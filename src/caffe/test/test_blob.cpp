@@ -16,7 +16,7 @@ class BlobSimpleTest : public ::testing::Test {
  protected:
   BlobSimpleTest()
       : blob_(new Blob<Dtype>()),
-        blob_preshaped_(new Blob<Dtype>(2, 3, 4, 5)) {}
+        blob_preshaped_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())) {}
   virtual ~BlobSimpleTest() { delete blob_; delete blob_preshaped_; }
   Blob<Dtype>* const blob_;
   Blob<Dtype>* const blob_preshaped_;
@@ -44,7 +44,7 @@ TYPED_TEST(BlobSimpleTest, TestPointersCPUGPU) {
 }
 
 TYPED_TEST(BlobSimpleTest, TestReshape) {
-  this->blob_->Reshape(2, 3, 4, 5);
+  this->blob_->Reshape(2, 3, 4, 5, Caffe::GetDefaultDeviceContext());
   EXPECT_EQ(this->blob_->num(), 2);
   EXPECT_EQ(this->blob_->channels(), 3);
   EXPECT_EQ(this->blob_->height(), 4);
@@ -59,7 +59,7 @@ TYPED_TEST(BlobSimpleTest, TestLegacyBlobProtoShapeEquals) {
   vector<int> shape(2);
   shape[0] = 3;
   shape[1] = 2;
-  this->blob_->Reshape(shape);
+  this->blob_->Reshape(shape, Caffe::GetDefaultDeviceContext());
 
   // (3 x 2) blob == (1 x 1 x 3 x 2) legacy blob
   blob_proto.set_num(1);
@@ -84,7 +84,7 @@ TYPED_TEST(BlobSimpleTest, TestLegacyBlobProtoShapeEquals) {
 
   // Reshape to (1 x 3 x 2).
   shape.insert(shape.begin(), 1);
-  this->blob_->Reshape(shape);
+  this->blob_->Reshape(shape, Caffe::GetDefaultDeviceContext());
 
   // (1 x 3 x 2) blob == (1 x 1 x 3 x 2) legacy blob
   blob_proto.set_num(1);
@@ -95,7 +95,7 @@ TYPED_TEST(BlobSimpleTest, TestLegacyBlobProtoShapeEquals) {
 
   // Reshape to (2 x 3 x 2).
   shape[0] = 2;
-  this->blob_->Reshape(shape);
+  this->blob_->Reshape(shape, Caffe::GetDefaultDeviceContext());
 
   // (2 x 3 x 2) blob != (1 x 1 x 3 x 2) legacy blob
   blob_proto.set_num(1);
@@ -110,7 +110,7 @@ class BlobMathTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   BlobMathTest()
-      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         epsilon_(1e-6) {}
 
   virtual ~BlobMathTest() { delete blob_; }

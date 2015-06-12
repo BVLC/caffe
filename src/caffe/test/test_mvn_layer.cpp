@@ -18,7 +18,7 @@ class MVNLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   MVNLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;

@@ -24,7 +24,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_mask_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 3, 6, 5);
+    blob_bottom_->Reshape(2, 3, 6, 5, Caffe::GetDefaultDeviceContext());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -50,7 +50,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
     pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
     const int num = 2;
     const int channels = 2;
-    blob_bottom_->Reshape(num, channels, 3, 5);
+    blob_bottom_->Reshape(num, channels, 3, 5, Caffe::GetDefaultDeviceContext());
     // Input: 2x 2 channels of:
     //     [1 2 5 2 3]
     //     [9 4 1 4 8]
@@ -123,7 +123,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
     pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
     const int num = 2;
     const int channels = 2;
-    blob_bottom_->Reshape(num, channels, 6, 6);
+    blob_bottom_->Reshape(num, channels, 6, 6, Caffe::GetDefaultDeviceContext());
     // Input: 2x 2 channels of:
     // [35     1     6    26    19    24]
     // [ 3    32     7    21    23    25]
@@ -248,7 +248,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
     pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
     const int num = 2;
     const int channels = 2;
-    blob_bottom_->Reshape(num, channels, 6, 6);
+    blob_bottom_->Reshape(num, channels, 6, 6, Caffe::GetDefaultDeviceContext());
     // Input: 2x 2 channels of:
     // [35     1     6    26    19    24]
     // [ 3    32     7    21    23    25]
@@ -480,7 +480,7 @@ TYPED_TEST(PoolingLayerTest, TestForwardMaxPadded) {
   pooling_param->set_stride(2);
   pooling_param->set_pad(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-  this->blob_bottom_->Reshape(1, 1, 3, 3);
+  this->blob_bottom_->Reshape(1, 1, 3, 3, Caffe::GetDefaultDeviceContext());
   // Input:
   //     [ 1 2 4 ]
   //     [ 2 3 2 ]
@@ -545,7 +545,7 @@ TYPED_TEST(PoolingLayerTest, TestForwardAve) {
   pooling_param->set_stride(1);
   pooling_param->set_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  this->blob_bottom_->Reshape(1, 1, 3, 3);
+  this->blob_bottom_->Reshape(1, 1, 3, 3, Caffe::GetDefaultDeviceContext());
   FillerParameter filler_param;
   filler_param.set_value(Dtype(2));
   ConstantFiller<Dtype> filler(filler_param);

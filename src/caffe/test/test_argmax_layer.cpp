@@ -16,7 +16,7 @@ template <typename Dtype>
 class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
  protected:
   ArgMaxLayerTest()
-      : blob_bottom_(new Blob<Dtype>(10, 20, 1, 1)),
+      : blob_bottom_(new Blob<Dtype>(10, 20, 1, 1, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()),
         top_k_(5) {
     Caffe::set_random_seed(1701);

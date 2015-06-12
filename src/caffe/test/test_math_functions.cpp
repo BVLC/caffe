@@ -27,8 +27,8 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
 
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    this->blob_bottom_->Reshape(11, 17, 19, 23);
-    this->blob_top_->Reshape(11, 17, 19, 23);
+    this->blob_bottom_->Reshape(11, 17, 19, 23, Caffe::GetDefaultDeviceContext());
+    this->blob_top_->Reshape(11, 17, 19, 23, Caffe::GetDefaultDeviceContext());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);

@@ -26,9 +26,9 @@ class SPPLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 3, 9, 8);
-    blob_bottom_2_->Reshape(4, 3, 1024, 765);
-    blob_bottom_3_->Reshape(10, 3, 7, 7);
+    blob_bottom_->Reshape(2, 3, 9, 8, Caffe::GetDefaultDeviceContext());
+    blob_bottom_2_->Reshape(4, 3, 1024, 765, Caffe::GetDefaultDeviceContext());
+    blob_bottom_3_->Reshape(10, 3, 7, 7, Caffe::GetDefaultDeviceContext());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);

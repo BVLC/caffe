@@ -15,6 +15,7 @@
 #include <string>
 #include <utility>  // pair
 #include <vector>
+#include <math.h>
 
 #include "caffe/util/device_alternate.hpp"
 
@@ -130,11 +131,13 @@ class Caffe {
     return *(Get().random_generator_);
   }
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
-#endif
+#endif // USE_CUDA
+#endif // !CPU_ONLY
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
@@ -170,9 +173,11 @@ class Caffe {
 
  protected:
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
-#endif
+#endif // USE_CUDA
+#endif // !CPU_ONLY
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;

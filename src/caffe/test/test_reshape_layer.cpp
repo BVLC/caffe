@@ -18,7 +18,7 @@ class ReshapeLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   ReshapeLayerTest()
-    : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
+    : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5, Caffe::GetDefaultDeviceContext())),
       blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -251,7 +251,7 @@ TYPED_TEST(ReshapeLayerTest, TestForwardAfterReshape) {
   // We know the above produced the correct result from TestForward.
   // Reshape the bottom and call layer.Reshape, then try again.
   vector<int> new_bottom_shape(1, 2 * 3 * 6 * 5);
-  this->blob_bottom_->Reshape(new_bottom_shape);
+  this->blob_bottom_->Reshape(new_bottom_shape, Caffe::GetDefaultDeviceContext());
   layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);

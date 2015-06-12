@@ -19,9 +19,9 @@ class EltwiseLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   EltwiseLayerTest()
-      : blob_bottom_a_(new Blob<Dtype>(2, 3, 4, 5)),
-        blob_bottom_b_(new Blob<Dtype>(2, 3, 4, 5)),
-        blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_bottom_a_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
+        blob_bottom_b_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
+        blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     Caffe::set_random_seed(1701);

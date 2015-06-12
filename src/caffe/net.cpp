@@ -385,11 +385,11 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
         blob_pointer->Reshape(param.input_dim(top_id * 4),
             param.input_dim(top_id * 4 + 1),
             param.input_dim(top_id * 4 + 2),
-            param.input_dim(top_id * 4 + 3), Caffe::GetDeviceContext(layer_param->device()));
+            param.input_dim(top_id * 4 + 3), Caffe::GetDefaultDeviceContext());
       }
       else
       {
-        blob_pointer->Reshape(param.input_shape(top_id),Caffe::GetDeviceContext(layer_param->device()));
+        blob_pointer->Reshape(param.input_shape(top_id),Caffe::GetDefaultDeviceContext());
       }
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());

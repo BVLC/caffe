@@ -21,11 +21,13 @@ SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   if (gpu_ptr_) {
     if (device_context_.backend() == Backend::BACKEND_CUDA) {
+#ifdef USE_CUDA
       CUDA_CHECK(cudaFree(gpu_ptr_));
+#endif // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       clReleaseMemObject(cl_gpu_mem_);
-#endif
+#endif // USE_GREENTEA
     }
   }
 #endif  // CPU_ONLY
@@ -75,8 +77,10 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
     case UNINITIALIZED: {
       if (device_context_.backend() == Backend::BACKEND_CUDA) {
+#ifdef USE_CUDA
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         caffe_gpu_memset(size_, 0, gpu_ptr_);
+#endif // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
@@ -106,10 +110,12 @@ inline void SyncedMemory::to_gpu() {
     }
     case HEAD_AT_CPU: {
       if (device_context_.backend() == Backend::BACKEND_CUDA) {
+#ifdef USE_CUDA
         if (gpu_ptr_ == NULL) {
           CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         }
         caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
+#endif // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
@@ -135,7 +141,7 @@ inline void SyncedMemory::to_gpu() {
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
           greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, ctx);
         }
-#endif
+#endif // USE_GREENTEA
       }
       head_ = SYNCED;
       break;

@@ -161,9 +161,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       (*updated_params)[i].reset(new Blob<Dtype>());
     }
     Blob<Dtype>& updated_weights = *(*updated_params)[0];
-    updated_weights.ReshapeLike(weights);
+    updated_weights.ReshapeLike(weights, Caffe::GetDefaultDeviceContext());
     Blob<Dtype>& updated_bias = *(*updated_params)[1];
-    updated_bias.ReshapeLike(bias);
+    updated_bias.ReshapeLike(bias, Caffe::GetDefaultDeviceContext());
 
     for (int i = 0; i <= D; ++i) {
       // Compute the derivative with respect to the ith weight (i.e., the ith
@@ -290,7 +290,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     vector<shared_ptr<Blob<Dtype> > > noaccum_params(param_blobs.size());
     for (int i = 0; i < param_blobs.size(); ++i) {
       noaccum_params[i].reset(new Blob<Dtype>());
-      noaccum_params[i]->CopyFrom(*param_blobs[i], false, true);
+      noaccum_params[i]->CopyFrom(*param_blobs[i], Caffe::GetDefaultDeviceContext(), false, true);
     }
     // Solve by equivalent accumulation of gradients over divided batches.
     this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,

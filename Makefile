@@ -609,7 +609,7 @@ ifeq ($(USE_CUDA), 1)
 	@ cat $@.$(WARNS_EXT)
 else
 	@ echo CXX $<
-	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+	$(Q)$(CXX) $< $(CXXFLAGS) -x c++ -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 endif
