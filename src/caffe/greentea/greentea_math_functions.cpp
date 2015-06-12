@@ -797,6 +797,30 @@ template void greentea_gpu_powx<double>(const int ctx_id, const int N,
                                         const int offy);
 
 template<typename Dtype>
+void greentea_gpu_log(const int ctx_id, const int N, const cl_mem a,
+                       const int offa, cl_mem y,
+                       const int offy) {
+
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+
+  viennacl::ocl::kernel &oclk_log = program.get_kernel(
+      CL_KERNEL_SELECT("log"));
+  viennacl::ocl::enqueue(
+      oclk_log(N, WrapHandle(a, ctx), offa, WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
+
+template void greentea_gpu_log<float>(const int ctx_id, const int N,
+                                       const cl_mem a, const int offa,
+                                       cl_mem y,
+                                       const int offy);
+template void greentea_gpu_log<double>(const int ctx_id, const int N,
+                                        const cl_mem a, const int offa,
+                                        cl_mem y,
+                                        const int offy);
+
+template<typename Dtype>
 void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
                        cl_mem y, const int offy) {
 

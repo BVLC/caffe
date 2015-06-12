@@ -341,7 +341,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
                                (cl_mem) weights, weight_offset_ * g,
                                (cl_mem) output, output_off + output_offset_ * g,
                                (Dtype) 0., (cl_mem) col_buff,
-                               is_1x1_ ? input_off : 0 + col_offset_ * g);
+                               (is_1x1_ ? input_off : 0) + col_offset_ * g);
     }
     if (!is_1x1_) {
       greentea_conv_col2im_gpu(col_buff, 0, input, input_off);
