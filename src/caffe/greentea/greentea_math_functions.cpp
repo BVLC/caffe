@@ -113,6 +113,28 @@ template void greentea_copy<float>(const int N, const cl_mem X, cl_mem Y,
 template void greentea_copy<double>(const int N, const cl_mem X, cl_mem Y,
                                     viennacl::ocl::context &ctx);
 
+// Copy from OpenCL buffer to OpenCL buffer
+template<typename Dtype>
+void greentea_copy(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
+                   viennacl::ocl::context &ctx) {
+  if (X != Y) {
+    clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, offX, offY,
+                        sizeof(Dtype) * N, 0, NULL, NULL);
+  }
+  ctx.get_queue().finish();
+}
+
+// Explicit instantiations
+template void greentea_copy<int>(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
+                                 viennacl::ocl::context &ctx);
+template void greentea_copy<unsigned int>(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
+                                 viennacl::ocl::context &ctx);
+template void greentea_copy<float>(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
+                                 viennacl::ocl::context &ctx);
+template void greentea_copy<double>(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
+                                 viennacl::ocl::context &ctx);
+
+
 template<typename Dtype>
 void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                        const CBLAS_TRANSPOSE TransB, const int M, const int N,

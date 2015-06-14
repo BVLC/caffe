@@ -35,6 +35,10 @@ void greentea_copy(const int N, const cl_mem X, cl_mem Y,
                    viennacl::ocl::context &ctx);
 
 template<typename Dtype>
+void greentea_copy(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
+                   viennacl::ocl::context &ctx);
+
+template<typename Dtype>
 void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                        const CBLAS_TRANSPOSE TransB, const int M, const int N,
                        const int K, const Dtype alpha, const cl_mem A,

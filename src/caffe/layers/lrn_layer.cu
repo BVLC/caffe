@@ -6,6 +6,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
     const int num, const int channels, const int height,
@@ -51,6 +52,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
     }
   }
 }
+#endif // USE_CUDA
 
 
 template <typename Dtype>
@@ -69,6 +71,7 @@ void LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 // TODO: check if it would be faster to just put it into the previous kernel.
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void LRNComputeOutput(const int nthreads, const Dtype* const in,
     const Dtype* const scale, const Dtype negative_beta, Dtype* const out) {
@@ -76,6 +79,7 @@ __global__ void LRNComputeOutput(const int nthreads, const Dtype* const in,
     out[index] = in[index] * pow(scale[index], negative_beta);
   }
 }
+#endif // USE_CUDA
 
 template <typename Dtype>
 void LRNLayer<Dtype>::CrossChannelForward_gpu(
@@ -119,6 +123,7 @@ void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void LRNComputeDiff(const int nthreads,
     const Dtype* const bottom_data, const Dtype* const top_data,
@@ -176,6 +181,7 @@ __global__ void LRNComputeDiff(const int nthreads,
     }
   }
 }
+#endif // USE_CUDA
 
 template <typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_gpu(
