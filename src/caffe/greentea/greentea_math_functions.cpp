@@ -16,7 +16,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 
 #include "caffe/common.hpp"
 
@@ -271,24 +270,21 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
     ViennaCLBackendSetOpenCLContextID(backend,
                                       static_cast<ViennaCLInt>(ctx_id));
 
-    ViennaCLOrder vclOrder = ViennaCLRowMajor;
     ViennaCLTranspose vclTransA =
         (TransA == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSgemv(backend, vclOrder, vclTransA, M, N, alpha, A,
+          ViennaCLOpenCLSgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha, A,
                               offA, 0, 1, 1, lda, x, offx, 1, beta, y, offy, 1));
     } else {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDgemv(backend, vclOrder, vclTransA, M, N, alpha, A,
+          ViennaCLOpenCLDgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha, A,
                               offA, 0, 1, 1, lda, x, offx, 1, beta, y, offy, 1));
     }
 #endif
 
 #ifdef USE_CLBLAS
-
-    clblasOrder clOrder = clblasRowMajor;
     clblasTranspose clTransA =
         (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
@@ -296,10 +292,10 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
-          clblasSgemv(clOrder,clTransA,M,N,alpha,A,offA,N,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
+          clblasSgemv(clblasRowMajor,clTransA,M,N,alpha,A,offA,lda,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
-          clblasDgemv(clOrder,clTransA,M,N,alpha,A,offA,N,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
+          clblasDgemv(clblasRowMajor,clTransA,M,N,alpha,A,offA,lda,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
     }
 #endif
   }
@@ -511,10 +507,10 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSdot(backend, n, out, X, offX, 1, Y, offY, 1));
+          ViennaCLOpenCLSdot(backend, n, (float*)out, X, offX, 1, Y, offY, 1));
     } else {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDdot(backend, n, out, X, offX, 1, Y, offY, 1));
+          ViennaCLOpenCLDdot(backend, n, (double*)out, X, offX, 1, Y, offY, 1));
     }
 #endif
 
@@ -574,9 +570,9 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
                                       static_cast<ViennaCLInt>(ctx_id));
 
     if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLSasum(backend, n, Y, X, offX, 1));
+      GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLSasum(backend, n, (float*)Y, X, offX, 1));
     } else {
-      GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLDasum(backend, n, Y, X, offX, 1));
+      GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLDasum(backend, n, (double*)Y, X, offX, 1));
     }
 #endif
 
@@ -899,7 +895,7 @@ void greentea_gpu_rng_uniform(const int ctx_id, const int n, cl_mem r,
                               int offr) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   std::vector<unsigned int> random(n);
-  caffe_gpu_rng_uniform(n, &random[0]);
+  caffe_rng_uniform(n, &random[0]);
   greentea_gpu_memcpy(sizeof(unsigned int) * n, &random[0], r, offr, ctx);
 }
 
