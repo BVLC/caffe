@@ -43,6 +43,9 @@ inline void CaffeFreeHost(void* ptr) {
 class SyncedMemory {
  public:
 #ifdef USE_GREENTEA
+  SyncedMemory()
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+        own_cpu_data_(false), device_context_(Caffe::GetDefaultDeviceContext()), cl_gpu_mem_(NULL) {}
   SyncedMemory(DeviceContext device_context)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
         own_cpu_data_(false), device_context_(device_context), cl_gpu_mem_(NULL) {}
@@ -50,6 +53,9 @@ class SyncedMemory {
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), device_context_(device_context), cl_gpu_mem_(NULL) {}
 #else
+  SyncedMemory()
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+        own_cpu_data_(false), device_context_(Caffe::GetDefaultDeviceContext()) {}
   SyncedMemory(DeviceContext device_context)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
         own_cpu_data_(false), device_context_(device_context) {}

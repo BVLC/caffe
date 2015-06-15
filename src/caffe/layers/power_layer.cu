@@ -50,7 +50,7 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       return;
     }
     const Dtype* bottom_data = bottom[0]->gpu_data();
-    caffe_copy(count, bottom_data, top_data);
+    greentea_copy<Dtype>(count, (cl_mem)bottom_data, 0, (cl_mem)top_data, 0, ctx);
     if (scale_ != Dtype(1)) {
       greentea_gpu_scal(this->device_context_.id(), count, scale_,
                         (cl_mem) top_data, 0);
@@ -155,8 +155,8 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           greentea_gpu_scal<Dtype>(this->device_context_.id(), count, power_,
                                    (cl_mem) bottom_diff, 0);
         } else {
-          greentea_copy<Dtype>(count, (cl_mem) bottom_data,
-                               (cl_mem) bottom_diff, ctx);
+          greentea_copy<Dtype>(count, (cl_mem) bottom_data,0,
+                               (cl_mem) bottom_diff,0, ctx);
           if (scale_ != Dtype(1)) {
             greentea_gpu_scal(this->device_context_.id(), count, scale_,
                               (cl_mem) bottom_diff, 0);

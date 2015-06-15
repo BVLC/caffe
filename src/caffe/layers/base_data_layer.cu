@@ -33,14 +33,14 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     // Reshape to loaded data.
     top[0]->ReshapeLike(this->prefetch_data_, this->device_context_);
     // Copy the data
-    greentea_copy<Dtype>(prefetch_data_.count(), (cl_mem)(prefetch_data_.cpu_data()),
-                  (cl_mem)(top[0]->mutable_gpu_data()), ctx);
+    greentea_copy<Dtype>(prefetch_data_.count(), (cl_mem)(prefetch_data_.gpu_data()),0,
+                  (cl_mem)(top[0]->mutable_gpu_data()),0, ctx);
     if (this->output_labels_) {
       // Reshape to loaded labels.
       top[1]->ReshapeLike(prefetch_label_, this->device_context_);
       // Copy the labels.
-      greentea_copy<Dtype>(prefetch_label_.count(), (cl_mem)(prefetch_label_.cpu_data()),
-                    (cl_mem)(top[1]->mutable_gpu_data()), ctx);
+      greentea_copy<Dtype>(prefetch_label_.count(), (cl_mem)(prefetch_label_.gpu_data()),0,
+                    (cl_mem)(top[1]->mutable_gpu_data()),0, ctx);
     }
 #endif // USE_GREENTEA
   }

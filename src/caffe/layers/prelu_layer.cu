@@ -81,7 +81,7 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_context_.id());
 
     if (top[0] == bottom[0]) {
-      greentea_copy<Dtype>(count, (cl_mem)bottom_data, (cl_mem)(bottom_memory_.mutable_gpu_data()), ctx);
+      greentea_copy<Dtype>(count, (cl_mem)bottom_data,0, (cl_mem)(bottom_memory_.mutable_gpu_data()),0, ctx);
     }
 
     viennacl::ocl::kernel &oclk_prelu = program.get_kernel(

@@ -45,8 +45,8 @@ void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_context_.id());
 
     if (top.size() == 1) {
-      greentea_copy<Dtype>(count_, (cl_mem) (top[0]->gpu_diff()),
-                    (cl_mem) (bottom[0]->mutable_gpu_diff()), ctx);
+      greentea_copy<Dtype>(count_, (cl_mem) (top[0]->gpu_diff()), 0,
+                    (cl_mem) (bottom[0]->mutable_gpu_diff()), 0, ctx);
       return;
     }
     greentea_gpu_add<Dtype>(this->device_context_.id(), count_,

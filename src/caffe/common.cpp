@@ -140,14 +140,15 @@ void Caffe::set_random_seed(const unsigned int seed) {
         g_curand_availability_logged = true;
       }
     }
-    // RNG seed
-    Get().random_generator_.reset(new RNG(seed));
+
 #endif // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
 // TODO: Proper RNG and Seed for OpenCL
 #endif // USE_GREENTEA
   }
+  // RNG seed
+  Get().random_generator_.reset(new RNG(seed));
 }
 
 void Caffe::EnumerateDevices() {

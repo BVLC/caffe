@@ -243,8 +243,8 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       greentea_gpu_div<Dtype>(this->device_context_.id(), temp_.count(),
                               (cl_mem)bottom_diff,0, (cl_mem)(temp_.gpu_data()),0, (cl_mem)bottom_diff,0);
     } else {
-      greentea_copy<Dtype>(temp_.count(), (cl_mem)top_diff,
-                           (cl_mem)bottom_diff, ctx);
+      greentea_copy<Dtype>(temp_.count(), (cl_mem)top_diff, 0,
+                           (cl_mem)bottom_diff, 0, ctx);
     }
 #endif // USE_GREENTEA
   }

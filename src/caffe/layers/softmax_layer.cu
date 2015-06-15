@@ -105,16 +105,18 @@ template<typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                       const vector<Blob<Dtype>*>& top) {
 
+  const Dtype* bottom_data = bottom[0]->gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+  int count = bottom[0]->count();
+  int num = bottom[0]->num();
+  int channels = bottom[0]->channels();
+  int spatial_dim = bottom[0]->height() * bottom[0]->width();
+
+
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // CUDA backend code
-    const Dtype* bottom_data = bottom[0]->gpu_data();
-    Dtype* top_data = top[0]->mutable_gpu_data();
-    Dtype* scale_data = scale_.mutable_gpu_data();
-    int count = bottom[0]->count();
-    int num = bottom[0]->num();
-    int channels = bottom[0]->channels();
-    int spatial_dim = bottom[0]->height() * bottom[0]->width();
     caffe_copy(count, bottom_data, top_data);
     // We need to subtract the max to avoid numerical issues, compute the exp,
     // and then normalize.
@@ -151,21 +153,13 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_context_.id());
 
-    const cl_mem bottom_data = (cl_mem) (bottom[0]->gpu_data());
-    cl_mem top_data = (cl_mem) (top[0]->mutable_gpu_data());
-    cl_mem scale_data = (cl_mem) (scale_.mutable_gpu_data());
-    int count = bottom[0]->count();
-    int num = bottom[0]->num();
-    int channels = bottom[0]->channels();
-    int spatial_dim = bottom[0]->height() * bottom[0]->width();
-
-    greentea_copy<Dtype>(count, bottom_data, top_data, ctx);
+    greentea_copy<Dtype>(count, (cl_mem)bottom_data, 0, (cl_mem)top_data, 0, ctx);
 
     viennacl::ocl::kernel &oclk_channel_max = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_max"));
     viennacl::ocl::enqueue(
-        oclk_channel_max(num, channels, spatial_dim, WrapHandle(top_data, ctx),
-                         WrapHandle(scale_data, ctx)),
+        oclk_channel_max(num, channels, spatial_dim, WrapHandle((cl_mem)top_data, ctx),
+                         WrapHandle((cl_mem)scale_data, ctx)),
         ctx.get_queue());
 
 
@@ -173,24 +167,24 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CL_KERNEL_SELECT("kernel_channel_subtract"));
     viennacl::ocl::enqueue(
         oclk_channel_subtract(count, num, channels, spatial_dim,
-                              WrapHandle(scale_data, ctx),
-                              WrapHandle(top_data, ctx)),
+                              WrapHandle((cl_mem)scale_data, ctx),
+                              WrapHandle((cl_mem)top_data, ctx)),
         ctx.get_queue());
 
 
     viennacl::ocl::kernel &oclk_exp = program.get_kernel(
         CL_KERNEL_SELECT("kernel_exp"));
     viennacl::ocl::enqueue(
-        oclk_exp(num * channels * spatial_dim, WrapHandle(top_data, ctx),
-                 WrapHandle(top_data, ctx)),
+        oclk_exp(num * channels * spatial_dim, WrapHandle((cl_mem)top_data, ctx),
+                 WrapHandle((cl_mem)top_data, ctx)),
         ctx.get_queue());
 
 
     viennacl::ocl::kernel &oclk_channel_sum = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_sum"));
     viennacl::ocl::enqueue(
-        oclk_channel_sum(num, channels, spatial_dim, WrapHandle(top_data, ctx),
-                         WrapHandle(scale_data, ctx)),
+        oclk_channel_sum(num, channels, spatial_dim, WrapHandle((cl_mem)top_data, ctx),
+                         WrapHandle((cl_mem)scale_data, ctx)),
         ctx.get_queue());
 
 
@@ -198,8 +192,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CL_KERNEL_SELECT("kernel_channel_div"));
     viennacl::ocl::enqueue(
         oclk_channel_div(count, num, channels, spatial_dim,
-                         WrapHandle(scale_data, ctx),
-                         WrapHandle(top_data, ctx)),
+                         WrapHandle((cl_mem)scale_data, ctx),
+                         WrapHandle((cl_mem)top_data, ctx)),
         ctx.get_queue());
 
 
@@ -215,13 +209,13 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int num = top[0]->num();
   int channels = top[0]->channels();
   int spatial_dim = top[0]->height() * top[0]->width();
+  const Dtype* top_diff = top[0]->gpu_diff();
+  const Dtype* top_data = top[0]->gpu_data();
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
 
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    const Dtype* top_diff = top[0]->gpu_diff();
-    const Dtype* top_data = top[0]->gpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    Dtype* scale_data = scale_.mutable_gpu_data();
     caffe_copy(top[0]->count(), top_diff, bottom_diff);
     // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff.
     // NOLINT_NEXT_LINE(whitespace/operators)
@@ -237,39 +231,32 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif
   } else {
 #ifdef USE_GREENTEA
-    const cl_mem top_diff = (cl_mem) (top[0]->gpu_diff());
-    const cl_mem top_data = (cl_mem) (top[0]->gpu_data());
-    cl_mem bottom_diff = (cl_mem) (bottom[0]->mutable_gpu_diff());
-    cl_mem scale_data = (cl_mem) (scale_.mutable_gpu_data());
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_.id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_context_.id());
 
-    greentea_copy<Dtype>(top[0]->count(), top_diff, bottom_diff, ctx);
-
+    greentea_copy<Dtype>(top[0]->count(), (cl_mem)top_diff, 0, (cl_mem)bottom_diff, 0, ctx);
 
     viennacl::ocl::kernel &oclk_channel_dot = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_dot"));
     viennacl::ocl::enqueue(
-        oclk_channel_dot(count, num, channels, spatial_dim,
-                         WrapHandle(top_diff, ctx), WrapHandle(top_data, ctx),
-                         WrapHandle(scale_data, ctx)),
+        oclk_channel_dot(num, channels, spatial_dim,
+                         WrapHandle((cl_mem)top_diff, ctx), WrapHandle((cl_mem)top_data, ctx),
+                         WrapHandle((cl_mem)scale_data, ctx)),
         ctx.get_queue());
-
 
     viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_subtract"));
     viennacl::ocl::enqueue(
         oclk_channel_subtract(count, num, channels, spatial_dim,
-                              WrapHandle(scale_data, ctx),
-                              WrapHandle(bottom_diff, ctx)),
+                              WrapHandle((cl_mem)scale_data, ctx),
+                              WrapHandle((cl_mem)bottom_diff, ctx)),
         ctx.get_queue());
 
-
     greentea_gpu_mul<Dtype>(this->device_context_.id(), top[0]->count(),
-                            bottom_diff, 0, top_data, 0, bottom_diff, 0);
+                            (cl_mem)bottom_diff, 0, (cl_mem)top_data, 0, (cl_mem)bottom_diff, 0);
 
 #endif
   }

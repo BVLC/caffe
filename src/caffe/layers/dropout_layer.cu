@@ -64,7 +64,7 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                        WrapHandle((cl_mem) top_data, ctx)),
           ctx.get_queue());
     } else {
-      greentea_copy<Dtype>(count, (cl_mem) bottom_data, (cl_mem) top_data, ctx);
+      greentea_copy<Dtype>(count, (cl_mem) bottom_data,0, (cl_mem) top_data,0, ctx);
     }
 #endif // USE_GREENTEA
   }
@@ -126,7 +126,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                          WrapHandle((cl_mem) bottom_diff, ctx)),
             ctx.get_queue());
       } else {
-        greentea_copy<Dtype>(top[0]->count(), (cl_mem) top_diff, (cl_mem) bottom_diff, ctx);
+        greentea_copy<Dtype>(top[0]->count(), (cl_mem) top_diff, 0, (cl_mem) bottom_diff, 0, ctx);
       }
 #endif // USE_GREENTEA
     }
