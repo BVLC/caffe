@@ -12,7 +12,6 @@ void EuclideanLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   normalize_ = this->layer_param_.loss_param().normalize();
-  DLOG(INFO) << "normalizing: " << normalize_;
 }
 
 template <typename Dtype>
