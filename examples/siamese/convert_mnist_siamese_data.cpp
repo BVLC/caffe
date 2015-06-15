@@ -1,4 +1,3 @@
-//
 // This script converts the MNIST dataset to the leveldb format used
 // by caffe to train siamese network.
 // Usage:
@@ -74,37 +73,44 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
   char label_i;
   char label_j;
-  char* pixels = new char[2 * rows * cols];
+  char label_k;
+  char* pixels = new char[3 * rows * cols];
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
 
   caffe::Datum datum;
-  datum.set_channels(2);  // one channel for each image in the pair
+  datum.set_channels(3);  // one channel for each image in the pair
   datum.set_height(rows);
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
   for (int itemid = 0; itemid < num_items; ++itemid) {
-    int i = caffe::caffe_rng_rand() % num_items;  // pick a random  pair
+    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
     int j = caffe::caffe_rng_rand() % num_items;
+    int k = caffe::caffe_rng_rand() % num_items;
     read_image(&image_file, &label_file, i, rows, cols,
         pixels, &label_i);
     read_image(&image_file, &label_file, j, rows, cols,
         pixels + (rows * cols), &label_j);
-    datum.set_data(pixels, 2*rows*cols);
-    if (label_i  == label_j) {
+    read_image(&image_file, &label_file, k, rows, cols,
+        pixels + (2 * rows * cols), &label_k);
+
+    datum.set_data(pixels, 3*rows*cols);
+    if (label_i  == label_j && label_i  != label_k) {
       datum.set_label(1);
+    
+      datum.SerializeToString(&value);
+      snprintf(key, kMaxKeyLength, "%08d", itemid);
+      db->Put(leveldb::WriteOptions(), std::string(key), value);
     } else {
+      itemid--;
       datum.set_label(0);
     }
-    datum.SerializeToString(&value);
-    snprintf(key, kMaxKeyLength, "%08d", itemid);
-    db->Put(leveldb::WriteOptions(), std::string(key), value);
   }
 
   delete db;
-  delete [] pixels;
+  delete pixels;
 }
 
 int main(int argc, char** argv) {

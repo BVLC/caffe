@@ -25,7 +25,7 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
-class Im2colKernelTest : public ::testing::Test {
+class Im2colKernelTest : public GPUDeviceTest<Dtype> {
  protected:
   Im2colKernelTest()
         // big so launches > 1024 threads
@@ -68,8 +68,6 @@ class Im2colKernelTest : public ::testing::Test {
 TYPED_TEST_CASE(Im2colKernelTest, TestDtypes);
 
 TYPED_TEST(Im2colKernelTest, TestGPU) {
-  Caffe::set_mode(Caffe::GPU);
-
   // Reshape the blobs to correct size for im2col output
   this->blob_top_->Reshape(this->blob_bottom_->num(),
           this->channels_ * this->kernel_size_ * this->kernel_size_,

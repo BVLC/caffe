@@ -75,38 +75,36 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     bottom_data = bottom_memory_.gpu_data();
   }
 
-  // Propagte to param
+  // Propagate to param
   // Since to write bottom diff will affect top diff if top and bottom blobs
   // are identical (in-place computaion), we first compute param backward to
   // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
-    // slope_diff is set as 0, then accumulated over batches
-    caffe_gpu_set<Dtype>(this->blobs_[0]->count(), Dtype(0), slope_diff);
     int cdim = channels * dim;
     Dtype dsum = 0.;
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      Dtype* temp_buff = multiplier_.mutable_gpu_diff();
       // compute element-wise diff
       // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(cdim),
           CAFFE_CUDA_NUM_THREADS>>>(
           cdim, top_diff + top[0]->offset(n),
-          bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
+          bottom_data + bottom[0]->offset(n),
+          backward_buff_.mutable_gpu_diff());
       CUDA_POST_KERNEL_CHECK;
       if (channel_shared_) {
         Dtype d;
-        caffe_gpu_dot<Dtype>(channels * dim, multiplier_.gpu_diff(),
+        caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
             multiplier_.gpu_data(), &d);
         dsum += d;
       } else {
         caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
-            multiplier_.gpu_diff(), multiplier_.gpu_data(), 1.,
+            backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
             slope_diff);
       }
     }
     if (channel_shared_) {
-      caffe_gpu_set(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
+      caffe_gpu_add_scalar(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
     }
   }
   // Propagate to bottom

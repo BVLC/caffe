@@ -50,6 +50,7 @@ class DataTransformer {
   void Transform(const vector<Datum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
 
+#ifdef USE_OPENCV
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Mat.
@@ -74,6 +75,7 @@ class DataTransformer {
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif  // USE_OPENCV
 
   /**
    * @brief Applies the same transformation defined in the data layer's
@@ -88,6 +90,10 @@ class DataTransformer {
    */
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 
+<<<<<<< ca976a2b520c8024cc7f41a048d2c1abe73f6022
+<<<<<<< ed5d44f53efe58e4cc2cd299f23c5164cbd7172c
+=======
+>>>>>>> macro define in upgrade_proto
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -113,6 +119,10 @@ class DataTransformer {
    * @param mat_vector
    *    A vector of Mat containing the data to be transformed.
    */
+<<<<<<< ca976a2b520c8024cc7f41a048d2c1abe73f6022
+#ifdef USE_OPENCV
+=======
+>>>>>>> macro define in upgrade_proto
   vector<int> InferBlobShape(const vector<cv::Mat> & mat_vector);
   /**
    * @brief Infers the shape of transformed_blob will have when
@@ -122,7 +132,14 @@ class DataTransformer {
    *    cv::Mat containing the data to be transformed.
    */
   vector<int> InferBlobShape(const cv::Mat& cv_img);
+<<<<<<< ca976a2b520c8024cc7f41a048d2c1abe73f6022
+#endif  // USE_OPENCV
 
+=======
+>>>>>>> New triplet loss layer added(beta1 version-no test source files)
+=======
+
+>>>>>>> macro define in upgrade_proto
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
@@ -148,4 +165,3 @@ class DataTransformer {
 }  // namespace caffe
 
 #endif  // CAFFE_DATA_TRANSFORMER_HPP_
-

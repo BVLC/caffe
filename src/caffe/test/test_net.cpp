@@ -617,8 +617,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 011aef0... restore
+=======
+>>>>>>> 80a07dd... macro define in upgrade_proto
   virtual void InitSkipPropNet(bool test_skip_true) {
     string proto =
       "name: 'SkipPropTestNetwork' "
@@ -709,10 +712,13 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 00341b2... triplet data generation and network update
 =======
 >>>>>>> 1882ac9... add initiate class name of triplet loss layer
+=======
+>>>>>>> 08d5d6d... macro define in upgrade_proto
       proto += "  propagate_down: true "
                "  propagate_down: false ";
     else
@@ -735,10 +741,18 @@ class NetTest : public MultiDeviceTest<TypeParam> {
                "  propagate_down: true ";
 >>>>>>> 98fb438... fixed two bugs with prototext format
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 00341b2... triplet data generation and network update
 =======
 >>>>>>> 1882ac9... add initiate class name of triplet loss layer
+=======
+=======
+      proto += "  propagate_down: [true, false] ";
+    else
+      proto += "  propagate_down: [true, true] ";
+>>>>>>> 80a07dd... macro define in upgrade_proto
+>>>>>>> 08d5d6d... macro define in upgrade_proto
     proto +=
       "  top: 'cross_entropy_loss' "
       "  type: 'SigmoidCrossEntropyLoss' "
@@ -748,12 +762,15 @@ class NetTest : public MultiDeviceTest<TypeParam> {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
 =======
 >>>>>>> 011aef0... restore
 =======
 >>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
+=======
+>>>>>>> 80a07dd... macro define in upgrade_proto
   int seed_;
   shared_ptr<Net<Dtype> > net_;
 };
@@ -2355,6 +2372,54 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->Backward();
   for (int i = 0; i < output2.count(); ++i) {
     CHECK_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
+  }
+}
+
+TYPED_TEST(NetTest, TestSkipPropagateDown) {
+  // check bottom_need_backward if propagate_down is true
+  this->InitSkipPropNet(false);
+  vector<bool> vec_layer_need_backward = this->net_->layer_need_backward();
+  for (int layer_id = 0; layer_id < this->net_->layers().size(); ++layer_id) {
+    string layer_name = this->net_->layer_names()[layer_id];
+    if (layer_name == "loss") {
+      // access to bottom_need_backward coresponding to label's blob
+      bool need_back = this->net_->bottom_need_backward()[layer_id][1];
+      // if propagate_down is true, the loss layer will try to
+      // backpropagate on labels
+      EXPECT_TRUE(need_back) << "bottom_need_backward should be True";
+    }
+    // layer_need_backward should be True except for data and silence layers
+    if (layer_name.find("data") != std::string::npos ||
+          layer_name == "silence") {
+      EXPECT_FALSE(vec_layer_need_backward[layer_id])
+          << "layer_need_backward for " << layer_name << " should be False";
+    } else {
+      EXPECT_TRUE(vec_layer_need_backward[layer_id])
+          << "layer_need_backward for " << layer_name << " should be True";
+    }
+  }
+  // check bottom_need_backward if propagat_down is false
+  this->InitSkipPropNet(true);
+  vec_layer_need_backward.clear();
+  vec_layer_need_backward = this->net_->layer_need_backward();
+  for (int layer_id = 0; layer_id < this->net_->layers().size(); ++layer_id) {
+    string layer_name = this->net_->layer_names()[layer_id];
+    if (layer_name == "loss") {
+      // access to bottom_need_backward coresponding to label's blob
+      bool need_back = this->net_->bottom_need_backward()[layer_id][1];
+      // if propagate_down is false, the loss layer will not try to
+      // backpropagate on labels
+      EXPECT_FALSE(need_back) << "bottom_need_backward should be False";
+    }
+    // layer_need_backward should be False except for innerproduct and
+    // loss layers
+    if (layer_name == "innerproduct" || layer_name == "loss") {
+      EXPECT_TRUE(vec_layer_need_backward[layer_id])
+          << "layer_need_backward for " << layer_name << " should be True";
+    } else {
+      EXPECT_FALSE(vec_layer_need_backward[layer_id])
+          << "layer_need_backward for " << layer_name << " should be False";
+    }
   }
 }
 
