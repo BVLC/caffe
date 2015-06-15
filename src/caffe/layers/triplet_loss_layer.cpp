@@ -84,9 +84,9 @@ void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           static_cast<Dtype>(bottom[i]->num());
       int num = bottom[i]->num();
       int channels = bottom[i]->channels();
-      for (int j = 0; j < num; ++j) {	
+      for (int j = 0; j < num; ++j) {
         Dtype* bout = bottom[i]->mutable_cpu_diff();
-	if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+        if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
         // similar pairs
           caffe_cpu_axpby(
               channels,
@@ -101,9 +101,9 @@ void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               diff_neg.cpu_data() + (j*channels),
               Dtype(0.0),
               bout + (j*channels));
-	  } else {
+        } else {
             caffe_set(channels, Dtype(0), bout + (j*channels));
-          }
+        }
       }
     }
   }
