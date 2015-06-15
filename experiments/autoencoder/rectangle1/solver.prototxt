@@ -1,7 +1,6 @@
 net: "experiments/autoencoder/rectangle1/train_val.prototxt"
 test_iter: 9860
 test_interval: 40000
-test_initialization: false
 base_lr: 0.01
 lr_policy: "step"
 gamma: 0.5
