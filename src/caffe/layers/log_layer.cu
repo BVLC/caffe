@@ -41,7 +41,7 @@ void LogLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       greentea_gpu_log<Dtype>(this->device_context_.id(), count,
                               (cl_mem) bottom_data, 0, (cl_mem) top_data, 0);
     } else {
-      greentea_copy<Dtype>(count, (cl_mem) bottom_data, (cl_mem) top_data, ctx);
+      greentea_copy<Dtype>(count, (cl_mem) bottom_data,0, (cl_mem) top_data,0, ctx);
       if (input_scale_ != Dtype(1)) {
         greentea_gpu_scal<Dtype>(this->device_context_.id(), count,
                                  input_scale_, (cl_mem) top_data, 0);
@@ -94,7 +94,7 @@ void LogLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_.id());
 
-    greentea_copy<Dtype>(count, (cl_mem) bottom_data, (cl_mem) bottom_diff,
+    greentea_copy<Dtype>(count, (cl_mem) bottom_data,0, (cl_mem) bottom_diff,0,
                          ctx);
     if (input_scale_ != Dtype(1)) {
       greentea_gpu_scal<Dtype>(this->device_context_.id(), count, input_scale_,

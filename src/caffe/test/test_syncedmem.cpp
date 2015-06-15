@@ -10,6 +10,11 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+#ifdef USE_GREENTEA
+#include "caffe/greentea/greentea.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
+#endif
+
 namespace caffe {
 
 class SyncedMemoryTest : public ::testing::Test {};
@@ -79,7 +84,21 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
   char* recovered_value = new char[10];
-  caffe_gpu_memcpy(10, gpu_data, recovered_value);
+
+
+  DeviceContext dc = Caffe::GetDefaultDeviceContext();
+
+  if(dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_memcpy(10, gpu_data, recovered_value);
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(dc.id());
+    greentea_gpu_memcpy(10, (cl_mem)gpu_data,0, recovered_value, ctx);
+#endif // USE_GREENTEA
+  }
+
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(recovered_value))[i], 1);
   }
@@ -93,7 +112,18 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   gpu_data = mem.gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
-  caffe_gpu_memcpy(10, gpu_data, recovered_value);
+
+  if(dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_memcpy(10, gpu_data, recovered_value);
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(dc.id());
+    greentea_gpu_memcpy(10, (cl_mem)gpu_data,0, recovered_value, ctx);
+#endif // USE_GREENTEA
+  }
+
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(recovered_value))[i], 2);
   }
@@ -104,7 +134,19 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   void* gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
-  caffe_gpu_memset(mem.size(), 1, gpu_data);
+
+  DeviceContext dc = Caffe::GetDefaultDeviceContext();
+
+  if(dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_memset(mem.size(), 1, gpu_data);
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    greentea_memset(dc.id(), mem.size(), 1, (cl_mem)gpu_data, 0);
+#endif // USE_GREENTEA
+  }
+
   const void* cpu_data = mem.cpu_data();
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<const char*>(cpu_data))[i], 1);
@@ -113,7 +155,17 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
 
   gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
-  caffe_gpu_memset(mem.size(), 2, gpu_data);
+
+  if(dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_memset(mem.size(), 2, gpu_data);
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    greentea_memset(dc.id(), mem.size(), 2, (cl_mem)gpu_data, 0);
+#endif // USE_GREENTEA
+  }
+
   cpu_data = mem.cpu_data();
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<const char*>(cpu_data))[i], 2);

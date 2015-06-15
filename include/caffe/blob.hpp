@@ -35,7 +35,8 @@ class Blob {
       : data_(),
         diff_(),
         count_(0),
-        capacity_(0) {
+        capacity_(0),
+        device_context_(Caffe::GetDefaultDeviceContext()) {
   }
   explicit Blob(const int num, const int channels, const int height,
                 const int width, DeviceContext device_context);

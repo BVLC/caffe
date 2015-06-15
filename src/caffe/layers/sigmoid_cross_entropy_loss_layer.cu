@@ -43,7 +43,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
           this->device_context_.id());
 
       // First, compute the diff
-      greentea_copy<Dtype>(count, (cl_mem)sigmoid_output_data, (cl_mem)bottom_diff, ctx);
+      greentea_copy<Dtype>(count, (cl_mem)sigmoid_output_data, 0, (cl_mem)bottom_diff, 0, ctx);
       greentea_gpu_axpy<Dtype>(this->device_context_.id(), count, Dtype(-1), (cl_mem)target,0, (cl_mem)bottom_diff,0);
       // Scale down gradient
       const Dtype loss_weight = top[0]->cpu_diff()[0];

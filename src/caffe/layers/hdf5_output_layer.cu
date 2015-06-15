@@ -33,14 +33,13 @@ void HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       caffe_copy(label_datum_dim, &bottom[1]->gpu_data()[i * label_datum_dim],
                  &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
     }
+    SaveBlobs();
 #endif // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     Forward_cpu(bottom, top);
 #endif // USE_GREENTEA
   }
-
-  SaveBlobs();
 }
 
 template<typename Dtype>

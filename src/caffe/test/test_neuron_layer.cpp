@@ -621,9 +621,9 @@ TYPED_TEST(NeuronLayerTest, TestPReLUConsistencyReLU) {
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
   filler.Fill(tmp_blob.get());
-  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+  caffe_cpu_copy(blob_top_2->count(), tmp_blob->cpu_data(),
       this->blob_top_->mutable_cpu_diff());
-  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+  caffe_cpu_copy(blob_top_2->count(), tmp_blob->cpu_data(),
       blob_top_2->mutable_cpu_diff());
   vector<bool> propagate_down;
   propagate_down.push_back(true);
@@ -663,7 +663,7 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   prelu.SetUp(this->blob_top_vec_, this->blob_top_vec_);
   ip2.SetUp(blob_bottom_vec_2, blob_middle_vec_2);
   prelu2.SetUp(blob_middle_vec_2, blob_top_vec_2);
-  caffe_copy(ip2.blobs()[0]->count(), ip.blobs()[0]->cpu_data(),
+  caffe_cpu_copy(ip2.blobs()[0]->count(), ip.blobs()[0]->cpu_data(),
       ip2.blobs()[0]->mutable_cpu_data());
   // Forward in-place
   ip.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -681,9 +681,9 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
   filler.Fill(tmp_blob.get());
-  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+  caffe_cpu_copy(blob_top_2->count(), tmp_blob->cpu_data(),
       this->blob_top_->mutable_cpu_diff());
-  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+  caffe_cpu_copy(blob_top_2->count(), tmp_blob->cpu_data(),
       blob_top_2->mutable_cpu_diff());
   // Backward in-place
   vector<bool> propagate_down;

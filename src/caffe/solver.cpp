@@ -669,8 +669,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
             momentum, (cl_mem) (history_[param_id]->mutable_gpu_data()), 0);
         greentea_copy<Dtype>(
             net_params[param_id]->count(),
-            (cl_mem) (history_[param_id]->gpu_data()),
-            (cl_mem) (net_params[param_id]->mutable_gpu_diff()), ctx);
+            (cl_mem) (history_[param_id]->gpu_data()),0,
+            (cl_mem) (net_params[param_id]->mutable_gpu_diff()),0, ctx);
 #endif // USE_GREENTEA
       }
 #else
@@ -764,8 +764,8 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         // save history momentum for stepping back
         greentea_copy<Dtype>(
             net_params[param_id]->count(),
-            (cl_mem) (this->history_[param_id]->gpu_data()),
-            (cl_mem) (this->update_[param_id]->mutable_gpu_data()), ctx);
+            (cl_mem) (this->history_[param_id]->gpu_data()),0,
+            (cl_mem) (this->update_[param_id]->mutable_gpu_data()),0, ctx);
 
         // update history
         greentea_gpu_axpby<Dtype>(
@@ -784,8 +784,8 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         // copy
         greentea_copy<Dtype>(
             net_params[param_id]->count(),
-            (cl_mem) (this->update_[param_id]->gpu_data()),
-            (cl_mem) (net_params[param_id]->mutable_gpu_diff()), ctx);
+            (cl_mem) (this->update_[param_id]->gpu_data()),0,
+            (cl_mem) (net_params[param_id]->mutable_gpu_diff()),0, ctx);
 #endif // USE_GREENTEA
       }
 #else

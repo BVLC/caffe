@@ -534,13 +534,13 @@ void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
 #ifdef USE_GREENTEA
         if (copy_diff) {
           greentea_copy<Dtype>(
-              count_, (cl_mem) (source.gpu_diff()),
-              (cl_mem) (diff_->mutable_gpu_data()),
+              count_, (cl_mem) (source.gpu_diff()),0,
+              (cl_mem) (diff_->mutable_gpu_data()),0,
               viennacl::ocl::get_context(device_context_.id()));
         } else {
           greentea_copy<Dtype>(
-              count_, (cl_mem) (source.gpu_data()),
-              (cl_mem) (data_->mutable_gpu_data()),
+              count_, (cl_mem) (source.gpu_data()),0,
+              (cl_mem) (data_->mutable_gpu_data()),0,
               viennacl::ocl::get_context(device_context_.id()));
         }
 #endif
