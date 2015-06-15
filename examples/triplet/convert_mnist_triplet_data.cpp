@@ -97,7 +97,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     datum.set_data(pixels, 3*rows*cols);
     if (label_i  == label_j && label_i  != label_k) {
       datum.set_label(1);
-    
       datum.SerializeToString(&value);
       snprintf(key, kMaxKeyLength, "%08d", itemid);
       db->Put(leveldb::WriteOptions(), std::string(key), value);
