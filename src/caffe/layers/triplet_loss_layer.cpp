@@ -60,14 +60,15 @@ void TripletLossLayer<Dtype>::Forward_cpu(
     dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_pos.cpu_data() + (i*channels), diff_pos.cpu_data() + (i*channels));
     //ab is a similar pair
-    dist_sq_ += dist_sq_pos.cpu_data()[i];
+    dist_sq_.mutable_cpu_data()[i] += dist_sq_pos.cpu_data()[i];
     
   
   //Loss component calculated from ac
     dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_neg.cpu_data() + (i*channels), diff_neg.cpu_data() + (i*channels));
     //ac is a dissimilar pair
-    dist_sq_ -= dist_sq_neg.cpu_data()[i];
+    dist_sq_.mutable_cpu_data()[i] -= dist_sq_neg.cpu_data()[i];
+
     loss += std::max(margin + dist_sq_.cpu_data()[i], Dtype(0.0));
     
   }
@@ -79,16 +80,16 @@ template <typename Dtype>
 void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.triplet_loss_param().margin();
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 1; i < 3; ++i) {//there must be further check to ensure the gradient calc
     if (propagate_down[i]) {
-      const Dtype sign = (i == 0) ? 1 : -1;
+      const Dtype sign = (i == 2) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
           static_cast<Dtype>(bottom[i]->num());
       int num = bottom[i]->num();
       int channels = bottom[i]->channels();
       for (int j = 0; j < num; ++j) {	
         Dtype* bout = bottom[i]->mutable_cpu_diff();
-	if ((margin-dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+	if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
         // similar pairs
           caffe_cpu_axpby(
               channels,
