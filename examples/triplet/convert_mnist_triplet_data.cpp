@@ -60,7 +60,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   cols = swap_endian(cols);
 
   // Open leveldb
-
   leveldb::DB* db;
   leveldb::Options options;
   options.create_if_missing = true;
@@ -85,7 +84,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
   for (int itemid = 0; itemid < num_items; ++itemid) {
-    int i = caffe::caffe_rng_rand() % num_items;  // pick a random  pair
+    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
     int j = caffe::caffe_rng_rand() % num_items;
     int k = caffe::caffe_rng_rand() % num_items;
     read_image(&image_file, &label_file, i, rows, cols,
@@ -94,15 +93,18 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         pixels + (rows * cols), &label_j);
     read_image(&image_file, &label_file, k, rows, cols,
         pixels + (2 * rows * cols), &label_k);
+
     datum.set_data(pixels, 3*rows*cols);
-    if (label_i  == label_j && label_i  == label_k) {
+    if (label_i  == label_j && label_i  != label_k) {
       datum.set_label(1);
+    
+      datum.SerializeToString(&value);
+      snprintf(key, kMaxKeyLength, "%08d", itemid);
+      db->Put(leveldb::WriteOptions(), std::string(key), value);
     } else {
+      itemid--;
       datum.set_label(0);
     }
-    datum.SerializeToString(&value);
-    snprintf(key, kMaxKeyLength, "%08d", itemid);
-    db->Put(leveldb::WriteOptions(), std::string(key), value);
   }
 
   delete db;
@@ -112,7 +114,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 int main(int argc, char** argv) {
   if (argc != 4) {
     printf("This script converts the MNIST dataset to the leveldb format used\n"
-           "by caffe to train a triplet network.\n"
+           "by caffe to train a siamese network.\n"
            "Usage:\n"
            "    convert_mnist_data input_image_file input_label_file "
            "output_db_file\n"

@@ -487,12 +487,14 @@ layer {
 }
 layer {
   name: "loss"
-  type: "ContrastiveLoss"
+  type: "TripletLoss"
   bottom: "feat"
+  bottom: "feat_true"
   bottom: "feat_false"
   bottom: "sim"
   top: "loss"
-  contrastive_loss_param {
+  triplet_loss_param {
     margin: 1
   }
 }
+

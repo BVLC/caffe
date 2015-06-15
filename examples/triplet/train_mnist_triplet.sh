@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 
-TOOLS=./build/tools
+TOOLS=./release/tools
 
 $TOOLS/caffe train --solver=examples/triplet/mnist_triplet_solver.prototxt

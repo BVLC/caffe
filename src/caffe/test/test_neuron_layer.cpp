@@ -117,6 +117,49 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
           + slope_data[c] * std::min(bottom_data[i], (Dtype)(0)));
     }
   }
+
+  void LogBottomInit() {
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    Dtype* bottom_data = this->blob_bottom_->mutable_cpu_data();
+    caffe_exp(this->blob_bottom_->count(), bottom_data, bottom_data);
+  }
+
+  void TestLogForward(const float base, const float scale, const float shift) {
+    LogBottomInit();
+    LayerParameter layer_param;
+    layer_param.mutable_log_param()->set_base(base);
+    layer_param.mutable_log_param()->set_scale(scale);
+    layer_param.mutable_log_param()->set_shift(shift);
+    LogLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    const Dtype kDelta = 2e-4;
+    const Dtype* bottom_data = blob_bottom_->cpu_data();
+    const Dtype* top_data = blob_top_->cpu_data();
+    for (int i = 0; i < blob_bottom_->count(); ++i) {
+      const Dtype bottom_val = bottom_data[i];
+      const Dtype top_val = top_data[i];
+      if (base == -1) {
+        EXPECT_NEAR(top_val, log(shift + scale * bottom_val), kDelta);
+      } else {
+        EXPECT_NEAR(top_val, log(shift + scale * bottom_val) / log(base),
+                    kDelta);
+      }
+    }
+  }
+
+  void TestLogGradient(const float base, const float scale, const float shift) {
+    LogBottomInit();
+    LayerParameter layer_param;
+    layer_param.mutable_log_param()->set_base(base);
+    layer_param.mutable_log_param()->set_scale(scale);
+    layer_param.mutable_log_param()->set_shift(shift);
+    LogLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-2);
+    checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
+  }
 };
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
@@ -339,6 +382,88 @@ TYPED_TEST(NeuronLayerTest, TestExpGradientBase2Shift1Scale3) {
   this->TestExpGradient(kBase, kScale, kShift);
 }
 
+TYPED_TEST(NeuronLayerTest, TestLogLayer) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Test default base of "-1" -- should actually set base := e.
+  const Dtype kBase = -1;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestLogForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Test default base of "-1" -- should actually set base := e.
+  const Dtype kBase = -1;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestLogGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogLayerBase2) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestLogForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogGradientBase2) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestLogGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogLayerBase2Shift1) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 1;
+  this->TestLogForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogGradientBase2Shift1) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 1;
+  this->TestLogGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogLayerBase2Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 0;
+  this->TestLogForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogGradientBase2Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 0;
+  this->TestLogGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogLayerBase2Shift1Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 1;
+  this->TestLogForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestLogGradientBase2Shift1Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 1;
+  this->TestLogGradient(kBase, kScale, kShift);
+}
+
 TYPED_TEST(NeuronLayerTest, TestDropoutHalf) {
   const float kDropoutRatio = 0.5;
   this->TestDropoutForward(kDropoutRatio);
@@ -541,14 +666,10 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   caffe_copy(ip2.blobs()[0]->count(), ip.blobs()[0]->cpu_data(),
       ip2.blobs()[0]->mutable_cpu_data());
   // Forward in-place
-  ip.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   ip.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  prelu.Reshape(this->blob_top_vec_, this->blob_top_vec_);
   prelu.Forward(this->blob_top_vec_, this->blob_top_vec_);
   // Forward non-in-place
-  ip2.Reshape(blob_bottom_vec_2, blob_middle_vec_2);
   ip2.Forward(blob_bottom_vec_2, blob_middle_vec_2);
-  prelu2.Reshape(blob_middle_vec_2, blob_top_vec_2);
   prelu2.Forward(blob_middle_vec_2, blob_top_vec_2);
   // Check numbers
   for (int s = 0; s < blob_top_2->count(); ++s) {
@@ -590,7 +711,7 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
 
 #ifdef USE_CUDNN
 template <typename Dtype>
-class CuDNNNeuronLayerTest : public ::testing::Test {
+class CuDNNNeuronLayerTest : public GPUDeviceTest<Dtype> {
  protected:
   CuDNNNeuronLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
@@ -613,7 +734,6 @@ class CuDNNNeuronLayerTest : public ::testing::Test {
 TYPED_TEST_CASE(CuDNNNeuronLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNReLULayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -628,7 +748,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNReLULayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
@@ -637,7 +756,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CHECK(google::protobuf::TextFormat::ParseFromString(
       "relu_param { negative_slope: 0.01 }", &layer_param));
@@ -657,7 +775,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CHECK(google::protobuf::TextFormat::ParseFromString(
       "relu_param { negative_slope: 0.01 }", &layer_param));
@@ -668,7 +785,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNSigmoidLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -685,7 +801,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNSigmoidLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
@@ -694,7 +809,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNTanHLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -717,7 +831,6 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHGradientCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNTanHLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);

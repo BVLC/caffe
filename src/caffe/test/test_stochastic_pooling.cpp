@@ -16,8 +16,10 @@ using std::min;
 
 namespace caffe {
 
-template <typename Dtype>
-class StochasticPoolingLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class StochasticPoolingLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
  protected:
   StochasticPoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
@@ -45,9 +47,14 @@ class StochasticPoolingLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(StochasticPoolingLayerTest, TestDtypes);
+template <typename Dtype>
+class CPUStochasticPoolingLayerTest
+  : public StochasticPoolingLayerTest<CPUDevice<Dtype> > {
+};
 
-TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
+TYPED_TEST_CASE(CPUStochasticPoolingLayerTest, TestDtypes);
+
+TYPED_TEST(CPUStochasticPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
@@ -60,8 +67,16 @@ TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
-TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
-  Caffe::set_mode(Caffe::GPU);
+#ifndef CPU_ONLY
+
+template <typename Dtype>
+class GPUStochasticPoolingLayerTest
+  : public StochasticPoolingLayerTest<GPUDevice<Dtype> > {
+};
+
+TYPED_TEST_CASE(GPUStochasticPoolingLayerTest, TestDtypes);
+
+TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochastic) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -104,8 +119,7 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
   EXPECT_GE(total / this->blob_top_->count(), 0.55);
 }
 
-TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
-  Caffe::set_mode(Caffe::GPU);
+TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochasticTestPhase) {
   LayerParameter layer_param;
   layer_param.set_phase(TEST);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -142,8 +156,7 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
   }
 }
 
-TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
-  Caffe::set_mode(Caffe::GPU);
+TYPED_TEST(GPUStochasticPoolingLayerTest, TestGradient) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
@@ -158,6 +171,6 @@ TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
       this->blob_top_vec_);
 }
 
-
+#endif
 
 }  // namespace caffe
