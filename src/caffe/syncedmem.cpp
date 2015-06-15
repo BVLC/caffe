@@ -54,10 +54,12 @@ inline void SyncedMemory::to_cpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_.id());
+        ctx.get_queue().finish();
         // On the CPU, memory is shared (and no copy needed)
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
           greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, ctx);
         }
+        ctx.get_queue().finish();
 #endif
       }
       head_ = SYNCED;
@@ -85,6 +87,7 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_.id());
+        ctx.get_queue().finish();
         cl_int err;
         if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
           // CPU memory is shared
@@ -120,6 +123,7 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_.id());
+        ctx.get_queue().finish();
         if (gpu_ptr_ == NULL) {
           cl_int err;
           if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
@@ -141,6 +145,7 @@ inline void SyncedMemory::to_gpu() {
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
           greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, ctx);
         }
+        ctx.get_queue().finish();
 #endif // USE_GREENTEA
       }
       head_ = SYNCED;

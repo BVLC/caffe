@@ -47,17 +47,23 @@ TEST_F(CommonTest, TestRandSeedCPU) {
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestRandSeedGPU) {
-  SyncedMemory data_a(10 * sizeof(unsigned int), Caffe::GetDefaultDeviceContext());
-  SyncedMemory data_b(10 * sizeof(unsigned int), Caffe::GetDefaultDeviceContext());
-  Caffe::set_random_seed(1701);
-  CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-        static_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));
-  Caffe::set_random_seed(1701);
-  CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-        static_cast<unsigned int*>(data_b.mutable_gpu_data()), 10));
-  for (int i = 0; i < 10; ++i) {
-    EXPECT_EQ(((const unsigned int*)(data_a.cpu_data()))[i],
-        ((const unsigned int*)(data_b.cpu_data()))[i]);
+  DeviceContext dc = Caffe::GetDefaultDeviceContext();
+
+  if(dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    SyncedMemory data_a(10 * sizeof(unsigned int), Caffe::GetDefaultDeviceContext());
+    SyncedMemory data_b(10 * sizeof(unsigned int), Caffe::GetDefaultDeviceContext());
+    Caffe::set_random_seed(1701);
+    CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
+          static_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));
+    Caffe::set_random_seed(1701);
+    CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
+          static_cast<unsigned int*>(data_b.mutable_gpu_data()), 10));
+    for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(((const unsigned int*)(data_a.cpu_data()))[i],
+          ((const unsigned int*)(data_b.cpu_data()))[i]);
+    }
+#endif // USE_CUDA
   }
 }
 
