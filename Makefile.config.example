@@ -5,7 +5,7 @@
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
-# CPU_ONLY := 1
+CPU_ONLY := 1
 
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_LEVELDB := 0
