@@ -366,6 +366,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     proto <<
         "  bottom: 'innerproduct1' "
         "  bottom: 'innerproduct2' "
+		"  loss_param: { normalize: false } "
         "} ";
     InitNetFromProtoString(proto.str());
   }
