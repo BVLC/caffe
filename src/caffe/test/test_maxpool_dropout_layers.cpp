@@ -121,8 +121,6 @@ TYPED_TEST(MaxPoolingDropoutTest, TestBackward) {
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     sum_with_dropout += bottom_diff[i];
   }
-  // REMOVE:
-  std::cout << "SUM: " << sum_with_dropout << std::endl;
   EXPECT_GE(sum_with_dropout, sum);
 }
 

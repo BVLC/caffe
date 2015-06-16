@@ -23,7 +23,7 @@ class LRNLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   LRNLayerTest()
-      : epsilon_(Dtype(1e-5)),
+      : epsilon_(Dtype(1e-3)),
         blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
