@@ -66,11 +66,25 @@ inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc) {
 }
 
 template <typename Dtype>
+inline void createTensorNdDesc(cudnnTensorDescriptor_t* desc) {
+  CUDNN_CHECK(cudnnCreateTensorDescriptor(desc));
+}
+
+template <typename Dtype>
 inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
     int n, int c, int h, int w,
     int stride_n, int stride_c, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetTensor4dDescriptorEx(*desc, dataType<Dtype>::type,
         n, c, h, w, stride_n, stride_c, stride_h, stride_w));
+}
+
+template <typename Dtype>
+inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
+    vector<int> shape,
+    vector<int> stride) {
+  CHECK_EQ(shape.size(), stride.size()) << "Dimensions of shape and stride don't match !";
+  CUDNN_CHECK(cudnnSetTensorNdDescriptor(*desc, dataType<Dtype>::type,
+        shape.size(), shape.data(), stride.data());
 }
 
 template <typename Dtype>
@@ -85,11 +99,29 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 }
 
 template <typename Dtype>
+inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
+    vector<int> shape) {
+  vector<int> stride(shape.size(), 1);
+  for(int i = stride.size()-2; i >= 0; --i) {
+	  stride[i] = shape[i+1] * stride[i+1];
+  }
+  setTensorNdDesc<Dtype>(desc, shape, stride);
+}
+
+template <typename Dtype>
 inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
     int n, int c, int h, int w) {
   CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
   CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
       n, c, h, w));
+}
+
+template <typename Dtype>
+inline void createNdFilterDesc(cudnnFilterDescriptor_t* desc,
+    vector<int> shape) {
+  CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
+  CUDNN_CHECK(cudnnSetFilterNdDescriptor(*desc, dataType<Dtype>::type,
+      shape.size(), shape.data()));
 }
 
 template <typename Dtype>
@@ -103,6 +135,20 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     int pad_h, int pad_w, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
       pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
+}
+
+template <typename Dtype>
+inline void setNdConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
+    cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    vector<int> pad, vector<int> stride) {
+  int nbDims;
+  vector<int> shape(pad.size()+2);
+  cudnnGetFilterNdDescriptor(filter, shape.size(), dataType<Dtype>::type, &nbDims, shape.data());
+  CHECK_EQ(nbDims, pad.size()+2) << "Dimensions of filters and pad don't match !";
+  CHECK_EQ(nbDims, stride.size()+2) << "Dimensions of filters and stride don't match !";
+  vector<int> upscale(pad.size(), 1);
+  CUDNN_CHECK(cudnnSetConvolutionNdDescriptor(*conv,
+      pad.size(), pad.data(), stride.data(), upscale.data(), CUDNN_CROSS_CORRELATION));
 }
 
 template <typename Dtype>
@@ -122,6 +168,27 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
   CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
         pad_h, pad_w, stride_h, stride_w));
+}
+
+template <typename Dtype>
+inline void createNdPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
+    PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
+    vector<int> shape, vector<int> pad, vector<int> stride) {
+  CHECK_EQ(shape.size(), pad.size()) << "Dimensions of shape and pad don't match !";
+  CHECK_EQ(shape.size(), stride.size()) << "Dimensions of shape and stride don't match !";
+  switch (poolmethod) {
+  case PoolingParameter_PoolMethod_MAX:
+    *mode = CUDNN_POOLING_MAX;
+    break;
+  case PoolingParameter_PoolMethod_AVE:
+    *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+    break;
+  default:
+    LOG(FATAL) << "Unknown pooling method.";
+  }
+  CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
+  CUDNN_CHECK(cudnnSetPoolingNdDescriptor(*pool_desc, *mode, shape.size(),
+        shape.data(), pad.data(), stride.data()));
 }
 
 }  // namespace cudnn

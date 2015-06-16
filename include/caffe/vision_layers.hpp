@@ -254,6 +254,58 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t workspaceSizeInBytes;
   void *workspace;
 };
+
+template <typename Dtype>
+class CudnnNdConvolutionLayer : public Layer<Dtype> {
+ public:
+  explicit CudnnNdConvolutionLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CudnnNdConvolutionLayer();
+
+  virtual inline const char* type() const { return "NdConvolution"; }
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  // Compute height_out_ and width_out_ from other parameters.
+  virtual void compute_output_shape();
+
+  vector<int> kernel_shape_;
+  vector<int> stride_shape_;
+  int num_;
+  int channels_;
+  vector<int> pad_shape_;
+  vector<int> input_shape_;
+  int group_;
+  int num_output_;
+  vector<int> output_shape_;
+  bool bias_term_;
+
+  int conv_out_spatial_dim_;
+  int kernel_dim_;
+  int weight_offset_;
+  int output_offset_;
+
+  Blob<Dtype> bias_multiplier_;
+
+  bool handles_setup_;
+  cudnnHandle_t* handle_;
+  cudaStream_t*  stream_;
+  vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
+  cudnnTensorDescriptor_t    bias_desc_;
+  cudnnFilterDescriptor_t      filter_desc_;
+  vector<cudnnConvolutionDescriptor_t> conv_descs_;
+  int bottom_offset_, top_offset_, weight_offset_, bias_offset_;
+  size_t workspaceSizeInBytes;
+  void *workspace;
+};
 #endif
 
 /**
@@ -444,6 +496,44 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
+  cudnnPoolingDescriptor_t  pooling_desc_;
+  cudnnPoolingMode_t        mode_;
+};
+
+template <typename Dtype>
+class CudnnNdPoolingLayer : public Layer<Dtype> {
+ public:
+  explicit CudnnNdPoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CudnnNdPoolingLayer();
+
+  virtual inline const char* type() const { return "NdPooling"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  vector<int> kernel_shape_;
+  vector<int> stride_shape_;
+  vector<int> pad_shape_;
+  int channels_;
+  vector<int> shape_in_;
+  vector<int> pooled_shape_;
+  bool global_pooling_;
+  Blob<Dtype> rand_idx_;
+  Blob<int> max_idx_;
 
   bool handles_setup_;
   cudnnHandle_t             handle_;
