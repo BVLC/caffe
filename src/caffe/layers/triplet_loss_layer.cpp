@@ -54,13 +54,12 @@ void TripletLossLayer<Dtype>::Forward_cpu(
   const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.triplet_loss_param().margin();
   Dtype loss(0.0);
-
   // Loss component calculated from ab
   for (int i = 0; i < bottom[0]->num(); ++i) {
     dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_pos.cpu_data() + (i*channels), diff_pos.cpu_data() + (i*channels));
     // ab is a similar pair
-    dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.cpu_data()[i];// wrong!!! dist_sq = *****
+    dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.cpu_data()[i];
     // Loss component calculated from ac
     dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_neg.cpu_data() + (i*channels), diff_neg.cpu_data() + (i*channels));
