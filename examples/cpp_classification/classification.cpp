@@ -118,7 +118,7 @@ void Classifier::SetMean(const string& mean_file) {
 
   /* Convert from BlobProto to Blob<float> */
   Blob<float> mean_blob;
-  mean_blob.FromProto(blob_proto, Caffe::GetDefaultDeviceContext());
+  mean_blob.FromProto(blob_proto);
   CHECK_EQ(mean_blob.channels(), num_channels_)
     << "Number of channels of mean file doesn't match input layer.";
 
@@ -145,7 +145,7 @@ void Classifier::SetMean(const string& mean_file) {
 std::vector<float> Classifier::Predict(const cv::Mat& img) {
   Blob<float>* input_layer = net_->input_blobs()[0];
   input_layer->Reshape(1, num_channels_,
-                       input_geometry_.height, input_geometry_.width, Caffe::GetDefaultDeviceContext());
+                       input_geometry_.height, input_geometry_.width);
   /* Forward dimension change to all layers. */
   net_->Reshape();
 
