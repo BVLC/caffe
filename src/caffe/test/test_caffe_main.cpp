@@ -4,6 +4,20 @@
 #include "caffe/caffe.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 
+namespace caffe {
+#ifndef CPU_ONLY
+#ifdef USE_CUDA
+cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif // USE_CUDA
+#endif
+}
+
+#ifndef CPU_ONLY
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif // USE_CUDA
+#endif
+
 using caffe::Caffe;
 
 int main(int argc, char** argv) {
