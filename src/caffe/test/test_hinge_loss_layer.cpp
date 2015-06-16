@@ -21,8 +21,8 @@ class HingeLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   HingeLossLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1, Caffe::GetDefaultDeviceContext())),
-        blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
+        blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     Caffe::set_random_seed(1701);

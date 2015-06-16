@@ -38,9 +38,16 @@ class Blob {
         capacity_(0),
         device_context_(Caffe::GetDefaultDeviceContext()) {
   }
+  explicit Blob(DeviceContext device_context)
+      : data_(),
+        diff_(),
+        count_(0),
+        capacity_(0),
+        device_context_(device_context) {
+  }
   explicit Blob(const int num, const int channels, const int height,
-                const int width, DeviceContext device_context);
-  explicit Blob(const vector<int>& shape, DeviceContext device_context);
+                const int width, DeviceContext device_context = Caffe::GetDefaultDeviceContext());
+  explicit Blob(const vector<int>& shape, DeviceContext device_context = Caffe::GetDefaultDeviceContext());
 
   /**
    * @brief Change the dimensions of the blob, allocating new memory if
@@ -56,11 +63,11 @@ class Blob {
    * an error; either Net::Forward or Net::Reshape need to be called to
    * propagate the new input shape to higher layers.
    */
-  void Reshape(const vector<int>& shape, DeviceContext device_context);
-  void Reshape(const BlobShape& shape, DeviceContext device_context);
+  void Reshape(const vector<int>& shape);
+  void Reshape(const BlobShape& shape);
   void Reshape(const int num, const int channels, const int height,
-               const int width, DeviceContext device_context);
-  void ReshapeLike(const Blob& other, DeviceContext device_context);
+               const int width);
+  void ReshapeLike(const Blob& other);
   inline string shape_string() const {
     ostringstream stream;
     for (int i = 0; i < shape_.size(); ++i) {
@@ -199,7 +206,7 @@ class Blob {
    *        of other (and die otherwise); if true, Reshape this Blob to other's
    *        shape if necessary
    */
-  void CopyFrom(const Blob<Dtype>& source, DeviceContext device_context, bool copy_diff = false,
+  void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
   inline Dtype data_at(const int n, const int c, const int h,
@@ -240,7 +247,7 @@ class Blob {
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
   void Update();
-  void FromProto(const BlobProto& proto, DeviceContext device_context, bool reshape = true);
+  void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
   /// @brief Compute the sum of absolute values (L1 norm) of the data.

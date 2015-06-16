@@ -53,7 +53,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     slices.push_back(bottom_slice_axis - prev);
     for (int i = 0; i < top.size(); ++i) {
       top_shape[slice_axis_] = slices[i];
-      top[i]->Reshape(top_shape,this->device_context_);
+      top[i]->Reshape(top_shape);
       count += top[i]->count();
     }
   } else {
@@ -62,7 +62,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         << "divide input slice axis (" << bottom_slice_axis << ")";
     top_shape[slice_axis_] = bottom_slice_axis / top.size();
     for (int i = 0; i < top.size(); ++i) {
-      top[i]->Reshape(top_shape,this->device_context_);
+      top[i]->Reshape(top_shape);
       count += top[i]->count();
     }
   }

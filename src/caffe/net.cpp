@@ -80,9 +80,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     const LayerParameter& layer_param = param.layer(layer_id);
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
-          layer_param.bottom_size())
-          << "propagate_down param must be specified "
-          << "either 0 or bottom_size times ";
+          layer_param.bottom_size())<< "propagate_down param must be specified "
+      << "either 0 or bottom_size times ";
     }
     layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     layer_names_.push_back(layer_param.name());
@@ -183,7 +182,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (layer_need_backward_[layer_id] && layer_skip_propagate_down) {
       layer_need_backward_[layer_id] = false;
       for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
-               ++bottom_id) {
+          ++bottom_id) {
         bottom_need_backward_[layer_id][bottom_id] = false;
       }
     }
@@ -207,7 +206,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
       if (!bottom_need_backward_[layer_id][bottom_id]) {
         const string& blob_name =
-                   blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
+            blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
         blobs_skip_backp.insert(blob_name);
       }
     }
@@ -385,11 +384,11 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
         blob_pointer->Reshape(param.input_dim(top_id * 4),
             param.input_dim(top_id * 4 + 1),
             param.input_dim(top_id * 4 + 2),
-            param.input_dim(top_id * 4 + 3), Caffe::GetDefaultDeviceContext());
+            param.input_dim(top_id * 4 + 3));
       }
       else
       {
-        blob_pointer->Reshape(param.input_shape(top_id),Caffe::GetDefaultDeviceContext());
+        blob_pointer->Reshape(param.input_shape(top_id));
       }
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());
@@ -425,8 +424,7 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
   // Check if the backpropagation on bottom_id should be skipped
   if (layer_param.propagate_down_size() > 0)
     propagate_down = layer_param.propagate_down(bottom_id);
-  const bool need_backward = blob_need_backward_[blob_id] &&
-                          propagate_down;
+  const bool need_backward = blob_need_backward_[blob_id] && propagate_down;
   bottom_need_backward_[layer_id].push_back(need_backward);
   return blob_id;
 }
@@ -549,7 +547,7 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
     const vector<Blob<Dtype>*> & bottom, Dtype* loss) {
   // Copy bottom to internal bottom
   for (int i = 0; i < bottom.size(); ++i) {
-    net_input_blobs_[i]->CopyFrom(*bottom[i], bottom[i]->device_context());
+    net_input_blobs_[i]->CopyFrom(*bottom[i]);
   }
   return ForwardPrefilled(loss);
 }
@@ -561,8 +559,7 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
     blob_proto_vec.ParseFromString(input_blob_protos);
     CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blobs_.size())<< "Incorrect input size.";
     for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
-      net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i),
-                                     net_input_blobs_[i]->device_context());
+      net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i));
     }
   }
   ForwardPrefilled(loss);
@@ -758,7 +755,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())<< "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       const bool kReshape = false;
-      target_blobs[j]->FromProto(source_layer.blobs(j), layers_[target_layer_id]->device_context(), kReshape);
+      target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
     }
   }
 }
@@ -813,10 +810,21 @@ void Net<Dtype>::Update() {
         caffe_add(count, this_diff, owner_diff, owner_diff);
         break;
 #ifndef CPU_ONLY
-      case Caffe::GPU:
+      case Caffe::GPU: {
         this_diff = params_[i]->gpu_diff();
         owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
-        caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
+        DeviceContext dc = Caffe::GetDefaultDeviceContext();
+        if (dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+          caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
+#endif // USE_CUDA
+        } else {
+#ifdef USE_GREENTEA
+          greentea_gpu_add<Dtype>(dc.id(), count, (cl_mem) this_diff, 0,
+                           (cl_mem) owner_diff, 0, (cl_mem) owner_diff, 0);
+#endif // USE_GREENTEA
+        }
+      }
         break;
 #else
         NO_GPU;

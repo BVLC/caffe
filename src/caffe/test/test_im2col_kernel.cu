@@ -37,7 +37,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
  protected:
   Im2colKernelTest()
         // big so launches > 1024 threads
-      : blob_bottom_(new Blob<Dtype>(5, 500, 10, 10, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(5, 500, 10, 10)),
         blob_top_(new Blob<Dtype>()),
         blob_top_cpu_(new Blob<Dtype>()) {
     FillerParameter filler_param;
@@ -80,12 +80,12 @@ TYPED_TEST(Im2colKernelTest, TestGPU) {
   this->blob_top_->Reshape(this->blob_bottom_->num(),
           this->channels_ * this->kernel_size_ * this->kernel_size_,
           this->height_col_,
-          this->width_col_, Caffe::GetDefaultDeviceContext());
+          this->width_col_);
 
   this->blob_top_cpu_->Reshape(this->blob_bottom_->num(),
           this->channels_ * this->kernel_size_ * this->kernel_size_,
           this->height_col_,
-          this->width_col_, Caffe::GetDefaultDeviceContext());
+          this->width_col_);
 
   const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
   TypeParam* top_data = this->blob_top_->mutable_gpu_data();

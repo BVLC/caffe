@@ -31,8 +31,8 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
     // pick random input data
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
-    data_->Reshape(batches_ * batch_size_, channels_, height_, width_, Caffe::GetDefaultDeviceContext());
-    labels_->Reshape(batches_ * batch_size_, 1, 1, 1, Caffe::GetDefaultDeviceContext());
+    data_->Reshape(batches_ * batch_size_, channels_, height_, width_);
+    labels_->Reshape(batches_ * batch_size_, 1, 1, 1);
     filler.Fill(this->data_);
     filler.Fill(this->labels_);
   }

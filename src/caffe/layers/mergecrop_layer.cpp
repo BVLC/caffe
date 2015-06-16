@@ -28,7 +28,7 @@ void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   int height = bottom[0]->height();
   int width = bottom[0]->width();
 
-  top[0]->Reshape(num, channels, height, width, this->device_context_);
+  top[0]->Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>

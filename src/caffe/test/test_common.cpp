@@ -15,9 +15,13 @@ class CommonTest : public ::testing::Test {};
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestCublasHandlerGPU) {
-  int cuda_device_id;
-  CUDA_CHECK(cudaGetDevice(&cuda_device_id));
-  EXPECT_TRUE(Caffe::cublas_handle());
+  if(Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    int cuda_device_id;
+    CUDA_CHECK(cudaGetDevice(&cuda_device_id));
+    EXPECT_TRUE(Caffe::cublas_handle());
+#endif // USE_CUDA
+  }
 }
 
 #endif

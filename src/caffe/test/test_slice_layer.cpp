@@ -19,7 +19,7 @@ class SliceLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   SliceLayerTest()
-      : blob_bottom_(new Blob<Dtype>(6, 12, 2, 3, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(6, 12, 2, 3)),
         blob_top_0_(new Blob<Dtype>()),
         blob_top_1_(new Blob<Dtype>()),
         blob_top_2_(new Blob<Dtype>()) {}
@@ -38,7 +38,7 @@ class SliceLayerTest : public MultiDeviceTest<TypeParam> {
   }
 
   virtual void ReduceBottomBlobSize() {
-    blob_bottom_->Reshape(4, 5, 2, 2, Caffe::GetDefaultDeviceContext());
+    blob_bottom_->Reshape(4, 5, 2, 2);
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);

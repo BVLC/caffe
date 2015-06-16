@@ -107,21 +107,21 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT((pooled_width_ - 1) * stride_w_, width_ + pad_w_);
   }
   top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_,this->device_context_);
+      pooled_width_);
   if (top.size() > 1) {
-    top[1]->ReshapeLike(*top[0],this->device_context_);
+    top[1]->ReshapeLike(*top[0]);
   }
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX && top.size() == 1) {
     max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-        pooled_width_,this->device_context_);
+        pooled_width_);
   }
   // If stochastic pooling, we will initialize the random index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_STOCHASTIC) {
     rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_,this->device_context_);
+      pooled_width_);
   }
 }
 

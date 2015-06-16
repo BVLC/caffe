@@ -26,9 +26,9 @@ class AccuracyLayerTest : public CPUDeviceTest<Dtype> {
     vector<int> shape(2);
     shape[0] = 100;
     shape[1] = 10;
-    blob_bottom_data_->Reshape(shape, Caffe::GetDefaultDeviceContext());
+    blob_bottom_data_->Reshape(shape);
     shape.resize(1);
-    blob_bottom_label_->Reshape(shape, Caffe::GetDefaultDeviceContext());
+    blob_bottom_label_->Reshape(shape);
     FillBottoms();
 
     blob_bottom_vec_.push_back(blob_bottom_data_);
@@ -117,10 +117,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
-  this->blob_bottom_data_->Reshape(2, 10, 4, 5, Caffe::GetDefaultDeviceContext());
+  this->blob_bottom_data_->Reshape(2, 10, 4, 5);
   vector<int> label_shape(3);
   label_shape[0] = 2; label_shape[1] = 4; label_shape[2] = 5;
-  this->blob_bottom_label_->Reshape(label_shape, Caffe::GetDefaultDeviceContext());
+  this->blob_bottom_label_->Reshape(label_shape);
   this->FillBottoms();
   LayerParameter layer_param;
   layer_param.mutable_accuracy_param()->set_axis(1);

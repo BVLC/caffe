@@ -23,7 +23,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     LOG(INFO) << "Loading mean file from: " << mean_file;
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-    data_mean_.FromProto(blob_proto, device_context_);
+    data_mean_.FromProto(blob_proto);
   }
   // check if we want to use mean_value
   if (param_.mean_value_size() > 0) {
@@ -335,10 +335,10 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     // Initialize transformed_blob with the right shape.
     if (crop_size) {
       transformed_blob->Reshape(input_num, input_channels,
-                                crop_size, crop_size, this->device_context_);
+                                crop_size, crop_size);
     } else {
       transformed_blob->Reshape(input_num, input_channels,
-                                input_height, input_width, this->device_context_);
+                                input_height, input_width);
     }
   }
 

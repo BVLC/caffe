@@ -33,7 +33,7 @@ class TanHLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   TanHLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
     FillerParameter filler_param;

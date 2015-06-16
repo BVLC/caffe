@@ -20,11 +20,11 @@ void ContrastiveLossLayer<Dtype>::LayerSetUp(
   CHECK_EQ(bottom[2]->channels(), 1);
   CHECK_EQ(bottom[2]->height(), 1);
   CHECK_EQ(bottom[2]->width(), 1);
-  diff_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1,this->device_context_);
-  diff_sq_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1,this->device_context_);
-  dist_sq_.Reshape(bottom[0]->num(), 1, 1, 1,this->device_context_);
+  diff_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
+  diff_sq_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
+  dist_sq_.Reshape(bottom[0]->num(), 1, 1, 1);
   // vector of ones used to sum along channels
-  summer_vec_.Reshape(bottom[0]->channels(), 1, 1, 1,this->device_context_);
+  summer_vec_.Reshape(bottom[0]->channels(), 1, 1, 1);
   for (int i = 0; i < bottom[0]->channels(); ++i)
     summer_vec_.mutable_cpu_data()[i] = Dtype(1);
 }

@@ -21,7 +21,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   NeuronLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
     // fill the values
@@ -605,7 +605,7 @@ TYPED_TEST(NeuronLayerTest, TestPReLUConsistencyReLU) {
   shared_ptr<Blob<Dtype> > blob_top_2(new Blob<Dtype>());
   blob_bottom_vec_2.push_back(blob_bottom_2.get());
   blob_top_vec_2.push_back(blob_top_2.get());
-  blob_bottom_2->CopyFrom(*this->blob_bottom_, Caffe::GetDefaultDeviceContext(), false, true);
+  blob_bottom_2->CopyFrom(*this->blob_bottom_, false, true);
   // SetUp layers
   prelu.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   relu.SetUp(blob_bottom_vec_2, blob_top_vec_2);
@@ -617,7 +617,7 @@ TYPED_TEST(NeuronLayerTest, TestPReLUConsistencyReLU) {
   }
   // Check backward
   shared_ptr<Blob<Dtype> > tmp_blob(new Blob<Dtype>());
-  tmp_blob->ReshapeLike(*blob_top_2.get(), Caffe::GetDefaultDeviceContext());
+  tmp_blob->ReshapeLike(*blob_top_2.get());
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
   filler.Fill(tmp_blob.get());
@@ -657,7 +657,7 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   blob_bottom_vec_2.push_back(blob_bottom_2.get());
   blob_middle_vec_2.push_back(blob_middle_2.get());
   blob_top_vec_2.push_back(blob_top_2.get());
-  blob_bottom_2->CopyFrom(*this->blob_bottom_, Caffe::GetDefaultDeviceContext(), false, true);
+  blob_bottom_2->CopyFrom(*this->blob_bottom_, false, true);
   // SetUp layers
   ip.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   prelu.SetUp(this->blob_top_vec_, this->blob_top_vec_);
@@ -677,7 +677,7 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   }
   // Fill top diff with random numbers
   shared_ptr<Blob<Dtype> > tmp_blob(new Blob<Dtype>());
-  tmp_blob->ReshapeLike(*blob_top_2.get(), Caffe::GetDefaultDeviceContext());
+  tmp_blob->ReshapeLike(*blob_top_2.get());
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
   filler.Fill(tmp_blob.get());

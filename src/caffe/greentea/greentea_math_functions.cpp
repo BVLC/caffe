@@ -51,11 +51,10 @@ void greentea_memset(const int ctx_id, const size_t N, const int alpha,
   // OpenCL Version < 1.2 fallback
   typedef float Dtype;
   viennacl::ocl::kernel &oclk_fill = program.get_kernel(
-      CL_KERNEL_SELECT("fill"));
+      CL_KERNEL_SELECT("fillbuffer"));
   viennacl::ocl::enqueue(
-      oclk_fill(int(N / sizeof(Dtype)), Dtype(alpha), WrapHandle(X, ctx), offX),
+      oclk_fill((int) N, (unsigned char) (alpha), WrapHandle(X, ctx), offX),
       ctx.get_queue());
-  ctx.get_queue().finish();
 }
 
 // Copy from OpenCL buffer to main memory
@@ -67,7 +66,6 @@ void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
                         NULL,
                         NULL);
   }
-  ctx.get_queue().finish();
 }
 
 // Copy from main memory to OpenCL buffer
@@ -78,7 +76,6 @@ void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
     CL_TRUE,
                          offY, N, X, 0, NULL, NULL);
   }
-  ctx.get_queue().finish();
 }
 
 // Copy from OpenCL to OpenCL buffer
@@ -88,31 +85,26 @@ void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
   clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, offX, offY, N, 0,
   NULL,
                       NULL);
-  ctx.get_queue().finish();
 }
 
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, const int offX, Dtype* Y,
                    viennacl::ocl::context &ctx) {
-    greentea_gpu_memcpy(sizeof(Dtype) * N, X, offX, Y, ctx);
-  ctx.get_queue().finish();
+  greentea_gpu_memcpy(sizeof(Dtype) * N, X, offX * sizeof(Dtype), Y, ctx);
 }
 
 template<typename Dtype>
 void greentea_copy(const int N, const Dtype* X, cl_mem Y, const int offY,
                    viennacl::ocl::context &ctx) {
-    greentea_gpu_memcpy(sizeof(Dtype) * N, X, Y, offY, ctx);
-  ctx.get_queue().finish();
+  greentea_gpu_memcpy(sizeof(Dtype) * N, X, Y, offY * sizeof(Dtype), ctx);
 }
 
 // Copy from OpenCL buffer to OpenCL buffer
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, const int offX, cl_mem Y,
                    const int offY, viennacl::ocl::context &ctx) {
-  if (X != Y) {
-    greentea_gpu_memcpy(sizeof(Dtype) * N, X, offX, Y, offY, ctx);
-  }
-  ctx.get_queue().finish();
+    greentea_gpu_memcpy(sizeof(Dtype) * N, X, offX * sizeof(Dtype), Y,
+                        offY * sizeof(Dtype), ctx);
 }
 
 // Explicit instantiations
@@ -262,8 +254,6 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                           yptr + offy);
   } else {
 
-    int lda = (TransA == CblasNoTrans) ? N : M;
-
 #ifdef USE_VIENNACLBLAS
     ViennaCLBackend backend;
     ViennaCLBackendCreate(&backend);
@@ -275,12 +265,14 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha, A,
-                              offA, 0, 1, 1, lda, x, offx, 1, beta, y, offy, 1));
+          ViennaCLOpenCLSgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha,
+                              A, offA, 0, 1, 1, N, x, offx, 1, beta, y, offy,
+                              1));
     } else {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha, A,
-                              offA, 0, 1, 1, lda, x, offx, 1, beta, y, offy, 1));
+          ViennaCLOpenCLDgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha,
+                              A, offA, 0, 1, 1, N, x, offx, 1, beta, y, offy,
+                              1));
     }
 #endif
 
@@ -292,10 +284,10 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
-          clblasSgemv(clblasRowMajor,clTransA,M,N,alpha,A,offA,lda,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
+          clblasSgemv(clblasRowMajor,clTransA,M,N,alpha,A,offA,N,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
-          clblasDgemv(clblasRowMajor,clTransA,M,N,alpha,A,offA,lda,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
+          clblasDgemv(clblasRowMajor,clTransA,M,N,alpha,A,offA,N,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
     }
 #endif
   }
@@ -507,10 +499,10 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSdot(backend, n, (float*)out, X, offX, 1, Y, offY, 1));
+          ViennaCLOpenCLSdot(backend, n, (float* )out, X, offX, 1, Y, offY, 1));
     } else {
       GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDdot(backend, n, (double*)out, X, offX, 1, Y, offY, 1));
+          ViennaCLOpenCLDdot(backend, n, (double* )out, X, offX, 1, Y, offY, 1));
     }
 #endif
 
@@ -533,7 +525,6 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
 
     greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, out, ctx);
 
-    ctx.get_queue().finish();
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 
@@ -570,9 +561,11 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
                                       static_cast<ViennaCLInt>(ctx_id));
 
     if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLSasum(backend, n, (float*)Y, X, offX, 1));
+      GREENTEA_VCL_BLAS_CHECK(
+          ViennaCLOpenCLSasum(backend, n, (float* )Y, X, offX, 1));
     } else {
-      GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLDasum(backend, n, (double*)Y, X, offX, 1));
+      GREENTEA_VCL_BLAS_CHECK(
+          ViennaCLOpenCLDasum(backend, n, (double* )Y, X, offX, 1));
     }
 #endif
 
@@ -595,7 +588,6 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
 
     greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, Y, ctx);
 
-    ctx.get_queue().finish();
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
 #endif
@@ -684,8 +676,6 @@ void greentea_gpu_set(const int ctx_id, const int N, const Dtype alpha,
       CL_KERNEL_SELECT("fill"));
   viennacl::ocl::enqueue(oclk_fill(N, alpha, WrapHandle(Y, ctx), offY),
                          ctx.get_queue());
-
-  ctx.get_queue().finish();
 }
 
 template void greentea_gpu_set<int>(const int ctx_id, const int N,

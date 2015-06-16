@@ -129,7 +129,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Shape the tops.
   compute_output_shape();
   for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(num_, num_output_, height_out_, width_out_, this->device_context_);
+    top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
   if (reverse_dimensions()) {
     conv_in_height_ = height_out_;
@@ -148,14 +148,14 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage. In the special case of 1x1 convolution
   // it goes lazily unused to save memory.
   if (reverse_dimensions()) {
-    col_buffer_.Reshape(1, kernel_dim_, height_, width_, this->device_context_);
+    col_buffer_.Reshape(1, kernel_dim_, height_, width_);
   } else {
-    col_buffer_.Reshape(1, kernel_dim_, height_out_, width_out_, this->device_context_);
+    col_buffer_.Reshape(1, kernel_dim_, height_out_, width_out_);
   }
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
     vector<int> bias_multiplier_shape(1, height_out_ * width_out_);
-    bias_multiplier_.Reshape(bias_multiplier_shape, this->device_context_);
+    bias_multiplier_.Reshape(bias_multiplier_shape);
     caffe_set(bias_multiplier_.count(), Dtype(1),
         bias_multiplier_.mutable_cpu_data());
   }

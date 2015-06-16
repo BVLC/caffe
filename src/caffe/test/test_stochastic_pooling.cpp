@@ -26,7 +26,7 @@ class StochasticPoolingLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 3, 6, 5, Caffe::GetDefaultDeviceContext());
+    blob_bottom_->Reshape(2, 3, 6, 5);
     // fill the values
     FillerParameter filler_param;
     filler_param.set_min(0.1);

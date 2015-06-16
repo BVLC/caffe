@@ -22,7 +22,7 @@ void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   for (int i = end_axis + 1; i < bottom[0]->num_axes(); ++i) {
     top_shape.push_back(bottom[0]->shape(i));
   }
-  top[0]->Reshape(top_shape, this->device_context_);
+  top[0]->Reshape(top_shape);
   CHECK_EQ(top[0]->count(), bottom[0]->count());
 }
 

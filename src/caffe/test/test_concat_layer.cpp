@@ -19,9 +19,9 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   ConcatLayerTest()
-      : blob_bottom_0_(new Blob<Dtype>(2, 3, 6, 5, Caffe::GetDefaultDeviceContext())),
-        blob_bottom_1_(new Blob<Dtype>(2, 5, 6, 5, Caffe::GetDefaultDeviceContext())),
-        blob_bottom_2_(new Blob<Dtype>(5, 3, 6, 5, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_0_(new Blob<Dtype>(2, 3, 6, 5)),
+        blob_bottom_1_(new Blob<Dtype>(2, 5, 6, 5)),
+        blob_bottom_2_(new Blob<Dtype>(5, 3, 6, 5)),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values

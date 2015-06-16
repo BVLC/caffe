@@ -15,23 +15,20 @@ namespace caffe {
 
 template<typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
-                          const int width, DeviceContext device_context) {
+                          const int width) {
   vector<int> shape(4);
   shape[0] = num;
   shape[1] = channels;
   shape[2] = height;
   shape[3] = width;
-  device_context_ = device_context;
-  Reshape(shape, device_context);
+  Reshape(shape);
 }
 
 template<typename Dtype>
-void Blob<Dtype>::Reshape(const vector<int>& shape,
-                          DeviceContext device_context) {
+void Blob<Dtype>::Reshape(const vector<int>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
-  device_context_ = device_context;
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     CHECK_LE(shape[i], INT_MAX / count_)<< "blob size exceeds INT_MAX";
@@ -46,21 +43,18 @@ void Blob<Dtype>::Reshape(const vector<int>& shape,
 }
 
 template<typename Dtype>
-void Blob<Dtype>::Reshape(const BlobShape& shape,
-                          DeviceContext device_context) {
+void Blob<Dtype>::Reshape(const BlobShape& shape) {
   CHECK_LE(shape.dim_size(), kMaxBlobAxes);
   vector<int> shape_vec(shape.dim_size());
-  device_context_ = device_context;
   for (int i = 0; i < shape.dim_size(); ++i) {
     shape_vec[i] = shape.dim(i);
   }
-  Reshape(shape_vec, device_context_);
+  Reshape(shape_vec);
 }
 
 template<typename Dtype>
-void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other,
-                              DeviceContext device_context) {
-  Reshape(other.shape(), device_context);
+void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
+  Reshape(other.shape());
 }
 
 template<typename Dtype>
@@ -69,7 +63,7 @@ Blob<Dtype>::Blob(const int num, const int channels, const int height,
     // capacity_ must be initialized before calling Reshape
     : capacity_(0),
       device_context_(device_context) {
-  Reshape(num, channels, height, width, device_context);
+  Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>
@@ -77,7 +71,7 @@ Blob<Dtype>::Blob(const vector<int>& shape, DeviceContext device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0),
       device_context_(device_context) {
-  Reshape(shape, device_context_);
+  Reshape(shape);
 }
 
 template<typename Dtype>
@@ -508,14 +502,11 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
 }
 
 template<typename Dtype>
-void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
-                           bool copy_diff, bool reshape) {
-
-  device_context_ = device_context;
+void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
 
   if (source.count() != count_ || source.shape() != shape_) {
     if (reshape) {
-      ReshapeLike(source, device_context_);
+      ReshapeLike(source);
     } else {
       LOG(FATAL)<< "Trying to copy blobs of different sizes.";
     }
@@ -549,10 +540,10 @@ void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
     }
     case Caffe::CPU: {
       if (copy_diff) {
-        caffe_copy(count_, source.cpu_diff(),
+        caffe_cpu_copy(count_, source.cpu_diff(),
                    static_cast<Dtype*>(diff_->mutable_cpu_data()));
       } else {
-        caffe_copy(count_, source.cpu_data(),
+        caffe_cpu_copy(count_, source.cpu_data(),
                    static_cast<Dtype*>(data_->mutable_cpu_data()));
       }
       break;
@@ -563,9 +554,7 @@ void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
   }
 
 template<typename Dtype>
-void Blob<Dtype>::FromProto(const BlobProto& proto,
-                            DeviceContext device_context, bool reshape) {
-  device_context_ = device_context;
+void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   if (reshape) {
     vector<int> shape;
     if (proto.has_num() || proto.has_channels() || proto.has_height()
@@ -583,7 +572,7 @@ void Blob<Dtype>::FromProto(const BlobProto& proto,
         shape[i] = proto.shape().dim(i);
       }
     }
-    Reshape(shape, device_context_);
+    Reshape(shape);
   } else {
     CHECK(ShapeEquals(proto)) << "shape mismatch (reshape not set)";
   }
