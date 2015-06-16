@@ -77,7 +77,11 @@ __kernel void TEMPLATE(powx,Dtype)(const int n, __global const Dtype* a,
                                    __global Dtype* y,
                                    const int offy) {
   for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
-    y[offy + index] = pow(a[offa + index], alpha);
+      if(a[offa + index] < 0 && alpha < 1 && alpha > -1) {
+        y[offy + index] = NAN;
+      } else {
+        y[offy + index] = pow(a[offa + index], alpha);
+      }
   }
 }
 
