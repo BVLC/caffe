@@ -10,7 +10,7 @@
 #include "caffe/greentea/cl_kernels.hpp"
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
-#endif
+#endif // USE_CLBLAS
 #endif
 
 namespace caffe {
@@ -93,7 +93,7 @@ void* Caffe::RNG::generator() {
 Caffe::Caffe()
     :
 #ifdef USE_CUDA
-    cublas_handle_(NULL),
+      cublas_handle_(NULL),
       curand_generator_(NULL),
 #endif // USE_CUDA
       random_generator_(),
@@ -140,7 +140,6 @@ void Caffe::set_random_seed(const unsigned int seed) {
         g_curand_availability_logged = true;
       }
     }
-
 #endif // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -179,10 +178,12 @@ void Caffe::EnumerateDevices() {
 #endif
 
   LOG(INFO)<< "Total devices: " << cuda_device_count + greentea_device_count;
+#ifdef USE_CUDA
   LOG(INFO)<< "CUDA devices: " << cuda_device_count;
+#endif // USE_CUDA
 #ifdef USE_GREENTEA
   LOG(INFO)<< "OpenCL devices: " << greentea_device_count;
-#endif
+#endif // USE_GREENTEA
 
   // Display info for all devices
 #ifdef USE_CUDA
@@ -196,7 +197,7 @@ void Caffe::EnumerateDevices() {
     LOG(INFO)<< "Name:                          " << prop.name;
     LOG(INFO)<< "Total global memory:           " << prop.totalGlobalMem;
   }
-#endif
+#endif /// USE_CUDA
 
 #ifdef USE_GREENTEA
   for (int i = 0; i < greentea_device_count; ++i) {
@@ -207,7 +208,7 @@ void Caffe::EnumerateDevices() {
     LOG(INFO)<< "Name:                          " << std::get<1>(platform_devices[i]).name();
     LOG(INFO)<< "Total global memory:           " << std::get<1>(platform_devices[i]).global_mem_size();
   }
-#endif
+#endif // USE_GREENTEA
 
 }
 
@@ -224,7 +225,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
 
 #ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
-#endif
+#endif // USE_CUDA
 
   for (int i = 0; i < cuda_device_count; ++i) {
     Get().device_contexts_.push_back(DeviceContext(i, Backend::BACKEND_CUDA));
@@ -232,7 +233,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
     // Dummy to have same vector size as device contexts
     viennacl::ocl::program program;
     Get().ocl_programs_.push_back(program);
-#endif
+#endif // USE_GREENTEA
   }
 
   // Initialize GreenTea devices
@@ -298,7 +299,6 @@ DeviceContext& Caffe::GetDefaultDeviceContext() {
 }
 
 void Caffe::SetDevice(const int device_id) {
-
   std::vector<int> devices;
   devices.push_back(device_id);
   Caffe::SetDevices(devices);
@@ -337,7 +337,7 @@ void Caffe::SetDevice(const int device_id) {
   }
 }
 
-// TODO: (FTschopp) fix this for the new backend
+// TODO: Fix this for the new backend
 void Caffe::DeviceQuery() {
   if (Get().default_device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -373,9 +373,7 @@ void Caffe::DeviceQuery() {
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
     }
 #endif // USE_CUDA
-  }
-  else
-  {
+  } else {
 #ifdef USE_GREENTEA
     // TODO: Complete OpenCL device information of current device
 #endif // USE_GREENTEA

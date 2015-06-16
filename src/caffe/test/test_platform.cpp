@@ -1,4 +1,5 @@
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
 
 #include <cstdio>
 #include <cstdlib>
@@ -54,4 +55,5 @@ TEST_F(PlatformTest, TestInitialization) {
 
 }  // namespace caffe
 
-#endif  // CPU_ONLY
+#endif // USE_CUDA
+#endif // CPU_ONLY

@@ -13,6 +13,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void SoftmaxLossForwardGPU(const int nthreads,
                                       const Dtype* prob_data,
@@ -37,6 +38,7 @@ __global__ void SoftmaxLossForwardGPU(const int nthreads,
     }
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
@@ -122,6 +124,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   }
 }
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
                                        const Dtype* label, Dtype* bottom_diff,
@@ -148,6 +151,7 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
     }
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
