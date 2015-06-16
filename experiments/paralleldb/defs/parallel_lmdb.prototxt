@@ -1,0 +1,40 @@
+name: "Parallel LMDB"
+layer {
+  name: "data-data"
+  type: "Data"
+  top: "data"
+  data_param {
+    source: "paralleldb/data/parallel_test_data_lmdb"
+    batch_size: 127
+    backend: LMDB
+  }
+}
+layer {
+  name: "data-label"
+  type: "Data"
+  top: "label"
+  data_param {
+    source: "paralleldb/data/parallel_test_labels_lmdb"
+    batch_size: 127
+    backend: LMDB
+  }
+}
+#layer {
+#  name: "cat"
+#  type: "Concat"
+#  bottom: "data"
+#  bottom: "label"
+#  top: "concated"
+#  concat_param {
+#    concat_dim: 1
+#  }
+#}
+layer {
+  name: "out"
+  type: "HDF5Output"
+  bottom: "data"
+  bottom: "label"
+  hdf5_output_param {
+    file_name: "paralleldb/data/parallel_test_output.hdf5"
+  }
+}
