@@ -79,7 +79,7 @@ __kernel void TEMPLATE(ave_pool_forward,Dtype)(
 }
 
 __kernel void TEMPLATE(sto_pool_forward_train,Dtype)(
-    const int nthreads, __global const Dtype* const bottom_data, const int num,
+    const int nthreads, __global const Dtype* bottom_data, const int num,
     const int channels, const int height, const int width,
     const int pooled_height, const int pooled_width, const int kernel_h,
     const int kernel_w, const int stride_h, const int stride_w,
@@ -113,7 +113,8 @@ __kernel void TEMPLATE(sto_pool_forward_train,Dtype)(
         if (cumsum >= thres) {
           rand_idx[index] = ((n * channels + c) * height + h) * width + w;
           top_data[index] = bottom_slice[h * width + w];
-          return;
+          h = hend;
+          w = wend;
         }
       }
     }

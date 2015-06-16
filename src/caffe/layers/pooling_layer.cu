@@ -257,7 +257,6 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                 WrapHandle((cl_mem) mask, ctx),
                 WrapHandle((cl_mem) top_mask, ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
       break;
       case PoolingParameter_PoolMethod_AVE: {
@@ -268,7 +267,6 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, WrapHandle((cl_mem)top_data,ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
       break;
       case PoolingParameter_PoolMethod_STOCHASTIC: {
@@ -282,9 +280,8 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           viennacl::ocl::enqueue(
               oclk_sto_pool_forward(count, WrapHandle((cl_mem)bottom_data,ctx), bottom[0]->num(), channels_,
                   height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_,
-                  stride_h_, stride_w_, WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()),ctx), WrapHandle((cl_mem)(top_data),ctx)),
+                  stride_h_, stride_w_, WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()),ctx), WrapHandle((cl_mem)top_data,ctx)),
               ctx.get_queue());
-          ctx.get_queue().finish();
         } else {
           viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
               CL_KERNEL_SELECT("sto_pool_forward_test"));
@@ -293,7 +290,6 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                   height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_,
                   stride_h_, stride_w_, WrapHandle((cl_mem)top_data,ctx)),
               ctx.get_queue());
-          ctx.get_queue().finish();
         }
       }
       break;
@@ -516,7 +512,6 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                    pad_w_,
                                    WrapHandle((cl_mem) bottom_diff, ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
         break;
       case PoolingParameter_PoolMethod_AVE: {
@@ -530,7 +525,6 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                    pad_w_,
                                    WrapHandle((cl_mem) bottom_diff, ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
         break;
       case PoolingParameter_PoolMethod_STOCHASTIC: {
@@ -544,7 +538,6 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                 kernel_w_, stride_h_, stride_w_,
                 WrapHandle((cl_mem) bottom_diff, ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
         break;
       default: {

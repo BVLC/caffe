@@ -84,7 +84,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
     }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
-  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-5);
 }
 
 TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
@@ -126,7 +126,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForwardLegacy) {
     }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
-  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-5);
 }
 
 TYPED_TEST(ContrastiveLossLayerTest, TestGradientLegacy) {
