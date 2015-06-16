@@ -38,7 +38,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     const bool kReshape = true;
     for (int i = 0; i < net_blobs.size(); ++i) {
       (*blobs_copy)[i].reset(new Blob<Dtype>());
-      (*blobs_copy)[i]->CopyFrom(*net_blobs[i], Caffe::GetDefaultDeviceContext(), copy_diff, kReshape);
+      (*blobs_copy)[i]->CopyFrom(*net_blobs[i], copy_diff, kReshape);
     }
   }
 
@@ -51,7 +51,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     const bool kReshape = true;
     for (int i = 0; i < net_params.size(); ++i) {
       (*params_copy)[i].reset(new Blob<Dtype>());
-      (*params_copy)[i]->CopyFrom(*net_params[i], Caffe::GetDefaultDeviceContext(), copy_diff, kReshape);
+      (*params_copy)[i]->CopyFrom(*net_params[i], copy_diff, kReshape);
     }
   }
 
@@ -873,7 +873,7 @@ TYPED_TEST(NetTest, TestLossWeightMidNet) {
   const bool kCopyDiff = true;
   const bool kReshape = true;
   Blob<Dtype> data_grad;
-  data_grad.CopyFrom(*this->net_->blob_by_name("data"), Caffe::GetDefaultDeviceContext(), kCopyDiff, kReshape);
+  data_grad.CopyFrom(*this->net_->blob_by_name("data"), kCopyDiff, kReshape);
   // Check that the loss is non-trivial, otherwise the test doesn't prove much.
   const Dtype kMinLossAbsValue = 1e-2;
   ASSERT_GE(fabs(loss), kMinLossAbsValue);
@@ -1115,8 +1115,8 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   Blob<Dtype> shared_params;
   const bool reshape = true;
   const bool copy_diff = false;
-  shared_params.CopyFrom(*ip1_weights, Caffe::GetDefaultDeviceContext(), copy_diff, reshape);
-  shared_params.CopyFrom(*ip1_weights, Caffe::GetDefaultDeviceContext(), !copy_diff, reshape);
+  shared_params.CopyFrom(*ip1_weights, copy_diff, reshape);
+  shared_params.CopyFrom(*ip1_weights, !copy_diff, reshape);
   const int count = ip1_weights->count();
   // Make sure the diffs are non-trivial.
   for (int i = 0; i < count; ++i) {
@@ -1152,11 +1152,11 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   this->net_->Backward();
   // Compute the expected update.
   Blob<Dtype> unshared_params1;
-  unshared_params1.CopyFrom(*ip1_weights, Caffe::GetDefaultDeviceContext(), copy_diff, reshape);
-  unshared_params1.CopyFrom(*ip1_weights, Caffe::GetDefaultDeviceContext(), !copy_diff, reshape);
+  unshared_params1.CopyFrom(*ip1_weights, copy_diff, reshape);
+  unshared_params1.CopyFrom(*ip1_weights,  !copy_diff, reshape);
   Blob<Dtype> unshared_params2;
-  unshared_params2.CopyFrom(*ip2_weights, Caffe::GetDefaultDeviceContext(), copy_diff, reshape);
-  unshared_params2.CopyFrom(*ip2_weights, Caffe::GetDefaultDeviceContext(), !copy_diff, reshape);
+  unshared_params2.CopyFrom(*ip2_weights, copy_diff, reshape);
+  unshared_params2.CopyFrom(*ip2_weights, !copy_diff, reshape);
   // Make sure the diffs are non-trivial and sum to the diff in the shared net.
   for (int i = 0; i < count; ++i) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
@@ -1203,7 +1203,7 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
   Blob<Dtype> shared_params;
   const bool kReshape = true;
   const bool kCopyDiff = false;
-  shared_params.CopyFrom(*ip1_weights, Caffe::GetDefaultDeviceContext(), kCopyDiff, kReshape);
+  shared_params.CopyFrom(*ip1_weights, kCopyDiff, kReshape);
   const int count = ip1_weights->count();
 
   // Write the net to a NetParameter, as in Solver::Snapshot.
@@ -1318,10 +1318,10 @@ TYPED_TEST(NetTest, TestFromTo) {
 
   // Run Forward and Backward, recording the data diff and loss.
   Blob<Dtype> data;
-  data.ReshapeLike(*this->net_->blob_by_name("data"), Caffe::GetDefaultDeviceContext());
+  data.ReshapeLike(*this->net_->blob_by_name("data"));
   this->net_->ForwardPrefilled();
   this->net_->Backward();
-  data.CopyFrom(*this->net_->blob_by_name("data"), Caffe::GetDefaultDeviceContext(), true, true);
+  data.CopyFrom(*this->net_->blob_by_name("data"), true, true);
   const Dtype *loss_ptr = this->net_->output_blobs()[0]->cpu_data();
   Dtype loss = *loss_ptr;
 
@@ -2273,8 +2273,8 @@ TYPED_TEST(NetTest, TestReshape) {
   FillerParameter filler_param;
   filler_param.set_std(1);
   GaussianFiller<Dtype> filler(filler_param);
-  Blob<Dtype> blob1(4, 3, 9, 11, Caffe::GetDefaultDeviceContext());
-  Blob<Dtype> blob2(2, 3, 12, 10, Caffe::GetDefaultDeviceContext());
+  Blob<Dtype> blob1(4, 3, 9, 11);
+  Blob<Dtype> blob2(2, 3, 12, 10);
   filler.Fill(&blob1);
   filler.Fill(&blob2);
 
@@ -2282,28 +2282,28 @@ TYPED_TEST(NetTest, TestReshape) {
   Blob<Dtype>* input_blob = this->net_->input_blobs()[0];
   Blob<Dtype>* output_blob = this->net_->output_blobs()[0];
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),
-      blob1.width(), Caffe::GetDefaultDeviceContext());
+      blob1.width());
   caffe_copy(blob1.count(), blob1.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->ForwardPrefilled();
   // call backward just to make sure it runs
   this->net_->Backward();
   Blob<Dtype> output1(output_blob->num(), output_blob->channels(),
-      output_blob->height(), output_blob->width(), Caffe::GetDefaultDeviceContext());
+      output_blob->height(), output_blob->width());
   caffe_copy(output1.count(), output_blob->cpu_data(),
       output1.mutable_cpu_data());
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
-      blob2.width(), Caffe::GetDefaultDeviceContext());
+      blob2.width());
   caffe_copy(blob2.count(), blob2.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   Blob<Dtype> output2(output_blob->num(), output_blob->channels(),
-      output_blob->height(), output_blob->width(), Caffe::GetDefaultDeviceContext());
+      output_blob->height(), output_blob->width());
   caffe_copy(output2.count(), output_blob->cpu_data(),
       output2.mutable_cpu_data());
 
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),
-      blob1.width(), Caffe::GetDefaultDeviceContext());
+      blob1.width());
   caffe_copy(blob1.count(), blob1.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->ForwardPrefilled();
   this->net_->Backward();
@@ -2312,7 +2312,7 @@ TYPED_TEST(NetTest, TestReshape) {
   }
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
-      blob2.width(), Caffe::GetDefaultDeviceContext());
+      blob2.width());
   caffe_copy(blob2.count(), blob2.cpu_data(), input_blob->mutable_cpu_data());
   this->net_->ForwardPrefilled();
   this->net_->Backward();

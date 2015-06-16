@@ -21,9 +21,9 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   InfogainLossLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1, Caffe::GetDefaultDeviceContext())),
-        blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1, Caffe::GetDefaultDeviceContext())),
-        blob_bottom_infogain_(new Blob<Dtype>(1, 1, 5, 5, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
+        blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
+        blob_bottom_infogain_(new Blob<Dtype>(1, 1, 5, 5)),
         blob_top_loss_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
     FillerParameter filler_param;

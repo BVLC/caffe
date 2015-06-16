@@ -122,7 +122,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(
     Blob<Dtype>* current_blob = blobs_to_check[blob_id];
     computed_gradient_blobs[blob_id].reset(new Blob<Dtype>());
     computed_gradient_blobs[blob_id]->ReshapeLike(
-        *current_blob, Caffe::GetDefaultDeviceContext());
+        *current_blob);
     const int count = blobs_to_check[blob_id]->count();
     const Dtype* diff = blobs_to_check[blob_id]->cpu_diff();
     Dtype* computed_gradients = computed_gradient_blobs[blob_id]

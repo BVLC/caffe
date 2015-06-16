@@ -85,7 +85,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // TODO: Change this
   if(kstride_h_ != 23 || this->device_context_.backend() == BACKEND_CUDA) {
     col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
-                      width_out, this->device_context_);
+                      width_out);
   }
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)<< "Number of output should be multiples of group.";
@@ -95,8 +95,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   K_ = channels_ * kernel_h_ * kernel_w_ / group_;
   N_ = height_out * width_out;
   for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(num_, num_output_, height_out, width_out,
-                         this->device_context_);
+    top[top_id]->Reshape(num_, num_output_, height_out, width_out);
   }
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
@@ -129,7 +128,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Set up the all ones "bias multiplier" for adding bias using blas
   if (bias_term_) {
-    bias_multiplier_.Reshape(1, 1, 1, N_, this->device_context_);
+    bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);

@@ -59,7 +59,7 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     }
 
     // Test when we have a transposed A
-    A.Reshape(1, 1, 3, 2, Caffe::GetDefaultDeviceContext());
+    A.Reshape(1, 1, 3, 2);
     caffe_cpu_copy(6, A_reshape_data, A.mutable_cpu_data());
     caffe_cpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
@@ -84,7 +84,7 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     }
 
     // Test when we have a transposed A and a transposed B too
-    B.Reshape(1, 1, 4, 3, Caffe::GetDefaultDeviceContext());
+    B.Reshape(1, 1, 4, 3);
     caffe_cpu_copy(12, B_reshape_data, B.mutable_cpu_data());
     caffe_cpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
@@ -109,7 +109,7 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
     }
 
     // Test when we have a transposed B
-    A.Reshape(1, 1, 2, 3, Caffe::GetDefaultDeviceContext());
+    A.Reshape(1, 1, 2, 3);
     caffe_cpu_copy(6, data, A.mutable_cpu_data());
     caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
@@ -166,7 +166,7 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
     } else {
 #ifdef USE_GREENTEA
       greentea_gpu_gemv<TypeParam>(dc.id(), CblasNoTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
-          (cl_mem)(y.gpu_data()),0, 0., (cl_mem)(x.mutable_gpu_data()),0);
+          (cl_mem)(x.gpu_data()),0, 0., (cl_mem)(y.mutable_gpu_data()),0);
 #endif // USE_GREENTEA
     }
 

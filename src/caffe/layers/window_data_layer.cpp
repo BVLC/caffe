@@ -170,16 +170,16 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int crop_size = this->transform_param_.crop_size();
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
-  top[0]->Reshape(batch_size, channels, crop_size, crop_size, this->device_context_);
-  this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size, this->device_context_);
+  top[0]->Reshape(batch_size, channels, crop_size, crop_size);
+  this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
   vector<int> label_shape(1, batch_size);
-  top[1]->Reshape(label_shape, this->device_context_);
-  this->prefetch_label_.Reshape(label_shape, this->device_context_);
+  top[1]->Reshape(label_shape);
+  this->prefetch_label_.Reshape(label_shape);
 
   // data mean
   has_mean_file_ = this->transform_param_.has_mean_file();
@@ -190,7 +190,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(INFO) << "Loading mean file from: " << mean_file;
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-    data_mean_.FromProto(blob_proto, this->device_context_);
+    data_mean_.FromProto(blob_proto);
   }
   if (has_mean_values_) {
     CHECK(has_mean_file_ == false) <<

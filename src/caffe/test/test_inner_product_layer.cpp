@@ -22,7 +22,7 @@ class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   InnerProductLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -57,12 +57,12 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
 
 TYPED_TEST(InnerProductLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
-  bool IS_VALID_CUDA = false;
+  bool IS_VALID_DEVICE = false;
 #ifndef CPU_ONLY
-  IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
+  IS_VALID_DEVICE = CAFFE_TEST_CUDA_PROP.major >= 2 || Caffe::GetDefaultDeviceContext().backend() == BACKEND_OpenCL;
 #endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 || IS_VALID_CUDA) {
+      sizeof(Dtype) == 4 || IS_VALID_DEVICE) {
     LayerParameter layer_param;
     InnerProductParameter* inner_product_param =
         layer_param.mutable_inner_product_param();
@@ -87,12 +87,12 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
 
 TYPED_TEST(InnerProductLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
-  bool IS_VALID_CUDA = false;
+  bool IS_VALID_DEVICE = false;
 #ifndef CPU_ONLY
-  IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
+  IS_VALID_DEVICE = CAFFE_TEST_CUDA_PROP.major >= 2 || Caffe::GetDefaultDeviceContext().backend() == BACKEND_OpenCL;
 #endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 || IS_VALID_CUDA) {
+      sizeof(Dtype) == 4 || IS_VALID_DEVICE) {
     LayerParameter layer_param;
     InnerProductParameter* inner_product_param =
         layer_param.mutable_inner_product_param();

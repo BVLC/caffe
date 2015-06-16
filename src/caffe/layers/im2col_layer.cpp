@@ -58,7 +58,7 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(
       bottom[0]->num(), channels_ * kernel_h_ * kernel_w_,
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1,
-      (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1, this->device_context_);
+      (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1);
 }
 
 template <typename Dtype>

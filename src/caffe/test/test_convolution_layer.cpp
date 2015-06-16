@@ -106,8 +106,8 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   ConvolutionLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4, Caffe::GetDefaultDeviceContext())),
-        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
+        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4)),
         blob_top_(new Blob<Dtype>()),
         blob_top_2_(new Blob<Dtype>()) {}
   virtual void SetUp() {
@@ -130,7 +130,7 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
 
   virtual Blob<Dtype>* MakeReferenceTop(Blob<Dtype>* top) {
     this->ref_blob_top_.reset(new Blob<Dtype>());
-    this->ref_blob_top_->ReshapeLike(*top, Caffe::GetDefaultDeviceContext());
+    this->ref_blob_top_->ReshapeLike(*top);
     return this->ref_blob_top_.get();
   }
 
@@ -283,7 +283,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   filler_param.set_value(1.);
   filler.reset(new GaussianFiller<Dtype>(filler_param));
   filler->Fill(this->blob_bottom_);
-  this->blob_bottom_2_->CopyFrom(*this->blob_bottom_, Caffe::GetDefaultDeviceContext());
+  this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
   // Compute Sobel G_x operator as 3 x 3 convolution.
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -295,7 +295,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3, Caffe::GetDefaultDeviceContext()));
+  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
   Dtype* weights = layer->blobs()[0]->mutable_cpu_data();
   for (int c = 0; c < 3; ++c) {
     int i = c * 9;  // 3 x 3 filter
@@ -328,7 +328,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   convolution_param->set_bias_term(false);
   layer.reset(new ConvolutionLayer<Dtype>(layer_param));
   layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 1, Caffe::GetDefaultDeviceContext()));
+  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 1));
   Dtype* weights_1 = layer->blobs()[0]->mutable_cpu_data();
   for (int c = 0; c < 3; ++c) {
     int i = c * 3;  // 3 x 1 filter
@@ -339,7 +339,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
   layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
   // (2) the [-1 0 1] row filter
-  blob_sep->CopyFrom(*this->blob_top_2_, Caffe::GetDefaultDeviceContext(), false, true);
+  blob_sep->CopyFrom(*this->blob_top_2_, false, true);
   sep_blob_bottom_vec.clear();
   sep_blob_bottom_vec.push_back(blob_sep.get());
   convolution_param->set_kernel_h(1);
@@ -350,7 +350,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   convolution_param->set_bias_term(false);
   layer.reset(new ConvolutionLayer<Dtype>(layer_param));
   layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 1, 3, Caffe::GetDefaultDeviceContext()));
+  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 1, 3));
   Dtype* weights_2 = layer->blobs()[0]->mutable_cpu_data();
   for (int c = 0; c < 3; ++c) {
     int i = c * 3;  // 1 x 3 filter

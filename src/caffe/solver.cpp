@@ -699,7 +699,7 @@ void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
   CHECK_EQ(state.history_size(), history_.size())<< "Incorrect length of history blobs.";
   LOG(INFO) << "SGDSolver: restoring history";
   for (int i = 0; i < history_.size(); ++i) {
-    history_[i]->FromProto(state.history(i),this->device_context_);
+    history_[i]->FromProto(state.history(i));
   }
 }
 

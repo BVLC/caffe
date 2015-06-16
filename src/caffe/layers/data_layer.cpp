@@ -43,11 +43,11 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   datum.ParseFromString(cursor_->value());
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
-  this->transformed_data_.Reshape(top_shape, this->device_context_);
+  this->transformed_data_.Reshape(top_shape);
   // Reshape top[0] and prefetch_data according to the batch_size.
   top_shape[0] = this->layer_param_.data_param().batch_size();
-  this->prefetch_data_.Reshape(top_shape, this->device_context_);
-  top[0]->ReshapeLike(this->prefetch_data_, this->device_context_);
+  this->prefetch_data_.Reshape(top_shape);
+  top[0]->ReshapeLike(this->prefetch_data_);
 
   LOG(INFO)<< "output data size: " << top[0]->num() << ","
   << top[0]->channels() << "," << top[0]->height() << ","
@@ -55,8 +55,8 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   if (this->output_labels_) {
     vector<int> label_shape(1, this->layer_param_.data_param().batch_size());
-    top[1]->Reshape(label_shape, this->device_context_);
-    this->prefetch_label_.Reshape(label_shape, this->device_context_);
+    top[1]->Reshape(label_shape);
+    this->prefetch_label_.Reshape(label_shape);
   }
 }
 
@@ -78,10 +78,10 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   datum.ParseFromString(cursor_->value());
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
-  this->transformed_data_.Reshape(top_shape, this->device_context_);
+  this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data according to the batch_size.
   top_shape[0] = batch_size;
-  this->prefetch_data_.Reshape(top_shape, this->device_context_);
+  this->prefetch_data_.Reshape(top_shape);
 
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables

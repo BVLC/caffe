@@ -64,20 +64,20 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                     new_height, new_width, is_color);
   // Use data_transformer to infer the expected blob shape from a cv_image.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  this->transformed_data_.Reshape(top_shape, this->device_context_);
+  this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data and top[0] according to the batch_size.
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   top_shape[0] = batch_size;
-  this->prefetch_data_.Reshape(top_shape, this->device_context_);
-  top[0]->ReshapeLike(this->prefetch_data_, this->device_context_);
+  this->prefetch_data_.Reshape(top_shape);
+  top[0]->ReshapeLike(this->prefetch_data_);
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
   vector<int> label_shape(1, batch_size);
-  top[1]->Reshape(label_shape, this->device_context_);
-  this->prefetch_label_.Reshape(label_shape, this->device_context_);
+  top[1]->Reshape(label_shape);
+  this->prefetch_label_.Reshape(label_shape);
 }
 
 template <typename Dtype>
@@ -110,10 +110,10 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
       new_height, new_width, is_color);
   // Use data_transformer to infer the expected blob shape from a cv_img.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  this->transformed_data_.Reshape(top_shape, this->device_context_);
+  this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data according to the batch_size.
   top_shape[0] = batch_size;
-  this->prefetch_data_.Reshape(top_shape, this->device_context_);
+  this->prefetch_data_.Reshape(top_shape);
 
   Dtype* prefetch_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* prefetch_label = this->prefetch_label_.mutable_cpu_data();

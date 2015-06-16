@@ -257,7 +257,7 @@ void hdf5_load_nd_dataset_helper(
   for (int i = 0; i < dims.size(); ++i) {
     blob_dims[i] = dims[i];
   }
-  blob->Reshape(blob_dims,blob->device_context());
+  blob->Reshape(blob_dims);
 }
 
 template <>

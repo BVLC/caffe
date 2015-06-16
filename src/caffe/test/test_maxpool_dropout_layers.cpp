@@ -22,7 +22,7 @@ class MaxPoolingDropoutTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1703);
-    blob_bottom_->Reshape(2, 3, 6, 5, Caffe::GetDefaultDeviceContext());
+    blob_bottom_->Reshape(2, 3, 6, 5);
     // fill the values
     FillerParameter filler_param;
     filler_param.set_value(1.);
@@ -121,6 +121,8 @@ TYPED_TEST(MaxPoolingDropoutTest, TestBackward) {
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     sum_with_dropout += bottom_diff[i];
   }
+  // REMOVE:
+  std::cout << "SUM: " << sum_with_dropout << std::endl;
   EXPECT_GE(sum_with_dropout, sum);
 }
 

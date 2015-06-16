@@ -46,7 +46,7 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     bottom_count_sum += bottom[i]->count();
     top_shape[concat_axis_] += bottom[i]->shape(concat_axis_);
   }
-  top[0]->Reshape(top_shape,this->device_context_);
+  top[0]->Reshape(top_shape);
   CHECK_EQ(bottom_count_sum, top[0]->count());
 }
 

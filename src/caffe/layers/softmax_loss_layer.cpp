@@ -46,7 +46,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
       << "with integer values in {0, 1, ..., C-1}.";
   if (top.size() >= 2) {
     // softmax output
-    top[1]->ReshapeLike(*bottom[0],this->device_context_);
+    top[1]->ReshapeLike(*bottom[0]);
   }
 }
 

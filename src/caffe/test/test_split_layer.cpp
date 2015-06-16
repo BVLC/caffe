@@ -23,7 +23,7 @@ class SplitLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   SplitLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5, Caffe::GetDefaultDeviceContext())),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_top_a_(new Blob<Dtype>()),
         blob_top_b_(new Blob<Dtype>()) {
     // fill the values

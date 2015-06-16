@@ -96,7 +96,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
       break;
       case EltwiseParameter_EltwiseOp_SUM: {
-        greentea_gpu_set(this->device_context_.id(), count, 0, (cl_mem)top_data, 0);
+        greentea_gpu_set<Dtype>(this->device_context_.id(), count, 0, (cl_mem)top_data, 0);
         for (int i = 0; i < bottom.size(); ++i) {
           greentea_gpu_axpy<Dtype>(this->device_context_.id(), count, coeffs_[i], (cl_mem)(bottom[i]->gpu_data()),0, (cl_mem)top_data, 0);
         }
@@ -236,7 +236,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             if (coeffs_[i] == Dtype(1.)) {
               greentea_copy<Dtype>(count, (cl_mem)top_diff,0, (cl_mem)bottom_diff,0,ctx);
             } else {
-              greentea_gpu_scale<Dtype>(count, coeffs_[i],0, (cl_mem)top_diff,0, (cl_mem)bottom_diff,0);
+              greentea_gpu_scale<Dtype>(this->device_context_.id(), count, coeffs_[i],(cl_mem)top_diff,0, (cl_mem)bottom_diff,0);
             }
           }
           break;

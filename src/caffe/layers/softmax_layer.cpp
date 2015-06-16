@@ -12,16 +12,16 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   softmax_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
-  top[0]->ReshapeLike(*bottom[0],this->device_context_);
+  top[0]->ReshapeLike(*bottom[0]);
   vector<int> mult_dims(1, bottom[0]->shape(softmax_axis_));
-  sum_multiplier_.Reshape(mult_dims,this->device_context_);
+  sum_multiplier_.Reshape(mult_dims);
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
   vector<int> scale_dims = bottom[0]->shape();
   scale_dims[softmax_axis_] = 1;
-  scale_.Reshape(scale_dims,this->device_context_);
+  scale_.Reshape(scale_dims);
 }
 
 template <typename Dtype>

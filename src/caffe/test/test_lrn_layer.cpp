@@ -28,7 +28,7 @@ class LRNLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 7, 3, 3, Caffe::GetDefaultDeviceContext());
+    blob_bottom_->Reshape(2, 7, 3, 3);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -53,7 +53,7 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
     Blob<Dtype>* blob_top) {
   typedef typename TypeParam::Dtype Dtype;
   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
-      blob_bottom.height(), blob_bottom.width(), Caffe::GetDefaultDeviceContext());
+      blob_bottom.height(), blob_bottom.width());
   Dtype* top_data = blob_top->mutable_cpu_data();
   LRNParameter lrn_param = layer_param.lrn_param();
   Dtype alpha = lrn_param.alpha();
