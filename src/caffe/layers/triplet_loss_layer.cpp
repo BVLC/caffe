@@ -60,7 +60,7 @@ void TripletLossLayer<Dtype>::Forward_cpu(
     dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_pos.cpu_data() + (i*channels), diff_pos.cpu_data() + (i*channels));
     // ab is a similar pair
-    dist_sq_.mutable_cpu_data()[i] += dist_sq_pos.cpu_data()[i];
+    dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.cpu_data()[i];// wrong!!! dist_sq = *****
     // Loss component calculated from ac
     dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_neg.cpu_data() + (i*channels), diff_neg.cpu_data() + (i*channels));
@@ -76,16 +76,15 @@ template <typename Dtype>
 void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.triplet_loss_param().margin();
-  for (int i = 1; i < 3; ++i) {
 // there must be further check to ensure the gradient calc
-    if (propagate_down[i]) {
-      const Dtype sign = (i == 2) ? 1 : -1;
+    if (propagate_down[0]) {
+      const Dtype sign = 1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[i]->num());
-      int num = bottom[i]->num();
-      int channels = bottom[i]->channels();
+          static_cast<Dtype>(bottom[0]->num());
+      int num = bottom[0]->num();
+      int channels = bottom[0]->channels();
       for (int j = 0; j < num; ++j) {
-        Dtype* bout = bottom[i]->mutable_cpu_diff();
+        Dtype* bout = bottom[0]->mutable_cpu_diff();
         if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
         // similar pairs
           caffe_cpu_axpby(
@@ -99,8 +98,42 @@ void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               channels,
               -alpha,
               diff_neg.cpu_data() + (j*channels),
+              Dtype(1.0),
+              bout + (j*channels));
+        } else {
+            caffe_set(channels, Dtype(0), bout + (j*channels));
+        }
+      }
+    }
+  for (int i = 1; i < 3; ++i) {
+// there must be further check to ensure the gradient calc
+    if (propagate_down[i]) {
+      const Dtype sign = (i == 1) ? -1 : 1;
+      const Dtype alpha = sign * top[0]->cpu_diff()[0] /
+          static_cast<Dtype>(bottom[i]->num());
+      int num = bottom[i]->num();
+      int channels = bottom[i]->channels();
+      for (int j = 0; j < num; ++j) {
+        Dtype* bout = bottom[i]->mutable_cpu_diff();
+        if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+          if (i == 1) {
+        // similar pairs
+          caffe_cpu_axpby(
+              channels,
+              alpha,
+              diff_pos.cpu_data() + (j*channels),
               Dtype(0.0),
               bout + (j*channels));
+          }
+          else {
+        // dissimilar pairs
+          caffe_cpu_axpby(
+              channels,
+              alpha,
+              diff_neg.cpu_data() + (j*channels),
+              Dtype(0.0),
+              bout + (j*channels));
+          }
         } else {
             caffe_set(channels, Dtype(0), bout + (j*channels));
         }
