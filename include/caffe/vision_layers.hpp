@@ -519,6 +519,52 @@ class SPPLayer : public Layer<Dtype> {
   shared_ptr<ConcatLayer<Dtype> > concat_layer_;
 };
 
+/* ROIPoolingLayer - Region of Interest Pooling Layer
+*/
+template <typename Dtype>
+class ROIPoolingLayer : public Layer<Dtype> {
+ public:
+  explicit ROIPoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "ROIPooling"; }
+
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MaxBottomBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //    const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  //virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  // returns a correctly configured LayerParameter for an SPPLayer
+  virtual LayerParameter GetSPPParam(const ROIPoolingParameter roi_pooling_param);
+
+  // the internal SPP layer
+  shared_ptr<SPPLayer<Dtype> > spp_layer_;
+  // top and bottom holders used in call to the underlying SPP::Forward
+  vector<Blob<Dtype>*> spp_top_vec_;
+  vector<Blob<Dtype>*> spp_bottom_vec_;
+
+  // the internal concat layer
+  shared_ptr<ConcatLayer<Dtype> > concat_layer_;
+  // top and bottom holders used in call to the underlying Concat::Forward
+  vector<Blob<Dtype>*> concat_bottom_vec_;
+
+  int n_rois_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_
