@@ -73,7 +73,7 @@ struct is_same<T, T> {
     CHECK_EQ(status, clblasSuccess) << "GreenTea CL BLAS ERROR";}
 #endif
 
-// Macro to select the single (_s) or double (_d) precision kernel
+// Macro to select the single (_float) or double (_double) precision kernel
 #define CL_KERNEL_SELECT(kernel) is_same<Dtype, float>::value ? kernel "_float" : kernel "_double"
 
 #endif

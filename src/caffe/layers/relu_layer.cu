@@ -11,6 +11,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out,
                             Dtype negative_slope) {
@@ -19,6 +20,7 @@ __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out,
     out[index] = in[index] > 0 ? in[index] : in[index] * negative_slope;
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -57,6 +59,7 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
 }
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void ReLUBackward(const int n, const Dtype* in_diff,
                              const Dtype* in_data, Dtype* out_diff,
@@ -67,6 +70,7 @@ __global__ void ReLUBackward(const int n, const Dtype* in_diff,
         * ((in_data[index] > 0) + (in_data[index] <= 0) * negative_slope);
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,

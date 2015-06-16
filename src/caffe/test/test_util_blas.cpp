@@ -12,8 +12,6 @@
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
 template <typename TypeParam>
 class GemmTest : public ::testing::Test {};
 
@@ -33,107 +31,103 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
   caffe_cpu_copy(6, data, A.mutable_cpu_data());
   caffe_cpu_copy(12, data, B.mutable_cpu_data());
 
-  if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2 || dc.backend() == BACKEND_OpenCL) {
-    // [1, 2, 3; 4 5 6] * [1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12];
-    caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
-        A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
+  // [1, 2, 3; 4 5 6] * [1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12];
+  caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+      A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
 
 
-    if (dc.backend() == BACKEND_CUDA) {
+  if (dc.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-      caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
-        A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
+    caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
 #endif // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-      greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
-                                   (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
-    }
-
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
-
-    // Test when we have a transposed A
-    A.Reshape(1, 1, 3, 2);
-    caffe_cpu_copy(6, A_reshape_data, A.mutable_cpu_data());
-    caffe_cpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
-        A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
-
-    if (dc.backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
-        A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
-          (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
-    }
-
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
-
-    // Test when we have a transposed A and a transposed B too
-    B.Reshape(1, 1, 4, 3);
-    caffe_cpu_copy(12, B_reshape_data, B.mutable_cpu_data());
-    caffe_cpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
-        A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
-
-    if (dc.backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-      caffe_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
-        A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-    greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasTrans, 2, 4, 3, 1.,
-          (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
-    }
-
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
-
-    // Test when we have a transposed B
-    A.Reshape(1, 1, 2, 3);
-    caffe_cpu_copy(6, data, A.mutable_cpu_data());
-    caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
-        A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
-
-    if (dc.backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-      caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
-        A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-      greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
-            (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
-    }
-
-    for (int i = 0; i < 8; ++i) {
-      EXPECT_EQ(C.cpu_data()[i], result[i]);
-    }
   } else {
-    LOG(ERROR) << "Skipping test due to old architecture.";
+#ifdef USE_GREENTEA
+    greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+                                 (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
+#endif // USE_GREENTEA
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
+
+  // Test when we have a transposed A
+  A.Reshape(1, 1, 3, 2);
+  caffe_cpu_copy(6, A_reshape_data, A.mutable_cpu_data());
+  caffe_cpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
+      A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
+
+  if (dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+  caffe_gpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
+      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+  greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
+        (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
+#endif // USE_GREENTEA
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
+
+  // Test when we have a transposed A and a transposed B too
+  B.Reshape(1, 1, 4, 3);
+  caffe_cpu_copy(12, B_reshape_data, B.mutable_cpu_data());
+  caffe_cpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
+      A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
+
+  if (dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
+      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+  greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasTrans, 2, 4, 3, 1.,
+        (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
+#endif // USE_GREENTEA
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
+
+  // Test when we have a transposed B
+  A.Reshape(1, 1, 2, 3);
+  caffe_cpu_copy(6, data, A.mutable_cpu_data());
+  caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+      A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
+  }
+
+  if (dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+      A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+          (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
+#endif // USE_GREENTEA
+  }
+
+  for (int i = 0; i < 8; ++i) {
+    EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 }
 
@@ -151,54 +145,51 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
   caffe_cpu_copy(6, data, A.mutable_cpu_data());
   caffe_cpu_copy(3, data, x.mutable_cpu_data());
 
-  if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2 || dc.backend() == BACKEND_OpenCL) {
-    caffe_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
-        x.cpu_data(), 0., y.mutable_cpu_data());
-    for (int i = 0; i < 2; ++i) {
-      EXPECT_EQ(y.cpu_data()[i], result_2[i]);
-    }
 
-    if (dc.backend() == BACKEND_CUDA) {
+  caffe_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
+      x.cpu_data(), 0., y.mutable_cpu_data());
+  for (int i = 0; i < 2; ++i) {
+    EXPECT_EQ(y.cpu_data()[i], result_2[i]);
+  }
+
+  if (dc.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-      caffe_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
-        x.gpu_data(), 0., y.mutable_gpu_data());
+    caffe_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
+      x.gpu_data(), 0., y.mutable_gpu_data());
 #endif // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-      greentea_gpu_gemv<TypeParam>(dc.id(), CblasNoTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
-          (cl_mem)(x.gpu_data()),0, 0., (cl_mem)(y.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
-    }
-
-    for (int i = 0; i < 2; ++i) {
-      EXPECT_EQ(y.cpu_data()[i], result_2[i]);
-    }
-
-    // Test transpose case
-    caffe_cpu_copy(2, data, y.mutable_cpu_data());
-    caffe_cpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
-        y.cpu_data(), 0., x.mutable_cpu_data());
-    for (int i = 0; i < 3; ++i) {
-      EXPECT_EQ(x.cpu_data()[i], result_3[i]);
-    }
-
-    if (dc.backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-      caffe_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
-        y.gpu_data(), 0., x.mutable_gpu_data());
-#endif // USE_CUDA
-    } else {
-#ifdef USE_GREENTEA
-      greentea_gpu_gemv<TypeParam>(dc.id(), CblasTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
-          (cl_mem)(y.gpu_data()),0, 0., (cl_mem)(x.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
-    }
-
-    for (int i = 0; i < 3; ++i) {
-      EXPECT_EQ(x.cpu_data()[i], result_3[i]);
-    }
   } else {
-    LOG(ERROR) << "Skipping test due to old architecture.";
+#ifdef USE_GREENTEA
+    greentea_gpu_gemv<TypeParam>(dc.id(), CblasNoTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
+        (cl_mem)(x.gpu_data()),0, 0., (cl_mem)(y.mutable_gpu_data()),0);
+#endif // USE_GREENTEA
+  }
+
+  for (int i = 0; i < 2; ++i) {
+    EXPECT_EQ(y.cpu_data()[i], result_2[i]);
+  }
+
+  // Test transpose case
+  caffe_cpu_copy(2, data, y.mutable_cpu_data());
+  caffe_cpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
+      y.cpu_data(), 0., x.mutable_cpu_data());
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_EQ(x.cpu_data()[i], result_3[i]);
+  }
+
+  if (dc.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    caffe_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
+      y.gpu_data(), 0., x.mutable_gpu_data());
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    greentea_gpu_gemv<TypeParam>(dc.id(), CblasTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
+        (cl_mem)(y.gpu_data()),0, 0., (cl_mem)(x.mutable_gpu_data()),0);
+#endif // USE_GREENTEA
+  }
+
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_EQ(x.cpu_data()[i], result_3[i]);
   }
 }
 

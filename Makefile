@@ -7,6 +7,11 @@ $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
+ifeq ($(CPU_ONLY),1)
+	USE_CUDA := 0
+	USE_GREENTEA := 0
+endif
+
 CXXFLAGS += -std=c++11 -Wno-deprecated-declarations
 LINKFLAGS += -std=c++11 -Wno-deprecated-declarations
 NVCCFLAGS += -Xcompiler "-Wno-deprecated-declarations" -Xlinker "-Wno-deprecated-declarations" -Xarchive "-Wno-deprecated-declarations" -Xnvlink "-Wno-deprecated-declarations"
@@ -609,7 +614,7 @@ ifeq ($(USE_CUDA), 1)
 	@ cat $@.$(WARNS_EXT)
 else
 	@ echo CXX $<
-	$(Q)$(CXX) $< $(CXXFLAGS) -x c++ -c $< -o $@ 2> $@.$(WARNS_EXT) \
+	$(Q)$(CXX) $(CXXFLAGS) -c -x c++ $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 endif

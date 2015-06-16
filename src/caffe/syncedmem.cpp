@@ -49,7 +49,9 @@ inline void SyncedMemory::to_cpu() {
         own_cpu_data_ = true;
       }
       if (device_context_.backend() == Backend::BACKEND_CUDA) {
+#ifdef USE_CUDA
         caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
+#endif // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(

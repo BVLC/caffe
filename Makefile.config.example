@@ -15,10 +15,12 @@ VIENNACL_DIR = ../ViennaCL
 # Either set CLBLAS or VIENNACLBLAS to 1, not both.
 # If you want to use OpenCL/Greentea on the CPU only, you can also disable both.
 # When both are disabled, GPUs won't work. CPUs always use CBLAS (Atlas, MKL or OpenBLAS).
+# The chosen BLAS library needs to be compiled and installed from source.
+# CLBLAS should be faster, especially on AMD cards.
 USE_CLBLAS := 1
 USE_VIENNACLBLAS := 0
 
-# Enable double precision support for OpenCL/Greentea
+# Enable or disable double precision support for OpenCL/Greentea
 GREENTEA_DOUBLE_SUPPORT := 1
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).

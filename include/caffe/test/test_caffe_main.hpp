@@ -17,7 +17,7 @@ using std::endl;
 #ifdef CMAKE_BUILD
   #include "caffe_config.h"
 #else
-  #define CUDA_TEST_DEVICE -1
+  #define TEST_DEVICE -1
   #define CMAKE_SOURCE_DIR "src/"
   #define EXAMPLES_SOURCE_DIR "examples/"
   #define CMAKE_EXT ""

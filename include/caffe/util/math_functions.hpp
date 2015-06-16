@@ -151,6 +151,7 @@ template <typename Dtype>
 void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
 #ifndef CPU_ONLY  // GPU
+#ifdef USE_CUDA
 
 // Decaf gpu gemm provides an interface that is almost the same as the cpu
 // gemm function - following the c convention and calling the fortran-order
@@ -280,7 +281,8 @@ void caffe_gpu_##name<double>(const int n, const double* x, double* y) { \
       n, x, y); \
 }
 
-#endif  // !CPU_ONLY
+#endif // USE_CUDA
+#endif // !CPU_ONLY
 
 }  // namespace caffe
 

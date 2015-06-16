@@ -165,6 +165,7 @@ TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
 TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
+#ifdef USE_CUDA
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
@@ -173,6 +174,7 @@ TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   y = this->blob_top_->gpu_data();
   int computed_distance = caffe_gpu_hamming_distance<TypeParam>(n, x, y);
   EXPECT_EQ(reference_distance, computed_distance);
+#endif // USE_CUDA
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {

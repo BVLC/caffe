@@ -1,3 +1,4 @@
+#ifdef USE_CUDA
 #include <math_functions.h>  // CUDA's, not caffe's, for fabs, signbit
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
@@ -11,6 +12,7 @@
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+
 
 template <>
 void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
@@ -463,3 +465,4 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
 }
 
 }  // namespace caffe
+#endif // USE_CUDA
