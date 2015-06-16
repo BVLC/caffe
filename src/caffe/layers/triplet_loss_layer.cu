@@ -2,9 +2,9 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -105,8 +105,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               diff_pos.gpu_data() + (j*channels),
               Dtype(0.0),
               bout + (j*channels));
-          }
-          else {
+          } else {
         // dissimilar pairs
           caffe_gpu_axpby(
               channels,

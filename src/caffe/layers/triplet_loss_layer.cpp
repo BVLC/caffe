@@ -123,8 +123,7 @@ void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               diff_pos.cpu_data() + (j*channels),
               Dtype(0.0),
               bout + (j*channels));
-          }
-          else {
+          } else {
         // dissimilar pairs
           caffe_cpu_axpby(
               channels,
