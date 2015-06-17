@@ -57,17 +57,16 @@ In this section we will define the triplet network used for training. The
 resulting network is defined in
 `./examples/triplet/mnist_triplet_train_test.prototxt`.
 
-### Reading in the Pair Data
+### Reading in the Triplet Data
 
 We start with a data layer that reads from the LevelDB database we created
-earlier. Each entry in this database contains the image data for a pair of
-images (`pair_data`) and a binary label saying if they belong to the same class
-or different classes (`sim`).
+earlier. Each entry in this database contains the image data for a triplet of
+images (`triplet_data`) and the label (`sim`) is not nessesary in our method.
 
     layers {
-      name: "pair_data"
+      name: "triplet_data"
       type: DATA
-      top: "pair_data"
+      top: "triplet_data"
       top: "sim"
       data_param {
         source: "examples/triplet/mnist-triplet-train-leveldb"
@@ -77,31 +76,33 @@ or different classes (`sim`).
       include: { phase: TRAIN }
     }
 
-In order to pack a pair of images into the same blob in the database we pack one
-image per channel. We want to be able to work with these two images separately,
-so we add a slice layer after the data layer. This takes the `pair_data` and
+In order to pack a triplet of images into the same blob in the database we pack one
+image per channel. We want to be able to work with these three images separately,
+so we add a slice layer after the data layer. This takes the `triplet_data` and
 slices it along the channel dimension so that we have a single image in `data`
-and its paired image in `data_p.`
+and its positive image in `data_pos.` & its negative image in `data_neg.`
 
     layers {
-        name: "slice_pair"
+        name: "slice_triplet"
         type: SLICE
-        bottom: "pair_data"
+        bottom: "triplet_data"
         top: "data"
-        top: "data_p"
+        top: "data_pos"
+        top: "data_neg"
         slice_param {
-            slice_dim: 1
-            slice_point: 1
-        }
+        slice_dim: 1
+        slice_point: 1
+        slice_point: 2
+  }
     }
 
-### Building the First Side of the triplet Net
+### Building the First part of the triplet Net
 
 Now we can specify the first side of the triplet net. This side operates on
 `data` and produces `feat`. Starting from the net in
 `./examples/triplet/mnist_triplet.prototxt` we add default weight fillers. Then
 we name the parameters of the convolutional and inner product layers. Naming the
-parameters allows Caffe to share the parameters between layers on both sides of
+parameters allows Caffe to share the parameters between layers on three channels of
 the triplet net. In the definition this looks like:
 
     ...
@@ -132,23 +133,20 @@ Now we need to create the second path that operates on `data_neg` and produces
 paste it. Then we change the name of each layer, input, and output by appending
 `_neg` to differentiate the "paired" layers from the originals.
 
-### Adding the Contrastive Loss Function
+### Adding the Triplet Loss Function
 
-To train the network we will optimize a contrastive loss function proposed in:
-Raia Hadsell, Sumit Chopra, and Yann LeCun "Dimensionality Reduction by Learning
-an Invariant Mapping". This loss function encourages matching pairs to be close
-together in feature space while pushing non-matching pairs apart. This cost
-function is implemented with the `TRIPLET_LOSS` layer:
+To train the network we will optimize a triplet loss function proposed in:
+This cost function is implemented with the `TRIPLET_LOSS` layer:
 
     layers {
         name: "loss"
         type: TRIPLET_LOSS
         triplet_loss_param {
-            margin: 1.0
+            margin: 0.2
         }
         bottom: "feat"
         bottom: "feat_pos"
-	bottom: "feat_neg"
+        bottom: "feat_neg"
         bottom: "sim"
         top: "loss"
     }
