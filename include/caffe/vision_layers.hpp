@@ -551,11 +551,11 @@ class ROIPoolingLayer : public Layer<Dtype> {
   // returns a correctly configured LayerParameter for an SPPLayer
   virtual LayerParameter GetSPPParam(const ROIPoolingParameter roi_pooling_param);
 
-  // the internal SPP layer
-  shared_ptr<SPPLayer<Dtype> > spp_layer_;
+  // the internal SPP layers
+  vector<shared_ptr<SPPLayer<Dtype> > > spp_layers_;
   // top and bottom holders used in call to the underlying SPP::Forward
-  vector<Blob<Dtype>*> spp_top_vec_;
-  vector<Blob<Dtype>*> spp_bottom_vec_;
+  vector<vector<Blob<Dtype>*>*> spp_top_vecs_;
+  vector<vector<Blob<Dtype>*>*> spp_bottom_vecs_;
 
   // the internal concat layer
   shared_ptr<ConcatLayer<Dtype> > concat_layer_;
