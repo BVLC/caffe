@@ -78,6 +78,41 @@ class BasePrefetchingDataLayer :
   Blob<Dtype> transformed_data_;
 };
 
+/**
+ * @brief Provides pre-fetching base for data layers that feed multiple blobs
+ * to the Net.
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class BasePrefetchingMultiDataLayer :
+    public BaseDataLayer<Dtype>, public InternalThread {
+ public:
+  explicit BasePrefetchingMultiDataLayer(const LayerParameter& param)
+      : BaseDataLayer<Dtype>(param) {}
+  // LayerSetUp: implements common data layer setup functionality, and calls
+  // DataLayerSetUp to do special data layer setup for individual layer types.
+  // This method may not be overridden.
+  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+  // The thread's function
+  virtual void InternalThreadEntry() {}
+
+ protected:
+  int input_data_size_;
+  std::vector<Blob<Dtype>*> prefetch_data_;
+  Blob<Dtype> prefetch_label_;
+  Blob<Dtype> transformed_data_;
+};
+
 template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
@@ -217,27 +252,41 @@ class HDF5OutputLayer : public Layer<Dtype> {
 /**
  * @brief Provides data to the Net from image files.
  *
+ * The file format is of the form:
+ * [file_path] { ... [file_path]} [label]
+ * The delimiter can be ' ', ',' or '\t' (checked in this order)
+ * To enable more than one file input, just add a 'top' in the layer parameters
+ * while keeping the label last.
+ *
  * TODO(dox): thorough documentation for Forward and proto params.
  */
 template <typename Dtype>
-class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
+class ImageDataLayer : public BasePrefetchingMultiDataLayer<Dtype> {
  public:
   explicit ImageDataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingMultiDataLayer<Dtype>(param) {}
   virtual ~ImageDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "ImageData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const {
+    return this->layer_param_.top_size();
+  }
+  // would this work? return this->input_data_size_ + 1;
 
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
   virtual void ShuffleImages();
   virtual void InternalThreadEntry();
+  int findNumOccurrences(char delim, std::string text);
+  void split(
+      char delim,
+      const std::string &line,
+      std::vector<std::string> *parts);
 
-  vector<std::pair<std::string, int> > lines_;
+  vector<std::pair<std::vector<std::string>, int> > lines_;
   int lines_id_;
 };
 
