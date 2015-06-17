@@ -54,14 +54,14 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int new_width  = this->layer_param_.image_data_param().new_width();
   const bool is_color  = this->layer_param_.image_data_param().is_color();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
-  string root_folder = this->layer_param_.image_data_param().root_folder();
+  const string root_folder = this->layer_param_.image_data_param().root_folder();
+  const string source = this->layer_param_.image_data_param().source();
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
-  const string& source = this->layer_param_.image_data_param().source();
-  LOG(INFO) << "Opening file " << source;
+  LOG(INFO) << "Opening file '" << source << "'";
   std::ifstream infile(source.c_str());
   std::string line;
   char delimiter = 0;
@@ -69,18 +69,26 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int label;
 
   // read one line and find the delimiter
-  CHECK(std::getline(infile, line)) << "Failed to read from input file."
-      "";
+  CHECK(std::getline(infile, line))
+    << "Failed to read from input file: '"
+    << source.c_str() << "'";
   // find delimiter occurrences
   // 2 occurrences means it can be slit in 2 files and a label
+  LOG(INFO) << "Input set size: " << this->input_data_size_;
   if (findNumOccurrences(' ', line) == this->input_data_size_) {
     delimiter = ' ';
   } else if (findNumOccurrences(',', line) == this->input_data_size_) {
     delimiter = ',';
   } else if (findNumOccurrences('\t', line) == this->input_data_size_) {
     delimiter = '\t';
+  } else {
+    LOG(INFO)
+        << "delimiter outputs:\n"
+        << "' ' " << findNumOccurrences(' ', line) << "\n"
+        << "',' " << findNumOccurrences(',', line) << "\n"
+        << "'\t' " << findNumOccurrences('\t', line) << "\n";
   }
-  CHECK_NE(delimiter, 0)
+  CHECK_NE((int)delimiter, 0)
     << "Input size for data layer doesn't match the text file.";
 
   do {
