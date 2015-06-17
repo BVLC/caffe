@@ -15,7 +15,7 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA and OpenCL support" OFF) # TODO: rename to USE_CUDA
+caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA and OpenCL support" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" ON)
 caffe_option(USE_GREENTEA "Build Caffe with OpenCL support" ON)
 caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF USE_CUDA AND NOT CPU_ONLY)
