@@ -16,31 +16,31 @@ void CudnnNdPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(pool_param.has_kernel_shape()
 	  && pool_param.has_pad_shape()
 	  && pool_param.has_stride_shape())
-	<< "Kernel, Pad and Stride shape required."
-  CHECK_EQ(pool_param.kernel_shape.dim_size(), pool_param.pad_shape.dim_size())
+	<< "Kernel, Pad and Stride shape required.";
+  CHECK_EQ(pool_param.kernel_shape().dim_size(), pool_param.pad_shape().dim_size())
 	<< "Kernel and Pad shape don't match !";
-  CHECK_EQ(pool_param.kernel_shape.dim_size(), pool_param.stride_shape.dim_size())
+  CHECK_EQ(pool_param.kernel_shape().dim_size(), pool_param.stride_shape().dim_size())
 	<< "Kernel and Stride shape don't match !";
   global_pooling_ = pool_param.global_pooling();
 
   if(global_pooling_) {
-	kernel_shape_ = vector<int>(bottom[0]->shape().begin()+2, bottom->shape().end());
-  } else {
-  	for(int i = 0; i < pool_param.kernel_shape.dim_size(); ++i) {
-  	  kernel_shape_.push_back(pool_param.kernel_shape.dim(i));
+	kernel_shape_ = vector<int>(bottom[0]->shape().begin()+2, bottom[0]->shape().end());
+  } else {
+  	for(int i = 0; i < pool_param.kernel_shape().dim_size(); ++i) {
+  	  kernel_shape_.push_back(pool_param.kernel_shape().dim(i));
   	  CHECK_GT(kernel_shape_[i], 0) << "Filter dimensions cannot be zero.";
   	}
   }
-  for(int i = 0; i < pool_param.kernel_shape.dim_size(); ++i) {
-    pad_shape_.push_back(pool_param.pad_shape.dim(i));
-    stride_shape_.push_back(pool_param.stride_shape.dim(i));
+  for(int i = 0; i < pool_param.kernel_shape().dim_size(); ++i) {
+    pad_shape_.push_back(pool_param.pad_shape().dim(i));
+    stride_shape_.push_back(pool_param.stride_shape().dim(i));
   }
 
   CUDNN_CHECK(cudnnCreate(&handle_));
-  cudnn::createTensorNdDesc<Dtype>(&bottom_desc_);
-  cudnn::createTensorNdDesc<Dtype>(&top_desc_);
-  cudnn::createPoolingNdDesc<Dtype>(&pooling_desc_,
-      layer_param_.pooling_param().pool(), &mode_,
+  cudnn::createTensorDesc<Dtype>(&bottom_desc_);
+  cudnn::createTensorDesc<Dtype>(&top_desc_);
+  cudnn::createNdPoolingDesc<Dtype>(&pooling_desc_,
+      this->layer_param_.pooling_param().pool(), &mode_,
       kernel_shape_, pad_shape_, stride_shape_);
   handles_setup_ = true;
 }
@@ -52,7 +52,7 @@ void CudnnNdPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   channels_ = bottom[0]->channels();
   input_shape_ = bottom[0]->shape();
   if(global_pooling_) {
-	kernel_shape_ = vector<int>(bottom[0]->shape().begin()+2, bottom->shape().end());
+	kernel_shape_ = vector<int>(bottom[0]->shape().begin()+2, bottom[0]->shape().end());
   }
 
   pooled_shape_ = input_shape_;
@@ -62,7 +62,7 @@ void CudnnNdPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 	++pooled_shape_[i];
 
 	if(pad_shape_[i-2] > 0) {
-      if ((pooled_shape_[i] - 1) * stride_shape_[i-2] >= input_shape_[i] + pad_shape[i-2]) {
+      if ((pooled_shape_[i] - 1) * stride_shape_[i-2] >= input_shape_[i] + pad_shape_[i-2]) {
         --pooled_shape_[i];
       }
       CHECK_LT((pooled_shape_[i] - 1) * stride_shape_[i-2], input_shape_[i] + pad_shape_[i-2]);

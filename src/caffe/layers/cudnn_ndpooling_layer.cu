@@ -10,7 +10,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void CuDNNPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void CudnnNdPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -22,7 +22,7 @@ void CuDNNPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void CuDNNPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void CudnnNdPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
@@ -39,7 +39,7 @@ void CuDNNPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         bottom_desc_, bottom_diff));
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNPoolingLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(CudnnNdPoolingLayer);
 
 }  // namespace caffe
 #endif

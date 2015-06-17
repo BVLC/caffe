@@ -26,15 +26,15 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
 	  && conv_param.has_pad_shape()
 	  && conv_param.has_stride_shape())
 	<< "Kernel, Pad and Stride shape are required.";
-  CHECK_EQ(conv_param.kernel_shape.dim_size(), conv_param.pad_shape.dim_size())
+  CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.pad_shape().dim_size())
 	<< "Kernel and Pad shape don't match !";
-  CHECK_EQ(conv_param.kernel_shape.dim_size(), conv_param.stride_shape.dim_size())
+  CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.stride_shape().dim_size())
 	<< "Kernel and Stride shape don't match !";
-  for(int i = 0; i < conv_param.kernel_shape.dim_size(); ++i) {
-  	kernel_shape_.push_back(conv_param.kernel_shape.dim(i));
+  for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
+  	kernel_shape_.push_back(conv_param.kernel_shape().dim(i));
     CHECK_GT(kernel_shape_[i], 0) << "Filter dimensions cannot be zero.";
-  	pad_shape_.push_back(conv_param.pad_shape.dim(i));
-  	stride_shape_.push_back(conv_param.stride_shape.dim(i));
+  	pad_shape_.push_back(conv_param.pad_shape().dim(i));
+  	stride_shape_.push_back(conv_param.stride_shape().dim(i));
   }
 
   // Configure output channels and groups.
@@ -50,6 +50,11 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
   bias_term_ = this->layer_param_.convolution_param().bias_term();
+
+  vector<int> weight_shape(kernel_shape_);
+  weight_shape.insert(weight_shape.begin(), channels_ / group_);
+  weight_shape.insert(weight_shape.begin(), num_output_);
+
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
@@ -60,10 +65,7 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
     }
     // Initialize and fill the weights:
     // output channels x input channels per-group x kernel height x kernel width
-	vector<int> weight_shape(kernel_shape_);
-	weight_shape_.insert(weight_shape_.begin(), channels_ / group_);
-	weight_shape_.insert(weight_shape_.begin(), num_output_);
-    this->blobs_[0].reset(new Blob<Dtype>(weight_shape_));
+    this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
         this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
@@ -95,8 +97,8 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   // Set the indexing parameters.
   weight_shape[0] /= group_;
   weight_offset_ = 1;
-  for(int i = 0; i < weight_shape_.size(); ++i) {
-	weight_offset_ *= weight_shape_[i];
+  for(int i = 0; i < weight_shape.size(); ++i) {
+	weight_offset_ *= weight_shape[i];
   }
   bias_offset_ = weight_shape[0];
 
@@ -106,10 +108,10 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   // Create tensor descriptor(s) for data and corresponding convolution(s).
   for (int i = 0; i < bottom.size(); i++) {
     cudnnTensorDescriptor_t bottom_desc;
-    cudnn::createTensorNdDesc<Dtype>(&bottom_desc);
+    cudnn::createTensorDesc<Dtype>(&bottom_desc);
     bottom_descs_.push_back(bottom_desc);
     cudnnTensorDescriptor_t top_desc;
-    cudnn::createTensorNdDesc<Dtype>(&top_desc);
+    cudnn::createTensorDesc<Dtype>(&top_desc);
     top_descs_.push_back(top_desc);
     cudnnConvolutionDescriptor_t conv_desc;
     cudnn::createConvolutionDesc<Dtype>(&conv_desc);
@@ -118,7 +120,7 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
 
   // Tensor descriptor for bias.
   if (this->bias_term_) {
-    cudnn::createTensorNdDesc<Dtype>(&bias_desc_);
+    cudnn::createTensorDesc<Dtype>(&bias_desc_);
   }
 
   handles_setup_ = true;
@@ -136,7 +138,7 @@ void CudnnNdConvolutionLayer<Dtype>::Reshape(
 	  << "Inputs must have same num.";
     CHECK_EQ(channels_, bottom[bottom_id]->channels())
         << "Inputs must have same channels.";
-  	for(int i = 0; i < bottom[0]->num_axis(); ++i) {
+  	for(int i = 0; i < bottom[0]->num_axes(); ++i) {
       CHECK_EQ(input_shape_[i], bottom[bottom_id]->shape(i)) << "Inputs must have same shape.";
   	}
   }

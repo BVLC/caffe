@@ -66,7 +66,7 @@ inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc) {
 }
 
 template <typename Dtype>
-inline void createTensorNdDesc(cudnnTensorDescriptor_t* desc) {
+inline void createTensorDesc(cudnnTensorDescriptor_t* desc) {
   CUDNN_CHECK(cudnnCreateTensorDescriptor(desc));
 }
 
@@ -80,11 +80,11 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 
 template <typename Dtype>
 inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
-    vector<int> shape,
-    vector<int> stride) {
+    std::vector<int> shape,
+    std::vector<int> stride) {
   CHECK_EQ(shape.size(), stride.size()) << "Dimensions of shape and stride don't match !";
   CUDNN_CHECK(cudnnSetTensorNdDescriptor(*desc, dataType<Dtype>::type,
-        shape.size(), shape.data(), stride.data());
+        shape.size(), shape.data(), stride.data()));
 }
 
 template <typename Dtype>
@@ -100,8 +100,8 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 
 template <typename Dtype>
 inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
-    vector<int> shape) {
-  vector<int> stride(shape.size(), 1);
+    std::vector<int> shape) {
+  std::vector<int> stride(shape.size(), 1);
   for(int i = stride.size()-2; i >= 0; --i) {
 	  stride[i] = shape[i+1] * stride[i+1];
   }
@@ -118,7 +118,7 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
 
 template <typename Dtype>
 inline void createNdFilterDesc(cudnnFilterDescriptor_t* desc,
-    vector<int> shape) {
+    std::vector<int> shape) {
   CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
   CUDNN_CHECK(cudnnSetFilterNdDescriptor(*desc, dataType<Dtype>::type,
       shape.size(), shape.data()));
@@ -140,13 +140,14 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 template <typename Dtype>
 inline void setNdConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
-    vector<int> pad, vector<int> stride) {
+    std::vector<int> pad, std::vector<int> stride) {
   int nbDims;
-  vector<int> shape(pad.size()+2);
-  cudnnGetFilterNdDescriptor(filter, shape.size(), dataType<Dtype>::type, &nbDims, shape.data());
+  std::vector<int> shape(pad.size()+2);
+  cudnnDataType_t cudnn_type;
+  cudnnGetFilterNdDescriptor(filter, shape.size(), &cudnn_type, &nbDims, shape.data());
   CHECK_EQ(nbDims, pad.size()+2) << "Dimensions of filters and pad don't match !";
   CHECK_EQ(nbDims, stride.size()+2) << "Dimensions of filters and stride don't match !";
-  vector<int> upscale(pad.size(), 1);
+  std::vector<int> upscale(pad.size(), 1);
   CUDNN_CHECK(cudnnSetConvolutionNdDescriptor(*conv,
       pad.size(), pad.data(), stride.data(), upscale.data(), CUDNN_CROSS_CORRELATION));
 }
@@ -173,7 +174,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 template <typename Dtype>
 inline void createNdPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
-    vector<int> shape, vector<int> pad, vector<int> stride) {
+    std::vector<int> shape, std::vector<int> pad, std::vector<int> stride) {
   CHECK_EQ(shape.size(), pad.size()) << "Dimensions of shape and pad don't match !";
   CHECK_EQ(shape.size(), stride.size()) << "Dimensions of shape and stride don't match !";
   switch (poolmethod) {

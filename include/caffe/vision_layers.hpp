@@ -290,7 +290,6 @@ class CudnnNdConvolutionLayer : public Layer<Dtype> {
 
   int conv_out_spatial_dim_;
   int kernel_dim_;
-  int weight_offset_;
   int output_offset_;
 
   Blob<Dtype> bias_multiplier_;
@@ -529,7 +528,7 @@ class CudnnNdPoolingLayer : public Layer<Dtype> {
   vector<int> stride_shape_;
   vector<int> pad_shape_;
   int channels_;
-  vector<int> shape_in_;
+  vector<int> input_shape_;
   vector<int> pooled_shape_;
   bool global_pooling_;
   Blob<Dtype> rand_idx_;

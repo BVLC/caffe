@@ -9,10 +9,10 @@
 
 namespace caffe {
 
-__global__ void sync_conv_groups() { }
+__global__ void sync_ndconv_groups() { }
 
 template <typename Dtype>
-void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
+void CudnnNdConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -20,8 +20,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const Dtype* weight = this->blobs_[0]->gpu_data();
 
     size_t workspace_limit_bytes = this->channels_*sizeof(int);
-	for(int i = 0; i < this->kernel_shape_.size(); ++i) {
-	  workspace_limit_bytes *= kernel_shape_[i];
+	for(int j = 0; j < this->kernel_shape_.size(); ++j) {
+	  workspace_limit_bytes *= kernel_shape_[j];
 	}
 	++workspace_limit_bytes;
 
@@ -90,12 +90,12 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    sync_ndconv_groups<<<1, 1>>>();
   }
 }
 
 template <typename Dtype>
-void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void CudnnNdConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
@@ -151,11 +151,11 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    sync_ndconv_groups<<<1, 1>>>();
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(CudnnNdConvolutionLayer);
 
 }  // namespace caffe
 #endif
