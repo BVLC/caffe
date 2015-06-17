@@ -150,7 +150,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groupsCUDA_KERNEL(1, 1)();
+    sync_conv_groups CUDA_KERNEL(1, 1)();
   }
 }
 
