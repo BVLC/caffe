@@ -12,7 +12,7 @@ add-apt-repository -y ppa:tuleu/precise-backports
 # This ppa is for boost 1.54
 add-apt-repository -y ppa:boost-latest/ppa
 # This ppa is for g++ 4.8
-add-apt repository -y ppa:ubuntu-toolchain-r/test
+add-apt-repository -y ppa:ubuntu-toolchain-r/test
 
 apt-get -y update
 apt-get install \
@@ -25,8 +25,7 @@ apt-get install \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     bc
 
-update-alternatives
---install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
