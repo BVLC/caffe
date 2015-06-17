@@ -59,7 +59,7 @@ def determine_node_label_by_layertype(layer, layertype, rankdir):
     else:
         # If graph orientation is horizontal, vertical space is free and
         # horizontal space is not; separate words with newlines
-        separator = '\n'
+        separator = '\\n'
 
     if layertype == 'Convolution':
         # Outer double quotes needed or else colon characters don't parse
