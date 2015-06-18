@@ -253,6 +253,7 @@ int time() {
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+      Caffe::Synchronize(FLAGS_gpu);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
@@ -261,6 +262,7 @@ int time() {
       timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
+      Caffe::Synchronize(FLAGS_gpu);
       backward_time_per_layer[i] += timer.MicroSeconds();
     }
     backward_time += backward_timer.MicroSeconds();
