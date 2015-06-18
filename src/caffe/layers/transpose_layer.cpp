@@ -18,11 +18,6 @@ void TransposeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     this->blobs_.resize(2);
-    vector<int> weight_shape = this->blobs_[0]->shape();
-    vector<int> transposed_weight_shape(2);
-    transposed_weight_shape[0] = weight_shape[1];
-    transposed_weight_shape[1] = weight_shape[0];
-    this->blobs_[1].reset(new Blob<Dtype>(transposed_weight_shape));
     
   }  
 }
@@ -35,11 +30,10 @@ void TransposeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void TransposeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-
+  const vector<Blob<Dtype>*>& top) {
+  vector<int> weight_shape = this->blobs_[0]->shape();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* transposed_weight = this->blobs_[1]->mutable_cpu_data();
-  vector<int> weight_shape = this->blobs_[0]->shape();
   const int m = weight_shape[0];
   const int n = weight_shape[1];
   // Transpose function code

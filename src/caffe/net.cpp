@@ -468,9 +468,13 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
       // Permissive dimension checking -- only check counts are the same.
       CHECK_EQ(this_blob->count(), owner_blob->count())
           << "Shared parameter blobs must have the same count.";
-    }else if((layer_param.param(param_id).share_mode() ==
-                                  ParamSpec_DimCheckMode_COPY)) {
-      layers_[layer_id]->blobs()[param_id].reset(new Blob<Dtype>(layers_[owner_layer_id]->blobs()[owner_param_id]->shape()));
+    }else if(layer_param.type() =="Transpose") {
+      vector<int> weight_shape = layers_[owner_layer_id]->blobs()[owner_param_id]->shape();
+      layers_[layer_id]->blobs()[param_id].reset(new Blob<Dtype>(weight_shape));
+      vector<int> transposed_weight_shape(2);
+      transposed_weight_shape[0] = weight_shape[1];
+      transposed_weight_shape[1] = weight_shape[0];
+      layers_[layer_id]->blobs()[param_id+1].reset(new Blob<Dtype>(transposed_weight_shape));
     }else{
       // Strict dimension checking -- all dims must be the same.
       CHECK(this_blob->shape() == owner_blob->shape());
