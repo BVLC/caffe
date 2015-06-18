@@ -19,7 +19,7 @@ apt-get install \
     g++-4.8 wget git curl \
     python-dev python-numpy \
     libleveldb-dev libsnappy-dev libopencv-dev \
-    libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev libboost-python1.54-dev \
+    libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
