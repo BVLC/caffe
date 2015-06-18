@@ -50,12 +50,6 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     PoolingParameter p_param = param.pooling_param();
-    if (p_param.pad() || p_param.pad_h() || p_param.pad_w() ||
-        param.top_size() > 1) {
-      LOG(INFO) << "CUDNN does not support padding or multiple tops. "
-                << "Using Caffe's own pooling layer.";
-      return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
-    }
     return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
 #endif
   } else {
@@ -64,6 +58,43 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 }
 
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
+
+// Get LRN layer according to engine
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
+  LRNParameter_Engine engine = param.lrn_param().engine();
+
+  if (engine == LRNParameter_Engine_DEFAULT) {
+    engine = LRNParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = LRNParameter_Engine_CUDNN;
+#endif
+  }
+
+  if (engine == LRNParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+  } else if (engine == LRNParameter_Engine_CUDNN) {
+    LRNParameter lrn_param = param.lrn_param();
+
+    if (lrn_param.norm_region() ==LRNParameter_NormRegion_WITHIN_CHANNEL) {
+      // not valid for cudnn
+      // return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
+    } else {
+      // local size is too big to be handled through cuDNN
+      if (param.lrn_param().local_size() > CUDNN_LRN_MAX_N) {
+        return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+      } else {
+        // return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+        return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
+      }
+    }
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
 
 // Get relu layer according to engine.
 template <typename Dtype>
