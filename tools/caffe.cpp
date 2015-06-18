@@ -71,7 +71,7 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
 // enumerate all devices if none is specified.
 int device_query() {
   if ( FLAGS_gpu < 0 ) {
-    //CHECK_GT(FLAGS_gpu, -1) << "Need a device ID to query.";
+    // If no gpu is specified, enumerate all the devices.
     Caffe::EnumerateDevices();
   } else {
     LOG(INFO) << "Querying device ID = " << FLAGS_gpu;
