@@ -162,6 +162,8 @@ class Caffe {
   static void EnumerateDevices();
   // Prepares contexts for devices to use
   static void SetDevices(std::vector<int> device_ids);
+  // Finish executing gpu kernels on the specified-device.
+  static void Synchronize(int device_id);
 
   // Get a device context
   static DeviceContext& GetDeviceContext(int id);
