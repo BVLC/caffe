@@ -257,6 +257,8 @@ message ParamSpec {
     STRICT = 0;
     // PERMISSIVE requires only the count (num*channels*height*width) to match.
     PERMISSIVE = 1;
+    // COPY will just re-initialize and copy weigts from source to target layers, useful while using Transpose Layer.
+    COPY = 3;
   }
 
   // The multiplier on the global learning rate for this parameter.
