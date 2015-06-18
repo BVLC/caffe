@@ -41,7 +41,6 @@ LayerParameter ROIPoolingLayer<Dtype>::GetConcatParam(void) {
 
     // concat along the first axis 
     concat_param.mutable_concat_param()->set_axis(0);
-    concat_param.mutable_concat_param()->set_concat_dim(0);
 
     return concat_param;
 }
@@ -55,6 +54,7 @@ void ROIPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
     // Currently, this layer only supports a batch size of 1, for ease of backprop
     // (see Fast-RCNN paper, section on image-centric sampling for mini-batches)
+    LOG(INFO) << "Started";
     CHECK_EQ(bottom[0]->shape(0), 1) << "Can only support a batch size of 1";
 
     spp_layers_.clear();
