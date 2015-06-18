@@ -348,6 +348,11 @@ ifeq ($(BLAS), mkl)
 	MKL_DIR ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKL_DIR)/include
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
+else ifeq ($(BLAS), eigen)
+	# Eigen
+	COMMON_FLAGS += -DUSE_EIGEN
+	EIGEN_DIR ?= /opt/eigen
+	BLAS_INCLUDE ?= $(EIGEN_DIR)
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
