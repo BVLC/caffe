@@ -16,7 +16,7 @@ def init_network(args):
 		net.blobs[name].reshape(1, *(net.blobs[name].data.shape[1:]))
 	transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
 	transformer.set_transpose('data', (2,0,1))
-	#transformer.set_mean('data', np.load(args.mean_file).mean(1).mean(1))
+	transformer.set_mean('data', np.load('python/caffe/imagenet/ilsvrc_2012_mean.npy').mean(1).mean(1))
 	transformer.set_raw_scale('data', 255)
 	#transformer.set_channel_swap('data', (2,1,0))
 	net.transformer = transformer
@@ -69,6 +69,23 @@ def format_data(data, padsize=1, padval=0):
 	data = data.reshape((n * data.shape[1], n * data.shape[3]) + data.shape[4:])
 	return data
 
+_original = False
+def format_general_filters(data, padsize=1, padval=0):
+	num_filters = data.shape[0]
+	num_channels = data.shape[1]
+	if _original:
+		return format_data(data[:num_channels].reshape( (num_channels ** 2,) + data.shape[2:]))
+	
+	data -= data.min()
+	data /= data.max()
+	padding = ( (0, 0), (0, 0), (0, padsize), (0, padsize) )
+	data = np.pad(data, padding, mode='constant', constant_values=padval)
+	
+	data = data.reshape((num_filters, num_channels) + data.shape[2:]).transpose((0, 2, 1, 3))
+	data = data.reshape((num_filters * data.shape[1], num_channels * data.shape[3]))
+	return data
+	
+
 def save_blob(blob, out_file, args):
 	if len(blob.shape) == 1:
 		blob = np.reshape(blob, (1, blob.shape[0]))
@@ -83,7 +100,7 @@ def save_blob(blob, out_file, args):
 			np_im = format_data(blob.transpose(0, 2, 3, 1))
 		else:
 			# this works if the number of channels is <= number of filters
-			np_im = format_data(blob[:num_channels].reshape(num_channels ** 2, width, height))
+			np_im = format_general_filters(blob)
 	elif len(blob.shape) == 3:
 		num_channels = blob.shape[0]
 		if num_channels == 3:
@@ -115,14 +132,13 @@ def save_activations(net, args):
 		os.mkdir(outdir)
 		im = caffe.io.load_image(im_f)
 		net.blobs['data'].data[...] = net.transformer.preprocess('data', im)
-		blobs = net.blobs.keys()
-		outs = net.forward(blobs=blobs)
-		for name, data in outs.items():
+		net.forward()
+		for name, data in net.blobs.items():
 			try:
-				print "\t%s: %s" % (name, data.shape)
+				print "\t%s: %s" % (name, data.data.shape)
 				out_file = os.path.join(outdir, name + ".png")
-				if len(data.shape) > 1:
-					save_blob(data[0], out_file, args)
+				if len(data.data.shape) > 1:
+					save_blob(data.data[0], out_file, args)
 			except Exception as e:
 				print "skipping %s" % name
 
@@ -135,11 +151,11 @@ def main(args):
 		shutil.rmtree(args.output_dir)
 	os.makedirs(args.output_dir)
 
-	print "\nSaving Filters"
-	save_filters(net, args)
 	print "\nSaving Activations"
 	save_activations(net, args)
 
+	print "\nSaving Filters"
+	save_filters(net, args)
 
 def get_args():
 	parser = argparse.ArgumentParser(description="Output network activations and filters")
