@@ -67,12 +67,17 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
 // To add a command, define a function "int command()" and register it with
 // RegisterBrewFunction(action);
 
-// Device Query: show diagnostic information for a GPU device.
+// Device Query: show diagnostic information for a GPU device, or
+// enumerate all devices if none is specified.
 int device_query() {
-  CHECK_GT(FLAGS_gpu, -1) << "Need a device ID to query.";
-  LOG(INFO) << "Querying device ID = " << FLAGS_gpu;
-  caffe::Caffe::SetDevice(FLAGS_gpu);
-  caffe::Caffe::DeviceQuery();
+  if ( FLAGS_gpu < 0 ) {
+    // If no gpu is specified, enumerate all the devices.
+    Caffe::EnumerateDevices();
+  } else {
+    LOG(INFO) << "Querying device ID = " << FLAGS_gpu;
+    caffe::Caffe::SetDevice(FLAGS_gpu);
+    caffe::Caffe::DeviceQuery();
+  }
   return 0;
 }
 RegisterBrewFunction(device_query);
