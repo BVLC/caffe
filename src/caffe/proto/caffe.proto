@@ -712,6 +712,8 @@ message ROIPoolingParameter {
         CUDNN = 2;
     }
     optional Engine engine = 6 [default = DEFAULT];
+
+    optional uint32 n_rois = 7 [default = 1000];
 }
 
 message ReshapeParameter {

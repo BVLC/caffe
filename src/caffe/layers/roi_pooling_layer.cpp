@@ -76,11 +76,11 @@ void ROIPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         spp_bottom_vecs.push_back(new vector<Blob<Dtype>*>);
         spp_top_vecs.push_back(new vector<Blob<Dtype>*>);
 
-        spp_bottom_vecs_[i].push_back(bottom[0]);
-        spp_top_vecs[i]_.push_back(new Blob<Dtype>());
+        spp_bottom_vecs_[i]->push_back(bottom[0]);
+        spp_top_vecs_[i]->push_back(new Blob<Dtype>());
 
         spp_layers_.push_back(shared_ptr<SPPLayer<Dtype> > (new SPPLayer<Dtype>(spp_param)));
-        spp_layers_[i].SetUp(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
+        spp_layers_[i]->SetUp(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
     }
 
     // Concat layer param
@@ -89,7 +89,7 @@ void ROIPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     // Concat layer, top and bottom
     for(int i = 0; i < n_rois_; i++) concat_bottom_vec_.push_back(*spp_top_vecs_[i]);
     concat_layer_.reset(new ConcatLayer<Dtype>(concat_param));
-    concat_layer_.SetUp(concat_bottom_vec_, top);
+    concat_layer_->SetUp(concat_bottom_vec_, top);
 }
 
 template <typename Dtype>
@@ -102,10 +102,10 @@ void ROIPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
     // reshape layers
     for(int i = 0; i < n_rois_; i++) {
-        spp_bottom_vecs_[i] = bottom[0];
-        spp_layers_[i].Reshape(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
+        spp_bottom_vecs_[i][0] = bottom[0];
+        spp_layers_[i]->Reshape(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
     }
-    concat_layer_.Reshape(concat_bottom_vec_, top);
+    concat_layer_->Reshape(concat_bottom_vec_, top);
 }
 
 template <typename Dtype>
@@ -134,8 +134,8 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         CHECK_LE(xmax, bottom_data->shape(3)-1)
         CHECK_LE(ymax, bottom_data->shape(2)-1)
 
-        // create a bottom for SPP TODO
-        vector<Blob<Dtype>*> spp_bottom = *(spp_bottom_vecs_[i]);
+        // create a bottom for SPP
+        vector<Blob<Dtype>*> spp_bottom = *spp_bottom_vecs_[i];
         spp_bottom.clear();
         spp_bottom.push_back(new Blob<Dtype>());
         spp_bottom[0]->Reshape(1, bottom_data->shape(1), ymax-ymin+1, xmax-xmin+1);
@@ -148,14 +148,10 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         }
 
         // set up SPP layer with new bottom
-        spp_layer_.SetUp(spp_bottom_vec_, spp_top_vec_);
+        spp_layer_.SetUp(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
 
         // forward pass through SPP
-        spp_layer_->Forward(spp_bottom_vec_, spp_top_vec_);
-
-        // copy to appropriate concat layer bottom
-        concat_bottom_vec_[i] = new Blob<Dtype>();
-        concat_bottom_vec_[i]->CopyFrom(*(spp_top_vec_[0]), false, true);
+        spp_layer_->Forward(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
     }
 
     // forward pass through the concat layer
@@ -170,11 +166,45 @@ void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
 
     CHECK_EQ(n_rois_, bottom[1]->shape(0)) << "n_rois_ is not correct";
+
+    // backprop through concat
     vector<bool> concat_propagate_down(n_rois_, true);
     concat_layer_->Backward(top, concat_propagate_down, concat_bottom_vec_);
 
-}
+    // backprop through spp layers
+    vector<bool> spp_propagate_down(1, true);
+    for(int i = 0; i < n_rois_; i++) 
+        spp_layers_[i]->Backward(*spp_top_vecs_[i], spp_propagate_down, *spp_bottom_vecs[i]);
 
+    // iterate over ROIs and accumulate gradients
+    Blob<Dtype>* bottom_data = bottom[0];
+    Blob<Dtype>* bottom_rois = bottom[1];
+    vector<Blob<Dtype>*> spp_bottom = *spp_bottom_vecs_[i];
+    caffe_set(spp_bottom[0]->count(), 0, spp_bottom[0]->cpu_diff());
+    for(int i = 0; i < n_rois; i++) {
+        // get the current roi and check dimensions
+        int xmin = static_cast<int>bottom_rois->data_at(i, 0, 0, 0);
+        int ymin = static_cast<int>bottom_rois->data_at(i, 0, 0, 1);
+        int xmax = static_cast<int>bottom_rois->data_at(i, 0, 0, 2);
+        int ymax = static_cast<int>bottom_rois->data_at(i, 0, 0, 3);
+
+        CHECK_GE(xmax, xmin);
+        CHECK_GE(ymax, ymin);
+        CHECK_GE(xmin, 0);
+        CHECK_GE(ymin, 0);
+        CHECK_LE(xmax, bottom_data->shape(3)-1)
+        CHECK_LE(ymax, bottom_data->shape(2)-1)
+
+        for(int c = 0; c < spp_bottom[0]->shape(1); c++) {
+            for(int y = 0; y < spp_bottom[0]->shape(2); y++) {
+                int d_offset = bottom_data->offset(1, c, y+y_min, xmin);
+                int s_offset = spp_bottom[0]->offset(1, c, y, 0);
+                Dtype *s = spp_bottom[0]->cpu_diff() + s_offset;
+                Dtype *d = bottom_data->cpu_diff() + d_offset;
+                caffe_add(xmax-xmin+1, s, d, s);
+            }
+        }
+}
 
 #ifdef CPU_ONLY
 STUB_GPU(ROIPoolingLayer);
