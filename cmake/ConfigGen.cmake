@@ -89,6 +89,10 @@ function(caffe_generate_export_configs)
     list(APPEND Caffe_DEFINITIONS -DUSE_MKL)
   endif()
 
+  if(BLAS STREQUAL "Eigen" OR BLAS STREQUAL "eigen")
+    list(APPEND Caffe_DEFINITIONS -DUSE_EIGEN)
+  endif()
+
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${PROJECT_BINARY_DIR}/CaffeConfig.cmake" @ONLY)
 
   # Add targets to the build-tree export set

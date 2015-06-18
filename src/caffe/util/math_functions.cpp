@@ -14,10 +14,32 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const float alpha, const float* A, const float* B, const float beta,
     float* C) {
+#ifdef USE_EIGEN
+  MAP_SMATRIX(eC, C, M, N);
+  eC *= beta;
+  if (TransA == CblasNoTrans && TransB == CblasNoTrans) {
+    MAP_CONST_SMATRIX(eA, A, M, K);
+    MAP_CONST_SMATRIX(eB, B, K, N);
+    eC.noalias() += alpha * (eA * eB);
+  } else if (TransA == CblasNoTrans && TransB == CblasTrans) {
+    MAP_CONST_SMATRIX(eA, A, M, K);
+    MAP_CONST_SMATRIX(eB, B, N, K);
+    eC.noalias() += alpha * (eA * eB.transpose());
+  } else if (TransA == CblasTrans && TransB == CblasNoTrans) {
+    MAP_CONST_SMATRIX(eA, A, K, M);
+    MAP_CONST_SMATRIX(eB, B, K, N);
+    eC.noalias() += alpha * (eA.transpose() * eB);
+  } else {
+    MAP_CONST_SMATRIX(eA, A, K, M);
+    MAP_CONST_SMATRIX(eB, B, N, K);
+    eC.noalias() += alpha * (eA.transpose() * eB.transpose());
+  }
+#else
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   cblas_sgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
       ldb, beta, C, N);
+#endif
 }
 
 template<>
@@ -25,33 +47,101 @@ void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta,
     double* C) {
+#ifdef USE_EIGEN
+  MAP_DMATRIX(eC, C, M, N);
+  eC *= beta;
+  if (TransA == CblasNoTrans && TransB == CblasNoTrans) {
+    MAP_CONST_DMATRIX(eA, A, M, K);
+    MAP_CONST_DMATRIX(eB, B, K, N);
+  eC.noalias() += alpha * (eA * eB);
+  } else if (TransA == CblasNoTrans && TransB == CblasTrans) {
+    MAP_CONST_DMATRIX(eA, A, M, K);
+    MAP_CONST_DMATRIX(eB, B, N, K);
+    eC.noalias() += alpha * (eA * eB.transpose());
+  } else if (TransA == CblasTrans && TransB == CblasNoTrans) {
+    MAP_CONST_DMATRIX(eA, A, K, M);
+    MAP_CONST_DMATRIX(eB, B, K, N);
+    eC.noalias() += alpha * (eA.transpose() * eB);
+  } else {
+    MAP_CONST_DMATRIX(eA, A, K, M);
+    MAP_CONST_DMATRIX(eB, B, N, K);
+    eC.noalias() += alpha * (eA.transpose() * eB.transpose());
+  }
+#else
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   cblas_dgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
       ldb, beta, C, N);
+#endif
 }
 
 template <>
 void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const float alpha, const float* A, const float* x,
     const float beta, float* y) {
+#ifdef USE_EIGEN
+  MAP_CONST_SMATRIX(eA, A, M, N);
+  if (TransA == CblasNoTrans) {
+    MAP_SVECTOR(eY, y, M);
+    eY *= beta;
+    MAP_CONST_SVECTOR(eX, x, N);
+    eY.noalias() += alpha * (eA * eX);
+  } else {
+    MAP_SVECTOR(eY, y, N);
+    eY *= beta;
+    MAP_CONST_SVECTOR(eX, x, M);
+    eY.noalias() += alpha * (eA.transpose() * eX);
+  }
+#else
   cblas_sgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
+#endif
 }
 
 template <>
 void caffe_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const double alpha, const double* A, const double* x,
     const double beta, double* y) {
+#ifdef USE_EIGEN
+  MAP_CONST_DMATRIX(eA, A, M, N);
+  if (TransA == CblasNoTrans) {
+    MAP_DVECTOR(eY, y, M);
+    eY *= beta;
+    MAP_CONST_DVECTOR(eX, x, N);
+    eY.noalias() += alpha * (eA * eX);
+  } else {
+    MAP_DVECTOR(eY, y, N);
+    eY *= beta;
+    MAP_CONST_DVECTOR(eX, x, M);
+    eY.noalias() += alpha * (eA.transpose() * eX);
+  }
+#else
   cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
+#endif
 }
 
 template <>
 void caffe_axpy<float>(const int N, const float alpha, const float* X,
-    float* Y) { cblas_saxpy(N, alpha, X, 1, Y, 1); }
+                       float* Y) {
+#ifdef USE_EIGEN
+  MAP_SVECTOR(eY, Y, N);
+  MAP_CONST_SVECTOR(eX, X, N);
+  eY = alpha * eX + eY;
+#else
+  cblas_saxpy(N, alpha, X, 1, Y, 1);
+#endif
+}
 
 template <>
 void caffe_axpy<double>(const int N, const double alpha, const double* X,
-    double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
+                        double* Y) {
+#ifdef USE_EIGEN
+  MAP_DVECTOR(eY, Y, N);
+  MAP_CONST_DVECTOR(eX, X, N);
+  eY = alpha * eX + eY;
+#else
+  cblas_daxpy(N, alpha, X, 1, Y, 1);
+#endif
+}
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
@@ -106,24 +196,46 @@ template void caffe_copy<double>(const int N, const double* X, double* Y);
 
 template <>
 void caffe_scal<float>(const int N, const float alpha, float *X) {
+#ifdef USE_EIGEN
+  MAP_SVECTOR(eX, X, N);
+  eX *= alpha;
+#else
   cblas_sscal(N, alpha, X, 1);
+#endif
 }
 
 template <>
 void caffe_scal<double>(const int N, const double alpha, double *X) {
+#ifdef USE_EIGEN
+  MAP_DVECTOR(eX, X, N);
+  eX *= alpha;
+#else
   cblas_dscal(N, alpha, X, 1);
+#endif
 }
 
 template <>
 void caffe_cpu_axpby<float>(const int N, const float alpha, const float* X,
                             const float beta, float* Y) {
+#ifdef USE_EIGEN
+  MAP_SVECTOR(eY, Y, N);
+  MAP_CONST_SVECTOR(eX, X, N);
+  eY = alpha * eX + beta * eY;
+#else
   cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
+#endif
 }
 
 template <>
 void caffe_cpu_axpby<double>(const int N, const double alpha, const double* X,
                              const double beta, double* Y) {
+#ifdef USE_EIGEN
+  MAP_DVECTOR(eY, Y, N);
+  MAP_CONST_DVECTOR(eX, X, N);
+  eY = alpha * eX + beta * eY;
+#else
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
+#endif
 }
 
 template <>
@@ -328,13 +440,29 @@ void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
 template <>
 float caffe_cpu_strided_dot<float>(const int n, const float* x, const int incx,
     const float* y, const int incy) {
+#ifdef USE_EIGEN
+  int lx = (n + incx - 1) / incx;
+  int ly = (n + incy - 1) / incy;
+  MAP_CONST_SVECTOR_STRIDE(eX, x, lx, incx);
+  MAP_CONST_SVECTOR_STRIDE(eY, y, ly, incy);
+  return eX.dot(eY);
+#else
   return cblas_sdot(n, x, incx, y, incy);
+#endif
 }
 
 template <>
 double caffe_cpu_strided_dot<double>(const int n, const double* x,
     const int incx, const double* y, const int incy) {
+#ifdef USE_EIGEN
+  int lx = (n + incx - 1) / incx;
+  int ly = (n + incy - 1) / incy;
+  MAP_CONST_DVECTOR_STRIDE(eX, x, lx, incx);
+  MAP_CONST_DVECTOR_STRIDE(eY, y, ly, incy);
+  return eX.dot(eY);
+#else
   return cblas_ddot(n, x, incx, y, incy);
+#endif
 }
 
 template <typename Dtype>
@@ -350,26 +478,52 @@ double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
 template <>
 float caffe_cpu_asum<float>(const int n, const float* x) {
+#ifdef USE_EIGEN
+  float *y = new float[n];
+  vsAbs(n, x, y);
+  MAP_SVECTOR(eY, y, n);
+  return eY.sum();
+#else
   return cblas_sasum(n, x, 1);
+#endif
 }
 
 template <>
 double caffe_cpu_asum<double>(const int n, const double* x) {
+#ifdef USE_EIGEN
+  double *y = new double[n];
+  vdAbs(n, x, y);
+  MAP_DVECTOR(eY, y, n);
+  return eY.sum();
+#else
   return cblas_dasum(n, x, 1);
+#endif
 }
 
 template <>
 void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,
                             float* y) {
+#ifdef USE_EIGEN
+  memcpy(y, x, sizeof(float)*n);
+  MAP_SVECTOR(eY, y, n);
+  eY *= alpha;
+#else
   cblas_scopy(n, x, 1, y, 1);
   cblas_sscal(n, alpha, y, 1);
+#endif
 }
 
 template <>
 void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
+#ifdef USE_EIGEN
+  memcpy(y, x, sizeof(double)*n);
+  MAP_DVECTOR(eY, y, n);
+  eY *= alpha;
+#else
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
+#endif
 }
 
 }  // namespace caffe

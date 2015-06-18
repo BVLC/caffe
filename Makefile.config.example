@@ -45,10 +45,11 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 
 # BLAS choice:
 # atlas for ATLAS (default)
+# eigen for Eigen
 # mkl for MKL
 # open for OpenBlas
 BLAS := atlas
-# Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
+# Custom (MKL/Eigen/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
 # BLAS_INCLUDE := /path/to/your/blas
