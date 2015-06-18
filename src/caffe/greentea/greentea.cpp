@@ -10,23 +10,6 @@
 namespace caffe {
 
 #ifdef USE_GREENTEA
-/*template<typename Dtype>
-cl_mem Subregion(cl_mem in, size_t off, size_t size) {
-  cl_buffer_region* region = new cl_buffer_region();
-  region->origin = sizeof(Dtype) * off;
-  region->size = sizeof(Dtype) * size;
-  cl_int status;
-  const cl_mem out = clCreateSubBuffer(in, CL_MEM_READ_WRITE,
-  CL_BUFFER_CREATE_TYPE_REGION,
-                                       region, &status);
-  std::cout << "SUBREGION: " << status << std::endl;
-  return out;
-}
-
-template cl_mem Subregion<float>(cl_mem in, size_t off, size_t size);
-template cl_mem Subregion<double>(cl_mem in, size_t off, size_t size);
-template cl_mem Subregion<long>(cl_mem in, size_t off, size_t size);
-template cl_mem Subregion<int>(cl_mem in, size_t off, size_t size);*/
 
 viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
                                          viennacl::ocl::context &ctx) {

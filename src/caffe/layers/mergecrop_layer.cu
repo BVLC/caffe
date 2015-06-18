@@ -24,10 +24,10 @@ __global__ void CopyForward(const int nthreads, const Dtype* bottom_a,
     int pad_h = (height_b - height_a) / 2;
     int pad_w = (width_b - width_a) / 2;
 
-    int batch_id = index / (channels_a * channels_b * height_a * width_a);
+    int batch_id = index / ((channels_a + channels_b) * height_a * width_a);
 
     int bottom_id = ((index
-        - batch_id * channels_a * channels_b * height_a * width_a)
+        - batch_id * (channels_a + channels_b) * height_a * width_a)
         / (channels_a * height_a * width_a)) % 2;
 
     int h = ((index / width_a) % height_a);
@@ -41,8 +41,8 @@ __global__ void CopyForward(const int nthreads, const Dtype* bottom_a,
     } else {
       int channel_id = (index / ((width_a * height_a)) % channels_b);
       int bidx =
-          ((((batch_id) * channels_b + channel_id) * height_a + h + pad_h)
-              * width_a + w + (h * 2 + 1) * pad_w);
+          (((batch_id) * channels_b + channel_id) * height_b
+              * width_b) + width_b * (h + pad_h) + pad_w + w;
       top[index] = bottom_b[bidx];
     }
   }
@@ -58,10 +58,10 @@ __global__ void CopyBackward(const int nthreads, Dtype* bottom_a,
   CUDA_KERNEL_LOOP(index, nthreads)
   {
 
-    int batch_id = index / (channels_a * channels_b * height_a * width_a);
+    int batch_id = index / ((channels_a + channels_b) * height_a * width_a);
 
     int bottom_id = ((index
-        - batch_id * channels_a * channels_b * height_a * width_a)
+        - batch_id * (channels_a + channels_b) * height_a * width_a)
         / (channels_a * height_a * width_a)) % 2;
 
     int h = ((index / width_a) % height_a);
