@@ -220,6 +220,16 @@ void CudnnNdConvolutionLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
+void CudnnNdConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>* >& bottom, const vector<Blob<Dtype>* >& top) {
+	NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
+void CudnnNdConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>* >& bottom, const vector<bool>& propagate_down, const vector<Blob<Dtype>* >& top) {
+	NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
 CudnnNdConvolutionLayer<Dtype>::~CudnnNdConvolutionLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }

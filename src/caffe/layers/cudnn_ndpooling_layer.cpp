@@ -86,6 +86,16 @@ void CudnnNdPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void CudnnNdPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>* >& bottom, const vector<Blob<Dtype>* >& top) {
+	NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
+void CudnnNdPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>* >& bottom, const vector<bool>& propagate_down, const vector<Blob<Dtype>* >& top) {
+	NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
 CudnnNdPoolingLayer<Dtype>::~CudnnNdPoolingLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
