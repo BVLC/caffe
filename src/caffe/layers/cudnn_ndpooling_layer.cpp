@@ -97,6 +97,7 @@ CudnnNdPoolingLayer<Dtype>::~CudnnNdPoolingLayer() {
 }
 
 INSTANTIATE_CLASS(CudnnNdPoolingLayer);
+REGISTER_LAYER_CLASS(NdPooling);
 
 }   // namespace caffe
 #endif

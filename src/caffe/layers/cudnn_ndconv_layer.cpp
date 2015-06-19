@@ -244,6 +244,7 @@ CudnnNdConvolutionLayer<Dtype>::~CudnnNdConvolutionLayer() {
 }
 
 INSTANTIATE_CLASS(CudnnNdConvolutionLayer);
+REGISTER_LAYER_CLASS(NdConvolution);
 
 }   // namespace caffe
 #endif
