@@ -38,7 +38,7 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   }
 
   // Configure output channels and groups.
-  channels_ = bottom[0]->channels();
+  channels_ = bottom[0]->shape(1);
   num_output_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(num_output_, 0);
   group_ = this->layer_param_.convolution_param().group();
@@ -129,14 +129,14 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void CudnnNdConvolutionLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  num_ = bottom[0]->num();
-  CHECK_EQ(bottom[0]->channels(), channels_) << "Input size incompatible with convolution kernel.";
+  num_ = bottom[0]->shape(0);
+  CHECK_EQ(bottom[0]->shape(1), channels_) << "Input size incompatible with convolution kernel.";
   input_shape_ = bottom[0]->shape();
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
-    CHECK_EQ(num_, bottom[bottom_id]->num())
+    CHECK_EQ(num_, bottom[bottom_id]->shape(0))
 	  << "Inputs must have same num.";
-    CHECK_EQ(channels_, bottom[bottom_id]->channels())
+    CHECK_EQ(channels_, bottom[bottom_id]->shape(1))
         << "Inputs must have same channels.";
   	for(int i = 0; i < bottom[0]->num_axes(); ++i) {
       CHECK_EQ(input_shape_[i], bottom[bottom_id]->shape(i)) << "Inputs must have same shape.";
@@ -209,13 +209,15 @@ void CudnnNdConvolutionLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 void CudnnNdConvolutionLayer<Dtype>::compute_output_shape() {
-  output_shape_ = input_shape_;
-  output_shape_[1] = num_output_;
+  output_shape_.clear();
+  output_shape_.push_back(num_);
+  output_shape_.push_back(num_output_);
   
-  for(int i = 2; i < output_shape_.size(); ++i) {
-	output_shape_[i] += 2*pad_shape_[i-2] - kernel_shape_[i-2];
-	output_shape_[i] /= stride_shape_[i-2];
-	++output_shape_[i];
+  for(int i = 2; i < input_shape_.size(); ++i) {
+    int dim = input_shape_[i] + 2*pad_shape_[i-2] - kernel_shape_[i-2] / stride_shape_[i-2] + 1;
+	if(dim > 1){
+	  output_shape_.push_back(dim);
+	}
   }
 }
 

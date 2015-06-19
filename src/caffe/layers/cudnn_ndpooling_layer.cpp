@@ -49,25 +49,13 @@ template <typename Dtype>
 void CudnnNdPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 
-  channels_ = bottom[0]->channels();
+  channels_ = bottom[0]->shape(1);
   input_shape_ = bottom[0]->shape();
   if(global_pooling_) {
 	kernel_shape_ = vector<int>(bottom[0]->shape().begin()+2, bottom[0]->shape().end());
   }
 
-  pooled_shape_ = input_shape_;
-  for(int i = 2; i < pooled_shape_.size(); ++i) {
-	pooled_shape_[i] += 2 * pad_shape_[i-2] - kernel_shape_[i-2];
-	pooled_shape_[i] /= stride_shape_[i-2];
-	++pooled_shape_[i];
-
-	if(pad_shape_[i-2] > 0) {
-      if ((pooled_shape_[i] - 1) * stride_shape_[i-2] >= input_shape_[i] + pad_shape_[i-2]) {
-        --pooled_shape_[i];
-      }
-      CHECK_LT((pooled_shape_[i] - 1) * stride_shape_[i-2], input_shape_[i] + pad_shape_[i-2]);
-	}
-  }
+  compute_output_shape();
   top[0]->Reshape(pooled_shape_);
  
   // If max pooling, we will initialize the vector index part.
@@ -83,6 +71,26 @@ void CudnnNdPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   cudnn::setTensorNdDesc<Dtype>(&bottom_desc_, input_shape_);
   cudnn::setTensorNdDesc<Dtype>(&top_desc_, pooled_shape_);
+}
+
+template <typename Dtype>
+void CudnnNdPoolingLayer<Dtype>::compute_output_shape() {
+  pooled_shape_ = std::vector<int>(input_shape_.begin(), input_shape_.begin()+2);
+  for(int i = 2; i < input_shape_.size(); ++i) {
+	int dim = input_shape_[i] + 2 * pad_shape_[i-2] - kernel_shape_[i-2] / stride_shape_[i-2] + 1;
+
+	if(pad_shape_[i-2] > 0) {
+      if ((dim - 1) * stride_shape_[i-2] >= input_shape_[i] + pad_shape_[i-2]) {
+        --dim;
+      }
+      CHECK_LT((dim - 1) * stride_shape_[i-2], input_shape_[i] + pad_shape_[i-2]);
+	}
+
+	if(dim > 1) {
+	  pooled_shape_.push_back(dim);
+	}
+
+  }
 }
 
 template <typename Dtype>

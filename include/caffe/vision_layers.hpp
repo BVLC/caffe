@@ -523,6 +523,8 @@ class CudnnNdPoolingLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+  virtual void compute_output_shape();
+
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
