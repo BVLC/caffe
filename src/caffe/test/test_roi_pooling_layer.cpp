@@ -25,7 +25,7 @@ class ROIPoolingLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   ROIPoolingLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(1, 3, 12, 8)),
-        blob_bottom_rois_(new Blob<Dtype>(4, 1, 1, 4)),
+        blob_bottom_rois_(new Blob<Dtype>(2, 1, 1, 4)),
         blob_top_data_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -39,13 +39,14 @@ class ROIPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     int i = 0;
     blob_bottom_rois_->mutable_cpu_data()[0 + 4*i] = 0;
     blob_bottom_rois_->mutable_cpu_data()[1 + 4*i] = 1;
-    blob_bottom_rois_->mutable_cpu_data()[2 + 4*i] = 1;
+    blob_bottom_rois_->mutable_cpu_data()[2 + 4*i] = 4;
     blob_bottom_rois_->mutable_cpu_data()[3 + 4*i] = 6;
     i = 1;
     blob_bottom_rois_->mutable_cpu_data()[0 + 4*i] = 2;
-    blob_bottom_rois_->mutable_cpu_data()[1 + 4*i] = 6;
-    blob_bottom_rois_->mutable_cpu_data()[2 + 4*i] = 2;
+    blob_bottom_rois_->mutable_cpu_data()[1 + 4*i] = 1;
+    blob_bottom_rois_->mutable_cpu_data()[2 + 4*i] = 7;
     blob_bottom_rois_->mutable_cpu_data()[3 + 4*i] = 7;
+    /*
     i = 2;
     blob_bottom_rois_->mutable_cpu_data()[0 + 4*i] = 1;
     blob_bottom_rois_->mutable_cpu_data()[1 + 4*i] = 3;
@@ -56,6 +57,7 @@ class ROIPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_rois_->mutable_cpu_data()[1 + 4*i] = 3;
     blob_bottom_rois_->mutable_cpu_data()[2 + 4*i] = 3;
     blob_bottom_rois_->mutable_cpu_data()[3 + 4*i] = 3;
+    */
 
     blob_bottom_vec_.push_back(blob_bottom_rois_);
     blob_top_vec_.push_back(blob_top_data_);
@@ -80,7 +82,7 @@ TYPED_TEST(ROIPoolingLayerTest, TestGradient) {
   ROIPoolingParameter* roi_pooling_param =
       layer_param.mutable_roi_pooling_param();
   roi_pooling_param->set_pyramid_height(2);
-  roi_pooling_param->set_n_rois(4);
+  roi_pooling_param->set_n_rois(2);
   ROIPoolingLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-4, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

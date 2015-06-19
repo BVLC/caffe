@@ -102,8 +102,6 @@ void ROIPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
     // reshape layers
     for(int i = 0; i < n_rois_; i++) {
-        spp_bottom_vecs_[i]->clear();
-        spp_bottom_vecs_[i]->push_back(bottom[0]);
         spp_layers_[i]->Reshape(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
     }
     concat_layer_->Reshape(concat_bottom_vec_, top);
@@ -136,17 +134,16 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         CHECK_LE(ymax, bottom_data->shape(2)-1);
 
         // create a bottom for SPP
-        vector<Blob<Dtype>*> spp_bottom = *spp_bottom_vecs_[i];
-        spp_bottom.clear();
-        spp_bottom.push_back(new Blob<Dtype>());
-        spp_bottom[0]->Reshape(1, bottom_data->shape(1), ymax-ymin+1, xmax-xmin+1);
-        for(int c = 0; c < spp_bottom[0]->shape(1); c++) {
-            for(int y = 0; y < spp_bottom[0]->shape(2); y++) {
-                int s_offset = bottom_data->offset(1, c, y+ymin, xmin);
-                int d_offset = spp_bottom[0]->offset(1, c, y, 0);
-                caffe_copy(xmax-xmin+1, bottom_data->cpu_data()+s_offset, spp_bottom[0]->mutable_cpu_data()+d_offset);
+        Blob<Dtype>* spp_bottom = new Blob<Dtype>();
+        spp_bottom->Reshape(1, bottom_data->shape(1), ymax-ymin+1, xmax-xmin+1);
+        for(int c = 0; c < spp_bottom->shape(1); c++) {
+            for(int y = 0; y < spp_bottom->shape(2); y++) {
+                int s_offset = bottom_data->offset(0, c, y+ymin, xmin);
+                int d_offset = spp_bottom->offset(0, c, y, 0);
+                caffe_copy(xmax-xmin+1, bottom_data->cpu_data()+s_offset, spp_bottom->mutable_cpu_data()+d_offset);
             }
         }
+        (*spp_bottom_vecs_[i])[0] = spp_bottom;
 
         // set up SPP layer with new bottom
         spp_layers_[i]->SetUp(*spp_bottom_vecs_[i], *spp_top_vecs_[i]);
@@ -162,6 +159,9 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+    if (propagate_down[1]) {
+        LOG(FATAL) << "ROIPooling Layer cannot backpropagate to label inputs.";
+    }
     if (!propagate_down[0]) {
         return;
     }
@@ -181,7 +181,7 @@ void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // backward pass through SPP layer
         spp_layers_[i]->Backward(*spp_top_vecs_[i], spp_propagate_down, *spp_bottom_vecs_[i]);
 
-        vector<Blob<Dtype>*> spp_bottom = *spp_bottom_vecs_[i];
+        Blob<Dtype>* spp_bottom = (*spp_bottom_vecs_[i])[0];
         // get the current roi and check dimensions
         int xmin = static_cast<int>(bottom_rois->data_at(i, 0, 0, 0));
         int ymin = static_cast<int>(bottom_rois->data_at(i, 0, 0, 1));
@@ -194,12 +194,14 @@ void ROIPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         CHECK_GE(ymin, 0);
         CHECK_LE(xmax, bottom_data->shape(3)-1);
         CHECK_LE(ymax, bottom_data->shape(2)-1);
+        CHECK_EQ(spp_bottom->shape(2), ymax-ymin+1);
+        CHECK_EQ(spp_bottom->shape(3), xmax-xmin+1);
 
-        for(int c = 0; c < spp_bottom[0]->shape(1); c++) {
-            for(int y = 0; y < spp_bottom[0]->shape(2); y++) {
-                int d_offset = bottom_data->offset(1, c, y+ymin, xmin);
-                int s_offset = spp_bottom[0]->offset(1, c, y, 0);
-                const Dtype *s = spp_bottom[0]->cpu_diff() + s_offset;
+        for(int c = 0; c < spp_bottom->shape(1); c++) {
+            for(int y = 0; y < spp_bottom->shape(2); y++) {
+                int d_offset = bottom_data->offset(0, c, y+ymin, xmin);
+                int s_offset = spp_bottom->offset(0, c, y, 0);
+                const Dtype *s = spp_bottom->cpu_diff() + s_offset;
                 Dtype *d = bottom_data->mutable_cpu_diff() + d_offset;
                 caffe_add(xmax-xmin+1, s, d, d);
             }
