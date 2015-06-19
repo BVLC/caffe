@@ -41,8 +41,6 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
       diff_.mutable_cpu_data());  // a_i-b_i
   const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
-  bool legacy_version =
-      this->layer_param_.contrastive_loss_param().legacy_version();
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
     dist_sq_.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
@@ -50,12 +48,7 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
     if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
-      if (legacy_version) {
-        loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
-      } else {
-        Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]), 0.0);
-        loss += dist*dist;
-      }
+      loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
     }
   }
   loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
@@ -66,8 +59,6 @@ template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
-  bool legacy_version =
-      this->layer_param_.contrastive_loss_param().legacy_version();
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
@@ -85,20 +76,10 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               Dtype(0.0),
               bout + (j*channels));
         } else {  // dissimilar pairs
-          Dtype mdist(0.0);
-          Dtype beta(0.0);
-          if (legacy_version) {
-            mdist = margin - dist_sq_.cpu_data()[j];
-            beta = -alpha;
-          } else {
-            Dtype dist = sqrt(dist_sq_.cpu_data()[j]);
-            mdist = margin - dist;
-            beta = -alpha * mdist / (dist + Dtype(1e-4));
-          }
-          if (mdist > Dtype(0.0)) {
+          if ((margin-dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
             caffe_cpu_axpby(
                 channels,
-                beta,
+                -alpha,
                 diff_.cpu_data() + (j*channels),
                 Dtype(0.0),
                 bout + (j*channels));
