@@ -19,7 +19,7 @@ Additionally Transpose Layer is provided with this repo to make the construction
 - Currently requires Intel MKL Library, but will soon be updated to work without it.
 
 
-Other changes includes:
+####Other changes includes:
 - addition of some functions to math_functions.cpp and hpp. 
 - some changes to net.cpp so that, transpose layer can be setup to share weights of any layer without knowing the size of blob.
 
