@@ -2,6 +2,12 @@ This Repo is aimed to enhance Caffe to include layers that are required to const
 
 Additionally Transpose Layer is provided with this repo to make the construction of stacked ELM-Auto Encoders possible.
 
+==LS Layer==
+Bottom : "data"
+Bottom : "labels"
+Param{Name : "beta"}
+//no top 
+beta (ß) is the weight calculated as Least square solution of Hß = Y, where H is "data" or bottom[0] and Y is "labels" or bottom[1].
 
 # Caffe
 
