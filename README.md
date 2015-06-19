@@ -2,7 +2,7 @@ This Repo is aimed to enhance Caffe to include layers that are required to const
 
 Additionally Transpose Layer is provided with this repo to make the construction of stacked ELM-Auto Encoders possible.
 
-==LS Layer==
+##LS Layer
 Bottom : "data"
 Bottom : "labels"
 Param{Name : "beta"}
