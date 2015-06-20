@@ -25,7 +25,7 @@ void ExpLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (outer_scale_ != Dtype(1)) {
       caffe_gpu_scal(count, outer_scale_, top_data);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     if (inner_scale_ == Dtype(1)) {
@@ -41,7 +41,7 @@ void ExpLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       greentea_gpu_scal<Dtype>(this->device_context_.id(), count, outer_scale_,
                                (cl_mem) top_data, 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -63,7 +63,7 @@ void ExpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (inner_scale_ != Dtype(1)) {
       caffe_gpu_scal(count, inner_scale_, bottom_diff);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     greentea_gpu_mul<Dtype>(this->device_context_.id(), count,
@@ -73,7 +73,7 @@ void ExpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       greentea_gpu_scal<Dtype>(this->device_context_.id(), count, inner_scale_,
                                (cl_mem) bottom_diff, 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

@@ -16,9 +16,8 @@ void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
-
   // Same number of batches requires
-  CHECK_EQ(bottom[0]->num(),bottom[1]->num());
+  CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   int num = bottom[0]->num();
 
   // All channels of both inputs are copied

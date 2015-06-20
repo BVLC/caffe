@@ -23,10 +23,14 @@ class RandomNumberGeneratorTest : public ::testing::Test {
      : mean_bound_multiplier_(3.8),  // ~99.99% confidence for test failure.
        sample_size_(10000),
        seed_(1701),
-       data_(new SyncedMemory(sample_size_ * sizeof(Dtype), Caffe::GetDefaultDeviceContext())),
-       data_2_(new SyncedMemory(sample_size_ * sizeof(Dtype), Caffe::GetDefaultDeviceContext())),
-       int_data_(new SyncedMemory(sample_size_ * sizeof(int), Caffe::GetDefaultDeviceContext())),
-       int_data_2_(new SyncedMemory(sample_size_ * sizeof(int), Caffe::GetDefaultDeviceContext())) {}
+       data_(new SyncedMemory(sample_size_ * sizeof(Dtype),
+                              Caffe::GetDefaultDeviceContext())),
+       data_2_(new SyncedMemory(sample_size_ * sizeof(Dtype),
+                              Caffe::GetDefaultDeviceContext())),
+       int_data_(new SyncedMemory(sample_size_ * sizeof(int),
+                              Caffe::GetDefaultDeviceContext())),
+       int_data_2_(new SyncedMemory(sample_size_ * sizeof(int),
+                              Caffe::GetDefaultDeviceContext())) {}
 
   virtual void SetUp() {
     Caffe::set_random_seed(this->seed_);
@@ -181,14 +185,15 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
     DeviceContext dc = Caffe::GetDefaultDeviceContext();
 
-    if(dc.backend() == BACKEND_CUDA) {
+    if (dc.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_rng_gaussian(sample_size_, mu, sigma, rng_data);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      greentea_gpu_rng_gaussian<Dtype>(dc.id(), sample_size_, mu, sigma, (cl_mem)rng_data, 0);
-#endif // USE_GREENTEA
+      greentea_gpu_rng_gaussian<Dtype>(dc.id(), sample_size_,
+                                       mu, sigma, (cl_mem)rng_data, 0);
+#endif  // USE_GREENTEA
     }
   }
 
@@ -198,16 +203,16 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
     DeviceContext dc = Caffe::GetDefaultDeviceContext();
 
-    if(dc.backend() == BACKEND_CUDA) {
+    if (dc.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_rng_uniform(sample_size_, lower, upper, rng_data);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      greentea_gpu_rng_uniform<Dtype>(dc.id(), sample_size_, lower, upper, (cl_mem)rng_data, 0);
-#endif // USE_GREENTEA
+      greentea_gpu_rng_uniform<Dtype>(dc.id(), sample_size_,
+                                      lower, upper, (cl_mem)rng_data, 0);
+#endif  // USE_GREENTEA
     }
-
   }
 
   // Fills with uniform integers in [0, UINT_MAX] using 2 argument form of
@@ -216,14 +221,14 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     unsigned int* rng_data = static_cast<unsigned int*>(gpu_data);
     DeviceContext dc = Caffe::GetDefaultDeviceContext();
 
-    if(dc.backend() == BACKEND_CUDA) {
+    if (dc.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_rng_uniform(sample_size_, rng_data);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       greentea_gpu_rng_uniform(dc.id(), sample_size_, (cl_mem)rng_data, 0);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
 }
 

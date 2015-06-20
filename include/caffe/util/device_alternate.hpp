@@ -30,7 +30,7 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     const vector<Blob<Dtype>*>& bottom) { NO_GPU; } \
 
 #else  // Normal GPU + CPU Caffe.
-#ifdef USE_CUDA // Include CUDA macros and headers only if the backend is enabled
+#ifdef USE_CUDA  // Include CUDA macros and headers only if enabled
 
 #include <cublas_v2.h>
 #include <cuda.h>
@@ -91,7 +91,9 @@ const char* curandGetErrorString(curandStatus_t error);
     const int CAFFE_CUDA_NUM_THREADS = 512;
 #endif
 
+// CDT hacks: allow proper code formatting and remove errors in CDT
 #ifdef __CDT_PARSER__
+#include "device_launch_parameters.h"
 #define CUDA_KERNEL(...)
 #else
 #define CUDA_KERNEL(...)  <<< __VA_ARGS__ >>>
@@ -105,7 +107,7 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 }  // namespace caffe
 
 
-#endif // USE_CUDA
-#endif // CPU_ONLY
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 
 #endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_

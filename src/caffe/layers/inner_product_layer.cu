@@ -25,7 +25,7 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                             bias_multiplier_.gpu_data(),
                             this->blobs_[1]->gpu_data(), (Dtype) 1., top_data);
     }
-#endif // USE CUDA
+#endif  // USE CUDA
   } else {
 #ifdef USE_GREENTEA
     greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
@@ -39,7 +39,7 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                (cl_mem) (this->blobs_[1]->gpu_data()), 0,
                                (Dtype) 1., (cl_mem) top_data, 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -72,7 +72,7 @@ void InnerProductLayer<Dtype>::Backward_gpu(
                             top_diff, this->blobs_[0]->gpu_data(), (Dtype) 0.,
                             bottom[0]->mutable_gpu_diff());
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     if (this->param_propagate_down_[0]) {
@@ -106,7 +106,7 @@ void InnerProductLayer<Dtype>::Backward_gpu(
                                (Dtype) 0.,
                                (cl_mem) (bottom[0]->mutable_gpu_diff()), 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

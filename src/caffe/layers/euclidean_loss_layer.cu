@@ -25,7 +25,7 @@ void EuclideanLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     caffe_gpu_dot(count, diff_.gpu_data(), diff_.gpu_data(), &dot);
     Dtype loss = dot / bottom[0]->num() / Dtype(2);
     top[0]->mutable_cpu_data()[0] = loss;
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     greentea_gpu_sub<Dtype>(this->device_context_.id(), count,
@@ -38,7 +38,7 @@ void EuclideanLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                             (cl_mem) (diff_.gpu_data()), 0, &dot);
     Dtype loss = dot / bottom[0]->num() / Dtype(2);
     top[0]->mutable_cpu_data()[0] = loss;
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -57,13 +57,13 @@ void EuclideanLossLayer<Dtype>::Backward_gpu(
             diff_.gpu_data(),                   // a
             Dtype(0),                           // beta
             bottom[i]->mutable_gpu_diff());  // b
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         greentea_gpu_axpby(this->device_context_.id(), bottom[i]->count(),
                            alpha, (cl_mem) (diff_.gpu_data()), 0, Dtype(0),
                            (cl_mem) (bottom[i]->mutable_gpu_diff()), 0);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
       }
     }
   }

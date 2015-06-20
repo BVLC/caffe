@@ -55,5 +55,5 @@ TEST_F(PlatformTest, TestInitialization) {
 
 }  // namespace caffe
 
-#endif // USE_CUDA
-#endif // CPU_ONLY
+#endif  // USE_CUDA
+#endif  // CPU_ONLY

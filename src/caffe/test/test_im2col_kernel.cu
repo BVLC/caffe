@@ -25,7 +25,7 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
     Dtype* data_col);
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template <typename Dtype>
 class Im2colKernelTest : public GPUDeviceTest<Dtype> {
@@ -105,7 +105,8 @@ TYPED_TEST(Im2colKernelTest, TestGPU) {
     for (int n = 0; n < this->blob_bottom_->num(); ++n) {
       int grid_dim = default_grid_dim/grid_div;
       // NOLINT_NEXT_LINE(whitespace/operators)
-      im2col_gpu_kernel<TypeParam> CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS)(
+      im2col_gpu_kernel<TypeParam>
+        CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS)(
         num_kernels, bottom_data + this->blob_bottom_->offset(n),
         this->height_, this->width_, this->kernel_size_, this->kernel_size_,
         this->pad_, this->pad_, this->stride_, this->stride_,
@@ -127,4 +128,4 @@ TYPED_TEST(Im2colKernelTest, TestGPU) {
 }
 
 }  // namespace caffe
-#endif // USE_CUDA
+#endif  // USE_CUDA

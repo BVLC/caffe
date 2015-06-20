@@ -6,19 +6,18 @@
 namespace caffe {
 
 Timer::Timer()
-    : initted_(false),
-      running_(false),
-      has_run_at_least_once_(false) {
+    : initted_(false), running_(false), has_run_at_least_once_(false) {
   Init();
 }
 
 Timer::~Timer() {
-  if (Caffe::mode() == Caffe::GPU && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::mode() == Caffe::GPU
+      && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     CUDA_CHECK(cudaEventDestroy(start_gpu_));
     CUDA_CHECK(cudaEventDestroy(stop_gpu_));
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #else
     NO_GPU;
 #endif
@@ -27,11 +26,12 @@ Timer::~Timer() {
 
 void Timer::Start() {
   if (!running()) {
-    if (Caffe::mode() == Caffe::GPU && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU
+        && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventRecord(start_gpu_, 0));
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #else
       NO_GPU;
 #endif
@@ -45,12 +45,13 @@ void Timer::Start() {
 
 void Timer::Stop() {
   if (running()) {
-    if (Caffe::mode() == Caffe::GPU && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU
+        && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventRecord(stop_gpu_, 0));
       CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #else
       NO_GPU;
 #endif
@@ -61,25 +62,25 @@ void Timer::Stop() {
   }
 }
 
-
 float Timer::MicroSeconds() {
   if (!has_run_at_least_once()) {
-    LOG(WARNING) << "Timer has never been run before reading time.";
+    LOG(WARNING)<< "Timer has never been run before reading time.";
     return 0;
   }
   if (running()) {
     Stop();
   }
-  if (Caffe::mode() == Caffe::GPU && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::mode() == Caffe::GPU
+      && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
-                                    stop_gpu_));
+            stop_gpu_));
     // Cuda only measure milliseconds
     elapsed_microseconds_ = elapsed_milliseconds_ * 1000;
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #else
-      NO_GPU;
+    NO_GPU;
 #endif
   } else {
     elapsed_microseconds_ = (stop_cpu_ - start_cpu_).total_microseconds();
@@ -89,20 +90,21 @@ float Timer::MicroSeconds() {
 
 float Timer::MilliSeconds() {
   if (!has_run_at_least_once()) {
-    LOG(WARNING) << "Timer has never been run before reading time.";
+    LOG(WARNING)<< "Timer has never been run before reading time.";
     return 0;
   }
   if (running()) {
     Stop();
   }
-  if (Caffe::mode() == Caffe::GPU && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::mode() == Caffe::GPU
+      && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
-                                    stop_gpu_));
-#endif // USE_CUDA
+            stop_gpu_));
+#endif  // USE_CUDA
 #else
-      NO_GPU;
+    NO_GPU;
 #endif
   } else {
     elapsed_milliseconds_ = (stop_cpu_ - start_cpu_).total_milliseconds();
@@ -116,12 +118,13 @@ float Timer::Seconds() {
 
 void Timer::Init() {
   if (!initted()) {
-    if (Caffe::mode() == Caffe::GPU && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU
+        && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventCreate(&start_gpu_));
       CUDA_CHECK(cudaEventCreate(&stop_gpu_));
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #else
       NO_GPU;
 #endif
@@ -153,14 +156,14 @@ void CPUTimer::Stop() {
 
 float CPUTimer::MilliSeconds() {
   if (!has_run_at_least_once()) {
-    LOG(WARNING) << "Timer has never been run before reading time.";
+    LOG(WARNING)<< "Timer has never been run before reading time.";
     return 0;
   }
   if (running()) {
     Stop();
   }
   this->elapsed_milliseconds_ = (this->stop_cpu_ -
-                                this->start_cpu_).total_milliseconds();
+      this->start_cpu_).total_milliseconds();
   return this->elapsed_milliseconds_;
 }
 
@@ -173,7 +176,7 @@ float CPUTimer::MicroSeconds() {
     Stop();
   }
   this->elapsed_microseconds_ = (this->stop_cpu_ -
-                                this->start_cpu_).total_microseconds();
+      this->start_cpu_).total_microseconds();
   return this->elapsed_microseconds_;
 }
 

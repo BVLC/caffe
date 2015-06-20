@@ -37,7 +37,7 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (power_ != Dtype(1)) {
       caffe_gpu_powx(count, top_data, power_, top_data);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -50,7 +50,8 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       return;
     }
     const Dtype* bottom_data = bottom[0]->gpu_data();
-    greentea_copy<Dtype>(count, (cl_mem)bottom_data, 0, (cl_mem)top_data, 0, ctx);
+    greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
+                         &ctx);
     if (scale_ != Dtype(1)) {
       greentea_gpu_scal(this->device_context_.id(), count, scale_,
                         (cl_mem) top_data, 0);
@@ -64,7 +65,7 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                (cl_mem) top_data, 0, power_, (cl_mem) top_data,
                                0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -118,7 +119,7 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
       }
       caffe_gpu_mul(count, top_diff, bottom_diff, bottom_diff);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -155,8 +156,8 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           greentea_gpu_scal<Dtype>(this->device_context_.id(), count, power_,
                                    (cl_mem) bottom_diff, 0);
         } else {
-          greentea_copy<Dtype>(count, (cl_mem) bottom_data,0,
-                               (cl_mem) bottom_diff,0, ctx);
+          greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0,
+                               (cl_mem) bottom_diff, 0, &ctx);
           if (scale_ != Dtype(1)) {
             greentea_gpu_scal(this->device_context_.id(), count, scale_,
                               (cl_mem) bottom_diff, 0);
@@ -178,9 +179,8 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       greentea_gpu_mul<Dtype>(this->device_context_.id(), count,
                               (cl_mem) top_diff, 0, (cl_mem) bottom_diff, 0,
                               (cl_mem) bottom_diff, 0);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
-
   }
 }
 

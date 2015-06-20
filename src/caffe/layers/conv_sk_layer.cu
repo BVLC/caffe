@@ -8,8 +8,8 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #include "caffe/greentea/greentea_im2col.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -17,7 +17,6 @@ namespace caffe {
 template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
-
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // CUDA backend code
@@ -61,7 +60,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_context_.id());
 
     for (int i = 0; i < bottom.size(); ++i) {
-
       const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
       cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
       cl_mem col_data = (cl_mem) (col_buffer_.mutable_gpu_data());
@@ -72,9 +70,8 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       int top_offset = M_ * N_;
 
       for (int n = 0; n < num_; ++n) {
-
         // First, im2col
-        greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
+        greentea_im2col_sk_gpu<Dtype>(&program, &ctx, bottom_data,
                                       bottom[i]->offset(n), channels_, height_,
                                       width_, kernel_h_, kernel_w_, pad_h_,
                                       pad_w_, stride_h_, stride_w_, kstride_h_,
@@ -231,7 +228,7 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
         for (int n = 0; n < num_; ++n) {
           // Since we saved memory in the forward pass by not storing all col
           // data, we will need to recompute them.
-          greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
+          greentea_im2col_sk_gpu<Dtype>(&program, &ctx, bottom_data,
                                         bottom[i]->offset(n), channels_,
                                         height_, width_, kernel_h_, kernel_w_,
                                         pad_h_, pad_w_, stride_h_, stride_w_,
@@ -258,7 +255,7 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
                                        (Dtype) 0., col_diff, col_offset * g);
             }
             // col2im back to the data
-            greentea_col2im_sk_gpu<Dtype>(program, ctx, col_diff, channels_,
+            greentea_col2im_sk_gpu<Dtype>(&program, &ctx, col_diff, channels_,
                                           height_, width_, kernel_h_, kernel_w_,
                                           pad_h_, pad_w_, stride_h_, stride_w_,
                                           kstride_h_, kstride_w_, bottom_diff,

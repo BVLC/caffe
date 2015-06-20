@@ -17,8 +17,7 @@ template<typename Dtype>
 __global__ void PReLUForward(const int n, const int channels, const int dim,
                              const Dtype* in, Dtype* out,
                              const Dtype* slope_data, const int div_factor) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     int c = (index / dim) % channels / div_factor;
     out[index] = in[index] > 0 ? in[index] : in[index] * slope_data[c];
   }
@@ -30,8 +29,7 @@ __global__ void PReLUBackward(const int n, const int channels, const int dim,
                               const Dtype* in_diff, const Dtype* in_data,
                               Dtype* out_diff, const Dtype* slope_data,
                               const int div_factor) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     int c = (index / dim) % channels / div_factor;
     out_diff[index] = in_diff[index]
         * ((in_data[index] > 0) + (in_data[index] <= 0) * slope_data[c]);
@@ -42,12 +40,11 @@ __global__ void PReLUBackward(const int n, const int channels, const int dim,
 template<typename Dtype>
 __global__ void PReLUParamBackward(const int n, const Dtype* in_diff,
                                    const Dtype* in_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -68,11 +65,11 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
 
     // NOLINT_NEXT_LINE(whitespace/operators)
-    PReLUForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+    PReLUForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                    CAFFE_CUDA_NUM_THREADS)(
         count, channels, dim, bottom_data, top_data, slope_data, div_factor);
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -81,18 +78,20 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_context_.id());
 
     if (top[0] == bottom[0]) {
-      greentea_copy<Dtype>(count, (cl_mem)bottom_data,0, (cl_mem)(bottom_memory_.mutable_gpu_data()),0, ctx);
+      greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0,
+                           (cl_mem) (bottom_memory_.mutable_gpu_data()), 0,
+                           &ctx);
     }
 
     viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
         CL_KERNEL_SELECT("prelu_forward"));
     viennacl::ocl::enqueue(
-        oclk_prelu(count, channels, dim, WrapHandle((cl_mem) bottom_data, ctx),
-                   WrapHandle((cl_mem) top_data, ctx),
-                   WrapHandle((cl_mem) slope_data, ctx), div_factor),
+        oclk_prelu(count, channels, dim, WrapHandle((cl_mem) bottom_data, &ctx),
+                   WrapHandle((cl_mem) top_data, &ctx),
+                   WrapHandle((cl_mem) slope_data, &ctx), div_factor),
         ctx.get_queue());
 
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -129,8 +128,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             cdim, top_diff + top[0]->offset(n),
             bottom_data + bottom[0]->offset(n),
             backward_buff_.mutable_gpu_diff());
-        CUDA_POST_KERNEL_CHECK
-        ;
+        CUDA_POST_KERNEL_CHECK;
         if (channel_shared_) {
           Dtype d;
           caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
@@ -156,10 +154,9 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           CAFFE_CUDA_NUM_THREADS)(
           count, channels, dim, top_diff, bottom_data, bottom_diff, slope_data,
           div_factor);
-      CUDA_POST_KERNEL_CHECK
-      ;
+      CUDA_POST_KERNEL_CHECK;
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -172,14 +169,13 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       int cdim = channels * dim;
       Dtype dsum = 0.;
       for (int n = 0; n < bottom[0]->num(); ++n) {
-
         viennacl::ocl::kernel &oclk_prelu_param = program.get_kernel(
             CL_KERNEL_SELECT("prelu_param_backward"));
         viennacl::ocl::enqueue(
             oclk_prelu_param(
-                cdim, WrapHandle((cl_mem) top_diff, ctx), top[0]->offset(n),
-                WrapHandle((cl_mem) bottom_data, ctx), bottom[0]->offset(n),
-                WrapHandle((cl_mem) (backward_buff_.mutable_gpu_diff()), ctx)),
+                cdim, WrapHandle((cl_mem) top_diff, &ctx), top[0]->offset(n),
+                WrapHandle((cl_mem) bottom_data, &ctx), bottom[0]->offset(n),
+                WrapHandle((cl_mem) (backward_buff_.mutable_gpu_diff()), &ctx)),
             ctx.get_queue());
 
         if (channel_shared_) {
@@ -211,13 +207,13 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
           CL_KERNEL_SELECT("prelu_backward"));
       viennacl::ocl::enqueue(
-          oclk_prelu(count, channels, dim, WrapHandle((cl_mem) top_diff, ctx),
-                     WrapHandle((cl_mem) bottom_data, ctx),
-                     WrapHandle((cl_mem) bottom_diff, ctx),
-                     WrapHandle((cl_mem) slope_data, ctx), div_factor),
+          oclk_prelu(count, channels, dim, WrapHandle((cl_mem) top_diff, &ctx),
+                     WrapHandle((cl_mem) bottom_data, &ctx),
+                     WrapHandle((cl_mem) bottom_diff, &ctx),
+                     WrapHandle((cl_mem) slope_data, &ctx), div_factor),
           ctx.get_queue());
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

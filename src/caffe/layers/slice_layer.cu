@@ -13,8 +13,7 @@ __global__ void Slice(const int nthreads, const Dtype* in_data,
                       const int slice_size, const int bottom_slice_axis,
                       const int top_slice_axis, const int offset_slice_axis,
                       Dtype* out_data) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int total_slice_size = slice_size * top_slice_axis;
     const int slice_num = index / total_slice_size;
     const int slice_index = index % total_slice_size;
@@ -27,7 +26,7 @@ __global__ void Slice(const int nthreads, const Dtype* in_data,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -48,7 +47,7 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
           nthreads, bottom_data, kForward, num_slices_, slice_size_,
           bottom_slice_axis, top_slice_axis, offset_slice_axis, top_data);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -59,12 +58,12 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));
       viennacl::ocl::enqueue(
-          oclk_slice(nthreads, WrapHandle((cl_mem) bottom_data, ctx),
+          oclk_slice(nthreads, WrapHandle((cl_mem) bottom_data, &ctx),
                      kForward ? 1 : 0, num_slices_, slice_size_,
                      bottom_slice_axis, top_slice_axis, offset_slice_axis,
-                     WrapHandle((cl_mem) top_data, ctx)),
+                     WrapHandle((cl_mem) top_data, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
 
     offset_slice_axis += top_slice_axis;
@@ -94,7 +93,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
           nthreads, top_diff, kForward, num_slices_, slice_size_,
           bottom_slice_axis, top_slice_axis, offset_slice_axis, bottom_diff);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -105,12 +104,12 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));
       viennacl::ocl::enqueue(
-          oclk_slice(nthreads, WrapHandle((cl_mem) top_diff, ctx),
+          oclk_slice(nthreads, WrapHandle((cl_mem) top_diff, &ctx),
                      kForward ? 1 : 0, num_slices_, slice_size_,
                      bottom_slice_axis, top_slice_axis, offset_slice_axis,
-                     WrapHandle((cl_mem) bottom_diff, ctx)),
+                     WrapHandle((cl_mem) bottom_diff, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
     offset_slice_axis += top_slice_axis;
   }

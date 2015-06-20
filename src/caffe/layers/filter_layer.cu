@@ -23,17 +23,16 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_CUDA
         caffe_copy(dim, bottom_data + data_offset_bottom,
                    top_data + data_offset_top);
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-                this->device_context_.id());
+            this->device_context_.id());
 
-        greentea_copy<Dtype>(dim, (cl_mem) bottom_data,
-                      data_offset_bottom, (cl_mem) top_data, data_offset_top, ctx);
-#endif // USE_GREENTEA
+        greentea_copy<Dtype>(dim, (cl_mem) bottom_data, data_offset_bottom,
+                             (cl_mem) top_data, data_offset_top, &ctx);
+#endif  // USE_GREENTEA
       }
-
     }
   }
 }
@@ -73,17 +72,17 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                   bottom[i]->mutable_gpu_diff() + data_offset_bottom);
             } else {  // this data was been forwarded
               data_offset_top = next_to_backward_offset * dim;
-              ++next_to_backward_offset;// point to next forwarded item index
+              ++next_to_backward_offset;  // point to next forwarded item index
               caffe_copy(dim, top[i]->mutable_gpu_diff() + data_offset_top,
                   bottom[i]->mutable_gpu_diff() + data_offset_bottom);
             }
           }
         }
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-                this->device_context_.id());
+            this->device_context_.id());
 
         for (int n = 0; n < bottom[i]->shape(0); ++n) {
           if (next_to_backward_offset >= indices_to_forward_.size()) {
@@ -100,15 +99,16 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                   (cl_mem)(bottom[i]->mutable_gpu_diff()), data_offset_bottom);
             } else {  // this data was been forwarded
               data_offset_top = next_to_backward_offset * dim;
-              ++next_to_backward_offset;// point to next forwarded item index
-              greentea_copy<Dtype>(dim, (cl_mem)(top[i]->mutable_gpu_diff()), data_offset_top,
-                  (cl_mem)(bottom[i]->mutable_gpu_diff()), data_offset_bottom, ctx);
+              ++next_to_backward_offset;  // point to next forwarded item index
+              greentea_copy<Dtype>(dim, (cl_mem)(top[i]->mutable_gpu_diff()),
+                  data_offset_top,
+                  (cl_mem)(bottom[i]->mutable_gpu_diff()),
+                  data_offset_bottom, &ctx);
             }
           }
         }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
       }
-
     }
   }
 }

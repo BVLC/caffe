@@ -7,8 +7,8 @@
 #include "caffe/greentea/greentea.hpp"
 
 #ifdef USE_GREENTEA
-#include "caffe/greentea/greentea_math_functions.hpp"
 #include "caffe/greentea/greentea_im2col.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -23,11 +23,11 @@ SyncedMemory::~SyncedMemory() {
     if (device_context_.backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
       CUDA_CHECK(cudaFree(gpu_ptr_));
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       clReleaseMemObject(cl_gpu_mem_);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
   }
 #endif  // CPU_ONLY
@@ -51,7 +51,7 @@ inline void SyncedMemory::to_cpu() {
       if (device_context_.backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
@@ -59,7 +59,7 @@ inline void SyncedMemory::to_cpu() {
         ctx.get_queue().finish();
         // On the CPU, memory is shared (and no copy needed)
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
-          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, ctx);
+          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
         }
         ctx.get_queue().finish();
 #endif
@@ -84,7 +84,7 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_CUDA
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         caffe_gpu_memset(size_, 0, gpu_ptr_);
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
@@ -106,7 +106,7 @@ inline void SyncedMemory::to_gpu() {
           int alpha = 0;
           greentea_memset(device_context_.id(), size_, alpha, cl_gpu_mem_, 0);
         }
-        gpu_ptr_ = (void*) cl_gpu_mem_;
+        gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
 #endif
       }
@@ -120,7 +120,7 @@ inline void SyncedMemory::to_gpu() {
           CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         }
         caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
@@ -140,15 +140,15 @@ inline void SyncedMemory::to_gpu() {
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                          size_, NULL, &err);
           }
-          gpu_ptr_ = (void*) cl_gpu_mem_;
+          gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
           ctx.get_queue().finish();
         }
         // On the CPU, memory is shared (and no copy needed)
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
-          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, ctx);
+          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
         }
         ctx.get_queue().finish();
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
       }
       head_ = SYNCED;
       break;

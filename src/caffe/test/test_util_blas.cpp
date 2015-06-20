@@ -43,12 +43,15 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
 #ifdef USE_CUDA
     caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
       A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
-                                 (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
+    greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasNoTrans,
+                                 2, 4, 3, 1.,
+                                 (cl_mem)(A.gpu_data()), 0,
+                                 (cl_mem)(B.gpu_data()), 0, 0.,
+                                 (cl_mem)(C.mutable_gpu_data()), 0);
+#endif  // USE_GREENTEA
   }
 
   for (int i = 0; i < 8; ++i) {
@@ -68,12 +71,15 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
 #ifdef USE_CUDA
   caffe_gpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
       A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-  greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
-        (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
+  greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasNoTrans,
+                               2, 4, 3, 1.,
+                               (cl_mem)(A.gpu_data()), 0,
+                               (cl_mem)(B.gpu_data()), 0,
+                               0., (cl_mem)(C.mutable_gpu_data()), 0);
+#endif  // USE_GREENTEA
   }
 
   for (int i = 0; i < 8; ++i) {
@@ -93,12 +99,15 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
 #ifdef USE_CUDA
     caffe_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
       A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-  greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasTrans, 2, 4, 3, 1.,
-        (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
+  greentea_gpu_gemm<TypeParam>(dc.id(), CblasTrans, CblasTrans,
+                               2, 4, 3, 1.,
+                               (cl_mem)(A.gpu_data()), 0,
+                               (cl_mem)(B.gpu_data()), 0, 0.,
+                               (cl_mem)(C.mutable_gpu_data()), 0);
+#endif  // USE_GREENTEA
   }
 
   for (int i = 0; i < 8; ++i) {
@@ -118,12 +127,15 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
 #ifdef USE_CUDA
     caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
       A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
-          (cl_mem)(A.gpu_data()),0, (cl_mem)(B.gpu_data()),0, 0., (cl_mem)(C.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
+    greentea_gpu_gemm<TypeParam>(dc.id(), CblasNoTrans, CblasTrans,
+                                 2, 4, 3, 1.,
+                                 (cl_mem)(A.gpu_data()), 0,
+                                 (cl_mem)(B.gpu_data()), 0, 0.,
+                                 (cl_mem)(C.mutable_gpu_data()), 0);
+#endif  // USE_GREENTEA
   }
 
   for (int i = 0; i < 8; ++i) {
@@ -156,12 +168,15 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
 #ifdef USE_CUDA
     caffe_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
       x.gpu_data(), 0., y.mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_gemv<TypeParam>(dc.id(), CblasNoTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
-        (cl_mem)(x.gpu_data()),0, 0., (cl_mem)(y.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
+    greentea_gpu_gemv<TypeParam>(dc.id(), CblasNoTrans,
+                                 2, 3, 1.,
+                                 (cl_mem)(A.gpu_data()), 0,
+                                 (cl_mem)(x.gpu_data()), 0, 0.,
+                                 (cl_mem)(y.mutable_gpu_data()), 0);
+#endif  // USE_GREENTEA
   }
 
   for (int i = 0; i < 2; ++i) {
@@ -180,12 +195,15 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
 #ifdef USE_CUDA
     caffe_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
       y.gpu_data(), 0., x.mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_gemv<TypeParam>(dc.id(), CblasTrans, 2, 3, 1., (cl_mem)(A.gpu_data()),0,
-        (cl_mem)(y.gpu_data()),0, 0., (cl_mem)(x.mutable_gpu_data()),0);
-#endif // USE_GREENTEA
+    greentea_gpu_gemv<TypeParam>(dc.id(), CblasTrans,
+                                 2, 3, 1.,
+                                 (cl_mem)(A.gpu_data()), 0,
+                                 (cl_mem)(y.gpu_data()), 0, 0.,
+                                 (cl_mem)(x.mutable_gpu_data()), 0);
+#endif  // USE_GREENTEA
   }
 
   for (int i = 0; i < 3; ++i) {

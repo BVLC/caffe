@@ -7,8 +7,8 @@
 #include "caffe/vision_layers.hpp"
 
 #ifdef USE_GREENTEA
-#include "caffe/greentea/greentea_math_functions.hpp"
 #include "caffe/greentea/greentea_im2col.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -22,8 +22,7 @@ __global__ void SoftmaxLossForwardGPU(const int nthreads,
                                       const int spatial_dim,
                                       const bool has_ignore_label_,
                                       const int ignore_label_, Dtype* counts) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int n = index / spatial_dim;
     const int s = index % spatial_dim;
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
@@ -38,7 +37,7 @@ __global__ void SoftmaxLossForwardGPU(const int nthreads,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
@@ -77,7 +76,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     if (top.size() == 2) {
       top[1]->ShareData(prob_);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -97,11 +96,11 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     viennacl::ocl::kernel &oclk_softmax_loss_forward = program.get_kernel(
         CL_KERNEL_SELECT("softmax_loss_forward"));
     viennacl::ocl::enqueue(
-        oclk_softmax_loss_forward(nthreads, WrapHandle(prob_data, ctx),
-                                  WrapHandle(label, ctx),
-                                  WrapHandle(loss_data, ctx), num, dim,
+        oclk_softmax_loss_forward(nthreads, WrapHandle(prob_data, &ctx),
+                                  WrapHandle(label, &ctx),
+                                  WrapHandle(loss_data, &ctx), num, dim,
                                   spatial_dim, has_ignore_label_ ? 1 : 0,
-                                  ignore_label_, WrapHandle(counts, ctx)),
+                                  ignore_label_, WrapHandle(counts, &ctx)),
         ctx.get_queue());
 
     Dtype loss;
@@ -120,7 +119,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     if (top.size() == 2) {
       top[1]->ShareData(prob_);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -134,8 +133,7 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
                                        const int ignore_label_, Dtype* counts) {
   const int channels = dim / spatial_dim;
 
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int n = index / spatial_dim;
     const int s = index % spatial_dim;
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
@@ -151,7 +149,7 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
@@ -188,7 +186,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       } else {
         caffe_gpu_scal(prob_.count(), loss_weight / num, bottom_diff);
       }
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -199,7 +197,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       cl_mem bottom_diff = (cl_mem)(bottom[0]->mutable_gpu_diff());
       cl_mem prob_data = (cl_mem)(prob_.gpu_data());
       cl_mem top_data = (cl_mem)(top[0]->gpu_data());
-      greentea_gpu_memcpy(prob_.count() * sizeof(Dtype), prob_data,0, bottom_diff,0,ctx);
+      greentea_gpu_memcpy(prob_.count() * sizeof(Dtype),
+                          prob_data, 0, bottom_diff, 0, &ctx);
       cl_mem label = (cl_mem)(bottom[1]->gpu_data());
       const int num = prob_.num();
       const int dim = prob_.count() / num;
@@ -210,18 +209,24 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       viennacl::ocl::kernel &oclk_softmax_loss_backward = program.get_kernel(
           CL_KERNEL_SELECT("softmax_loss_backward"));
       viennacl::ocl::enqueue(
-          oclk_softmax_loss_backward(nthreads, WrapHandle(top_data,ctx), WrapHandle(label,ctx), WrapHandle(bottom_diff,ctx), num, dim, spatial_dim, has_ignore_label_?1:0, ignore_label_, WrapHandle(counts,ctx)),
+          oclk_softmax_loss_backward(nthreads, WrapHandle(top_data, &ctx),
+                    WrapHandle(label, &ctx), WrapHandle(bottom_diff, &ctx),
+                    num, dim, spatial_dim, has_ignore_label_ ? 1 : 0,
+                    ignore_label_, WrapHandle(counts, &ctx)),
           ctx.get_queue());
 
       const Dtype loss_weight = top[0]->cpu_diff()[0];
       if (normalize_) {
         Dtype count;
-        greentea_gpu_asum(this->device_context_.id(), nthreads, counts, 0, &count);
-        greentea_gpu_scal(this->device_context_.id(), prob_.count(), loss_weight / count, bottom_diff, 0);
+        greentea_gpu_asum(this->device_context_.id(),
+                          nthreads, counts, 0, &count);
+        greentea_gpu_scal(this->device_context_.id(),
+                          prob_.count(), loss_weight / count, bottom_diff, 0);
       } else {
-        greentea_gpu_scal(this->device_context_.id(), prob_.count(), loss_weight / num, bottom_diff, 0);
+        greentea_gpu_scal(this->device_context_.id(),
+                          prob_.count(), loss_weight / num, bottom_diff, 0);
       }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
   }
 }

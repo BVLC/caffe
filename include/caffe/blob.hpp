@@ -46,8 +46,10 @@ class Blob {
         device_context_(device_context) {
   }
   explicit Blob(const int num, const int channels, const int height,
-                const int width, DeviceContext device_context = Caffe::GetDefaultDeviceContext());
-  explicit Blob(const vector<int>& shape, DeviceContext device_context = Caffe::GetDefaultDeviceContext());
+                const int width, DeviceContext device_context =
+                    Caffe::GetDefaultDeviceContext());
+  explicit Blob(const vector<int>& shape, DeviceContext device_context =
+                    Caffe::GetDefaultDeviceContext());
 
   /**
    * @brief Change the dimensions of the blob, allocating new memory if
@@ -139,7 +141,9 @@ class Blob {
    *        Dies on out of range index.
    */
   inline int CanonicalAxisIndex(int axis_index) const {
-    CHECK_GE(axis_index, -num_axes())<<"axis " << axis_index << " out of range for " << num_axes()
+    CHECK_GE(axis_index, -num_axes())
+        <<"axis " << axis_index
+        << " out of range for " << num_axes()
     << "-D Blob with shape " << shape_string();
     CHECK_LT(axis_index, num_axes())
     << "axis " << axis_index << " out of range for " << num_axes()
@@ -290,7 +294,7 @@ class Blob {
    */
   DeviceContext device_context();
 
-protected:
+ protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
   vector<int> shape_;
@@ -302,7 +306,6 @@ protected:
 };
 // class Blob
 
-}
-      // namespace caffe
+}  // namespace caffe
 
 #endif  // CAFFE_BLOB_HPP_

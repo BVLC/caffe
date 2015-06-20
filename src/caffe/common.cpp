@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <ctime>
 #include <tuple>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
@@ -10,7 +11,7 @@
 #include "caffe/greentea/cl_kernels.hpp"
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
-#endif // USE_CLBLAS
+#endif  // USE_CLBLAS
 #endif
 
 namespace caffe {
@@ -67,11 +68,11 @@ void Caffe::DeviceQuery() {
 }
 
 class Caffe::RNG::Generator {
-public:
+ public:
   Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
   explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
   caffe::rng_t* rng() {return rng_.get();}
-private:
+ private:
   shared_ptr<caffe::rng_t> rng_;
 };
 
@@ -95,7 +96,7 @@ Caffe::Caffe()
 #ifdef USE_CUDA
       cublas_handle_(NULL),
       curand_generator_(NULL),
-#endif // USE_CUDA
+#endif  // USE_CUDA
       random_generator_(),
       mode_(Caffe::CPU) {
   // Try to create a cublas handler, and report an error if failed (but we will
@@ -111,7 +112,7 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 }
 
 Caffe::~Caffe() {
@@ -121,7 +122,7 @@ Caffe::~Caffe() {
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -140,11 +141,11 @@ void Caffe::set_random_seed(const unsigned int seed) {
         g_curand_availability_logged = true;
       }
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
 // TODO: Proper RNG and Seed for OpenCL
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
@@ -153,9 +154,9 @@ void Caffe::set_random_seed(const unsigned int seed) {
 void Caffe::Synchronize(int device_id) {
 #ifdef USE_GREENTEA
   DeviceContext& device_context = Caffe::GetDeviceContext(device_id);
-  if ( device_context.backend() == BACKEND_OpenCL ) {
+  if (device_context.backend() == BACKEND_OpenCL) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-                      GetDeviceContext(device_id).id());
+        GetDeviceContext(device_id).id());
     ctx.get_queue().finish();
   }
 #else
@@ -175,7 +176,8 @@ void Caffe::EnumerateDevices() {
   typedef std::vector<viennacl::ocl::platform> platforms_type;
   platforms_type platforms = viennacl::ocl::get_platforms();
 
-  std::vector<std::tuple<viennacl::ocl::platform, viennacl::ocl::device>> platform_devices;
+  std::vector<std::tuple<viennacl::ocl::platform,
+      viennacl::ocl::device>> platform_devices;
 
   // Loop through devices
   for (std::size_t platform_id = 0; platform_id < platforms.size();
@@ -193,60 +195,66 @@ void Caffe::EnumerateDevices() {
   LOG(INFO)<< "Total devices: " << cuda_device_count + greentea_device_count;
 #ifdef USE_CUDA
   LOG(INFO)<< "CUDA devices: " << cuda_device_count;
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #ifdef USE_GREENTEA
   LOG(INFO)<< "OpenCL devices: " << greentea_device_count;
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
 
   // Display info for all devices
 #ifdef USE_CUDA
   for (int i = 0; i < cuda_device_count; ++i) {
     cudaDeviceProp prop;
     CUDA_CHECK(cudaGetDeviceProperties(&prop, i));
-    LOG(INFO)<< "Device id:                     " << i;
-    LOG(INFO)<< "Device backend:                " << "CUDA";
-    LOG(INFO)<< "Backend details:               " << "CUDA";
-    LOG(INFO)<< "Device vendor:                 " << "NVIDIA Corporation";
-    LOG(INFO)<< "Name:                          " << prop.name;
-    LOG(INFO)<< "Total global memory:           " << prop.totalGlobalMem;
+    LOG(INFO)<< "Device id:                     "
+        << i;
+    LOG(INFO)<< "Device backend:                "
+        << "CUDA";
+    LOG(INFO)<< "Backend details:               "
+        << "CUDA";
+    LOG(INFO)<< "Device vendor:                 "
+        << "NVIDIA Corporation";
+    LOG(INFO)<< "Name:                          "
+        << prop.name;
+    LOG(INFO)<< "Total global memory:           "
+        << prop.totalGlobalMem;
   }
-#endif /// USE_CUDA
+#endif  // USE_CUDA
 
 #ifdef USE_GREENTEA
   for (int i = 0; i < greentea_device_count; ++i) {
-    LOG(INFO)<< "Device id:                     " << cuda_device_count + i;
-    LOG(INFO)<< "Device backend:                " << "OpenCL";
-    LOG(INFO)<< "Backend details:               " << std::get<0>(platform_devices[i]).info();
-    LOG(INFO)<< "Device vendor:                 " << std::get<1>(platform_devices[i]).vendor();
-    LOG(INFO)<< "Name:                          " << std::get<1>(platform_devices[i]).name();
-    LOG(INFO)<< "Total global memory:           " << std::get<1>(platform_devices[i]).global_mem_size();
+    LOG(INFO)<< "Device id:                     "
+        << cuda_device_count + i;
+    LOG(INFO)<< "Device backend:                "
+        << "OpenCL";
+    LOG(INFO)<< "Backend details:               "
+        << std::get<0>(platform_devices[i]).info();
+    LOG(INFO)<< "Device vendor:                 "
+        << std::get<1>(platform_devices[i]).vendor();
+    LOG(INFO)<< "Name:                          "
+        << std::get<1>(platform_devices[i]).name();
+    LOG(INFO)<< "Total global memory:           "
+        << std::get<1>(platform_devices[i]).global_mem_size();
   }
-#endif // USE_GREENTEA
-
+#endif  // USE_GREENTEA
 }
 
 void Caffe::SetDevices(std::vector<int> device_ids) {
-
   Get().device_contexts_.clear();
-
 #ifdef USE_GREENTEA
   Get().ocl_programs_.clear();
 #endif
-
   int cuda_device_count = 0;
   int greentea_device_count = 0;
-
 #ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
-#endif // USE_CUDA
-
+#endif  // USE_CUDA
   for (int i = 0; i < cuda_device_count; ++i) {
     Get().device_contexts_.push_back(DeviceContext(i, Backend::BACKEND_CUDA));
 #ifdef USE_GREENTEA
     // Dummy to have same vector size as device contexts
     viennacl::ocl::program program;
     Get().ocl_programs_.push_back(program);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 
   // Initialize GreenTea devices
@@ -254,7 +262,8 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   typedef std::vector<viennacl::ocl::platform> platforms_type;
   platforms_type platforms = viennacl::ocl::get_platforms();
 
-  std::vector<std::tuple<viennacl::ocl::platform, viennacl::ocl::device>> platform_devices;
+  std::vector<std::tuple<viennacl::ocl::platform,
+    viennacl::ocl::device>> platform_devices;
 
   // Loop through devices
   for (std::size_t platform_id = 0; platform_id < platforms.size();
@@ -276,11 +285,12 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
           viennacl::ocl::setup_context(
               device_id, std::get<1>(platform_devices[greentea_device_count]));
           viennacl::ocl::context ctx = viennacl::ocl::get_context(
-              static_cast<long>(device_id));
-          viennacl::ocl::program & program = RegisterKernels(ctx);
+              static_cast<uint64_t>(device_id));
+          viennacl::ocl::program & program = RegisterKernels(&ctx);
           Get().ocl_programs_.push_back(program);
-          //viennacl::ocl::switch_context(device_id);
-          //viennacl::ocl::switch_device(std::get<1>(platform_devices[device_id - cuda_device_count]));
+          // viennacl::ocl::switch_context(device_id);
+          // viennacl::ocl::switch_device(std::get<1>
+          // (platform_devices[device_id - cuda_device_count]));
           is_used = true;
         }
       }
@@ -292,9 +302,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
       greentea_device_count++;
     }
   }
-
-#endif // USE_GREENTEA
-
+#endif  // USE_GREENTEA
 }
 
 DeviceContext& Caffe::GetDeviceContext(int id) {
@@ -305,7 +313,7 @@ DeviceContext& Caffe::GetDeviceContext(int id) {
 viennacl::ocl::program & Caffe::GetDeviceProgram(int id) {
   return id == -1 ? Get().default_ocl_program_ : Get().ocl_programs_[id];
 }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
 
 DeviceContext& Caffe::GetDefaultDeviceContext() {
   return Get().default_device_context_;
@@ -340,13 +348,13 @@ void Caffe::SetDevice(const int device_id) {
     CURAND_CHECK(
         curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
                                            cluster_seedgen()));
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
 #ifdef USE_CLBLAS
     clblasSetup();
-#endif // USE_CLBLAS
-#endif // USE_GREENTEA
+#endif  // USE_CLBLAS
+#endif  // USE_GREENTEA
   }
 }
 
@@ -385,11 +393,11 @@ void Caffe::DeviceQuery() {
       LOG(INFO)<< "Kernel execution timeout:      "
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     // TODO: Complete OpenCL device information of current device
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 
   return;
@@ -489,7 +497,7 @@ const char* curandGetErrorString(curandStatus_t error) {
   }
   return "Unknown curand status";
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 #endif  // CPU_ONLY
 

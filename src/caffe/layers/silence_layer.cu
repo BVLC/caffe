@@ -27,7 +27,7 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_CUDA
         caffe_gpu_set(bottom[i]->count(), Dtype(0),
                       bottom[i]->mutable_gpu_data());
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -39,7 +39,7 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::enqueue(
             oclk_gpu_set(
                 bottom[i]->count(), Dtype(0),
-                WrapHandle((cl_mem) bottom[i]->mutable_gpu_data(),ctx)),
+                WrapHandle((cl_mem) bottom[i]->mutable_gpu_data(), &ctx)),
             ctx.get_queue());
         ctx.get_queue().finish();
 #endif

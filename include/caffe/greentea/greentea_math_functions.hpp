@@ -10,10 +10,10 @@
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "viennacl/ocl/backend.hpp"
 #include "viennacl/ocl/context.hpp"
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
-#include "viennacl/ocl/backend.hpp"
 #include "viennacl/vector.hpp"
 
 namespace caffe {
@@ -22,25 +22,26 @@ void greentea_memset(const int ctx_id, const size_t N, const int alpha,
                      cl_mem X, const int offX);
 
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
-                         void *Y, viennacl::ocl::context &ctx);
+                         void *Y, viennacl::ocl::context *ctx);
 
 void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
-                         const int offY, viennacl::ocl::context &ctx);
+                         const int offY, viennacl::ocl::context *ctx);
 
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
-                         cl_mem Y, const int offY, viennacl::ocl::context &ctx);
+                         cl_mem Y, const int offY,
+                         viennacl::ocl::context *ctx);
 
 template<typename Dtype>
-void greentea_copy(const int N, const cl_mem X, const int offX, cl_mem Y, const int offY,
-                   viennacl::ocl::context &ctx);
+void greentea_copy(const int N, const cl_mem X, const int offX, cl_mem Y,
+                   const int offY, viennacl::ocl::context *ctx);
 
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, const int offX, Dtype* Y,
-                   viennacl::ocl::context &ctx);
+                   viennacl::ocl::context *ctx);
 
 template<typename Dtype>
 void greentea_copy(const int N, const Dtype* X, cl_mem Y, const int offY,
-                   viennacl::ocl::context &ctx);
+                   viennacl::ocl::context *ctx);
 
 template<typename Dtype>
 void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
@@ -127,8 +128,7 @@ void greentea_gpu_powx(const int ctx_id, const int N, const cl_mem a,
 
 template<typename Dtype>
 void greentea_gpu_log(const int ctx_id, const int N, const cl_mem a,
-                       const int offa, cl_mem y,
-                       const int offy);
+                      const int offa, cl_mem y, const int offy);
 
 template<typename Dtype>
 void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
@@ -149,7 +149,7 @@ template<typename Dtype>
 void greentea_gpu_rng_gaussian(const int ctx_id, const int n, const Dtype mu,
                                const Dtype sigma, cl_mem r, const int offr);
 
-}
+}  // namespace caffe
 
-#endif // USE GREENTEA
-#endif /* GREENTEA_MATH_FUNCTIONS_HPP_ */
+#endif  // USE GREENTEA
+#endif  /* GREENTEA_MATH_FUNCTIONS_HPP_ */

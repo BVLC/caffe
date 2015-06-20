@@ -31,7 +31,7 @@ void LogLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (base_scale_ != Dtype(1)) {
       caffe_gpu_scal(count, base_scale_, top_data);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -41,7 +41,8 @@ void LogLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       greentea_gpu_log<Dtype>(this->device_context_.id(), count,
                               (cl_mem) bottom_data, 0, (cl_mem) top_data, 0);
     } else {
-      greentea_copy<Dtype>(count, (cl_mem) bottom_data,0, (cl_mem) top_data,0, ctx);
+      greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
+                           &ctx);
       if (input_scale_ != Dtype(1)) {
         greentea_gpu_scal<Dtype>(this->device_context_.id(), count,
                                  input_scale_, (cl_mem) top_data, 0);
@@ -57,9 +58,8 @@ void LogLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       greentea_gpu_scal<Dtype>(this->device_context_.id(), count, base_scale_,
                                (cl_mem) top_data, 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 
 template<typename Dtype>
@@ -88,14 +88,14 @@ void LogLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       caffe_gpu_scal(count, backward_num_scale_, bottom_diff);
     }
     caffe_gpu_mul(count, top_diff, bottom_diff, bottom_diff);
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_.id());
 
-    greentea_copy<Dtype>(count, (cl_mem) bottom_data,0, (cl_mem) bottom_diff,0,
-                         ctx);
+    greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) bottom_diff,
+                         0, &ctx);
     if (input_scale_ != Dtype(1)) {
       greentea_gpu_scal<Dtype>(this->device_context_.id(), count, input_scale_,
                                (cl_mem) bottom_diff, 0);
@@ -114,9 +114,8 @@ void LogLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     greentea_gpu_mul<Dtype>(this->device_context_.id(), count,
                             (cl_mem) top_diff, 0, (cl_mem) bottom_diff, 0,
                             (cl_mem) bottom_diff, 0);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(LogLayer);

@@ -12,12 +12,11 @@ namespace caffe {
 #ifdef USE_CUDA
 template<typename Dtype>
 __global__ void TanHForward(const int n, const Dtype* in, Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] = tanh(in[index]);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -29,11 +28,11 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    TanHForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+    TanHForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                   CAFFE_CUDA_NUM_THREADS)(
         count, bottom_data, top_data);
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -44,10 +43,10 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
         CL_KERNEL_SELECT("tanh_forward"));
     viennacl::ocl::enqueue(
-        oclk_tanh(count, WrapHandle((cl_mem) bottom_data, ctx),
-                  WrapHandle((cl_mem) top_data, ctx)),
+        oclk_tanh(count, WrapHandle((cl_mem) bottom_data, &ctx),
+                  WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -55,13 +54,12 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 __global__ void TanHBackward(const int n, const Dtype* in_diff,
                              const Dtype* out_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     Dtype tanhx = out_data[index];
     out_diff[index] = in_diff[index] * (1 - tanhx * tanhx);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -76,11 +74,11 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
-      TanHBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+      TanHBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                      CAFFE_CUDA_NUM_THREADS)(
           count, top_diff, top_data, bottom_diff);
-      CUDA_POST_KERNEL_CHECK
-      ;
-#endif // USE_CUDA
+      CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -91,13 +89,12 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
           CL_KERNEL_SELECT("tanh_backward"));
       viennacl::ocl::enqueue(
-          oclk_tanh(count, WrapHandle((cl_mem) top_diff, ctx),
-                    WrapHandle((cl_mem) top_data, ctx),
-                    WrapHandle((cl_mem) bottom_diff, ctx)),
+          oclk_tanh(count, WrapHandle((cl_mem) top_diff, &ctx),
+                    WrapHandle((cl_mem) top_data, &ctx),
+                    WrapHandle((cl_mem) bottom_diff, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
-
   }
 }
 

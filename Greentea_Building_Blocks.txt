@@ -13,10 +13,10 @@ viennacl::ocl::enqueue(
 
 if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
 }
 
 #ifdef USE_GREENTEA

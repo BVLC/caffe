@@ -5,6 +5,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
+#include <math.h>
 #include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
@@ -15,7 +16,7 @@
 #include <string>
 #include <utility>  // pair
 #include <vector>
-#include <math.h>
+
 
 #include "caffe/util/device_alternate.hpp"
 
@@ -136,8 +137,8 @@ class Caffe {
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
-#endif // USE_CUDA
-#endif // !CPU_ONLY
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
@@ -178,8 +179,8 @@ class Caffe {
 #ifdef USE_CUDA
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
-#endif // USE_CUDA
-#endif // !CPU_ONLY
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
@@ -192,7 +193,7 @@ class Caffe {
 #ifdef USE_GREENTEA
   vector<viennacl::ocl::program> ocl_programs_;
   viennacl::ocl::program default_ocl_program_;
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
 
  private:
   // The private constructor to avoid duplicate instantiation.

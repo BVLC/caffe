@@ -21,7 +21,8 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       || (conv_param.has_kernel_h() && conv_param.has_kernel_w()))
       << "For non-square filters both kernel_h and kernel_w are required.";
   CHECK(
-      (!conv_param.has_pad() && conv_param.has_pad_h() && conv_param.has_pad_w())
+      (!conv_param.has_pad() && conv_param.has_pad_h()
+          && conv_param.has_pad_w())
       || (!conv_param.has_pad_h() && !conv_param.has_pad_w()))
       << "pad is pad OR pad_h and pad_w are required.";
   CHECK(
@@ -83,12 +84,13 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
 
   // TODO: Change this
-  if(kstride_h_ != 23 || this->device_context_.backend() == BACKEND_CUDA) {
+  if (kstride_h_ != 23 || this->device_context_.backend() == BACKEND_CUDA) {
     col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
-                      width_out);
+                        width_out);
   }
   // Set the parameters
-  CHECK_EQ(num_output_ % group_, 0)<< "Number of output should be multiples of group.";
+  CHECK_EQ(num_output_ % group_, 0)
+  << "Number of output should be multiples of group.";
   bias_term_ = this->layer_param_.convolution_param().bias_term();
   // Figure out the dimensions for individual gemms.
   M_ = num_output_ / group_;
@@ -99,8 +101,6 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
-    // (FTschopp) Silence this output:
-    //LOG(INFO)<< "Skipping parameter initialization";
   } else {
     if (bias_term_) {
       this->blobs_.resize(2);

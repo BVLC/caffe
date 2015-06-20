@@ -7,8 +7,8 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #include "caffe/greentea/greentea_im2col.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {
@@ -26,7 +26,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                  kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                  top_data + top[0]->offset(n));
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -35,13 +35,14 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_context_.id());
 
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      greentea_im2col_gpu<Dtype>(program, ctx, (cl_mem)bottom_data, bottom[0]->offset(n), channels_, height_, width_,
-                 kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-                 (cl_mem)top_data, top[0]->offset(n));
+      greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) bottom_data,
+                                 bottom[0]->offset(n), channels_, height_,
+                                 width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+                                 stride_h_, stride_w_, (cl_mem) top_data,
+                                 top[0]->offset(n));
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 
 template<typename Dtype>
@@ -58,7 +59,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                  kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                  bottom_diff + bottom[0]->offset(n));
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -67,14 +68,14 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_context_.id());
 
     for (int n = 0; n < top[0]->num(); ++n) {
-      greentea_col2im_gpu<Dtype>(program, ctx, (cl_mem) top_diff, top[0]->offset(n),
-                          channels_, height_, width_, kernel_h_, kernel_w_,
-                          pad_h_, pad_w_, stride_h_, stride_w_,
-                          (cl_mem) bottom_diff, bottom[0]->offset(n));
+      greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) top_diff,
+                                 top[0]->offset(n), channels_, height_, width_,
+                                 kernel_h_, kernel_w_, pad_h_, pad_w_,
+                                 stride_h_, stride_w_, (cl_mem) bottom_diff,
+                                 bottom[0]->offset(n));
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(Im2colLayer);

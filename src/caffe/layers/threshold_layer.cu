@@ -15,8 +15,7 @@ namespace caffe {
 template<typename Dtype>
 __global__ void ThresholdForward(const int n, const Dtype threshold,
                                  const Dtype* in, Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] > threshold ? 1 : 0;
   }
 }
@@ -32,11 +31,11 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    ThresholdForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+    ThresholdForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                        CAFFE_CUDA_NUM_THREADS)(
         count, threshold_, bottom_data, top_data);
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -47,13 +46,13 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::kernel &oclk_threshold = program.get_kernel(
         CL_KERNEL_SELECT("threshold"));
     viennacl::ocl::enqueue(
-        oclk_threshold(count, threshold_, WrapHandle((cl_mem) bottom_data, ctx),
-                       WrapHandle((cl_mem) top_data, ctx)),
+        oclk_threshold(count, threshold_,
+                       WrapHandle((cl_mem) bottom_data, &ctx),
+                       WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
     ctx.get_queue().finish();
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 
 INSTANTIATE_LAYER_GPU_FORWARD(ThresholdLayer);
