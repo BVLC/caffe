@@ -1,7 +1,29 @@
-This Repo is aimed to enhance Caffe to include layers that are required to construct Eextreme Learning Machine. Currently, only Least square layer is available for constructing ELM (by combining Inner Product layer and Sigmoid Layer). Iterative Least square support is under development to make ELM Online Sequential. 
+Note : This repo is not aimed to be merged with Caffe, and so is being maintained as seperate repo, instead of a fork. 
+
+This Repo is aimed to enhance Caffe to include layers that are required to construct Extreme Learning Machine. Currently, only Least square layer is available for constructing ELM (by combining Inner Product layer and Sigmoid Layer). Iterative Least square support is under development to make ELM Online Sequential. 
 
 Additionally Transpose Layer is provided with this repo to make the construction of stacked ELM-Auto Encoders possible.
 
+####LS Layer
+- Bottom : "data"
+- Bottom : "labels"
+- Param{Name : "beta"}
+- //no top 
+- beta (ß) is the weight calculated as Least square solution of Hß = Y, where H is "data" or bottom[0] and Y is "labels" or bottom[1].
+- Requires Intel MKL Library
+
+
+####Transpose Layer
+- //no bottom
+- Param{Name : "beta"}
+- Param{Name : "transposed_beta"}
+- //no top
+- Currently requires Intel MKL Library, but will soon be updated to work without it.
+
+
+####Other changes includes:
+- addition of some functions to math_functions.cpp and hpp. 
+- some changes to net.cpp so that, transpose layer can be setup to share weights of any layer without knowing the size of blob.
 
 # Caffe
 
