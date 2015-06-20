@@ -45,7 +45,7 @@ void load_features(float** in,std::string filename){
 }
 
 void load_labels(float** in,string filename){
-	float labels[200];
+	int labels[200];
 	*in = (float*)malloc(sizeof(float) * 200 * 8);
 	ifstream file(filename);
 	for( int row = 0 ; row < 200 ; row++ ){
@@ -54,20 +54,24 @@ void load_labels(float** in,string filename){
 		if( !file.good() )
 			break;
 		stringstream iss(line);
-
-		for( int col = 0 ; col < 1 ; col++ ){
-			string val;
-			std::getline( iss, val, ',');
-			if ( !iss.good() )
-				break;
-			stringstream convertor(val);
-			convertor >> labels[row];
-		}
+		iss >> labels[row];
+		cout << labels[row];
+		// for( int col = 0 ; col < 1 ; col++ ){
+		// 	string val;
+		// 	std::getline( iss, val, ',');
+		// 	if ( !iss.good() )
+		// 		break;
+		// 	stringstream convertor(val);
+		// 	convertor >> labels[row];
+		// }
 	}
 	float pro_labels[200][8];
 	for ( int row = 0 ; row < 200 ; row++ ){
 		for ( int col = 0 ; col < 8 ; col ++){
-			if( labels[row] == col+1 )
+			cout<<"label : "<<endl;
+			cout<<labels[row]<<endl;
+			cout<<(col+1)<<endl;
+			if( (int)labels[row] == (col+1) )
 				pro_labels[row][col] = 1;
 			else
 				pro_labels[row][col] = -1;
@@ -83,7 +87,7 @@ void load_labels(float** in,string filename){
 		cout << endl;
 	}
 
-
+ 
 }
 
 void dnn_fwd(float* in, float* out, Net<float>* net){
