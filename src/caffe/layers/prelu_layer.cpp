@@ -10,7 +10,8 @@ namespace caffe {
 template<typename Dtype>
 void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                    const vector<Blob<Dtype>*>& top) {
-  CHECK_GE(bottom[0]->num_axes(), 2)<< "Number of axes of bottom blob must be >=2.";
+  CHECK_GE(bottom[0]->num_axes(), 2)
+      << "Number of axes of bottom blob must be >=2.";
   PReLUParameter prelu_param = this->layer_param().prelu_param();
   int channels = bottom[0]->channels();
   channel_shared_ = prelu_param.channel_shared();
@@ -19,9 +20,11 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     this->blobs_.resize(1);
     if (channel_shared_) {
-      this->blobs_[0].reset(new Blob<Dtype>(vector<int>(0),this->device_context_));
+      this->blobs_[0].reset(new Blob<Dtype>(vector<int>(0),
+                                            this->device_context_));
     } else {
-      this->blobs_[0].reset(new Blob<Dtype>(vector<int>(1, channels),this->device_context_));
+      this->blobs_[0].reset(new Blob<Dtype>(vector<int>(1, channels),
+                                            this->device_context_));
     }
     shared_ptr<Filler<Dtype> > filler;
     if (prelu_param.has_filler()) {
@@ -52,7 +55,8 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                 const vector<Blob<Dtype>*>& top) {
-  CHECK_GE(bottom[0]->num_axes(), 2)<< "Number of axes of bottom blob must be >=2.";
+  CHECK_GE(bottom[0]->num_axes(), 2)
+      << "Number of axes of bottom blob must be >=2.";
   top[0]->ReshapeLike(*bottom[0]);
   if (bottom[0] == top[0]) {
     // For in-place computation

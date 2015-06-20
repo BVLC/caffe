@@ -8,8 +8,8 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
 #include "caffe/greentea/greentea_im2col.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
 namespace caffe {

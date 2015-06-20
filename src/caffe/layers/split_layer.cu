@@ -36,7 +36,7 @@ void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
       caffe_gpu_axpy(count_, Dtype(1.), top_diff, bottom_diff);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -46,7 +46,7 @@ void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
     if (top.size() == 1) {
       greentea_copy<Dtype>(count_, (cl_mem) (top[0]->gpu_diff()), 0,
-                    (cl_mem) (bottom[0]->mutable_gpu_diff()), 0, ctx);
+                    (cl_mem) (bottom[0]->mutable_gpu_diff()), 0, &ctx);
       return;
     }
     greentea_gpu_add<Dtype>(this->device_context_.id(), count_,
@@ -60,7 +60,7 @@ void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       greentea_gpu_axpy<Dtype>(this->device_context_.id(), count_, Dtype(1.),
                         (cl_mem) top_diff, 0, (cl_mem) bottom_diff, 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

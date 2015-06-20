@@ -19,18 +19,19 @@
 #endif
 
 #include "CL/cl.h"
+#include "viennacl/backend/opencl.hpp"
+#include "viennacl/ocl/backend.hpp"
 #include "viennacl/ocl/context.hpp"
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
-#include "viennacl/ocl/backend.hpp"
-#include "viennacl/backend/opencl.hpp"
 #include "viennacl/vector.hpp"
 #endif
 
 namespace caffe {
 
 #ifdef USE_GREENTEA
-viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in, viennacl::ocl::context &ctx);
+viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
+                                         viennacl::ocl::context *ctx);
 #endif
 
 enum Backend {
@@ -74,10 +75,13 @@ struct is_same<T, T> {
 #endif
 
 // Macro to select the single (_float) or double (_double) precision kernel
-#define CL_KERNEL_SELECT(kernel) is_same<Dtype, float>::value ? kernel "_float" : kernel "_double"
+#define CL_KERNEL_SELECT(kernel) \
+  is_same<Dtype, float>::value ? \
+      kernel "_float" : \
+      kernel "_double"
 
 #endif
 
-}
+}  // namespace caffe
 
-#endif /* CAFFE_GREENTEA_HPP_ */
+#endif  /* CAFFE_GREENTEA_HPP_ */

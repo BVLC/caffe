@@ -253,7 +253,7 @@ TYPED_TEST(NeuronLayerTest, TestSigmoid) {
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype kDelta = 2e-3;
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 1. / (1 + exp(-bottom_data[i])),kDelta);
+    EXPECT_NEAR(top_data[i], 1. / (1 + exp(-bottom_data[i])), kDelta);
     // check that we squashed the value between 0 and 1
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);

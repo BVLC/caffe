@@ -13,11 +13,13 @@ namespace caffe {
  * @brief Applies common transformations to the input data, such as
  * scaling, mirroring, substracting the image mean...
  */
-template <typename Dtype>
+template<typename Dtype>
 class DataTransformer {
  public:
-  explicit DataTransformer(const TransformationParameter& param, Phase phase, DeviceContext device_context);
-  virtual ~DataTransformer() {}
+  explicit DataTransformer(const TransformationParameter& param, Phase phase,
+                           DeviceContext device_context);
+  virtual ~DataTransformer() {
+  }
 
   /**
    * @brief Initialize the Random number generations if needed by the
@@ -48,7 +50,7 @@ class DataTransformer {
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
    */
   void Transform(const vector<Datum> & datum_vector,
-                Blob<Dtype>* transformed_blob);
+                 Blob<Dtype>* transformed_blob);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -61,7 +63,7 @@ class DataTransformer {
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
    */
   void Transform(const vector<cv::Mat> & mat_vector,
-                Blob<Dtype>* transformed_blob);
+                 Blob<Dtype>* transformed_blob);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -124,7 +126,7 @@ class DataTransformer {
   vector<int> InferBlobShape(const cv::Mat& cv_img);
 
  protected:
-   /**
+  /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
    *
    * @param n
@@ -137,7 +139,6 @@ class DataTransformer {
   void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
-
 
   shared_ptr<Caffe::RNG> rng_;
   Phase phase_;

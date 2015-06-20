@@ -95,9 +95,12 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
             << "Padding layer input to "
             "non-convolutional / non-pooling layer type "
             << layer_param.type();
-        CHECK_EQ(layer_connection.bottom_size(), 1)<< "Conv Layer takes a single blob as input.";
-        CHECK_EQ(source_layer.bottom_size(), 1)<< "Padding Layer takes a single blob as input.";
-        CHECK_EQ(source_layer.top_size(), 1)<< "Padding Layer produces a single blob as output.";
+        CHECK_EQ(layer_connection.bottom_size(), 1)
+          << "Conv Layer takes a single blob as input.";
+        CHECK_EQ(source_layer.bottom_size(), 1)
+          << "Padding Layer takes a single blob as input.";
+        CHECK_EQ(source_layer.top_size(), 1)
+          << "Padding Layer produces a single blob as output.";
         int layer_index = param_upgraded_pad->layers_size() - 1;
         param_upgraded_pad->mutable_layers(layer_index)->mutable_layer()
             ->set_pad(source_layer.layer().pad());

@@ -61,16 +61,14 @@ template<typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
                   const int width, DeviceContext device_context)
     // capacity_ must be initialized before calling Reshape
-    : capacity_(0),
-      device_context_(device_context) {
+    : capacity_(0), device_context_(device_context) {
   Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>
 Blob<Dtype>::Blob(const vector<int>& shape, DeviceContext device_context)
     // capacity_ must be initialized before calling Reshape
-    : capacity_(0),
-      device_context_(device_context) {
+    : capacity_(0), device_context_(device_context) {
   Reshape(shape);
 }
 
@@ -492,7 +490,8 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
     // Blob shape (1 x 1 x 1 x N), IP layer weight Blob shape (1 x 1 x M x N)).
     return shape_.size() <= 4 && LegacyShape(-4) == other.num()
         && LegacyShape(-3) == other.channels()
-        && LegacyShape(-2) == other.height() && LegacyShape(-1) == other.width();
+        && LegacyShape(-2) == other.height()
+        && LegacyShape(-1) == other.width();
   }
   vector<int> other_shape(other.shape().dim_size());
   for (int i = 0; i < other.shape().dim_size(); ++i) {
@@ -503,7 +502,6 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
 
 template<typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
-
   if (source.count() != count_ || source.shape() != shape_) {
     if (reshape) {
       ReshapeLike(source);
@@ -516,23 +514,23 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
       if (device_context_.backend() == BACKEND_CUDA) {
         if (copy_diff) {
           caffe_copy(count_, source.gpu_diff(),
-                     static_cast<Dtype*>(diff_->mutable_gpu_data()));
+              static_cast<Dtype*>(diff_->mutable_gpu_data()));
         } else {
           caffe_copy(count_, source.gpu_data(),
-                     static_cast<Dtype*>(data_->mutable_gpu_data()));
+              static_cast<Dtype*>(data_->mutable_gpu_data()));
         }
       } else {
 #ifdef USE_GREENTEA
         if (copy_diff) {
           greentea_copy<Dtype>(
-              count_, (cl_mem) (source.gpu_diff()),0,
-              (cl_mem) (diff_->mutable_gpu_data()),0,
-              viennacl::ocl::get_context(device_context_.id()));
+              count_, (cl_mem) (source.gpu_diff()), 0,
+              (cl_mem) (diff_->mutable_gpu_data()), 0,
+              &viennacl::ocl::get_context(device_context_.id()));
         } else {
           greentea_copy<Dtype>(
-              count_, (cl_mem) (source.gpu_data()),0,
-              (cl_mem) (data_->mutable_gpu_data()),0,
-              viennacl::ocl::get_context(device_context_.id()));
+              count_, (cl_mem) (source.gpu_data()), 0,
+              (cl_mem) (data_->mutable_gpu_data()), 0,
+              &viennacl::ocl::get_context(device_context_.id()));
         }
 #endif
       }
@@ -541,17 +539,17 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     case Caffe::CPU: {
       if (copy_diff) {
         caffe_cpu_copy(count_, source.cpu_diff(),
-                   static_cast<Dtype*>(diff_->mutable_cpu_data()));
+            static_cast<Dtype*>(diff_->mutable_cpu_data()));
       } else {
         caffe_cpu_copy(count_, source.cpu_data(),
-                   static_cast<Dtype*>(data_->mutable_cpu_data()));
+            static_cast<Dtype*>(data_->mutable_cpu_data()));
       }
       break;
     }
     default:
-      LOG(FATAL)<< "Unknown caffe mode.";
-    }
+    LOG(FATAL)<< "Unknown caffe mode.";
   }
+}
 
 template<typename Dtype>
 void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
@@ -610,8 +608,8 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
 }
 
 INSTANTIATE_CLASS(Blob);
-template class Blob<int> ;
-template class Blob<unsigned int> ;
+template class Blob<int>;
+template class Blob<unsigned int>;
 
 }  // namespace caffe
 

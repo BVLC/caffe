@@ -32,11 +32,11 @@ void HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                  &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
     }
     SaveBlobs();
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     Forward_cpu(bottom, top);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

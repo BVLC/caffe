@@ -6,10 +6,9 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/util/math_functions.hpp"
-
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -19,8 +18,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
 
  protected:
   MergeCropLayerTest()
-      : blob_bottom_a_(new Blob<Dtype>()),
-        blob_bottom_b_(new Blob<Dtype>()),
+      : blob_bottom_a_(new Blob<Dtype>()), blob_bottom_b_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {
   }
 
@@ -164,13 +162,13 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     vector<bool> propagate_down(blob_bottom_vec_.size(), true);
     layer.Backward(blob_top_vec_, propagate_down, blob_bottom_vec_);
 
-
     // Test copy to A
     for (int n = 0; n < blob_bottom_a_->num(); ++n) {
       for (int c = 0; c < a_c; ++c) {
         for (int h = 0; h < a_h; ++h) {
           for (int w = 0; w < a_w; ++w) {
-            EXPECT_EQ((w + h * 10 + c * 100 + n * 1000 + 10000),
+            EXPECT_EQ(
+                (w + h * 10 + c * 100 + n * 1000 + 10000),
                 blob_bottom_a_->cpu_diff()[w + h * a_w + c * a_h * a_w
                     + n * a_h * a_w * a_c]);
           }
@@ -189,25 +187,25 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(MergeCropLayerTest, TestDtypes);
 
-TYPED_TEST(MergeCropLayerTest, TestSetup){
+TYPED_TEST(MergeCropLayerTest, TestSetup) {
   typedef TypeParam Dtype;
   LayerParameter layer_param;
   MergeCropLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_a_->num());
-  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_a_->channels() + this->blob_bottom_b_->channels());
+  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_a_->channels()
+            + this->blob_bottom_b_->channels());
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_a_->height());
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
-TYPED_TEST(MergeCropLayerTest, TestForward){
+TYPED_TEST(MergeCropLayerTest, TestForward) {
   this->TestForward();
 }
 
-TYPED_TEST(MergeCropLayerTest, TestBackward){
+TYPED_TEST(MergeCropLayerTest, TestBackward) {
   this->TestBackward();
 }
 
-}
-  // namespace caffe
+}  // namespace caffe

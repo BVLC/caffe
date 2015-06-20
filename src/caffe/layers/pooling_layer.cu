@@ -19,8 +19,7 @@ __global__ void MaxPoolForward(const int nthreads,
                                const int stride_w, const int pad_h,
                                const int pad_w, Dtype* const top_data,
                                int* mask, Dtype* top_mask) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
     const int c = (index / pooled_width / pooled_height) % channels;
@@ -61,8 +60,7 @@ __global__ void AvePoolForward(const int nthreads,
                                const int kernel_w, const int stride_h,
                                const int stride_w, const int pad_h,
                                const int pad_w, Dtype* const top_data) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
     const int c = (index / pooled_width / pooled_height) % channels;
@@ -98,8 +96,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
                                     const int kernel_w, const int stride_h,
                                     const int stride_w, Dtype* const rand_idx,
                                     Dtype* const top_data) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
     const int c = (index / pooled_width / pooled_height) % channels;
@@ -142,8 +139,7 @@ __global__ void StoPoolForwardTest(const int nthreads,
                                    const int pooled_width, const int kernel_h,
                                    const int kernel_w, const int stride_h,
                                    const int stride_w, Dtype* const top_data) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
     const int c = (index / pooled_width / pooled_height) % channels;
@@ -167,7 +163,7 @@ __global__ void StoPoolForwardTest(const int nthreads,
     top_data[index] = cumvalues / cumsum;
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -190,7 +186,8 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           mask = max_idx_.mutable_gpu_data();
         }
         // NOLINT_NEXT_LINE(whitespace/operators)
-        MaxPoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+        MaxPoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                          CAFFE_CUDA_NUM_THREADS)(
             count, bottom_data, bottom[0]->num(), channels_,
             height_, width_, pooled_height_, pooled_width_, kernel_h_,
             kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
@@ -198,7 +195,8 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         break;
       case PoolingParameter_PoolMethod_AVE:
         // NOLINT_NEXT_LINE(whitespace/operators)
-        AvePoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+        AvePoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                          CAFFE_CUDA_NUM_THREADS)(
             count, bottom_data, bottom[0]->num(), channels_,
             height_, width_, pooled_height_, pooled_width_, kernel_h_,
             kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
@@ -228,9 +226,8 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LOG(FATAL)<< "Unknown pooling method.";
       }
     }
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -248,14 +245,14 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
             CL_KERNEL_SELECT("max_pool_forward"));
         viennacl::ocl::enqueue(
-            oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, ctx),
+            oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, &ctx),
                 bottom[0]->num(), channels_, height_, width_,
                 pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
-                WrapHandle((cl_mem) top_data, ctx),
+                WrapHandle((cl_mem) top_data, &ctx),
                 mask == NULL ? 0 : 1,
-                WrapHandle((cl_mem) mask, ctx),
-                WrapHandle((cl_mem) top_mask, ctx)),
+                WrapHandle((cl_mem) mask, &ctx),
+                WrapHandle((cl_mem) top_mask, &ctx)),
             ctx.get_queue());
       }
       break;
@@ -263,32 +260,44 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         viennacl::ocl::kernel &oclk_ave_pool_forward = program.get_kernel(
             CL_KERNEL_SELECT("ave_pool_forward"));
         viennacl::ocl::enqueue(
-            oclk_ave_pool_forward(count, WrapHandle((cl_mem) bottom_data,ctx), bottom[0]->num(), channels_,
+            oclk_ave_pool_forward(count,
+                       WrapHandle((cl_mem) bottom_data, &ctx),
+                bottom[0]->num(), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
-                kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, WrapHandle((cl_mem)top_data,ctx)),
+                kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
+                WrapHandle((cl_mem)top_data, &ctx)),
             ctx.get_queue());
       }
       break;
       case PoolingParameter_PoolMethod_STOCHASTIC: {
         if (this->phase_ == caffe::TRAIN) {
           // We need to create the random index as well.
-          greentea_gpu_rng_uniform(this->device_context_.id(),count, Dtype(0), Dtype(1),
-              (cl_mem)(rand_idx_.mutable_gpu_data()),0);
+          greentea_gpu_rng_uniform(this->device_context_.id(), count,
+                                   Dtype(0), Dtype(1),
+              (cl_mem)(rand_idx_.mutable_gpu_data()), 0);
 
           viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
               CL_KERNEL_SELECT("sto_pool_forward_train"));
           viennacl::ocl::enqueue(
-              oclk_sto_pool_forward(count, WrapHandle((cl_mem)bottom_data,ctx), bottom[0]->num(), channels_,
-                  height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_,
-                  stride_h_, stride_w_, WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()),ctx), WrapHandle((cl_mem)top_data,ctx)),
+              oclk_sto_pool_forward(count,
+                                    WrapHandle((cl_mem)bottom_data, &ctx),
+                  bottom[0]->num(), channels_,
+                  height_, width_, pooled_height_, pooled_width_,
+                  kernel_h_, kernel_w_,
+                  stride_h_, stride_w_,
+                  WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()), &ctx),
+                  WrapHandle((cl_mem)top_data, &ctx)),
               ctx.get_queue());
         } else {
           viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
               CL_KERNEL_SELECT("sto_pool_forward_test"));
           viennacl::ocl::enqueue(
-              oclk_sto_pool_forward(count, WrapHandle((cl_mem)bottom_data,ctx), bottom[0]->num(), channels_,
-                  height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_,
-                  stride_h_, stride_w_, WrapHandle((cl_mem)top_data,ctx)),
+              oclk_sto_pool_forward(count,
+                          WrapHandle((cl_mem)bottom_data, &ctx),
+                  bottom[0]->num(), channels_,
+                  height_, width_, pooled_height_,
+                  pooled_width_, kernel_h_, kernel_w_,
+                  stride_h_, stride_w_, WrapHandle((cl_mem)top_data, &ctx)),
               ctx.get_queue());
         }
       }
@@ -297,7 +306,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LOG(FATAL)<< "Unknown pooling method.";
       }
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -312,8 +321,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* const top_diff,
                                 const int kernel_w, const int stride_h,
                                 const int stride_w, const int pad_h,
                                 const int pad_w, Dtype* const bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
     const int w = index % width;
@@ -361,8 +369,7 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* const top_diff,
                                 const int stride_h, const int stride_w,
                                 const int pad_h, const int pad_w,
                                 Dtype* const bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
     const int w = index % width + pad_w;
@@ -399,8 +406,7 @@ __global__ void StoPoolBackward(const int nthreads, const Dtype* const rand_idx,
                                 const int pooled_width, const int kernel_h,
                                 const int kernel_w, const int stride_h,
                                 const int stride_w, Dtype* const bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
     const int w = index % width;
@@ -421,13 +427,13 @@ __global__ void StoPoolBackward(const int nthreads, const Dtype* const rand_idx,
         gradient +=
             top_diff_slice[ph * pooled_width + pw]
                 * (index
-                    == static_cast<int>(rand_idx_slice[ph * pooled_width + pw]));
+            == static_cast<int>(rand_idx_slice[ph * pooled_width + pw]));
       }
     }
     bottom_diff[index] = gradient;
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -455,7 +461,8 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           mask = max_idx_.gpu_data();
         }
         // NOLINT_NEXT_LINE(whitespace/operators)
-        MaxPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+        MaxPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                           CAFFE_CUDA_NUM_THREADS)(
             count, top_diff, mask, top_mask, top[0]->num(), channels_,
             height_, width_, pooled_height_, pooled_width_,
             kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
@@ -463,14 +470,16 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         break;
       case PoolingParameter_PoolMethod_AVE:
         // NOLINT_NEXT_LINE(whitespace/operators)
-        AvePoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+        AvePoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                           CAFFE_CUDA_NUM_THREADS)(
             count, top_diff, top[0]->num(), channels_,
             height_, width_, pooled_height_, pooled_width_, kernel_h_,
             kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
         break;
       case PoolingParameter_PoolMethod_STOCHASTIC:
         // NOLINT_NEXT_LINE(whitespace/operators)
-        StoPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+        StoPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                           CAFFE_CUDA_NUM_THREADS)(
             count, rand_idx_.gpu_data(), top_diff,
             top[0]->num(), channels_, height_, width_, pooled_height_,
             pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
@@ -480,9 +489,8 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         LOG(FATAL)<< "Unknown pooling method.";
       }
     }
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -502,15 +510,15 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::kernel &oclk_max_pool_backward = program.get_kernel(
             CL_KERNEL_SELECT("max_pool_backward"));
         viennacl::ocl::enqueue(
-            oclk_max_pool_backward(count, WrapHandle((cl_mem) top_diff, ctx),
+            oclk_max_pool_backward(count, WrapHandle((cl_mem) top_diff, &ctx),
                                    mask == NULL ? 0 : 1,
-                                   WrapHandle((cl_mem) mask, ctx),
-                                   WrapHandle((cl_mem) top_mask, ctx),
+                                   WrapHandle((cl_mem) mask, &ctx),
+                                   WrapHandle((cl_mem) top_mask, &ctx),
                                    top[0]->num(), channels_, height_, width_,
                                    pooled_height_, pooled_width_, kernel_h_,
                                    kernel_w_, stride_h_, stride_w_, pad_h_,
                                    pad_w_,
-                                   WrapHandle((cl_mem) bottom_diff, ctx)),
+                                   WrapHandle((cl_mem) bottom_diff, &ctx)),
             ctx.get_queue());
       }
         break;
@@ -518,12 +526,12 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::kernel &oclk_ave_pool_backward = program.get_kernel(
             CL_KERNEL_SELECT("ave_pool_backward"));
         viennacl::ocl::enqueue(
-            oclk_ave_pool_backward(count, WrapHandle((cl_mem) top_diff, ctx),
+            oclk_ave_pool_backward(count, WrapHandle((cl_mem) top_diff, &ctx),
                                    top[0]->num(), channels_, height_, width_,
                                    pooled_height_, pooled_width_, kernel_h_,
                                    kernel_w_, stride_h_, stride_w_, pad_h_,
                                    pad_w_,
-                                   WrapHandle((cl_mem) bottom_diff, ctx)),
+                                   WrapHandle((cl_mem) bottom_diff, &ctx)),
             ctx.get_queue());
       }
         break;
@@ -532,11 +540,11 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             CL_KERNEL_SELECT("sto_pool_backward"));
         viennacl::ocl::enqueue(
             oclk_sto_pool_backward(
-                count, WrapHandle((cl_mem) (rand_idx_.gpu_data()), ctx),
-                WrapHandle((cl_mem) top_diff, ctx), top[0]->num(), channels_,
+                count, WrapHandle((cl_mem) (rand_idx_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) top_diff, &ctx), top[0]->num(), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, stride_h_, stride_w_,
-                WrapHandle((cl_mem) bottom_diff, ctx)),
+                WrapHandle((cl_mem) bottom_diff, &ctx)),
             ctx.get_queue());
       }
         break;

@@ -17,8 +17,7 @@ template<typename Dtype>
 __global__ void MaxForward(const int nthreads, const Dtype* bottom_data_a,
                            const Dtype* bottom_data_b, const int blob_idx,
                            Dtype* top_data, int* mask) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
     if (bottom_data_a[index] > bottom_data_b[index]) {
@@ -37,7 +36,7 @@ __global__ void MaxForward(const int nthreads, const Dtype* bottom_data_a,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -66,11 +65,14 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       case EltwiseParameter_EltwiseOp_MAX:
         mask = max_idx_.mutable_gpu_data();
         // NOLINT_NEXT_LINE(whitespace/operators)
-        MaxForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
-            count, bottom[0]->gpu_data(), bottom[1]->gpu_data(), 0, top_data, mask);
+        MaxForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                      CAFFE_CUDA_NUM_THREADS)(
+            count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
+            0, top_data, mask);
         for (int i = 2; i < bottom.size(); ++i) {
           // NOLINT_NEXT_LINE(whitespace/operators)
-          MaxForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+          MaxForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                        CAFFE_CUDA_NUM_THREADS)(
               count, top_data, bottom[i]->gpu_data(), i-1, top_data, mask);
         }
         break;
@@ -78,7 +80,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LOG(FATAL)<< "Unknown elementwise operation.";
       }
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -88,17 +90,26 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD: {
-        greentea_gpu_mul<Dtype>(this->device_context_.id(), count, (cl_mem)(bottom[0]->gpu_data()),0, (cl_mem)(bottom[1]->gpu_data()),0,
-            (cl_mem)top_data,0);
+        greentea_gpu_mul<Dtype>(this->device_context_.id(),
+                                count, (cl_mem)(bottom[0]->gpu_data()), 0,
+                                (cl_mem)(bottom[1]->gpu_data()), 0,
+            (cl_mem)top_data, 0);
         for (int i = 2; i < bottom.size(); ++i) {
-          greentea_gpu_mul<Dtype>(this->device_context_.id(), count, (cl_mem)top_data,0, (cl_mem)(bottom[i]->gpu_data()),0, (cl_mem)top_data,0);
+          greentea_gpu_mul<Dtype>(this->device_context_.id(),
+                                  count, (cl_mem)top_data, 0,
+                                  (cl_mem)(bottom[i]->gpu_data()), 0,
+                                  (cl_mem)top_data, 0);
         }
       }
       break;
       case EltwiseParameter_EltwiseOp_SUM: {
-        greentea_gpu_set<Dtype>(this->device_context_.id(), count, 0, (cl_mem)top_data, 0);
+        greentea_gpu_set<Dtype>(this->device_context_.id(), count, 0,
+                                (cl_mem)top_data, 0);
         for (int i = 0; i < bottom.size(); ++i) {
-          greentea_gpu_axpy<Dtype>(this->device_context_.id(), count, coeffs_[i], (cl_mem)(bottom[i]->gpu_data()),0, (cl_mem)top_data, 0);
+          greentea_gpu_axpy<Dtype>(this->device_context_.id(),
+                                   count, coeffs_[i],
+                                   (cl_mem)(bottom[i]->gpu_data()),
+                                   0, (cl_mem)top_data, 0);
         }
       }
       break;
@@ -109,12 +120,19 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             CL_KERNEL_SELECT("eltwise_max_forward"));
 
         viennacl::ocl::enqueue(
-            oclk_max_forward(count, WrapHandle((cl_mem)(bottom[0]->gpu_data()),ctx), WrapHandle((cl_mem)(bottom[1]->gpu_data()),ctx), 0, WrapHandle((cl_mem)top_data,ctx), WrapHandle((cl_mem)mask,ctx)),
+            oclk_max_forward(count,
+                WrapHandle((cl_mem)(bottom[0]->gpu_data()), &ctx),
+                WrapHandle((cl_mem)(bottom[1]->gpu_data()), &ctx), 0,
+                WrapHandle((cl_mem)top_data, &ctx),
+                WrapHandle((cl_mem)mask, &ctx)),
             ctx.get_queue());
 
         for (int i = 2; i < bottom.size(); ++i) {
           viennacl::ocl::enqueue(
-              oclk_max_forward(count, WrapHandle((cl_mem)(top_data),ctx), WrapHandle((cl_mem)(bottom[i]->gpu_data()),ctx), i-1, WrapHandle((cl_mem)top_data,ctx), WrapHandle((cl_mem)mask,ctx)),
+              oclk_max_forward(count, WrapHandle((cl_mem)(top_data), &ctx),
+                  WrapHandle((cl_mem)(bottom[i]->gpu_data()), &ctx), i-1,
+                  WrapHandle((cl_mem)top_data, &ctx),
+                  WrapHandle((cl_mem)mask, &ctx)),
               ctx.get_queue());
         }
       }
@@ -123,7 +141,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LOG(FATAL)<< "Unknown elementwise operation.";
       }
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -132,8 +150,7 @@ template<typename Dtype>
 __global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
                             const int blob_idx, const int* mask,
                             Dtype* bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     Dtype gradient = 0;
     if (mask[index] == blob_idx) {
       gradient += top_diff[index];
@@ -141,7 +158,7 @@ __global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
     bottom_diff[index] = gradient;
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -198,7 +215,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
       }
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -219,24 +236,35 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                   continue;
                 }
                 if (!initialized) {
-                  greentea_copy<Dtype>(count, (cl_mem)(bottom[j]->gpu_data()),0, (cl_mem)(bottom_diff), 0, ctx);
+                  greentea_copy<Dtype>(count,
+                      (cl_mem)(bottom[j]->gpu_data()), 0,
+                      (cl_mem)(bottom_diff), 0, &ctx);
                   initialized = true;
                 } else {
-                  greentea_gpu_mul<Dtype>(this->device_context_.id(), count, (cl_mem)bottom[j]->gpu_data(),0, (cl_mem)bottom_diff,0,
-                      (cl_mem)bottom_diff,0);
+                  greentea_gpu_mul<Dtype>(this->device_context_.id(), count,
+                      (cl_mem)bottom[j]->gpu_data(), 0,
+                      (cl_mem)bottom_diff, 0,
+                      (cl_mem)bottom_diff, 0);
                 }
               }
             } else {
-              greentea_gpu_div<Dtype>(this->device_context_.id(), count, (cl_mem)top_data,0, (cl_mem)bottom_data,0, (cl_mem)bottom_diff,0);
+              greentea_gpu_div<Dtype>(this->device_context_.id(),
+                                      count, (cl_mem)top_data, 0,
+                  (cl_mem)bottom_data, 0, (cl_mem)bottom_diff, 0);
             }
-            greentea_gpu_mul<Dtype>(this->device_context_.id(), count, (cl_mem)bottom_diff,0, (cl_mem)top_diff,0, (cl_mem)bottom_diff,0);
+            greentea_gpu_mul<Dtype>(this->device_context_.id(),
+                                    count, (cl_mem)bottom_diff, 0,
+                (cl_mem)top_diff, 0, (cl_mem)bottom_diff, 0);
           }
           break;
           case EltwiseParameter_EltwiseOp_SUM: {
             if (coeffs_[i] == Dtype(1.)) {
-              greentea_copy<Dtype>(count, (cl_mem)top_diff,0, (cl_mem)bottom_diff,0,ctx);
+              greentea_copy<Dtype>(count, (cl_mem)top_diff,
+                                   0, (cl_mem)bottom_diff, 0, &ctx);
             } else {
-              greentea_gpu_scale<Dtype>(this->device_context_.id(), count, coeffs_[i],(cl_mem)top_diff,0, (cl_mem)bottom_diff,0);
+              greentea_gpu_scale<Dtype>(this->device_context_.id(),
+                  count, coeffs_[i], (cl_mem)top_diff,
+                  0, (cl_mem)bottom_diff, 0);
             }
           }
           break;
@@ -247,7 +275,9 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                 CL_KERNEL_SELECT("eltwise_max_backward"));
 
             viennacl::ocl::enqueue(
-                oclk_max_backward(count, WrapHandle((cl_mem)top_diff,ctx),i, WrapHandle((cl_mem)mask,ctx), WrapHandle((cl_mem)bottom_diff,ctx)),
+                oclk_max_backward(count, WrapHandle((cl_mem)top_diff, &ctx), i,
+                    WrapHandle((cl_mem)mask, &ctx),
+                    WrapHandle((cl_mem)bottom_diff, &ctx)),
                 ctx.get_queue());
           }
           break;

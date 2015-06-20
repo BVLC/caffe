@@ -18,8 +18,7 @@ __global__ void Concat(const int nthreads, const Dtype* in_data,
                        const int concat_size, const int top_concat_axis,
                        const int bottom_concat_axis,
                        const int offset_concat_axis, Dtype* out_data) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     const int total_concat_size = concat_size * bottom_concat_axis;
     const int concat_num = index / total_concat_size;
     const int concat_index = index % total_concat_size;
@@ -32,7 +31,7 @@ __global__ void Concat(const int nthreads, const Dtype* in_data,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -50,10 +49,11 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
-      Concat<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
+      Concat<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
+                                CAFFE_CUDA_NUM_THREADS)(
           nthreads, bottom_data, kForward, num_concats_, concat_input_size_,
           top_concat_axis, bottom_concat_axis, offset_concat_axis, top_data);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
 
@@ -65,15 +65,14 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       viennacl::ocl::kernel &oclk_concat = program.get_kernel(
           CL_KERNEL_SELECT("concat"));
       viennacl::ocl::enqueue(
-          oclk_concat(nthreads, WrapHandle((cl_mem) bottom_data, ctx),
+          oclk_concat(nthreads, WrapHandle((cl_mem) bottom_data, &ctx),
                       kForward ? 1 : 0, num_concats_, concat_input_size_,
                       top_concat_axis, bottom_concat_axis, offset_concat_axis,
-                      WrapHandle((cl_mem) top_data, ctx)),
+                      WrapHandle((cl_mem) top_data, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
     offset_concat_axis += bottom_concat_axis;
-
   }
 }
 
@@ -97,10 +96,11 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
-      Concat<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
+      Concat<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
+                                CAFFE_CUDA_NUM_THREADS)(
           nthreads, top_diff, kForward, num_concats_, concat_input_size_,
           top_concat_axis, bottom_concat_axis, offset_concat_axis, bottom_diff);
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
 
@@ -112,12 +112,12 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::kernel &oclk_concat = program.get_kernel(
           CL_KERNEL_SELECT("concat"));
       viennacl::ocl::enqueue(
-          oclk_concat(nthreads, WrapHandle((cl_mem) top_diff, ctx),
+          oclk_concat(nthreads, WrapHandle((cl_mem) top_diff, &ctx),
                       kForward ? 1 : 0, num_concats_, concat_input_size_,
                       top_concat_axis, bottom_concat_axis, offset_concat_axis,
-                      WrapHandle((cl_mem) bottom_diff, ctx)),
+                      WrapHandle((cl_mem) bottom_diff, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
 
     offset_concat_axis += bottom_concat_axis;

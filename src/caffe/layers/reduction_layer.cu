@@ -49,7 +49,7 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       top_data = top[0]->mutable_gpu_data();
       caffe_gpu_scal(num_, coeff_, top_data);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     if (sum_multiplier_.count() > 0) {
@@ -88,7 +88,7 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       greentea_gpu_scal<Dtype>(this->device_context_.id(), num_, coeff_,
                                (cl_mem) top_data, 0);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -132,11 +132,13 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           caffe_gpu_set(dim_, bottom_coeff, bottom_diff + bottom_diff_off);
           break;
         case ReductionParameter_ReductionOp_ASUM:
-          caffe_gpu_sign(dim_, bottom_data + bottom_data_off, bottom_diff + bottom_diff_off);
+          caffe_gpu_sign(dim_, bottom_data + bottom_data_off,
+                         bottom_diff + bottom_diff_off);
           caffe_gpu_scal(dim_, bottom_coeff, bottom_diff + bottom_diff_off);
           break;
         case ReductionParameter_ReductionOp_SUMSQ:
-          caffe_gpu_scale(dim_, 2 * bottom_coeff, bottom_data + bottom_data_off, bottom_diff + bottom_diff_off);
+          caffe_gpu_scale(dim_, 2 * bottom_coeff, bottom_data + bottom_data_off,
+                          bottom_diff + bottom_diff_off);
           break;
         default:
           LOG(FATAL)<< "Unknown reduction op: "
@@ -146,7 +148,7 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       bottom_diff_off += dim_;
       ++top_diff_off;
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     for (int i = 0; i < num_; ++i) {
@@ -155,19 +157,22 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         case ReductionParameter_ReductionOp_SUM:
         case ReductionParameter_ReductionOp_MEAN:
           greentea_gpu_set<Dtype>(this->device_context_.id(), dim_,
-                                  bottom_coeff, (cl_mem) bottom_diff, bottom_diff_off);
+                                  bottom_coeff, (cl_mem) bottom_diff,
+                                  bottom_diff_off);
           break;
         case ReductionParameter_ReductionOp_ASUM:
           greentea_gpu_sign<Dtype>(this->device_context_.id(), dim_,
                                    (cl_mem) bottom_data, bottom_data_off,
                                    (cl_mem) bottom_diff, bottom_diff_off);
           greentea_gpu_scal<Dtype>(this->device_context_.id(), dim_,
-                                   bottom_coeff, (cl_mem) bottom_diff, bottom_diff_off);
+                                   bottom_coeff, (cl_mem) bottom_diff,
+                                   bottom_diff_off);
           break;
         case ReductionParameter_ReductionOp_SUMSQ:
           greentea_gpu_scale<Dtype>(this->device_context_.id(), dim_,
-                                    2 * bottom_coeff, (cl_mem) bottom_data, bottom_data_off,
-                                    (cl_mem) bottom_diff, bottom_diff_off);
+                                    2 * bottom_coeff, (cl_mem) bottom_data,
+                                    bottom_data_off, (cl_mem) bottom_diff,
+                                    bottom_diff_off);
           break;
         default:
           LOG(FATAL)<< "Unknown reduction op: "
@@ -177,7 +182,7 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       bottom_diff_off += dim_;
       ++top_diff_off;
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

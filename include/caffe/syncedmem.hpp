@@ -33,7 +33,6 @@ inline void CaffeFreeHost(void* ptr) {
   free(ptr);
 }
 
-
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
  *        and device (GPU).
@@ -44,26 +43,43 @@ class SyncedMemory {
  public:
 #ifdef USE_GREENTEA
   SyncedMemory()
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false), device_context_(Caffe::GetDefaultDeviceContext()), cl_gpu_mem_(NULL) {}
-  SyncedMemory(DeviceContext device_context)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false), device_context_(device_context), cl_gpu_mem_(NULL) {}
+      : cpu_ptr_(NULL),
+        gpu_ptr_(NULL),
+        size_(0),
+        head_(UNINITIALIZED),
+        own_cpu_data_(false),
+        device_context_(Caffe::GetDefaultDeviceContext()),
+        cl_gpu_mem_(NULL) {
+  }
+  explicit SyncedMemory(DeviceContext device_context)
+      : cpu_ptr_(NULL),
+        gpu_ptr_(NULL),
+        size_(0),
+        head_(UNINITIALIZED),
+        own_cpu_data_(false),
+        device_context_(device_context),
+        cl_gpu_mem_(NULL) {
+  }
   explicit SyncedMemory(size_t size, DeviceContext device_context)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false), device_context_(device_context), cl_gpu_mem_(NULL) {}
+      : cpu_ptr_(NULL),
+        gpu_ptr_(NULL),
+        size_(size),
+        head_(UNINITIALIZED),
+        own_cpu_data_(false),
+        device_context_(device_context),
+        cl_gpu_mem_(NULL) {
+  }
 #else
   SyncedMemory()
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false), device_context_(Caffe::GetDefaultDeviceContext()) {}
-  SyncedMemory(DeviceContext device_context)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false), device_context_(device_context) {}
+  : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+  own_cpu_data_(false), device_context_(Caffe::GetDefaultDeviceContext()) {}
+  explicit SyncedMemory(DeviceContext device_context)
+  : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+  own_cpu_data_(false), device_context_(device_context) {}
   explicit SyncedMemory(size_t size, DeviceContext device_context)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false), device_context_(device_context) {}
+  : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
+  own_cpu_data_(false), device_context_(device_context) {}
 #endif
-
 
   ~SyncedMemory();
   const void* cpu_data();
@@ -71,9 +87,18 @@ class SyncedMemory {
   const void* gpu_data();
   void* mutable_cpu_data();
   void* mutable_gpu_data();
-  enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
-  SyncedHead head() { return head_; }
-  size_t size() { return size_; }
+  enum SyncedHead {
+    UNINITIALIZED,
+    HEAD_AT_CPU,
+    HEAD_AT_GPU,
+    SYNCED
+  };
+  SyncedHead head() {
+    return head_;
+  }
+  size_t size() {
+    return size_;
+  }
 
  private:
   void to_cpu();
@@ -89,8 +114,9 @@ class SyncedMemory {
   cl_mem cl_gpu_mem_;
 #endif
 
-  DISABLE_COPY_AND_ASSIGN(SyncedMemory);
-};  // class SyncedMemory
+DISABLE_COPY_AND_ASSIGN(SyncedMemory);
+};
+// class SyncedMemory
 
 }  // namespace caffe
 

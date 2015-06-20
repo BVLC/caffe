@@ -31,8 +31,8 @@ class Timer {
 #ifdef USE_CUDA
   cudaEvent_t start_gpu_;
   cudaEvent_t stop_gpu_;
-#endif // USE_CUDA
-#endif // !CPU_ONLY
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
   boost::posix_time::ptime start_cpu_;
   boost::posix_time::ptime stop_cpu_;
   float elapsed_milliseconds_;

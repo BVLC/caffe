@@ -9,7 +9,7 @@
 namespace caffe {
 
 /**
- * @brief An interface for classes that perform optimization on Net%s.
+ * @brief An interface for classes that perform optimization on Nets.
  *
  * Requires implementation of ApplyUpdate to compute a parameter update
  * given the current state of the Net parameters.
@@ -141,7 +141,8 @@ class AdaGradSolver : public SGDSolver<Dtype> {
  protected:
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   void constructor_sanity_check() {
-    CHECK_EQ(0, this->param_.momentum())<< "Momentum cannot be used with AdaGrad.";
+    CHECK_EQ(0, this->param_.momentum())
+        << "Momentum cannot be used with AdaGrad.";
   }
 
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);

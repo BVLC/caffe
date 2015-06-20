@@ -10,12 +10,11 @@ namespace caffe {
 #ifdef USE_CUDA
 template<typename Dtype>
 __global__ void SigmoidForward(const int n, const Dtype* in, Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] = 1. / (1. + exp(-in[index]));
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -27,11 +26,11 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    SigmoidForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+    SigmoidForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                      CAFFE_CUDA_NUM_THREADS)(
         count, bottom_data, top_data);
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -42,10 +41,10 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::kernel &oclk_sigmoid = program.get_kernel(
         CL_KERNEL_SELECT("sigmoid_forward"));
     viennacl::ocl::enqueue(
-        oclk_sigmoid(count, WrapHandle((cl_mem) bottom_data, ctx),
-                     WrapHandle((cl_mem) top_data, ctx)),
+        oclk_sigmoid(count, WrapHandle((cl_mem) bottom_data, &ctx),
+                     WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 
   // << " count: " << count << " bottom_data: "
@@ -59,13 +58,12 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 __global__ void SigmoidBackward(const int n, const Dtype* in_diff,
                                 const Dtype* out_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     const Dtype sigmoid_x = out_data[index];
     out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -80,11 +78,11 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
-      SigmoidBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+      SigmoidBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                         CAFFE_CUDA_NUM_THREADS)(
           count, top_diff, top_data, bottom_diff);
-      CUDA_POST_KERNEL_CHECK
-      ;
-#endif // USE_CUDA
+      CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -95,13 +93,12 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::kernel &oclk_sigmoid = program.get_kernel(
           CL_KERNEL_SELECT("sigmoid_backward"));
       viennacl::ocl::enqueue(
-          oclk_sigmoid(count, WrapHandle((cl_mem) top_diff, ctx),
-                       WrapHandle((cl_mem) top_data, ctx),
-                       WrapHandle((cl_mem) bottom_diff, ctx)),
+          oclk_sigmoid(count, WrapHandle((cl_mem) top_diff, &ctx),
+                       WrapHandle((cl_mem) top_data, &ctx),
+                       WrapHandle((cl_mem) bottom_diff, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
-
   }
 }
 

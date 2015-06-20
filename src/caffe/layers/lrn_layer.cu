@@ -13,8 +13,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
                              const int height, const int width, const int size,
                              const Dtype alpha_over_size, const Dtype k,
                              Dtype* const scale) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     const int w = index % width;
     const int h = (index / width) % height;
@@ -54,7 +53,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -77,12 +76,11 @@ template<typename Dtype>
 __global__ void LRNComputeOutput(const int nthreads, const Dtype* const in,
                                  const Dtype* const scale,
                                  const Dtype negative_beta, Dtype* const out) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     out[index] = in[index] * pow(scale[index], negative_beta);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void LRNLayer<Dtype>::CrossChannelForward_gpu(
@@ -98,18 +96,19 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
     // go through all the channels.
     int n_threads = num_ * height_ * width_;
     // NOLINT_NEXT_LINE(whitespace/operators)
-    LRNFillScale CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS)(
-        n_threads, bottom_data, num_, channels_, height_, width_, size_,
+    LRNFillScale CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads),
+                             CAFFE_CUDA_NUM_THREADS)(
+        n_threads, bottom_data, num_, channels_, height_,
+        width_, size_,
         alpha_ / size_, k_, scale_data);
-    CUDA_POST_KERNEL_CHECK
-    ;
+    CUDA_POST_KERNEL_CHECK;
     n_threads = bottom[0]->count();
     // NOLINT_NEXT_LINE(whitespace/operators)
-    LRNComputeOutput CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS)(
+    LRNComputeOutput CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads),
+                                 CAFFE_CUDA_NUM_THREADS)(
         n_threads, bottom_data, scale_data, -beta_, top_data);
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
 
@@ -122,22 +121,21 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
     viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
         CL_KERNEL_SELECT("lrn_fill_scale"));
     viennacl::ocl::enqueue(
-        oclk_lrn_fill(n_threads, WrapHandle((cl_mem) bottom_data, ctx), num_,
+        oclk_lrn_fill(n_threads, WrapHandle((cl_mem) bottom_data, &ctx), num_,
                       channels_, height_, width_, size_, alpha_ / size_, k_,
-                      WrapHandle((cl_mem) scale_data, ctx)),
+                      WrapHandle((cl_mem) scale_data, &ctx)),
         ctx.get_queue());
 
     n_threads = bottom[0]->count();
     viennacl::ocl::kernel &oclk_lrn_compute = program.get_kernel(
         CL_KERNEL_SELECT("lrn_compute_output"));
     viennacl::ocl::enqueue(
-        oclk_lrn_compute(n_threads, WrapHandle((cl_mem) bottom_data, ctx),
-                         WrapHandle((cl_mem) scale_data, ctx), -beta_,
-                         WrapHandle((cl_mem) top_data, ctx)),
+        oclk_lrn_compute(n_threads, WrapHandle((cl_mem) bottom_data, &ctx),
+                         WrapHandle((cl_mem) scale_data, &ctx), -beta_,
+                         WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 template void LRNLayer<float>::CrossChannelForward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
@@ -172,8 +170,7 @@ __global__ void LRNComputeDiff(const int nthreads,
                                const Dtype negative_beta,
                                const Dtype cache_ratio,
                                Dtype* const bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads)
-  {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     const int w = index % width;
     const int h = (index / width) % height;
@@ -221,7 +218,7 @@ __global__ void LRNComputeDiff(const int nthreads,
     }
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_gpu(
@@ -232,12 +229,14 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    LRNComputeDiff CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS)(
+    LRNComputeDiff CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads),
+                               CAFFE_CUDA_NUM_THREADS)(
         n_threads, bottom[0]->gpu_data(), top[0]->gpu_data(),
-        scale_.gpu_data(), top[0]->gpu_diff(), num_, channels_, height_, width_,
+        scale_.gpu_data(), top[0]->gpu_diff(), num_,
+        channels_, height_, width_,
         size_, -beta_, Dtype(2. * alpha_ * beta_ / size_),
         bottom[0]->mutable_gpu_diff());
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -248,17 +247,16 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
     viennacl::ocl::kernel &oclk_lrn = program.get_kernel(
         CL_KERNEL_SELECT("lrn_compute_diff"));
     viennacl::ocl::enqueue(
-        oclk_lrn(n_threads, WrapHandle((cl_mem) (bottom[0]->gpu_data()), ctx),
-                 WrapHandle((cl_mem) (top[0]->gpu_data()), ctx),
-                 WrapHandle((cl_mem) (scale_.gpu_data()), ctx),
-                 WrapHandle((cl_mem) (top[0]->gpu_diff()), ctx), num_,
+        oclk_lrn(n_threads, WrapHandle((cl_mem) (bottom[0]->gpu_data()), &ctx),
+                 WrapHandle((cl_mem) (top[0]->gpu_data()), &ctx),
+                 WrapHandle((cl_mem) (scale_.gpu_data()), &ctx),
+                 WrapHandle((cl_mem) (top[0]->gpu_diff()), &ctx), num_,
                  channels_, height_, width_, size_, -beta_,
                  Dtype(2. * alpha_ * beta_ / size_),
-                 WrapHandle((cl_mem) (bottom[0]->mutable_gpu_diff()), ctx)),
+                 WrapHandle((cl_mem) (bottom[0]->mutable_gpu_diff()), &ctx)),
         ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 template void LRNLayer<float>::CrossChannelBackward_gpu(
     const vector<Blob<float>*>& top, const vector<bool>& propagate_down,

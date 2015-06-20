@@ -16,12 +16,11 @@ __global__ void DropoutForward(const int n, const Dtype* in,
                                const unsigned int* mask,
                                const unsigned int threshold, const float scale,
                                Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] * (mask[index] > threshold) * scale;
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -38,14 +37,14 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       caffe_gpu_rng_uniform(count, mask);
       // set thresholds
       // NOLINT_NEXT_LINE(whitespace/operators)
-      DropoutForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+      DropoutForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                        CAFFE_CUDA_NUM_THREADS)(
           count, bottom_data, mask, uint_thres_, scale_, top_data);
-      CUDA_POST_KERNEL_CHECK
-      ;
+      CUDA_POST_KERNEL_CHECK;
     } else {
       caffe_copy(count, bottom_data, top_data);
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -59,16 +58,16 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       viennacl::ocl::kernel &oclk_dropout = program.get_kernel(
           CL_KERNEL_SELECT("dropout_forward"));
       viennacl::ocl::enqueue(
-          oclk_dropout(count, WrapHandle((cl_mem) bottom_data, ctx),
-                       WrapHandle(mask, ctx), uint_thres_, scale_,
-                       WrapHandle((cl_mem) top_data, ctx)),
+          oclk_dropout(count, WrapHandle((cl_mem) bottom_data, &ctx),
+                       WrapHandle(mask, &ctx), uint_thres_, scale_,
+                       WrapHandle((cl_mem) top_data, &ctx)),
           ctx.get_queue());
     } else {
-      greentea_copy<Dtype>(count, (cl_mem) bottom_data,0, (cl_mem) top_data,0, ctx);
+      greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
+                           &ctx);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
 }
 
 #ifdef USE_CUDA
@@ -77,12 +76,11 @@ __global__ void DropoutBackward(const int n, const Dtype* in_diff,
                                 const unsigned int* mask,
                                 const unsigned int threshold, const float scale,
                                 Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out_diff[index] = in_diff[index] * scale * (mask[index] > threshold);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -102,12 +100,11 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         DropoutBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
             CAFFE_CUDA_NUM_THREADS)(
             count, top_diff, mask, uint_thres_, scale_, bottom_diff);
-        CUDA_POST_KERNEL_CHECK
-        ;
+        CUDA_POST_KERNEL_CHECK;
       } else {
         caffe_copy(top[0]->count(), top_diff, bottom_diff);
       }
-#endif // USE_CUDA
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -121,14 +118,15 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::kernel &oclk_dropout = program.get_kernel(
             CL_KERNEL_SELECT("dropout_backward"));
         viennacl::ocl::enqueue(
-            oclk_dropout(count, WrapHandle((cl_mem) top_diff, ctx),
-                         WrapHandle(mask, ctx), uint_thres_, scale_,
-                         WrapHandle((cl_mem) bottom_diff, ctx)),
+            oclk_dropout(count, WrapHandle((cl_mem) top_diff, &ctx),
+                         WrapHandle(mask, &ctx), uint_thres_, scale_,
+                         WrapHandle((cl_mem) bottom_diff, &ctx)),
             ctx.get_queue());
       } else {
-        greentea_copy<Dtype>(top[0]->count(), (cl_mem) top_diff, 0, (cl_mem) bottom_diff, 0, ctx);
+        greentea_copy<Dtype>(top[0]->count(), (cl_mem) top_diff, 0,
+                             (cl_mem) bottom_diff, 0, &ctx);
       }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
   }
 }

@@ -52,7 +52,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       << "Must specify either input_shape OR deprecated input_dim, not both.";
   if (param.input_dim_size() > 0) {
     // Deprecated 4D dimensions.
-    CHECK_EQ(param.input_size() * 4, param.input_dim_size())<< "Incorrect input blob dimension specifications.";
+    CHECK_EQ(param.input_size() * 4, param.input_dim_size())
+        << "Incorrect input blob dimension specifications.";
   } else {
     CHECK_EQ(param.input_size(), param.input_shape_size())
     << "Exactly one input_shape must be specified per input.";
@@ -131,7 +132,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     DLOG(INFO)<< "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int param_size = layer_param.param_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
-    CHECK_LE(param_size, num_param_blobs)<< "Too many params specified for layer " << layer_param.name();
+    CHECK_LE(param_size, num_param_blobs)
+        << "Too many params specified for layer " << layer_param.name();
     ParamSpec default_param_spec;
     for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
       const ParamSpec* param_spec =
@@ -385,9 +387,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
             param.input_dim(top_id * 4 + 1),
             param.input_dim(top_id * 4 + 2),
             param.input_dim(top_id * 4 + 3));
-      }
-      else
-      {
+      } else {
         blob_pointer->Reshape(param.input_shape(top_id));
       }
       net_input_blob_indices_.push_back(blob_id);
@@ -408,7 +408,6 @@ template<typename Dtype>
 int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
                              const int bottom_id, set<string>* available_blobs,
                              map<string, int>* blob_name_to_idx) {
-
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
@@ -461,7 +460,8 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     // Named param blob with name we've seen before: share params
     const int owner_net_param_id = param_names_index_[param_name];
     param_owners_.push_back(owner_net_param_id);
-    const pair<int, int>& owner_index = param_layer_indices_[owner_net_param_id];
+    const pair<int, int>& owner_index =
+        param_layer_indices_[owner_net_param_id];
     const int owner_layer_id = owner_index.first;
     const int owner_param_id = owner_index.second;
     LOG(INFO)<< "Sharing parameters '" << param_name << "' owned by "
@@ -475,7 +475,8 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
         && (layer_param.param(param_id).share_mode()
             == ParamSpec_DimCheckMode_PERMISSIVE)) {
       // Permissive dimension checking -- only check counts are the same.
-      CHECK_EQ(this_blob->count(), owner_blob->count())<< "Shared parameter blobs must have the same count.";
+      CHECK_EQ(this_blob->count(), owner_blob->count())
+          << "Shared parameter blobs must have the same count.";
     } else {
       // Strict dimension checking -- all dims must be the same.
       CHECK(this_blob->shape() == owner_blob->shape());
@@ -557,7 +558,8 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
   BlobProtoVector blob_proto_vec;
   if (net_input_blobs_.size()) {
     blob_proto_vec.ParseFromString(input_blob_protos);
-    CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blobs_.size())<< "Incorrect input size.";
+    CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blobs_.size())
+        << "Incorrect input size.";
     for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
       net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i));
     }
@@ -686,7 +688,8 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs = layers_[target_layer_id]
         ->blobs();
-    CHECK_EQ(target_blobs.size(), source_layer->blobs().size())<< "Incompatible number of blobs for layer " << source_layer_name;
+    CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
+        << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
       CHECK(target_blobs[j]->shape() == source_blob->shape());
@@ -752,7 +755,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs = layers_[target_layer_id]
         ->blobs();
-    CHECK_EQ(target_blobs.size(), source_layer.blobs_size())<< "Incompatible number of blobs for layer " << source_layer_name;
+    CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
+        << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       const bool kReshape = false;
       target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
@@ -817,12 +821,13 @@ void Net<Dtype>::Update() {
         if (dc.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
           caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
-#endif // USE_CUDA
+#endif  // USE_CUDA
         } else {
 #ifdef USE_GREENTEA
           greentea_gpu_add<Dtype>(dc.id(), count, (cl_mem) this_diff, 0,
-                           (cl_mem) owner_diff, 0, (cl_mem) owner_diff, 0);
-#endif // USE_GREENTEA
+                                  (cl_mem) owner_diff, 0, (cl_mem) owner_diff,
+                                  0);
+#endif  // USE_GREENTEA
         }
       }
         break;

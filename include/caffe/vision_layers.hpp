@@ -56,7 +56,6 @@ class MergeCropLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
-
 };
 
 /**
@@ -153,7 +152,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                data);
   }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 #ifdef USE_GREENTEA
   inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
                                        Dtype* col_buff,
@@ -162,7 +161,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
         this->device_context_.id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_context_.id());
-    greentea_im2col_gpu<Dtype>(program, ctx, (cl_mem) data, data_off,
+    greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
                                conv_in_channels_, conv_in_height_,
                                conv_in_width_, kernel_h_, kernel_w_, pad_h_,
                                pad_w_, stride_h_, stride_w_, (cl_mem) col_buff,
@@ -175,14 +174,14 @@ class BaseConvolutionLayer : public Layer<Dtype> {
         this->device_context_.id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_context_.id());
-    greentea_col2im_gpu<Dtype>(program, ctx, (cl_mem) col_buff, col_buff_off,
+    greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff, col_buff_off,
                                conv_in_channels_, conv_in_height_,
                                conv_in_width_, kernel_h_, kernel_w_, pad_h_,
                                pad_w_, stride_h_, stride_w_, (cl_mem) data,
                                data_off);
   }
-#endif // USE_GREENTEA
-#endif // !CPU_ONLY
+#endif  // USE_GREENTEA
+#endif  // !CPU_ONLY
 
   int conv_out_channels_;
   int conv_in_channels_;
@@ -376,7 +375,7 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
  */
 template <typename Dtype>
 class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
-public:
+ public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
   : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -385,7 +384,7 @@ public:
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNConvolutionLayer();
 
-protected:
+ protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -662,7 +661,7 @@ class PoolingLayer : public Layer<Dtype> {
  */
 template <typename Dtype>
 class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
-public:
+ public:
   explicit CuDNNPoolingLayer(const LayerParameter& param)
   : PoolingLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -674,7 +673,7 @@ public:
   virtual inline int MinTopBlobs() const {return -1;}
   virtual inline int ExactNumTopBlobs() const {return 1;}
 
-protected:
+ protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,

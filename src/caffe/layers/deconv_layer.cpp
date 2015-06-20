@@ -6,12 +6,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#ifdef USE_GREENTEA
-#include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
-#include "caffe/greentea/greentea_im2col.hpp"
-#endif
-
 namespace caffe {
 
 template <typename Dtype>

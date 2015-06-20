@@ -18,17 +18,17 @@ echo "#ifndef GREENTEA_CL_KERNELS_HPP_" >> $HEADER
 echo "#define GREENTEA_CL_KERNELS_HPP_" >> $HEADER
 echo "#include \"caffe/greentea/greentea.hpp\"" >> $HEADER
 echo "#include \"viennacl/backend/opencl.hpp\"" >> $HEADER
+echo "#include \"viennacl/ocl/backend.hpp\"" >> $HEADER
 echo "#include \"viennacl/ocl/context.hpp\"" >> $HEADER
 echo "#include \"viennacl/ocl/device.hpp\"" >> $HEADER
 echo "#include \"viennacl/ocl/platform.hpp\"" >> $HEADER
-echo "#include \"viennacl/ocl/backend.hpp\"" >> $HEADER
 echo "namespace caffe {" >> $HEADER
 echo "#include \"$INCHEADER\"" >> $SOURCE
 echo "#include <sstream>" >> $SOURCE
 echo "#include <string>" >> $SOURCE
 echo "namespace caffe {" >> $SOURCE
 
-echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context &ctx);" >> $HEADER
+echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
 echo "}" >> $HEADER
 echo "#endif" >> $HEADER
 
@@ -41,7 +41,7 @@ do
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
 	echo -n "std::string $CL_KERNEL_NAME = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
-	echo "\";" >> $SOURCE
+	echo "\";  // NOLINT" >> $SOURCE
 done
 
 shopt -s nullglob
@@ -53,7 +53,7 @@ do
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
 	echo -n "std::string ${CL_KERNEL_NAME}_float = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
-	echo "\";" >> $SOURCE
+	echo "\";  // NOLINT" >> $SOURCE
 done
 
 shopt -s nullglob
@@ -65,12 +65,12 @@ do
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
 	echo -n "std::string ${CL_KERNEL_NAME}_double = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
-	echo "\";" >> $SOURCE
+	echo "\";  // NOLINT" >> $SOURCE
 done
 
 
 
-echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context &ctx) {" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
 
 shopt -s nullglob
@@ -79,41 +79,42 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo "  ss << $CL_KERNEL_NAME << \"\\n\\n\";" >> $SOURCE
+	echo "  ss << $CL_KERNEL_NAME << \"\\n\\n\";  // NOLINT" >> $SOURCE
 done
 
 shopt -s nullglob
-echo "  ss << \"#define Dtype float\" << \"\\n\\n\";" >> $SOURCE
+echo "  ss << \"#define Dtype float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 for CL_KERNEL in $CL_KERNELDIR
 do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo "  ss << ${CL_KERNEL_NAME}_float << \"\\n\\n\";" >> $SOURCE
+	echo "  ss << ${CL_KERNEL_NAME}_float << \"\\n\\n\";  // NOLINT" >> $SOURCE
 done
 
 shopt -s nullglob
 echo "#ifdef GREENTEA_DOUBLE_SUPPORT" >> $SOURCE
-echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";" >> $SOURCE
-echo "  ss << \"#undef Dtype\" << \"\\n\\n\";" >> $SOURCE
-echo "  ss << \"#define Dtype double\" << \"\\n\\n\";" >> $SOURCE
+echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 for CL_KERNEL in $CL_KERNELDIR
 do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo "  ss << ${CL_KERNEL_NAME}_double << \"\\n\\n\";" >> $SOURCE
+	echo "  ss << ${CL_KERNEL_NAME}_double << \"\\n\\n\";  // NOLINT" >> $SOURCE
 done
 echo "  ss << \"#endif\" << \"\\n\\n\";" >> $SOURCE
-echo "#endif // GREENTEA_DOUBLE_SUPPORT" >> $SOURCE
+echo "#endif  // GREENTEA_DOUBLE_SUPPORT" >> $SOURCE
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
-echo "  ctx.build_options(\"-cl-fast-relaxed-math -cl-mad-enable\");" >> $SOURCE
-echo "  viennacl::ocl::program &program = ctx.add_program(kernel_program,\"kernel_program\");" >> $SOURCE
+echo "  ctx->build_options(\"-cl-fast-relaxed-math -cl-mad-enable\");" >> $SOURCE
+echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
+echo "      \"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
-echo "}" >> $SOURCE
+echo "}  // namespace caffe" >> $SOURCE
 
 echo "#endif" >> $HEADER
 echo "#endif" >> $SOURCE

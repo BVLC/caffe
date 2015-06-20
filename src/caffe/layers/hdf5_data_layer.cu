@@ -19,7 +19,6 @@ namespace caffe {
 template<typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
-
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
@@ -52,11 +51,11 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             &top[j]->mutable_gpu_data()[i * data_dim]);
       }
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     Forward_cpu(bottom, top);
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 

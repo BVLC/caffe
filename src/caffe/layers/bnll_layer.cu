@@ -16,14 +16,13 @@ const float kBNLL_THRESHOLD = 50.;
 #ifdef USE_CUDA
 template<typename Dtype>
 __global__ void BNLLForward(const int n, const Dtype* in, Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] =
         in[index] > 0 ?
             in[index] + log(1. + exp(-in[index])) : log(1. + exp(in[index]));
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -35,11 +34,11 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    BNLLForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+    BNLLForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                   CAFFE_CUDA_NUM_THREADS)(
         count, bottom_data, top_data);
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif // USE_CUDA
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -50,10 +49,10 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::kernel &oclk_bnll = program.get_kernel(
         CL_KERNEL_SELECT("bnll_forward"));
     viennacl::ocl::enqueue(
-        oclk_bnll(count, WrapHandle((cl_mem) bottom_data, ctx),
-                  WrapHandle((cl_mem) top_data, ctx)),
+        oclk_bnll(count, WrapHandle((cl_mem) bottom_data, &ctx),
+                  WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -61,13 +60,12 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 __global__ void BNLLBackward(const int n, const Dtype* in_diff,
                              const Dtype* in_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n)
-  {
+  CUDA_KERNEL_LOOP(index, n) {
     Dtype expval = exp(min(in_data[index], Dtype(kBNLL_THRESHOLD)));
     out_diff[index] = in_diff[index] * expval / (expval + 1.);
   }
 }
-#endif // USE_CUDA
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -82,11 +80,11 @@ void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
-      BNLLBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+      BNLLBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+                                      CAFFE_CUDA_NUM_THREADS)(
           count, top_diff, bottom_data, bottom_diff);
-      CUDA_POST_KERNEL_CHECK
-      ;
-#endif // USE_CUDA
+      CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -97,11 +95,11 @@ void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       viennacl::ocl::kernel &oclk_bnll = program.get_kernel(
           CL_KERNEL_SELECT("bnll_backward"));
       viennacl::ocl::enqueue(
-          oclk_bnll(count, WrapHandle((cl_mem) top_diff, ctx),
-                    WrapHandle((cl_mem) bottom_data, ctx),
-                    WrapHandle((cl_mem) bottom_diff, ctx)),
+          oclk_bnll(count, WrapHandle((cl_mem) top_diff, &ctx),
+                    WrapHandle((cl_mem) bottom_data, &ctx),
+                    WrapHandle((cl_mem) bottom_diff, &ctx)),
           ctx.get_queue());
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
     }
   }
 }

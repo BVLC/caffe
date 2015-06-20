@@ -7,6 +7,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/greentea/greentea.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/net.hpp"
@@ -15,6 +16,6 @@
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/greentea/greentea.hpp"
+
 
 #endif  // CAFFE_CAFFE_HPP_

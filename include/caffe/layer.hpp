@@ -376,7 +376,8 @@ class Layer {
   virtual void CheckBlobCounts(const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top) {
     if (ExactNumBottomBlobs() >= 0) {
-      CHECK_EQ(ExactNumBottomBlobs(), bottom.size())<< type() << " Layer takes " << ExactNumBottomBlobs()
+      CHECK_EQ(ExactNumBottomBlobs(), bottom.size())<< type()
+          << " Layer takes " << ExactNumBottomBlobs()
       << " bottom blob(s) as input.";
     }
     if (MinBottomBlobs() >= 0) {
@@ -471,7 +472,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
           caffe_gpu_dot(count, data, loss_weights, &blob_loss);
           loss += blob_loss;
         }
-#endif // USE_CUDA
+#endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         for (int top_id = 0; top_id < top.size(); ++top_id) {
@@ -479,14 +480,14 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
             continue;
           }
           const int count = top[top_id]->count();
-          cl_mem data = (cl_mem)(top[top_id]->gpu_data());
-          cl_mem loss_weights = (cl_mem)(top[top_id]->gpu_diff());
+          cl_mem data = (cl_mem) (top[top_id]->gpu_data());
+          cl_mem loss_weights = (cl_mem) (top[top_id]->gpu_diff());
           Dtype blob_loss = 0;
           greentea_gpu_dot(this->device_context_.id(), count, data, 0,
                            loss_weights, 0, &blob_loss);
           loss += blob_loss;
         }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
       }
 #endif
       break;

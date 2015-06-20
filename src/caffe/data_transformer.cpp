@@ -12,7 +12,8 @@ namespace caffe {
 
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
-                                        Phase phase, DeviceContext device_context)
+                                        Phase phase,
+                                        DeviceContext device_context)
     : param_(param),
       phase_(phase), device_context_(device_context) {
   // check if we want to use mean_file
@@ -234,7 +235,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_GE(num, 1);
 
   // (FTschopp) Fixed for float data
-  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_32F) << "Image data type must be unsigned byte or 4 byte float";
+  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_32F)
+  << "Image data type must be unsigned byte or 4 byte float";
 
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
@@ -301,11 +303,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         }
         // int top_index = (c * height + h) * width + w;
         Dtype pixel;
-        if(cv_img.depth() == CV_8U) {
+        if (cv_img.depth() == CV_8U) {
           pixel = static_cast<Dtype>(ptr[img_index++]);
-        }
-        else {
-          pixel = static_cast<Dtype>(((float*)ptr)[img_index++]);
+        } else {
+          pixel = static_cast<Dtype>((reinterpret_cast<const float*>(ptr))
+                                     [img_index++]);
         }
         if (has_mean_file) {
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;

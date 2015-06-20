@@ -24,7 +24,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
       caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
                  top[1]->mutable_gpu_data());
     }
-#endif // USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -33,18 +33,19 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     // Reshape to loaded data.
     top[0]->ReshapeLike(this->prefetch_data_);
     // Copy the data
-    greentea_copy<Dtype>(prefetch_data_.count(), (cl_mem)(prefetch_data_.gpu_data()),0,
-                  (cl_mem)(top[0]->mutable_gpu_data()),0, ctx);
+    greentea_copy<Dtype>(prefetch_data_.count(),
+                         (cl_mem) (prefetch_data_.gpu_data()), 0,
+                         (cl_mem) (top[0]->mutable_gpu_data()), 0, &ctx);
     if (this->output_labels_) {
       // Reshape to loaded labels.
       top[1]->ReshapeLike(prefetch_label_);
       // Copy the labels.
-      greentea_copy<Dtype>(prefetch_label_.count(), (cl_mem)(prefetch_label_.gpu_data()),0,
-                    (cl_mem)(top[1]->mutable_gpu_data()),0, ctx);
+      greentea_copy<Dtype>(prefetch_label_.count(),
+                           (cl_mem) (prefetch_label_.gpu_data()), 0,
+                           (cl_mem) (top[1]->mutable_gpu_data()), 0, &ctx);
     }
-#endif // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
-
   // Start a new prefetch thread
   CreatePrefetchThread();
 }
