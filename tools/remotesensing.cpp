@@ -12,10 +12,10 @@ using namespace std;
 using namespace caffe;
 
 void load_features(float** in,std::string filename){
-	float data[200][65];
-	*in = (float*)malloc(sizeof(float) * 200 * 8);
+	float data[800][65];
+	*in = (float*)malloc(sizeof(float) * 800 * 8);
 	ifstream file(filename);
-	for( int row = 0 ; row < 200 ; row++ ){
+	for( int row = 0 ; row < 800 ; row++ ){
 		string line;
 		getline(file, line);
 		if( !file.good() )
@@ -24,7 +24,7 @@ void load_features(float** in,std::string filename){
 
 		for( int col = 0 ; col < 65 ; col++ ){
 			string val;
-			getline( iss, val, ',');
+			getline( iss, val, ' ');
 			if( !iss.good() ) 
 				break;
 			stringstream convertor(val);
@@ -33,8 +33,8 @@ void load_features(float** in,std::string filename){
 		}
 	}
 
-	for( int row = 0 ; row < 200 ; row++){
-		for( int col = 0 ; col < 65 ; col++){
+	for( int row = 0 ; row < 800 ; row++){
+		for( int col = 0 ; col < 6 ; col++){
 			cout << data[row][col];
 			cout << " , ";
 
@@ -45,32 +45,20 @@ void load_features(float** in,std::string filename){
 }
 
 void load_labels(float** in,string filename){
-	int labels[200];
-	*in = (float*)malloc(sizeof(float) * 200 * 8);
+	int labels[800];
+	*in = (float*)malloc(sizeof(float) * 800 * 8);
 	ifstream file(filename);
-	for( int row = 0 ; row < 200 ; row++ ){
+	for( int row = 0 ; row < 800 ; row++ ){
 		string line;
 		std::getline(file, line);
 		if( !file.good() )
 			break;
 		stringstream iss(line);
 		iss >> labels[row];
-		cout << labels[row];
-		// for( int col = 0 ; col < 1 ; col++ ){
-		// 	string val;
-		// 	std::getline( iss, val, ',');
-		// 	if ( !iss.good() )
-		// 		break;
-		// 	stringstream convertor(val);
-		// 	convertor >> labels[row];
-		// }
 	}
-	float pro_labels[200][8];
-	for ( int row = 0 ; row < 200 ; row++ ){
+	float pro_labels[800][8];
+	for ( int row = 0 ; row < 800 ; row++ ){
 		for ( int col = 0 ; col < 8 ; col ++){
-			cout<<"label : "<<endl;
-			cout<<labels[row]<<endl;
-			cout<<(col+1)<<endl;
 			if( (int)labels[row] == (col+1) )
 				pro_labels[row][col] = 1;
 			else
@@ -79,7 +67,7 @@ void load_labels(float** in,string filename){
 		}
 	}
 
-	for( int row = 0 ; row < 200 ; row++){
+	for( int row = 0 ; row < 800 ; row++){
 		for( int col = 0 ; col < 8 ; col++){
 			cout << pro_labels[row][col];
 			cout << " , ";
