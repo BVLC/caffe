@@ -20,7 +20,7 @@ void LSLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     vector<int> hidden_output_shape = bottom[0]->shape();
     vector<int> expected_output_shape = bottom[1]->shape();
     vector<int> weight_shape(2);
-    weight_shape[0] = hidden_output_shape[0];
+    weight_shape[0] = hidden_output_shape[1];
     weight_shape[1] = expected_output_shape[1];
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
     
