@@ -1,4 +1,6 @@
-This Repo is aimed to enhance Caffe to include layers that are required to construct Eextreme Learning Machine. Currently, only Least square layer is available for constructing ELM (by combining Inner Product layer and Sigmoid Layer). Iterative Least square support is under development to make ELM Online Sequential. 
+Note : This repo is not aimed to be merged with Caffe, and so is being maintained as seperate repo, instead of a fork. 
+
+This Repo is aimed to enhance Caffe to include layers that are required to construct Extreme Learning Machine. Currently, only Least square layer is available for constructing ELM (by combining Inner Product layer and Sigmoid Layer). Iterative Least square support is under development to make ELM Online Sequential. 
 
 Additionally Transpose Layer is provided with this repo to make the construction of stacked ELM-Auto Encoders possible.
 
