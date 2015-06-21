@@ -254,7 +254,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   Get().ocl_programs_.clear();
 #endif
   int cuda_device_count = 0;
-  int greentea_device_count = 0;
+  // int greentea_device_count = 0;
 #ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
 #endif  // USE_CUDA
