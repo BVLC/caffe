@@ -47,6 +47,14 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
+DeviceContext & Caffe::GetDeviceContext(int id) {
+  return id == -1 ? Get().default_device_context_ : Get().device_contexts_[id];
+}
+
+DeviceContext& Caffe::GetDefaultDeviceContext() {
+  return Get().default_device_context_;
+}
+
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
@@ -65,6 +73,12 @@ void Caffe::SetDevice(const int device_id) {
 
 void Caffe::DeviceQuery() {
   NO_GPU;
+}
+
+void Caffe::Synchronize(int device_id) {
+}
+
+void Caffe::EnumerateDevices() {
 }
 
 class Caffe::RNG::Generator {
@@ -193,12 +207,8 @@ void Caffe::EnumerateDevices() {
 #endif
 
   LOG(INFO)<< "Total devices: " << cuda_device_count + greentea_device_count;
-#ifdef USE_CUDA
   LOG(INFO)<< "CUDA devices: " << cuda_device_count;
-#endif  // USE_CUDA
-#ifdef USE_GREENTEA
   LOG(INFO)<< "OpenCL devices: " << greentea_device_count;
-#endif  // USE_GREENTEA
 
   // Display info for all devices
 #ifdef USE_CUDA
@@ -305,19 +315,11 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
 #endif  // USE_GREENTEA
 }
 
-DeviceContext & Caffe::GetDeviceContext(int id) {
-  return id == -1 ? Get().default_device_context_ : Get().device_contexts_[id];
-}
-
 #ifdef USE_GREENTEA
 viennacl::ocl::program & Caffe::GetDeviceProgram(int id) {
   return id == -1 ? Get().default_ocl_program_ : Get().ocl_programs_[id];
 }
 #endif  // USE_GREENTEA
-
-DeviceContext& Caffe::GetDefaultDeviceContext() {
-  return Get().default_device_context_;
-}
 
 void Caffe::SetDevice(const int device_id) {
   std::vector<int> devices;
