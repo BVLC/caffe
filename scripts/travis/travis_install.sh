@@ -11,12 +11,12 @@ MAKE="make --jobs=$NUM_THREADS"
 add-apt-repository -y ppa:tuleu/precise-backports
 # This ppa is for boost 1.54
 add-apt-repository -y ppa:boost-latest/ppa
-# This ppa is for g++ 4.8
+# This ppa is for g++ 4.9
 add-apt-repository -y ppa:ubuntu-toolchain-r/test
 
 apt-get -y update
 apt-get install \
-    gcc-4.8 g++-4.8 wget git curl \
+    gcc-4.9 g++-4.9 wget git curl \
     python-dev python-numpy \
     libleveldb-dev libsnappy-dev libopencv-dev \
     libboost1.54-dev libboost-system1.54-dev libboost-python1.54-dev libboost-thread1.54-dev \
@@ -25,8 +25,8 @@ apt-get install \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     bc
 
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
 
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
