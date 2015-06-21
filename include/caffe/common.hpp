@@ -167,7 +167,7 @@ class Caffe {
   static void Synchronize(int device_id);
 
   // Get a device context
-  static DeviceContext& GetDeviceContext(int id);
+  static DeviceContext & GetDeviceContext(int id);
 
   // Get a device OpenCL program
 #ifdef USE_GREENTEA

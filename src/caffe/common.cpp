@@ -305,7 +305,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
 #endif  // USE_GREENTEA
 }
 
-DeviceContext& Caffe::GetDeviceContext(int id) {
+DeviceContext & Caffe::GetDeviceContext(int id) {
   return id == -1 ? Get().default_device_context_ : Get().device_contexts_[id];
 }
 
