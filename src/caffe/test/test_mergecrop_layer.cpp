@@ -1,3 +1,4 @@
+#ifndef CPU_ONLY  // CPU-GPU test
 #include <cstring>
 #include <vector>
 
@@ -209,3 +210,4 @@ TYPED_TEST(MergeCropLayerTest, TestBackward) {
 }
 
 }  // namespace caffe
+#endif  // !CPU_ONLY
