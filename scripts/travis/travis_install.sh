@@ -25,9 +25,6 @@ apt-get install \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     bc
 
-
-update-alternatives --remove-all gcc
-update-alternatives --remove-all g++
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
 update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
