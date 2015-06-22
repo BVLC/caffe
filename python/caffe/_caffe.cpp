@@ -1,4 +1,4 @@
-#include <Python.h>  // NOLINT(build/include_alpha)
+#include <boost/python/detail/wrap_python.hpp>  // NOLINT(build/include_alpha)
 
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -16,6 +16,9 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/python_layer.hpp"
+#ifdef _MSC_VER
+#include "caffe_reference_symbols.h"
+#endif
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
