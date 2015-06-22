@@ -77,6 +77,7 @@ void caffe_cpu_gelss<float>(const int M, const int N, const int NRHS, const floa
     info = LAPACKE_sgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
     caffe_cpu_omatcopy<float>('N',N,NRHS,(float)1.0,temp,x);
     LOG(INFO) <<"sgelss running info : "<<info;
+    delete rank;
 }
 
 template<>
@@ -94,6 +95,7 @@ void caffe_cpu_gelss<double>(const int M, const int N, const int NRHS, const dou
     info = LAPACKE_dgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
     caffe_cpu_omatcopy<double>('N',N,NRHS,(double)1.0,temp,x);
     LOG(INFO) <<"dgelss running info : "<<info;
+    delete rank;
 }
 
 template<>
@@ -111,6 +113,7 @@ void caffe_cpu_gelsd<float>(const int M, const int N, const int NRHS, const floa
     info = LAPACKE_sgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
     caffe_cpu_omatcopy<float>('N',N,NRHS,(float)1.0,temp,x);
     LOG(INFO) <<"sgelsd running info : "<<info;
+    delete rank;
 }
 
 template<>
@@ -128,6 +131,7 @@ void caffe_cpu_gelsd<double>(const int M, const int N, const int NRHS, const dou
     info = LAPACKE_dgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
     caffe_cpu_omatcopy<double>('N',N,NRHS,(double)1.0,temp,x);
     LOG(INFO) <<"dgelsd running info : "<<info;
+    delete rank;
 }
 
 template<>
