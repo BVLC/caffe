@@ -39,10 +39,12 @@ void caffe_cpu_gels<float>(const int M, const int N, const int NRHS, const float
     int LDA = N;
     int LDB = NRHS;
     lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
-    float h[m*n];
-    caffe_cpu_omatcopy<float>('N',m,n,(float)1.0,H,h);
-    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,x);
+    float h[M*N];
+    float temp[M*NRHS];
+    caffe_cpu_omatcopy<float>('N',M,N,(float)1.0,H,h);
+    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,temp);
     info = LAPACKE_sgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
+    caffe_cpu_omatcopy<float>('N',N,NRHS,(float)1.0,temp,x);
     LOG(INFO) <<"sgels running info : "<<info;
 }
 
@@ -51,10 +53,12 @@ void caffe_cpu_gels<double>(const int M, const int N, const int NRHS, const doub
     int LDA = N;
     int LDB = NRHS;
     lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
-    double h[m*n];
-    caffe_cpu_omatcopy<double>('N',m,n,(double)1.0,H,h);
-    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,x);
-    info = LAPACKE_dgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
+    double h[M*N];
+    double temp[M*NRHS];
+    caffe_cpu_omatcopy<double>('N',M,N,(double)1.0,H,h);
+    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,temp);
+    info = LAPACKE_dgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,temp,ldb);
+    caffe_cpu_omatcopy<double>('N',N,NRHS,(double)1.0,temp,x);
     LOG(INFO) <<"dgels running info : "<<info;
 }
 
@@ -64,12 +68,14 @@ void caffe_cpu_gelss<float>(const int M, const int N, const int NRHS, const floa
     int LDB = NRHS;
     lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
     lapack_int *rank = new lapack_int();
-    float h[m*n];
-    float s[(m>n?n:m)];
+    float h[M*N];
+    float temp[M*NRHS];
+    float s[(M>N?N:M)];
     float rcond = -1;
-    caffe_cpu_omatcopy<float>('N',m,n,(float)1.0,H,h);
-    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,x);
-    info = LAPACKE_sgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<float>('N',M,N,(float)1.0,H,h);
+    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,temp);
+    info = LAPACKE_sgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<float>('N',N,NRHS,(float)1.0,temp,x);
     LOG(INFO) <<"sgelss running info : "<<info;
 }
 
@@ -79,12 +85,14 @@ void caffe_cpu_gelss<double>(const int M, const int N, const int NRHS, const dou
     int LDB = NRHS;
     lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
     lapack_int *rank = new lapack_int();
-    double h[m*n];
-    double s[(m>n?n:m)];
+    double h[M*N];
+    double temp[M*NRHS];
+    double s[(M>N?N:M)];
     double rcond = -1;
-    caffe_cpu_omatcopy<double>('N',m,n,(double)1.0,H,h);
-    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,x);
-    info = LAPACKE_dgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<double>('N',M,N,(double)1.0,H,h);
+    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,temp);
+    info = LAPACKE_dgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<double>('N',N,NRHS,(double)1.0,temp,x);
     LOG(INFO) <<"dgelss running info : "<<info;
 }
 
@@ -94,12 +102,14 @@ void caffe_cpu_gelsd<float>(const int M, const int N, const int NRHS, const floa
     int LDB = NRHS;
     lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
     lapack_int *rank = new lapack_int();
-    float h[m*n];
-    float s[(m>n?n:m)];
+    float h[M*N];
+    float temp[M*NRHS];
+    float s[(M>N?N:M)];
     float rcond = -1;
-    caffe_cpu_omatcopy<float>('N',m,n,(float)1.0,H,h);
-    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,x);
-    info = LAPACKE_sgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<float>('N',M,N,(float)1.0,H,h);
+    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,temp);
+    info = LAPACKE_sgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<float>('N',N,NRHS,(float)1.0,temp,x);
     LOG(INFO) <<"sgelsd running info : "<<info;
 }
 
@@ -109,12 +119,14 @@ void caffe_cpu_gelsd<double>(const int M, const int N, const int NRHS, const dou
     int LDB = NRHS;
     lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
     lapack_int *rank = new lapack_int();
-    double h[m*n];
-    double s[(m>n?n:m)];
+    double h[M*N];
+    double temp[M*NRHS];
+    double s[(M>N?N:M)];
     double rcond = -1;
-    caffe_cpu_omatcopy<double>('N',m,n,(double)1.0,H,h);
-    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,x);
-    info = LAPACKE_dgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<double>('N',M,N,(double)1.0,H,h);
+    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,temp);
+    info = LAPACKE_dgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,temp,ldb,s,rcond,rank);
+    caffe_cpu_omatcopy<double>('N',N,NRHS,(double)1.0,temp,x);
     LOG(INFO) <<"dgelsd running info : "<<info;
 }
 
