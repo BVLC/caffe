@@ -89,7 +89,7 @@ template <typename Dtype>
 void CudnnNdPoolingLayer<Dtype>::compute_output_shape() {
   pooled_shape_ = std::vector<int>(input_shape_.begin(), input_shape_.begin()+2);
   for(int i = 2; i < input_shape_.size(); ++i) {
-	int dim = input_shape_[i] + 2 * pad_shape_[i-2] - kernel_shape_[i-2] / stride_shape_[i-2] + 1;
+	int dim = (input_shape_[i] + 2 * pad_shape_[i-2] - kernel_shape_[i-2]) / stride_shape_[i-2] + 1;
 
 	if(pad_shape_[i-2] > 0) {
       if ((dim - 1) * stride_shape_[i-2] >= input_shape_[i] + pad_shape_[i-2]) {
