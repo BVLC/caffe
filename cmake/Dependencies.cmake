@@ -4,6 +4,7 @@ set(Caffe_LINKER_LIBS "")
 # ---[ Boost
 set(Boost_COMPONENTS system thread)
 if(MSVC)
+    # todo move these options to project config
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_MULTITHREAD ON)
     set(Boost_USE_STATIC_RUNTIME OFF)
@@ -24,9 +25,6 @@ include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
 
 # ---[ Google-glog
-if(MSVC)
-    add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
-endif()
 include("cmake/External/glog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
@@ -36,12 +34,6 @@ include(cmake/ProtoBuf.cmake)
 
 # ---[ HDF5
 find_package(HDF5 COMPONENTS HL)
-if(NOT HDF5_FOUND)
-    find_package(HDF5 COMPONENTS HL REQUIRED CONFIG)      
-endif()
-if(HDF5_FOUND AND NOT HDF5_HL_INCLUDE_DIR)
-    set(HDF5_HL_INCLUDE_DIR ${HDF5_INCLUDE_DIRS})
-endif()
 include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
 
@@ -74,9 +66,6 @@ if(NOT HAVE_CUDA)
 endif()
 
 # ---[ OpenCV
-if(MSVC)
-    set(OpenCV_STATIC OFF)
-endif()
 find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
 if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found
   find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)

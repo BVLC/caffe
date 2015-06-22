@@ -45,7 +45,8 @@ inline void MakeTempFilename(string* temp_filename) {
       "caffe_test",
       0,  // Generate unique file name.
       temp_file_path);
-  CHECK(success != 0) << "Unable to create a temporary file in " << temp_dir_path;
+  CHECK_NE(success, 0) << "Unable to create a temporary file in "
+                      << temp_dir_path;
   *temp_filename = temp_dir_path;
 #endif
 }
@@ -71,12 +72,14 @@ inline void MakeTempDir(string* temp_dirname) {
   // there is not GetTempDirectory in windows so fallback on mktemp
   strcat_s(temp_dir_path, sizeof(temp_dir_path), base_temp_dir_path);
   strcat_s(temp_dir_path, sizeof(temp_dir_path), "\\caffe_test.XXXXXX");
-  
+
   errno_t success = _mktemp_s(temp_dir_path, sizeof(temp_dir_path));
-  CHECK(success != 0) << "Unable to create a temporary directory in " << temp_dir_path;
+  CHECK_NE(success, 0) << "Unable to create a temporary directory in "
+      << temp_dir_path;
 
   BOOL directory_created = ::CreateDirectory(temp_dir_path, NULL);
-  CHECK(!directory_created) << "Unable to create a temporary directory in " << temp_dir_path;
+  CHECK(!directory_created) << "Unable to create a temporary directory in "
+      << temp_dir_path;
 
   *temp_dirname = temp_dir_path;
 #endif

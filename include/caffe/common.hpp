@@ -35,18 +35,21 @@ private:\
 
 
 #ifndef _MSC_VER
-#define DEFINE_SYMBOL_REFERENCE(classname, token) 
-#define FORCE_SYMBOL_REFERENCE(classname, token) 
+#define DEFINE_SYMBOL_REFERENCE(classname, token)
+#define FORCE_SYMBOL_REFERENCE(classname, token)
 #else
-#define DEFINE_SYMBOL_REFERENCE(classname, token)  int g_ref_##token##_##classname = 0
+#define DEFINE_SYMBOL_REFERENCE(classname, token) \
+    int g_ref_##token##_##classname = 0
 #define FORCE_SYMBOL_REFERENCE(classname, token) \
         void _ref_##token##_##classname##_func() { \
             extern int g_ref_##token##_##classname; \
             g_ref_##token##_##classname = 1; \
         }
 #endif
-#define DEFINE_INSTANTIATE_CLASS_SYMBOL_REFERENCE(classname) DEFINE_SYMBOL_REFERENCE(classname, instantiate)
-#define FORCE_INSTANTIATE_CLASS_SYMBOL_REFERENCE(classname) FORCE_SYMBOL_REFERENCE(classname, instantiate)
+#define DEFINE_INSTANTIATE_CLASS_SYMBOL_REFERENCE(classname) \
+    DEFINE_SYMBOL_REFERENCE(classname, instantiate)
+#define FORCE_INSTANTIATE_CLASS_SYMBOL_REFERENCE(classname) \
+    FORCE_SYMBOL_REFERENCE(classname, instantiate)
 
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS(classname) \
@@ -55,10 +58,14 @@ private:\
   template class classname<double>; \
   DEFINE_INSTANTIATE_CLASS_SYMBOL_REFERENCE(classname);
 
-#define DEFINE_INSTANTIATE_LAYER_GPU_FORWARD_SYMBOL_REFERENCE(classname) DEFINE_SYMBOL_REFERENCE(classname, forward_gpu)
-#define FORCE_INSTANTIATE_LAYER_GPU_FORWARD_REFERENCE(classname) FORCE_SYMBOL_REFERENCE(classname, forward_gpu)
-#define DEFINE_INSTANTIATE_LAYER_GPU_BACKWARD_SYMBOL_REFERENCE(classname) DEFINE_SYMBOL_REFERENCE(classname, backward_gpu)
-#define FORCE_INSTANTIATE_LAYER_GPU_BACKWARD_REFERENCE(classname) FORCE_SYMBOL_REFERENCE(classname, backward_gpu)
+#define DEFINE_INSTANTIATE_LAYER_GPU_FORWARD_SYMBOL_REFERENCE(classname) \
+    DEFINE_SYMBOL_REFERENCE(classname, forward_gpu)
+#define FORCE_INSTANTIATE_LAYER_GPU_FORWARD_REFERENCE(classname) \
+    FORCE_SYMBOL_REFERENCE(classname, forward_gpu)
+#define DEFINE_INSTANTIATE_LAYER_GPU_BACKWARD_SYMBOL_REFERENCE(classname) \
+    DEFINE_SYMBOL_REFERENCE(classname, backward_gpu)
+#define FORCE_INSTANTIATE_LAYER_GPU_BACKWARD_REFERENCE(classname) \
+    FORCE_SYMBOL_REFERENCE(classname, backward_gpu)
 
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
   template void classname<float>::Forward_gpu( \
