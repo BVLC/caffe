@@ -46,7 +46,7 @@ void LSLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int N=hidden_output_shape[1];
   const int NRHS=expected_output_shape[1];
   // Inverse code here
-  caffe_cpu_gelss<Dtype>(M,N,NRHS,hidden_output,beta,expected_output);
+  caffe_cpu_gelsd<Dtype>(M,N,NRHS,hidden_output,beta,expected_output);
 }
 
 
