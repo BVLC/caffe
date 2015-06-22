@@ -43,7 +43,7 @@ void caffe_cpu_gels<float>(const int M, const int N, const int NRHS, const float
     caffe_cpu_omatcopy<float>('N',m,n,(float)1.0,H,h);
     caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,x);
     info = LAPACKE_sgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
-    LOG(INFO) <<"sgelss running info : "<<info;
+    LOG(INFO) <<"sgels running info : "<<info;
 }
 
 template<>
@@ -55,7 +55,7 @@ void caffe_cpu_gels<double>(const int M, const int N, const int NRHS, const doub
     caffe_cpu_omatcopy<double>('N',m,n,(double)1.0,H,h);
     caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,x);
     info = LAPACKE_dgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
-    LOG(INFO) <<"sgelss running info : "<<info;
+    LOG(INFO) <<"dgels running info : "<<info;
 }
 
 template<>
@@ -85,7 +85,37 @@ void caffe_cpu_gelss<double>(const int M, const int N, const int NRHS, const dou
     caffe_cpu_omatcopy<double>('N',m,n,(double)1.0,H,h);
     caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,x);
     info = LAPACKE_dgelss(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
-    LOG(INFO) <<"sgelss running info : "<<info;
+    LOG(INFO) <<"dgelss running info : "<<info;
+}
+
+template<>
+void caffe_cpu_gelsd<float>(const int M, const int N, const int NRHS, const float* H, float* x, const float* y) {
+    int LDA = N;
+    int LDB = NRHS;
+    lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
+    lapack_int *rank = new lapack_int();
+    float h[m*n];
+    float s[(m>n?n:m)];
+    float rcond = -1;
+    caffe_cpu_omatcopy<float>('N',m,n,(float)1.0,H,h);
+    caffe_cpu_omatcopy<float>('N',M,NRHS,(float)1.0,y,x);
+    info = LAPACKE_sgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
+    LOG(INFO) <<"sgelsd running info : "<<info;
+}
+
+template<>
+void caffe_cpu_gelsd<double>(const int M, const int N, const int NRHS, const double* H, double* x, const double* y) {
+    int LDA = N;
+    int LDB = NRHS;
+    lapack_int m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
+    lapack_int *rank = new lapack_int();
+    double h[m*n];
+    double s[(m>n?n:m)];
+    double rcond = -1;
+    caffe_cpu_omatcopy<double>('N',m,n,(double)1.0,H,h);
+    caffe_cpu_omatcopy<double>('N',M,NRHS,(double)1.0,y,x);
+    info = LAPACKE_dgelsd(LAPACK_ROW_MAJOR,m,n,nrhs,h,lda,x,ldb,s,rcond,rank);
+    LOG(INFO) <<"dgelsd running info : "<<info;
 }
 
 template<>

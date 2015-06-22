@@ -27,6 +27,9 @@ template <typename Dtype>
 void caffe_cpu_gelss(const int M, const int N, const int NRHS, const Dtype* h, Dtype* x, const Dtype* y);
 
 template <typename Dtype>
+void caffe_cpu_gelsd(const int M, const int N, const int NRHS, const Dtype* h, Dtype* x, const Dtype* y);
+
+template <typename Dtype>
 void caffe_cpu_omatcopy(const char trans, const int M, const int N, const Dtype alpha, const Dtype* A, Dtype* B);
 
 template <typename Dtype>
