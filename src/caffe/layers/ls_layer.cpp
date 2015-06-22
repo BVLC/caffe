@@ -23,15 +23,15 @@ void LSLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     weight_shape[0] = hidden_output_shape[1];
     weight_shape[1] = expected_output_shape[1];
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
-    
-  } 
+
+  }
 }
 
 template <typename Dtype>
 void LSLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-  // Dimension verification can be added later  
+  // Dimension verification can be added later
 }
 
 template <typename Dtype>
@@ -46,7 +46,7 @@ void LSLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int N=hidden_output_shape[1];
   const int NRHS=expected_output_shape[1];
   // Inverse code here
-  caffe_cpu_gels<Dtype>(M,N,NRHS,hidden_output,beta,expected_output);
+  caffe_cpu_gelsd<Dtype>(M,N,NRHS,hidden_output,beta,expected_output);
 }
 
 
