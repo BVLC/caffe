@@ -13,14 +13,16 @@ template <typename Dtype>
 void CudnnNdPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
-  CHECK(pool_param.has_kernel_shape()
-	  && pool_param.has_pad_shape()
-	  && pool_param.has_stride_shape())
-	<< "Kernel, Pad and Stride shape required.";
-  CHECK_EQ(pool_param.kernel_shape().dim_size(), pool_param.pad_shape().dim_size())
-	<< "Kernel and Pad shape don't match !";
-  CHECK_EQ(pool_param.kernel_shape().dim_size(), pool_param.stride_shape().dim_size())
-	<< "Kernel and Stride shape don't match !";
+  CHECK(pool_param.has_kernel_shape())
+	<< "Kernel shape is required.";
+  if(pool_param.has_pad_shape()) {
+    CHECK_EQ(pool_param.kernel_shape().dim_size(), pool_param.pad_shape().dim_size())
+	  << "Kernel and Pad shape don't match !";
+  }
+  if(pool_param.has_stride_shape()) {
+    CHECK_EQ(pool_param.kernel_shape().dim_size(), pool_param.stride_shape().dim_size())
+	  << "Kernel and Stride shape don't match !";
+  }
   global_pooling_ = pool_param.global_pooling();
 
   if(global_pooling_) {
@@ -31,9 +33,19 @@ void CudnnNdPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   	  CHECK_GT(kernel_shape_[i], 0) << "Filter dimensions cannot be zero.";
   	}
   }
-  for(int i = 0; i < pool_param.kernel_shape().dim_size(); ++i) {
-    pad_shape_.push_back(pool_param.pad_shape().dim(i));
-    stride_shape_.push_back(pool_param.stride_shape().dim(i));
+  if(pool_param.has_pad_shape()) {
+    for(int i = 0; i < pool_param.kernel_shape().dim_size(); ++i) {
+      pad_shape_.push_back(pool_param.pad_shape().dim(i));
+    }
+  } else {
+    pad_shape_ = std::vector<int>(kernel_shape_.size(), 0);
+  }
+  if(pool_param.has_stride_shape()) {
+    for(int i = 0; i < pool_param.kernel_shape().dim_size(); ++i) {
+      stride_shape_.push_back(pool_param.stride_shape().dim(i));
+    }
+  } else {
+    stride_shape_ = std::vector<int>(kernel_shape_.size(), 1);
   }
 
   CUDNN_CHECK(cudnnCreate(&handle_));

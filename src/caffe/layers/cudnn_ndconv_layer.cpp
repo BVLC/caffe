@@ -22,21 +22,34 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   // Configure the kernel size, padding, stride, and inputs.
-  CHECK(conv_param.has_kernel_shape()
-	  && conv_param.has_pad_shape()
-	  && conv_param.has_stride_shape())
-	<< "Kernel, Pad and Stride shape are required.";
-  CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.pad_shape().dim_size())
-	<< "Kernel and Pad shape don't match !";
-  CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.stride_shape().dim_size())
-	<< "Kernel and Stride shape don't match !";
+  CHECK(conv_param.has_kernel_shape())
+	<< "Kernel shape is required.";
+  if(conv_param.has_pad_shape()) {
+    CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.pad_shape().dim_size())
+	  << "Kernel and Pad shape don't match !";
+  }
+  if(conv_param.has_stride_shape()) {
+    CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.stride_shape().dim_size())
+	  << "Kernel and Stride shape don't match !";
+  }
   for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
   	kernel_shape_.push_back(conv_param.kernel_shape().dim(i));
     CHECK_GT(kernel_shape_[i], 0) << "Filter dimensions cannot be zero.";
-  	pad_shape_.push_back(conv_param.pad_shape().dim(i));
-  	stride_shape_.push_back(conv_param.stride_shape().dim(i));
   }
-
+  if(conv_param.has_pad_shape()) {
+    for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
+  	  pad_shape_.push_back(conv_param.pad_shape().dim(i));
+	}
+  } else {
+	pad_shape_ = std::vector<int>(kernel_shape_.size(), 0);
+  }
+  if(conv_param.has_stride_shape()) {
+    for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
+  	  stride_shape_.push_back(conv_param.stride_shape().dim(i));
+	}
+  } else {
+	stride_shape_ = std::vector<int>(kernel_shape_.size(), 1);
+  }
   // Configure output channels and groups.
   channels_ = bottom[0]->shape(1);
   num_output_ = this->layer_param_.convolution_param().num_output();
