@@ -191,7 +191,8 @@ __kernel void TEMPLATE(sto_pool_forward_train_sk,Dtype)(
         if (cumsum >= thres) {
           rand_idx[index] = ((n * channels + c) * height + h) * width + w;
           top_data[index] = bottom_data_ptr[h * width + w];
-          return;
+          h = hend;
+          w = wend;
         }
       }
     }
