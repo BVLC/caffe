@@ -384,6 +384,8 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
+#ifdef USE_CUDNN
+
 template <typename Dtype>
 class CuDNNLRNLayer : public LRNLayer<Dtype> {
  public:
@@ -438,6 +440,8 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   size_t tempDataSize;
   void *tempData1, *tempData2;
 };
+
+#endif
 
 /**
  * @brief Pools the input image by taking the max, average, etc. within regions.

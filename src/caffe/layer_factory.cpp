@@ -73,6 +73,7 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
 
   if (engine == LRNParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+#ifdef USE_CUDNN
   } else if (engine == LRNParameter_Engine_CUDNN) {
     LRNParameter lrn_param = param.lrn_param();
 
@@ -89,6 +90,7 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
         return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
       }
     }
+#endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
