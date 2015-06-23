@@ -117,7 +117,7 @@ def main(argv):
     elif os.path.isdir(args.input_file):
         print("Loading folder: %s" % args.input_file)
         inputs =[caffe.io.load_image(im_f)
-                 for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
+                 for im_f in sorted(glob.glob(args.input_file + '/*.' + args.ext))]
     else:
         print("Loading file: %s" % args.input_file)
         inputs = [caffe.io.load_image(args.input_file)]
