@@ -83,11 +83,9 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int height_out = (height_ - ext_kernel_h) / stride_h_ + 1;
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
 
-  // TODO: Change this
-  if (kstride_h_ != 23 || this->device_context_.backend() == BACKEND_CUDA) {
-    col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
+  col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
                         width_out);
-  }
+
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
   << "Number of output should be multiples of group.";
@@ -128,8 +126,13 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Set up the all ones "bias multiplier" for adding bias using blas
   if (bias_term_) {
-    bias_multiplier_.Reshape(1, 1, 1, N_);
-    caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+    bool reshaped = bias_multiplier_.Reshape(1, 1, 1, N_);
+    // This will trigger a memory copy if in GPU mode,
+    // which may not be necessary.
+    // Thus omit to set the values if not necessary.
+    if (reshaped) {
+      caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+    }
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }

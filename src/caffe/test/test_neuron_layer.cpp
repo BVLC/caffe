@@ -735,96 +735,110 @@ class CuDNNNeuronLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNNeuronLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
-  LayerParameter layer_param;
-  CuDNNReLULayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_GE(top_data[i], 0.);
-    EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CuDNNReLULayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Now, check values
+    const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+    const TypeParam* top_data = this->blob_top_->cpu_data();
+    for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+      EXPECT_GE(top_data[i], 0.);
+      EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+    }
   }
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
-  LayerParameter layer_param;
-  CuDNNReLULayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CuDNNReLULayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
+    checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
-  LayerParameter layer_param;
-  CHECK(google::protobuf::TextFormat::ParseFromString(
-      "relu_param { negative_slope: 0.01 }", &layer_param));
-  CuDNNReLULayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    if (top_data[i] >= 0) {
-      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
-    } else {
-      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] * 0.01);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        "relu_param { negative_slope: 0.01 }", &layer_param));
+    CuDNNReLULayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Now, check values
+    const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+    const TypeParam* top_data = this->blob_top_->cpu_data();
+    for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+      if (top_data[i] >= 0) {
+        EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+      } else {
+        EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] * 0.01);
+      }
     }
   }
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
-  LayerParameter layer_param;
-  CHECK(google::protobuf::TextFormat::ParseFromString(
-      "relu_param { negative_slope: 0.01 }", &layer_param));
-  CuDNNReLULayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        "relu_param { negative_slope: 0.01 }", &layer_param));
+    CuDNNReLULayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
+    checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
-  LayerParameter layer_param;
-  CuDNNSigmoidLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_FLOAT_EQ(top_data[i], 1. / (1 + exp(-bottom_data[i])));
-    // check that we squashed the value between 0 and 1
-    EXPECT_GE(top_data[i], 0.);
-    EXPECT_LE(top_data[i], 1.);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CuDNNSigmoidLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Now, check values
+    const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+    const TypeParam* top_data = this->blob_top_->cpu_data();
+    for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+      EXPECT_FLOAT_EQ(top_data[i], 1. / (1 + exp(-bottom_data[i])));
+      // check that we squashed the value between 0 and 1
+      EXPECT_GE(top_data[i], 0.);
+      EXPECT_LE(top_data[i], 1.);
+    }
   }
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
-  LayerParameter layer_param;
-  CuDNNSigmoidLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CuDNNSigmoidLayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
+    checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
-  LayerParameter layer_param;
-  CuDNNTanHLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Test exact values
-  for (int i = 0; i < this->blob_bottom_->num(); ++i) {
-    for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
-      for (int k = 0; k < this->blob_bottom_->height(); ++k) {
-        for (int l = 0; l < this->blob_bottom_->width(); ++l) {
-          EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
-             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
-             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
-          EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
-             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
-             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CuDNNTanHLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Test exact values
+    for (int i = 0; i < this->blob_bottom_->num(); ++i) {
+      for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+        for (int k = 0; k < this->blob_bottom_->height(); ++k) {
+          for (int l = 0; l < this->blob_bottom_->width(); ++l) {
+            EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
+               (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
+               (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
+            EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
+               (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
+               (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
+          }
         }
       }
     }
@@ -832,11 +846,13 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHGradientCuDNN) {
-  LayerParameter layer_param;
-  CuDNNTanHLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    CuDNNTanHLayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3);
+    checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
 }
 #endif
 
