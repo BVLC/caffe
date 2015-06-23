@@ -963,31 +963,35 @@ class CuDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNPoolingLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestSetupCuDNN) {
-  LayerParameter layer_param;
-  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
-  CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
-  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
-  EXPECT_EQ(this->blob_top_->height(), 3);
-  EXPECT_EQ(this->blob_top_->width(), 2);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_kernel_size(3);
+    pooling_param->set_stride(2);
+    CuDNNPoolingLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+    EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
+    EXPECT_EQ(this->blob_top_->height(), 3);
+    EXPECT_EQ(this->blob_top_->width(), 2);
+  }
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestSetupPaddedCuDNN) {
-  LayerParameter layer_param;
-  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
-  pooling_param->set_pad(1);
-  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
-  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
-  EXPECT_EQ(this->blob_top_->height(), 4);
-  EXPECT_EQ(this->blob_top_->width(), 3);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_kernel_size(3);
+    pooling_param->set_stride(2);
+    pooling_param->set_pad(1);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+    CuDNNPoolingLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+    EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
+    EXPECT_EQ(this->blob_top_->height(), 4);
+    EXPECT_EQ(this->blob_top_->width(), 3);
+  }
 }
 
 /*
@@ -1017,9 +1021,11 @@ TYPED_TEST(CuDNNPoolingLayerTest, PrintBackwardCuDNN) {
 */
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxCuDNN) {
-  this->TestForwardSquare();
-  this->TestForwardRectHigh();
-  this->TestForwardRectWide();
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    this->TestForwardSquare();
+    this->TestForwardRectHigh();
+    this->TestForwardRectWide();
+  }
 }
 
 // Currently, cuDNN does not support a top mask, so we comment this and
@@ -1034,66 +1040,70 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxTopMaskCuDNN) {
 */
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxCuDNN) {
-  for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
-    for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
-      LayerParameter layer_param;
-      PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-      pooling_param->set_kernel_h(kernel_h);
-      pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
-      // currenty, cuDNN pooling does not support padding
-      pooling_param->set_pad(0);
-      pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-      CuDNNPoolingLayer<TypeParam> layer(layer_param);
-      GradientChecker<TypeParam> checker(1e-4, 1e-2);
-      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-          this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
+      for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
+        LayerParameter layer_param;
+        PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+        pooling_param->set_kernel_h(kernel_h);
+        pooling_param->set_kernel_w(kernel_w);
+        pooling_param->set_stride(2);
+        // currenty, cuDNN pooling does not support padding
+        pooling_param->set_pad(0);
+        pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+        CuDNNPoolingLayer<TypeParam> layer(layer_param);
+        GradientChecker<TypeParam> checker(1e-4, 1e-2);
+        checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+            this->blob_top_vec_);
+      }
     }
   }
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxPaddedCuDNN) {
-  LayerParameter layer_param;
-  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
-  pooling_param->set_pad(2);
-  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-  this->blob_bottom_->Reshape(1, 1, 3, 3);
-  // Input:
-  //     [ 1 2 4 ]
-  //     [ 2 3 2 ]
-  //     [ 4 2 1 ]
-  this->blob_bottom_->mutable_cpu_data()[0] = 1;
-  this->blob_bottom_->mutable_cpu_data()[1] = 2;
-  this->blob_bottom_->mutable_cpu_data()[2] = 4;
-  this->blob_bottom_->mutable_cpu_data()[3] = 2;
-  this->blob_bottom_->mutable_cpu_data()[4] = 3;
-  this->blob_bottom_->mutable_cpu_data()[5] = 2;
-  this->blob_bottom_->mutable_cpu_data()[6] = 4;
-  this->blob_bottom_->mutable_cpu_data()[7] = 2;
-  this->blob_bottom_->mutable_cpu_data()[8] = 1;
-  CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 1);
-  EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), 3);
-  EXPECT_EQ(this->blob_top_->width(), 3);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  TypeParam epsilon = 1e-8;
-  // Output:
-  //     [ 1 4 4 ]
-  //     [ 4 4 4 ]
-  //     [ 4 4 1 ]
-  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 1, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[2], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[6], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[8], 1, epsilon);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_kernel_size(3);
+    pooling_param->set_stride(2);
+    pooling_param->set_pad(2);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+    this->blob_bottom_->Reshape(1, 1, 3, 3);
+    // Input:
+    //     [ 1 2 4 ]
+    //     [ 2 3 2 ]
+    //     [ 4 2 1 ]
+    this->blob_bottom_->mutable_cpu_data()[0] = 1;
+    this->blob_bottom_->mutable_cpu_data()[1] = 2;
+    this->blob_bottom_->mutable_cpu_data()[2] = 4;
+    this->blob_bottom_->mutable_cpu_data()[3] = 2;
+    this->blob_bottom_->mutable_cpu_data()[4] = 3;
+    this->blob_bottom_->mutable_cpu_data()[5] = 2;
+    this->blob_bottom_->mutable_cpu_data()[6] = 4;
+    this->blob_bottom_->mutable_cpu_data()[7] = 2;
+    this->blob_bottom_->mutable_cpu_data()[8] = 1;
+    CuDNNPoolingLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_->num(), 1);
+    EXPECT_EQ(this->blob_top_->channels(), 1);
+    EXPECT_EQ(this->blob_top_->height(), 3);
+    EXPECT_EQ(this->blob_top_->width(), 3);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    TypeParam epsilon = 1e-8;
+    // Output:
+    //     [ 1 4 4 ]
+    //     [ 4 4 4 ]
+    //     [ 4 4 1 ]
+    EXPECT_NEAR(this->blob_top_->cpu_data()[0], 1, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[2], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[4], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[6], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4, epsilon);
+    EXPECT_NEAR(this->blob_top_->cpu_data()[8], 1, epsilon);
+  }
 }
 
 /*
@@ -1118,61 +1128,67 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxTopMaskCuDNN) {
 */
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
-  LayerParameter layer_param;
-  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(1);
-  // Currently, cuDNN pooling does not support padding, so we use
-  // a simplified version of this test.
-  pooling_param->set_pad(0);
-  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  this->blob_bottom_->Reshape(1, 1, 3, 3);
-  FillerParameter filler_param;
-  filler_param.set_value(TypeParam(2));
-  ConstantFiller<TypeParam> filler(filler_param);
-  filler.Fill(this->blob_bottom_);
-  CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 1);
-  EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), 1);
-  EXPECT_EQ(this->blob_top_->width(), 1);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  TypeParam epsilon = 1e-5;
-  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 2.0, epsilon);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_kernel_size(3);
+    pooling_param->set_stride(1);
+    // Currently, cuDNN pooling does not support padding, so we use
+    // a simplified version of this test.
+    pooling_param->set_pad(0);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+    this->blob_bottom_->Reshape(1, 1, 3, 3);
+    FillerParameter filler_param;
+    filler_param.set_value(TypeParam(2));
+    ConstantFiller<TypeParam> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    CuDNNPoolingLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_->num(), 1);
+    EXPECT_EQ(this->blob_top_->channels(), 1);
+    EXPECT_EQ(this->blob_top_->height(), 1);
+    EXPECT_EQ(this->blob_top_->width(), 1);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    TypeParam epsilon = 1e-5;
+    EXPECT_NEAR(this->blob_top_->cpu_data()[0], 2.0, epsilon);
+  }
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
-  for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
-    for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
-      LayerParameter layer_param;
-      PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-      pooling_param->set_kernel_h(kernel_h);
-      pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
-      pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-      CuDNNPoolingLayer<TypeParam> layer(layer_param);
-      GradientChecker<TypeParam> checker(1e-2, 1e-2);
-      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-          this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
+      for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
+        LayerParameter layer_param;
+        PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+        pooling_param->set_kernel_h(kernel_h);
+        pooling_param->set_kernel_w(kernel_w);
+        pooling_param->set_stride(2);
+        pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+        CuDNNPoolingLayer<TypeParam> layer(layer_param);
+        GradientChecker<TypeParam> checker(1e-2, 1e-2);
+        checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+            this->blob_top_vec_);
+      }
     }
   }
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAvePaddedCuDNN) {
-  for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
-    for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
-      LayerParameter layer_param;
-      PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-      pooling_param->set_kernel_h(kernel_h);
-      pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
-      pooling_param->set_pad(2);
-      pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-      CuDNNPoolingLayer<TypeParam> layer(layer_param);
-      GradientChecker<TypeParam> checker(1e-2, 1e-2);
-      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-          this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
+      for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
+        LayerParameter layer_param;
+        PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+        pooling_param->set_kernel_h(kernel_h);
+        pooling_param->set_kernel_w(kernel_w);
+        pooling_param->set_stride(2);
+        pooling_param->set_pad(2);
+        pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+        CuDNNPoolingLayer<TypeParam> layer(layer_param);
+        GradientChecker<TypeParam> checker(1e-2, 1e-2);
+        checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+            this->blob_top_vec_);
+      }
     }
   }
 }

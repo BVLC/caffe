@@ -64,12 +64,14 @@ class Blob {
    * Note that reshaping an input blob and immediately calling Net::Backward is
    * an error; either Net::Forward or Net::Reshape need to be called to
    * propagate the new input shape to higher layers.
+   *
+   * Reshape returns true if new memory was allocated.
    */
-  void Reshape(const vector<int>& shape);
-  void Reshape(const BlobShape& shape);
-  void Reshape(const int num, const int channels, const int height,
+  bool Reshape(const vector<int>& shape);
+  bool Reshape(const BlobShape& shape);
+  bool Reshape(const int num, const int channels, const int height,
                const int width);
-  void ReshapeLike(const Blob& other);
+  bool ReshapeLike(const Blob& other);
   inline string shape_string() const {
     ostringstream stream;
     for (int i = 0; i < shape_.size(); ++i) {

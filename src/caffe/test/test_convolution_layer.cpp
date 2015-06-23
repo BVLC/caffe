@@ -467,231 +467,243 @@ class CuDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNConvolutionLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(4);
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  shared_ptr<Layer<TypeParam> > layer(
-      new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 4);
-  EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 1);
-  EXPECT_EQ(this->blob_top_2_->num(), 2);
-  EXPECT_EQ(this->blob_top_2_->channels(), 4);
-  EXPECT_EQ(this->blob_top_2_->height(), 2);
-  EXPECT_EQ(this->blob_top_2_->width(), 1);
-  // setting group should not change the shape
-  convolution_param->set_num_output(3);
-  convolution_param->set_group(3);
-  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 3);
-  EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 1);
-  EXPECT_EQ(this->blob_top_2_->num(), 2);
-  EXPECT_EQ(this->blob_top_2_->channels(), 3);
-  EXPECT_EQ(this->blob_top_2_->height(), 2);
-  EXPECT_EQ(this->blob_top_2_->width(), 1);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+    this->blob_top_vec_.push_back(this->blob_top_2_);
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    convolution_param->set_kernel_size(3);
+    convolution_param->set_stride(2);
+    convolution_param->set_num_output(4);
+    this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+    this->blob_top_vec_.push_back(this->blob_top_2_);
+    shared_ptr<Layer<TypeParam> > layer(
+        new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_->num(), 2);
+    EXPECT_EQ(this->blob_top_->channels(), 4);
+    EXPECT_EQ(this->blob_top_->height(), 2);
+    EXPECT_EQ(this->blob_top_->width(), 1);
+    EXPECT_EQ(this->blob_top_2_->num(), 2);
+    EXPECT_EQ(this->blob_top_2_->channels(), 4);
+    EXPECT_EQ(this->blob_top_2_->height(), 2);
+    EXPECT_EQ(this->blob_top_2_->width(), 1);
+    // setting group should not change the shape
+    convolution_param->set_num_output(3);
+    convolution_param->set_group(3);
+    layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_->num(), 2);
+    EXPECT_EQ(this->blob_top_->channels(), 3);
+    EXPECT_EQ(this->blob_top_->height(), 2);
+    EXPECT_EQ(this->blob_top_->width(), 1);
+    EXPECT_EQ(this->blob_top_2_->num(), 2);
+    EXPECT_EQ(this->blob_top_2_->channels(), 3);
+    EXPECT_EQ(this->blob_top_2_->height(), 2);
+    EXPECT_EQ(this->blob_top_2_->width(), 1);
+  }
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(4);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("constant");
-  convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Check against reference convolution.
-  const TypeParam* top_data;
-  const TypeParam* ref_top_data;
-  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
-      this->MakeReferenceTop(this->blob_top_));
-  top_data = this->blob_top_->cpu_data();
-  ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
-  }
-  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
-      this->MakeReferenceTop(this->blob_top_2_));
-  top_data = this->blob_top_2_->cpu_data();
-  ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+    this->blob_top_vec_.push_back(this->blob_top_2_);
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    convolution_param->set_kernel_size(3);
+    convolution_param->set_stride(2);
+    convolution_param->set_num_output(4);
+    convolution_param->mutable_weight_filler()->set_type("gaussian");
+    convolution_param->mutable_bias_filler()->set_type("constant");
+    convolution_param->mutable_bias_filler()->set_value(0.1);
+    shared_ptr<Layer<TypeParam> > layer(
+        new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Check against reference convolution.
+    const TypeParam* top_data;
+    const TypeParam* ref_top_data;
+    caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+        this->MakeReferenceTop(this->blob_top_));
+    top_data = this->blob_top_->cpu_data();
+    ref_top_data = this->ref_blob_top_->cpu_data();
+    for (int i = 0; i < this->blob_top_->count(); ++i) {
+      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    }
+    caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+        this->MakeReferenceTop(this->blob_top_2_));
+    top_data = this->blob_top_2_->cpu_data();
+    ref_top_data = this->ref_blob_top_->cpu_data();
+    for (int i = 0; i < this->blob_top_->count(); ++i) {
+      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    }
   }
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(3);
-  convolution_param->set_group(3);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("constant");
-  convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Check against reference convolution.
-  const TypeParam* top_data;
-  const TypeParam* ref_top_data;
-  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
-      this->MakeReferenceTop(this->blob_top_));
-  top_data = this->blob_top_->cpu_data();
-  ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    convolution_param->set_kernel_size(3);
+    convolution_param->set_stride(2);
+    convolution_param->set_num_output(3);
+    convolution_param->set_group(3);
+    convolution_param->mutable_weight_filler()->set_type("gaussian");
+    convolution_param->mutable_bias_filler()->set_type("constant");
+    convolution_param->mutable_bias_filler()->set_value(0.1);
+    shared_ptr<Layer<TypeParam> > layer(
+        new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Check against reference convolution.
+    const TypeParam* top_data;
+    const TypeParam* ref_top_data;
+    caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+        this->MakeReferenceTop(this->blob_top_));
+    top_data = this->blob_top_->cpu_data();
+    ref_top_data = this->ref_blob_top_->cpu_data();
+    for (int i = 0; i < this->blob_top_->count(); ++i) {
+      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    }
   }
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
-  // Test separable convolution by computing the Sobel operator
-  // as a single filter then comparing the result
-  // as the convolution of two rectangular filters.
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    // Test separable convolution by computing the Sobel operator
+    // as a single filter then comparing the result
+    // as the convolution of two rectangular filters.
 
-  // Fill bottoms with identical Gaussian noise.
-  shared_ptr<GaussianFiller<TypeParam> > filler;
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  filler.reset(new GaussianFiller<TypeParam>(filler_param));
-  filler->Fill(this->blob_bottom_);
-  this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
-  // Compute Sobel G_x operator as 3 x 3 convolution.
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(1);
-  convolution_param->set_bias_term(false);
-  shared_ptr<Layer<TypeParam> > layer(
-      new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 3));
-  TypeParam* weights = layer->blobs()[0]->mutable_cpu_data();
-  for (int c = 0; c < 3; ++c) {
-    int i = c * 9;  // 3 x 3 filter
-    weights[i +  0] = -1;
-    weights[i +  1] =  0;
-    weights[i +  2] =  1;
-    weights[i +  3] = -2;
-    weights[i +  4] =  0;
-    weights[i +  5] =  2;
-    weights[i +  6] = -1;
-    weights[i +  7] =  0;
-    weights[i +  8] =  1;
-  }
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
-  // (1) the [1 2 1] column filter
-  vector<Blob<TypeParam>*> sep_blob_bottom_vec;
-  vector<Blob<TypeParam>*> sep_blob_top_vec;
-  shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
-  sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
-  sep_blob_top_vec.push_back(this->blob_top_2_);
-  convolution_param->clear_kernel_size();
-  convolution_param->clear_stride();
-  convolution_param->set_kernel_h(3);
-  convolution_param->set_kernel_w(1);
-  convolution_param->set_stride_h(2);
-  convolution_param->set_stride_w(1);
-  convolution_param->set_num_output(1);
-  convolution_param->set_bias_term(false);
-  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 1));
-  TypeParam* weights_1 = layer->blobs()[0]->mutable_cpu_data();
-  for (int c = 0; c < 3; ++c) {
-    int i = c * 3;  // 3 x 1 filter
-    weights_1[i +  0] = 1;
-    weights_1[i +  1] = 2;
-    weights_1[i +  2] = 1;
-  }
-  layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
-  layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
-  // (2) the [-1 0 1] row filter
-  blob_sep->CopyFrom(*this->blob_top_2_, false, true);
-  sep_blob_bottom_vec.clear();
-  sep_blob_bottom_vec.push_back(blob_sep.get());
-  convolution_param->set_kernel_h(1);
-  convolution_param->set_kernel_w(3);
-  convolution_param->set_stride_h(1);
-  convolution_param->set_stride_w(2);
-  convolution_param->set_num_output(1);
-  convolution_param->set_bias_term(false);
-  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
-  layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 1, 3));
-  TypeParam* weights_2 = layer->blobs()[0]->mutable_cpu_data();
-  for (int c = 0; c < 3; ++c) {
-    int i = c * 3;  // 1 x 3 filter
-    weights_2[i +  0] = -1;
-    weights_2[i +  1] =  0;
-    weights_2[i +  2] =  1;
-  }
-  layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
-  layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
-  // Test equivalence of full and separable filters.
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam* sep_top_data = this->blob_top_2_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], sep_top_data[i], 1e-4);
+    // Fill bottoms with identical Gaussian noise.
+    shared_ptr<GaussianFiller<TypeParam> > filler;
+    FillerParameter filler_param;
+    filler_param.set_value(1.);
+    filler.reset(new GaussianFiller<TypeParam>(filler_param));
+    filler->Fill(this->blob_bottom_);
+    this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
+    // Compute Sobel G_x operator as 3 x 3 convolution.
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    convolution_param->set_kernel_size(3);
+    convolution_param->set_stride(2);
+    convolution_param->set_num_output(1);
+    convolution_param->set_bias_term(false);
+    shared_ptr<Layer<TypeParam> > layer(
+        new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->blobs().resize(1);
+    layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 3));
+    TypeParam* weights = layer->blobs()[0]->mutable_cpu_data();
+    for (int c = 0; c < 3; ++c) {
+      int i = c * 9;  // 3 x 3 filter
+      weights[i +  0] = -1;
+      weights[i +  1] =  0;
+      weights[i +  2] =  1;
+      weights[i +  3] = -2;
+      weights[i +  4] =  0;
+      weights[i +  5] =  2;
+      weights[i +  6] = -1;
+      weights[i +  7] =  0;
+      weights[i +  8] =  1;
+    }
+    layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+    // (1) the [1 2 1] column filter
+    vector<Blob<TypeParam>*> sep_blob_bottom_vec;
+    vector<Blob<TypeParam>*> sep_blob_top_vec;
+    shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
+    sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
+    sep_blob_top_vec.push_back(this->blob_top_2_);
+    convolution_param->clear_kernel_size();
+    convolution_param->clear_stride();
+    convolution_param->set_kernel_h(3);
+    convolution_param->set_kernel_w(1);
+    convolution_param->set_stride_h(2);
+    convolution_param->set_stride_w(1);
+    convolution_param->set_num_output(1);
+    convolution_param->set_bias_term(false);
+    layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->blobs().resize(1);
+    layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 1));
+    TypeParam* weights_1 = layer->blobs()[0]->mutable_cpu_data();
+    for (int c = 0; c < 3; ++c) {
+      int i = c * 3;  // 3 x 1 filter
+      weights_1[i +  0] = 1;
+      weights_1[i +  1] = 2;
+      weights_1[i +  2] = 1;
+    }
+    layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
+    layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
+    // (2) the [-1 0 1] row filter
+    blob_sep->CopyFrom(*this->blob_top_2_, false, true);
+    sep_blob_bottom_vec.clear();
+    sep_blob_bottom_vec.push_back(blob_sep.get());
+    convolution_param->set_kernel_h(1);
+    convolution_param->set_kernel_w(3);
+    convolution_param->set_stride_h(1);
+    convolution_param->set_stride_w(2);
+    convolution_param->set_num_output(1);
+    convolution_param->set_bias_term(false);
+    layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+    layer->blobs().resize(1);
+    layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 1, 3));
+    TypeParam* weights_2 = layer->blobs()[0]->mutable_cpu_data();
+    for (int c = 0; c < 3; ++c) {
+      int i = c * 3;  // 1 x 3 filter
+      weights_2[i +  0] = -1;
+      weights_2[i +  1] =  0;
+      weights_2[i +  2] =  1;
+    }
+    layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
+    layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
+    // Test equivalence of full and separable filters.
+    const TypeParam* top_data = this->blob_top_->cpu_data();
+    const TypeParam* sep_top_data = this->blob_top_2_->cpu_data();
+    for (int i = 0; i < this->blob_top_->count(); ++i) {
+      EXPECT_NEAR(top_data[i], sep_top_data[i], 1e-4);
+    }
   }
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(2);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("gaussian");
-  CuDNNConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+    this->blob_top_vec_.push_back(this->blob_top_2_);
+    convolution_param->set_kernel_size(3);
+    convolution_param->set_stride(2);
+    convolution_param->set_num_output(2);
+    convolution_param->mutable_weight_filler()->set_type("gaussian");
+    convolution_param->mutable_bias_filler()->set_type("gaussian");
+    CuDNNConvolutionLayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(3);
-  convolution_param->set_group(3);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("gaussian");
-  CuDNNConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+    convolution_param->set_kernel_size(3);
+    convolution_param->set_stride(2);
+    convolution_param->set_num_output(3);
+    convolution_param->set_group(3);
+    convolution_param->mutable_weight_filler()->set_type("gaussian");
+    convolution_param->mutable_bias_filler()->set_type("gaussian");
+    CuDNNConvolutionLayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
+  }
 }
 
 #endif

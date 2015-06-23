@@ -156,9 +156,14 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
     vector<int> bias_multiplier_shape(1, height_out_ * width_out_);
-    bias_multiplier_.Reshape(bias_multiplier_shape);
-    caffe_set(bias_multiplier_.count(), Dtype(1),
-        bias_multiplier_.mutable_cpu_data());
+    bool reshaped = bias_multiplier_.Reshape(bias_multiplier_shape);
+    // This will trigger a memory copy if in GPU mode,
+    // which may not be necessary.
+    // Thus omit to set the values if not necessary.
+    if (reshaped) {
+      caffe_set(bias_multiplier_.count(), Dtype(1),
+                bias_multiplier_.mutable_cpu_data());
+    }
   }
 }
 

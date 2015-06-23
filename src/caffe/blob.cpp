@@ -14,18 +14,18 @@
 namespace caffe {
 
 template<typename Dtype>
-void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
+bool Blob<Dtype>::Reshape(const int num, const int channels, const int height,
                           const int width) {
   vector<int> shape(4);
   shape[0] = num;
   shape[1] = channels;
   shape[2] = height;
   shape[3] = width;
-  Reshape(shape);
+  return Reshape(shape);
 }
 
 template<typename Dtype>
-void Blob<Dtype>::Reshape(const vector<int>& shape) {
+bool Blob<Dtype>::Reshape(const vector<int>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
@@ -39,22 +39,24 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_context_));
     diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_context_));
+    return true;
   }
+  return false;
 }
 
 template<typename Dtype>
-void Blob<Dtype>::Reshape(const BlobShape& shape) {
+bool Blob<Dtype>::Reshape(const BlobShape& shape) {
   CHECK_LE(shape.dim_size(), kMaxBlobAxes);
   vector<int> shape_vec(shape.dim_size());
   for (int i = 0; i < shape.dim_size(); ++i) {
     shape_vec[i] = shape.dim(i);
   }
-  Reshape(shape_vec);
+  return Reshape(shape_vec);
 }
 
 template<typename Dtype>
-void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
-  Reshape(other.shape());
+bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
+  return Reshape(other.shape());
 }
 
 template<typename Dtype>
