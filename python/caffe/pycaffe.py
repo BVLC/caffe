@@ -10,8 +10,8 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver
-import caffe.io
+from _caffe import Net, SGDSolver
+import caffeio
 
 # We directly update methods from Net here (rather than using composition or
 # inheritance) so that nets created by caffe (e.g., by SGDSolver) will
