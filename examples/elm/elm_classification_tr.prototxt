@@ -22,7 +22,7 @@ layer{
       max: 1
     }
     bias_filler: {
-			type: "uniform"
+      type: "uniform"
       min: -1
       max: 1
     }
