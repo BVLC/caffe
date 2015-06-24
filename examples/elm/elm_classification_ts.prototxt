@@ -11,7 +11,7 @@ layer{
   top: "inner1"
   inner_product_param: {
     num_output: 300
-		weight_filler: {
+    weight_filler: {
       type: "uniform"
       min: -1
       max: 1
