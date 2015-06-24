@@ -14,8 +14,15 @@ using namespace caffe;
 
 #define FEATURE_VEC_SIZE 65
 #define PROB_VEC_SIZE 8
-#define Number_Samples 800
-
+int Number_Samples;
+void printmatrix(float* inp,int row,int col){
+  for (int i = 0; i < row; i++){
+    for (int j = 0; j < col; j++){
+      cout<<" "<<inp[i*col+j]<<" ";
+    }
+    cout<<endl;
+  }
+}
 int load_features(float** in, string feature_file, int vec_size) {
   // Read in features from file
   // First need to detect how many feature vectors
@@ -67,17 +74,19 @@ int check_output(float* elm_output, float* exp_out){
 			if(elm_output[i*PROB_VEC_SIZE+j]>max){
 				max = elm_output[i*PROB_VEC_SIZE+j];
 				label[i]=j+1;
+
 			}
 
 		}
 		if(exp_out[i]==(float)label[i])
 			count++;
 	}
+
 	return count;
 
 }
 
-void dnn_fwd(float* in, float* out, Net<float>* net, float* predicted){
+void dnn_fwd(float* in, float* out, Net<float>* net, float* predicted, int phase){
 	cout << "going to get input blobs" << endl;
 	vector<caffe::Blob<float>*> in_blobs = net->input_blobs();
 	cout << "got input blobs" << endl;
@@ -86,7 +95,10 @@ void dnn_fwd(float* in, float* out, Net<float>* net, float* predicted){
 	cout << "going to set data" << endl;
 	in_blobs[0]->set_cpu_data(in);
 	cout << "setted in_blob[0]" << endl;
-	in_blobs[1]->set_cpu_data(out);
+  if(phase == 0){
+	 in_blobs[1]->set_cpu_data(out);
+   cout<<"in if"<<endl;
+ }
 	cout << "setted in_blob[1]" << endl;
   out_blobs =	net->ForwardPrefilled(&loss);
 	memcpy(predicted,out_blobs[0]->cpu_data(), sizeof(float) *PROB_VEC_SIZE*Number_Samples);
@@ -104,6 +116,12 @@ int main(int argc, char** argv){
 	string features(argv[3]);
 	string labels(argv[4]);
 	string weights(argv[5]);
+	if(phase == "TRAIN"){
+    Number_Samples = 800;
+  }
+  else{
+    Number_Samples = 3800;
+  }
 	float* input = NULL; //features
 	float* exp_out1d = NULL; //1-D array containing labels
 	float* exp_out2d = (float*)malloc(sizeof(float)*PROB_VEC_SIZE*Number_Samples); //2-D array of labels for one vs one classification
@@ -119,17 +137,21 @@ int main(int argc, char** argv){
 		Net<float>* elm = new Net<float>(network,TRAIN);
 
 		cout<<"Forward pass"<<endl;
-		dnn_fwd(input,exp_out2d,elm,elm_output);
+		dnn_fwd(input,exp_out2d,elm,elm_output,0);
 
 		// Compare output with actual labels and find accuracy
 		int count = check_output(elm_output,exp_out1d);
-		float accu = (count/Number_Samples)*100;
+		float accu = ((float)count/(float)Number_Samples)*100;
 		cout << "Training accuracy is : "<<accu<<endl;
 
 		// Saving trained Network to file
 		NetParameter elm_param;
 		elm->ToProto(&elm_param,false);
 		WriteProtoToBinaryFile(elm_param,weights);
+
+    // Printing output
+    // cout << "train output"<<endl;
+    // printmatrix(elm_output,800,8);
 
 	}
 	else if(phase == "TEST"){
@@ -142,12 +164,16 @@ int main(int argc, char** argv){
 		elm->CopyTrainedLayersFrom(weights);
 
 		// Forward pass
-		dnn_fwd(input,exp_out2d,elm,elm_output);
+		dnn_fwd(input,exp_out2d,elm,elm_output,1);
 
 		// Compare output with actual labels and find accuracy
 		int count = check_output(elm_output,exp_out1d);
-		float accu = (count/Number_Samples)*100;
+		float accu = ((float)count/(float)Number_Samples)*100;
 		cout << "Testing accuracy is : "<<accu<<endl;
-	}
 
+
+    // Printing output
+    // cout << "test output"<<endl;
+    // printmatrix(elm_output,3800,8);
+	}
 }
