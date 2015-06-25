@@ -7,6 +7,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/relu_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -47,8 +48,8 @@ namespace OpenCL {
 
 template<typename T>
 bool clReLULayerForward(const int count, const T* bottom_data, T* top_data, T negative_slope) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
-  cl_command_queue* queue = device.getQueue();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 
 	std::string kernel_name = clGetKernelName<T>("ReLUForward");
 
@@ -76,7 +77,7 @@ bool clReLULayerForward(const int count, const T* bottom_data, T* top_data, T ne
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -88,11 +89,11 @@ template bool clReLULayerForward<double>(const int count, const double* bottom_d
 
 template<typename T>
 bool clReLULayerBackward(const int count, const T* top_diff, const T* bottom_data, T* bottom_diff, T negative_slope) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("ReLUBackward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -118,7 +119,7 @@ bool clReLULayerBackward(const int count, const T* top_diff, const T* bottom_dat
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END

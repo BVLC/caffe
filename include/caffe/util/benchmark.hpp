@@ -64,6 +64,23 @@ class CPUTimer : public Timer {
 }  // namespace caffe
 
 #ifdef USE_TIMER
+
+#define TIME_INIT() \
+struct timeval s;\
+double bgn = 0.0;\
+double end = 0.0;\
+
+#define TIME_BGN() \
+if (gettimeofday(&s, 0) == 0) {\
+  bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}
+
+#define TIME_END(name) \
+if (gettimeofday(&s, 0) == 0) {\
+  end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<<"ms";
+
 #define TIME(name, this) {\
 \
 struct timeval s;\
@@ -87,6 +104,10 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 #define TIME(name, this) {\
 (this); \
 }
+#define TIME_INIT()
+#define TIME_BGN()
+#define TIME_END(name)
+
 #endif
 
 #if defined(CPU_ONLY) && ! defined(USE_OPENCL)
@@ -119,12 +140,12 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
 	}\
 	(this); \
-  caffe::Caffe::DeviceSync(); \
+  caffe::Caffe::DeviceSync();\
 	double end = 0.0;\
 	if (gettimeofday(&s, 0) == 0) {\
 		end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
 	}\
-	result.time 	= ((float) floor(1000*(1000*(end-bgn))))/1000;\
+	result.time 	= ((float) floor(10000*(1000*(end-bgn))))/10000;\
 	result.function = __func__;\
 	result.file     = __FILE__;\
 	LOG(INFO) << "TIME::OpenCL::"<<result.function.c_str()<<" = "<<result.time<<"ms";\
@@ -164,7 +185,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 #define KWHT  "\x1B[37m"
 
 #define SNAP_LENGTH 30
-#define snap(name, array, length) \
+#define SNAPSHOT(name, array, length) \
 	{ \
 		char buffer[1024];\
 		std::cout<<name<<"[" << length << "] = ";\
@@ -180,7 +201,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		std::cout<<std::endl;\
 	}\
 
-#define snap2D(name, array, width, height) \
+#define SNAPSHOT2D(name, array, width, height) \
 	{ \
 		char buffer[1024];\
 		std::cout<<name<<"[" << width << " x " << height << "] = " <<std::endl;\
@@ -211,7 +232,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		}\
 	}\
 
-#define diff2D(name, array1, array2, width, height) \
+#define DIFFSHOT2D(name, array1, array2, width, height) \
   { \
     char buffer[1024];\
     std::cout<<name<<"[" << width << " x " << height << "] = " <<std::endl;\
@@ -224,7 +245,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
         delta = (array1)[i*width+j] - (array2)[i*width+j];\
         sprintf(buffer, "%+5.1f ", delta);\
         if ( fabs(delta) < epsilon ) {\
-          std::cout<<buffer;\
+          std::cout<<KGRN<<buffer<<KNRM;\
         } else {\
           std::cout<<KRED<<buffer<<KNRM;\
         }\
@@ -233,7 +254,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
         delta = (array1)[i*width+width-1] - (array2)[i*width+width-1];\
         sprintf(buffer, "%+5.1f ", delta);\
         if ( fabs(delta) < epsilon ) {\
-          std::cout<<" ... "<<buffer;\
+          std::cout<<" ... "<<KGRN<<buffer<<KNRM;\
         } else {\
           std::cout<<" ... "<<KRED<<buffer<<KNRM;\
         }\
@@ -246,7 +267,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
         delta = (array1)[(height-1)*width+j] - (array2)[(height-1)*width+j];\
         sprintf(buffer, "%+5.1f ", delta);\
         if ( fabs(delta) < epsilon ) {\
-          std::cout<<buffer;\
+          std::cout<<KGRN<<buffer<<KNRM;\
         } else {\
           std::cout<<KRED<<buffer<<KNRM;\
         }\
@@ -255,13 +276,41 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
         delta = (array1)[(height-1)*width+width-1] - (array2)[(height-1)*width+width-1];\
         sprintf(buffer, "%+5.1f ", delta);\
         if ( fabs(delta) < epsilon ) {\
-          std::cout<<" ... "<<buffer;\
+          std::cout<<" ... "<<KGRN<<buffer<<KNRM;\
         } else {\
           std::cout<<" ... "<<KRED<<buffer<<KNRM;\
         }\
       }\
       std::cout<<std::endl;\
     }\
+  }\
+
+#define DIFFSHOT(name, array1, array2, width) \
+  { \
+    char buffer[1024];\
+    std::cout<<name<<"[" << width << "] = " <<std::endl;\
+    int limit_width  = width < SNAP_LENGTH ? width : SNAP_LENGTH;\
+    double delta = 0.0;\
+    double epsilon = 0.01;\
+    for( int j = 0; j < limit_width; j++ ) {\
+      delta = (array1)[j] - (array2)[j];\
+      sprintf(buffer, "%+5.1f ", delta);\
+      if ( fabs(delta) < epsilon ) {\
+        std::cout<<KGRN<<buffer<<KNRM;\
+      } else {\
+        std::cout<<KRED<<buffer<<KNRM;\
+      }\
+    }\
+    if ( limit_width < width ) {\
+      delta = (array1)[width-1] - (array2)[width-1];\
+      sprintf(buffer, "%+5.1f ", delta);\
+      if ( fabs(delta) < epsilon ) {\
+        std::cout<<" ... "<<KGRN<<buffer<<KNRM;\
+      } else {\
+        std::cout<<" ... "<<KRED<<buffer<<KNRM;\
+      }\
+    }\
+    std::cout<<std::endl;\
   }\
 
 #endif   // CAFFE_UTIL_BENCHMARK_H_

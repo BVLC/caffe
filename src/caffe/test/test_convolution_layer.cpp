@@ -238,9 +238,11 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
+
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
+
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -250,8 +252,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<Dtype> > layer(
-      new ConvolutionLayer<Dtype>(layer_param));
+  shared_ptr<Layer<Dtype> > layer(new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Check against reference convolution.
@@ -480,10 +481,9 @@ TYPED_TEST(ConvolutionLayerTest, TestGradientGroup) {
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestForwardPerformance){
-	//for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX*4; i*=2 ) {
-  for(int i=64; i<=64; i*=2 ) {
-		this->ConvolutionLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
-	}
+  for(int i = 0; i < 10; i++ ) {
+		this->ConvolutionLayerTestForwardPerformance(100, 3, 32, 32);
+  }
 }
 
 #ifdef USE_CUDNN

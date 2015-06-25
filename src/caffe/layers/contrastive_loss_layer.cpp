@@ -9,6 +9,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/contrastive_loss_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -110,10 +111,10 @@ bool clCLLForward(
 		const T* diff,
 		const T* dist_sq,
 		T *bottom_diff) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("CLLForward");
 
-  cl_command_queue* queue =  device.getQueue();
+  cl_command_queue* queue =  device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -142,7 +143,7 @@ bool clCLLForward(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU " << device.name();
 
 	CL_SET_KERNEL_ARG_END

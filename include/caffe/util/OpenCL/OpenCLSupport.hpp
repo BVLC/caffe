@@ -5,6 +5,9 @@
 #include <sstream>
 #include <iostream>
 #include <string>
+#include <map>
+#include <typeindex>
+#include <typeinfo>
 #include <CL/cl.h>
 #include "sys/time.h"
 #include "sys/types.h"
@@ -20,14 +23,13 @@
 #include <glog/logging.h>
 
 #ifndef OPENCL_OPT_LEVEL
-#define OPENCL_OPT_LEVEL 0
+#define OPENCL_OPT_LEVEL 1
 #endif
 
 #ifndef CAFFE_OPENCL_VERSION
 #define CAFFE_OPENCL_VERSION "0.0"
 #endif
 
-#define OPENCL_LOCAL_SIZE 64
 
 #if defined(CL_API_SUFFIX__VERSION_2_0)
 #define OPENCL_VERSION 2.0
@@ -56,9 +58,9 @@
 #define CL_CHECK(code) \
 	({ \
 		bool ret = false;\
-		std::ostringstream message;\
-		message << "[" << __FILE__ << " > " << __func__ << "():" << __LINE__ << "]";\
 		if ( code != CL_SUCCESS ) { \
+		  std::ostringstream message;\
+		  message << "[" << __FILE__ << " > " << __func__ << "():" << __LINE__ << "]";\
 			message << " failed: " << caffe::OpenCL::what(code) << " : " << code; \
 			std::cerr << message.str() << std::endl; \
 			ret = false;\
@@ -71,10 +73,10 @@
 #define BOOL_CHECK(code) \
 	({ \
 		bool ret = false;\
-		std::ostringstream message;\
-		message << "[" << __FILE__ << " > " << __func__ << "():" << __LINE__ << "]";\
 		if ( code != true ) { \
-			message << " failed."; \
+		  std::ostringstream message;\
+		  message << "[" << __FILE__ << " > " << __func__ << "():" << __LINE__ << "]";\
+		  message << " failed."; \
 			std::cerr << message.str() << std::endl; \
 			ret = false;\
 		} else { \
@@ -107,15 +109,9 @@ namespace caffe {
 
 namespace OpenCL {
 
-	int64_t getTickCount();
-	double getTickFrequency();
-
-//	bool init();
-
 	bool clMalloc(void** virtualPtr, size_t);
 	bool clFree(void* virtualPtr);
 	template<typename T> bool clMemset(void* gpuPtr, const T alpha, const size_t Bytes);
-	template<typename T> bool clGPU2GPU(const void* src, void* dst, size_t Bytes);
 	bool clMemcpy(void* dst, const void* src, size_t Bytes, int type);
 	bool clIsVirtualMemory(const void* p);
 	bool clMakeLogical(const void* ptr_virtual, const void** ptr_logical);
@@ -129,6 +125,8 @@ namespace OpenCL {
 	size_t clGetMemoryOffset(const void* ptr_virtual);
 	size_t clGetMemorySize(const void* ptr_virtual);
 	void* clGetMemoryBase(const void* ptr_virtual);
+	bool clGetMemoryObject(const void* ptr_virtual, OpenCLMemory** clMem);
+
 
 	template<typename T> std::string clGetKernelName(std::string name);
 
@@ -142,7 +140,10 @@ namespace OpenCL {
 	template<typename T> bool cladd_scalar(const int N, const T alpha, T* Y);
 	template<typename T> bool clpowx(const int n, const T* array_GPU_x, const T alpha, T* array_GPU_z);
 	template<typename T> bool clexp(const int n, const T* array_GPU_x, T* array_GPU_y);
-	template<typename T> bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, const T* B, const T beta, T* C);
+	template<typename T> bool clgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* B, const T beta, T* C, cl_event* event);
+  template<typename T> bool clgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* B, const size_t idx_offset_B, const T beta, T* C, const size_t idx_offset_C, cl_event* event);
+  template<typename T> bool clgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const size_t step_A, const T* x, const size_t step_x, const T beta, T* y, const size_t step_y);
+  template<typename T> bool clgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y);
 
 	/* clBLAS wrapper functions */
 	template<typename T> bool clBLASasum(const int n, const void* gpuPtr, T* y);
@@ -151,7 +152,7 @@ namespace OpenCL {
 	template<typename T> bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y);
 	template<typename T> bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const int step_A, const T* x, const int step_x, const T beta, T* y, const int step_y);
 	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* x, const T beta, T* y);
-	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const int step_A, const T* x, const int step_x, const T beta, T* y, const int step_y);
+	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* x, const size_t idx_offset_x, const T beta, T* y, const size_t idx_offset_y);
 	template<typename T> bool clBLASaxpy(const int N, const T alpha, const T* X, const int incr_x, T* Y, const int incr_y);
 	bool cl_caffe_gpu_rng_uniform(const int n, unsigned int* r);
 	template<typename T> bool cl_caffe_gpu_rng_uniform(const int n, const T a, const T b, T* r);
@@ -166,13 +167,12 @@ namespace OpenCL {
 	const static int COPY_GPU_TO_GPU = 3;
 	const static int COPY_DEFAULT    = 4;
 
-//	extern bool inititialized;
-//	extern caffe::OpenCLManager mgr;
-//	extern caffe::OpenCLPlatform* pf;
-//	extern caffe::OpenCLDevice* gpu;
-//	extern cl_context*	context;
-//	extern cl_command_queue* queue;
-//	extern cl_kernel* kernel;
+	static std::map<std::pair<std::string, std::type_index>, std::string> mapKernelName;
+	static std::map<const void*, const void*> mapMemoryToDevice;
+  static std::map<const void*, size_t> mapMemoryToOffset;
+  static std::map<const void*, size_t> mapMemoryToSize;
+  static std::map<const void*, void*> mapMemoryToBase;
+
 
 } // namespace OpenCL
 

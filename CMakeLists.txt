@@ -15,6 +15,8 @@ include(cmake/ConfigGen.cmake)
 # ---[ Options
 caffe_option(CPU_ONLY   "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
 caffe_option(USE_OPENCL "Build Caffe with OpenCL support" ON)
+caffe_option(USE_CLGEMM "Use custom clgemm() instead of clBLASgemm()" OFF)
+caffe_option(USE_OPENMP "Build Caffe with OpenMP support" OFF)
 caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" OFF) # IF NOT CPU_ONLY OR USE_OPENCL)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
@@ -29,12 +31,19 @@ include(cmake/Dependencies.cmake)
 # ---[ Flags
 if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
+  if(USE_OPENCL)
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  endif()
 endif()
 
 if(USE_libstdcpp)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+  if(USE_OPENCL)
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  endif()
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
+
 
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
 
@@ -60,6 +69,8 @@ add_subdirectory(docs)
 add_subdirectory(data)
 add_subdirectory(src/caffe/util/OpenCL)
 add_subdirectory(src/caffe/layers/OpenCL)
+add_subdirectory(src/caffe/test/test_data)
+add_subdirectory(examples/images)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)

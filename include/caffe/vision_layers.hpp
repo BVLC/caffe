@@ -48,14 +48,46 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
-  void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
-      Dtype* output, bool skip_im2col = false);
+  void forward_gpu_gemm(
+      const Dtype* col_input,
+      const Dtype* weights,
+      Dtype* output,
+      bool skip_im2col = false);
+
+#if defined(USE_OPENCL)
+  void forward_gpu_gemm(
+      const Dtype* col_input, const size_t col_input_offset,
+      const Dtype* weights, const size_t weights_offset,
+      Dtype* output, const size_t output_offset,
+      bool skip_im2col = false);
+#endif
+
   void forward_gpu_bias(Dtype* output, const Dtype* bias);
+
+#if defined(USE_OPENCL)
+  void forward_gpu_bias(Dtype* output, const size_t output_offset, const Dtype* bias);
+#endif
+
   void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* col_output);
-  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
-      weights);
+
+#if defined(USE_OPENCL)
+  void backward_gpu_gemm(
+      const Dtype* input, const size_t input_offset,
+      const Dtype* weights, const size_t weights_offset,
+      Dtype* col_output, const size_t col_output_offset);
+#endif
+
+  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype* weights);
+#if defined(USE_OPENCL)
+  void weight_gpu_gemm(const Dtype* col_input, const size_t col_input_offset, const Dtype* output, const size_t output_offset, Dtype* weights, const size_t weights_offset);
+#endif
+
   void backward_gpu_bias(Dtype* bias, const Dtype* input);
+#if defined(USE_OPENCL)
+  void backward_gpu_bias(Dtype* bias, const size_t bias_offset, const Dtype* input, const size_t input_offset);
+#endif
+
 #endif
 
   // reverse_dimensions should return true iff we are implementing deconv, so
@@ -95,6 +127,17 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     col2im_gpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
   }
+#endif
+
+#if defined(USE_OPENCL)
+  inline void conv_im2col_gpu(const Dtype* data, const size_t data_offset, Dtype* col_buff, const size_t col_buff_offset) {
+    im2col_gpu(data, data_offset, conv_in_channels_, conv_in_height_, conv_in_width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff, col_buff_offset);
+  }
+  inline void conv_col2im_gpu(const Dtype* col_buff, const size_t col_buff_offset, Dtype* data, const size_t data_offset) {
+    col2im_gpu(col_buff, col_buff_offset, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data, data_offset);
+  }
+
 #endif
 
   int conv_out_channels_;

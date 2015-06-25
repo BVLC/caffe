@@ -7,6 +7,7 @@
 
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #include <caffe/util/OpenCL/softmax_layer.hpp>
 #endif
 
@@ -97,10 +98,10 @@ namespace OpenCL {
 
 template<typename T>
 bool clkernel_channel_max(const int num, const int channels, const int spatial_dim, const T* data, T* out) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("kernel_channel_max");
 
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -129,7 +130,7 @@ bool clkernel_channel_max(const int num, const int channels, const int spatial_d
                <<" : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "
              << current_device.name();
 
@@ -143,9 +144,9 @@ template bool clkernel_channel_max<double>(const int num, const int channels, co
 template<typename T>
 bool clkernel_channel_subtract(const int num, const int channels, const int spatial_dim,
                                T* data, const T* channel_max) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("kernel_channel_subtract");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -173,7 +174,7 @@ bool clkernel_channel_subtract(const int num, const int channels, const int spat
               <<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name.c_str()
              << "' executed on GPU " << current_device.name();
 
@@ -187,9 +188,9 @@ template bool clkernel_channel_subtract<double>(const int num, const int channel
 template<typename T>
 bool clkernel_exp(const int count, const T* data, T* out) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("kernel_exp");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -217,7 +218,7 @@ bool clkernel_exp(const int count, const T* data, T* out) {
                << current_device.name()<<" : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -230,9 +231,9 @@ template bool clkernel_exp<double>(const int count, const double* data, double* 
 
 template<typename T>
 bool clkernel_channel_sum(const int num, const int channels, const int spatial_dim, const T* data, T* channel_sum) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("kernel_channel_sum");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -263,7 +264,7 @@ bool clkernel_channel_sum(const int num, const int channels, const int spatial_d
                << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -285,9 +286,9 @@ bool clkernel_channel_div(const int num, const int channels,
                           const int spatial_dim,
                           T* data, const T* channel_sum) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("kernel_channel_div");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -319,7 +320,7 @@ bool clkernel_channel_div(const int num, const int channels,
                << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -339,9 +340,9 @@ bool clkernel_channel_dot(const int num, const int channels,
                           const int spatial_dim, const T* data_1,
                           const T* data_2, T* channel_dot) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("kernel_channel_dot");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -375,7 +376,7 @@ bool clkernel_channel_dot(const int num, const int channels,
                <<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()
              <<"' executed on GPU " << current_device.name();
 

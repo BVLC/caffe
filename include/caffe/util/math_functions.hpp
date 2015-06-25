@@ -329,10 +329,13 @@ template <typename T>
 void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const T alpha, const T* A, const T* B, const T beta, T* C);
 
 template <typename T>
-void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const T alpha, const T* A, const int step_A, const T* B, const int step_B, const T beta, T* C, const int step_C);
+void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const T alpha, const T* A, const T* B, const T beta, T* C, cl_event* event);
 
 template <typename T>
-void caffe_gpu_gemm_simple(const int M, const int N, const int K, const T* A, const T* B, T* C);
+void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const T alpha, const T* A, const size_t idx_offset_A, const T* B, const size_t index_offset_B, const T beta, T* C, const size_t idx_offset_C);
+
+template <typename T>
+void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const T alpha, const T* A, const size_t idx_offset_A, const T* B, const size_t index_offset_B, const T beta, T* C, const size_t idx_offset_C, cl_event* event);
 
 template <typename T>
 void caffe_gpu_axpy(const int N, const T alpha, const T* X, T* Y);

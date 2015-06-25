@@ -5,9 +5,9 @@ net: "examples/cifar10/cifar10_quick_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of MNIST, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
-test_iter: 1
+test_iter: 4000
 # Carry out testing every 500 training iterations.
-test_interval: 500
+test_interval: 10000
 # The base learning rate, momentum and the weight decay of the network.
 base_lr: 0.001
 momentum: 0.9
@@ -19,7 +19,7 @@ display: 100
 # The maximum number of iterations
 max_iter: 1
 # snapshot intermediate results
-snapshot: 4000
+snapshot: 10000
 snapshot_prefix: "examples/cifar10/cifar10_quick"
 # solver mode: CPU or GPU
 solver_mode: GPU

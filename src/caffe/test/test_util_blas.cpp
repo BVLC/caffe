@@ -8,6 +8,7 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "stdlib.h"
+#include "omp.h"
 
 namespace caffe {
 
@@ -48,7 +49,7 @@ protected:
     delete(C_);
 	}
 
-	void BLASTestPerformance(const int m, const int n, const int k) {
+	void BLASTestPerformanceGEMM(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int m, const int n, const int k) {
 
 #ifdef USE_CUDA
   if ( ! ( sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2 ) ) {
@@ -81,14 +82,17 @@ protected:
       A->gpu_data();
       B->gpu_data();
       C->mutable_gpu_data();
+
+      caffe::Caffe::DeviceSync();
+
       BENCH(r, {
-          caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
+          caffe_gpu_gemm<Dtype>(TransA, TransB, m, n, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
       });
 		}
 
 		if ( TypeParam::device == Caffe::CPU ) {
       BENCH(r, {
-          caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->cpu_data(), B->cpu_data(), 0.0, C->mutable_cpu_data());
+          caffe_cpu_gemm<Dtype>(TransA, TransB, m, n, k, 1.0, A->cpu_data(), B->cpu_data(), 0.0, C->mutable_cpu_data());
       });
     }
 
@@ -100,7 +104,7 @@ protected:
 
 	}
 
-  void BLASTestValidation(const int m, const int n, const int k) {
+  void BLASTestValidationGEMM(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int m, const int n, const int k, size_t idx_offset_A, size_t idx_offset_B, size_t idx_offset_C, Dtype alpha, Dtype beta) {
 
 #ifdef USE_CUDA
   if ( ! ( sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2 ) ) {
@@ -109,53 +113,411 @@ protected:
   }
 #endif
 
-    A->Reshape(1, 1, m, k);
-    B->Reshape(1, 1, k, n);
-    C->Reshape(1, 1, m, n);
-    C_->Reshape(1, 1, m, n);
+    int scale      = 4;
+    size_t sizeOfA = m*k;
+    size_t sizeOfB = k*n;
+    size_t sizeOfC = m*n;
+    size_t sizeOfBufferA = scale*scale*sizeOfA;
+    size_t sizeOfBufferB = scale*scale*sizeOfB;
+    size_t sizeOfBufferC = scale*scale*sizeOfC;
+
+    if ( sizeOfA + idx_offset_A > sizeOfBufferA ) {
+      LOG(ERROR)<<"index offset for A = "<<idx_offset_A<<" out of range";
+      EXPECT_TRUE(sizeOfA + idx_offset_A < sizeOfBufferA);
+      return;
+    }
+
+    if ( sizeOfB + idx_offset_B > sizeOfBufferB ) {
+      LOG(ERROR)<<"index offset for B = "<<idx_offset_B<<" out of range";
+      EXPECT_TRUE(sizeOfB + idx_offset_B < sizeOfBufferB);
+      return;
+    }
+
+    if ( sizeOfC + idx_offset_C > sizeOfBufferC ) {
+      LOG(ERROR)<<"index offset for C = "<<idx_offset_C<<" out of range";
+      EXPECT_TRUE(sizeOfC + idx_offset_C < sizeOfBufferC);
+      return;
+    }
+
+    // initialize matrices
+    A->Reshape(1, 1, scale*m, scale*k);
+    B->Reshape(1, 1, scale*k, scale*n);
+    C->Reshape(1, 1, scale*m, scale*n);
+    C_->Reshape(1, 1, scale*m, scale*n);
 
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->A);
     filler.Fill(this->B);
+    filler.Fill(this->C);
 
-    for ( int i=0; i<m; i++ ) {
-      for ( int j=0; j<n; j++ ) {
-        C->mutable_cpu_data()[i*n+j] = 0.0;
-        C_->mutable_cpu_data()[i*n+j] = 0.0;
+    for ( int i=0; i<scale*m*scale*k; i++ ) {
+      if ( i < idx_offset_A ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_A + m*k ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
       }
     }
 
-    record r;
-    r.type      = std::string(typeid(Dtype).name());
-    r.num_images    = 1;
-    r.num_channels  = 1;
-    r.img_width     = m;
-    r.img_height    = n;
+    for ( int i=0; i<scale*k*scale*n; i++ ) {
+      if ( i < idx_offset_B ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_B + n*k ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*m*scale*n; i++ ) {
+      if ( i < idx_offset_C ) {
+        C->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_C + m*n ) {
+        C->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*m; i++ ) {
+      for ( int j=0; j<scale*n; j++ ) {
+        C_->mutable_cpu_data()[i*scale*n+j] = C->mutable_cpu_data()[i*scale*n+j];
+      }
+    }
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
 
-    //snap("A", A->cpu_data(), k*m);
-    //snap2D("A", A->cpu_data(), k, m);
-    //snap("B", B->cpu_data(), n*k);
-    //snap2D("B", B->cpu_data(), n, k);
+#if defined(USE_OPENCL)
 
-    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->cpu_data(), B->cpu_data(), 0.0, C_->mutable_cpu_data());
+    caffe_gpu_gemm<Dtype>(TransA, TransB, m, n, k, alpha, \
+        A->gpu_data(), idx_offset_A, \
+        B->gpu_data(), idx_offset_B, beta, \
+        C->mutable_gpu_data(), idx_offset_C, NULL);
+#endif
 
-    //snap("C(NEW)", C->cpu_data(), n*m);
-    //snap2D("C(NEW)", C->cpu_data(), n, m);
-    //snap("C_(OLD)", C_->cpu_data(), n*m);
-    //snap2D("C_(OLD)", C_->cpu_data(), n, m);
+#if defined(USE_CUDA)
+    caffe_gpu_gemm<Dtype>(TransA, TransB, m, n, k, alpha, \
+        A->gpu_data() + idx_offset_A, \
+        B->gpu_data() + idx_offset_B, beta, \
+        C->mutable_gpu_data() + idx_offset_C);
+#endif
 
-    for (int i = 0; i < m*n; ++i) {
+    caffe_cpu_gemm<Dtype>(TransA, TransB, m, n, k, alpha, \
+        A->cpu_data() + idx_offset_A, \
+        B->cpu_data() + idx_offset_B, beta, \
+        C_->mutable_cpu_data() + idx_offset_C);
+
+    //SNAPSHOT2D("A", A->cpu_data(), scale*k, scale*m);
+    //SNAPSHOT2D("B", B->cpu_data(), scale*n, scale*k);
+    //SNAPSHOT2D("C(CPU)", C_->cpu_data() + idx_offset_C , n, m);
+    //SNAPSHOT2D("C(GPU)", C->cpu_data() + idx_offset_C , n, m);
+
+    for (int i = 0; i < scale*m*scale*n; ++i) {
       EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
     }
-    //diff2D("dC", C->cpu_data(), C_->cpu_data(), n, m);
+    //DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data() + idx_offset_C, n, m);
 
 #endif
 
+    // re-initialize matrices
+    filler.Fill(this->A);
+    filler.Fill(this->B);
+
+    for ( int i=0; i<scale*m*scale*k; i++ ) {
+      if ( i < idx_offset_A ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_A + m*k ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*k*scale*n; i++ ) {
+      if ( i < idx_offset_B ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_B + n*k ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*m*scale*n; i++ ) {
+      if ( i < idx_offset_C ) {
+        C->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_C + m*n ) {
+        C->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*m; i++ ) {
+      for ( int j=0; j<scale*n; j++ ) {
+        C_->mutable_cpu_data()[i*scale*n+j] = C->mutable_cpu_data()[i*scale*n+j];
+      }
+    }
+
+    #if defined(USE_CUDA) || defined(USE_OPENCL)
+
+#if defined(USE_OPENCL)
+
+    caffe_gpu_gemm<Dtype>(TransA, TransB, m, n, k, alpha, \
+        A->gpu_data() + idx_offset_A, \
+        B->gpu_data() + idx_offset_B, beta, \
+        C->mutable_gpu_data() + idx_offset_C, NULL);
+#endif
+
+#if defined(USE_CUDA)
+    caffe_gpu_gemm<Dtype>(TransA, TransB, m, n, k, alpha, \
+        A->gpu_data() + idx_offset_A, \
+        B->gpu_data() + idx_offset_B, beta, \
+        C->mutable_gpu_data() + idx_offset_C);
+#endif
+
+    caffe_cpu_gemm<Dtype>(TransA, TransB, m, n, k, alpha, \
+        A->cpu_data() + idx_offset_A, \
+        B->cpu_data() + idx_offset_B, beta, \
+        C_->mutable_cpu_data() + idx_offset_C);
+
+    //SNAPSHOT2D("A", A->cpu_data(), scale*k, scale*m);
+    //SNAPSHOT2D("B", B->cpu_data(), scale*n, scale*k);
+    //SNAPSHOT2D("C(CPU)", C_->cpu_data() + idx_offset_C , n, m);
+    //SNAPSHOT2D("C(GPU)", C->cpu_data() + idx_offset_C , n, m);
+
+    for (int i = 0; i < scale*m*scale*n; ++i) {
+      EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
+    }
+    //DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data() + idx_offset_C, n, m);
+
+#endif
+
+
   }
+
+  void BLASTestValidationGEMV(const CBLAS_TRANSPOSE TransA, const int m, const int n, size_t idx_offset_A, size_t idx_offset_B, size_t idx_offset_C) {
+
+  #ifdef USE_CUDA
+  if ( ! ( sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2 ) ) {
+    LOG(ERROR) << "Skipping test due to old architecture.";
+    return;
+  }
+  #endif
+
+    int scale      = 2;
+    size_t sizeOfA = m*n;
+    size_t sizeOfB = n;
+    size_t sizeOfC = m;
+
+    size_t sizeOfBufferA = scale*scale*sizeOfA;
+    size_t sizeOfBufferB = scale*sizeOfB;
+    size_t sizeOfBufferC = scale*sizeOfC;
+
+    if ( sizeOfA + idx_offset_A > sizeOfBufferA ) {
+      LOG(ERROR)<<"index offset for A = "<<idx_offset_A<<" out of range";
+      EXPECT_TRUE(sizeOfA + idx_offset_A < sizeOfBufferA);
+      return;
+    }
+
+    if ( sizeOfB + idx_offset_B > sizeOfBufferB ) {
+      LOG(ERROR)<<"index offset for B = "<<idx_offset_B<<" out of range";
+      EXPECT_TRUE(sizeOfB + idx_offset_B < sizeOfBufferB);
+      return;
+    }
+
+    if ( sizeOfC + idx_offset_C > sizeOfBufferC ) {
+      LOG(ERROR)<<"index offset for C = "<<idx_offset_C<<" out of range";
+      EXPECT_TRUE(sizeOfC + idx_offset_C < sizeOfBufferC);
+      return;
+    }
+
+    int BLength = 0;
+    int CLength = 0;
+
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+
+    A->Reshape(1, 1, scale*m, scale*n);
+
+    if( TransA == CblasNoTrans ) {
+      BLength = n;
+      CLength = m;
+    } else {
+      BLength = m;
+      CLength = n;
+    }
+    B->Reshape(1, 1, 1, scale*BLength);
+    C->Reshape(1, 1, 1, scale*CLength);
+    C_->Reshape(1, 1, 1, scale*CLength);
+
+    filler.Fill(this->A);
+    filler.Fill(this->B);
+
+    for ( int i=0; i<scale*m*scale*n; i++ ) {
+      if ( i < idx_offset_A ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_A + m*n ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*BLength; i++ ) {
+      if ( i < idx_offset_B ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_B + BLength ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*CLength; i++ ) {
+      C->mutable_cpu_data()[i]  = 0.0;
+      C_->mutable_cpu_data()[i] = 0.0;
+    }
+
+  #if defined(USE_CUDA) || defined(USE_OPENCL)
+
+#if defined(USE_OPENCL)
+    caffe_gpu_gemv(TransA, m, n,
+        (Dtype) 1.0, \
+        A->gpu_data(), idx_offset_A, \
+        B->gpu_data(), idx_offset_B, \
+        (Dtype) 0.0,\
+        C->mutable_gpu_data(), idx_offset_C);
+#endif
+#if defined(USE_CUDA)
+    caffe_gpu_gemv(TransA, m, n,
+        (Dtype) 1.0, \
+        A->gpu_data() + idx_offset_A, \
+        B->gpu_data() + idx_offset_B, \
+        (Dtype) 0.0,\
+        C->mutable_gpu_data() + idx_offset_C);
+#endif
+
+    caffe_cpu_gemv(TransA, m, n, \
+        (Dtype) 1.0, \
+        A->cpu_data() + idx_offset_A, \
+        B->cpu_data() + idx_offset_B, \
+        (Dtype) 0.0, \
+        C_->mutable_cpu_data() + idx_offset_C);
+
+
+    //SNAPSHOT2D("A", A->cpu_data() + idx_offset_A, m, n);
+    //SNAPSHOT("B", B->cpu_data() + idx_offset_B, BLength);
+    //SNAPSHOT("C(CPU)", C_->cpu_data() + idx_offset_C, CLength);
+    //SNAPSHOT("C(GPU)", C->cpu_data() + idx_offset_C, CLength);
+
+    for (int i = 0; i < scale*CLength; ++i) {
+      EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
+    }
+    //DIFFSHOT("delta", C->cpu_data() + idx_offset_C, C_->cpu_data() + idx_offset_C, CLength);
+
+    A->Reshape(1, 1, scale*m, scale*n);
+
+    if( TransA == CblasNoTrans ) {
+      BLength = n;
+      CLength = m;
+    } else {
+      BLength = m;
+      CLength = n;
+    }
+    B->Reshape(1, 1, 1, scale*BLength);
+    C->Reshape(1, 1, 1, scale*CLength);
+    C_->Reshape(1, 1, 1, scale*CLength);
+
+    filler.Fill(this->A);
+    filler.Fill(this->B);
+
+    for ( int i=0; i<scale*m*scale*n; i++ ) {
+      if ( i < idx_offset_A ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_A + m*n ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*BLength; i++ ) {
+      if ( i < idx_offset_B ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_B + BLength ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*CLength; i++ ) {
+      C->mutable_cpu_data()[i]  = 0.0;
+      C_->mutable_cpu_data()[i] = 0.0;
+    }
+
+    for(int i = 0; i < scale*BLength; i++) {
+      if( i < idx_offset_B ) {
+        B->mutable_cpu_data()[i]  = 0.0;
+      }
+      if( i > idx_offset_B + BLength ) {
+        B->mutable_cpu_data()[i]  = 0.0;
+      }
+
+    }
+
+#if defined(USE_OPENCL)
+    caffe_gpu_gemv(TransA, m, n,
+        (Dtype) 1.0, \
+        A->gpu_data() + idx_offset_A, \
+        B->gpu_data() + idx_offset_B, \
+        (Dtype) 0.0,\
+        C->mutable_gpu_data() + idx_offset_C);
+#endif
+#if defined(USE_CUDA)
+    caffe_gpu_gemv(TransA, m, n,
+        (Dtype) 1.0, \
+        A->gpu_data() + idx_offset_A, \
+        B->gpu_data() + idx_offset_B, \
+        (Dtype) 0.0,\
+        C->mutable_gpu_data() + idx_offset_C);
+#endif
+
+    caffe_cpu_gemv(TransA, m, n, \
+        (Dtype) 1.0, \
+        A->cpu_data() + idx_offset_A, \
+        B->cpu_data() + idx_offset_B, \
+        (Dtype) 0.0, \
+        C_->mutable_cpu_data() + idx_offset_C);
+
+
+    //SNAPSHOT2D("A", A->cpu_data() + idx_offset_A, m, n);
+    //SNAPSHOT("B", B->cpu_data() + idx_offset_B, BLength);
+    //SNAPSHOT("C(CPU)", C_->cpu_data(), CLength);
+    //SNAPSHOT("C(GPU)", C->cpu_data(), CLength);
+
+    for (int i = 0; i < scale*CLength; ++i) {
+      EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
+    }
+    //DIFFSHOT("delta", (Dtype*) C->cpu_data() + idx_offset_C, (Dtype*) C_->cpu_data() + idx_offset_C, CLength);
+
+  #endif
+
+  }
+
 
   Blob<Dtype>* A;
   Blob<Dtype>* B;
@@ -163,18 +525,22 @@ protected:
   Blob<Dtype>* C_;
 };
 
+
 TYPED_TEST_CASE(BLASTest, TestDtypesAndDevices);
 
-TYPED_TEST(BLASTest, BLASTestPerformance) {
+TYPED_TEST(BLASTest, BLASTestPerformanceGEMM) {
 
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=2048; i*=2 ) {
-		this->BLASTestPerformance(i,i,i);
-	}
+  for ( int i = 0; i < 10; i++ ) {
+    for(int size=16; size<=1024; size*=2 ) {
+      this->BLASTestPerformanceGEMM(CblasNoTrans, CblasNoTrans, size,size,size);
+      this->BLASTestPerformanceGEMM(CblasTrans, CblasNoTrans, size,size,size);
+    }
+  }
 }
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
 
-TYPED_TEST(BLASTest, BLASTestValidation) {
+TYPED_TEST(BLASTest, BLASTestValidationGEMM) {
 
   srand (time(NULL));
   int min = 1;
@@ -184,25 +550,107 @@ TYPED_TEST(BLASTest, BLASTestValidation) {
   int n;
   int k;
 
-  for ( int i = 0; i < 100; i++ ) {
+  for ( int i = 0; i < 10; i++ ) {
     m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
-    LOG(ERROR)<<m<<" x "<<n<<" x "<<k;
-    this->BLASTestValidation(m,n,k);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,0,0,0, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,0,0,0, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,0,0,0, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,0,0,0, 1.0, 1.0);
   }
 
-  /*
-  this->BLASTestValidation(1,1,1);
-  this->BLASTestValidation(8,8,8);
-  this->BLASTestValidation(16,16,16);
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = 1;
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,0,0,0, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,0,0,0, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,0,0,0, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,0,0,0, 1.0, 1.0);
+  }
+}
 
-  this->BLASTestValidation(32,32,32);
-  this->BLASTestValidation(64,64,64);
-  this->BLASTestValidation(16,16,17);
-  this->BLASTestValidation(17,16,16);
-  this->BLASTestValidation(16,17,16);
-  */
+TYPED_TEST(BLASTest, BLASTestValidationGEMMOffset) {
+
+  srand (time(NULL));
+  int min = 1;
+  int max = 128;
+
+  int m;
+  int n;
+  int k;
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
+  }
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = 1;
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
+  }
+
+}
+
+TYPED_TEST(BLASTest, BLASTestValidationGEMV) {
+
+  srand (time(NULL));
+  int min = 1;
+  int max = 128;
+
+  int m;
+  int n;
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidationGEMV(CblasNoTrans, m, n, 0, 0, 0);
+    this->BLASTestValidationGEMV(CblasTrans, m, n, 0, 0, 0);
+  }
+}
+
+TYPED_TEST(BLASTest, BLASTestValidationGEMVOffset) {
+
+  srand (time(NULL));
+  int min = 1;
+  int max = 128;
+
+  int m;
+  int n;
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidationGEMV(CblasNoTrans, m, n, m, n/2, m/2);
+    this->BLASTestValidationGEMV(CblasTrans, m, n, m, n/2, m/2);
+  }
 }
 
 #endif

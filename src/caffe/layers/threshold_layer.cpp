@@ -6,6 +6,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/threshold_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -34,9 +35,9 @@ namespace OpenCL {
 
 template<typename T>
 bool clThresholdForward(const int n, const T threshold, const T* in, T* out) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("ThresholdForward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -65,7 +66,7 @@ bool clThresholdForward(const int n, const T threshold, const T* in, T* out) {
               << current_device.name() << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 

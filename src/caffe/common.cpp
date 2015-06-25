@@ -8,9 +8,6 @@
 
 namespace caffe {
 
-//bool caffe::Caffe::GPU_USE_CUDA 	= false;
-//bool caffe::Caffe::GPU_USE_OPENCL = false;
-
 shared_ptr<Caffe> Caffe::singleton_;
 
 void Caffe::DeviceSync() {
@@ -18,7 +15,7 @@ void Caffe::DeviceSync() {
   cudaDeviceSynchronize();
 #endif
 #ifdef USE_OPENCL
-  OpenCLManager::CurrentPlatform().DeviceSynchronize();
+  OpenCLManager::CurrentPlatform()->DeviceSynchronize();
 #endif
 }
 
@@ -115,9 +112,6 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
-	GPU_USE_CUDA   = true;
-	GPU_USE_OPENCL = false;
-
 }
 
 Caffe::~Caffe() {
@@ -291,8 +285,6 @@ const char* curandGetErrorString(curandStatus_t error) {
 
 Caffe::Caffe() : random_generator_(), mode_(Caffe::CPU) {
   caffe::OpenCLManager::Init();
-//	GPU_USE_CUDA   = false;
-//	GPU_USE_OPENCL = true;
 }
 
 Caffe::~Caffe() {
@@ -308,7 +300,7 @@ void Caffe::SetDevice(const int device_id) {
 }
 
 void Caffe::DeviceQuery() {
-  OpenCLManager::CurrentPlatform().CurrentDevice().print();
+  OpenCLManager::CurrentPlatform()->CurrentDevice().print();
 }
 
 class Caffe::RNG::Generator {

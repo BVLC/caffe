@@ -1,5 +1,6 @@
 #ifdef USE_OPENCL
 
+#include <memory>
 #include <glog/logging.h>
 #include <CL/cl.h>
 #include <caffe/util/OpenCL/OpenCLManager.hpp>
@@ -30,16 +31,17 @@ bool OpenCLManager::Init() {
   // TODO: mechanism for choosing the correct platform.
   instance_.current_platform_index_ = 0;
 
-  OpenCLPlatform& pf = CurrentPlatform();
-  pf.print();
+  std::tr1::shared_ptr<OpenCLPlatform> pf = CurrentPlatform();
+  pf->print();
 
-  if (!pf.createContext()) {
-    LOG(FATAL) << "failed to create OpenCL context for platform " << pf.name();
+  if (!pf->createContext()) {
+    LOG(FATAL) << "failed to create OpenCL context for platform " << pf->name();
     return false;
   }
 
   std::vector<std::string> cl_files;
   cl_files.push_back("src/caffe/util/OpenCL/math_functions.cl");
+  cl_files.push_back("src/caffe/util/OpenCL/gemm.cl");
   cl_files.push_back("src/caffe/util/OpenCL/im2col.cl");
   cl_files.push_back("src/caffe/layers/OpenCL/pooling_layer.cl");
   cl_files.push_back("src/caffe/layers/OpenCL/relu_layer.cl");
@@ -59,18 +61,18 @@ bool OpenCLManager::Init() {
   std::vector<std::string>::iterator it;
 
   for ( it = cl_files.begin(); it != cl_files.end(); it++ ) {
-    if ( !pf.compile(*it) ) {
-      LOG(FATAL) << "failed to create to create OpenCL program for platform " << pf.name();
+    if ( !pf->compile(*it) ) {
+      LOG(FATAL) << "failed to create to create OpenCL program for platform " << pf->name();
       return false;
     }
   }
 
-  if ( pf.getNumGPUDevices() < 1 ) {
-    LOG(FATAL) << "No GPU devices available at platform " << pf.name();
+  if ( pf->getNumGPUDevices() < 1 ) {
+    LOG(FATAL) << "No GPU devices available at platform " << pf->name();
     return false;
   }
-  pf.SetCurrentDevice(CL_DEVICE_TYPE_GPU, instance_.device_id_);
-  OpenCLDevice& device = pf.CurrentDevice();
+  pf->SetCurrentDevice(CL_DEVICE_TYPE_GPU, instance_.device_id_);
+  OpenCLDevice& device = pf->CurrentDevice();
   if (!device.createQueue()) {
     LOG(FATAL) << "failed to create OpenCL command queue for device "
                << device.name();
@@ -99,12 +101,13 @@ bool OpenCLManager::Query() {
   }
 
   for(ClPlatformsIter it = cl_platforms.begin(); it != cl_platforms.end(); ++it) {
-    OpenCLPlatform plat(*it);
-    if (!plat.Query()) {
+
+    std::tr1::shared_ptr<OpenCLPlatform> pp = std::tr1::shared_ptr<OpenCLPlatform>(new OpenCLPlatform(*it));
+    if (!pp->Query()) {
       LOG(ERROR) << "failed to query platform.";
       return false;
     }
-    platforms_.push_back(plat);
+    platforms_.push_back(pp);
   }
   LOG(INFO) << "found " << platforms_.size() << " OpenCL platforms";
 
@@ -118,7 +121,7 @@ void OpenCLManager::Print() {
 	std::cout << "-- OpenCL Manager Information -----------------------------------" << std::endl;
   for (PlatformIter it = instance_.platforms_.begin();
        it != instance_.platforms_.end(); it++) {
-    it->print();
+    (*it)->print();
 	}
 }
 
@@ -126,15 +129,16 @@ int OpenCLManager::GetNumPlatforms() {
   return instance_.platforms_.size();
 }
 
-OpenCLPlatform* OpenCLManager::getPlatform(unsigned int idx) {
+std::tr1::shared_ptr<OpenCLPlatform> OpenCLManager::getPlatform(unsigned int idx) {
   if ( idx >= platforms_.size() ) {
 		LOG(ERROR) << "platform idx = " << idx << " out of range.";
-		return NULL;
+		std::tr1::shared_ptr<OpenCLPlatform> ptr;
+		return ptr;
 	}
-  return &platforms_[idx];
+  return platforms_[idx];
 }
 
-OpenCLPlatform& OpenCLManager::CurrentPlatform() {
+std::tr1::shared_ptr<OpenCLPlatform> OpenCLManager::CurrentPlatform() {
   if (instance_.current_platform_index_ < 0) {
     LOG(FATAL) << "No current platform.";
   }

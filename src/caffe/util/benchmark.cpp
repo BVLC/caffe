@@ -13,7 +13,7 @@ Timer::Timer()
 }
 
 Timer::~Timer() {
-  if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
+  if (Caffe::mode() == Caffe::GPU ) {
 #if defined(USE_CUDA)
     CUDA_CHECK(cudaEventDestroy(start_gpu_));
     CUDA_CHECK(cudaEventDestroy(stop_gpu_));
@@ -25,7 +25,7 @@ void Timer::Start() {
 
   if (!running()) {
 #ifdef USE_CUDA
-    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
+    if (Caffe::mode() == Caffe::GPU ) {
       CUDA_CHECK(cudaEventRecord(start_gpu_, 0));
     } else {
 #endif
@@ -41,7 +41,7 @@ void Timer::Start() {
 void Timer::Stop() {
   if (running()) {
 #if defined(USE_CUDA)
-    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA) {
+    if (Caffe::mode() == Caffe::GPU ) {
       CUDA_CHECK(cudaEventRecord(stop_gpu_, 0));
       CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
     } else {
@@ -64,7 +64,7 @@ float Timer::MicroSeconds() {
     Stop();
   }
 #ifdef USE_CUDA
-  if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
+  if (Caffe::mode() == Caffe::GPU ) {
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
     // Cuda only measure milliseconds
@@ -88,7 +88,7 @@ float Timer::MilliSeconds() {
   }
 
 #ifdef USE_CUDA
-  if ( Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA {
+  if ( Caffe::mode() == Caffe::GPU ) {
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
   } else {
@@ -106,7 +106,7 @@ float Timer::Seconds() {
 
 void Timer::Init() {
   if (!initted()) {
-    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA) {
+    if (Caffe::mode() == Caffe::GPU ) {
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventCreate(&start_gpu_));
       CUDA_CHECK(cudaEventCreate(&stop_gpu_));
@@ -180,7 +180,7 @@ bool Timer::log(std::string file, record result) {
 	}
 
 	if ( file_is_new ) {
-		ofs << "\"Device\",\"SDK\",\"CAFFE_OPENCL\",\"File\",\"Function\",\"DataType\",\"Images[#]\",\"Channels[#]\",\"Width\",\"Height\",\"Time[ms]\"" << std::endl;
+		ofs << "\"Device\",\"SDK\",\"NCQ\",\"CAFFE_OPENCL\",\"File\",\"Function\",\"DataType\",\"Images[#]\",\"Channels[#]\",\"Width\",\"Height\",\"Time[ms]\"" << std::endl;
 	}
 
 #ifdef CPU_ONLY
@@ -203,25 +203,27 @@ bool Timer::log(std::string file, record result) {
 #ifdef USE_OPENCL
 	if ( Caffe::mode() == Caffe::CPU ) {
 		result.device = "CPU";
-    if ( OpenCLManager::CurrentPlatform().getNumDevices(CL_DEVICE_TYPE_CPU) > 0 ) {
-      if ( OpenCLManager::CurrentPlatform().getDevice(CL_DEVICE_TYPE_CPU, 0) != NULL ) {
-        result.device = OpenCLManager::CurrentPlatform().getDevice(CL_DEVICE_TYPE_CPU, 0)->name();
+    if ( OpenCLManager::CurrentPlatform()->getNumDevices(CL_DEVICE_TYPE_CPU) > 0 ) {
+      if ( OpenCLManager::CurrentPlatform()->getDevice(CL_DEVICE_TYPE_CPU, 0) != NULL ) {
+        result.device = OpenCLManager::CurrentPlatform()->getDevice(CL_DEVICE_TYPE_CPU, 0)->name();
 			}
 		}
 		result.sdk	  = "C++";
 	}
 	if ( Caffe::mode() == Caffe::GPU ) {
-    result.device = OpenCLManager::CurrentPlatform().getDevice(CL_DEVICE_TYPE_GPU, 0)->name();
-    result.sdk = OpenCLManager::CurrentPlatform().version();
+    result.device = OpenCLManager::CurrentPlatform()->getDevice(CL_DEVICE_TYPE_GPU, 0)->name();
+    result.sdk = OpenCLManager::CurrentPlatform()->version();
 	}
 #endif
 
 	ofs << result.device <<",";
 	ofs << result.sdk <<",";
 #ifdef USE_OPENCL
-	ofs << CAFFE_OPENCL_VERSION <<",";
+  ofs << OPENCL_NUM_COMMAND_QUEUES <<",";
+  ofs << CAFFE_OPENCL_VERSION <<",";
 #else
-	ofs << "0.0" <<",";
+  ofs <<"1,";
+  ofs << "0.0" <<",";
 #endif
 	ofs << result.file <<",";
 	ofs << result.function <<",";

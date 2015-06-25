@@ -4,6 +4,11 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_OPENCL)
+#include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -257,9 +262,9 @@ bool clLRNFillScale(const int nthreads, const T* in,
                     const int width, const int size2,
                     const T alpha_over_size, const T k, T* scale) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("LRNFillScale");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -294,7 +299,7 @@ bool clLRNFillScale(const int nthreads, const T* in,
                << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name << "' executed on GPU "
              << current_device.name();
 
@@ -307,9 +312,9 @@ template bool clLRNFillScale<double>(const int nthreads, const double* in, const
 
 template<typename T>
 bool clLRNComputeOutput(const int nthreads, const T* in, const T* scale, const T negative_beta, T* out) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("LRNComputeOutput");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -338,7 +343,7 @@ bool clLRNComputeOutput(const int nthreads, const T* in, const T* scale, const T
                << current_device.name() << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              <<"' executed on GPU " << current_device.name();
 
@@ -351,9 +356,9 @@ template bool clLRNComputeOutput<double>(const int nthreads, const double* in, c
 
 template<typename T>
 bool clLRNComputeDiff(const int nthreads, const T* bottom_data, const T* top_data, const T* scale, const T* top_diff, const int num, const int channels, const int height, const int width, const int size2, const T negative_beta, const T cache_ratio, T* bottom_diff) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("LRNComputeDiff");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -390,7 +395,7 @@ bool clLRNComputeDiff(const int nthreads, const T* bottom_data, const T* top_dat
                << current_device.name()<<" : "<< caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name.c_str()
              << "' executed on GPU " << current_device.name();
 

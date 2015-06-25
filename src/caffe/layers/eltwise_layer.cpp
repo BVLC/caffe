@@ -8,6 +8,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/eltwise_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -162,11 +163,11 @@ namespace OpenCL {
 
 template<typename T>
 bool clMaxForward(const int nthreads, const T* bottom_data_a, const T* bottom_data_b, const int blob_idx, T* top_data, int* mask) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("MaxForward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -193,7 +194,7 @@ bool clMaxForward(const int nthreads, const T* bottom_data_a, const T* bottom_da
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -205,11 +206,11 @@ template bool clMaxForward<double>(const int nthreads, const double* bottom_data
 
 template<typename T>
 bool clMaxBackward(const int nthreads, const T* top_diff, const int blob_idx, const int* mask, T* bottom_diff) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("MaxBackward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -235,7 +236,7 @@ bool clMaxBackward(const int nthreads, const T* top_diff, const int blob_idx, co
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<< device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END

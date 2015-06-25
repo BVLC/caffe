@@ -12,6 +12,7 @@
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/pooling_layer.hpp>
 #include <caffe/util/benchmark.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -338,11 +339,11 @@ bool clMaxPoolBackward(
 		const int pad_h,
 		const int pad_w,
 		T* bottom_diff) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("MaxPoolBackward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -380,7 +381,7 @@ bool clMaxPoolBackward(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -407,11 +408,11 @@ bool clAvePoolBackward(
 		const int pad_h,
 		const int pad_w,
 		T* bottom_diff) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("AvePoolBackward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -447,7 +448,7 @@ bool clAvePoolBackward(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -473,11 +474,11 @@ bool clStoPoolBackward(
 		const int stride_h,
 		const int stride_w,
 		T* bottom_diff) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("StoPoolBackward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -512,7 +513,7 @@ bool clStoPoolBackward(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -542,11 +543,11 @@ bool clMaxPoolForward(
 		int* mask,
 		T* top_mask
 		) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string	kernel_name = clGetKernelName<T>("MaxPoolForward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -605,7 +606,7 @@ bool clMaxPoolForward(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -668,11 +669,11 @@ bool clAvePoolForward(
 		const int pad_h,
 		const int pad_w,
 		T* top_data) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("AvePoolForward");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -727,7 +728,7 @@ bool clAvePoolForward(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -753,11 +754,11 @@ bool clStoPoolForwardTrain(
 		const int stride_w,
 		T* rand_idx,
 		T* top_data) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("StoPoolForwardTrain");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -792,7 +793,7 @@ bool clStoPoolForwardTrain(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
@@ -817,11 +818,11 @@ bool clStoPoolForwardTest(
 		const int stride_h,
 		const int stride_w,
 		T* top_data) {
-  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("StoPoolForwardTest");
 
-  cl_command_queue* queue = device.getQueue();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -855,7 +856,7 @@ bool clStoPoolForwardTest(
     LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END

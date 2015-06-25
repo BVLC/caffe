@@ -211,8 +211,8 @@ TYPED_TEST(OpenCLSimpleTest, TestMemcpyOverlay) {
 
 TYPED_TEST(OpenCLSimpleTest, TestMemset) {
 
-	int		count	= 10;
-	size_t bytes 	= count*sizeof(TypeParam);
+	size_t bytes 	= 1024*1024*100;
+	int count     = bytes/sizeof(TypeParam);
 
 	TypeParam* cpuPtrA = (TypeParam*) malloc(bytes);
 	EXPECT_TRUE(cpuPtrA != NULL);
@@ -325,7 +325,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clBLASgemv) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_n[i] = rand() % (m*n);
 	}
-	//snap(cpuPtr_n, n);
+	//SNAPSHOT(cpuPtr_n, n);
 
 	TypeParam* gpuPtr_n	= (TypeParam*) mem_n.mutable_gpu_data();
 	EXPECT_TRUE(gpuPtr_n != NULL);
@@ -340,7 +340,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clBLASgemv) {
 	for(int i = 0; i < m; i++) {
 		cpuPtr_m[i] = rand() % (m*n);
 	}
-	//snap(cpuPtr_m, m);
+	//SNAPSHOT(cpuPtr_m, m);
 
 	TypeParam* gpuPtr_m	= (TypeParam*) mem_m.mutable_gpu_data();
 	EXPECT_TRUE(gpuPtr_m != NULL);
@@ -350,7 +350,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clBLASgemv) {
 
 	EXPECT_TRUE(caffe::OpenCL::clBLASgemv(clblasNoTrans, m, n, alpha, gpuPtr_mxn, gpuPtr_n, beta, gpuPtr_m));
 	mem_m.cpu_data();
-	//snap(cpuPtr_m, m);
+	//SNAPSHOT(cpuPtr_m, m);
 
 	TypeParam val = 0;
 	for(int i = 0; i < m; i++) {
@@ -363,7 +363,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clBLASgemv) {
 
 	EXPECT_TRUE(caffe::OpenCL::clBLASgemv(clblasTrans, m, n, alpha, gpuPtr_mxn, gpuPtr_m, beta, gpuPtr_n));
 	mem_n.cpu_data();
-	//snap(cpuPtr_n, n);
+	//SNAPSHOT(cpuPtr_n, n);
 
 	for(int j = 0; j < n; j++) {
 		val = 0;
@@ -389,7 +389,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clBLASdot) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_x[i] = rand() % (n);
 	}
-	//snap(cpuPtr_x, n);
+	//SNAPSHOT(cpuPtr_x, n);
 
 	TypeParam* gpuPtr_x	= (TypeParam*) mem_x.mutable_gpu_data();
 	EXPECT_TRUE(gpuPtr_x != NULL);
@@ -402,7 +402,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clBLASdot) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_y[i] = rand() % (n);
 	}
-	//snap(cpuPtr_y, n);
+	//SNAPSHOT(cpuPtr_y, n);
 
 	TypeParam* gpuPtr_y	= (TypeParam*) mem_y.mutable_gpu_data();
 	EXPECT_TRUE(gpuPtr_y != NULL);
@@ -433,7 +433,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clsub) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_x[i] = rand() % (n);
 	}
-	//snap(cpuPtr_x, n);
+	//SNAPSHOT(cpuPtr_x, n);
 
 	const TypeParam* gpuPtr_x	= (const TypeParam*) mem_x.gpu_data();
 	EXPECT_TRUE(gpuPtr_x != NULL);
@@ -446,7 +446,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clsub) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_y[i] = rand() % (n);
 	}
-	//snap(cpuPtr_y, n);
+	//SNAPSHOT(cpuPtr_y, n);
 
 	const TypeParam* gpuPtr_y	= (const TypeParam*) mem_y.gpu_data();
 	EXPECT_TRUE(gpuPtr_y != NULL);
@@ -459,7 +459,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clsub) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_z[i] = 0;
 	}
-	//snap(cpuPtr_y, n);
+	//SNAPSHOT(cpuPtr_y, n);
 
 	TypeParam* gpuPtr_z	= (TypeParam*) mem_z.mutable_gpu_data();
 	EXPECT_TRUE(gpuPtr_z != NULL);
@@ -488,7 +488,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clpowx) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_x[i] = rand() % (n);
 	}
-	//snap(cpuPtr_x, n);
+	//SNAPSHOT(cpuPtr_x, n);
 
 	const TypeParam* gpuPtr_x	= (const TypeParam*) mem_x.gpu_data();
 	EXPECT_TRUE(gpuPtr_x != NULL);
@@ -501,7 +501,7 @@ TYPED_TEST(OpenCLSimpleTest, Test_clpowx) {
 	for(int i = 0; i < n; i++) {
 		cpuPtr_y[i] = 0;
 	}
-	//snap(cpuPtr_y, n);
+	//SNAPSHOT(cpuPtr_y, n);
 
 	TypeParam* gpuPtr_y	= (TypeParam*) mem_y.mutable_gpu_data();
 	EXPECT_TRUE(gpuPtr_y != NULL);

@@ -14,8 +14,8 @@ class OpenCLMemory {
 public:
 	OpenCLMemory();
 	OpenCLMemory(size_t size);
-	//OpenCLMemory(const OpenCLMemory& mem);
 	~OpenCLMemory();
+  //OpenCLMemory(const OpenCLMemory&) = delete;
 
 	void free();
 	void* getVirtualPointer();
@@ -28,15 +28,20 @@ public:
 	bool includes(OpenCLMemory& clMem);
 	static bool isHighMem(const void* ptr);
 	size_t getSize();
+  bool hasEvent();
+  bool setEvent(cl_event event);
+  cl_event getEvent();
+	void resetEvent();
 
 	static void logStatistics() {
-		DLOG(INFO)<<"numCallsMalloc = "<<numCallsMalloc;
-		DLOG(INFO)<<"numCallsFree   = "<<numCallsFree;
+		DLOG(INFO)<<"OpenCL Memory Statistics [clMalloc|clFree] = ["<<numCallsMalloc<<"|"<<numCallsFree<<"]";
 	}
 
 protected:
 
 private:
+
+  OpenCLMemory(const OpenCLMemory&);
 
 	const void*		ptr_device_mem;	// the pointer to cl_mem object created by the OpenCL runtime - not a memory address
 	cl_mem 		ptr_device_mem_;
@@ -48,6 +53,7 @@ private:
 	static void*	ptr_offset;
 	static unsigned long int numCallsMalloc;
 	static unsigned long int numCallsFree;
+	cl_event  memoryEvent;
 };
 
 class OpenCLMemoryException: public std::exception {

@@ -109,8 +109,6 @@ class Caffe {
     return *singleton_;
   }
   enum Brew { CPU, GPU };
-//  static bool GPU_USE_CUDA;
-//  static bool GPU_USE_OPENCL;
 
   // Used for benchmarking.
   static void DeviceSync();

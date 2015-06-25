@@ -10,6 +10,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/softmax_loss_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -138,8 +139,8 @@ bool clSoftmaxLossForwardGPU(const int nthreads,
 
 	std::string kernel_name = clGetKernelName<T>("SoftmaxLossForwardGPU");
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
-  cl_command_queue* queue = current_device.getQueue();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -176,7 +177,7 @@ bool clSoftmaxLossForwardGPU(const int nthreads,
                << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name << "' executed on GPU "
              << current_device.name();
 
@@ -200,9 +201,9 @@ bool clSoftmaxLossBackwardGPU(const int nthreads, const T* top,
           const T* label, T* bottom_diff, const int num, const int dim,
           const int spatial_dim, const bool has_ignore_label_,
           const int ignore_label_, T* counts) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("SoftmaxLossBackwardGPU");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -238,7 +239,7 @@ bool clSoftmaxLossBackwardGPU(const int nthreads, const T* top,
               <<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name << "' executed on GPU "
              << current_device.name();
 

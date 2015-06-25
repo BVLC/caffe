@@ -17,7 +17,7 @@ using std::endl;
 #define TEST_NUM_IMAGES 1
 #define TEST_NUM_CHANNELS 3
 #define TEST_IMAGE_WIDTH_MIN 64
-#define TEST_IMAGE_WIDTH_MAX 1024
+#define TEST_IMAGE_WIDTH_MAX 64
 
 #ifdef CMAKE_BUILD
   #include "caffe_config.h"

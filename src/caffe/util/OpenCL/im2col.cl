@@ -83,7 +83,7 @@ template <class T> __kernel void clim2col_perf(const int n, global T* data_im, c
 template __attribute__((mangled_name(clim2col_perfFloat))) kernel void clim2col_perf(const int n, global float* data_im, const int bottom_step, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global float* data_col, const int top_step);
 template __attribute__((mangled_name(clim2col_perfDouble))) kernel void clim2col_perf(const int n, global double* data_im, const int bottom_step, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global double* data_col, const int top_step);
 
-template <class T> __kernel void clim2col_perf2(const int n, global T* data_im, const int data_im_step, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global T* data_col, const int data_col_step) {
+template <class T> __kernel void clim2col_perf2(const int n, global T* data_im, const long unsigned int data_im_step, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global T* data_col, const long unsigned int data_col_step) {
 
 	int idx = get_global_id(0);
 	if ( idx < n ) {
@@ -114,8 +114,8 @@ template <class T> __kernel void clim2col_perf2(const int n, global T* data_im, 
 		}
 	}
 }
-template __attribute__((mangled_name(clim2col_perf2Float))) kernel void clim2col_perf2(const int n, global float* data_im, const int data_im_step, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global float* data_col, const int data_col_step);
-template __attribute__((mangled_name(clim2col_perf2Double))) kernel void clim2col_perf2(const int n, global double* data_im, const int data_im_step, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global double* data_col, const int data_col_step);
+template __attribute__((mangled_name(clim2col_perf2Float))) kernel void clim2col_perf2(const int n, global float* data_im, const long unsigned int data_im_step, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global float* data_col, const long unsigned int data_col_step);
+template __attribute__((mangled_name(clim2col_perf2Double))) kernel void clim2col_perf2(const int n, global double* data_im, const long unsigned int data_im_step, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global double* data_col, const long unsigned int data_col_step);
 
 template <class T> __kernel void clcol2im(const int n, global T* data_col, const int height, const int width, const int channels, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global T* data_im) {
 

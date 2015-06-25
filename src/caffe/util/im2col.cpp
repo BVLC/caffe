@@ -4,6 +4,7 @@
 
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
+#include <caffe/util/OpenCL/definitions.hpp>
 
 namespace caffe {
 
@@ -40,8 +41,6 @@ namespace caffe {
       }
     }
   }
-
-// Explicit instantiation
   template void im2col_cpu<float>(
       const float* data_im,
       const int channels,
@@ -99,8 +98,6 @@ namespace caffe {
       }
     }
   }
-
-// Explicit instantiation
   template void col2im_cpu<float>(
       const float* data_col,
       const int channels,
@@ -147,8 +144,8 @@ namespace caffe {
 
       std::string kernel_name = clGetKernelName < T > ("clim2col");
 
-      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
-      cl_command_queue* queue = current_device.getQueue();
+      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
+      cl_command_queue* queue = current_device.getCurrentCommandQueue();
       if (!queue) {
         LOG(ERROR)<< current_device.name() << "> failed to get OpenCL command queue";
         return false;
@@ -184,7 +181,7 @@ namespace caffe {
                      current_device.name()<<" : "<<caffe::OpenCL::what(err);
         return false;
       }
-      //clFinish (*queue);
+
       DLOG(INFO)<< "kernel '"<<kernel_name.c_str() <<
                    "' executed on GPU "<< current_device.name();
 
@@ -224,7 +221,7 @@ namespace caffe {
     template<typename T> bool clim2col_gpu(
         const int n,
         const T* data_im,
-        const int data_im_step,
+        const size_t data_im_step,
         const int height,
         const int width,
         const int kernel_h,
@@ -236,12 +233,13 @@ namespace caffe {
         const int height_col,
         const int width_col,
         T* data_col,
-        const int data_col_step) {
+        const size_t data_col_step) {
 
       std::string kernel_name = clGetKernelName < T > ("clim2col_perf2");
 
-      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
-      cl_command_queue* queue = current_device.getQueue();
+      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
+
+      cl_command_queue* queue = current_device.getCurrentCommandQueue();
       if (!queue) {
         LOG(ERROR)<< current_device.name() << "> failed to get OpenCL command queue";
         return false;
@@ -255,7 +253,7 @@ namespace caffe {
       CL_SET_KERNEL_ARG
       CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
       CL_SET_ARRAY_KERNEL_ARG (&data_im, kernel)
-      CL_SET_TYPE_KERNEL_ARG(int, data_im_step, kernel)
+      CL_SET_TYPE_KERNEL_ARG(size_t, data_im_step, kernel)
       CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
       CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
       CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
@@ -267,7 +265,7 @@ namespace caffe {
       CL_SET_TYPE_KERNEL_ARG(int, height_col, kernel)
       CL_SET_TYPE_KERNEL_ARG(int, width_col, kernel)
       CL_SET_ARRAY_KERNEL_ARG(&data_col, kernel)
-      CL_SET_TYPE_KERNEL_ARG(int, data_col_step, kernel)
+      CL_SET_TYPE_KERNEL_ARG(size_t, data_col_step, kernel)
 
       size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
       size_t local = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
@@ -280,7 +278,7 @@ namespace caffe {
                   << caffe::OpenCL::what(err);
         return false;
       }
-      //clFinish (*queue);
+
       DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "
                  << current_device.name();
 
@@ -291,7 +289,7 @@ namespace caffe {
     template bool clim2col_gpu<float>(
         const int n,
         const float* data_im,
-        const int data_im_step,
+        const size_t data_im_step,
         const int height,
         const int width,
         const int kernel_h,
@@ -303,11 +301,11 @@ namespace caffe {
         const int height_col,
         const int width_col,
         float* data_col,
-        const int data_col_step);
+        const size_t data_col_step);
     template bool clim2col_gpu<double>(
         const int n,
         const double* data_im,
-        const int data_im_step,
+        const size_t data_im_step,
         const int height,
         const int width,
         const int kernel_h,
@@ -319,7 +317,7 @@ namespace caffe {
         const int height_col,
         const int width_col,
         double* data_col,
-        const int data_col_step);
+        const size_t data_col_step);
 
     template<typename T> bool clim2col_gpu(
         const int num_kernels,
@@ -340,10 +338,10 @@ namespace caffe {
         T* data_col,
         const int top_step) {
 
-      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
       std::string kernel_name = clGetKernelName < T > ("clim2col_perf");
 
-      cl_command_queue* queue = current_device.getQueue();
+      cl_command_queue* queue = current_device.getCurrentCommandQueue();
       if (!queue) {
         LOG(ERROR)<< current_device.name() << "> failed to get OpenCL command queue";
         return false;
@@ -405,7 +403,7 @@ namespace caffe {
                   << " : " << caffe::OpenCL::what(err);
         return false;
       }
-      //clFinish (*queue);
+
       DLOG(INFO) << "kernel '" << kernel_name
                 << "' executed on GPU " << current_device.name();
 
@@ -466,10 +464,10 @@ namespace caffe {
         const int width_col,
         T* data_im) {
 
-      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
       std::string kernel_name = clGetKernelName < T > ("clcol2im");
 
-      cl_command_queue* queue = current_device.getQueue();
+      cl_command_queue* queue = current_device.getCurrentCommandQueue();
       if (!queue) {
         LOG(ERROR)<< current_device.name() << "> failed to get OpenCL command queue";
         return false;
@@ -507,7 +505,7 @@ namespace caffe {
                  <<" : "<<caffe::OpenCL::what(err);
         return false;
       }
-      //clFinish (*queue);
+
       DLOG(INFO)<< "kernel '"<<kernel_name.c_str()
                 <<"' executed on GPU " << current_device.name();
 
@@ -565,10 +563,10 @@ namespace caffe {
         T* data_im,
         const int data_im_step) {
 
-      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
       std::string kernel_name = clGetKernelName < T > ("clcol2im_perf2");
 
-      cl_command_queue* queue = current_device.getQueue();
+      cl_command_queue* queue = current_device.getCurrentCommandQueue();
       if (!queue) {
         LOG(ERROR)<< current_device.name() << "> failed to get OpenCL command queue";
         return false;
@@ -607,7 +605,7 @@ namespace caffe {
                  << current_device.name()<<" : "<<caffe::OpenCL::what(err);
         return false;
       }
-      //clFinish (*queue);
+
       DLOG(INFO)<< "kernel '"<< kernel_name
                 <<"' executed on GPU " << current_device.name();
 
@@ -668,9 +666,9 @@ namespace caffe {
         const int width_col,
         T* data_im,
         const int bottom_step) {
-      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
       std::string kernel_name = clGetKernelName < T > ("clcol2im_perf");
-      cl_command_queue* queue = current_device.getQueue();
+      cl_command_queue* queue = current_device.getCurrentCommandQueue();
       if (!queue) {
         LOG(ERROR)<< current_device.name() << "> failed to get OpenCL command queue";
         return false;
@@ -710,7 +708,7 @@ namespace caffe {
                  << current_device.name()<<" : "<< caffe::OpenCL::what(err);
         return false;
       }
-      //clFinish (*queue);
+
       DLOG(INFO)<< "kernel '" << kernel_name.c_str()
                 << "' executed on GPU "<< current_device.name();
 
@@ -817,7 +815,7 @@ namespace caffe {
   template<typename Dtype>
   void im2col_gpu(
       const Dtype* data_im,
-      const int data_im_step,
+      const size_t data_im_step,
       const int channels,
       const int height,
       const int width,
@@ -828,22 +826,14 @@ namespace caffe {
       const int stride_h,
       const int stride_w,
       Dtype* data_col,
-      const int data_col_step) {
+      const size_t data_col_step) {
     // We are going to launch channels * height_col * width_col kernels, each
     // kernel responsible for copying a single-channel grid.
     int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
     int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
     int num_kernels = channels * height_col * width_col;
 
-    /*
-     // NOLINT_NEXT_LINE(whitespace/operators)
-     im2col_gpu_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels),
-     CAFFE_CUDA_NUM_THREADS>>>(
-     num_kernels, data_im, height, width, kernel_h, kernel_w, pad_h,
-     pad_w, stride_h, stride_w, height_col,
-     width_col, data_col);
-     CUDA_POST_KERNEL_CHECK;
-     */
+
     BOOL_CHECK(
         caffe::OpenCL::clim2col_gpu(num_kernels, data_im, data_im_step, height, width, kernel_h,
             kernel_w, pad_h, pad_w, stride_h, stride_w, height_col, width_col, data_col,
@@ -851,7 +841,7 @@ namespace caffe {
   }
   template void im2col_gpu<float>(
       const float* data_im,
-      const int data_im_step,
+      const size_t data_im_step,
       const int channels,
       const int height,
       const int width,
@@ -862,10 +852,10 @@ namespace caffe {
       const int stride_h,
       const int stride_w,
       float* data_col,
-      const int data_col_step);
+      const size_t data_col_step);
   template void im2col_gpu<double>(
       const double* data_im,
-      const int data_im_step,
+      const size_t data_im_step,
       const int channels,
       const int height,
       const int width,
@@ -876,7 +866,7 @@ namespace caffe {
       const int stride_h,
       const int stride_w,
       double* data_col,
-      const int data_col_step);
+      const size_t data_col_step);
 
   template<typename Dtype>
   void im2col_gpu(

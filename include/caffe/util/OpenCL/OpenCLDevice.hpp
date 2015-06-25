@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 #include <caffe/util/OpenCL/OpenCLMemory.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
+
 
 namespace caffe {
 
@@ -29,13 +31,30 @@ public:
 	bool compile(std::string source);
 	bool createQueue();
   cl_context getContext();
+
 	cl_command_queue* getQueue();
+
+	bool setInputQueueIDX(unsigned int);
+	cl_command_queue* getNextInputQueue();
+  cl_command_queue* getCurrentInputQueue();
+  void waitForInputQueues();
+
+  bool setCommandQueueIDX(unsigned int);
+  cl_command_queue* getNextCommandQueue();
+  cl_command_queue* getCurrentCommandQueue();
+  void waitForCommandQueues();
+
+  bool setOutputQueueIDX(unsigned int);
+  cl_command_queue* getNextOutputQueue();
+  cl_command_queue* getCurrentOutputQueue();
+  void waitForOutputQueues();
+
 	cl_kernel* getKernel(std::string name);
 	bool add(OpenCLMemory& clMem);
 	bool rmMemoryPtr(const void* ptr);
 	bool isValidPtr(const void* ptr);
 	std::string getMemoryTag(const void* ptr);
-	bool get(const void* ptr, OpenCLMemory& clMem);
+  bool get(const void* ptr, OpenCLMemory** clMem);
 	std::string getDeviceName();
 	cl_uint getDeviceMemBaseAddrAlign();
 	size_t getMemoryUsage();
@@ -68,9 +87,15 @@ private:
 	std::string deviceName;
   cl::Context context_;
 	std::vector<cl_program> programs;
-	cl_command_queue queue;
-  std::map<std::string, cl_kernel> kernel_map_;
+	cl_command_queue inputQueues[OPENCL_NUM_INPUT_QUEUES];
+  cl_command_queue commandQueues[OPENCL_NUM_COMMAND_QUEUES];
+	cl_command_queue outputQueues[OPENCL_NUM_OUTPUT_QUEUES];
+  unsigned int currentInputQueueIdx;
+  unsigned int currentCommandQueueIdx;
+  unsigned int currentOutputQueueIdx;
 
+
+  std::map<std::string, cl_kernel> kernel_map_;
 	std::map<const void*, caffe::OpenCLMemory> memory;
 };
 

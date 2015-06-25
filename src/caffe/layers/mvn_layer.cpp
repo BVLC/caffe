@@ -7,6 +7,7 @@
 
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #include <caffe/util/OpenCL/mvn_layer.hpp>
 #endif
 
@@ -172,9 +173,9 @@ namespace OpenCL {
 			T* top_data, const int top_data_height, const int top_data_width
 		    ) {
     OpenCLDevice& current_device =
-        OpenCLManager::CurrentPlatform().CurrentDevice();
+        OpenCLManager::CurrentPlatform()->CurrentDevice();
     std::string kernel_name = clGetKernelName<T>("MVNLayerForwardResidual");
-    cl_command_queue* queue = current_device.getQueue();
+    cl_command_queue* queue = current_device.getCurrentCommandQueue();
     if ( ! queue ) {
       LOG(ERROR) << current_device.name()
                  << "> failed to get OpenCL command queue";
@@ -219,7 +220,7 @@ namespace OpenCL {
                  <<" : "<<caffe::OpenCL::what(err);
       return false;
     }
-    //clFinish(*queue);
+
     DLOG(INFO) << "kernel '" << kernel_name.c_str()
                << "' executed on GPU " << current_device.name();
 
@@ -240,9 +241,9 @@ template<typename T> bool clMVNLayerForwardMV2(
 		T* quadratic_term
 	    ) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForwardMV2");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -274,7 +275,7 @@ template<typename T> bool clMVNLayerForwardMV2(
                << current_device.name() << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -293,9 +294,9 @@ template<typename T> bool clMVNLayerForward(
 		const T eps,
 		T* data2D_out
 	    ) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -332,7 +333,7 @@ template<typename T> bool clMVNLayerForward(
                << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              <<"' executed on GPU " << current_device.name();
 
@@ -361,9 +362,9 @@ template<typename T> bool clMVNLayerForwardS2(
 		T* data2D_out
 	    ) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForwardS2");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -396,7 +397,7 @@ template<typename T> bool clMVNLayerForwardS2(
                << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              <<"' executed on GPU " << current_device.name();
 
@@ -424,9 +425,9 @@ template<typename T> bool clMVNLayerBackward(
 		const T eps,
     T* data2D_out ) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerBackward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -461,7 +462,7 @@ template<typename T> bool clMVNLayerBackward(
                << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "
              << current_device.name();
 
@@ -492,9 +493,9 @@ template<typename T> bool clMVNLayerBackwardMV2(
 		T* linear_term,
 		T* quadratic_term
 	    ) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
   std::string kernel_name = clGetKernelName<T>("MVNLayerBackwardMV2");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -527,7 +528,7 @@ template<typename T> bool clMVNLayerBackwardMV2(
                << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -552,9 +553,9 @@ template<typename T> bool clMVNLayerBackwardS1(
 		const T* quadratic_term, const int quadratic_term_length,
 		T* data2D_out
 	    ) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerBackwardS1");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -592,7 +593,7 @@ template<typename T> bool clMVNLayerBackwardS1(
                <<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              <<"' executed on GPU " << current_device.name();
 
@@ -625,9 +626,9 @@ template<typename T> bool clMVNLayerForward_perf(
     const int sum_multiplier_length, const T eps, T* data2D_out
 	    ) {
   OpenCLDevice& current_device =
-      OpenCLManager::CurrentPlatform().CurrentDevice();
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForward_perf");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -668,7 +669,7 @@ template<typename T> bool clMVNLayerForward_perf(
                << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -698,8 +699,8 @@ template<typename T> bool clMVNLayerBackward_perf(
     const T* A1D_sum_multiplier, const T* A1D_buffer,
     const int sum_multiplier_length, const T eps, T* data2D_out ) {
 	std::string kernel_name = clGetKernelName<T>("MVNLayerBackward_perf");
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
-  cl_command_queue* queue = current_device.getQueue();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -739,7 +740,7 @@ template<typename T> bool clMVNLayerBackward_perf(
                << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -799,18 +800,18 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vect
 		// 1D array [num_pixels]
 		// this step computes the square of all pixel values in bottom layer
 		caffe_gpu_powx(num_pixels, bottom_data, Dtype(2), temp_.mutable_gpu_data());
-	  //snap2D("bottom", bottom[0]->cpu_data(),num_ppp, num_parts);
-	  //snap2D("squared", temp_.cpu_data(),num_ppp, num_parts);
+	  //SNAPSHOT2D("bottom", bottom[0]->cpu_data(),num_ppp, num_parts);
+	  //SNAPSHOT2D("squared", temp_.cpu_data(),num_ppp, num_parts);
 
 		// 2D array [num_parts x num_ppp]
 		// this step computes the dot product between each part of bottom layer and sum_multiplier and normalizes by number of pixels per part
 		caffe_gpu_gemv<Dtype>(CblasNoTrans, num_parts, num_ppp, 1. / num_ppp, bottom_data, sum_multiplier_.gpu_data(), 0., mean_.mutable_gpu_data());
-	  //snap2D("mean", mean_.cpu_data(),1, num_parts);
+	  //SNAPSHOT2D("mean", mean_.cpu_data(),1, num_parts);
 
 		// 2D array [num_parts x num_ppp]
 		// this step computes the dot product between each part of bottom layer (squared) and sum_multiplier and normalizes by number of pixels per part
 		caffe_gpu_gemv<Dtype>(CblasNoTrans, num_parts, num_ppp, 1. / num_ppp, temp_.gpu_data(), sum_multiplier_.gpu_data(), 0., variance_.mutable_gpu_data());  // E(X^2)
-	  //snap2D("variance", variance_.cpu_data(),1, num_parts);
+	  //SNAPSHOT2D("variance", variance_.cpu_data(),1, num_parts);
 
 		/*
 		// 1D array [num_parts]

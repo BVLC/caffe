@@ -26,16 +26,17 @@ OpenCLMemory::OpenCLMemory() {
 	this->ptr_virtual_end 	= NULL;
 	this->size 							= 0;
 	this->tag								= "";
+	this->memoryEvent       = NULL;
 }
 
 OpenCLMemory::OpenCLMemory(size_t size) {
 
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
-  cl_context context = current_device.getContext();
+  OpenCLDevice& current_device  = OpenCLManager::CurrentPlatform()->CurrentDevice();
+  cl_context context            = current_device.getContext();
+
   if ( ! context ) {
 		std::ostringstream oss;
     oss << current_device.name() << "> failed to get OpenCL context.";
-    //throw OpenCLMemoryException(oss.str());
     LOG(FATAL) << oss;
 	}
 
@@ -47,7 +48,6 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 		std::ostringstream oss;
     oss << current_device.name() << "> failed to create CL_MEM_READ_WRITE buffer of "<<allocSizeMB<<" MByte";
     LOG(FATAL)<<oss.str();
-    //throw OpenCLMemoryException(oss.str());
 	}
   size_t bytesUsed = current_device.getMemoryUsage();
 	double deviceMemUsedMB = bytesUsed;
@@ -59,34 +59,30 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	this->ptr_virtual_bgn		= ptr_offset;
 	this->ptr_virtual_end		= static_cast<void*>((char*) ptr_offset + size -1 );
 	this->ptr_offset				= static_cast<void*>((char*) ptr_offset + size);
+	this->memoryEvent       = NULL;
 
 	std::ostringstream oss;
 	oss << "GPU@" << this->ptr_device_mem << "("<<this->size<<") MEM"<< this->count;
 	this->tag = oss.str();
 
   DLOG(INFO) << current_device.name() << "> create CL_MEM_READ_WRITE buffer of "<<allocSizeMB<<" MByte at "<<getTag().c_str()<<" total mem utilization = "<<deviceMemUsedMB<<" MByte";
-  DLOG(INFO) << "cl_mem = "<<this->ptr_device_mem_;
 	DLOG(INFO) << "new memory "<<this->tag.c_str();
 	this->count++;
 	numCallsMalloc++;
 	logStatistics();
 }
 
-/*
-OpenCLMemory::OpenCLMemory(const OpenCLMemory& mem) {
-
-	this->ptr_device_mem 	= mem.ptr_device_mem;
-	this->ptr_virtual_bgn 	= mem.ptr_virtual_bgn;
-	this->ptr_virtual_end 	= mem.ptr_virtual_end;
-	this->size 				= mem.size;
-	this->tag				= mem.tag;
-}
-*/
-
 void OpenCLMemory::free() {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
+  cl_int err;
+
 	if ( this->ptr_device_mem_ != NULL ) {
-		cl_int err = clReleaseMemObject(this->ptr_device_mem_);
+	  if ( this->hasEvent() ) {
+	    CL_CHECK( clWaitForEvents(1, &this->memoryEvent) );
+	    this->resetEvent();
+	  }
+		err = clReleaseMemObject(this->ptr_device_mem_);
 		if ( err != CL_SUCCESS ) {
 				std::ostringstream oss;
         oss << current_device.name() << "> failed to call clReleaseMemObject("<<this->ptr_device_mem<<").";
@@ -150,7 +146,6 @@ bool OpenCLMemory::contains(const void* ptr) {
 	if ( ptr > this->ptr_virtual_end ) {
 		return false;
 	}
-	//DLOG(INFO)<<ptr_virtual_bgn<<" < "<<ptr<<" < "<<ptr_virtual_end;
 
 	return true;
 }
@@ -194,6 +189,33 @@ bool OpenCLMemory::includes(OpenCLMemory& clMem) {
 size_t OpenCLMemory::getSize() {
 
 	return this->size;
+}
+
+bool OpenCLMemory::hasEvent() {
+  if ( this->memoryEvent != NULL ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool OpenCLMemory::setEvent(cl_event event) {
+  DLOG(INFO)<<"setting event for "<<this->getTag()<<" event = "<<event;
+  this->memoryEvent = event;
+  return true;
+}
+
+cl_event OpenCLMemory::getEvent() {
+  if ( this->memoryEvent != NULL ) {
+    DLOG(INFO)<<"get event for "<<this->getTag()<<" event = "<<this->memoryEvent;
+    return this->memoryEvent;
+  } else {
+    return NULL;
+  }
+}
+
+void OpenCLMemory::resetEvent() {
+  this->memoryEvent = NULL;
 }
 
 } // namespace caffe

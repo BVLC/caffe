@@ -8,6 +8,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/prelu_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -142,9 +143,9 @@ template<typename T>
 bool clPReLUForward(const int n, const int channels, const int dim,
     const T* in, T* out, const T* slope_data,
     const int div_factor) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("PReLUForward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -176,7 +177,7 @@ bool clPReLUForward(const int n, const int channels, const int dim,
                << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name.c_str()
              << "' executed on GPU " << current_device.name();
 
@@ -195,9 +196,9 @@ template<typename T>
 bool clPReLUBackward(const int n, const int channels, const int dim,
     const T* in_diff, const T* in_data, T* out_diff,
     const T* slope_data, const int div_factor) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("PReLUBackward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -229,7 +230,7 @@ bool clPReLUBackward(const int n, const int channels, const int dim,
                << current_device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              << "' executed on GPU " << current_device.name();
 
@@ -247,9 +248,9 @@ template bool clPReLUBackward<double>(const int n, const int channels, const int
 template<typename T>
 bool clPReLUParamBackward(const int n, const T* in_diff,
     const T* in_data, T* out_diff) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("PReLUParamBackward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -277,7 +278,7 @@ bool clPReLUParamBackward(const int n, const T* in_diff,
                << current_device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name.c_str()
              << "' executed on GPU " << current_device.name();
 

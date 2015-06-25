@@ -7,6 +7,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/bnll_layer.hpp>
+#include <caffe/util/OpenCL/definitions.hpp>
 #endif
 
 namespace caffe {
@@ -49,9 +50,9 @@ namespace OpenCL {
 
 template<typename T>
 bool clBNLLLayerForward(const int count, const T* bottom_data, T* top_data) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("BNLLForward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
 	if ( ! queue ) {
     LOG(ERROR) << current_device.name()
                << "> failed to get OpenCL command queue";
@@ -78,7 +79,7 @@ bool clBNLLLayerForward(const int count, const T* bottom_data, T* top_data) {
                << current_device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '"<<kernel_name.c_str()
              << "' executed on GPU " << current_device.name();
 
@@ -91,9 +92,9 @@ template bool clBNLLLayerForward<double>(const int count, const double* bottom_d
 
 template<typename T>
 bool clBNLLLayerBackward(const int count, const T* top_diff, const T* bottom_data, T* bottom_diff) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("BNLLBackward");
-  cl_command_queue* queue = current_device.getQueue();
+  cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
     LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -122,7 +123,7 @@ bool clBNLLLayerBackward(const int count, const T* top_diff, const T* bottom_dat
                << caffe::OpenCL::what(err);
 		return false;
 	}
-	//clFinish(*queue);
+
   DLOG(INFO) << "kernel '" << kernel_name
              <<"' executed on GPU " << current_device.name();
 

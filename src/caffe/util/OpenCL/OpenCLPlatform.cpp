@@ -24,6 +24,7 @@ OpenCLPlatform::OpenCLPlatform():
 	devicePtr	 		= NULL;
 }
 
+/*
 OpenCLPlatform::OpenCLPlatform(const OpenCLPlatform& pf):
   platform_(pf.platform_),
   name_(pf.name_),
@@ -42,6 +43,7 @@ OpenCLPlatform::OpenCLPlatform(const OpenCLPlatform& pf):
   context_				= pf.context_;
 //	programs			= pf.programs;
 }
+*/
 
 OpenCLPlatform::OpenCLPlatform(cl::Platform platform) : platform_(platform), current_device_index_(-1) {
 	numCPUDevices 		= 0;

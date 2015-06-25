@@ -1,6 +1,7 @@
 #ifdef USE_OPENCL
 
 #include <CL/cl.h>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string.h>
@@ -36,7 +37,21 @@ OpenCLDevice::OpenCLDevice() {
 	deviceLocalMemSize 			= 0;
 	deviceHostUnifiedMem 		= 0;
 	deviceMemBaseAddrAlign		= 0;
-	queue 						= NULL;
+
+	for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+	  inputQueues[i] = NULL;
+	}
+  currentInputQueueIdx  = 0;
+
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    commandQueues[i] = NULL;
+  }
+  currentCommandQueueIdx  = 0;
+
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    outputQueues[i] = NULL;
+  }
+  currentOutputQueueIdx   = 0;
 }
 
 OpenCLDevice::OpenCLDevice(cl_platform_id pid, cl_device_id did) {
@@ -59,7 +74,21 @@ OpenCLDevice::OpenCLDevice(cl_platform_id pid, cl_device_id did) {
 	deviceLocalMemSize = 0;
 	deviceHostUnifiedMem = 0;
 	deviceMemBaseAddrAlign		= 0;
-	queue = NULL;
+
+  for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+    inputQueues[i] = NULL;
+  }
+  currentInputQueueIdx  = 0;
+
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    commandQueues[i] = NULL;
+  }
+  currentCommandQueueIdx  = 0;
+
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    outputQueues[i] = NULL;
+  }
+  currentOutputQueueIdx   = 0;
 }
 
 OpenCLDevice::OpenCLDevice(const OpenCLDevice& dev) {
@@ -86,23 +115,51 @@ OpenCLDevice::OpenCLDevice(const OpenCLDevice& dev) {
 	deviceName = dev.deviceName;
   context_ = dev.context_;
 	programs	= dev.programs;
-	queue = dev.queue;
+
+  for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+    inputQueues[i] = dev.inputQueues[i];
+  }
+  currentInputQueueIdx  = dev.currentInputQueueIdx;
+
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    commandQueues[i] = dev.commandQueues[i];
+  }
+  currentCommandQueueIdx  = dev.currentCommandQueueIdx;
+
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    outputQueues[i] = dev.commandQueues[i];
+  }
+  currentOutputQueueIdx   = dev.currentOutputQueueIdx;
 }
 
 OpenCLDevice::~OpenCLDevice() {
-	if (queue != NULL) {
-		clReleaseCommandQueue(queue);
-		LOG(INFO)<< "release OpenCL command queue on device " << name();
-	}
-//	if ( context != NULL ) {
-//		clReleaseContext(context);
-//		LOG(INFO) << "release OpenCL context on device " << name();
-//	}
+
+  for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+    if (inputQueues[i] != NULL) {
+      clReleaseCommandQueue(inputQueues[i]);
+      LOG(INFO)<< "release OpenCL input queue["<<i<<"] on device " << name();
+    }
+  }
+
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    if (commandQueues[i] != NULL) {
+      clReleaseCommandQueue(commandQueues[i]);
+      LOG(INFO)<< "release OpenCL command queue["<<i<<"] on device " << name();
+    }
+  }
+
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    if (outputQueues[i] != NULL) {
+      clReleaseCommandQueue(outputQueues[i]);
+      LOG(INFO)<< "release OpenCL output queue["<<i<<"] on device " << name();
+    }
+  }
+
 	std::vector<cl_program>::iterator it;
 	for ( it = programs.begin(); it != programs.end(); it++ ) {
 		if ( *it != NULL ) {
 			clReleaseProgram(*it);
-			LOG(INFO) << "release OpenCL program on platform " << name();
+			DLOG(INFO) << "release OpenCL program on platform " << name();
 		}
 	}
 }
@@ -287,7 +344,7 @@ bool OpenCLDevice::compile(std::string cl_source) {
 	DLOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for device "<<this->name();
 
 	//-x clc++ -O5
-	std::string clIncludes = "-cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math -cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -I ../../CL/include/";
+	std::string clIncludes = "-cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math -cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -I ../../CL/include/ -I include/caffe/util/OpenCL/";
 	err = clBuildProgram(program, 1, &deviceID, clIncludes.c_str(), NULL, NULL);
 	if ( err != CL_SUCCESS ) {
 		LOG(ERROR) << "failed to build OpenCL program from file '" << cl_standard.c_str() << "' : error = " << err;
@@ -349,13 +406,34 @@ bool OpenCLDevice::createQueue() {
 		return false;
 	}
 
-	cl_int err;
-  queue = clCreateCommandQueue(context_(), deviceID, 0, &err);
-	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "failed to create OpenCL command queue for device " << this->name();
-		return false;
+  cl_int err;
+	for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+	  inputQueues[i] = clCreateCommandQueue(context_(), deviceID, 0, &err);
+	  if ( err != CL_SUCCESS ) {
+	    LOG(ERROR) << "failed to create OpenCL input queue["<<i<<"] for device " << this->name();
+	    return false;
+	  }
+	  LOG(INFO) << "create OpenCL input queue["<<i<<"] for device " << this->name() << " @ queues = "<<inputQueues[i]<<" and deviceID = "<<deviceID;
 	}
-	LOG(INFO) << "create OpenCL command queue for device " << this->name() << " @ queue = "<<queue<<" and deviceID = "<<deviceID;
+
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    commandQueues[i] = clCreateCommandQueue(context_(), deviceID, 0, &err);
+    if ( err != CL_SUCCESS ) {
+      LOG(ERROR) << "failed to create OpenCL command queue["<<i<<"] for device " << this->name();
+      return false;
+    }
+    LOG(INFO) << "create OpenCL command queue["<<i<<"] for device " << this->name() << " @ queues = "<<commandQueues[i]<<" and deviceID = "<<deviceID;
+  }
+
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    outputQueues[i] = clCreateCommandQueue(context_(), deviceID, 0, &err);
+    if ( err != CL_SUCCESS ) {
+      LOG(ERROR) << "failed to create OpenCL output queue["<<i<<"] for device " << this->name();
+      return false;
+    }
+    LOG(INFO) << "create OpenCL output queue["<<i<<"] for device " << this->name() << " @ queues = "<<outputQueues[i]<<" and deviceID = "<<deviceID;
+  }
+
 	return true;
 }
 
@@ -365,7 +443,92 @@ cl_context OpenCLDevice::getContext() {
 }
 
 cl_command_queue* OpenCLDevice::getQueue() {
-	return &queue;
+  DLOG(INFO)<<"using OpenCL default command queue = 0";
+	return &commandQueues[0];
+}
+
+cl_command_queue* OpenCLDevice::getNextInputQueue() {
+
+  if ( currentInputQueueIdx < OPENCL_NUM_INPUT_QUEUES-1 ) {
+    currentInputQueueIdx++;
+  } else {
+    currentInputQueueIdx = 0;
+  }
+  DLOG(INFO)<<"next OpenCL input queue = "<<currentInputQueueIdx;
+  return &inputQueues[currentInputQueueIdx];
+}
+
+cl_command_queue* OpenCLDevice::getNextCommandQueue() {
+
+  if ( currentCommandQueueIdx < OPENCL_NUM_COMMAND_QUEUES-1 ) {
+    currentCommandQueueIdx++;
+  } else {
+    currentCommandQueueIdx = 0;
+  }
+  DLOG(INFO)<<"really next OpenCL command queue = "<<currentCommandQueueIdx;
+  return &commandQueues[currentCommandQueueIdx];
+}
+
+cl_command_queue* OpenCLDevice::getNextOutputQueue() {
+
+  if ( currentOutputQueueIdx < OPENCL_NUM_OUTPUT_QUEUES-1 ) {
+    currentOutputQueueIdx++;
+  } else {
+    currentOutputQueueIdx = 0;
+  }
+  DLOG(INFO)<<"next OpenCL output queue = "<<currentOutputQueueIdx;
+  return &outputQueues[currentOutputQueueIdx];
+}
+
+cl_command_queue* OpenCLDevice::getCurrentInputQueue() {
+
+  DLOG(INFO)<<"current input queue = "<<currentInputQueueIdx;
+  return &inputQueues[currentInputQueueIdx];
+}
+
+cl_command_queue* OpenCLDevice::getCurrentCommandQueue() {
+
+  DLOG(INFO)<<"current command queue = "<<currentCommandQueueIdx;
+  return &commandQueues[currentCommandQueueIdx];
+}
+
+cl_command_queue* OpenCLDevice::getCurrentOutputQueue() {
+
+  DLOG(INFO)<<"current output queue = "<<currentOutputQueueIdx;
+  return &outputQueues[currentOutputQueueIdx];
+}
+
+bool OpenCLDevice::setInputQueueIDX(unsigned int idx) {
+
+  if ( idx >= OPENCL_NUM_INPUT_QUEUES ) {
+    LOG(ERROR)<<"OpenCL input queue idx = "<<idx<<" out of range.";
+    return false;
+  }
+  currentInputQueueIdx = idx;
+  DLOG(INFO)<<"set OpenCL input queue idx = "<<idx;
+  return true;
+}
+
+bool OpenCLDevice::setCommandQueueIDX(unsigned int idx) {
+
+  if ( idx >= OPENCL_NUM_COMMAND_QUEUES ) {
+    LOG(ERROR)<<"OpenCL command queue idx = "<<idx<<" out of range.";
+    return false;
+  }
+  currentCommandQueueIdx = idx;
+  DLOG(INFO)<<"set OpenCL command queue idx = "<<idx;
+  return true;
+}
+
+bool OpenCLDevice::setOutputQueueIDX(unsigned int idx) {
+
+  if ( idx >= OPENCL_NUM_OUTPUT_QUEUES ) {
+    LOG(ERROR)<<"OpenCL output queue idx = "<<idx<<" out of range.";
+    return false;
+  }
+  currentOutputQueueIdx = idx;
+  DLOG(INFO)<<"set OpenCL output queue idx = "<<idx;
+  return true;
 }
 
 void OpenCLDevice::SetContext(cl::Context context) {
@@ -395,22 +558,11 @@ bool OpenCLDevice::add(OpenCLMemory& clMem) {
 	}
 
 	std::map<const void*, OpenCLMemory>::iterator it;
-	std::vector<OpenCLMemory> list;
-
 	for ( it = memory.begin(); it != memory.end(); it++ ) {
 		if ( (it->second).overlaps(clMem) ) {
-			LOG(ERROR) << "memory overlap found";
-			list.push_back(it->second);
+			LOG(FATAL) << "memory overlap found";
 		}
 	}
-
-	/*
-	for ( std::vector<OpenCLMemory>::iterator li = list.begin(); li != list.end(); li++ ) {
-		if ( rmMemoryPtr((*li).getVirtualPointer()) ) {
-			DLOG(INFO) << "remove memory pointer " << (*li).getTag().c_str();
-		}
-	}
-	*/
 
 	DLOG(INFO) << "add memory " << clMem.getTag().c_str();
 	memory[clMem.getVirtualPointer()] = clMem;
@@ -476,49 +628,49 @@ bool OpenCLDevice::isValidPtr(const void* ptr) {
 	*/
 }
 
-bool OpenCLDevice::get(const void* ptr, OpenCLMemory& clMem) {
+bool OpenCLDevice::get(const void* ptr, OpenCLMemory** clMem) {
 
-	if ( ptr == NULL ) {
-		return false;
-	}
+  if ( ptr == NULL ) {
+    return false;
+  }
 
-	if ( ! caffe::OpenCLMemory::isHighMem(ptr) ) {
-		LOG(ERROR)<<"memory pointer to query is not in virtual memory.";
-		return false;
-	}
+  if ( ! caffe::OpenCLMemory::isHighMem(ptr) ) {
+    LOG(ERROR)<<"memory pointer to query is not in virtual memory.";
+    return false;
+  }
 
-	// direct match of the base address
-	if ( memory.find(ptr) != memory.end() ) {
-		clMem = memory[ptr];
-		return true;
-	}
+  // direct match of the base address
+  if ( memory.find(ptr) != memory.end() ) {
+    *clMem = &(memory[ptr]);
+    return true;
+  }
 
-	int found = 0;
-	std::map<const void*, OpenCLMemory>::iterator it;
-	for ( it = memory.begin(); it != memory.end(); it++ ) {
-		if ( (it->second).contains(ptr) ) {
-			found++;
-		}
-	}
+  int found = 0;
+  std::map<const void*, OpenCLMemory>::iterator it;
+  for ( it = memory.begin(); it != memory.end(); it++ ) {
+    if ( (it->second).contains(ptr) ) {
+      found++;
+    }
+  }
 
-	if ( found > 1 ) {
-		DLOG(INFO) << "found "<<found<<" matching for "<<ptr;
-		for ( it = memory.begin(); it != memory.end(); it++ ) {
-			if ( (it->second).contains(ptr) ) {
-				DLOG(INFO) << it->second.getTag().c_str();
-			}
-		}
+  if ( found > 1 ) {
+    DLOG(INFO) << "found "<<found<<" matching for "<<ptr;
+    for ( it = memory.begin(); it != memory.end(); it++ ) {
+      if ( (it->second).contains(ptr) ) {
+        DLOG(INFO) << it->second.getTag().c_str();
+      }
+    }
 
-	}
+  }
 
-	for ( it = memory.begin(); it != memory.end(); it++ ) {
-		if ( (it->second).contains(ptr) ) {
-			clMem = it->second;
-			return true;
-		}
-	}
+  for ( it = memory.begin(); it != memory.end(); it++ ) {
+    if ( (it->second).contains(ptr) ) {
+      *clMem = &(it->second);
+      return true;
+    }
+  }
 
-	return false;
+  return false;
 }
 
 std::string OpenCLDevice::getMemoryTag(const void* ptr) {
@@ -531,19 +683,12 @@ std::string OpenCLDevice::getMemoryTag(const void* ptr) {
 		return "NO VIRTUAL ADDRESS";
 	}
 
-	OpenCLMemory clMem;
-	if ( ! get(ptr, clMem) ) {
+	OpenCLMemory* clMem;
+	if ( ! get(ptr, &clMem) ) {
 		return "UNKNOWN";
 	}
 
-	return clMem.getTag();
-
-	/*
-	if ( memory.find(ptr) == memory.end() ) {
-		return "UNKNOWN";
-	}
-	return memory[ptr].getTag();
-	*/
+	return clMem->getTag();
 }
 
 std::string OpenCLDevice::getDeviceName() {
@@ -561,15 +706,49 @@ size_t OpenCLDevice::getMemoryUsage() {
 	size_t bytesUsed = 0;
 	std::map<const void*, OpenCLMemory>::iterator it;
 	for ( it = memory.begin(); it != memory.end(); it++ ) {
-		OpenCLMemory clMem = it->second;
-		bytesUsed += clMem.getSize();
+		OpenCLMemory* clMem = &(it->second);
+		bytesUsed += clMem->getSize();
 	}
 	return bytesUsed;
 }
 
+void OpenCLDevice::waitForInputQueues() {
+
+  for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+    DLOG(INFO)<<"calling clFinish(inputQueues["<<i<<"])";
+    CL_CHECK(clFinish(inputQueues[i]));
+  }
+}
+
+void OpenCLDevice::waitForCommandQueues() {
+
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    DLOG(INFO)<<"calling clFinish(commandQueues["<<i<<"])";
+    CL_CHECK(clFinish(commandQueues[i]));
+  }
+}
+
+void OpenCLDevice::waitForOutputQueues() {
+
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    DLOG(INFO)<<"calling clFinish(outputQueues["<<i<<"])";
+    CL_CHECK(clFinish(outputQueues[i]));
+  }
+}
+
 void OpenCLDevice::Synchronize() {
-  if (queue != NULL) {
-    CL_CHECK(clFinish(queue));
+
+  for( int i = 0; i < OPENCL_NUM_INPUT_QUEUES; i++ ) {
+    DLOG(INFO)<<"calling clFinish(inputQueues["<<i<<"])";
+    CL_CHECK(clFinish(inputQueues[i]));
+  }
+  for( int i = 0; i < OPENCL_NUM_COMMAND_QUEUES; i++ ) {
+    DLOG(INFO)<<"calling clFinish(commandQueues["<<i<<"])";
+    CL_CHECK(clFinish(commandQueues[i]));
+  }
+  for( int i = 0; i < OPENCL_NUM_OUTPUT_QUEUES; i++ ) {
+    DLOG(INFO)<<"calling clFinish(outputQueues["<<i<<"])";
+    CL_CHECK(clFinish(outputQueues[i]));
   }
 }
 

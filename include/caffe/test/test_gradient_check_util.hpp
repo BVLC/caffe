@@ -100,9 +100,11 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   // Ignore the loss from the layer (it's just the weighted sum of the losses
   // from the top blobs, whose gradients we may want to test individually).
   layer->Forward(bottom, top);
+
   // Get additional loss from the objective
   GetObjAndGradient(*layer, top, top_id, top_data_id);
   layer->Backward(top, propagate_down, bottom);
+
   // Store computed gradients for all checked blobs
   vector<shared_ptr<Blob<Dtype> > >
       computed_gradient_blobs(blobs_to_check.size());

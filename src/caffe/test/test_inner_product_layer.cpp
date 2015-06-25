@@ -166,7 +166,7 @@ TYPED_TEST(InnerProductLayerTest, TestGradient) {
 
 TYPED_TEST(InnerProductLayerTest, TestForwardPerformance) {
 
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=1024; i*=2 ) {
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
 		this->InnerProductLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
 	}
 }

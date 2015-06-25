@@ -10,7 +10,6 @@ namespace caffe {
 class OpenCLPlatform {
 public:
 	OpenCLPlatform();
-	OpenCLPlatform(const OpenCLPlatform& pf);
   OpenCLPlatform(cl::Platform platform);
 
 	~OpenCLPlatform();
@@ -32,8 +31,10 @@ public:
 	int getNumDevices(cl_device_type type);
   void DeviceSynchronize();
 private:
+
+  OpenCLPlatform(const OpenCLPlatform&);
+
   void Check();
-  //cl_platform_id platformID;
   cl::Platform platform_;
   std::string name_;
   std::string vendor_;
@@ -47,9 +48,7 @@ private:
 	cl_device_id*	cpuDevicePtr;
 	cl_device_id*	gpuDevicePtr;
 	std::vector<caffe::OpenCLDevice>	devices;
-//  cl_context context;
   cl::Context context_;
-//	std::vector<cl_program> programs;
   int current_device_index_;
   cl_device_type current_device_type_;
 };
