@@ -32,7 +32,7 @@ class Net {
   void Init(const NetParameter& param);
 
   /**
-   * @brief Run Forward with the input Blob%s already fed separately.
+   * @brief Run Forward with the input Blobs already fed separately.
    *
    * You can get the input blobs using input_blobs().
    */
