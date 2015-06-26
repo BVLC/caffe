@@ -735,7 +735,7 @@ class CuDNNNeuronLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNNeuronLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNReLULayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -751,7 +751,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNReLULayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
@@ -761,7 +761,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CHECK(google::protobuf::TextFormat::ParseFromString(
         "relu_param { negative_slope: 0.01 }", &layer_param));
@@ -782,7 +782,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CHECK(google::protobuf::TextFormat::ParseFromString(
         "relu_param { negative_slope: 0.01 }", &layer_param));
@@ -794,7 +794,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNSigmoidLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -812,7 +812,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNSigmoidLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
@@ -822,7 +822,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNTanHLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -846,7 +846,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHGradientCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNTanHLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3);

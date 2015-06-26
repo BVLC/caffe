@@ -183,15 +183,15 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   void RngGaussianFillGPU(const Dtype mu, const Dtype sigma, void* gpu_data) {
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
 
-    DeviceContext dc = Caffe::GetDefaultDeviceContext();
+    DeviceContext *dc = Caffe::GetDefaultDeviceContext();
 
-    if (dc.backend() == BACKEND_CUDA) {
+    if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_rng_gaussian(sample_size_, mu, sigma, rng_data);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      greentea_gpu_rng_gaussian<Dtype>(dc.id(), sample_size_,
+      greentea_gpu_rng_gaussian<Dtype>(dc->id(), sample_size_,
                                        mu, sigma, (cl_mem)rng_data, 0);
 #endif  // USE_GREENTEA
     }
@@ -201,15 +201,15 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
 
-    DeviceContext dc = Caffe::GetDefaultDeviceContext();
+    DeviceContext *dc = Caffe::GetDefaultDeviceContext();
 
-    if (dc.backend() == BACKEND_CUDA) {
+    if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_rng_uniform(sample_size_, lower, upper, rng_data);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      greentea_gpu_rng_uniform<Dtype>(dc.id(), sample_size_,
+      greentea_gpu_rng_uniform<Dtype>(dc->id(), sample_size_,
                                       lower, upper, (cl_mem)rng_data, 0);
 #endif  // USE_GREENTEA
     }
@@ -219,15 +219,15 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   // caffe_gpu_rng_uniform.
   void RngUniformIntFillGPU(void* gpu_data) {
     unsigned int* rng_data = static_cast<unsigned int*>(gpu_data);
-    DeviceContext dc = Caffe::GetDefaultDeviceContext();
+    DeviceContext *dc = Caffe::GetDefaultDeviceContext();
 
-    if (dc.backend() == BACKEND_CUDA) {
+    if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_rng_uniform(sample_size_, rng_data);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      greentea_gpu_rng_uniform(dc.id(), sample_size_, (cl_mem)rng_data, 0);
+      greentea_gpu_rng_uniform(dc->id(), sample_size_, (cl_mem)rng_data, 0);
 #endif  // USE_GREENTEA
     }
 }

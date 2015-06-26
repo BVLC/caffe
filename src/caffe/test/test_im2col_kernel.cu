@@ -71,7 +71,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(Im2colKernelTest, TestDtypes);
 
 TYPED_TEST(Im2colKernelTest, TestGPU) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     // Reshape the blobs to correct size for im2col output
     this->blob_top_->Reshape(this->blob_bottom_->num(),
             this->channels_ * this->kernel_size_ * this->kernel_size_,

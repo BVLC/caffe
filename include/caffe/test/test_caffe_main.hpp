@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 
 using std::cout;
 using std::endl;

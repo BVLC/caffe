@@ -41,7 +41,7 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const int top_slice_size = top_slice_axis * slice_size_;
     const int nthreads = top_slice_size * num_slices_;
 
-    if (this->device_context_.backend() == BACKEND_CUDA) {
+    if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       Slice<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
       CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
@@ -51,9 +51,9 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_.id());
+          this->device_context_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_.id());
+          this->device_context_->id());
 
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));
@@ -87,7 +87,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const int top_slice_size = top_slice_axis * slice_size_;
     const int nthreads = top_slice_size * num_slices_;
 
-    if (this->device_context_.backend() == BACKEND_CUDA) {
+    if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       Slice<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
       CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
@@ -97,9 +97,9 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_.id());
+          this->device_context_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_.id());
+          this->device_context_->id());
 
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));

@@ -21,6 +21,8 @@ const int kMaxBlobAxes = INT_MAX;
 
 namespace caffe {
 
+class DeviceContext;
+
 /**
  * @brief A wrapper around SyncedMemory holders serving as the basic
  *        computational unit through which Layer%s, Net%s, and Solver%s
@@ -38,7 +40,7 @@ class Blob {
         capacity_(0),
         device_context_(Caffe::GetDefaultDeviceContext()) {
   }
-  explicit Blob(DeviceContext device_context)
+  explicit Blob(DeviceContext *device_context)
       : data_(),
         diff_(),
         count_(0),
@@ -46,9 +48,9 @@ class Blob {
         device_context_(device_context) {
   }
   explicit Blob(const int num, const int channels, const int height,
-                const int width, DeviceContext device_context =
+                const int width, DeviceContext *device_context =
                     Caffe::GetDefaultDeviceContext());
-  explicit Blob(const vector<int>& shape, DeviceContext device_context =
+  explicit Blob(const vector<int>& shape, DeviceContext *device_context =
                     Caffe::GetDefaultDeviceContext());
 
   /**
@@ -294,7 +296,7 @@ class Blob {
   /**
    * @brief Return the device context to which this blob and shared memory belongs
    */
-  DeviceContext device_context();
+  DeviceContext *device_context();
 
  protected:
   shared_ptr<SyncedMemory> data_;
@@ -302,7 +304,7 @@ class Blob {
   vector<int> shape_;
   int count_;
   int capacity_;
-  DeviceContext device_context_;
+  DeviceContext *device_context_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };

@@ -817,14 +817,14 @@ void Net<Dtype>::Update() {
       case Caffe::GPU: {
         this_diff = params_[i]->gpu_diff();
         owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
-        DeviceContext dc = Caffe::GetDefaultDeviceContext();
-        if (dc.backend() == BACKEND_CUDA) {
+        DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+        if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
           caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
 #endif  // USE_CUDA
         } else {
 #ifdef USE_GREENTEA
-          greentea_gpu_add<Dtype>(dc.id(), count, (cl_mem) this_diff, 0,
+          greentea_gpu_add<Dtype>(dc->id(), count, (cl_mem) this_diff, 0,
                                   (cl_mem) owner_diff, 0, (cl_mem) owner_diff,
                                   0);
 #endif  // USE_GREENTEA

@@ -7,6 +7,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
@@ -315,7 +316,7 @@ class Layer {
   /**
    * @brief Returns the device context this layer runs on
    */
-  inline DeviceContext device_context() {
+  inline DeviceContext *device_context() {
     return device_context_;
   }
 
@@ -334,7 +335,7 @@ class Layer {
   vector<Dtype> loss_;
 
   /** Device context */
-  DeviceContext device_context_;
+  DeviceContext *device_context_;
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -459,7 +460,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     case Caffe::GPU:
       Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
-      if (device_context_.backend() == BACKEND_CUDA) {
+      if (device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         for (int top_id = 0; top_id < top.size(); ++top_id) {
           if (!this->loss(top_id)) {
@@ -483,7 +484,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
           cl_mem data = (cl_mem) (top[top_id]->gpu_data());
           cl_mem loss_weights = (cl_mem) (top[top_id]->gpu_diff());
           Dtype blob_loss = 0;
-          greentea_gpu_dot(this->device_context_.id(), count, data, 0,
+          greentea_gpu_dot(this->device_context_->id(), count, data, 0,
                            loss_weights, 0, &blob_loss);
           loss += blob_loss;
         }

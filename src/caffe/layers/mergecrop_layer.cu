@@ -91,7 +91,7 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int height_b = bottom[1]->height();
   int width_b = bottom[1]->width();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     CopyForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                                    CAFFE_CUDA_NUM_THREADS) (
@@ -101,9 +101,9 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     viennacl::ocl::kernel &oclk_copy_forward = program.get_kernel(
         CL_KERNEL_SELECT("merge_copy_forward"));
@@ -143,7 +143,7 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int height_b = bottom[1]->height();
   int width_b = bottom[1]->width();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     CopyBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                                     CAFFE_CUDA_NUM_THREADS) (
@@ -153,9 +153,9 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     viennacl::ocl::kernel &oclk_copy_backward = program.get_kernel(
         CL_KERNEL_SELECT("merge_copy_backward"));

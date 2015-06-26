@@ -13,7 +13,7 @@ namespace caffe {
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
                                         Phase phase,
-                                        DeviceContext device_context)
+                                        DeviceContext *device_context)
     : param_(param),
       phase_(phase), device_context_(device_context) {
   // check if we want to use mean_file

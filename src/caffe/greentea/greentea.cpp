@@ -6,6 +6,7 @@
  */
 
 #include "caffe/greentea/greentea.hpp"
+#include "caffe/util/device_alternate.hpp"
 
 namespace caffe {
 
@@ -27,24 +28,6 @@ viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
   }
 }
 
-#endif
-
-DeviceContext::DeviceContext()
-    : id_(0), backend_(Backend::BACKEND_CUDA) {
-}
-
-DeviceContext::DeviceContext(int id, Backend backend)
-    : id_(id), backend_(backend) {
-}
-
-Backend DeviceContext::backend() const {
-  return backend_;
-}
-
-int DeviceContext::id() const {
-  return id_;
-}
-
 void FinishQueues(viennacl::ocl::context *ctx) {
   for (int i = 0; i < GREENTEA_QUEUE_COUNT; ++i) {
     ctx->switch_queue(i);
@@ -52,5 +35,8 @@ void FinishQueues(viennacl::ocl::context *ctx) {
   }
   ctx->switch_queue(0);
 }
+
+#endif
+
 
 }  // namespace caffe

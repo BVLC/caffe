@@ -25,7 +25,7 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
     TanHForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
@@ -36,9 +36,9 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
         CL_KERNEL_SELECT("tanh_forward"));
@@ -71,7 +71,7 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
     const int count = bottom[0]->count();
 
-    if (this->device_context_.backend() == BACKEND_CUDA) {
+    if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
       TanHBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
@@ -82,9 +82,9 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_.id());
+          this->device_context_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_.id());
+          this->device_context_->id());
 
       viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
           CL_KERNEL_SELECT("tanh_backward"));

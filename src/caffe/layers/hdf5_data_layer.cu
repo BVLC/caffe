@@ -19,7 +19,7 @@ namespace caffe {
 template<typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
     for (int i = 0; i < batch_size; ++i, ++current_row_) {

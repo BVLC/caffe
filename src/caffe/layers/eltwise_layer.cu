@@ -45,7 +45,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int count = top[0]->count();
   Dtype* top_data = top[0]->mutable_gpu_data();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
@@ -84,18 +84,18 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD: {
-        greentea_gpu_mul<Dtype>(this->device_context_.id(),
+        greentea_gpu_mul<Dtype>(this->device_context_->id(),
                                 count, (cl_mem)(bottom[0]->gpu_data()), 0,
                                 (cl_mem)(bottom[1]->gpu_data()), 0,
             (cl_mem)top_data, 0);
         for (int i = 2; i < bottom.size(); ++i) {
-          greentea_gpu_mul<Dtype>(this->device_context_.id(),
+          greentea_gpu_mul<Dtype>(this->device_context_->id(),
                                   count, (cl_mem)top_data, 0,
                                   (cl_mem)(bottom[i]->gpu_data()), 0,
                                   (cl_mem)top_data, 0);
@@ -103,10 +103,10 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
       break;
       case EltwiseParameter_EltwiseOp_SUM: {
-        greentea_gpu_set<Dtype>(this->device_context_.id(), count, 0,
+        greentea_gpu_set<Dtype>(this->device_context_->id(), count, 0,
                                 (cl_mem)top_data, 0);
         for (int i = 0; i < bottom.size(); ++i) {
-          greentea_gpu_axpy<Dtype>(this->device_context_.id(),
+          greentea_gpu_axpy<Dtype>(this->device_context_->id(),
                                    count, coeffs_[i],
                                    (cl_mem)(bottom[i]->gpu_data()),
                                    0, (cl_mem)top_data, 0);
@@ -169,7 +169,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* top_diff = top[0]->gpu_diff();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     for (int i = 0; i < bottom.size(); ++i) {
       if (propagate_down[i]) {
@@ -219,9 +219,9 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     for (int i = 0; i < bottom.size(); ++i) {
       if (propagate_down[i]) {
@@ -241,18 +241,18 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                       (cl_mem)(bottom_diff), 0, &ctx);
                   initialized = true;
                 } else {
-                  greentea_gpu_mul<Dtype>(this->device_context_.id(), count,
+                  greentea_gpu_mul<Dtype>(this->device_context_->id(), count,
                       (cl_mem)bottom[j]->gpu_data(), 0,
                       (cl_mem)bottom_diff, 0,
                       (cl_mem)bottom_diff, 0);
                 }
               }
             } else {
-              greentea_gpu_div<Dtype>(this->device_context_.id(),
+              greentea_gpu_div<Dtype>(this->device_context_->id(),
                                       count, (cl_mem)top_data, 0,
                   (cl_mem)bottom_data, 0, (cl_mem)bottom_diff, 0);
             }
-            greentea_gpu_mul<Dtype>(this->device_context_.id(),
+            greentea_gpu_mul<Dtype>(this->device_context_->id(),
                                     count, (cl_mem)bottom_diff, 0,
                 (cl_mem)top_diff, 0, (cl_mem)bottom_diff, 0);
           }
@@ -262,7 +262,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               greentea_copy<Dtype>(count, (cl_mem)top_diff,
                                    0, (cl_mem)bottom_diff, 0, &ctx);
             } else {
-              greentea_gpu_scale<Dtype>(this->device_context_.id(),
+              greentea_gpu_scale<Dtype>(this->device_context_->id(),
                   count, coeffs_[i], (cl_mem)top_diff,
                   0, (cl_mem)bottom_diff, 0);
             }

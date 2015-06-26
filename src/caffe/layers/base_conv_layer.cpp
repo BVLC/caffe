@@ -252,7 +252,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
                                                    const int output_off,
                                                    bool skip_im2col) {
   const Dtype* col_buff = input;
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (!is_1x1_) {
       if (!skip_im2col) {
@@ -279,7 +279,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
       col_buff = col_buffer_.gpu_data();
     }
     for (int g = 0; g < group_; ++g) {
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, conv_out_channels_ / group_,
                                conv_out_spatial_dim_, kernel_dim_ / group_,
                                (Dtype) 1., (cl_mem) weights, weight_offset_ * g,
@@ -296,7 +296,7 @@ template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
                                                    const int output_off,
                                                    const Dtype* bias) {
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
                           height_out_ * width_out_, 1, (Dtype) 1., bias,
@@ -305,7 +305,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+    greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                              CblasNoTrans, num_output_,
                              height_out_ * width_out_, 1, (Dtype) 1.,
                              (cl_mem) bias, 0,
@@ -325,7 +325,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
   if (is_1x1_) {
     col_buff = input;
   }
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     for (int g = 0; g < group_; ++g) {
       caffe_gpu_gemm<Dtype>(
@@ -341,7 +341,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
   } else {
 #ifdef USE_GREENTEA
     for (int g = 0; g < group_; ++g) {
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasTrans,
                                CblasNoTrans, kernel_dim_ / group_,
                                conv_out_spatial_dim_,
                                conv_out_channels_ / group_, (Dtype) 1.,
@@ -364,7 +364,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
                                                   const int output_off,
                                                   Dtype* weights) {
   const Dtype* col_buff = input;
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (!is_1x1_) {
       conv_im2col_gpu(input + input_off, col_buffer_.mutable_gpu_data());
@@ -387,7 +387,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
       col_buff = col_buffer_.gpu_data();
     }
     for (int g = 0; g < group_; ++g) {
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasTrans, conv_out_channels_ / group_,
                                kernel_dim_ / group_, conv_out_spatial_dim_,
                                (Dtype) 1., (cl_mem) output,
@@ -405,7 +405,7 @@ template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
                                                     const Dtype* input,
                                                     const int input_off) {
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_,
                           1., input + input_off, bias_multiplier_.gpu_data(),
@@ -413,7 +413,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans,
+    greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans,
                              num_output_, height_out_ * width_out_, 1.,
                              (cl_mem) input, input_off,
                              (cl_mem) (bias_multiplier_.gpu_data()), 0, 1.,

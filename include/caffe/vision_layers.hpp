@@ -158,9 +158,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        Dtype* col_buff,
                                        const int col_buff_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
     greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
                                conv_in_channels_, conv_in_height_,
                                conv_in_width_, kernel_h_, kernel_w_, pad_h_,
@@ -171,9 +171,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        const int col_buff_off, Dtype* data,
                                        const int data_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
     greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff, col_buff_off,
                                conv_in_channels_, conv_in_height_,
                                conv_in_width_, kernel_h_, kernel_w_, pad_h_,

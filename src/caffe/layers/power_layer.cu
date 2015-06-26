@@ -18,7 +18,7 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Special case where we can ignore the input: scale or power is 0.
     if (diff_scale_ == Dtype(0)) {
@@ -41,11 +41,11 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
 
     if (diff_scale_ == Dtype(0)) {
       Dtype value = (power_ == 0) ? Dtype(1) : pow(shift_, power_);
-      greentea_gpu_set<Dtype>(this->device_context_.id(), count, value,
+      greentea_gpu_set<Dtype>(this->device_context_->id(), count, value,
                               (cl_mem) top_data, 0);
       return;
     }
@@ -53,15 +53,15 @@ void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
                          &ctx);
     if (scale_ != Dtype(1)) {
-      greentea_gpu_scal(this->device_context_.id(), count, scale_,
+      greentea_gpu_scal(this->device_context_->id(), count, scale_,
                         (cl_mem) top_data, 0);
     }
     if (shift_ != Dtype(0)) {
-      greentea_gpu_add_scalar<Dtype>(this->device_context_.id(), count, shift_,
+      greentea_gpu_add_scalar<Dtype>(this->device_context_->id(), count, shift_,
                                      (cl_mem) top_data, 0);
     }
     if (power_ != Dtype(1)) {
-      greentea_gpu_powx<Dtype>(this->device_context_.id(), count,
+      greentea_gpu_powx<Dtype>(this->device_context_->id(), count,
                                (cl_mem) top_data, 0, power_, (cl_mem) top_data,
                                0);
     }
@@ -78,7 +78,7 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const int count = bottom[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();
 
-    if (this->device_context_.backend() == BACKEND_CUDA) {
+    if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
         caffe_gpu_set(count, diff_scale_, bottom_diff);
@@ -123,10 +123,10 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_.id());
+          this->device_context_->id());
 
       if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
-        greentea_gpu_set<Dtype>(this->device_context_.id(), count, diff_scale_,
+        greentea_gpu_set<Dtype>(this->device_context_->id(), count, diff_scale_,
                                 (cl_mem) bottom_diff, 0);
       } else {
         const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -136,11 +136,11 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           // Special case for y = (shift + scale * x)^2
           //     -> dy/dx = 2 * scale * (shift + scale * x)
           //              = diff_scale * shift + diff_scale * scale * x
-          greentea_gpu_axpby(this->device_context_.id(), count,
+          greentea_gpu_axpby(this->device_context_->id(), count,
                              diff_scale_ * scale_, (cl_mem) bottom_data, 0,
                              Dtype(0), (cl_mem) bottom_diff, 0);
           if (shift_ != Dtype(0)) {
-            greentea_gpu_add_scalar(this->device_context_.id(), count,
+            greentea_gpu_add_scalar(this->device_context_->id(), count,
                                     diff_scale_ * shift_, (cl_mem) bottom_diff,
                                     0);
           }
@@ -150,33 +150,33 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           //              = scale * power * (scale * x)^power * (scale * x)^(-1)
           //              = power * y / x
           const Dtype* top_data = top[0]->gpu_data();
-          greentea_gpu_div<Dtype>(this->device_context_.id(), count,
+          greentea_gpu_div<Dtype>(this->device_context_->id(), count,
                                   (cl_mem) top_data, 0, (cl_mem) bottom_data, 0,
                                   (cl_mem) bottom_diff, 0);
-          greentea_gpu_scal<Dtype>(this->device_context_.id(), count, power_,
+          greentea_gpu_scal<Dtype>(this->device_context_->id(), count, power_,
                                    (cl_mem) bottom_diff, 0);
         } else {
           greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0,
                                (cl_mem) bottom_diff, 0, &ctx);
           if (scale_ != Dtype(1)) {
-            greentea_gpu_scal(this->device_context_.id(), count, scale_,
+            greentea_gpu_scal(this->device_context_->id(), count, scale_,
                               (cl_mem) bottom_diff, 0);
           }
           if (shift_ != Dtype(0)) {
-            greentea_gpu_add_scalar(this->device_context_.id(), count, shift_,
+            greentea_gpu_add_scalar(this->device_context_->id(), count, shift_,
                                     (cl_mem) bottom_diff, 0);
           }
           const Dtype* top_data = top[0]->gpu_data();
-          greentea_gpu_div<Dtype>(this->device_context_.id(), count,
+          greentea_gpu_div<Dtype>(this->device_context_->id(), count,
                                   (cl_mem) top_data, 0, (cl_mem) bottom_diff, 0,
                                   (cl_mem) bottom_diff, 0);
           if (diff_scale_ != Dtype(1)) {
-            greentea_gpu_scal(this->device_context_.id(), count, diff_scale_,
+            greentea_gpu_scal(this->device_context_->id(), count, diff_scale_,
                               (cl_mem) bottom_diff, 0);
           }
         }
       }
-      greentea_gpu_mul<Dtype>(this->device_context_.id(), count,
+      greentea_gpu_mul<Dtype>(this->device_context_->id(), count,
                               (cl_mem) top_diff, 0, (cl_mem) bottom_diff, 0,
                               (cl_mem) bottom_diff, 0);
 #endif  // USE_GREENTEA

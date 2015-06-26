@@ -90,7 +90,7 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // We will launch one kernel for each pixel location, and have the kernel
     // go through all the channels.
@@ -113,9 +113,9 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
 #ifdef USE_GREENTEA
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     int n_threads = num_ * height_ * width_;
     viennacl::ocl::kernel &oclk_lrn_fill = program.get_kernel(
@@ -226,7 +226,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
     const vector<Blob<Dtype>*>& bottom) {
   int n_threads = num_ * height_ * width_;
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
     LRNComputeDiff CUDA_KERNEL(CAFFE_GET_BLOCKS(n_threads),
@@ -240,9 +240,9 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     viennacl::ocl::kernel &oclk_lrn = program.get_kernel(
         CL_KERNEL_SELECT("lrn_compute_diff"));

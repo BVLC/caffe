@@ -17,10 +17,9 @@
 #include <utility>  // pair
 #include <vector>
 
-
+#include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
-#include "caffe/greentea/greentea.hpp"
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
@@ -73,6 +72,8 @@ private:\
 namespace cv {class Mat;}
 
 namespace caffe {
+
+class DeviceContext;
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
@@ -157,7 +158,7 @@ class Caffe {
   static void DeviceQuery();
 
   // Get the default device
-  static DeviceContext& GetDefaultDeviceContext();
+  static DeviceContext *GetDefaultDeviceContext();
 
   // Prints info about all devices
   static void EnumerateDevices();
@@ -167,7 +168,7 @@ class Caffe {
   static void Synchronize(int device_id);
 
   // Get a device context
-  static DeviceContext & GetDeviceContext(int id);
+  static DeviceContext *GetDeviceContext(int id);
 
   // Get a device OpenCL program
 #ifdef USE_GREENTEA
@@ -188,7 +189,7 @@ class Caffe {
 
   vector<DeviceContext> device_contexts_;
 
-  DeviceContext default_device_context_;
+  DeviceContext *default_device_context_;
 
 #ifdef USE_GREENTEA
   vector<viennacl::ocl::program> ocl_programs_;

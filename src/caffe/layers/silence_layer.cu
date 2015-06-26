@@ -23,7 +23,7 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                        const vector<Blob<Dtype>*>& bottom) {
   for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_set(bottom[i]->count(), Dtype(0),
                       bottom[i]->mutable_gpu_data());
@@ -31,9 +31,9 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_.id());
+            this->device_context_->id());
         viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-            this->device_context_.id());
+            this->device_context_->id());
         viennacl::ocl::kernel &oclk_gpu_set = program.get_kernel(
             CL_KERNEL_SELECT("gpu_set"));
         viennacl::ocl::enqueue(

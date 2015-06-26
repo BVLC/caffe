@@ -17,7 +17,7 @@ void EuclideanLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_sub(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
                   diff_.mutable_gpu_data());
@@ -28,12 +28,12 @@ void EuclideanLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_sub<Dtype>(this->device_context_.id(), count,
+    greentea_gpu_sub<Dtype>(this->device_context_->id(), count,
                             (cl_mem) (bottom[0]->gpu_data()), 0,
                             (cl_mem) (bottom[1]->gpu_data()), 0,
                             (cl_mem) (diff_.mutable_gpu_data()), 0);
     Dtype dot;
-    greentea_gpu_dot<Dtype>(this->device_context_.id(), count,
+    greentea_gpu_dot<Dtype>(this->device_context_->id(), count,
                             (cl_mem) (diff_.gpu_data()), 0,
                             (cl_mem) (diff_.gpu_data()), 0, &dot);
     Dtype loss = dot / bottom[0]->num() / Dtype(2);
@@ -50,7 +50,7 @@ void EuclideanLossLayer<Dtype>::Backward_gpu(
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_axpby(bottom[i]->count(),              // count
             alpha,                              // alpha
@@ -60,7 +60,7 @@ void EuclideanLossLayer<Dtype>::Backward_gpu(
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_axpby(this->device_context_.id(), bottom[i]->count(),
+        greentea_gpu_axpby(this->device_context_->id(), bottom[i]->count(),
                            alpha, (cl_mem) (diff_.gpu_data()), 0, Dtype(0),
                            (cl_mem) (bottom[i]->mutable_gpu_diff()), 0);
 #endif  // USE_GREENTEA
