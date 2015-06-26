@@ -54,19 +54,21 @@ int DeviceContext::WorkgroupSize(int id) {
 }
 
 template<>
-Blob<float> *DeviceContext::Buffer(int id) {
+shared_ptr< Blob<float> > DeviceContext::Buffer(int id) {
   if (buff_f_.size() <= id) {
-    buff_f_.push_back(Blob<float>(this));
+    shared_ptr<Blob<float> > blob_pointer(new Blob<float>(this));
+    buff_f_.push_back(blob_pointer);
   }
-  return &(buff_f_[id]);
+  return buff_f_[id];
 }
 
 template<>
-Blob<double> *DeviceContext::Buffer(int id) {
+shared_ptr< Blob<double> > DeviceContext::Buffer(int id) {
   if (buff_d_.size() <= id) {
-    buff_d_.push_back(Blob<double>(this));
+    shared_ptr<Blob<double> > blob_pointer(new Blob<double>(this));
+    buff_d_.push_back(blob_pointer);
   }
-  return &(buff_d_[id]);
+  return buff_d_[id];
 }
 
 }  // namespace caffe

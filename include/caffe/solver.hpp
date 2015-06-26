@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "caffe/net.hpp"
+#include "caffe/device_context.hpp"
 
 namespace caffe {
 
