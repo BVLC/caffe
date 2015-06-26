@@ -201,7 +201,6 @@ ifeq ($(USE_GREENTEA),1)
 	
 	# Use ViennaCL BLAS
 	ifeq ($(USE_VIENNACLBLAS), 1)
-		LIBRARIES += viennacl
 		COMMON_FLAGS += -DUSE_VIENNACLBLAS
 	endif
 	

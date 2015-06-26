@@ -27,6 +27,11 @@
 #include "viennacl/vector.hpp"
 #endif
 
+#ifndef GREENTEA_QUEUE_COUNT
+#define GREENTEA_QUEUE_COUNT 1
+
+#endif
+
 namespace caffe {
 
 #ifdef USE_GREENTEA
@@ -49,6 +54,8 @@ class DeviceContext {
   int id_;
   Backend backend_;
 };
+
+void FinishQueues(viennacl::ocl::context *ctx);
 
 template<typename T, typename U>
 struct is_same {
