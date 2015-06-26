@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "caffe/net.hpp"
 #include "caffe/device_context.hpp"
+#include "caffe/net.hpp"
 
 namespace caffe {
 

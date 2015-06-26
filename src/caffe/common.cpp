@@ -260,7 +260,12 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   cudaGetDeviceCount(&cuda_device_count);
 #endif  // USE_CUDA
   for (int i = 0; i < cuda_device_count; ++i) {
-    Get().device_contexts_.push_back(DeviceContext(i, Backend::BACKEND_CUDA));
+    Get().device_contexts_.emplace_back(DeviceContext(i, Backend::BACKEND_CUDA));
+    for(int j = 0; j < device_ids.size(); ++j) {
+      if(device_ids[j] == i) {
+        Caffe::GetDeviceContext(i)->Init();
+      }
+    }
 #ifdef USE_GREENTEA
     // Dummy to have same vector size as device contexts
     viennacl::ocl::program program;
@@ -286,7 +291,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
     for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
       platform_devices.push_back(
           std::make_tuple(platforms[platform_id], devices[device_id]));
-      Get().device_contexts_.push_back(
+      Get().device_contexts_.emplace_back(
           DeviceContext(cuda_device_count + greentea_device_count,
                         Backend::BACKEND_OpenCL));
       // Check if this device is really used and initialize
@@ -309,6 +314,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
           for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
             ctx.add_queue(ctx.current_device());
           }
+          Caffe::GetDeviceContext(device_id)->Init();
           is_used = true;
         }
       }
