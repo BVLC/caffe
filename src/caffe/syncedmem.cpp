@@ -105,6 +105,8 @@ inline void SyncedMemory::to_gpu() {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                        size_, NULL, &err);
           int alpha = 0;
+          // REMOVE:
+          std::cout <<  device_context_->id() << std::endl;
           greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
         }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);

@@ -29,8 +29,10 @@ class DeviceContext {
   template<typename Dtype>
   shared_ptr< Blob<Dtype> > Buffer(int id);
 
- private:
+  int num_queues();
+
   void Init();
+ private:
   std::vector<int> workgroup_sizes_;
   int id_;
   Backend backend_;

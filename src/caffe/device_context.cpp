@@ -15,12 +15,10 @@ namespace caffe {
 
 DeviceContext::DeviceContext()
     : workgroup_sizes_(3, 0), id_(0), backend_(Backend::BACKEND_CUDA) {
-  this->Init();
 }
 
 DeviceContext::DeviceContext(int id, Backend backend)
     : workgroup_sizes_(3, 0), id_(id), backend_(backend) {
-  this->Init();
 }
 
 void DeviceContext::Init() {
@@ -51,6 +49,19 @@ int DeviceContext::id() const {
 int DeviceContext::WorkgroupSize(int id) {
   return workgroup_sizes_[id];
   return 0;
+}
+
+int DeviceContext::num_queues() {
+  if (backend_ == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    return 1;
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    return GREENTEA_QUEUE_COUNT;
+#endif  // USE_GREENTEA
+  }
+  return 1;
 }
 
 template<>
