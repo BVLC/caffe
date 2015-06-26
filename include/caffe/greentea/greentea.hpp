@@ -28,7 +28,7 @@
 #endif
 
 #ifndef GREENTEA_QUEUE_COUNT
-#define GREENTEA_QUEUE_COUNT 1
+#define GREENTEA_QUEUE_COUNT 4
 
 #endif
 
@@ -55,7 +55,6 @@ class DeviceContext {
   Backend backend_;
 };
 
-void FinishQueues(viennacl::ocl::context *ctx);
 
 template<typename T, typename U>
 struct is_same {
@@ -69,11 +68,7 @@ struct is_same<T, T> {
 
 #ifdef USE_GREENTEA
 
-#ifdef USE_VIENNACLBLAS
-#define GREENTEA_VCL_BLAS_CHECK(condition) \
-    {ViennaCLStatus status = condition; \
-    CHECK_EQ(status, ViennaCLSuccess) << "GreenTea ViennaCL BLAS ERROR";}
-#endif
+void FinishQueues(viennacl::ocl::context *ctx);
 
 #ifdef USE_CLBLAS
 #define GREENTEA_CL_BLAS_CHECK(condition) \
