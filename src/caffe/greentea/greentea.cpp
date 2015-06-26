@@ -45,4 +45,12 @@ int DeviceContext::id() const {
   return id_;
 }
 
+void FinishQueues(viennacl::ocl::context *ctx) {
+  for (int i = 0; i < GREENTEA_QUEUE_COUNT; ++i) {
+    ctx->switch_queue(i);
+    ctx->get_queue().finish();
+  }
+  ctx->switch_queue(0);
+}
+
 }  // namespace caffe

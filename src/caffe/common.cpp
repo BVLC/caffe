@@ -295,13 +295,18 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
           // Setup actual context and compile kernels for this device
           viennacl::ocl::setup_context(
               device_id, std::get<1>(platform_devices[greentea_device_count]));
-          viennacl::ocl::context ctx = viennacl::ocl::get_context(
+          viennacl::ocl::context &ctx = viennacl::ocl::get_context(
               static_cast<uint64_t>(device_id));
           viennacl::ocl::program & program = RegisterKernels(&ctx);
           Get().ocl_programs_.push_back(program);
           // viennacl::ocl::switch_context(device_id);
           // viennacl::ocl::switch_device(std::get<1>
           // (platform_devices[device_id - cuda_device_count]));
+
+          // Add defined number of queues
+          for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
+            ctx.add_queue(ctx.current_device());
+          }
           is_used = true;
         }
       }

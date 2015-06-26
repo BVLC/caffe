@@ -36,7 +36,16 @@
 #endif
 
 #ifdef USE_VIENNACLBLAS
-#include "libviennacl/include/viennacl.hpp"
+#include "viennacl/detail/matrix_def.hpp"
+#include "viennacl/detail/vector_def.hpp"
+#include "viennacl/linalg/inner_prod.hpp"
+#include "viennacl/linalg/norm_1.hpp"
+#include "viennacl/linalg/norm_2.hpp"
+#include "viennacl/linalg/norm_inf.hpp"
+#include "viennacl/linalg/prod.hpp"
+#include "viennacl/matrix.hpp"
+#include "viennacl/scalar.hpp"
+#include "viennacl/vector.hpp"
 #endif
 
 namespace caffe {
@@ -167,33 +176,41 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #ifdef USE_VIENNACLBLAS
 
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
+    typedef typename viennacl::matrix_base<Dtype>::size_type size_type;
+    typedef typename viennacl::matrix_base<Dtype>::size_type difference_type;
 
-    ViennaCLTranspose vclTransA =
-        (TransA == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
-    ViennaCLTranspose vclTransB =
-        (TransB == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
+    size_type A_size1 = static_cast<size_type>((TransA == CblasTrans) ? K : M);
+    size_type A_size2 = static_cast<size_type>((TransA == CblasTrans) ? M : K);
 
-    ViennaCLOrder vclOrderA = ViennaCLRowMajor;
-    ViennaCLOrder vclOrderB = ViennaCLRowMajor;
-    ViennaCLOrder vclOrderC = ViennaCLRowMajor;
+    size_type B_size1 = static_cast<size_type>((TransB == CblasTrans) ? N : K);
+    size_type B_size2 = static_cast<size_type>((TransB == CblasTrans) ? K : N);
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSgemm(backend, vclOrderA, vclTransA, vclOrderB,
-                              vclTransB, vclOrderC, M, N, K, alpha, A, 0, offA,
-                              1, 1, lda, B, 0, offB, 1, 1, ldb, beta, C, 0,
-                              offC, 1, 1, ldc));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDgemm(backend, vclOrderA, vclTransA, vclOrderB,
-                              vclTransB, vclOrderC, M, N, K, alpha, A, 0, offA,
-                              1, 1, lda, B, 0, offB, 1, 1, ldb, beta, C, 0,
-                              offC, 1, 1, ldc));
-    }
+    viennacl::matrix_base<Dtype> matA(A, ctx,
+        A_size1, size_type(0), difference_type(1), size_type(M),
+        A_size2, size_type(offA), difference_type(1), size_type(lda), true);
+
+    viennacl::matrix_base<Dtype> matB(B, ctx,
+        B_size1, size_type(0), difference_type(1), size_type(K),
+        B_size2, size_type(offB), difference_type(1), size_type(ldb), true);
+
+    viennacl::matrix_base<Dtype> matC(C, ctx,
+        size_type(M), size_type(0), difference_type(1), size_type(M),
+        size_type(N), size_type(offC), difference_type(1),
+        size_type(ldc), true);
+
+  if (TransA == CblasTrans && TransB == CblasTrans)
+    viennacl::linalg::prod_impl(viennacl::trans(matA), viennacl::trans(matB),
+                                matC, alpha, beta);
+  else if (TransA == CblasTrans && TransB == CblasNoTrans)
+    viennacl::linalg::prod_impl(viennacl::trans(matA), matB,
+                                matC, alpha, beta);
+  else if (TransA == CblasNoTrans && TransB == CblasTrans)
+    viennacl::linalg::prod_impl(matA, viennacl::trans(matB),
+                                matC, alpha, beta);
+  else if (TransA == CblasNoTrans && TransB == CblasNoTrans)
+    viennacl::linalg::prod_impl(matA, matB,
+                                matC, alpha, beta);
+
 #endif
 #ifdef USE_CLBLAS
     clblasOrder clOrder = clblasRowMajor;
@@ -256,25 +273,27 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                           yptr + offy);
   } else {
 #ifdef USE_VIENNACLBLAS
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
 
-    ViennaCLTranspose vclTransA =
-        (TransA == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
+    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha,
-                              A, offA, 0, 1, 1, N, x, offx, 1, beta, y, offy,
-                              1));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDgemv(backend, ViennaCLRowMajor, vclTransA, M, N, alpha,
-                              A, offA, 0, 1, 1, N, x, offx, 1, beta, y, offy,
-                              1));
-    }
+    viennacl::vector_base<Dtype> v1(x,
+                                    size_type((TransA == CblasTrans) ? M : N),
+                                    size_type(offx), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v2(y,
+                                    size_type((TransA == CblasTrans) ? N : M),
+                                    size_type(offy), difference_type(1), ctx);
+    viennacl::matrix_base<Dtype> mat(A, ctx,
+                                     size_type(M), size_type(0),
+                                     difference_type(1), size_type(M),
+                                     size_type(N), size_type(offA),
+                                     difference_type(1), size_type(N), true);
+    v2 *= beta;
+    if (TransA == CblasTrans)
+      v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
+    else
+      v2 += alpha * viennacl::linalg::prod(mat, v1);
+
 #endif
 
 #ifdef USE_CLBLAS
@@ -327,18 +346,17 @@ void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
     caffe_axpy<Dtype>(N, alpha, Xptr + offX, Yptr + offY);
   } else {
 #ifdef USE_VIENNACLBLAS
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSaxpy(backend, N, alpha, X, offX, 1, Y, offY, 1));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDaxpy(backend, N, alpha, X, offX, 1, Y, offY, 1));
-    }
+    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+
+    viennacl::vector_base<Dtype> v1(X, size_type(N), size_type(offX),
+                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v2(Y, size_type(N), size_type(offY),
+                                    difference_type(1), ctx);
+
+    v2 += alpha * v1;
+
 #endif
 
 #ifdef USE_CLBLAS
@@ -426,18 +444,15 @@ void greentea_gpu_scal(const int ctx_id, const int N, const Dtype alpha,
 
   } else {
 #ifdef USE_VIENNACLBLAS
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSscal(backend, N, alpha, x, offx, 1));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDscal(backend, N, alpha, x, offx, 1));
-    }
+    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+
+    viennacl::vector_base<Dtype> v1(x, size_type(N),
+                                    size_type(offx), difference_type(1), ctx);
+
+    v1 *= alpha;
+
 #endif
 
 #ifdef USE_CLBLAS
@@ -495,20 +510,17 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
     *out = caffe_cpu_dot<Dtype>(n, Xptr + offX, Yptr + offY);
   } else {
 #ifdef USE_VIENNACLBLAS
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSdot(backend, n, reinterpret_cast<float*>(out), X, offX,
-                             1, Y, offY, 1));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDdot(backend, n, reinterpret_cast<double*>(out), X,
-                             offX, 1, Y, offY, 1));
-    }
+    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+
+    viennacl::vector_base<Dtype> v1(X, size_type(n),
+                                    size_type(offX), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v2(Y, size_type(n),
+                                    size_type(offY), difference_type(1), ctx);
+
+    *out = viennacl::linalg::inner_prod(v1, v2);
+
 #endif
 
 #ifdef USE_CLBLAS
@@ -562,20 +574,15 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
 
   } else {
 #ifdef USE_VIENNACLBLAS
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSasum(backend, n, reinterpret_cast<float*>(Y), X, offX,
-                              1));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDasum(backend, n, reinterpret_cast<double*>(Y), X, offX,
-                              1));
-    }
+    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+
+    viennacl::vector_base<Dtype> v1(X, size_type(n),
+                                    size_type(offX), difference_type(1), ctx);
+
+    *Y = viennacl::linalg::norm_1(v1);
+
 #endif
 
 #ifdef USE_CLBLAS
@@ -628,22 +635,17 @@ void greentea_gpu_scale(const int ctx_id, const int n, const Dtype alpha,
 
   } else {
 #ifdef USE_VIENNACLBLAS
-    ViennaCLBackend backend;
-    ViennaCLBackendCreate(&backend);
-    ViennaCLBackendSetOpenCLContextID(backend,
-                                      static_cast<ViennaCLInt>(ctx_id));
 
-    if (std::is_same<Dtype, float>::value) {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLScopy(backend, n, X, offX, 1, Y, offY, 1));
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLSscal(backend, n, alpha, Y, offY, 1));
-    } else {
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDcopy(backend, n, X, offX, 1, Y, offY, 1));
-      GREENTEA_VCL_BLAS_CHECK(
-          ViennaCLOpenCLDscal(backend, n, alpha, Y, offY, 1));
-    }
+    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+
+    viennacl::vector_base<Dtype> v1(X, size_type(n),
+                                    size_type(offX), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v2(Y, size_type(n),
+                                    size_type(offY), difference_type(1), ctx);
+
+    v2 = v1 * alpha;
+
 #endif
 
 #ifdef USE_CLBLAS

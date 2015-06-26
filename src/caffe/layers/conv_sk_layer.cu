@@ -70,6 +70,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       int top_offset = M_ * N_;
 
       for (int n = 0; n < num_; ++n) {
+        // ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
         // First, im2col
         greentea_im2col_sk_gpu<Dtype>(&program, &ctx, bottom_data,
                                       bottom[i]->offset(n), channels_, height_,
@@ -95,6 +96,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                    (Dtype) 1., top_data, top[i]->offset(n));
         }
       }
+      // FinishQueues(&ctx);
     }
 #endif
   }
