@@ -18,7 +18,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int count = bottom[0]->count();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_sub(count, bottom[0]->gpu_data(),  // a
                   bottom[1]->gpu_data(),  // b
@@ -33,16 +33,16 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    greentea_gpu_sub<Dtype>(this->device_context_.id(), count,
+    greentea_gpu_sub<Dtype>(this->device_context_->id(), count,
                             (cl_mem) (bottom[0]->gpu_data()), 0,
                             (cl_mem) (bottom[1]->gpu_data()), 0,
                             (cl_mem) (diff_.mutable_gpu_data()), 0);
-    greentea_gpu_powx<Dtype>(this->device_context_.id(), count,
+    greentea_gpu_powx<Dtype>(this->device_context_->id(), count,
                              (cl_mem) (diff_.mutable_gpu_data()),
                              0,  // a_i-b_i
                              Dtype(2), (cl_mem) (diff_sq_.mutable_gpu_data()),
                              0);  // (a_i-b_i)^2
-    greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans,
+    greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans,
                              bottom[0]->num(), bottom[0]->channels(),
                              Dtype(1.0), (cl_mem) (diff_sq_.gpu_data()),
                              0,  // (a_i-b_i)^2
@@ -119,7 +119,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
       const Dtype alpha = sign * top[0]->cpu_diff()[0]
           / static_cast<Dtype>(bottom[0]->num());
 
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         // NOLINT_NEXT_LINE(whitespace/operators)
         CLLBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
@@ -134,9 +134,9 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_.id());
+            this->device_context_->id());
         viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-            this->device_context_.id());
+            this->device_context_->id());
 
         viennacl::ocl::kernel &oclk_cll = program.get_kernel(
             CL_KERNEL_SELECT("cll_backward"));

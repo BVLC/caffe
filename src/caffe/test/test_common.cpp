@@ -15,7 +15,7 @@ class CommonTest : public ::testing::Test {};
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestCublasHandlerGPU) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     int cuda_device_id;
     CUDA_CHECK(cudaGetDevice(&cuda_device_id));
@@ -51,9 +51,9 @@ TEST_F(CommonTest, TestRandSeedCPU) {
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestRandSeedGPU) {
-  DeviceContext dc = Caffe::GetDefaultDeviceContext();
+  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
 
-  if (dc.backend() == BACKEND_CUDA) {
+  if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     SyncedMemory data_a(10 * sizeof(unsigned int),
                         Caffe::GetDefaultDeviceContext());

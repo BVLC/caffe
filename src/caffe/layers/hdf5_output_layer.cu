@@ -14,7 +14,7 @@ namespace caffe {
 template<typename Dtype>
 void HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     CHECK_GE(bottom.size(), 2);
     CHECK_EQ(bottom[0]->num(), bottom[1]->num());

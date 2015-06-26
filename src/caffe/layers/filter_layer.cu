@@ -19,7 +19,7 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       int data_offset_top = n * dim;
       int data_offset_bottom = indices_to_forward_[n] * dim;
 
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_copy(dim, bottom_data + data_offset_bottom,
                    top_data + data_offset_top);
@@ -27,7 +27,7 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_.id());
+            this->device_context_->id());
 
         greentea_copy<Dtype>(dim, (cl_mem) bottom_data, data_offset_bottom,
                              (cl_mem) top_data, data_offset_top, &ctx);
@@ -55,7 +55,7 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       int data_offset_bottom = 0;
       int data_offset_top = 0;
 
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         for (int n = 0; n < bottom[i]->shape(0); ++n) {
           if (next_to_backward_offset >= indices_to_forward_.size()) {
@@ -82,20 +82,20 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_.id());
+            this->device_context_->id());
 
         for (int n = 0; n < bottom[i]->shape(0); ++n) {
           if (next_to_backward_offset >= indices_to_forward_.size()) {
             // we already visited all items that were been forwarded, so
             // just set to zero remaining ones
             data_offset_bottom = n * dim;
-            greentea_gpu_set(this->device_context_.id(), dim, Dtype(0),
+            greentea_gpu_set(this->device_context_->id(), dim, Dtype(0),
                 (cl_mem)(bottom[i]->mutable_gpu_diff()), data_offset_bottom);
           } else {
             batch_offset = indices_to_forward_[next_to_backward_offset];
             data_offset_bottom = n * dim;
             if (n != batch_offset) {  // this data was not been forwarded
-              greentea_gpu_set(this->device_context_.id(), dim, Dtype(0),
+              greentea_gpu_set(this->device_context_->id(), dim, Dtype(0),
                   (cl_mem)(bottom[i]->mutable_gpu_diff()), data_offset_bottom);
             } else {  // this data was been forwarded
               data_offset_top = next_to_backward_offset * dim;

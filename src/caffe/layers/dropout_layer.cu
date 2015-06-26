@@ -29,7 +29,7 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (this->phase_ == TRAIN) {
       unsigned int* mask =
@@ -48,12 +48,12 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
     if (this->phase_ == TRAIN) {
       cl_mem mask = (cl_mem) (rand_vec_.mutable_gpu_data());
-      greentea_gpu_rng_uniform(this->device_context_.id(), count, mask, 0);
+      greentea_gpu_rng_uniform(this->device_context_->id(), count, mask, 0);
       // set thresholds
       viennacl::ocl::kernel &oclk_dropout = program.get_kernel(
           CL_KERNEL_SELECT("dropout_forward"));
@@ -90,7 +90,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-    if (this->device_context_.backend() == BACKEND_CUDA) {
+    if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       if (this->phase_ == TRAIN) {
         const unsigned int* mask = static_cast<const unsigned int*>(rand_vec_
@@ -108,9 +108,9 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_.id());
+          this->device_context_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_.id());
+          this->device_context_->id());
 
       if (this->phase_ == TRAIN) {
         cl_mem mask = (cl_mem) (rand_vec_.gpu_data());

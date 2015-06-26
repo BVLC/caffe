@@ -178,14 +178,14 @@ void Solver<Dtype>::Step(int iters) {
           break;
         case Caffe::GPU:
 #ifndef CPU_ONLY
-          if (blob->device_context().backend() == BACKEND_CUDA) {
+          if (blob->device_context()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
             caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
                           blob->mutable_gpu_diff());
 #endif  // USE_CUDA
           } else {
 #ifdef USE_GREENTEA
-            greentea_gpu_set(blob->device_context().id(),
+            greentea_gpu_set(blob->device_context()->id(),
                           blob->count(), static_cast<Dtype>(0),
                           (cl_mem)(blob->mutable_gpu_diff()), 0);
 #endif  // USE_GREENTEA
@@ -525,14 +525,14 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
                        net_params[param_id]->mutable_gpu_diff());
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_scal(this->device_context_.id(),
+        greentea_gpu_scal(this->device_context_->id(),
                           net_params[param_id]->count(), accum_normalization,
                           (cl_mem) (net_params[param_id]->mutable_gpu_diff()),
                           0);
@@ -579,7 +579,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         if (local_decay) {
           if (regularization_type == "L2") {
@@ -607,17 +607,17 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
         if (local_decay) {
           if (regularization_type == "L2") {
             // add weight decay
-            greentea_gpu_axpy<Dtype>(this->device_context_.id(),
+            greentea_gpu_axpy<Dtype>(this->device_context_->id(),
                                      net_params[param_id]->count(),
                 local_decay,
                 (cl_mem)(net_params[param_id]->gpu_data()), 0,
                 (cl_mem)(net_params[param_id]->mutable_gpu_diff()), 0);
           } else if (regularization_type == "L1") {
-            greentea_gpu_sign<Dtype>(this->device_context_.id(),
+            greentea_gpu_sign<Dtype>(this->device_context_->id(),
                                      net_params[param_id]->count(),
                 (cl_mem)(net_params[param_id]->gpu_data()), 0,
                 (cl_mem)(temp_[param_id]->mutable_gpu_data()), 0);
-            greentea_gpu_axpy<Dtype>(this->device_context_.id(),
+            greentea_gpu_axpy<Dtype>(this->device_context_->id(),
                                      net_params[param_id]->count(),
                 local_decay,
                 (cl_mem)(temp_[param_id]->gpu_data()), 0,
@@ -658,7 +658,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
                         net_params[param_id]->gpu_diff(), momentum,
@@ -670,10 +670,10 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_.id());
+            this->device_context_->id());
 
         greentea_gpu_axpby<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             local_rate, (cl_mem) (net_params[param_id]->gpu_diff()), 0,
             momentum, (cl_mem) (history_[param_id]->mutable_gpu_data()), 0);
         greentea_copy<Dtype>(
@@ -744,7 +744,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         // save history momentum for stepping back
         caffe_copy(net_params[param_id]->count(),
@@ -769,7 +769,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_.id());
+            this->device_context_->id());
 
         // save history momentum for stepping back
         greentea_copy<Dtype>(
@@ -779,14 +779,14 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
         // update history
         greentea_gpu_axpby<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             local_rate, (cl_mem) (net_params[param_id]->gpu_diff()), 0,
             momentum, (cl_mem) (this->history_[param_id]->mutable_gpu_data()),
             0);
 
         // compute update: step back then over step
         greentea_gpu_axpby<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             Dtype(1) + momentum,
             (cl_mem) (this->history_[param_id]->gpu_data()), 0, -momentum,
             (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
@@ -848,7 +848,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_context_.backend() == BACKEND_CUDA) {
+      if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         // compute square of gradient in update
         caffe_gpu_powx(net_params[param_id]->count(),
@@ -883,36 +883,36 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 #ifdef USE_GREENTEA
         // compute square of gradient in update
         greentea_gpu_powx<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             (cl_mem) (net_params[param_id]->gpu_diff()), 0, Dtype(2),
             (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
 
         // update history
         greentea_gpu_add<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             (cl_mem) (this->update_[param_id]->gpu_data()), 0,
             (cl_mem) (this->history_[param_id]->gpu_data()), 0,
             (cl_mem) (this->history_[param_id]->mutable_gpu_data()), 0);
 
         // prepare update
         greentea_gpu_powx<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             (cl_mem) (this->history_[param_id]->gpu_data()), 0, Dtype(0.5),
             (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
 
         greentea_gpu_add_scalar<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(), delta,
+            this->device_context_->id(), net_params[param_id]->count(), delta,
             (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
 
         greentea_gpu_div<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             (cl_mem) (net_params[param_id]->gpu_diff()), 0,
             (cl_mem) (this->update_[param_id]->gpu_data()), 0,
             (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
 
         // scale and copy
         greentea_gpu_axpby<Dtype>(
-            this->device_context_.id(), net_params[param_id]->count(),
+            this->device_context_->id(), net_params[param_id]->count(),
             local_rate, (cl_mem) (this->update_[param_id]->gpu_data()), 0,
             Dtype(0), (cl_mem) (net_params[param_id]->mutable_gpu_diff()), 0);
 #endif  // USE_GREENTEA

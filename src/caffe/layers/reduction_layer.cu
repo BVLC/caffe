@@ -16,7 +16,7 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int bottom_data_off = 0;
   int top_data_off = 0;
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (sum_multiplier_.count() > 0) {
       mult_data = sum_multiplier_.gpu_data();
@@ -60,17 +60,17 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       switch (op_) {
         case ReductionParameter_ReductionOp_SUM:
         case ReductionParameter_ReductionOp_MEAN:
-          greentea_gpu_dot<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_dot<Dtype>(this->device_context_->id(), dim_,
                                   (cl_mem) mult_data, 0, (cl_mem) bottom_data,
                                   bottom_data_off, top_data + top_data_off);
           break;
         case ReductionParameter_ReductionOp_ASUM:
-          greentea_gpu_asum<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_asum<Dtype>(this->device_context_->id(), dim_,
                                    (cl_mem) bottom_data, bottom_data_off,
                                    top_data + top_data_off);
           break;
         case ReductionParameter_ReductionOp_SUMSQ:
-          greentea_gpu_dot<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_dot<Dtype>(this->device_context_->id(), dim_,
                                   (cl_mem) bottom_data, bottom_data_off,
                                   (cl_mem) bottom_data, bottom_data_off,
                                   top_data + top_data_off);
@@ -85,7 +85,7 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (coeff_ != Dtype(1)) {
       // Reset the top_data pointer.
       top_data = top[0]->mutable_gpu_data();
-      greentea_gpu_scal<Dtype>(this->device_context_.id(), num_, coeff_,
+      greentea_gpu_scal<Dtype>(this->device_context_->id(), num_, coeff_,
                                (cl_mem) top_data, 0);
     }
 #endif  // USE_GREENTEA
@@ -122,7 +122,7 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int bottom_diff_off = 0;
   int top_diff_off = 0;
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     for (int i = 0; i < num_; ++i) {
       const Dtype bottom_coeff = (*(top_diff + top_diff_off)) * coeff_;
@@ -156,20 +156,20 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       switch (op_) {
         case ReductionParameter_ReductionOp_SUM:
         case ReductionParameter_ReductionOp_MEAN:
-          greentea_gpu_set<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_set<Dtype>(this->device_context_->id(), dim_,
                                   bottom_coeff, (cl_mem) bottom_diff,
                                   bottom_diff_off);
           break;
         case ReductionParameter_ReductionOp_ASUM:
-          greentea_gpu_sign<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_sign<Dtype>(this->device_context_->id(), dim_,
                                    (cl_mem) bottom_data, bottom_data_off,
                                    (cl_mem) bottom_diff, bottom_diff_off);
-          greentea_gpu_scal<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_scal<Dtype>(this->device_context_->id(), dim_,
                                    bottom_coeff, (cl_mem) bottom_diff,
                                    bottom_diff_off);
           break;
         case ReductionParameter_ReductionOp_SUMSQ:
-          greentea_gpu_scale<Dtype>(this->device_context_.id(), dim_,
+          greentea_gpu_scale<Dtype>(this->device_context_->id(), dim_,
                                     2 * bottom_coeff, (cl_mem) bottom_data,
                                     bottom_data_off, (cl_mem) bottom_diff,
                                     bottom_diff_off);

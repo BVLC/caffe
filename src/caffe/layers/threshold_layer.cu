@@ -28,7 +28,7 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
     ThresholdForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
@@ -39,9 +39,9 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     viennacl::ocl::kernel &oclk_threshold = program.get_kernel(
         CL_KERNEL_SELECT("threshold"));

@@ -10,7 +10,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   // First, join the thread
   JoinPrefetchThread();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Reshape to loaded data.
     top[0]->ReshapeLike(this->prefetch_data_);
@@ -28,7 +28,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
 
     // Reshape to loaded data.
     top[0]->ReshapeLike(this->prefetch_data_);

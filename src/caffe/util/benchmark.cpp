@@ -1,6 +1,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 #include "caffe/util/benchmark.hpp"
 
 namespace caffe {
@@ -12,7 +13,7 @@ Timer::Timer()
 
 Timer::~Timer() {
   if (Caffe::mode() == Caffe::GPU
-      && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+      && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     CUDA_CHECK(cudaEventDestroy(start_gpu_));
@@ -27,7 +28,7 @@ Timer::~Timer() {
 void Timer::Start() {
   if (!running()) {
     if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+        && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventRecord(start_gpu_, 0));
@@ -46,7 +47,7 @@ void Timer::Start() {
 void Timer::Stop() {
   if (running()) {
     if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+        && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventRecord(stop_gpu_, 0));
@@ -71,7 +72,7 @@ float Timer::MicroSeconds() {
     Stop();
   }
   if (Caffe::mode() == Caffe::GPU
-      && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+      && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
@@ -97,7 +98,7 @@ float Timer::MilliSeconds() {
     Stop();
   }
   if (Caffe::mode() == Caffe::GPU
-      && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+      && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
@@ -119,7 +120,7 @@ float Timer::Seconds() {
 void Timer::Init() {
   if (!initted()) {
     if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+        && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       CUDA_CHECK(cudaEventCreate(&start_gpu_));

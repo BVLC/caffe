@@ -467,7 +467,7 @@ class CuDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNConvolutionLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
     LayerParameter layer_param;
@@ -506,7 +506,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
     LayerParameter layer_param;
@@ -543,7 +543,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
         layer_param.mutable_convolution_param();
@@ -572,7 +572,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     // Test separable convolution by computing the Sobel operator
     // as a single filter then comparing the result
     // as the convolution of two rectangular filters.
@@ -670,7 +670,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
         layer_param.mutable_convolution_param();
@@ -689,7 +689,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
         layer_param.mutable_convolution_param();

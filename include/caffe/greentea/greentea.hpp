@@ -8,6 +8,8 @@
 #ifndef CAFFE_GREENTEA_HPP_
 #define CAFFE_GREENTEA_HPP_
 
+#include <vector>
+
 // Define ViennaCL/GreenTea flags
 #ifdef USE_GREENTEA
 #ifndef NDEBUG
@@ -28,8 +30,7 @@
 #endif
 
 #ifndef GREENTEA_QUEUE_COUNT
-#define GREENTEA_QUEUE_COUNT 4
-
+#define GREENTEA_QUEUE_COUNT 8
 #endif
 
 namespace caffe {
@@ -42,17 +43,6 @@ viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
 enum Backend {
   BACKEND_CUDA,
   BACKEND_OpenCL
-};
-
-class DeviceContext {
- public:
-  DeviceContext();
-  DeviceContext(int id, Backend backend);
-  Backend backend() const;
-  int id() const;
- private:
-  int id_;
-  Backend backend_;
 };
 
 

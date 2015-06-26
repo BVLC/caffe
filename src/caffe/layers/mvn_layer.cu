@@ -20,7 +20,7 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   int dim = bottom[0]->count() / num;
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (this->layer_param_.mvn_param().normalize_variance()) {
       // put the squares of bottom into temp_
@@ -76,73 +76,73 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     if (this->layer_param_.mvn_param().normalize_variance()) {
       // put the squares of bottom into temp_
-      greentea_gpu_powx<Dtype>(this->device_context_.id(), bottom[0]->count(),
+      greentea_gpu_powx<Dtype>(this->device_context_->id(), bottom[0]->count(),
                                (cl_mem) bottom_data, 0, Dtype(2),
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
 
       // computes variance using var(X) = E(X^2) - (EX)^2
-      greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans, num,
+      greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans, num,
                                dim, 1. / dim, (cl_mem) (bottom_data), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (mean_.mutable_gpu_data()), 0);
-      greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans, num,
+      greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans, num,
                                dim, 1. / dim, (cl_mem) (temp_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (variance_.mutable_gpu_data()), 0);
-      greentea_gpu_powx<Dtype>(this->device_context_.id(), mean_.count(),
+      greentea_gpu_powx<Dtype>(this->device_context_->id(), mean_.count(),
                                (cl_mem) mean_.gpu_data(), 0, Dtype(2),
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
-      greentea_gpu_sub<Dtype>(this->device_context_.id(), mean_.count(),
+      greentea_gpu_sub<Dtype>(this->device_context_->id(), mean_.count(),
                               (cl_mem) (variance_.gpu_data()), 0,
                               (cl_mem) (temp_.gpu_data()), 0,
                               (cl_mem) (variance_.mutable_gpu_data()), 0);
 
       // do mean and variance normalization
       // subtract mean
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, num, dim, 1, -1.,
                                (cl_mem) (mean_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
 
-      greentea_gpu_add<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_add<Dtype>(this->device_context_->id(), temp_.count(),
                               (cl_mem) bottom_data, 0,
                               (cl_mem) (temp_.gpu_data()), 0, (cl_mem) top_data,
                               0);
 
       // normalize variance
-      greentea_gpu_powx<Dtype>(this->device_context_.id(), variance_.count(),
+      greentea_gpu_powx<Dtype>(this->device_context_->id(), variance_.count(),
                                (cl_mem) (variance_.gpu_data()), 0, Dtype(0.5),
                                (cl_mem) (variance_.mutable_gpu_data()), 0);
 
-      greentea_gpu_add_scalar<Dtype>(this->device_context_.id(),
+      greentea_gpu_add_scalar<Dtype>(this->device_context_->id(),
                                      variance_.count(), eps_,
                                      (cl_mem) (variance_.mutable_gpu_data()),
                                      0);
 
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, num, dim, 1, 1.,
                                (cl_mem) (variance_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
 
-      greentea_gpu_div<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_div<Dtype>(this->device_context_->id(), temp_.count(),
                               (cl_mem) top_data, 0, (cl_mem) (temp_.gpu_data()),
                               0, (cl_mem) top_data, 0);
     } else {
-      greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans, num,
+      greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans, num,
                                dim, 1. / dim, (cl_mem) bottom_data, 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (mean_.mutable_gpu_data()), 0);  // EX
 
       // subtract mean
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, num, dim, 1, -1.,
                                (cl_mem) (mean_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
 
-      greentea_gpu_add<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_add<Dtype>(this->device_context_->id(), temp_.count(),
                               (cl_mem) bottom_data, 0,
                               (cl_mem) (temp_.gpu_data()), 0, (cl_mem) top_data,
                               0);
@@ -168,7 +168,7 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   int dim = bottom[0]->count() / num;
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (this->layer_param_.mvn_param().normalize_variance()) {
       caffe_gpu_mul(temp_.count(), top_data, top_diff, bottom_diff);
@@ -206,51 +206,51 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
 
     if (this->layer_param_.mvn_param().normalize_variance()) {
-      greentea_gpu_mul<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_mul<Dtype>(this->device_context_->id(), temp_.count(),
                               (cl_mem) top_data, 0, (cl_mem) top_diff, 0,
                               (cl_mem) bottom_diff, 0);
-      greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans, num,
+      greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans, num,
                                dim, 1., (cl_mem) bottom_diff, 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (mean_.mutable_gpu_data()), 0);
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, num, dim, 1, 1.,
                                (cl_mem) (mean_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) bottom_diff, 0);
-      greentea_gpu_mul<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_mul<Dtype>(this->device_context_->id(), temp_.count(),
                               (cl_mem) top_data, 0, (cl_mem) bottom_diff, 0,
                               (cl_mem) bottom_diff, 0);
 
-      greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans, num,
+      greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans, num,
                                dim, 1., (cl_mem) top_diff, 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (mean_.mutable_gpu_data()), 0);
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, num, dim, 1, 1.,
                                (cl_mem) (mean_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 1.,
                                (cl_mem) bottom_diff, 0);
 
-      greentea_gpu_axpby<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_axpby<Dtype>(this->device_context_->id(), temp_.count(),
                                 Dtype(1), (cl_mem) top_diff, 0,
                                 Dtype(-1. / dim), (cl_mem) bottom_diff, 0);
 
       // put the squares of bottom into temp_
-      greentea_gpu_powx<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_powx<Dtype>(this->device_context_->id(), temp_.count(),
                                (cl_mem) bottom_data, 0, Dtype(2),
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
 
-      greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, num, dim, 1, 1.,
                                (cl_mem) (variance_.gpu_data()), 0,
                                (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
                                (cl_mem) (temp_.mutable_gpu_data()), 0);
 
-      greentea_gpu_div<Dtype>(this->device_context_.id(), temp_.count(),
+      greentea_gpu_div<Dtype>(this->device_context_->id(), temp_.count(),
                               (cl_mem) bottom_diff, 0,
                               (cl_mem) (temp_.gpu_data()), 0,
                               (cl_mem) bottom_diff, 0);

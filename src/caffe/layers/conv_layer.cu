@@ -23,10 +23,10 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
 #ifdef USE_GREENTEA
-      if (this->device_context_.backend() == BACKEND_OpenCL) {
+      if (this->device_context_->backend() == BACKEND_OpenCL) {
         viennacl::ocl::context &ctx =
-            viennacl::ocl::get_context(this->device_context_.id());
-        // ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
+            viennacl::ocl::get_context(this->device_context_->id());
+         // ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
       }
 #endif  // USE_GREENTEA
 
@@ -38,9 +38,9 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
 #ifdef USE_GREENTEA
-      if (this->device_context_.backend() == BACKEND_OpenCL) {
+      if (this->device_context_->backend() == BACKEND_OpenCL) {
         viennacl::ocl::context &ctx =
-            viennacl::ocl::get_context(this->device_context_.id());
+            viennacl::ocl::get_context(this->device_context_->id());
         FinishQueues(&ctx);
       }
 #endif  // USE_GREENTEA
@@ -59,19 +59,19 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {
 #ifdef USE_GREENTEA
-        if (this->device_context_.backend() == BACKEND_OpenCL) {
+        if (this->device_context_->backend() == BACKEND_OpenCL) {
           viennacl::ocl::context &ctx =
-              viennacl::ocl::get_context(this->device_context_.id());
-          ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
+              viennacl::ocl::get_context(this->device_context_->id());
+          // ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
         }
 #endif  // USE_GREENTEA
 
         this->backward_gpu_bias(bias_diff, top_diff, top[i]->offset(n));
 
 #ifdef USE_GREENTEA
-        if (this->device_context_.backend() == BACKEND_OpenCL) {
+        if (this->device_context_->backend() == BACKEND_OpenCL) {
           viennacl::ocl::context &ctx =
-              viennacl::ocl::get_context(this->device_context_.id());
+              viennacl::ocl::get_context(this->device_context_->id());
           FinishQueues(&ctx);
         }
 #endif  // USE_GREENTEA
@@ -82,10 +82,10 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {
 #ifdef USE_GREENTEA
-        if (this->device_context_.backend() == BACKEND_OpenCL) {
+        if (this->device_context_->backend() == BACKEND_OpenCL) {
           viennacl::ocl::context &ctx =
-              viennacl::ocl::get_context(this->device_context_.id());
-          // ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
+              viennacl::ocl::get_context(this->device_context_->id());
+           // ctx.switch_queue(n % GREENTEA_QUEUE_COUNT);
         }
 #endif  // USE_GREENTEA
 
@@ -101,9 +101,9 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
 
 #ifdef USE_GREENTEA
-        if (this->device_context_.backend() == BACKEND_OpenCL) {
+        if (this->device_context_->backend() == BACKEND_OpenCL) {
           viennacl::ocl::context &ctx =
-              viennacl::ocl::get_context(this->device_context_.id());
+              viennacl::ocl::get_context(this->device_context_->id());
           FinishQueues(&ctx);
         }
 #endif  // USE_GREENTEA

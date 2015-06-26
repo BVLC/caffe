@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -20,7 +21,7 @@ SyncedMemory::~SyncedMemory() {
 
 #ifndef CPU_ONLY
   if (gpu_ptr_) {
-    if (device_context_.backend() == Backend::BACKEND_CUDA) {
+    if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
       CUDA_CHECK(cudaFree(gpu_ptr_));
 #endif  // USE_CUDA
@@ -48,14 +49,14 @@ inline void SyncedMemory::to_cpu() {
         CaffeMallocHost(&cpu_ptr_, size_);
         own_cpu_data_ = true;
       }
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
-            device_context_.id());
+            device_context_->id());
         ctx.get_queue().finish();
         // On the CPU, memory is shared (and no copy needed)
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
@@ -80,7 +81,7 @@ inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
     case UNINITIALIZED: {
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         caffe_gpu_memset(size_, 0, gpu_ptr_);
@@ -88,7 +89,7 @@ inline void SyncedMemory::to_gpu() {
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
-            device_context_.id());
+            device_context_->id());
         ctx.get_queue().finish();
         cl_int err;
         if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
@@ -104,7 +105,7 @@ inline void SyncedMemory::to_gpu() {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                        size_, NULL, &err);
           int alpha = 0;
-          greentea_memset(device_context_.id(), size_, alpha, cl_gpu_mem_, 0);
+          greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
         }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
@@ -114,7 +115,7 @@ inline void SyncedMemory::to_gpu() {
       break;
     }
     case HEAD_AT_CPU: {
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         if (gpu_ptr_ == NULL) {
           CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
@@ -124,7 +125,7 @@ inline void SyncedMemory::to_gpu() {
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
-            device_context_.id());
+            device_context_->id());
         ctx.get_queue().finish();
         if (gpu_ptr_ == NULL) {
           cl_int err;
@@ -173,10 +174,10 @@ void SyncedMemory::set_cpu_data(void* data) {
     CaffeFreeHost(cpu_ptr_);
   }
   cpu_ptr_ = data;
-  if (device_context_.backend() == Backend::BACKEND_OpenCL) {
+  if (device_context_->backend() == Backend::BACKEND_OpenCL) {
 #ifdef USE_GREENTEA
     viennacl::ocl::context ctx = viennacl::ocl::get_context(
-        device_context_.id());
+        device_context_->id());
     if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
       // If host memory is released and shared
       gpu_ptr_ = NULL;

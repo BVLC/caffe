@@ -57,7 +57,7 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* slope_data = this->blobs_[0]->gpu_data();
   const int div_factor = channel_shared_ ? channels : 1;
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // For in-place computation
     if (top[0] == bottom[0]) {
@@ -73,9 +73,9 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     if (top[0] == bottom[0]) {
       greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0,
@@ -110,7 +110,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     bottom_data = bottom_memory_.gpu_data();
   }
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Propagate to param
     // Since to write bottom diff will affect top diff if top and bottom blobs
@@ -160,9 +160,9 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     if (this->param_propagate_down_[0]) {
       Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
@@ -180,12 +180,12 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
         if (channel_shared_) {
           Dtype d;
-          greentea_gpu_dot<Dtype>(this->device_context_.id(), channels * dim,
+          greentea_gpu_dot<Dtype>(this->device_context_->id(), channels * dim,
                                   (cl_mem) (backward_buff_.gpu_diff()), 0,
                                   (cl_mem) (multiplier_.gpu_data()), 0, &d);
           dsum += d;
         } else {
-          greentea_gpu_gemv<Dtype>(this->device_context_.id(), CblasNoTrans,
+          greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans,
                                    channels, dim, 1.,
                                    (cl_mem) (backward_buff_.gpu_diff()), 0,
                                    (cl_mem) (multiplier_.gpu_data()), 0, 1.,
@@ -193,7 +193,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
       }
       if (channel_shared_) {
-        greentea_gpu_add_scalar<Dtype>(this->device_context_.id(),
+        greentea_gpu_add_scalar<Dtype>(this->device_context_->id(),
                                        this->blobs_[0]->count(), Dtype(dsum),
                                        (cl_mem) slope_diff, 0);
       }

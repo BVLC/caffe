@@ -963,7 +963,7 @@ class CuDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNPoolingLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestSetupCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
     pooling_param->set_kernel_size(3);
@@ -978,7 +978,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestSetupCuDNN) {
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestSetupPaddedCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
     pooling_param->set_kernel_size(3);
@@ -1021,7 +1021,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, PrintBackwardCuDNN) {
 */
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     this->TestForwardSquare();
     this->TestForwardRectHigh();
     this->TestForwardRectWide();
@@ -1040,7 +1040,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxTopMaskCuDNN) {
 */
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
       for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
         LayerParameter layer_param;
@@ -1061,7 +1061,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxCuDNN) {
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxPaddedCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
     pooling_param->set_kernel_size(3);
@@ -1128,7 +1128,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxTopMaskCuDNN) {
 */
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
     pooling_param->set_kernel_size(3);
@@ -1155,7 +1155,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
       for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
         LayerParameter layer_param;
@@ -1174,7 +1174,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAvePaddedCuDNN) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
     for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
       for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
         LayerParameter layer_param;

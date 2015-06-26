@@ -106,7 +106,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int channels = bottom[0]->channels();
   int spatial_dim = bottom[0]->height() * bottom[0]->width();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // CUDA backend code
     caffe_copy(count, bottom_data, top_data);
@@ -142,9 +142,9 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     greentea_copy<Dtype>(count, (cl_mem)bottom_data,
                          0, (cl_mem)top_data, 0, &ctx);
@@ -211,7 +211,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   Dtype* scale_data = scale_.mutable_gpu_data();
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_copy(top[0]->count(), top_diff, bottom_diff);
     // Compute inner1d(top_diff, top_data) and
@@ -231,9 +231,9 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
 
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     greentea_copy<Dtype>(top[0]->count(), (cl_mem)top_diff,
                          0, (cl_mem)bottom_diff, 0, &ctx);
@@ -255,7 +255,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                               WrapHandle((cl_mem)bottom_diff, &ctx)),
         ctx.get_queue());
 
-    greentea_gpu_mul<Dtype>(this->device_context_.id(), top[0]->count(),
+    greentea_gpu_mul<Dtype>(this->device_context_->id(), top[0]->count(),
                             (cl_mem)bottom_diff, 0,
                             (cl_mem)top_data, 0, (cl_mem)bottom_diff, 0);
 

@@ -17,7 +17,7 @@ namespace caffe {
 template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // CUDA backend code
     for (int i = 0; i < bottom.size(); ++i) {
@@ -55,9 +55,9 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     // GreenTea backend code
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     for (int i = 0; i < bottom.size(); ++i) {
       const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
@@ -80,7 +80,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
         // Second, innerproduct with groups
         for (int g = 0; g < group_; ++g) {
-          greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+          greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                    CblasNoTrans, M_, N_, K_, (Dtype) 1., weight,
                                    weight_offset * g, col_data, col_offset * g,
                                    (Dtype) 0., top_data,
@@ -89,7 +89,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
         // Third, add bias
         if (bias_term_) {
-          greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+          greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                    CblasNoTrans, num_output_, N_, 1, (Dtype) 1.,
                                    (cl_mem) (this->blobs_[1]->gpu_data()), 0,
                                    (cl_mem) (bias_multiplier_.gpu_data()), 0,
@@ -107,7 +107,7 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
 
-  if (this->device_context_.backend() == BACKEND_CUDA) {
+  if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     const Dtype* weight = NULL;
     Dtype* weight_diff = NULL;
@@ -181,9 +181,9 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_.id());
+        this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_.id());
+        this->device_context_->id());
 
     cl_mem weight = NULL;
     cl_mem weight_diff = NULL;
@@ -191,7 +191,7 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
     if (this->param_propagate_down_[0]) {
       weight = (cl_mem) (this->blobs_[0]->gpu_data());
       weight_diff = (cl_mem) (this->blobs_[0]->mutable_gpu_diff());
-      greentea_gpu_set(this->device_context_.id(), this->blobs_[0]->count(),
+      greentea_gpu_set(this->device_context_->id(), this->blobs_[0]->count(),
                        Dtype(0), weight_diff, 0);
     }
 
@@ -199,7 +199,7 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
 
     if (bias_term_ && this->param_propagate_down_[1]) {
       bias_diff = (cl_mem) (this->blobs_[1]->mutable_gpu_diff());
-      greentea_gpu_set(this->device_context_.id(), this->blobs_[1]->count(),
+      greentea_gpu_set(this->device_context_->id(), this->blobs_[1]->count(),
                        Dtype(0), bias_diff, 0);
     }
     const int weight_offset = M_ * K_;
@@ -211,7 +211,7 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
       if (bias_term_ && this->param_propagate_down_[1]) {
         top_diff = (cl_mem) (top[i]->gpu_diff());
         for (int n = 0; n < num_; ++n) {
-          greentea_gpu_gemv(this->device_context_.id(), CblasNoTrans,
+          greentea_gpu_gemv(this->device_context_->id(), CblasNoTrans,
                             num_output_, N_, (Dtype) 1., top_diff,
                             top[0]->offset(n),
                             (cl_mem) (bias_multiplier_.gpu_data()), 0,
@@ -239,7 +239,8 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
           // gradient w.r.t. weight. Note that we will accumulate diffs.
           if (this->param_propagate_down_[0]) {
             for (int g = 0; g < group_; ++g) {
-              greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+              greentea_gpu_gemm<Dtype>(this->device_context_->id(),
+                                       CblasNoTrans,
                                        CblasTrans, M_, K_, N_, (Dtype) 1.,
                                        top_diff,
                                        top[i]->offset(n) + top_offset * g,
@@ -250,7 +251,8 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
           // gradient w.r.t. bottom data, if necessary
           if (propagate_down[i]) {
             for (int g = 0; g < group_; ++g) {
-              greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasTrans,
+              greentea_gpu_gemm<Dtype>(this->device_context_->id(),
+                                       CblasTrans,
                                        CblasNoTrans, K_, N_, M_, (Dtype) 1.,
                                        weight, weight_offset * g, top_diff,
                                        top[i]->offset(n) + top_offset * g,
@@ -258,7 +260,8 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
             }
             // col2im back to the data
             greentea_col2im_sk_gpu<Dtype>(&program, &ctx, col_diff, channels_,
-                                          height_, width_, kernel_h_, kernel_w_,
+                                          height_, width_,
+                                          kernel_h_, kernel_w_,
                                           pad_h_, pad_w_, stride_h_, stride_w_,
                                           kstride_h_, kstride_w_, bottom_diff,
                                           bottom[i]->offset(n));

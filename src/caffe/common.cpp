@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 #include "caffe/util/rng.hpp"
 
 #ifdef USE_GREENTEA
@@ -47,11 +48,12 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
-DeviceContext & Caffe::GetDeviceContext(int id) {
-  return id == -1 ? Get().default_device_context_ : Get().device_contexts_[id];
+DeviceContext *Caffe::GetDeviceContext(int id) {
+  return id == -1 ? Get().default_device_context_ :
+      &(Get().device_contexts_[id]);
 }
 
-DeviceContext& Caffe::GetDefaultDeviceContext() {
+DeviceContext *Caffe::GetDefaultDeviceContext() {
   return Get().default_device_context_;
 }
 
@@ -140,7 +142,7 @@ Caffe::~Caffe() {
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
-  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Curand seed
     static bool g_curand_availability_logged = false;
@@ -167,10 +169,10 @@ void Caffe::set_random_seed(const unsigned int seed) {
 
 void Caffe::Synchronize(int device_id) {
 #ifdef USE_GREENTEA
-  DeviceContext& device_context = Caffe::GetDeviceContext(device_id);
-  if (device_context.backend() == BACKEND_OpenCL) {
+  DeviceContext * device_context = Caffe::GetDeviceContext(device_id);
+  if (device_context->backend() == BACKEND_OpenCL) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        GetDeviceContext(device_id).id());
+        GetDeviceContext(device_id)->id());
     ctx.get_queue().finish();
   }
 #else
@@ -334,7 +336,7 @@ void Caffe::SetDevice(const int device_id) {
 
   Get().default_device_context_ = GetDeviceContext(device_id);
 
-  if (Get().default_device_context_.backend() == Backend::BACKEND_CUDA) {
+  if (Get().default_device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
     int current_device;
     CUDA_CHECK(cudaGetDevice(&current_device));
@@ -368,7 +370,7 @@ void Caffe::SetDevice(const int device_id) {
 
 // TODO: Fix this for the new backend
 void Caffe::DeviceQuery() {
-  if (Get().default_device_context_.backend() == BACKEND_CUDA) {
+  if (Get().default_device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     cudaDeviceProp prop;
     int device;

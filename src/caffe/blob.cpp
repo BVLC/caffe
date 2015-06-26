@@ -3,6 +3,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -61,14 +62,14 @@ bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
 
 template<typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
-                  const int width, DeviceContext device_context)
+                  const int width, DeviceContext *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_context_(device_context) {
   Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>
-Blob<Dtype>::Blob(const vector<int>& shape, DeviceContext device_context)
+Blob<Dtype>::Blob(const vector<int>& shape, DeviceContext *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_context_(device_context) {
   Reshape(shape);
@@ -166,7 +167,7 @@ void Blob<Dtype>::Update() {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       // perform computation on GPU
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
                               static_cast<const Dtype*>(diff_->gpu_data()),
@@ -174,7 +175,7 @@ void Blob<Dtype>::Update() {
 #endif
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_axpy<Dtype>(device_context_.id(), count_, Dtype(-1),
+        greentea_gpu_axpy<Dtype>(device_context_->id(), count_, Dtype(-1),
                                  (cl_mem) (diff_->gpu_data()), 0,
                                  (cl_mem) (data_->mutable_gpu_data()), 0);
 #endif
@@ -195,7 +196,7 @@ template<> unsigned int Blob<unsigned int>::asum_data() const {
 }
 
 template<typename Dtype>
-DeviceContext Blob<Dtype>::device_context() {
+DeviceContext *Blob<Dtype>::device_context() {
   return device_context_;
 }
 
@@ -215,7 +216,7 @@ Dtype Blob<Dtype>::asum_data() const {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         Dtype asum;
         caffe_gpu_asum(count_, gpu_data(), &asum);
@@ -224,7 +225,7 @@ Dtype Blob<Dtype>::asum_data() const {
       } else {
 #ifdef USE_GREENTEA
         Dtype asum;
-        greentea_gpu_asum(device_context_.id(), count_, (cl_mem) gpu_data(), 0,
+        greentea_gpu_asum(device_context_->id(), count_, (cl_mem) gpu_data(), 0,
                           &asum);
         return asum;
 #endif
@@ -262,7 +263,7 @@ Dtype Blob<Dtype>::asum_diff() const {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         Dtype asum;
         caffe_gpu_asum(count_, gpu_diff(), &asum);
@@ -271,7 +272,7 @@ Dtype Blob<Dtype>::asum_diff() const {
       } else {
 #ifdef USE_GREENTEA
         Dtype asum;
-        greentea_gpu_asum(device_context_.id(), count_, (cl_mem) gpu_diff(), 0,
+        greentea_gpu_asum(device_context_->id(), count_, (cl_mem) gpu_diff(), 0,
                           &asum);
         return asum;
 #endif
@@ -315,13 +316,13 @@ Dtype Blob<Dtype>::sumsq_data() const {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       data = gpu_data();
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_dot(count_, data, data, &sumsq);
 #endif
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_dot(device_context_.id(), count_, (cl_mem) data, 0,
+        greentea_gpu_dot(device_context_->id(), count_, (cl_mem) data, 0,
                          (cl_mem) data, 0, &sumsq);
 #endif
       }
@@ -365,13 +366,13 @@ Dtype Blob<Dtype>::sumsq_diff() const {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       diff = gpu_diff();
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_dot(count_, diff, diff, &sumsq);
 #endif
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_dot(device_context_.id(), count_, (cl_mem) diff, 0,
+        greentea_gpu_dot(device_context_->id(), count_, (cl_mem) diff, 0,
                          (cl_mem) diff, 0, &sumsq);
 #endif
       }
@@ -412,13 +413,13 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       data = mutable_gpu_data();
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_scal(count_, scale_factor, data);
 #endif
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_scal(device_context_.id(), count_, scale_factor,
+        greentea_gpu_scal(device_context_->id(), count_, scale_factor,
                           (cl_mem) data, 0);
 #endif
       }
@@ -458,13 +459,13 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       diff = mutable_gpu_diff();
-      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_scal(count_, scale_factor, diff);
 #endif
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_scal(device_context_.id(), count_, scale_factor,
+        greentea_gpu_scal(device_context_->id(), count_, scale_factor,
                           (cl_mem) diff, 0);
 #endif
       }
@@ -513,7 +514,7 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   }
   switch (Caffe::mode()) {
     case Caffe::GPU: {
-      if (device_context_.backend() == BACKEND_CUDA) {
+      if (device_context_->backend() == BACKEND_CUDA) {
         if (copy_diff) {
           caffe_copy(count_, source.gpu_diff(),
               static_cast<Dtype*>(diff_->mutable_gpu_data()));
@@ -527,12 +528,12 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
           greentea_copy<Dtype>(
               count_, (cl_mem) (source.gpu_diff()), 0,
               (cl_mem) (diff_->mutable_gpu_data()), 0,
-              &viennacl::ocl::get_context(device_context_.id()));
+              &viennacl::ocl::get_context(device_context_->id()));
         } else {
           greentea_copy<Dtype>(
               count_, (cl_mem) (source.gpu_data()), 0,
               (cl_mem) (data_->mutable_gpu_data()), 0,
-              &viennacl::ocl::get_context(device_context_.id()));
+              &viennacl::ocl::get_context(device_context_->id()));
         }
 #endif
       }
