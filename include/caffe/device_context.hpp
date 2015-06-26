@@ -8,6 +8,7 @@
 #ifndef CAFFE_DEVICE_CONTEXT_HPP_
 #define CAFFE_DEVICE_CONTEXT_HPP_
 
+#include <boost/shared_ptr.hpp>
 #include <vector>
 #include "caffe/blob.hpp"
 #include "caffe/greentea/greentea.hpp"
@@ -25,18 +26,16 @@ class DeviceContext {
   int id() const;
   int WorkgroupSize(int id);
 
-
   template<typename Dtype>
-  Blob<Dtype> * Buffer(int id);
-
+  shared_ptr< Blob<Dtype> > Buffer(int id);
 
  private:
   void Init();
   std::vector<int> workgroup_sizes_;
   int id_;
   Backend backend_;
-  std::vector< Blob<float> > buff_f_;
-  std::vector< Blob<double> > buff_d_;
+  std::vector< shared_ptr< Blob<float> > > buff_f_;
+  std::vector< shared_ptr< Blob<double> > > buff_d_;
 };
 }  // namespace caffe
 

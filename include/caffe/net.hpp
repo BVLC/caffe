@@ -9,8 +9,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device_context.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+
 
 namespace caffe {
 
