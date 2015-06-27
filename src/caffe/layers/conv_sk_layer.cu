@@ -23,7 +23,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
       Dtype* top_data = top[i]->mutable_gpu_data();
-      Dtype* col_data = col_buffer_.mutable_gpu_data();
+      Dtype* col_data = col_buffer()->mutable_gpu_data();
       const Dtype* weight = this->blobs_[0]->gpu_data();
       int weight_offset = M_ * K_;
       int col_offset = K_ * N_;
@@ -62,7 +62,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
       cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
-      cl_mem col_data = (cl_mem) (col_buffer_.mutable_gpu_data());
+      cl_mem col_data = (cl_mem) (col_buffer()->mutable_gpu_data());
       const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
 
       int weight_offset = M_ * K_;
@@ -137,8 +137,8 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
         if (!top_diff) {
           top_diff = top[i]->gpu_diff();
         }
-        Dtype* col_data = col_buffer_.mutable_gpu_data();
-        Dtype* col_diff = col_buffer_.mutable_gpu_diff();
+        Dtype* col_data = col_buffer()->mutable_gpu_data();
+        Dtype* col_diff = col_buffer()->mutable_gpu_diff();
         const Dtype* bottom_data = bottom[i]->gpu_data();
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
         for (int n = 0; n < num_; ++n) {
@@ -220,8 +220,8 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
         if (!top_diff) {
           top_diff = (cl_mem) (top[i]->gpu_diff());
         }
-        cl_mem col_data = (cl_mem) (col_buffer_.mutable_gpu_data());
-        cl_mem col_diff = (cl_mem) (col_buffer_.mutable_gpu_diff());
+        cl_mem col_data = (cl_mem) (col_buffer()->mutable_gpu_data());
+        cl_mem col_diff = (cl_mem) (col_buffer()->mutable_gpu_diff());
         const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
         cl_mem bottom_diff = (cl_mem) (bottom[i]->mutable_gpu_diff());
 
@@ -269,6 +269,12 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
     }
 #endif
   }
+}
+
+template<typename Dtype>
+shared_ptr< Blob<Dtype> > ConvolutionSKLayer<Dtype>::col_buffer() {
+    return this->device_context_->
+        template Buffer<Dtype>(this->device_context_->current_queue_id());
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionSKLayer);

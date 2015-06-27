@@ -233,6 +233,8 @@ class ConvolutionSKLayer : public Layer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
 
+  shared_ptr< Blob<Dtype> > col_buffer();
+
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int channels_;

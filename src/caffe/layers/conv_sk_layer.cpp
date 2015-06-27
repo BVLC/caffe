@@ -83,8 +83,17 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int height_out = (height_ - ext_kernel_h) / stride_h_ + 1;
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
 
-  col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
+  if (Caffe::mode() == Caffe::Brew::CPU) {
+    col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
                         width_out);
+  } else {
+    // Shared column buffer per device-queue across all layers on that device
+    for (int i = 0; i < this->device_context_->num_queues(); ++i) {
+      shared_ptr< Blob<Dtype> > buffer =
+          this->device_context_->template Buffer<Dtype>(i);
+      buffer->Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out, width_out);
+    }
+  }
 
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
