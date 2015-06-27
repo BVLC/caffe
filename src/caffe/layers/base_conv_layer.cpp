@@ -440,12 +440,16 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
 template<typename Dtype>
 shared_ptr< Blob<Dtype> > BaseConvolutionLayer<Dtype>::col_buffer() {
   if (this->device_context_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
     return this->device_context_->template Buffer<Dtype>(0);
+#endif  // USE_CUDA
   } else {
+#ifdef USE_GREENTEA
     viennacl::ocl::context ctx =
         viennacl::ocl::get_context(this->device_context_->id());
     return this->device_context_->
         template Buffer<Dtype>(this->device_context_->current_queue_id());
+#endif  // USE_GREENTEA
   }
 }
 
