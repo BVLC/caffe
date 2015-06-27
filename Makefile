@@ -169,9 +169,18 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-LIBRARIES += glog gflags protobuf leveldb snappy \
-	lmdb boost_system hdf5_hl hdf5 m \
-	opencv_core opencv_highgui opencv_imgproc
+
+LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5
+
+ifeq ($(USE_LEVELDB), 1)
+	LIBRARIES += leveldb snappy
+endif
+ifeq ($(USE_LMDB), 1)
+	LIBRARIES += lmdb
+endif
+ifeq ($(USE_OPENCV), 1)
+	LIBRARIES += opencv_core opencv_highgui opencv_imgproc
+endif
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -288,6 +297,17 @@ endif
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
 	COMMON_FLAGS += -DUSE_CUDNN
+endif
+
+# i/o libraries configuration
+ifeq ($(USE_OPENCV), 1)
+	COMMON_FLAGS += -DUSE_OPENCV
+endif
+ifeq ($(USE_LEVELDB), 1)
+	COMMON_FLAGS += -DUSE_LEVELDB
+endif
+ifeq ($(USE_LMDB), 1)
+	COMMON_FLAGS += -DUSE_LMDB
 endif
 
 # CPU-only configuration
@@ -472,7 +492,7 @@ runtest: $(TEST_ALL_BIN)
 
 pytest: py
 	cd python; python -m unittest discover -s caffe/test
-	
+
 mattest: mat
 	cd matlab; $(MATLAB_DIR)/bin/matlab -nodisplay -r 'caffe.run_tests(), exit()'
 
