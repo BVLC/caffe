@@ -7,6 +7,11 @@
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
+# comment out to disable IO dependencies
+USE_LEVELDB := 1
+USE_LMDB := 1
+USE_OPENCV := 1
+
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
