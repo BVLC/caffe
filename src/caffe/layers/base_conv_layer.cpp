@@ -451,6 +451,7 @@ shared_ptr< Blob<Dtype> > BaseConvolutionLayer<Dtype>::col_buffer() {
         template Buffer<Dtype>(this->device_context_->current_queue_id());
 #endif  // USE_GREENTEA
   }
+  return NULL;
 }
 
 #endif  // !CPU_ONLY
