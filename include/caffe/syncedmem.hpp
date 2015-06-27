@@ -73,10 +73,10 @@ class SyncedMemory {
   SyncedMemory()
   : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
   own_cpu_data_(false), device_context_(Caffe::GetDefaultDeviceContext()) {}
-  explicit SyncedMemory(DeviceContext device_context)
+  explicit SyncedMemory(DeviceContext *device_context)
   : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
   own_cpu_data_(false), device_context_(device_context) {}
-  explicit SyncedMemory(size_t size, DeviceContext device_context)
+  explicit SyncedMemory(size_t size, DeviceContext *device_context)
   : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
   own_cpu_data_(false), device_context_(device_context) {}
 #endif
