@@ -28,14 +28,6 @@ viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
   }
 }
 
-void FinishQueues(viennacl::ocl::context *ctx) {
-  for (int i = 0; i < GREENTEA_QUEUE_COUNT; ++i) {
-    ctx->switch_queue(i);
-    ctx->get_queue().finish();
-  }
-  ctx->switch_queue(0);
-}
-
 #endif
 
 

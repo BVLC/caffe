@@ -24,15 +24,19 @@ class DeviceContext {
   explicit DeviceContext(int id, Backend backend);
   Backend backend() const;
   int id() const;
+  int current_queue_id();
   int WorkgroupSize(int id);
 
   template<typename Dtype>
   shared_ptr< Blob<Dtype> > Buffer(int id);
 
   int num_queues();
+  void SwitchQueue(int id);
+  void FinishQueues();
 
   void Init();
  private:
+  int current_queue_id_;
   std::vector<int> workgroup_sizes_;
   int id_;
   Backend backend_;
