@@ -108,6 +108,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                        const Dtype* output, const int output_off,
                        Dtype* weights);
   void backward_gpu_bias(Dtype* bias, const Dtype* input, const int input_off);
+
+  shared_ptr< Blob<Dtype> > col_buffer();
 #endif
 
   // reverse_dimensions should return true iff we are implementing deconv, so

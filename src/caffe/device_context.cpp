@@ -14,11 +14,13 @@
 namespace caffe {
 
 DeviceContext::DeviceContext()
-    : workgroup_sizes_(3, 0), id_(0), backend_(Backend::BACKEND_CUDA) {
+    : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0),
+      backend_(Backend::BACKEND_CUDA) {
 }
 
 DeviceContext::DeviceContext(int id, Backend backend)
-    : workgroup_sizes_(3, 0), id_(id), backend_(backend) {
+    : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id),
+      backend_(backend) {
 }
 
 void DeviceContext::Init() {
@@ -80,6 +82,43 @@ shared_ptr< Blob<double> > DeviceContext::Buffer(int id) {
     buff_d_.push_back(blob_pointer);
   }
   return buff_d_[id];
+}
+
+int DeviceContext::current_queue_id() {
+  return current_queue_id_;
+}
+
+void DeviceContext::SwitchQueue(int id) {
+  if (backend_ == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    (void) id;
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx =
+        viennacl::ocl::get_context(id_);
+    ctx.switch_queue(id % num_queues());
+    current_queue_id_ = id % num_queues();
+#endif  // USE_GREENTEA
+  }
+}
+
+void DeviceContext::FinishQueues() {
+  if (backend_ == BACKEND_CUDA) {
+#ifdef USE_CUDA
+#endif  // USE_CUDA
+  } else {
+  #ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx =
+        viennacl::ocl::get_context(id_);
+    for (int i = 0; i < num_queues(); ++i) {
+      ctx.switch_queue(i);
+      ctx.get_queue().finish();
+    }
+    ctx.switch_queue(0);
+    current_queue_id_ = 0;
+  #endif  // USE_GREENTEA
+  }
 }
 
 }  // namespace caffe

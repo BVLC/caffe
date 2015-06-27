@@ -260,9 +260,10 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   cudaGetDeviceCount(&cuda_device_count);
 #endif  // USE_CUDA
   for (int i = 0; i < cuda_device_count; ++i) {
-    Get().device_contexts_.emplace_back(DeviceContext(i, Backend::BACKEND_CUDA));
-    for(int j = 0; j < device_ids.size(); ++j) {
-      if(device_ids[j] == i) {
+    Get().device_contexts_.emplace_back(
+        DeviceContext(i, Backend::BACKEND_CUDA));
+    for (int j = 0; j < device_ids.size(); ++j) {
+      if (device_ids[j] == i) {
         Caffe::GetDeviceContext(i)->Init();
       }
     }

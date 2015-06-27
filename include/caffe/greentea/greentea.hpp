@@ -58,8 +58,6 @@ struct is_same<T, T> {
 
 #ifdef USE_GREENTEA
 
-void FinishQueues(viennacl::ocl::context *ctx);
-
 #ifdef USE_CLBLAS
 #define GREENTEA_CL_BLAS_CHECK(condition) \
     {clblasStatus status = condition; \
