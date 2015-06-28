@@ -15,12 +15,14 @@ namespace caffe {
 
 DeviceContext::DeviceContext()
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0),
-      backend_(Backend::BACKEND_CUDA) {
+      backend_(Backend::BACKEND_CUDA),
+      memory_usage_(0), peak_memory_usage_(0) {
 }
 
 DeviceContext::DeviceContext(int id, Backend backend)
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id),
-      backend_(backend) {
+      backend_(backend),
+      memory_usage_(0), peak_memory_usage_(0) {
 }
 
 void DeviceContext::Init() {
@@ -119,6 +121,25 @@ void DeviceContext::FinishQueues() {
     current_queue_id_ = 0;
   #endif  // USE_GREENTEA
   }
+}
+
+size_t DeviceContext::memory_usage() {
+  return memory_usage_;
+}
+
+size_t DeviceContext::peak_memory_usage() {
+  return peak_memory_usage_;
+}
+
+void DeviceContext::IncreaseMemoryUsage(size_t bytes) {
+  memory_usage_ += bytes;
+  if (memory_usage_ > peak_memory_usage_) {
+    peak_memory_usage_ = memory_usage_;
+  }
+}
+
+void DeviceContext::DecreaseMemoryUsage(size_t bytes) {
+  memory_usage_ -= bytes;
 }
 
 }  // namespace caffe

@@ -24,10 +24,12 @@ SyncedMemory::~SyncedMemory() {
     if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
       CUDA_CHECK(cudaFree(gpu_ptr_));
+      device_context_->DecreaseMemoryUsage(size_);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       clReleaseMemObject(cl_gpu_mem_);
+      device_context_->DecreaseMemoryUsage(size_);
 #endif  // USE_GREENTEA
     }
   }
@@ -84,6 +86,7 @@ inline void SyncedMemory::to_gpu() {
       if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+        device_context_->IncreaseMemoryUsage(size_);
         caffe_gpu_memset(size_, 0, gpu_ptr_);
 #endif  // USE_CUDA
       } else {
@@ -101,9 +104,11 @@ inline void SyncedMemory::to_gpu() {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
           CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                                        size_, cpu_ptr_, &err);
+          device_context_->IncreaseMemoryUsage(size_);
         } else {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                        size_, NULL, &err);
+          device_context_->IncreaseMemoryUsage(size_);
           int alpha = 0;
           greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
         }
@@ -119,6 +124,7 @@ inline void SyncedMemory::to_gpu() {
 #ifdef USE_CUDA
         if (gpu_ptr_ == NULL) {
           CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+          device_context_->IncreaseMemoryUsage(size_);
         }
         caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
 #endif  // USE_CUDA
@@ -137,9 +143,12 @@ inline void SyncedMemory::to_gpu() {
             cl_gpu_mem_ = clCreateBuffer(
                 ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                 size_, cpu_ptr_, &err);
+            device_context_->IncreaseMemoryUsage(size_);
+
           } else {
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                          size_, NULL, &err);
+            device_context_->IncreaseMemoryUsage(size_);
           }
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
           ctx.get_queue().finish();
