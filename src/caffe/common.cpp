@@ -132,6 +132,9 @@ Caffe::Caffe()
 }
 
 Caffe::~Caffe() {
+  // Make sure all device contexts and
+  // dependent memory blocks are freed properly
+  device_contexts_.clear();
 #ifdef USE_CUDA
   if (cublas_handle_)
     CUBLAS_CHECK(cublasDestroy(cublas_handle_));
