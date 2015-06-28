@@ -35,11 +35,19 @@ class DeviceContext {
   void FinishQueues();
 
   void Init();
+
+  size_t memory_usage();
+  size_t peak_memory_usage();
+  void IncreaseMemoryUsage(size_t bytes);
+  void DecreaseMemoryUsage(size_t bytes);
+
  private:
   int current_queue_id_;
   std::vector<int> workgroup_sizes_;
   int id_;
   Backend backend_;
+  size_t memory_usage_;
+  size_t peak_memory_usage_;
   std::vector< shared_ptr< Blob<float> > > buff_f_;
   std::vector< shared_ptr< Blob<double> > > buff_d_;
 };

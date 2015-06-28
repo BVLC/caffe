@@ -91,7 +91,8 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < this->device_context_->num_queues(); ++i) {
       shared_ptr< Blob<Dtype> > buffer =
           this->device_context_->template Buffer<Dtype>(i);
-      buffer->Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out, width_out);
+      buffer->Reshape(1, channels_ * kernel_h_ * kernel_w_,
+                      height_out, width_out);
     }
   }
 
