@@ -23,7 +23,7 @@ SyncedMemory::~SyncedMemory() {
   if (gpu_ptr_) {
     if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
-      CUDA_CHECK(cudaFree(gpu_ptr_));
+      cudaFree(gpu_ptr_);
       device_context_->DecreaseMemoryUsage(size_);
 #endif  // USE_CUDA
     } else {
