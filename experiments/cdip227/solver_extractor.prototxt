@@ -1,7 +1,7 @@
-net: "experiments/cdip256/finetune.prototxt"
+net: "experiments/cdip227/extractor.prototxt"
 test_iter: 800
 test_interval: 4000
-base_lr: 0.0001
+base_lr: 0.01
 lr_policy: "step"
 gamma: 0.5
 stepsize: 200000
@@ -10,5 +10,5 @@ max_iter: 1800000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 20000
-snapshot_prefix: "experiments/cdip256/finetune/cdip256_finetune"
+snapshot_prefix: "experiments/cdip227/extractor/cdip227_extractor"
 solver_mode: GPU
