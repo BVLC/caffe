@@ -13,7 +13,7 @@ layer {
   }
   data_param {
     source: "experiments/cdip256/data/cdip_train_lmdb"
-    batch_size: 256
+    batch_size: 64
     backend: LMDB
   }
 }
