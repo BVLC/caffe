@@ -285,7 +285,8 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
-  virtual void FastForward(const int ffstep) {}  // ywc // fast forward for frequent training restarts
+  // fast forward for frequent training restarts
+  virtual void FastForward(const int ffstep) {}
 
  protected:
   /** The protobuf that stores the layer parameters */

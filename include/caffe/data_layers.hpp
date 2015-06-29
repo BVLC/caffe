@@ -87,7 +87,8 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  void FastForward(const int ffstep);  // ywc // fast forward for frequent training restarts
+  // fast forward for frequent training restarts
+  void FastForward(const int ffstep);
 
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }

@@ -186,7 +186,8 @@ class Net {
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
 
-  void FastForward(const int ffstep);  // ywc // fast forward for frequent training restarts
+  // fast forward for frequent training restarts
+  void FastForward(const int ffstep);
 
  protected:
   // Helpers for Init.
