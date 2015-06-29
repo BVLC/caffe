@@ -60,6 +60,25 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+// ywc // fast forward for frequent training restarts
+template <typename Dtype>
+void DataLayer<Dtype>::FastForward(const int ffstep) {
+   const int batch_size = this->layer_param_.data_param().batch_size();
+
+   for (int i = 0; i < ffstep; ++i) {
+       // LOG(INFO) << "ff " << i;
+       for (int item_id = 0; item_id < batch_size; ++item_id) {
+           // go to the next iter
+           // LOG(INFO) << "  item id " << item_id;
+           cursor_->Next();
+           if (!cursor_->valid()) {
+             DLOG(INFO) << "Restarting data prefetching from start.";
+             cursor_->SeekToFirst();
+           }
+       }
+   }
+}
+
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void DataLayer<Dtype>::InternalThreadEntry() {

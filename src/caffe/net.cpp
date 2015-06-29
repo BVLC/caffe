@@ -493,6 +493,26 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
   }
 }
 
+// ywc // fast forward for frequent training restarts
+template <typename Dtype>
+void Net<Dtype>::FastForward(const int ffstep) {
+    int start = 0;
+    int end   = layers_.size() - 1;
+
+    // We do fast forward by ffstep-1 steps and one forward in the last step.
+    // This is because the current caffe pre-fetches the data that will be
+    // used in the next step. This is done in a forward pass.
+    LOG(INFO) << "fast forward for ffstep-1=" << ffstep-1 << " steps";
+    for (int i = start; i <= end; ++i) {
+        layers_[i]->FastForward(ffstep-1);
+    }
+    LOG(INFO) << "forward for the last step";
+    for (int i = start; i <= end; ++i) {
+        layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+    }
+    LOG(INFO) << "fast forward done";
+}
+
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);

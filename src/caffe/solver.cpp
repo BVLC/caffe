@@ -255,6 +255,12 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     Restore(resume_file);
   }
 
+  // data cursor fast forward for frequent training restarts
+  int ffstep = iter_;
+  if (ffstep >= 1) {
+    net_->FastForward(ffstep);
+  }
+
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   Step(param_.max_iter() - iter_);
