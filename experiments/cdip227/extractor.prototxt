@@ -339,7 +339,7 @@ layer {
   }
 }
 layer {
-  name: "fc8"
+  name: "fc8_extractor"
   type: "InnerProduct"
   bottom: "fc7"
   top: "fc8"
