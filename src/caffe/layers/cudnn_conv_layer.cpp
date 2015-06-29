@@ -140,8 +140,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   top_offset_ = (this->num_output_ / this->group_)
       * this->height_out_ * this->width_out_;
 
-  // workspace needed for algo1 on kepler or maxwell
-  size_t max_workspace_bytes = 1048576 * 8; // 8 MB
+  // Specify workspace limit for kernels directly until we have a
+  // planning strategy and a rewrite of Caffe's GPU memory mangagement
+  size_t workspace_limit_bytes = 8*1024*1024;
 
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
@@ -190,7 +191,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm(handle_[0],
             bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
             CUDNN_CONVOLUTION_BWD_FILTER_SPECIFY_WORKSPACE_LIMIT,
-            max_workspace_bytes, &bwd_filter_algo_[i]) );
+            workspace_limit_bytes, &bwd_filter_algo_[i]) );
     } else {
       bwd_filter_algo_[i] = GetCuDNNBwdFilterAlgo(
                   this->layer_param_.convolution_param().cudnnbwdfilteralgo());
@@ -205,7 +206,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm(handle_[0],
             filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
             CUDNN_CONVOLUTION_BWD_DATA_SPECIFY_WORKSPACE_LIMIT,
-            max_workspace_bytes, &bwd_data_algo_[i]));
+          workspace_limit_bytes, &bwd_data_algo_[i]));
     } else {
       bwd_data_algo_[i] = GetCuDNNBwdDataAlgo(
                   this->layer_param_.convolution_param().cudnnbwddataalgo());
