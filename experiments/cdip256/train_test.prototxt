@@ -10,11 +10,10 @@ layer {
   transform_param {
     mirror: true
     crop_size: 227
-    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
   }
   data_param {
     source: "experiments/cdip256/data/cdip_train_lmdb"
-    batch_size: 64
+    batch_size: 256
     backend: LMDB
   }
 }
@@ -29,10 +28,9 @@ layer {
   transform_param {
     mirror: false
     crop_size: 227
-    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
   }
   data_param {
-    source: "experiments/cdip256/data/cdip_val_lmdb"
+    source: "experiments/cdip256/data/cdip_test_lmdb"
     batch_size: 50
     backend: LMDB
   }
@@ -341,16 +339,16 @@ layer {
   }
 }
 layer {
-  name: "fc8_finetune"
+  name: "fc8"
   type: "InnerProduct"
   bottom: "fc7"
   top: "fc8"
   param {
-    lr_mult: 10
+    lr_mult: 1
     decay_mult: 1
   }
   param {
-    lr_mult: 20
+    lr_mult: 2
     decay_mult: 0
   }
   inner_product_param {

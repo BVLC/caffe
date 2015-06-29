@@ -32,7 +32,7 @@ layer {
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
   }
   data_param {
-    source: "experiments/cdip256/data/cdip_val_lmdb"
+    source: "experiments/cdip256/data/cdip_test_lmdb"
     batch_size: 50
     backend: LMDB
   }
