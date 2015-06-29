@@ -21,7 +21,8 @@ using std::ostringstream;
 
 DEFINE_string(gpu, "",
     "Optional; run in GPU mode on given device IDs separated by ','."
-    "Use '-gpu all' to run on all available GPUs.");
+    "Use '-gpu all' to run on all available GPUs. The effective training "
+    "batch size is multiplied by the number of devices.");
 DEFINE_string(solver, "",
     "The solver definition protocol buffer text file.");
 DEFINE_string(model, "",

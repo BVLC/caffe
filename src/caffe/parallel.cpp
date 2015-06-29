@@ -435,62 +435,6 @@ void P2PSync<Dtype>::run(shared_ptr<Solver<Dtype> > root,
   }
 }
 
-template<typename Dtype>
-void P2PSync<Dtype>::divide_batch_size(NetParameter* net) {
-  int solver_count = Caffe::solver_count();
-  for (int i = 0; i < net->layer_size(); ++i) {
-    string m = "Batch size must be divisible by the number of solvers (GPUs)";
-    if (net->layer(i).has_data_param()) {
-      if (net->layer(i).data_param().has_batch_size()) {
-        uint32_t total = net->layer(i).data_param().batch_size();
-        uint32_t batch = total / solver_count;
-        CHECK(batch * solver_count == total) << m;
-        net->mutable_layer(i)->mutable_data_param()->set_batch_size(batch);
-
-        // Also adjust the prefetch count, as it is shared by all solvers
-        uint32_t prefetch = net->layer(i).data_param().prefetch();
-        net->mutable_layer(i)->mutable_data_param()->set_prefetch(
-            prefetch * solver_count);
-      }
-    }
-    if (net->layer(i).has_hdf5_data_param()) {
-      if (net->layer(i).hdf5_data_param().has_batch_size()) {
-        uint32_t total = net->layer(i).hdf5_data_param().batch_size();
-        uint32_t batch = total / solver_count;
-        CHECK(batch * solver_count == total) << m;
-        net->mutable_layer(i)->mutable_hdf5_data_param()->set_batch_size(batch);
-      }
-    }
-    if (net->layer(i).has_image_data_param()) {
-      if (net->layer(i).image_data_param().has_batch_size()) {
-        uint32_t total = net->layer(i).image_data_param().batch_size();
-        uint32_t batch = total / solver_count;
-        CHECK(batch * solver_count == total) << m;
-        net->mutable_layer(i)->mutable_image_data_param()->set_batch_size(
-            batch);
-      }
-    }
-    if (net->layer(i).has_memory_data_param()) {
-      if (net->layer(i).memory_data_param().has_batch_size()) {
-        uint32_t total = net->layer(i).memory_data_param().batch_size();
-        uint32_t batch = total / solver_count;
-        CHECK(batch * solver_count == total) << m;
-        net->mutable_layer(i)->mutable_memory_data_param()->set_batch_size(
-            batch);
-      }
-    }
-    if (net->layer(i).has_window_data_param()) {
-      if (net->layer(i).window_data_param().has_batch_size()) {
-        uint32_t total = net->layer(i).window_data_param().batch_size();
-        uint32_t batch = total / solver_count;
-        CHECK(batch * solver_count == total) << m;
-        net->mutable_layer(i)->mutable_window_data_param()->set_batch_size(
-            batch);
-      }
-    }
-  }
-}
-
 INSTANTIATE_CLASS(Params);
 INSTANTIATE_CLASS(GPUParams);
 INSTANTIATE_CLASS(P2PSync);
