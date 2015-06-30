@@ -70,6 +70,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   CPUTimer timer;
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
+  CHECK(cursor_->valid());
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -91,6 +92,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   }
   timer.Start();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
+    CHECK(cursor_->valid());
     // get a datum
     Datum datum;
     datum.ParseFromString(cursor_->value());
