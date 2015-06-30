@@ -21,22 +21,23 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   << "corresponding to (num, channels, height, width)";
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  CHECK(!conv_param.has_kernel_size() !=
+  CHECK(!(conv_param.kernel_size_size() > 0) !=
       !(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
   << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-  CHECK(conv_param.has_kernel_size() ||
+  CHECK((conv_param.kernel_size_size() > 0) ||
       (conv_param.has_kernel_h() && conv_param.has_kernel_w()))
   << "For non-square filters both kernel_h and kernel_w are required.";
-  CHECK((!conv_param.has_pad() && conv_param.has_pad_h()
+  CHECK((!(conv_param.pad_size() > 0) && conv_param.has_pad_h()
           && conv_param.has_pad_w())
       || (!conv_param.has_pad_h() && !conv_param.has_pad_w()))
   << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!conv_param.has_stride() && conv_param.has_stride_h()
+  CHECK((!(conv_param.stride_size() > 0) && conv_param.has_stride_h()
           && conv_param.has_stride_w())
       || (!conv_param.has_stride_h() && !conv_param.has_stride_w()))
   << "Stride is stride OR stride_h and stride_w are required.";
-  if (conv_param.has_kernel_size()) {
-    kernel_h_ = kernel_w_ = conv_param.kernel_size();
+  if (conv_param.kernel_size_size() > 0) {
+    kernel_h_ = kernel_w_ = conv_param.kernel_size_size() > 0 ?
+        conv_param.kernel_size().Get(0) : 1;
   } else {
     kernel_h_ = conv_param.kernel_h();
     kernel_w_ = conv_param.kernel_w();
@@ -44,13 +45,15 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
   CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
   if (!conv_param.has_pad_h()) {
-    pad_h_ = pad_w_ = conv_param.pad();
+    pad_h_ = pad_w_ = conv_param.pad_size() > 0 ?
+        conv_param.pad().Get(0) : 0;
   } else {
     pad_h_ = conv_param.pad_h();
     pad_w_ = conv_param.pad_w();
   }
   if (!conv_param.has_stride_h()) {
-    stride_h_ = stride_w_ = conv_param.stride();
+    stride_h_ = stride_w_ = conv_param.stride_size() > 0 ?
+        conv_param.stride().Get(0) : 1;
   } else {
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();

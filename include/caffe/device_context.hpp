@@ -40,6 +40,7 @@ class DeviceContext {
   size_t peak_memory_usage();
   void IncreaseMemoryUsage(size_t bytes);
   void DecreaseMemoryUsage(size_t bytes);
+  void ResetPeakMemoryUsage();
 
  private:
   int current_queue_id_;

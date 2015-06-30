@@ -703,7 +703,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
  protected:
   /// @copydoc SoftmaxWithLossLayer

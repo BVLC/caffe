@@ -117,6 +117,12 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     } else {
       caffe_scal(prob_.count(), loss_weight / outer_num_, bottom_diff);
     }
+    if (bottom.size() == 3) {
+      // TODO: Correct this for easy diff scaling
+      std::cout << "Size: " << bottom[0]->count() << std::endl;
+      const Dtype* weight = bottom[2]->cpu_data();
+      caffe_mul(bottom[2]->count(), bottom_diff, weight, bottom_diff);
+    }
   }
 }
 
