@@ -176,6 +176,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
+
 LIBRARIES += glog gflags protobuf leveldb snappy \
 	lmdb boost_system hdf5_hl hdf5 m \
 	opencv_core opencv_highgui opencv_imgproc
@@ -297,6 +298,12 @@ endif
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
 	COMMON_FLAGS += -DUSE_CUDNN
+endif
+
+# cuMEM integration
+ifeq ($(USE_CNMEM), 1)
+	LIBRARIES += cnmem
+	COMMON_FLAGS += -DUSE_CNMEM
 endif
 
 # CPU-only configuration

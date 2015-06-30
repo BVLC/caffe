@@ -18,6 +18,7 @@ using caffe::string;
 using caffe::Timer;
 using caffe::vector;
 using std::ostringstream;
+using caffe::MemoryHandlerActivator;
 
 DEFINE_int32(gpu, -1,
     "Run in GPU mode on given device ID (Legacy switch, use -gpus).");
@@ -159,6 +160,9 @@ int train() {
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_solver_count(gpus.size());
   }
+#ifdef USE_CNMEM
+  MemoryHandlerActivator handler(gpus);
+#endif
 
   shared_ptr<Solver<float> > solver(caffe::GetSolver<float>(solver_param));
 
@@ -176,6 +180,8 @@ int train() {
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+  // solver.reset();
   return 0;
 }
 RegisterBrewFunction(train);

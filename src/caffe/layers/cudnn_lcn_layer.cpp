@@ -43,20 +43,22 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   size_t totalSizeInBytes = sizeof(Dtype)*bottom[0]->num()* \
                             this->channels_*this->height_*this->width_;
 
+#ifdef USE_CNMEM
+  this->tempDataSize = totalSizeInBytes;
+#else
   if (totalSizeInBytes > tempDataSize) {
     tempDataSize = totalSizeInBytes;
 
-    if (tempData1 != NULL) {
-      cudaFree(tempData1);
-    }
-    if (tempData2 != NULL) {
-      cudaFree(tempData2);
-    }
+    MemoryHandler::freeGPU(tempData1);
+    MemoryHandler::freeGPU(tempData2);
+    tempData1 = NULL;
+    tempData2 = NULL;
 
     // allocate new buffers
-    CUDA_CHECK(cudaMalloc(&tempData1, totalSizeInBytes));
-    CUDA_CHECK(cudaMalloc(&tempData2, totalSizeInBytes));
+    MemoryHandler::mallocGPU(&tempData1, totalSizeInBytes);
+    MemoryHandler::mallocGPU(&tempData2, totalSizeInBytes);
   }
+#endif
 }
 
 template <typename Dtype>

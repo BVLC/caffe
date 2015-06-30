@@ -98,6 +98,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     CUDNN_CHECK(cudnnCreate(&handle_[g]));
     CUDNN_CHECK(cudnnSetStream(handle_[g], stream_[g]));
     workspace[g] = NULL;
+    MemoryHandler::registerStream(stream_[g]);
   }
 
   // Set the indexing parameters.
@@ -142,7 +143,13 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
-  size_t workspace_limit_bytes = 8*1024*1024;
+  size_t workspace_limit_bytes;
+  if (MemoryHandler::usingPool()) {
+    size_t total_memory;
+    MemoryHandler::getInfo(&workspace_limit_bytes, &total_memory);
+  } else {
+    workspace_limit_bytes = 8*1024*1024;
+  }
 
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
@@ -186,6 +193,14 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
       fwd_algo_[i],
       &(workspace_fwd_sizes_[i])));
 
+    if (MemoryHandler::usingPool()) {
+      // restrict to only 1 convolution at a time for memory allocation purposes
+      size_t total_memory;
+      MemoryHandler::getInfo(&workspace_limit_bytes, &total_memory);
+    } else {
+      workspace_limit_bytes = 8*1024*1024;
+    }
+    //
     // choose backward algorithm for filter
     if (!this->layer_param_.convolution_param().has_cudnnbwdfilteralgo()) {
       CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm(handle_[0],
@@ -218,6 +233,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
           bwd_data_algo_[i], &workspace_bwd_data_sizes_[i]) );
   }
 
+#ifndef USE_CNMEM
   // reduce over all workspace sizes to get a maximum to allocate / reallocate
   size_t total_workspace_fwd = 0;
   size_t total_workspace_bwd_data = 0;
@@ -244,37 +260,17 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     workspaceSizeInBytes = total_max_workspace;
 
     // free the existing workspace and allocate a new (larger) one
-    if (this->workspaceData) {
-      cudaFree(this->workspaceData);
-    }
+    MemoryHandler::freeGPU(this->workspaceData);
+    this->workspaceData = NULL;
 
-    cudaError_t err = cudaMalloc(&(this->workspaceData), workspaceSizeInBytes);
-    if (err != cudaSuccess) {
-      // LOG(FATAL) << "Failed to allocated convolution workspace memory";
-      // force zero memory path
-      for (int i = 0; i < bottom.size(); i++) {
-        workspace_fwd_sizes_[i] = 0;
-        workspace_bwd_filter_sizes_[i] = 0;
-        workspace_bwd_data_sizes_[i] = 0;
-        fwd_algo_[i] = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
-        bwd_filter_algo_[i] = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
-        bwd_data_algo_[i] = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
-      }
-
-      // NULL out all workspace pointers
-      for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
-        workspace[g] = NULL;
-      }
-      // NULL out underlying data
-      workspaceData = NULL;
-      workspaceSizeInBytes = 0;
-    }
+    MemoryHandler::mallocGPU(&(this->workspaceData), workspaceSizeInBytes);
 
     // if we succeed in the allocation, set pointer aliases for workspaces
     for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
       workspace[g] = reinterpret_cast<char *>(workspaceData) + g*max_workspace;
     }
   }
+#endif
 
   // Tensor descriptor for bias.
   if (this->bias_term_) {
