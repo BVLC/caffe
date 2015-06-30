@@ -384,8 +384,7 @@ void P2PSync<Dtype>::on_gradients_ready(Timer* timer, ostringstream* timing) {
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::run(shared_ptr<Solver<Dtype> > root,
-                         const vector<int>& gpus) {
+void P2PSync<Dtype>::run(const vector<int>& gpus) {
   // Pair devices for map-reduce synchronization
   vector<DevicePair> pairs;
   DevicePair::compute(gpus, &pairs);
@@ -395,9 +394,8 @@ void P2PSync<Dtype>::run(shared_ptr<Solver<Dtype> > root,
   }
   LOG(INFO)<< "GPUs pairs " << s.str();
 
-  SolverParameter param(root->param());
+  SolverParameter param(solver_->param());
   vector<shared_ptr<P2PSync<Dtype> > > syncs(gpus.size());
-  syncs[0].reset(new P2PSync<Dtype>(root, NULL, param));
 
   // Build the GPU tree by finding the parent for each solver
   for (int attempts = 0; attempts < pairs.size(); ++attempts) {
@@ -405,16 +403,17 @@ void P2PSync<Dtype>::run(shared_ptr<Solver<Dtype> > root,
       if (!syncs[i].get()) {
         P2PSync<Dtype>* parent = NULL;
         for (int j = 0; j < syncs.size(); ++j) {
-          if (syncs[j]) {
-            const SolverParameter& p = syncs[j]->solver()->param();
+          P2PSync<Dtype>* sync = j == 0 ? this : syncs[j].get();
+          if (sync) {
+            const SolverParameter& p = sync->solver()->param();
             if (p.device_id() == pairs[i].parent()) {
-              parent = (P2PSync<Dtype>*) syncs[j].get();
+              parent = sync;
             }
           }
         }
         if (parent) {
           param.set_device_id(pairs[i].device());
-          syncs[i].reset(new P2PSync<Dtype>(root, parent, param));
+          syncs[i].reset(new P2PSync<Dtype>(solver_, parent, param));
           parent->children_.push_back((P2PSync<Dtype>*) syncs[i].get());
         }
       }
@@ -428,7 +427,7 @@ void P2PSync<Dtype>::run(shared_ptr<Solver<Dtype> > root,
   }
 
   // Run root solver on current thread
-  syncs[0]->solver_->Solve();
+  solver_->Solve();
 
   for (int i = 1; i < syncs.size(); ++i) {
     syncs[i]->StopInternalThread();

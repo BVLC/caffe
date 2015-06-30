@@ -93,7 +93,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
     return solver_;
   }
 
-  static void run(shared_ptr<Solver<Dtype> > root, const vector<int>& gpus);
+  void run(const vector<int>& gpus);
 
  protected:
   void on_start(Timer* timer, ostringstream* timing);

@@ -166,7 +166,8 @@ int train() {
   }
 
   if (gpus.size() > 1) {
-    caffe::P2PSync<float>::run(solver, gpus);
+    caffe::P2PSync<float> sync(solver, NULL, solver->param());
+    sync.run(gpus);
   } else {
     LOG(INFO) << "Starting Optimization";
     solver->Solve();
