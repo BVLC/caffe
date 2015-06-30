@@ -142,4 +142,8 @@ void DeviceContext::DecreaseMemoryUsage(size_t bytes) {
   memory_usage_ -= bytes;
 }
 
+void DeviceContext::ResetPeakMemoryUsage() {
+  peak_memory_usage_ = memory_usage_;
+}
+
 }  // namespace caffe
