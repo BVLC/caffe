@@ -36,7 +36,7 @@ void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) { return; }
   if (top.size() == 1) {
-    caffe_copy(count_, top[0]->cpu_diff(), bottom[0]->mutable_cpu_diff());
+    caffe_cpu_copy(count_, top[0]->cpu_diff(), bottom[0]->mutable_cpu_diff());
     return;
   }
   caffe_add(count_, top[0]->cpu_diff(), top[1]->cpu_diff(),

@@ -82,7 +82,7 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const int top_offset = n * top_slice_axis * slice_size_;
       const int bottom_offset =
           (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
-      caffe_copy(top_slice_axis * slice_size_,
+      caffe_cpu_copy(top_slice_axis * slice_size_,
           bottom_data + bottom_offset, top_data + top_offset);
     }
     offset_slice_axis += top_slice_axis;
@@ -103,7 +103,7 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const int top_offset = n * top_slice_axis * slice_size_;
       const int bottom_offset =
           (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
-      caffe_copy(top_slice_axis * slice_size_,
+      caffe_cpu_copy(top_slice_axis * slice_size_,
           top_diff + top_offset, bottom_diff + bottom_offset);
     }
     offset_slice_axis += top_slice_axis;

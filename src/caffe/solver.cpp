@@ -652,7 +652,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                       net_params[param_id]->cpu_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
-      caffe_copy(net_params[param_id]->count(), history_[param_id]->cpu_data(),
+      caffe_cpu_copy(net_params[param_id]->count(),
+                     history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_cpu_diff());
       break;
     }
@@ -722,7 +723,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   switch (Caffe::mode()) {
     case Caffe::CPU: {
       // save history momentum for stepping back
-      caffe_copy(net_params[param_id]->count(),
+      caffe_cpu_copy(net_params[param_id]->count(),
                  this->history_[param_id]->cpu_data(),
                  this->update_[param_id]->mutable_cpu_data());
 
@@ -737,7 +738,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
                       this->update_[param_id]->mutable_cpu_data());
 
       // copy
-      caffe_copy(net_params[param_id]->count(),
+      caffe_cpu_copy(net_params[param_id]->count(),
                  this->update_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_cpu_diff());
       break;
