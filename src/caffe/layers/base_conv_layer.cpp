@@ -37,7 +37,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   << "Stride is stride OR stride_h and stride_w are required.";
   if (conv_param.kernel_size_size() > 0) {
     kernel_h_ = kernel_w_ = conv_param.kernel_size_size() > 0 ?
-        conv_param.kernel_size().Get(0) : 1;
+        conv_param.kernel_size(0) : 1;
   } else {
     kernel_h_ = conv_param.kernel_h();
     kernel_w_ = conv_param.kernel_w();
@@ -46,14 +46,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
   if (!conv_param.has_pad_h()) {
     pad_h_ = pad_w_ = conv_param.pad_size() > 0 ?
-        conv_param.pad().Get(0) : 0;
+        conv_param.pad(0) : 0;
   } else {
     pad_h_ = conv_param.pad_h();
     pad_w_ = conv_param.pad_w();
   }
   if (!conv_param.has_stride_h()) {
     stride_h_ = stride_w_ = conv_param.stride_size() > 0 ?
-        conv_param.stride().Get(0) : 1;
+        conv_param.stride(0) : 1;
   } else {
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();

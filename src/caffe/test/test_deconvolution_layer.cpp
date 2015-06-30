@@ -58,8 +58,8 @@ TYPED_TEST(DeconvolutionLayerTest, TestSetup) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -96,8 +96,8 @@ TYPED_TEST(DeconvolutionLayerTest, TestSimpleDeconvolution) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("constant");
   convolution_param->mutable_weight_filler()->set_value(1);
@@ -144,8 +144,8 @@ TYPED_TEST(DeconvolutionLayerTest, TestGradient) {
       layer_param.mutable_convolution_param();
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  convolution_param->set_kernel_size(2);
-  convolution_param->set_stride(1);
+  convolution_param->add_kernel_size(2);
+  convolution_param->add_stride(1);
   convolution_param->set_num_output(1);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
