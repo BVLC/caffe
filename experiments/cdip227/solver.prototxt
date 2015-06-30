@@ -1,12 +1,11 @@
 net: "experiments/cdip227/train_val.prototxt"
 test_iter: 800
 test_interval: 1000
-base_lr: 0.01
-lr_policy: "step"
-gamma: 0.1
-stepsize: 100000
+base_lr: 0.05
+lr_policy: "poly"
+power: 2
 display: 20
-max_iter: 450000
+max_iter: 900000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000

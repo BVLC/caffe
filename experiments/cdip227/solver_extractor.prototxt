@@ -2,9 +2,7 @@ net: "experiments/cdip227/extractor.prototxt"
 test_iter: 800
 test_interval: 4000
 base_lr: 0.01
-lr_policy: "step"
-gamma: 0.5
-stepsize: 200000
+lr_policy: "fixed"
 display: 80
 max_iter: 1800000
 momentum: 0.9
