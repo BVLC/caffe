@@ -71,7 +71,7 @@ void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < new_tops_num; ++n) {
       int data_offset_top = n * dim;
       int data_offset_bottom = indices_to_forward_[n] * bottom[t]->count(1);
-      caffe_copy(dim, bottom_data + data_offset_bottom,
+      caffe_cpu_copy(dim, bottom_data + data_offset_bottom,
           top_data + data_offset_top);
     }
   }
@@ -108,7 +108,7 @@ void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           } else {  // this data was been forwarded
             data_offset_top = next_to_backward_offset * dim;
             next_to_backward_offset++;  // point to next forwarded item index
-            caffe_copy(dim, top[i]->mutable_cpu_diff() + data_offset_top,
+            caffe_cpu_copy(dim, top[i]->mutable_cpu_diff() + data_offset_top,
                 bottom[i]->mutable_cpu_diff() + data_offset_bottom);
           }
         }

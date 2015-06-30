@@ -130,7 +130,7 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
   } else {
-    caffe_copy(temp_.count(), top_diff, bottom_diff);
+    caffe_cpu_copy(temp_.count(), top_diff, bottom_diff);
   }
 }
 
