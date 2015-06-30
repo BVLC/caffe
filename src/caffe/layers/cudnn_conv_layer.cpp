@@ -171,7 +171,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         conv_descs_[i],
         top_descs_[i],
         CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
-        max_workspace_bytes,  // memoryLimitInBytes,
+        workspace_limit_bytes,
         &fwd_algo_[i]));
     } else {
       fwd_algo_[i] = GetCuDNNFwdAlgo(
