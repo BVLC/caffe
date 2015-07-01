@@ -1,6 +1,7 @@
 #ifndef CAFFE_LOSS_LAYERS_HPP_
 #define CAFFE_LOSS_LAYERS_HPP_
 
+#include <opencv2/imgproc/imgproc.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -762,6 +763,52 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 
   int softmax_axis_, outer_num_, inner_num_;
 };
+
+
+template <typename Dtype>
+class MalisLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit MalisLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "MalisLoss"; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  /// The internal SoftmaxLayer used to map predictions to a distribution.
+  shared_ptr<Layer<Dtype> > softmax_layer_;
+  /// prob stores the output probability predictions from the SoftmaxLayer.
+  Blob<Dtype> prob_;
+  /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_bottom_vec_;
+  /// top vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_top_vec_;
+
+  int softmax_axis_, outer_num_, inner_num_;
+
+ private:
+  void FindBlobs(const cv::Mat &binary,
+                 std::vector<std::vector<cv::Point2i> > &blobs);
+
+  void Malis(Dtype* conn_data, int conn_num_dims, int* conn_dims,
+             int conn_num_elements,
+             Dtype* nhood_data, int nhood_num_dims, int* nhood_dims,
+             int* seg_data, int seg_num_dims, int* seg_dims,
+             int seg_num_elements,
+             bool pos, Dtype* dloss_data, Dtype* loss_out,
+             Dtype *classerr_out, Dtype *rand_index_out,
+             Dtype margin = 0.3);
+};
+
 
 }  // namespace caffe
 
