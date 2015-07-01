@@ -12,8 +12,8 @@ ifeq ($(CPU_ONLY),1)
 	USE_GREENTEA := 0
 endif
 
-CXXFLAGS += -std=c++11 -Wno-deprecated-declarations
-LINKFLAGS += -std=c++11 -Wno-deprecated-declarations
+CXXFLAGS += -std=c++11 -fopenmp -Wno-deprecated-declarations
+LINKFLAGS += -std=c++11 -fopenmp -Wno-deprecated-declarations
 NVCCFLAGS += -Xcompiler "-Wno-deprecated-declarations" -Xlinker "-Wno-deprecated-declarations" -Xarchive "-Wno-deprecated-declarations" -Xnvlink "-Wno-deprecated-declarations"
 
 BUILD_DIR_LINK := $(BUILD_DIR)
