@@ -1,9 +1,7 @@
 #include <cfloat>
+#include <vector>
 
 #include "caffe/vision_layers.hpp"
-
-using std::max;
-using std::min;
 
 namespace caffe {
 
@@ -140,10 +138,10 @@ __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
       int pwstart = floor(static_cast<Dtype>(w - roi_start_w) / bin_size_w);
       int pwend = ceil(static_cast<Dtype>(w - roi_start_w + 1) / bin_size_w);
 
-      phstart = min(max(phstart, 0), pooled_height);
-      phend = min(max(phend, 0), pooled_height);
-      pwstart = min(max(pwstart, 0), pooled_width);
-      pwend = min(max(pwend, 0), pooled_width);
+      phstart = min(max(phstart, 0), pooled_height);  // NOLINT
+      phend = min(max(phend, 0), pooled_height);  // NOLINT
+      pwstart = min(max(pwstart, 0), pooled_width);  // NOLINT
+      pwend = min(max(pwend, 0), pooled_width);  // NOLINT
 
       for (int ph = phstart; ph < phend; ++ph) {
         for (int pw = pwstart; pw < pwend; ++pw) {
@@ -160,6 +158,10 @@ __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
 template <typename Dtype>
 void ROIPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (propagate_down[1]) {
+    LOG(FATAL) << this->type()
+               << " Layer cannot backpropagate to roi inputs.";
+  }
   if (!propagate_down[0]) {
     return;
   }
