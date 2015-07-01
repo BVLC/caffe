@@ -704,7 +704,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 3; }
+  virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
   /// @copydoc SoftmaxWithLossLayer
@@ -776,7 +776,9 @@ class MalisLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MalisLoss"; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return -1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -795,15 +797,17 @@ class MalisLossLayer : public LossLayer<Dtype> {
 
   int softmax_axis_, outer_num_, inner_num_;
 
+  int conn_num_dims_;
+  std::vector<int> conn_dims_;
+  std::vector<int> nhood_data_;
+  std::vector<int> nhood_dims_;
+
  private:
-  void FindBlobs(const cv::Mat &binary,
-                 std::vector<std::vector<cv::Point2i> > &blobs);
+  cv::Mat FindBlobs(const cv::Mat &input,
+                 std::vector<std::vector<cv::Point2i> > *blobs);
 
   void Malis(Dtype* conn_data, int conn_num_dims, int* conn_dims,
-             int conn_num_elements,
-             Dtype* nhood_data, int nhood_num_dims, int* nhood_dims,
-             int* seg_data, int seg_num_dims, int* seg_dims,
-             int seg_num_elements,
+             int* nhood_data, int* nhood_dims, int* seg_data,
              bool pos, Dtype* dloss_data, Dtype* loss_out,
              Dtype *classerr_out, Dtype *rand_index_out,
              Dtype margin = 0.3);
