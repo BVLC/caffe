@@ -17,8 +17,8 @@ if(HAVE_CUDA)
   list(APPEND srcs ${cuda_objs} ${cuda})
 endif()
 
-set(caffe_symbol_reference_header "${CMAKE_BINARY_DIR}/caffe_force_link.h")
-list(APPEND srcs ${caffe_symbol_reference_header})
+set(caffe_force_link_header "${CMAKE_BINARY_DIR}/caffe_force_link.h")
+list(APPEND srcs ${caffe_force_link_header})
 
 add_library(caffe ${srcs})
 target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
@@ -29,7 +29,7 @@ if(MSVC)
     # force the linker to include the statically registered layers
     # in a final executable.
     include(${PROJECT_SOURCE_DIR}/cmake/GenerateForceLinkSymbolsHeader.cmake)    
-    add_generate_force_link_symbols_header_post_build_command(caffe ${caffe_symbol_reference_header} caffe_force_link)
+    add_generate_force_link_symbols_header_post_build_command(caffe ${caffe_force_link_header} caffe_force_link)
 endif()
 
 # ---[ Tests
@@ -38,7 +38,7 @@ endif()
 # ---[ Install
 install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION include)
 install(FILES ${proto_hdrs} DESTINATION include/caffe/proto)
-install(FILES ${caffe_symbol_reference_header} DESTINATION include)
+install(FILES ${caffe_force_link_header} DESTINATION include)
 install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
 
 file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)

@@ -3,6 +3,7 @@ macro(add_generate_force_link_symbols_header_post_build_command target output_fi
         add_custom_command(TARGET ${target} POST_BUILD
                            COMMAND ${CMAKE_COMMAND} -DMSVC_VERSION=${MSVC_VERSION} -DSYMBOL_PATTERN=${symbol_pattern} -DOUTPUT_FILE=${output_file} -DTARGET=$<TARGET_FILE:${target}> -P ${CMAKE_SOURCE_DIR}/cmake/GenerateForceLinkSymbolsHeader.cmake
                            )
+        set_source_files_properties(${output_file} PROPERTIES GENERATED TRUE)
     endif()
 endmacro()
 
