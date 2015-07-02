@@ -436,7 +436,7 @@ void greentea_gpu_scal(const int ctx_id, const int N, const Dtype alpha,
     caffe_scal<Dtype>(N, alpha, xptr + offx);
 
   } else {
-#ifdef USE_VIENNACLBLAS
+#ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
     typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
@@ -446,9 +446,7 @@ void greentea_gpu_scal(const int ctx_id, const int N, const Dtype alpha,
 
     v1 *= alpha;
 
-#endif
-
-#ifdef USE_CLBLAS
+#else
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     if (std::is_same<Dtype, float>::value) {
@@ -502,8 +500,7 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
 
     *out = caffe_cpu_dot<Dtype>(n, Xptr + offX, Yptr + offY);
   } else {
-#ifdef USE_VIENNACLBLAS
-
+#ifndef USE_CLBLAS
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
     typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
 
@@ -514,9 +511,7 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
 
     *out = viennacl::linalg::inner_prod(v1, v2);
 
-#endif
-
-#ifdef USE_CLBLAS
+#else
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     cl_int err;
@@ -566,7 +561,7 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
     *Y = caffe_cpu_asum<Dtype>(n, Xptr + offX);
 
   } else {
-#ifdef USE_VIENNACLBLAS
+#ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
     typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
@@ -576,9 +571,7 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
 
     *Y = viennacl::linalg::norm_1(v1);
 
-#endif
-
-#ifdef USE_CLBLAS
+#else
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     cl_int err;
@@ -627,7 +620,7 @@ void greentea_gpu_scale(const int ctx_id, const int n, const Dtype alpha,
     caffe_cpu_scale<Dtype>(n, alpha, Xptr + offX, Yptr + offY);
 
   } else {
-#ifdef USE_VIENNACLBLAS
+#ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
     typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
@@ -639,9 +632,8 @@ void greentea_gpu_scale(const int ctx_id, const int n, const Dtype alpha,
 
     v2 = v1 * alpha;
 
-#endif
+#else
 
-#ifdef USE_CLBLAS
     viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
     cl_command_queue queue = ctx.get_queue().handle().get();
 
