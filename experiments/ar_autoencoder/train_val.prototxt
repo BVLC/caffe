@@ -1,0 +1,621 @@
+name: "Aspect_Ratio_Test"
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  data_param {
+    #source: "experiments/ar_autoencoder/data/ar_512_lmdb"
+    source: "experiments/ar_autoencoder/data/ar_single_lmdb"
+    batch_size: 1
+    backend: LMDB
+  }
+}
+
+
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 5
+    stride: 1
+	pad: 2
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "act1"
+  type: "PReLU"
+  bottom: "conv1"
+  top: "conv1"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "conv1"
+  top: "conv1"
+  lrn_param {
+    local_size: 5
+    alpha: 1
+    beta: 0.75
+    norm_region: ACROSS_CHANNELS
+    k: 1
+  }
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: STOCHASTIC
+	pad: 0
+    kernel_size: 2
+	stride: 2
+	engine: CAFFE
+  }
+}
+
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 5
+    stride: 1
+	pad: 2
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "act2"
+  type: "PReLU"
+  bottom: "conv2"
+  top: "conv2"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+#layer {
+#  name: "norm2"
+#  type: "LRN"
+#  bottom: "conv2"
+#  top: "conv2"
+#  lrn_param {
+#    local_size: 5
+#    alpha: 1
+#    beta: 0.75
+#    norm_region: ACROSS_CHANNELS
+#    k: 1
+#  }
+#}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: STOCHASTIC
+	pad: 0
+    kernel_size: 2
+	stride: 2
+	engine: CAFFE
+  }
+}
+
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "conv3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    stride: 1
+	pad: 2
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "act3"
+  type: "PReLU"
+  bottom: "conv3"
+  top: "conv3"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+layer {
+  name: "norm3"
+  type: "LRN"
+  bottom: "conv3"
+  top: "conv3"
+  lrn_param {
+    local_size: 5
+    alpha: 1
+    beta: 0.75
+    norm_region: ACROSS_CHANNELS
+    k: 1
+  }
+}
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "conv3"
+  top: "pool3"
+  pooling_param {
+    pool: STOCHASTIC
+	pad: 0
+    kernel_size: 2
+	stride: 2
+	engine: CAFFE
+  }
+}
+
+layer {
+  name: "conv4"
+  type: "Convolution"
+  bottom: "pool3"
+  top: "conv4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    stride: 1
+	pad: 2
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "act4"
+  type: "PReLU"
+  bottom: "conv4"
+  top: "conv4"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+#layer {
+#  name: "norm4"
+#  type: "LRN"
+#  bottom: "conv4"
+#  top: "conv4"
+#  lrn_param {
+#    local_size: 5
+#    alpha: 1
+#    beta: 0.75
+#    norm_region: ACROSS_CHANNELS
+#    k: 1
+#  }
+#}
+layer {
+  name: "pool4"
+  type: "Pooling"
+  bottom: "conv4"
+  top: "pool4"
+  pooling_param {
+    pool: STOCHASTIC
+	pad: 0
+    kernel_size: 2
+	stride: 2
+	engine: CAFFE
+  }
+}
+
+layer {
+  name: "conv5"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "conv5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    kernel_size: 5
+    stride: 1
+	pad: 2
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "act5"
+  type: "PReLU"
+  bottom: "conv5"
+  top: "conv5"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+layer {
+  name: "norm5"
+  type: "LRN"
+  bottom: "conv5"
+  top: "conv5"
+  lrn_param {
+    local_size: 5
+    alpha: 1
+    beta: 0.75
+    norm_region: ACROSS_CHANNELS
+    k: 1
+  }
+}
+layer {
+  name: "pool5"
+  type: "Pooling"
+  bottom: "conv5"
+  top: "pool5"
+  pooling_param {
+    pool: STOCHASTIC
+	pad: 0
+    kernel_size: 2
+	stride: 2
+	engine: CAFFE
+  }
+}
+
+
+layer {
+  name: "deconv6"
+  type: "Deconvolution"
+  bottom: "pool5"
+  top: "deconv6"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    stride: 2
+	pad: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "crop6"
+  type: "SimpleCrop"
+  bottom: "deconv6"
+  bottom: "conv5"
+  top: "crop6"
+}
+layer {
+  name: "act6"
+  type: "PReLU"
+  bottom: "crop6"
+  top: "crop6"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+layer {
+  name: "norm6"
+  type: "LRN"
+  bottom: "crop6"
+  top: "crop6"
+  lrn_param {
+    local_size: 5
+    alpha: 1
+    beta: 0.75
+    norm_region: ACROSS_CHANNELS
+    k: 1
+  }
+}
+
+layer {
+  name: "deconv7"
+  type: "Deconvolution"
+  bottom: "crop6"
+  top: "deconv7"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    stride: 2
+	pad: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "crop7"
+  type: "SimpleCrop"
+  bottom: "deconv7"
+  bottom: "conv4"
+  top: "crop7"
+}
+layer {
+  name: "act7"
+  type: "PReLU"
+  bottom: "crop7"
+  top: "crop7"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+layer {
+  name: "norm7"
+  type: "LRN"
+  bottom: "crop7"
+  top: "crop7"
+  lrn_param {
+    local_size: 5
+    alpha: 1
+    beta: 0.75
+    norm_region: ACROSS_CHANNELS
+    k: 1
+  }
+}
+
+layer {
+  name: "deconv8"
+  type: "Deconvolution"
+  bottom: "crop7"
+  top: "deconv8"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 5
+    stride: 2
+	pad: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "crop8"
+  type: "SimpleCrop"
+  bottom: "deconv8"
+  bottom: "conv3"
+  top: "crop8"
+}
+layer {
+  name: "act8"
+  type: "PReLU"
+  bottom: "crop8"
+  top: "crop8"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+#layer {
+#  name: "norm8"
+#  type: "LRN"
+#  bottom: "crop8"
+#  top: "crop8"
+#  lrn_param {
+#    local_size: 5
+#    alpha: 1
+#    beta: 0.75
+#    norm_region: ACROSS_CHANNELS
+#    k: 1
+#  }
+#}
+
+layer {
+  name: "deconv9"
+  type: "Deconvolution"
+  bottom: "crop8"
+  top: "deconv9"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 5
+    stride: 2
+	pad: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "crop9"
+  type: "SimpleCrop"
+  bottom: "deconv9"
+  bottom: "conv2"
+  top: "crop9"
+}
+layer {
+  name: "act9"
+  type: "PReLU"
+  bottom: "crop9"
+  top: "crop9"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+#layer {
+#  name: "norm9"
+#  type: "LRN"
+#  bottom: "crop9"
+#  top: "crop9"
+#  lrn_param {
+#    local_size: 5
+#    alpha: 1
+#    beta: 0.75
+#    norm_region: ACROSS_CHANNELS
+#    k: 1
+#  }
+#}
+
+layer {
+  name: "deconv10"
+  type: "Deconvolution"
+  bottom: "crop9"
+  top: "deconv10"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 3
+    kernel_size: 5
+    stride: 2
+	pad: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "crop10"
+  type: "SimpleCrop"
+  bottom: "deconv10"
+  bottom: "conv1"
+  top: "crop10"
+}
+layer {
+  name: "act10"
+  type: "PReLU"
+  bottom: "crop10"
+  top: "crop10"
+  prelu_param {
+    filler {value: 0.25}
+    channel_shared: false
+  }
+}
+
+
+layer {
+  name: "loss"
+  type: "EuclideanLoss"
+  bottom: "data"
+  bottom: "crop10"
+  top: "loss"
+}
+
