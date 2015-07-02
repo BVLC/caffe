@@ -56,6 +56,29 @@ if(NOT HAVE_CUDA)
   add_definitions(-DCPU_ONLY)
 endif()
 
+# ---[ ViennaCL
+if (USE_GREENTEA)
+  find_package(ViennaCL)
+  if (NOT ViennaCL_FOUND)
+    message(FATAL_ERROR "ViennaCL required for GREENTEA but not found.")
+  endif()
+  include_directories(SYSTEM ${ViennaCL_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS ${ViennaCL_LIBRARIES})
+  set(HAVE_VIENNACL TRUE)
+  set(VIENNACL_WITH_OPENCL ${ViennaCL_WITH_OPENCL})
+endif()
+
+# ---[ clBLAS
+if (USE_CLBLAS)
+  find_package(clBLAS)
+  if (NOT CLBLAS_FOUND)
+    message(FATAL_ERROR "clBLAS required but not found.")
+  endif()
+  include_directories(SYSTEM ${CLBLAS_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${CLBLAS_LIBRARY})
+  set(HAVE_CLBLAS TRUE)
+endif()
+
 # ---[ OpenCV
 find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
 if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found

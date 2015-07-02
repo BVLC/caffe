@@ -1,9 +1,3 @@
-#ifdef USE_CUDA
-#include <math_functions.h>  // CUDA's, not caffe's, for fabs, signbit
-#include <thrust/device_vector.h>
-#include <thrust/functional.h>  // thrust::plus
-#include <thrust/reduce.h>
-
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -11,6 +5,13 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
+
+#ifdef USE_CUDA
+
+#include <math_functions.h>  // CUDA's, not caffe's, for fabs, signbit
+#include <thrust/device_vector.h>
+#include <thrust/functional.h>  // thrust::plus
+#include <thrust/reduce.h>
 
 namespace caffe {
 

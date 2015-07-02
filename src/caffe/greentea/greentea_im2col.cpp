@@ -4,6 +4,7 @@
  *  Created on: Apr 8, 2015
  *      Author: Fabian Tschopp
  */
+#include "caffe/common.hpp"
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
 

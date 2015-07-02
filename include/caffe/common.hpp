@@ -1,6 +1,10 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>

@@ -5,6 +5,7 @@
  *      Author: Fabian Tschopp
  */
 
+#include "caffe/common.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
