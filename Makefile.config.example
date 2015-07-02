@@ -12,13 +12,9 @@ USE_GREENTEA := 0
 # Folder of the ViennaCL header-only library
 VIENNACL_DIR = ../ViennaCL
 
-# Either set CLBLAS or VIENNACLBLAS to 1, not both.
-# If you want to use OpenCL/Greentea on the CPU only, you can also disable both.
-# When both are disabled, GPUs won't work. CPUs always use CBLAS (Atlas, MKL or OpenBLAS).
-# The chosen BLAS library needs to be compiled and installed from source.
+# Either set clBLAS to 1 or it will use ViennaclBLAS.
 # CLBLAS should be faster, especially on AMD cards.
 USE_CLBLAS := 0
-USE_VIENNACLBLAS := 0
 
 # Enable or disable double precision support for OpenCL/Greentea
 GREENTEA_DOUBLE_SUPPORT := 1

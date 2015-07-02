@@ -33,9 +33,7 @@
 
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
-#endif
-
-#ifdef USE_VIENNACLBLAS
+#else
 #include "viennacl/detail/matrix_def.hpp"
 #include "viennacl/detail/vector_def.hpp"
 #include "viennacl/linalg/inner_prod.hpp"
@@ -174,7 +172,7 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
     int ldb = (TransB == CblasNoTrans) ? N : K;
     int ldc = N;
 
-#ifdef USE_VIENNACLBLAS
+#ifndef USE_CLBLAS
 
     typedef typename viennacl::matrix_base<Dtype>::size_type size_type;
     typedef typename viennacl::matrix_base<Dtype>::size_type difference_type;
@@ -211,8 +209,7 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
     viennacl::linalg::prod_impl(matA, matB,
                                 matC, alpha, beta);
 
-#endif
-#ifdef USE_CLBLAS
+#else
     clblasOrder clOrder = clblasRowMajor;
     clblasTranspose clTransA =
         (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
@@ -272,7 +269,7 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
     caffe_cpu_gemv<Dtype>(TransA, M, N, alpha, Aptr + offA, xptr + offx, beta,
                           yptr + offy);
   } else {
-#ifdef USE_VIENNACLBLAS
+#ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
     typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
@@ -294,9 +291,7 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
     else
       v2 += alpha * viennacl::linalg::prod(mat, v1);
 
-#endif
-
-#ifdef USE_CLBLAS
+#else
     clblasTranspose clTransA =
         (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
@@ -345,7 +340,7 @@ void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
 
     caffe_axpy<Dtype>(N, alpha, Xptr + offX, Yptr + offY);
   } else {
-#ifdef USE_VIENNACLBLAS
+#ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
     typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
@@ -357,9 +352,7 @@ void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
 
     v2 += alpha * v1;
 
-#endif
-
-#ifdef USE_CLBLAS
+#else
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     if (std::is_same<Dtype, float>::value) {
