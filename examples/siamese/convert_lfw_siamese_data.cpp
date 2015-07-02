@@ -46,10 +46,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
   image_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
-  //CHECK_EQ(magic, 2051) << "Incorrect image file magic.";
   label_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
-  //CHECK_EQ(magic, 2049) << "Incorrect label file magic.";
   image_file.read(reinterpret_cast<char*>(&num_items), 4);
   num_items = swap_endian(num_items);
   label_file.read(reinterpret_cast<char*>(&num_labels), 4);
