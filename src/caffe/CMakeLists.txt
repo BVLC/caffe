@@ -17,36 +17,20 @@ if(HAVE_CUDA)
   list(APPEND srcs ${cuda_objs} ${cuda})
 endif()
 
-set(caffe_symbol_reference_header "${CMAKE_BINARY_DIR}/caffe_reference_symbols.h")
-list(APPEND srcs ${caffe_symbol_reference_header})
-if(MSVC)
-     # convert strings to numbers
-     if(HAVE_CUDNN)
-         set(_have_cudnn 1)
-     else()
-         set(_have_cudnn 0)
-     endif()
-    
-     if(HAVE_CUDA)
-         set(_have_cuda 1)
-     else()
-         set(_have_cuda 0)
-     endif()
-    
-    add_custom_command( OUTPUT ${caffe_symbol_reference_header}
-                        COMMAND powershell.exe -ExecutionPolicy Bypass -Command "${CMAKE_SOURCE_DIR}/scripts/generate_symbol_reference_header.ps1 ${_have_cudnn} ${_have_cuda} | Out-File ${caffe_symbol_reference_header}"
-                        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-                        COMMENT "Generating header to force symbol references"
-                        )        
-else()
-    add_custom_command( OUTPUT ${caffe_symbol_reference_header}
-                        COMMAND ${CMAKE_COMMAND} -E touch ${caffe_symbol_reference_header}
-    )
-endif()
+set(caffe_force_link_header "${CMAKE_BINARY_DIR}/caffe_force_link.h")
+list(APPEND srcs ${caffe_force_link_header})
 
 add_library(caffe ${srcs})
 target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
 caffe_default_properties(caffe)
+
+if(MSVC)
+    # add a post build command to generate a header file that will
+    # force the linker to include the statically registered layers
+    # in a final executable.
+    include(${PROJECT_SOURCE_DIR}/cmake/GenerateForceLinkSymbolsHeader.cmake)    
+    add_generate_force_link_symbols_header_post_build_command(caffe ${caffe_force_link_header} caffe_force_link)
+endif()
 
 # ---[ Tests
  add_subdirectory(test)
@@ -54,7 +38,7 @@ caffe_default_properties(caffe)
 # ---[ Install
 install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION include)
 install(FILES ${proto_hdrs} DESTINATION include/caffe/proto)
-install(FILES ${caffe_symbol_reference_header} DESTINATION include)
+install(FILES ${caffe_force_link_header} DESTINATION include)
 install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
 
 file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)

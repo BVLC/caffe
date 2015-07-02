@@ -48,7 +48,12 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
+#ifndef _MSC_VER
+  int flags = O_RDONLY;
+#else
+	int flags = O_RDONLY | O_BINARY;
+#endif
+  int fd = open(filename, flags);
   CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
