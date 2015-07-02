@@ -71,8 +71,10 @@ def assign_proto(proto, name, val):
         for k, v in val.iteritems():
             assign_proto(getattr(proto, name), k, v)
     else:
-        setattr(proto, name, val)
-
+        try:
+            setattr(proto, name, val)
+        except (AttributeError):
+            getattr(proto, name).append(val)
 
 class Top(object):
     """A Top specifies a single output blob (which could be one of several

@@ -13,6 +13,8 @@ add-apt-repository -y ppa:tuleu/precise-backports
 add-apt-repository -y ppa:boost-latest/ppa
 # This ppa is for g++ 4.9
 add-apt-repository -y ppa:ubuntu-toolchain-r/test
+# This ppa is for ViennaCL
+add-apt-repository -y ppa:tsmithe/pyviennacl
 
 apt-get -y update
 apt-get install \
@@ -22,6 +24,7 @@ apt-get install \
     libboost1.54-dev libboost-system1.54-dev libboost-python1.54-dev libboost-thread1.54-dev \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
+    libviennacl-dev ocl-icd-libopencl1 \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     bc
 
