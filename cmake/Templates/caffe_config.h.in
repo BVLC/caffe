@@ -1,3 +1,6 @@
+#ifndef CAFFE_CONFIG_HPP_
+#define CAFFE_CONFIG_HPP_
+
 /* Sources directory */
 #define SOURCE_FOLDER "${PROJECT_SOURCE_DIR}"
 
@@ -39,3 +42,5 @@
 
 /* Matlab */
 #cmakedefine HAVE_MATLAB
+
+#endif  // CAFFE_CONFIG_HPP_

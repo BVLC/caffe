@@ -14,7 +14,6 @@
 #define HDF5_DATA_LABEL_NAME "label"
 
 namespace caffe {
-
 /**
  * @brief An interface for layers that take one blob as input (@f$ x @f$)
  *        and produce one equally-sized blob as output (@f$ y @f$), where
@@ -84,6 +83,10 @@ class AbsValLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
+
+
+const float kBNLL_THRESHOLD = 50.;
+
 
 /**
  * @brief Computes @f$ y = x + \log(1 + \exp(-x)) @f$ if @f$ x > 0 @f$;

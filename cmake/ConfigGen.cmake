@@ -53,13 +53,10 @@ function(caffe_generate_export_configs)
   set(Caffe_DEFINITIONS "")
   if(NOT HAVE_CUDA)
     set(HAVE_CUDA FALSE)
-    list(APPEND Caffe_DEFINITIONS -DCPU_ONLY)
   endif()
 
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
-  else()
-    list(APPEND DEFINITIONS -DUSE_CUDNN)
   endif()
 
   if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")

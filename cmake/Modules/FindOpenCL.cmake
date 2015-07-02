@@ -34,11 +34,11 @@ ELSE (APPLE)
 	    # The AMD SDK currently installs both x86 and x86_64 libraries
 	    # This is only a hack to find out architecture
 	    IF( ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" )
-	    	SET(OPENCL_LIB_DIR "$ENV{ATISTREAMSDKROOT}/lib/x86_64")
-			SET(OPENCL_LIB_DIR "$ENV{ATIINTERNALSTREAMSDKROOT}/lib/x86_64")
+	    	SET(OPENCL_LIB_DIR "$ENV{AMDAPPSDKROOT}/lib/x86_64")
+			SET(OPENCL_LIB_DIR "$ENV{AMDAPPSDKROOT}/lib/x86_64")
 	    ELSE (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-	    	SET(OPENCL_LIB_DIR "$ENV{ATISTREAMSDKROOT}/lib/x86")
-	   		SET(OPENCL_LIB_DIR "$ENV{ATIINTERNALSTREAMSDKROOT}/lib/x86")
+	    	SET(OPENCL_LIB_DIR "$ENV{AMDAPPSDKROOT}/lib/x86")
+	   		SET(OPENCL_LIB_DIR "$ENV{AMDAPPSDKROOT}/lib/x86")
 	    ENDIF( ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" )
 
 	    # find out if the user asked for a 64-bit build, and use the corresponding 

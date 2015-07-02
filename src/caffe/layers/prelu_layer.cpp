@@ -5,6 +5,10 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "prelu_layer.cu"
+#endif
+
 namespace caffe {
 
 template<typename Dtype>

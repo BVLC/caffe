@@ -5,6 +5,10 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "im2col_layer.cu"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>

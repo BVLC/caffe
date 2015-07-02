@@ -11,8 +11,6 @@
 
 namespace caffe {
 
-const float kBNLL_THRESHOLD = 50.;
-
 #ifdef USE_CUDA
 template<typename Dtype>
 __global__ void BNLLForward(const int n, const Dtype* in, Dtype* out) {

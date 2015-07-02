@@ -6,6 +6,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "sigmoid_cross_entropy_loss_layer.cu"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
