@@ -24,7 +24,8 @@ apt-get install \
     libboost1.54-dev libboost-system1.54-dev libboost-python1.54-dev libboost-thread1.54-dev \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
-    libviennacl-dev ocl-icd-libopencl1 \
+    fglrx opencl-headers \
+    libviennacl-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     bc
 

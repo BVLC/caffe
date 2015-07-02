@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-
 #if defined(USE_GREENTEA) && !defined(USE_CUDA)
 #include "bnll_layer.cu"
 #endif
+
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
