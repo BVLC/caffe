@@ -4,7 +4,7 @@ import sys
 import shutil
 import subprocess
 
-INV_DURATION = "1/3"
+INV_DURATION = 1
 FPS = 10
 
 def create_movie(input_dir, output_file):
