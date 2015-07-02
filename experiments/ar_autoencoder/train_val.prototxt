@@ -4,9 +4,9 @@ layer {
   type: "Data"
   top: "data"
   data_param {
-    #source: "experiments/ar_autoencoder/data/ar_512_lmdb"
+    #source: "experiments/ar_autoencoder/data/ar_all_lmdb"
     source: "experiments/ar_autoencoder/data/ar_single_lmdb"
-    batch_size: 1
+    batch_size: 64
     backend: LMDB
   }
 }
@@ -180,9 +180,9 @@ layer {
   }
   convolution_param {
     num_output: 512
-    kernel_size: 5
+    kernel_size: 3
     stride: 2
-	pad: 2
+	pad: 1
     weight_filler {
       type: "msra"
     }
@@ -232,9 +232,9 @@ layer {
   }
   convolution_param {
     num_output: 256
-    kernel_size: 5
+    kernel_size: 3
     stride: 2
-	pad: 1
+	pad: 0
     weight_filler {
       type: "msra"
     }
