@@ -1,7 +1,7 @@
 net: "experiments/cdip227/train_val.prototxt"
 test_iter: 800
 test_interval: 1000
-base_lr: 0.05
+base_lr: 0.01
 lr_policy: "poly"
 power: 2
 display: 20
