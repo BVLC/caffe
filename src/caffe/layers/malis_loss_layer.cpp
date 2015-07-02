@@ -11,8 +11,6 @@
 #include <utility>
 #include <vector>
 
-
-
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -121,6 +119,8 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
   int nPairIncorrect = 0;
   map<int, int>::iterator it1, it2;
 
+  std::cout << "Pqueue size: " << pqueue.size() << std::endl;
+
   /* Start Kruskal's */
   for (int i = 0; i < pqueue.size(); ++i) {
     minEdge = pqueue[i];
@@ -211,12 +211,14 @@ cv::Mat MalisLossLayer<Dtype>::FindBlobs(
   cv::Mat label_image;
   input.convertTo(label_image, CV_32SC1);
 
-  int label_count = 2;
+  // Segment into label numbers higher than the original label numbers
+  int label_count = prob_.channels();
 
   for (int y = 0; y < label_image.rows; y++) {
     int *row = reinterpret_cast<int*>(label_image.ptr(y));
     for (int x = 0; x < label_image.cols; x++) {
-      if (row[x] > 1) {
+      // Skip background and already labeled areas
+      if (row[x] >= prob_.channels() || row[x] == 0) {
         continue;
       }
 
@@ -417,15 +419,22 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // Bottom
         Dtype g2 = label[(i + 1) * bottom[0]->width() + j];
 
-        conn_data_pos[i * (bottom[0]->width() - 1) + j] = std::max(
+        // X positive
+        conn_data_pos[i * (bottom[0]->width() - 1) + j] = std::min(
             1.0 - std::fabs(p0 - p1), 1.0 - std::fabs(g0 - g1));
-        conn_data_neg[i * (bottom[0]->width() - 1) + j] = std::min(
+
+        // X negative
+        conn_data_neg[i * (bottom[0]->width() - 1) + j] = std::max(
             1.0 - std::fabs(p0 - p1), 1.0 - std::fabs(g0 - g1));
+
+        // Y positive
         conn_data_pos[(bottom[0]->width() - 1) * (bottom[0]->height() - 1)
-            + i * (bottom[0]->width() - 1) + j] = std::max(
-            1.0 - std::fabs(p0 - p2), 1.0 - std::fabs(g0 - g2));
-        conn_data_neg[(bottom[0]->width() - 1) * (bottom[0]->height() - 1)
             + i * (bottom[0]->width() - 1) + j] = std::min(
+            1.0 - std::fabs(p0 - p2), 1.0 - std::fabs(g0 - g2));
+
+        // Y negative
+        conn_data_neg[(bottom[0]->width() - 1) * (bottom[0]->height() - 1)
+            + i * (bottom[0]->width() - 1) + j] = std::max(
             1.0 - std::fabs(p0 - p2), 1.0 - std::fabs(g0 - g2));
       }
     }
@@ -443,6 +452,19 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           &nhood_dims_[0], reinterpret_cast<int*>(seg.ptr(0)),
           false, &dloss_neg[0],
           &loss_out, &classerr_out, &rand_index_out);
+
+
+    auto minmax = std::minmax_element(dloss_neg.begin(),dloss_neg.end());
+
+    std::cout << "DLoss_neg min/max: " <<
+        dloss_neg[minmax.first - dloss_neg.begin()] << " " <<
+        dloss_neg[minmax.second - dloss_neg.begin()]  << std::endl;
+
+    minmax = std::minmax_element(dloss_pos.begin(),dloss_pos.end());
+
+    std::cout << "DLoss_pos min/max: " <<
+        dloss_pos[minmax.first - dloss_pos.begin()] << " " <<
+        dloss_pos[minmax.second - dloss_pos.begin()]  << std::endl;
 
     std::cout << "Before PROB BACK" << std::endl;
 

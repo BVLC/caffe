@@ -199,11 +199,6 @@ ifeq ($(USE_GREENTEA),1)
 		COMMON_FLAGS += -DUSE_CLBLAS
 	endif
 	
-	# Use ViennaCL BLAS
-	ifeq ($(USE_VIENNACLBLAS), 1)
-		COMMON_FLAGS += -DUSE_VIENNACLBLAS
-	endif
-	
 	# Requires valid OpenCL library
 	LIBRARY_DIRS += $(CLLIBS)
 	# Requires valid OpenCL headers and valid ViennaCL
