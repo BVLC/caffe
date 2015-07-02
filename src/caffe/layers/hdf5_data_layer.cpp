@@ -18,6 +18,10 @@ TODO:
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "hdf5_data_layer.cu"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>

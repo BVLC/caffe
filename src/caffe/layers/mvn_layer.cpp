@@ -5,6 +5,10 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "mvn_layer.cu"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>

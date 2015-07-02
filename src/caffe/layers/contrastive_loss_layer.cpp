@@ -6,6 +6,10 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "contrastive_loss_layer.cu"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>

@@ -4,9 +4,11 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-namespace caffe {
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "bnll_layer.cu"
+#endif
 
-const float kBNLL_THRESHOLD = 50.;
+namespace caffe {
 
 template <typename Dtype>
 void BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

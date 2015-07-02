@@ -21,6 +21,7 @@
 
 namespace caffe {
 
+
 template<typename Dtype>
 class MergeCropLayer : public Layer<Dtype> {
  public:

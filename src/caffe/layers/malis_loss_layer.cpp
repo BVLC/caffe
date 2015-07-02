@@ -439,6 +439,19 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
 
+    auto minmax = std::minmax_element(conn_data_neg.begin(),conn_data_neg.end());
+
+    std::cout << "Conndata neg min/max: " <<
+        conn_data_neg[minmax.first - conn_data_neg.begin()] << " " <<
+        conn_data_neg[minmax.second - conn_data_neg.begin()]  << std::endl;
+
+    minmax = std::minmax_element(dloss_pos.begin(),dloss_pos.end());
+
+    std::cout << "Conndata pos min/max: " <<
+        conn_data_pos[minmax.first - conn_data_pos.begin()] << " " <<
+        conn_data_pos[minmax.second - conn_data_pos.begin()]  << std::endl;
+
+
     std::cout << "Before MALIS 1" << std::endl;
 
     Malis(&conn_data_pos[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
@@ -454,7 +467,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           &loss_out, &classerr_out, &rand_index_out);
 
 
-    auto minmax = std::minmax_element(dloss_neg.begin(),dloss_neg.end());
+    minmax = std::minmax_element(dloss_neg.begin(),dloss_neg.end());
 
     std::cout << "DLoss_neg min/max: " <<
         dloss_neg[minmax.first - dloss_neg.begin()] << " " <<
