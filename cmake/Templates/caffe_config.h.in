@@ -6,12 +6,21 @@
 
 /* NVIDA Cuda */
 #cmakedefine HAVE_CUDA
+#cmakedefine USE_CUDA
+
+/* OpenCl kernels */
+#cmakedefine USE_GREENTEA
+#cmakedefine VIENNACL_WITH_OPENCL
+
+/* clBLAS */
+#cmakedefine HAVE_CLBLAS
+#cmakedefine USE_CLBLAS
 
 /* NVIDA cuDNN */
 #cmakedefine HAVE_CUDNN
 #cmakedefine USE_CUDNN
 
-/* NVIDA cuDNN */
+/* Disable CUDA and OpenCL */
 #cmakedefine CPU_ONLY
 
 /* Test device */

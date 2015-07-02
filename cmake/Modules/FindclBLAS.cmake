@@ -1,0 +1,53 @@
+SET(CLBLAS_INCLUDE_SEARCH_PATHS
+  /usr/include
+  /usr/local/include
+  /opt/clBLAS/include
+  $ENV{CLBLAS_HOME}
+  $ENV{CLBLAS_HOME}/include
+)
+
+SET(CLBLAS_LIB_SEARCH_PATHS
+        /lib/
+        /lib64/
+        /usr/lib
+        /usr/lib64
+        /usr/local/lib
+        /usr/local/lib64
+        /opt/clBLAS/lib
+        $ENV{CLBLAS_HOME}
+        $ENV{CLBLAS_HOME}/lib
+ )
+
+FIND_PATH(CLBLAS_INCLUDE_DIR NAMES clBLAS.h PATHS ${CLBLAS_INCLUDE_SEARCH_PATHS})
+FIND_LIBRARY(CLBLAS_LIBRARY NAMES clBLAS PATHS ${CLBLAS_LIB_SEARCH_PATHS})
+
+SET(CLBLAS_FOUND ON)
+
+#    Check include files
+IF(NOT CLBLAS_INCLUDE_DIR)
+    SET(CLBLAS_FOUND OFF)
+    MESSAGE(STATUS "Could not find CLBLAS include. Turning CLBLAS_FOUND off")
+ENDIF()
+
+#    Check libraries
+IF(NOT CLBLAS_LIBRARY)
+    SET(CLBLAS_FOUND OFF)
+    MESSAGE(STATUS "Could not find CLBLAS lib. Turning CLBLAS_FOUND off")
+ENDIF()
+
+IF (CLBLAS_FOUND)
+  IF (NOT CLBLAS_FIND_QUIETLY)
+    MESSAGE(STATUS "Found CLBLAS libraries: ${CLBLAS_LIBRARY}")
+    MESSAGE(STATUS "Found CLBLAS include: ${CLBLAS_INCLUDE_DIR}")
+  ENDIF (NOT CLBLAS_FIND_QUIETLY)
+ELSE (CLBLAS_FOUND)
+  IF (CLBLAS_FIND_REQUIRED)
+    MESSAGE(FATAL_ERROR "Could not find CLBLAS")
+  ENDIF (CLBLAS_FIND_REQUIRED)
+ENDIF (CLBLAS_FOUND)
+
+MARK_AS_ADVANCED(
+    CLBLAS_INCLUDE_DIR
+    CLBLAS_LIBRARY
+)
+

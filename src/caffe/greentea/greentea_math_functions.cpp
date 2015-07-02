@@ -5,6 +5,8 @@
  *      Author: Fabian Tschopp
  */
 
+#include "caffe/common.hpp"
+
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
@@ -20,8 +22,6 @@
 #include <limits>
 #include <random>
 #include <vector>
-
-#include "caffe/common.hpp"
 
 #include "viennacl/backend/opencl.hpp"
 #include "viennacl/ocl/backend.hpp"

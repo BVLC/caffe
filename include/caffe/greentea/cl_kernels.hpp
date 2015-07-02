@@ -1,4 +1,5 @@
 // AUTOMATICALLY GENERATED FILE, DO NOT EDIT
+#include "caffe/common.hpp"
 #ifdef USE_GREENTEA
 #ifndef GREENTEA_CL_KERNELS_HPP_
 #define GREENTEA_CL_KERNELS_HPP_

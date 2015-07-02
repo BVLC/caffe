@@ -1,4 +1,5 @@
 // AUTOMATICALLY GENERATED FILE, DO NOT EDIT
+#include "caffe/common.hpp"
 #ifdef USE_GREENTEA
 #include "caffe/greentea/cl_kernels.hpp"
 #include <sstream>

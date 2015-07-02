@@ -145,7 +145,7 @@ macro(caffe_cuda_compile objlist_variable)
   endforeach()
 
   if(UNIX OR APPLE)
-    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
+    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC -std=c++11)
   endif()
 
   if(APPLE)
@@ -213,6 +213,8 @@ if(USE_CUDNN)
     add_definitions(-DUSE_CUDNN)
     include_directories(SYSTEM ${CUDNN_INCLUDE})
     list(APPEND Caffe_LINKER_LIBS ${CUDNN_LIBRARY})
+  else()
+    message(FATAL_ERROR "CuDNN requested, but not found.")
   endif()
 endif()
 
