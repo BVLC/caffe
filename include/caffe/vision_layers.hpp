@@ -530,7 +530,7 @@ class SimpleCropLayer : public Layer<Dtype> {
   	const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "SimpleCrop"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
@@ -544,6 +544,7 @@ class SimpleCropLayer : public Layer<Dtype> {
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   int crop_h_, crop_w_;
+  shared_ptr<Blob<Dtype> > crop_like_blob_;
 };
 
 }  // namespace caffe

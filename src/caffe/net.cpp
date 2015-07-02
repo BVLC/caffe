@@ -46,7 +46,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   InsertSplits(filtered_param, &param);
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
-  map<string, int> blob_name_to_idx;
+  //map<string, int> blob_name_to_idx;
   set<string> available_blobs;
   CHECK(param.input_dim_size() == 0 || param.input_shape_size() == 0)
       << "Must specify either input_shape OR deprecated input_dim, not both.";
@@ -62,7 +62,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
     const int layer_id = -1;  // inputs have fake layer ID -1
-    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
+    AppendTop(param, layer_id, input_id, &available_blobs, &blob_names_index_);
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up its input and output
@@ -87,6 +87,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     layer_names_.push_back(layer_param.name());
+	layers_[layer_id]->set_net(this);
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = false;
 
@@ -94,13 +95,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
       const int blob_id = AppendBottom(param, layer_id, bottom_id,
-                                       &available_blobs, &blob_name_to_idx);
+                                       &available_blobs, &blob_names_index_);
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
     int num_top = layer_param.top_size();
     for (int top_id = 0; top_id < num_top; ++top_id) {
-      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
+      AppendTop(param, layer_id, top_id, &available_blobs, &blob_names_index_);
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
     // specified fewer than the required number (as specified by
@@ -233,12 +234,23 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (set<string>::iterator it = available_blobs.begin();
       it != available_blobs.end(); ++it) {
     LOG(INFO) << "This network produces output " << *it;
-    net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
-    net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
+    net_output_blobs_.push_back(blobs_[blob_names_index_[*it]].get());
+    net_output_blob_indices_.push_back(blob_names_index_[*it]);
   }
   for (size_t blob_id = 0; blob_id < blob_names_.size(); ++blob_id) {
     blob_names_index_[blob_names_[blob_id]] = blob_id;
   }
+
+  // these seem to be identical
+  //LOG(INFO) << "blob_names_index_ size: " << blob_names_index_.size();
+  //LOG(INFO) << "blob_name_to_idx size: " << blob_name_to_idx.size();
+  //std::map<string, int>::const_iterator it;
+  //for (it = blob_names_index_.begin(); it != blob_names_index_.end(); it++) {
+  //  LOG(INFO) << it->first << ":\t" << it->second << "\t" << blob_name_to_idx[it->first];
+  //}
+  //LOG(INFO) << "Done";
+
+
   for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }

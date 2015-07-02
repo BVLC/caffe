@@ -14,19 +14,37 @@ namespace caffe {
 template <typename Dtype>
 void SimpleCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+    CropParameter crop_param = this->layer_param_.crop_param();
+    CHECK(crop_param.has_blob_name()) << "Must specify a blob to crop like";
+	crop_like_blob_ = this->net_->blob_by_name(crop_param.blob_name());
+
 	crop_h_ = crop_w_ = 0;
 }
 
 template <typename Dtype>
 void SimpleCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  CHECK_GE(bottom[0]->height(), bottom[1]->height()) << "SimpleCropLayer cannot crop height of " <<
-    bottom[0]->height() << " to " << bottom[1]->height();
-  CHECK_GE(bottom[0]->width(), bottom[1]->width()) << "SimpleCropLayer cannot crop width of " <<
-    bottom[0]->width() << " to " << bottom[1]->width();
+  CropParameter crop_param = this->layer_param_.crop_param();
 
-  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(), bottom[1]->height(),
-      bottom[1]->width());
+  // this is a little hacky because at network initialization time, the network
+  // has not completed setting up its mapping from blob names to blobs, so we cannot
+  // access it through the network at that time.  When Reshape is called after net
+  // initialization (during Forward), if a proper blob by that name is available, it is
+  // used.  If a wrong name is used, then the code will most likely error because no cropping
+  // is performed.
+  //crop_like_blob_ = this->net_->blob_by_name(crop_param.blob_name());
+
+  int like_height = bottom[0]->height(), like_width = bottom[0]->width();
+  //if (crop_like_blob_) {
+	  like_height = crop_like_blob_->height();
+	  like_width = crop_like_blob_->width();
+
+	  CHECK_GE(bottom[0]->height(), like_height) << "SimpleCropLayer cannot crop height of " <<
+		bottom[0]->height() << " to " << like_height;
+	  CHECK_GE(bottom[0]->width(), like_width) << "SimpleCropLayer cannot crop width of " <<
+		bottom[0]->width() << " to " << like_width;
+  //}
+  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(), like_height, like_width);
 }
 
 template <typename Dtype>
