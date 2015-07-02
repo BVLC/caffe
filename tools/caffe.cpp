@@ -7,7 +7,9 @@
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe_reference_symbols.h"
+#ifdef _MSV_VER
+#include "caffe_force_link.h"
+#endif
 
 using caffe::Blob;
 using caffe::Caffe;
