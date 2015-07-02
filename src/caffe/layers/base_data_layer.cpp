@@ -1,12 +1,12 @@
 #include <string>
 #include <vector>
 
-#include "caffe/data_layers.hpp"
-#include "caffe/util/io.hpp"
-
 #if defined(USE_GREENTEA) && !defined(USE_CUDA)
 #include "base_data_layer.cu"
 #endif
+
+#include "caffe/data_layers.hpp"
+#include "caffe/util/io.hpp"
 
 namespace caffe {
 

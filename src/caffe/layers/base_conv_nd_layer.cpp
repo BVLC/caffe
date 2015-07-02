@@ -308,7 +308,8 @@ void BaseConvolutionNDLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
       col_buff = col_buffer_.gpu_data();
     }
     for (int g = 0; g < group_; ++g) {
-      caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+      caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
+          conv_out_channels_ / group_,
           kernel_dim_ / group_, conv_out_spatial_dim_,
           (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
           (Dtype)1., weights + weight_offset_ * g);
