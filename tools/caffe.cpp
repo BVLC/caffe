@@ -7,7 +7,7 @@
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
-#ifdef _MSV_VER
+#ifdef _MSC_VER
 #include "caffe_force_link.h"
 #endif
 

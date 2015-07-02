@@ -6,8 +6,8 @@
 #endif
 
 #include "caffe/common.hpp"
-#include "caffe/util/rng.hpp"
 #include "caffe/util/msvc.hpp"
+#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -40,8 +40,8 @@ void GlobalInit(int* pargc, char*** pargv) {
   // Google logging.
   ::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
-#ifndef _MSC_VER 
-  ::google::InstallFailureSignalHandler(); // InstallFailureSignalHandler is not defined windows glog
+#ifndef _MSC_VER  // InstallFailureSignalHandler is not defined windows glog
+  ::google::InstallFailureSignalHandler();
 #endif
 }
 

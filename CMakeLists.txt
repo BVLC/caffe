@@ -62,7 +62,7 @@ add_subdirectory(matlab)
 add_subdirectory(docs)
 
 # ---[ Linter target
-add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
+add_custom_target(lint COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
 
 # ---[ Configuration summary
 caffe_print_configuration_summary()

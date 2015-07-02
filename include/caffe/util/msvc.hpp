@@ -10,16 +10,16 @@
 # define snprintf _snprintf_s
 #else
 # define snprintf _snprintf
-#endif 
+#endif
 
 #define getpid _getpid
 
 #define  mkdir(str, mode) _mkdir(str)
 
-#define __builtin_popcount __popcnt 
+#define __builtin_popcount __popcnt
 #define __builtin_popcountl __popcnt
 
-#endif // _MSC_VER
+#endif  // _MSC_VER
 
 
 #endif
