@@ -44,6 +44,19 @@
 #include "viennacl/vector.hpp"
 #endif
 
+// ViennaCL 1.5.1 compability fix
+#ifndef VIENNACL_MINOR_VERSION
+#define VIENNACL_MINOR_VERSION 5
+#endif
+
+#if VIENNACL_MINOR_VERSION > 5
+#define VCL_ROW_MAJOR , true
+#define VCL_COL_MAJOR , false
+#else
+#define VCL_ROW_MAJOR
+#define VCL_COL_MAJOR
+#endif
+
 namespace caffe {
 
 void greentea_memset(const int ctx_id, const size_t N, const int alpha,
@@ -183,16 +196,16 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
     viennacl::matrix_base<Dtype> matA(A, ctx,
         A_size1, size_type(0), difference_type(1), size_type(M),
-        A_size2, size_type(offA), difference_type(1), size_type(lda), true);
+        A_size2, size_type(offA), difference_type(1), size_type(lda) VCL_ROW_MAJOR);
 
     viennacl::matrix_base<Dtype> matB(B, ctx,
         B_size1, size_type(0), difference_type(1), size_type(K),
-        B_size2, size_type(offB), difference_type(1), size_type(ldb), true);
+        B_size2, size_type(offB), difference_type(1), size_type(ldb) VCL_ROW_MAJOR);
 
     viennacl::matrix_base<Dtype> matC(C, ctx,
         size_type(M), size_type(0), difference_type(1), size_type(M),
         size_type(N), size_type(offC), difference_type(1),
-        size_type(ldc), true);
+        size_type(ldc) VCL_ROW_MAJOR);
 
   if (TransA == CblasTrans && TransB == CblasTrans)
     viennacl::linalg::prod_impl(viennacl::trans(matA), viennacl::trans(matB),
@@ -282,7 +295,7 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                                      size_type(M), size_type(0),
                                      difference_type(1), size_type(M),
                                      size_type(N), size_type(offA),
-                                     difference_type(1), size_type(N), true);
+                                     difference_type(1), size_type(N) VCL_ROW_MAJOR);
     v2 *= beta;
     if (TransA == CblasTrans)
       v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
