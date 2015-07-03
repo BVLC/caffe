@@ -183,11 +183,12 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
         std::swap(set1, set2);
       }
 
-      it2 = overlap[set2].begin();
-      while (it2 != overlap[set2].end()) {
+      for (it2 = overlap[set2].begin();
+          it2 != overlap[set2].end(); ++it2) {
         it1 = overlap[set1].find(it2->first);
         if (it1 == overlap[set1].end()) {
-          overlap[set1].insert(pair<int, int>(it2->first, it2->second));
+          overlap[set1].insert(pair<int64_t, int64_t>
+            (it2->first, it2->second));
         } else {
           it1->second += it2->second;
         }
