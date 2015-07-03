@@ -31,8 +31,8 @@ function(caffe_fetch_and_set_proper_mexext mexfile_variable)
 endfunction()
 
 # global settings
-file(GLOB Matlab_srcs caffe/matcaffe.cpp)
-set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/caffe/caffe.mex)
+file(GLOB Matlab_srcs +caffe/private/caffe_.cpp)
+set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/+caffe/private/caffe_.mex)
 
 caffe_get_current_cflags(cflags)
 caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_frameworks)
