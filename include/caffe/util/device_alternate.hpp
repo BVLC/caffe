@@ -1,6 +1,10 @@
 #ifndef CAFFE_UTIL_DEVICE_ALTERNATE_H_
 #define CAFFE_UTIL_DEVICE_ALTERNATE_H_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 #include <vector>

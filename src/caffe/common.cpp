@@ -60,7 +60,7 @@ DeviceContext *Caffe::GetDefaultDeviceContext() {
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
-: random_generator_(), mode_(Caffe::CPU) {}
+: random_generator_(), mode_(Caffe::CPU), default_device_context_(nullptr) {}
 
 Caffe::~Caffe() {}
 
@@ -114,7 +114,8 @@ Caffe::Caffe()
       curand_generator_(NULL),
 #endif  // USE_CUDA
       random_generator_(),
-      mode_(Caffe::CPU) {
+      mode_(Caffe::CPU),
+      default_device_context_(nullptr) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
 #ifdef USE_CUDA

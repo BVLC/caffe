@@ -8,6 +8,10 @@
 #ifndef CAFFE_DEVICE_CONTEXT_HPP_
 #define CAFFE_DEVICE_CONTEXT_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include "caffe/blob.hpp"
