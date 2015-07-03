@@ -52,49 +52,49 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
 
   /* Cache for speed to access neighbors */
   // nVert stores (x * y * z)
-  long nVert = 1;
-  for (long i = 0; i < conn_num_dims - 1; ++i) {
+  int64_t nVert = 1;
+  for (int64_t i = 0; i < conn_num_dims - 1; ++i) {
     nVert = nVert * conn_dims[i];
   }
 
   // prodDims stores x, x*y, x*y*z offsets
-  vector<long> prodDims(conn_num_dims - 1);
+  vector<int64_t> prodDims(conn_num_dims - 1);
   prodDims[0] = 1;
-  for (long i = 1; i < conn_num_dims - 1; ++i) {
+  for (int64_t i = 1; i < conn_num_dims - 1; ++i) {
     prodDims[i] = prodDims[i - 1] * conn_dims[i - 1];
   }
 
   /* convert n-d offset vectors into linear array offset scalars */
   // nHood is a vector of size #edges
   vector<int32_t> nHood(nhood_dims[0]);
-  for (long i = 0; i < nhood_dims[0]; ++i) {
+  for (int64_t i = 0; i < nhood_dims[0]; ++i) {
     nHood[i] = 0;
-    for (long j = 0; j < nhood_dims[1]; ++j) {
+    for (int64_t j = 0; j < nhood_dims[1]; ++j) {
       nHood[i] += (int32_t) nhood_data[i + j * nhood_dims[0]] * prodDims[j];
     }
   }
 
   /* Disjoint sets and sparse overlap vectors */
-  vector<map<long, long> > overlap(nVert);
-  vector<long> rank(nVert);
-  vector<long> parent(nVert);
-  map<long, long> segSizes;
-  long nLabeledVert = 0;
-  long nPairPos = 0;
-  boost::disjoint_sets<long*, long*> dsets(&rank[0], &parent[0]);
+  vector<map<int64_t, int64_t> > overlap(nVert);
+  vector<int64_t> rank(nVert);
+  vector<int64_t> parent(nVert);
+  map<int64_t, int64_t> segSizes;
+  int64_t nLabeledVert = 0;
+  int64_t nPairPos = 0;
+  boost::disjoint_sets<int64_t*, int64_t*> dsets(&rank[0], &parent[0]);
   // Loop over all seg data items
-  for (long i = 0; i < nVert; ++i) {
+  for (int64_t i = 0; i < nVert; ++i) {
     dsets.make_set(i);
     if (0 != seg_data[i]) {
-      overlap[i].insert(pair<long, long>(seg_data[i], 1));
+      overlap[i].insert(pair<int64_t, int64_t>(seg_data[i], 1));
       ++nLabeledVert;
       ++segSizes[seg_data[i]];
       nPairPos += (segSizes[seg_data[i]] - 1);
     }
   }
-  long nPairTot = (nLabeledVert * (nLabeledVert - 1)) / 2;
-  long nPairNeg = nPairTot - nPairPos;
-  long nPairNorm;
+  int64_t nPairTot = (nLabeledVert * (nLabeledVert - 1)) / 2;
+  int64_t nPairNeg = nPairTot - nPairPos;
+  int64_t nPairNorm;
   if (pos) {
     nPairNorm = nPairPos;
   } else {
@@ -102,19 +102,19 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
   }
 
   /* Sort all the edges in increasing order of weight */
-  std::vector<long> pqueue(
+  std::vector<int64_t> pqueue(
       conn_dims[3] * std::max((conn_dims[0] - 1), 1)
                    * std::max((conn_dims[1] - 1), 1)
                    * std::max((conn_dims[2] - 1), 1));
-  long j = 0;
+  int64_t j = 0;
   // Loop over #edges
-  for (long d = 0, i = 0; d < conn_dims[3]; ++d) {
+  for (int64_t d = 0, i = 0; d < conn_dims[3]; ++d) {
     // Loop over Z
-    for (long z = 0; z < conn_dims[2]; ++z) {
+    for (int64_t z = 0; z < conn_dims[2]; ++z) {
       // Loop over Y
-      for (long y = 0; y < conn_dims[1]; ++y) {
+      for (int64_t y = 0; y < conn_dims[1]; ++y) {
         // Loop over X
-        for (long x = 0; x < conn_dims[0]; ++x, ++i) {
+        for (int64_t x = 0; x < conn_dims[0]; ++x, ++i) {
           if (x < std::max(conn_dims[0] - 1, 1) &&
               y < std::max(conn_dims[1] - 1, 1) &&
               z < std::max(conn_dims[2] - 1, 1)) {
@@ -128,16 +128,16 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
        MalisAffinityGraphCompare<Dtype>(conn_data));
 
   /* Start MST */
-  long minEdge;
-  long e, v1, v2;
-  long set1, set2;
-  long nPair = 0;
+  int64_t minEdge;
+  int64_t e, v1, v2;
+  int64_t set1, set2;
+  int64_t nPair = 0;
   double loss = 0, dl = 0;
-  long nPairIncorrect = 0;
-  map<long, long>::iterator it1, it2;
+  int64_t nPairIncorrect = 0;
+  map<int64_t, int64_t>::iterator it1, it2;
 
   /* Start Kruskal's */
-  for (long i = 0; i < pqueue.size(); ++i) {
+  for (int64_t i = 0; i < pqueue.size(); ++i) {
     minEdge = pqueue[i];
     e = minEdge / nVert;
     v1 = minEdge % nVert;
@@ -221,9 +221,7 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
 // http://nghiaho.com/uploads/code/opencv_connected_component/blob.cpp
 template<typename Dtype>
 cv::Mat MalisLossLayer<Dtype>::FindBlobs(const cv::Mat &input) {
-
   // Fill the label_image with the blobs
-
   cv::Mat label_image;
   input.convertTo(label_image, CV_32SC1);
 
@@ -424,11 +422,17 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < bottom[0]->height() - 1; ++i) {
       for (int j = 0; j < bottom[0]->width() - 1; ++j) {
         // Center
-        Dtype p0 = prob_data[bottom[0]->width() * bottom[0]->height() + i * bottom[0]->width() + j];
+        Dtype p0 = prob_data[bottom[0]->width()
+                             * bottom[0]->height()
+                             + i * bottom[0]->width() + j];
         // Right
-        Dtype p1 = prob_data[bottom[0]->width() * bottom[0]->height() + i * bottom[0]->width() + (j + 1)];
+        Dtype p1 = prob_data[bottom[0]->width()
+                             * bottom[0]->height()
+                             + i * bottom[0]->width() + (j + 1)];
         // Bottom
-        Dtype p2 = prob_data[bottom[0]->width() * bottom[0]->height() + (i + 1) * bottom[0]->width() + j];
+        Dtype p2 = prob_data[bottom[0]->width()
+                             * bottom[0]->height()
+                             + (i + 1) * bottom[0]->width() + j];
 
         // Center
         Dtype g0 = label[i * bottom[0]->width() + j];
@@ -491,7 +495,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           true, &dloss_pos[0],
           &loss_out, &classerr_out, &rand_index_out);
 
-    //std::cout << "Before MALIS 2" << std::endl;
+    // std::cout << "Before MALIS 2" << std::endl;
 
     Malis(&conn_data_neg[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
           &nhood_dims_[0], reinterpret_cast<int*>(seg.ptr(0)),
@@ -568,7 +572,6 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     caffe_scal(prob_.count(), loss_weight / outer_num_, bottom_diff);
-
   }
 }
 
