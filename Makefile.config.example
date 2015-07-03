@@ -16,9 +16,6 @@ VIENNACL_DIR = ../ViennaCL
 # CLBLAS should be faster, especially on AMD cards.
 USE_CLBLAS := 0
 
-# Enable or disable double precision support for OpenCL/Greentea
-GREENTEA_DOUBLE_SUPPORT := 1
-
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 # USE_CUDNN := 1
 
@@ -103,6 +100,7 @@ DISTRIBUTE_DIR := distribute
 
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
+# VIENNACL_DEBUG := 0
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0

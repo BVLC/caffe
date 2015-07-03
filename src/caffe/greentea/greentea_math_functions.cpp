@@ -34,8 +34,6 @@
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
 #else
-#include "viennacl/detail/matrix_def.hpp"
-#include "viennacl/detail/vector_def.hpp"
 #include "viennacl/linalg/inner_prod.hpp"
 #include "viennacl/linalg/norm_1.hpp"
 #include "viennacl/linalg/norm_2.hpp"

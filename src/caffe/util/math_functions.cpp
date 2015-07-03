@@ -260,7 +260,7 @@ double caffe_nextafter(const double b);
 void caffe_rng_uniform(const int n, unsigned int* r) {
   CHECK_GE(n, 0);
   CHECK(r);
-  boost::uniform_int<unsigned int> random_distribution(INT32_MIN, INT32_MAX);
+  boost::uniform_int<unsigned int> random_distribution(0, UINT32_MAX);
   boost::variate_generator<caffe::rng_t*, boost::uniform_int<unsigned int>>
     variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
