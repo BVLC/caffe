@@ -70,7 +70,7 @@ inline void SyncedMemory::to_cpu() {
       head_ = SYNCED;
 #else
       NO_GPU;
-#endif
+#endif  // !CPU_ONLY
       break;
     }
     case HEAD_AT_CPU:
