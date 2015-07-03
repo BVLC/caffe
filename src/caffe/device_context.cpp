@@ -10,7 +10,6 @@
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
-
 namespace caffe {
 
 DeviceContext::DeviceContext()
@@ -26,6 +25,7 @@ DeviceContext::DeviceContext(int id, Backend backend)
 }
 
 void DeviceContext::Init() {
+#ifndef CPU_ONLY
   if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
     workgroup_sizes_[0] = CAFFE_CUDA_NUM_THREADS;
@@ -41,6 +41,7 @@ void DeviceContext::Init() {
     workgroup_sizes_[2] = temp[2];
 #endif  // USE_GREENTEA
   }
+#endif  // !CPU_ONLY
 }
 
 Backend DeviceContext::backend() const {
