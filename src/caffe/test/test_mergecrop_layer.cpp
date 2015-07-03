@@ -15,12 +15,10 @@ namespace caffe {
 
 template<typename TypeParam>
 class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
-  typedef TypeParam Dtype;
-
  protected:
   MergeCropLayerTest()
-      : blob_bottom_a_(new Blob<Dtype>()), blob_bottom_b_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()) {
+      : blob_bottom_a_(new Blob<TypeParam>()), blob_bottom_b_(new Blob<TypeParam>()),
+        blob_top_(new Blob<TypeParam>()) {
   }
 
   virtual void SetUp() {
@@ -72,7 +70,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     }
 
     LayerParameter layer_param;
-    MergeCropLayer<Dtype> layer(layer_param);
+    MergeCropLayer<TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
     EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_a_->num());
@@ -153,11 +151,11 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     }
 
     LayerParameter layer_param;
-    MergeCropLayer<Dtype> layer(layer_param);
+    MergeCropLayer<TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
-    caffe_cpu_copy<Dtype>(blob_top_->count(), blob_top_->cpu_data(),
+    caffe_cpu_copy<TypeParam>(blob_top_->count(), blob_top_->cpu_data(),
                           blob_top_->mutable_cpu_diff());
 
     vector<bool> propagate_down(blob_bottom_vec_.size(), true);
@@ -178,20 +176,19 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     }
   }
 
-  Blob<Dtype>* const blob_bottom_a_;
-  Blob<Dtype>* const blob_bottom_b_;
-  Blob<Dtype>* const blob_top_;
+  Blob<TypeParam>* const blob_bottom_a_;
+  Blob<TypeParam>* const blob_bottom_b_;
+  Blob<TypeParam>* const blob_top_;
 
-  vector<Blob<Dtype>*> blob_bottom_vec_;
-  vector<Blob<Dtype>*> blob_top_vec_;
+  vector<Blob<TypeParam>*> blob_bottom_vec_;
+  vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
 TYPED_TEST_CASE(MergeCropLayerTest, TestDtypes);
 
 TYPED_TEST(MergeCropLayerTest, TestSetup) {
-  typedef TypeParam Dtype;
   LayerParameter layer_param;
-  MergeCropLayer<Dtype> layer(layer_param);
+  MergeCropLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_a_->num());

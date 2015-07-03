@@ -186,12 +186,12 @@ void SyncedMemory::set_cpu_data(void* data) {
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
   if (Caffe::mode() == Caffe::Brew::GPU) {
-    if(device_context_->backend() == Backend::BACKEND_OpenCL) {
+    if (device_context_->backend() == Backend::BACKEND_OpenCL) {
       viennacl::ocl::context ctx = viennacl::ocl::get_context(
           device_context_->id());
       if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-        // If host memory is released and shared
         gpu_ptr_ = nullptr;
+        ctx.get_queue().finish();
       }
     }
   }
