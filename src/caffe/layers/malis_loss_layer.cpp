@@ -507,7 +507,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     minmax = std::minmax_element(dloss_pos.begin(), dloss_pos.end());
 
-    /*std::cout << "DLoss_pos min/max: " <<
+    std::cout << "DLoss_pos min/max: " <<
         dloss_pos[minmax.first - dloss_pos.begin()] << " " <<
         dloss_pos[minmax.second - dloss_pos.begin()]  << std::endl;
 

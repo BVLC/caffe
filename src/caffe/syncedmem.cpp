@@ -114,7 +114,7 @@ inline void SyncedMemory::to_gpu() {
         }
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
-#endif
+#endif  // USE_GREENTEA
       }
       head_ = HEAD_AT_GPU;
       break;
@@ -183,16 +183,20 @@ void SyncedMemory::set_cpu_data(void* data) {
     CaffeFreeHost(cpu_ptr_);
   }
   cpu_ptr_ = data;
-  if (device_context_->backend() == Backend::BACKEND_OpenCL) {
+#ifndef CPU_ONLY
 #ifdef USE_GREENTEA
-    viennacl::ocl::context ctx = viennacl::ocl::get_context(
-        device_context_->id());
-    if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-      // If host memory is released and shared
-      gpu_ptr_ = NULL;
+  if (Caffe::mode() == Caffe::Brew::GPU) {
+    if(device_context_->backend() == Backend::BACKEND_OpenCL) {
+      viennacl::ocl::context ctx = viennacl::ocl::get_context(
+          device_context_->id());
+      if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+        // If host memory is released and shared
+        gpu_ptr_ = nullptr;
+      }
     }
-#endif
   }
+#endif  // USE_GREENTEA
+#endif  // !CPU_ONLY
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
 }

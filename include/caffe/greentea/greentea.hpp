@@ -8,6 +8,10 @@
 #ifndef CAFFE_GREENTEA_HPP_
 #define CAFFE_GREENTEA_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #include <vector>
 
 // Define ViennaCL/GreenTea flags
