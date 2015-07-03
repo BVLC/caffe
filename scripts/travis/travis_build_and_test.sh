@@ -2,7 +2,8 @@
 # Script called by Travis to do a CPU-only build of and test Caffe.
 
 set -e
-MAKE="make --jobs=$NUM_THREADS --keep-going"
+# Limit jobs to stay within available RAM/Swap
+MAKE="make --jobs=2 --keep-going"
 
 if $WITH_CMAKE; then
   mkdir build
