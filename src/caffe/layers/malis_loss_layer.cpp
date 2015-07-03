@@ -176,18 +176,9 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
           }
         }
       }
-      dloss_data[minEdge] /= nPairNorm;
-      /* HARD-CODED ALERT!!
-       * The derivative of the activation function is also multiplied here.
-       * Assumes the logistic nonlinear activation function.
-       */
-      // dloss_data[minEdge] *=
-      // conn_data[minEdge] * (1 - conn_data[minEdge]);  // DSigmoid
-      // Don't pre-multiply derivative, will be done
-      // later in the softmax backward
 
-      /* move the pixel bags of the non-representative to the representative */
-      // make set1 the rep to keep and set2 the rep to empty
+      dloss_data[minEdge] /= nPairNorm;
+
       if (dsets.find_set(set1) == set2) {
         std::swap(set1, set2);
       }
@@ -200,8 +191,8 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
         } else {
           it1->second += it2->second;
         }
-        overlap[set2].erase(it2++);
       }
+      overlap[set2].clear();
     }  // end link
   }  // end while
 
