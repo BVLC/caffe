@@ -7,6 +7,8 @@
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
+extern const int CAFFE_CUDA_NUM_THREADS = 0;
+
 #include <vector>
 
 // Stub out GPU calls as unavailable.
@@ -90,9 +92,9 @@ const char* curandGetErrorString(curandStatus_t error);
 // Use 1024 threads per block, which requires cuda sm_2x or above,
 // or fall back to attempt compatibility (best of luck to you).
 #if __CUDA_ARCH__ >= 200
-    const int CAFFE_CUDA_NUM_THREADS = 1024;
+    extern const int CAFFE_CUDA_NUM_THREADS = 1024;
 #else
-    const int CAFFE_CUDA_NUM_THREADS = 512;
+    extern const int CAFFE_CUDA_NUM_THREADS = 512;
 #endif
 
 // CDT hacks: allow proper code formatting and remove errors in CDT
