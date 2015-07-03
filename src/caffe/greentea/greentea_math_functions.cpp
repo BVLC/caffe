@@ -196,11 +196,13 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
     viennacl::matrix_base<Dtype> matA(A, ctx,
         A_size1, size_type(0), difference_type(1), size_type(M),
-        A_size2, size_type(offA), difference_type(1), size_type(lda) VCL_ROW_MAJOR);
+        A_size2, size_type(offA), difference_type(1), size_type(lda)
+        VCL_ROW_MAJOR);
 
     viennacl::matrix_base<Dtype> matB(B, ctx,
         B_size1, size_type(0), difference_type(1), size_type(K),
-        B_size2, size_type(offB), difference_type(1), size_type(ldb) VCL_ROW_MAJOR);
+        B_size2, size_type(offB), difference_type(1), size_type(ldb)
+        VCL_ROW_MAJOR);
 
     viennacl::matrix_base<Dtype> matC(C, ctx,
         size_type(M), size_type(0), difference_type(1), size_type(M),
@@ -295,7 +297,8 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                                      size_type(M), size_type(0),
                                      difference_type(1), size_type(M),
                                      size_type(N), size_type(offA),
-                                     difference_type(1), size_type(N) VCL_ROW_MAJOR);
+                                     difference_type(1), size_type(N)
+                                     VCL_ROW_MAJOR);
     v2 *= beta;
     if (TransA == CblasTrans)
       v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
