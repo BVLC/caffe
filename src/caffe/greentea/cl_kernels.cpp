@@ -65,7 +65,6 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   ss << pooling_sk_float << "\n\n";  // NOLINT
   ss << slice_float << "\n\n";  // NOLINT
   ss << softmax_loss_float << "\n\n";  // NOLINT
-#ifdef GREENTEA_DOUBLE_SUPPORT
   ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
   ss << "#undef Dtype" << "\n\n";  // NOLINT
   ss << "#define Dtype double" << "\n\n";  // NOLINT
@@ -88,10 +87,9 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   ss << slice_double << "\n\n";  // NOLINT
   ss << softmax_loss_double << "\n\n";  // NOLINT
   ss << "#endif" << "\n\n";
-#endif  // GREENTEA_DOUBLE_SUPPORT
   std::string kernel_string = ss.str();
   const char* kernel_program = kernel_string.c_str();
-  ctx->build_options("-cl-fast-relaxed-math -cl-mad-enable");
+  // ctx->build_options("-cl-fast-relaxed-math -cl-mad-enable");
   viennacl::ocl::program &program = ctx->add_program(kernel_program,
       "kernel_program");
   return program;

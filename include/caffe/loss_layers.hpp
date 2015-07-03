@@ -803,8 +803,7 @@ class MalisLossLayer : public LossLayer<Dtype> {
   std::vector<int> nhood_dims_;
 
  private:
-  cv::Mat FindBlobs(const cv::Mat &input,
-                 std::vector<std::vector<cv::Point2i> > *blobs);
+  cv::Mat FindBlobs(const cv::Mat &input);
 
   void Malis(Dtype* conn_data, int conn_num_dims, int* conn_dims,
              int* nhood_data, int* nhood_dims, int* seg_data,

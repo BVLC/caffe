@@ -26,7 +26,7 @@ DeviceContext::DeviceContext(int id, Backend backend)
 }
 
 void DeviceContext::Init() {
-if(backend_ == BACKEND_CUDA) {
+  if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
     workgroup_sizes_[0] = CAFFE_CUDA_NUM_THREADS;
 #endif  // USE_CUDA
@@ -34,7 +34,8 @@ if(backend_ == BACKEND_CUDA) {
 #ifdef USE_GREENTEA
     std::vector<size_t> temp(3);
     clGetDeviceInfo(viennacl::ocl::get_context(id_).devices()[0].id(),
-           CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t), &temp[0], NULL);
+    CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                    sizeof(size_t), &temp[0], NULL);
     workgroup_sizes_[0] = temp[0];
     workgroup_sizes_[1] = temp[1];
     workgroup_sizes_[2] = temp[2];

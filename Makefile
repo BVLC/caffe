@@ -209,12 +209,8 @@ ifeq ($(USE_GREENTEA),1)
 	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
 	
 	# Viennacl runtime debug output
-	ifeq ($(DEBUG), 1)
+	ifeq ($(VIENNACL_DEBUG), 1)
 		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
-	endif
-	
-	ifeq ($(GREENTEA_DOUBLE_SUPPORT), 1)
-		COMMON_FLAGS += -DGREENTEA_DOUBLE_SUPPORT
 	endif
 	
 	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
