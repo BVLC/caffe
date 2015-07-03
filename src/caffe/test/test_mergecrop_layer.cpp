@@ -17,7 +17,8 @@ template<typename TypeParam>
 class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
  protected:
   MergeCropLayerTest()
-      : blob_bottom_a_(new Blob<TypeParam>()), blob_bottom_b_(new Blob<TypeParam>()),
+      : blob_bottom_a_(new Blob<TypeParam>()),
+        blob_bottom_b_(new Blob<TypeParam>()),
         blob_top_(new Blob<TypeParam>()) {
   }
 
