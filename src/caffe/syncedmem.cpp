@@ -179,24 +179,24 @@ const void* SyncedMemory::cpu_data() {
 
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
-  if (own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
-  }
-  cpu_ptr_ = data;
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
   if (Caffe::mode() == Caffe::Brew::GPU) {
     if (device_context_->backend() == Backend::BACKEND_OpenCL) {
       viennacl::ocl::context ctx = viennacl::ocl::get_context(
           device_context_->id());
+      ctx.get_queue().finish();
       if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
         gpu_ptr_ = nullptr;
-        ctx.get_queue().finish();
       }
     }
   }
 #endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
+  if (own_cpu_data_) {
+    CaffeFreeHost(cpu_ptr_);
+  }
+  cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
 }
