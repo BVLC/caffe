@@ -347,7 +347,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* label = bottom[1]->cpu_data();
 
     // cv::namedWindow("labelled");
-     cv::namedWindow("prob");
+    // cv::namedWindow("prob");
     // cv::namedWindow("diff");
 
     cv::Mat img(bottom[1]->height(), bottom[1]->width(), CV_8SC1);
