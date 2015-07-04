@@ -45,6 +45,8 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
                                   Dtype* dloss_data, Dtype* loss_out,
                                   Dtype *classerr_out, Dtype *rand_index_out,
                                   Dtype margin) {
+  Dtype threshold = 0.5;
+
   if ((nhood_dims[1] != (conn_num_dims - 1))
       || (nhood_dims[0] != conn_dims[conn_num_dims - 1])) {
     LOG(FATAL) << "nhood and conn dimensions don't match";
@@ -167,21 +169,19 @@ void MalisLossLayer<Dtype>::Malis(Dtype* conn_data, int conn_num_dims,
 
           if (pos && (it1->first == it2->first)) {
             // +ve example pairs
-            // Sq-Sq loss is used here
-            dl = std::max(0.0, 0.5 + margin - conn_data[minEdge]);
-            loss += 0.5 * dl * dl * nPair;
-            dloss_data[minEdge] += dl * nPair;
-            if (conn_data[minEdge] <= 0.5) {  // an error
+            dl = std::max(Dtype(0.0), threshold + margin - conn_data[minEdge]);
+            loss += dl * nPair;
+            dloss_data[minEdge] -= (dl > 0) * nPair;
+            if (conn_data[minEdge] <= threshold) {  // an error
               nPairIncorrect += nPair;
             }
 
           } else if ((!pos) && (it1->first != it2->first)) {
             // -ve example pairs
-            // Sq-Sq loss is used here
-            dl = -std::max(0.0, conn_data[minEdge] - 0.5 + margin);
-            loss += 0.5 * dl * dl * nPair;
-            dloss_data[minEdge] += dl * nPair;
-            if (conn_data[minEdge] > 0.5) {  // an error
+            dl = std::max(Dtype(0.0), conn_data[minEdge] - threshold + margin);
+            loss += dl * nPair;
+            dloss_data[minEdge] += (dl > 0) * nPair;
+            if (conn_data[minEdge] > threshold) {  // an error
               nPairIncorrect += nPair;
             }
           }
@@ -347,7 +347,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* label = bottom[1]->cpu_data();
 
     // cv::namedWindow("labelled");
-    // cv::namedWindow("prob");
+     cv::namedWindow("prob");
     // cv::namedWindow("diff");
 
     cv::Mat img(bottom[1]->height(), bottom[1]->width(), CV_8SC1);
@@ -532,45 +532,66 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             * bottom[0]->height() + i * bottom[0]->width() + j];
 
         // Pick labels
-        const int l0 = static_cast<int>
+        /*const int l0 = static_cast<int>
           (label[i * bottom[0]->width() + j]);
         const int l1 = static_cast<int>
           (label[i * bottom[0]->width() + (j + 1)]);
         const int l2 = static_cast<int>
-          (label[(i + 1) * bottom[0]->width() + j]);
+          (label[(i + 1) * bottom[0]->width() + j]);*/
 
         // Center
-        bottom_diff[l0 * inner_num_ + i * bottom[0]->width() + j] += 0.5
+        bottom_diff[0 * inner_num_ + i * bottom[0]->width() + j] -= 0.5
             * (lxp + lxn + lyp + lyn);
 
         // Right
-        bottom_diff[l1 * inner_num_ + i * bottom[0]->width() + (j + 1)] += 0.5
+        bottom_diff[0 * inner_num_ + i * bottom[0]->width() + (j + 1)] -= 0.5
             * (lxp + lxn);
 
         // Bottom
-        bottom_diff[l2 * inner_num_ + (i + 1) * bottom[0]->width() + j] += 0.5
+        bottom_diff[0 * inner_num_ + (i + 1) * bottom[0]->width() + j] -= 0.5
+            * (lyp + lyn);
+
+
+        // Center
+        bottom_diff[1 * inner_num_ + i * bottom[0]->width() + j] += 0.5
+            * (lxp + lxn + lyp + lyn);
+
+        // Right
+        bottom_diff[1 * inner_num_ + i * bottom[0]->width() + (j + 1)] += 0.5
+            * (lxp + lxn);
+
+        // Bottom
+        bottom_diff[1 * inner_num_ + (i + 1) * bottom[0]->width() + j] += 0.5
             * (lyp + lyn);
       }
     }
 
     /*Dtype* prob_rd = prob_.mutable_cpu_data();
 
-    cv::Mat wrapped_1(bottom[0]->height(), bottom[0]->width(),
+    cv::Mat wrapped_prob(bottom[0]->height(), bottom[0]->width(),
                       cv::DataType<Dtype>::type,
                     prob_rd, sizeof(Dtype) * bottom[0]->width());
-    cv::imshow("prob", wrapped_1);
+    cv::imshow("prob", wrapped_prob);
     cv::waitKey(100);
 
-    cv::Mat wrapped_2(bottom[0]->height(), bottom[0]->width(),
+    cv::Mat wrapped_diff(bottom[0]->height(), bottom[0]->width(),
                       cv::DataType<Dtype>::type,
                     bottom_diff, sizeof(Dtype) * bottom[0]->width());
-    cv::imshow("diff", wrapped_2);
-    cv::waitKey(100);
+
+    double minVal, maxVal;
+    cv::minMaxLoc(wrapped_diff, &minVal, &maxVal);
+
+    std::cout << "Max loss: " << maxVal << std::endl;
+    std::cout << "Min loss: " << minVal << std::endl;
+
+    cv::Mat tmp;
+    wrapped_diff.convertTo(tmp, CV_32FC1, 1.0 / (maxVal - minVal),
+        -minVal * 1.0 / (maxVal - minVal));
+
+    cv::imshow("diff", tmp);
+    cv::waitKey(0);
 
     std::cout << "After LOSS BACK" << std::endl;*/
-
-    const Dtype loss_weight = top[0]->cpu_diff()[0];
-    caffe_scal(prob_.count(), loss_weight / outer_num_, bottom_diff);
   }
 }
 
