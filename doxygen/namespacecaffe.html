@@ -115,6 +115,9 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html">BasePrefetchingDataLayer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BilinearFiller.html">BilinearFiller</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with coefficients for bilinear interpolation.  <a href="classcaffe_1_1BilinearFiller.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html">Blob</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapper around <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holders serving as the basic computational unit through which <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s, <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a>s, and <a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a>s interact.  <a href="classcaffe_1_1Blob.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,6 +166,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Filler.html">Filler</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with constant or randomly-generated data.  <a href="classcaffe_1_1Filler.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1FilterLayer.html">FilterLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Takes two+ Blobs, interprets last <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> as a selector and filter remaining Blobs accordingly with selector data (0 means that the corresponding item has to be filtered, non-zero means that corresponding item needs to stay).  <a href="classcaffe_1_1FilterLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1FlattenLayer.html">FlattenLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reshapes the input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> into flat vectors.  <a href="classcaffe_1_1FlattenLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -198,6 +204,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LayerRegisterer.html">LayerRegisterer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LayerRegistry.html">LayerRegistry</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LogLayer.html">LogLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes <img class="formulaInl" alt="$ y = log_{\gamma}(\alpha x + \beta) $" src="form_132.png"/>, as specified by the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/>, shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/>, and base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/>.  <a href="classcaffe_1_1LogLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html">LossLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s that take two <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>s as input &ndash; usually (1) predictions and (2) ground-truth labels &ndash; and output a singleton <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> representing the loss.  <a href="classcaffe_1_1LossLayer.html#details">More...</a><br /></td></tr>
@@ -238,6 +247,9 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameterized Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y_i = \max(0, x_i) + a_i \min(0, x_i) $" src="form_126.png"/>. The differences from <a class="el" href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa...">ReLULayer</a> are 1) negative slopes are learnable though backprop and 2) negative slopes can vary across channels. The number of axes of input blob should be greater than or equal to 2. The 1st axis (0-based) is seen as channels.  <a href="classcaffe_1_1PReLULayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1PythonLayer.html">PythonLayer</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ReductionLayer.html">ReductionLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute "reductions" &ndash; operations that return a scalar output <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> for an input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> of arbitrary size, such as the sum, absolute sum, and sum of squares.  <a href="classcaffe_1_1ReductionLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ReLULayer.html">ReLULayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_102.png"/>. The simple max is fast to compute, and the function does not saturate.  <a href="classcaffe_1_1ReLULayer.html#details">More...</a><br /></td></tr>
@@ -548,6 +560,10 @@ template&lt;typename Dtype &gt; </td></tr>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:ae3dacc5c5bd60f1d15cadcb25c0c0720"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_exp</b> (const int n, const Dtype *a, Dtype *y)</td></tr>
 <tr class="separator:ae3dacc5c5bd60f1d15cadcb25c0c0720"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91f4d24e5d7a7194c3d07b9293ccf67e"><td class="memTemplParams" colspan="2"><a class="anchor" id="a91f4d24e5d7a7194c3d07b9293ccf67e"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a91f4d24e5d7a7194c3d07b9293ccf67e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_log</b> (const int n, const Dtype *a, Dtype *y)</td></tr>
+<tr class="separator:a91f4d24e5d7a7194c3d07b9293ccf67e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9056cc88a6cf2eb7f67e64dc7231dc5"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae9056cc88a6cf2eb7f67e64dc7231dc5"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:ae9056cc88a6cf2eb7f67e64dc7231dc5"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_abs</b> (const int n, const Dtype *a, Dtype *y)</td></tr>
@@ -643,6 +659,10 @@ template&lt;typename Dtype &gt; </td></tr>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a377ac4c841146a13666afd9ad9411583"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_gpu_exp</b> (const int n, const Dtype *a, Dtype *y)</td></tr>
 <tr class="separator:a377ac4c841146a13666afd9ad9411583"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6adb76ec01137569f8bc453b86156106"><td class="memTemplParams" colspan="2"><a class="anchor" id="a6adb76ec01137569f8bc453b86156106"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a6adb76ec01137569f8bc453b86156106"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_gpu_log</b> (const int n, const Dtype *a, Dtype *y)</td></tr>
+<tr class="separator:a6adb76ec01137569f8bc453b86156106"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ee33a72306ecb2f1b13e31e1a326d6b"><td class="memTemplParams" colspan="2"><a class="anchor" id="a9ee33a72306ecb2f1b13e31e1a326d6b"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a9ee33a72306ecb2f1b13e31e1a326d6b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_gpu_powx</b> (const int n, const Dtype *a, const Dtype b, Dtype *y)</td></tr>
@@ -887,6 +907,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a987b5b084d464b7ad7fed7a8c637f657"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a987b5b084d464b7ad7fed7a8c637f657"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Exp)</td></tr>
 <tr class="separator:a987b5b084d464b7ad7fed7a8c637f657"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a003cc48c7c58a260107edaaabda3f094"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a003cc48c7c58a260107edaaabda3f094"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1FilterLayer.html">FilterLayer</a>)</td></tr>
+<tr class="separator:a003cc48c7c58a260107edaaabda3f094"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f2f80c5bb71306250c08a23903a9934"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2f2f80c5bb71306250c08a23903a9934"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Filter)</td></tr>
+<tr class="separator:a2f2f80c5bb71306250c08a23903a9934"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cf041fd4eb88960848b5bbb1ddf3e5e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4cf041fd4eb88960848b5bbb1ddf3e5e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1FlattenLayer.html">FlattenLayer</a>)</td></tr>
 <tr class="separator:a4cf041fd4eb88960848b5bbb1ddf3e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -935,6 +961,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a1c899720e9a6b5210ef8eae27530243f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c899720e9a6b5210ef8eae27530243f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (InnerProduct)</td></tr>
 <tr class="separator:a1c899720e9a6b5210ef8eae27530243f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0660db69c30c83d6ab786a31cb5d1601"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0660db69c30c83d6ab786a31cb5d1601"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1LogLayer.html">LogLayer</a>)</td></tr>
+<tr class="separator:a0660db69c30c83d6ab786a31cb5d1601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72ac9cb82e9f678a29e4a367acaf7985"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a72ac9cb82e9f678a29e4a367acaf7985"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Log)</td></tr>
+<tr class="separator:a72ac9cb82e9f678a29e4a367acaf7985"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e622070ea84ee8b7bd8362074e257c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e622070ea84ee8b7bd8362074e257c4"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1LossLayer.html">LossLayer</a>)</td></tr>
 <tr class="separator:a4e622070ea84ee8b7bd8362074e257c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -980,6 +1012,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a9a94d42ca9a0b3dfca549a754d83a88c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a94d42ca9a0b3dfca549a754d83a88c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (PReLU)</td></tr>
 <tr class="separator:a9a94d42ca9a0b3dfca549a754d83a88c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace96caf0e6989108da1e9d6af605c63a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace96caf0e6989108da1e9d6af605c63a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1ReductionLayer.html">ReductionLayer</a>)</td></tr>
+<tr class="separator:ace96caf0e6989108da1e9d6af605c63a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a3430a6482308be1a4cc07a00ce8f70"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a3430a6482308be1a4cc07a00ce8f70"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Reduction)</td></tr>
+<tr class="separator:a0a3430a6482308be1a4cc07a00ce8f70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a889d40ff9d35d8cdcf75089259d4ada0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a889d40ff9d35d8cdcf75089259d4ada0"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1ReLULayer.html">ReLULayer</a>)</td></tr>
 <tr class="separator:a889d40ff9d35d8cdcf75089259d4ada0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1218,6 +1256,14 @@ template&lt;&gt; </td></tr>
 template&lt;&gt; </td></tr>
 <tr class="memitem:ab934b2004cda176643660f2029ff9fa2"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_exp&lt; double &gt;</b> (const int n, const double *a, double *y)</td></tr>
 <tr class="separator:ab934b2004cda176643660f2029ff9fa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb0328e4604ee2bb2829c1ab069a047b"><td class="memTemplParams" colspan="2"><a class="anchor" id="acb0328e4604ee2bb2829c1ab069a047b"></a>
+template&lt;&gt; </td></tr>
+<tr class="memitem:acb0328e4604ee2bb2829c1ab069a047b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_log&lt; float &gt;</b> (const int n, const float *a, float *y)</td></tr>
+<tr class="separator:acb0328e4604ee2bb2829c1ab069a047b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21f7168d644e539376f94aabd9fea305"><td class="memTemplParams" colspan="2"><a class="anchor" id="a21f7168d644e539376f94aabd9fea305"></a>
+template&lt;&gt; </td></tr>
+<tr class="memitem:a21f7168d644e539376f94aabd9fea305"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_log&lt; double &gt;</b> (const int n, const double *a, double *y)</td></tr>
+<tr class="separator:a21f7168d644e539376f94aabd9fea305"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae723398dd9f752078438ba1e9e07f084"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae723398dd9f752078438ba1e9e07f084"></a>
 template&lt;&gt; </td></tr>
 <tr class="memitem:ae723398dd9f752078438ba1e9e07f084"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_abs&lt; float &gt;</b> (const int n, const float *a, float *y)</td></tr>
@@ -1345,7 +1391,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri May 29 2015 12:07:28 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 6 2015 00:57:02 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

@@ -9,6 +9,7 @@ var searchData=
   ['lmdb',['LMDB',['../classcaffe_1_1db_1_1LMDB.html',1,'caffe::db']]],
   ['lmdbcursor',['LMDBCursor',['../classcaffe_1_1db_1_1LMDBCursor.html',1,'caffe::db']]],
   ['lmdbtransaction',['LMDBTransaction',['../classcaffe_1_1db_1_1LMDBTransaction.html',1,'caffe::db']]],
+  ['loglayer',['LogLayer',['../classcaffe_1_1LogLayer.html',1,'caffe']]],
   ['losslayer',['LossLayer',['../classcaffe_1_1LossLayer.html',1,'caffe']]],
   ['lrnlayer',['LRNLayer',['../classcaffe_1_1LRNLayer.html',1,'caffe']]]
 ];

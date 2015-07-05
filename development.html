@@ -119,29 +119,29 @@ We do release things as soon as a reasonable technical report may be written, an
 
 <h4 id="shelhamershttpsgithubcomshelhamer-life-of-a-branch-in-four-acts"><a href="https://github.com/shelhamer">Shelhamer’s</a> “life of a branch in four acts”</h4>
 
-<p>Make the <code>feature</code> branch off of the latest <code>bvlc/master</code>
-<code>
-git checkout master
+<p>Make the <code>feature</code> branch off of the latest <code>bvlc/master</code></p>
+
+<pre><code>git checkout master
 git pull upstream master
 git checkout -b feature
 # do your work, make commits
-</code></p>
+</code></pre>
 
-<p>Prepare to merge by rebasing your branch on the latest <code>bvlc/master</code>
-<code>
-# make sure master is fresh
+<p>Prepare to merge by rebasing your branch on the latest <code>bvlc/master</code></p>
+
+<pre><code># make sure master is fresh
 git checkout master
 git pull upstream master
 # rebase your branch on the tip of master
 git checkout feature
 git rebase master
-</code></p>
+</code></pre>
 
-<p>Push your branch to pull request it into <code>BVLC/caffe:master</code>
-<code>
-git push origin feature
+<p>Push your branch to pull request it into <code>BVLC/caffe:master</code></p>
+
+<pre><code>git push origin feature
 # ...make pull request to master...
-</code></p>
+</code></pre>
 
 <p>Now make a pull request! You can do this from the command line (<code>git pull-request -b master</code>) if you install <a href="https://github.com/github/hub">hub</a>. Hub has many other magical uses.</p>
 

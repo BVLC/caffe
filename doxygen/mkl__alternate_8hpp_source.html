@@ -123,71 +123,72 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;DEFINE_VSL_UNARY_FUNC(Sqr, y[i] = a[i] * a[i]);</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;DEFINE_VSL_UNARY_FUNC(Exp, y[i] = exp(a[i]));</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">// A simple way to define the vsl unary functions with singular parameter b.</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">// The operation should be in the form e.g. y[i] = pow(a[i], b)</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define DEFINE_VSL_UNARY_FUNC_WITH_PARAM(name, operation) \</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">  template&lt;typename Dtype&gt; \</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">  void v##name(const int n, const Dtype* a, const Dtype b, Dtype* y) { \</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">    CHECK_GT(n, 0); CHECK(a); CHECK(y); \</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">    for (int i = 0; i &lt; n; ++i) { operation; } \</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">  } \</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">  inline void vs##name( \</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">    const int n, const float* a, const float b, float* y) { \</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">    v##name&lt;float&gt;(n, a, b, y); \</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">  } \</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">  inline void vd##name( \</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">      const int n, const double* a, const float b, double* y) { \</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">    v##name&lt;double&gt;(n, a, b, y); \</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">  }</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;DEFINE_VSL_UNARY_FUNC_WITH_PARAM(Powx, y[i] = pow(a[i], b));</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="comment">// A simple way to define the vsl binary functions. The operation should</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="comment">// be in the form e.g. y[i] = a[i] + b[i]</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#define DEFINE_VSL_BINARY_FUNC(name, operation) \</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">  template&lt;typename Dtype&gt; \</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">  void v##name(const int n, const Dtype* a, const Dtype* b, Dtype* y) { \</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">    CHECK_GT(n, 0); CHECK(a); CHECK(b); CHECK(y); \</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">    for (int i = 0; i &lt; n; ++i) { operation; } \</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">  } \</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">  inline void vs##name( \</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">    const int n, const float* a, const float* b, float* y) { \</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">    v##name&lt;float&gt;(n, a, b, y); \</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor">  } \</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">  inline void vd##name( \</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor">      const int n, const double* a, const double* b, double* y) { \</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor">    v##name&lt;double&gt;(n, a, b, y); \</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">  }</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;DEFINE_VSL_BINARY_FUNC(Add, y[i] = a[i] + b[i]);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i]);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i]);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">// In addition, MKL comes with an additional function axpby that is not present</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">// in standard blas. We will simply use a two-step (inefficient, of course) way</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">// to mimic that.</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> cblas_saxpby(<span class="keyword">const</span> <span class="keywordtype">int</span> N, <span class="keyword">const</span> <span class="keywordtype">float</span> alpha, <span class="keyword">const</span> <span class="keywordtype">float</span>* X,</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incX, <span class="keyword">const</span> <span class="keywordtype">float</span> beta, <span class="keywordtype">float</span>* Y,</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incY) {</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  cblas_sscal(N, beta, Y, incY);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  cblas_saxpy(N, alpha, X, incX, Y, incY);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;}</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> cblas_daxpby(<span class="keyword">const</span> <span class="keywordtype">int</span> N, <span class="keyword">const</span> <span class="keywordtype">double</span> alpha, <span class="keyword">const</span> <span class="keywordtype">double</span>* X,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incX, <span class="keyword">const</span> <span class="keywordtype">double</span> beta, <span class="keywordtype">double</span>* Y,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incY) {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  cblas_dscal(N, beta, Y, incY);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  cblas_daxpy(N, alpha, X, incX, Y, incY);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;}</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor">#endif  // USE_MKL</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor">#endif  // CAFFE_UTIL_MKL_ALTERNATE_H_</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">// A simple way to define the vsl unary functions with singular parameter b.</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">// The operation should be in the form e.g. y[i] = pow(a[i], b)</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#define DEFINE_VSL_UNARY_FUNC_WITH_PARAM(name, operation) \</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">  template&lt;typename Dtype&gt; \</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">  void v##name(const int n, const Dtype* a, const Dtype b, Dtype* y) { \</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">    CHECK_GT(n, 0); CHECK(a); CHECK(y); \</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">    for (int i = 0; i &lt; n; ++i) { operation; } \</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">  } \</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">  inline void vs##name( \</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">    const int n, const float* a, const float b, float* y) { \</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">    v##name&lt;float&gt;(n, a, b, y); \</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">  } \</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">  inline void vd##name( \</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">      const int n, const double* a, const float b, double* y) { \</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="preprocessor">    v##name&lt;double&gt;(n, a, b, y); \</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">  }</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;DEFINE_VSL_UNARY_FUNC_WITH_PARAM(Powx, y[i] = pow(a[i], b));</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="comment">// A simple way to define the vsl binary functions. The operation should</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">// be in the form e.g. y[i] = a[i] + b[i]</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#define DEFINE_VSL_BINARY_FUNC(name, operation) \</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor">  template&lt;typename Dtype&gt; \</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">  void v##name(const int n, const Dtype* a, const Dtype* b, Dtype* y) { \</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">    CHECK_GT(n, 0); CHECK(a); CHECK(b); CHECK(y); \</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">    for (int i = 0; i &lt; n; ++i) { operation; } \</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="preprocessor">  } \</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">  inline void vs##name( \</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">    const int n, const float* a, const float* b, float* y) { \</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor">    v##name&lt;float&gt;(n, a, b, y); \</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="preprocessor">  } \</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="preprocessor">  inline void vd##name( \</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="preprocessor">      const int n, const double* a, const double* b, double* y) { \</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">    v##name&lt;double&gt;(n, a, b, y); \</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">  }</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;DEFINE_VSL_BINARY_FUNC(Add, y[i] = a[i] + b[i]);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i]);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i]);</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">// In addition, MKL comes with an additional function axpby that is not present</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">// in standard blas. We will simply use a two-step (inefficient, of course) way</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment">// to mimic that.</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> cblas_saxpby(<span class="keyword">const</span> <span class="keywordtype">int</span> N, <span class="keyword">const</span> <span class="keywordtype">float</span> alpha, <span class="keyword">const</span> <span class="keywordtype">float</span>* X,</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incX, <span class="keyword">const</span> <span class="keywordtype">float</span> beta, <span class="keywordtype">float</span>* Y,</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incY) {</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  cblas_sscal(N, beta, Y, incY);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  cblas_saxpy(N, alpha, X, incX, Y, incY);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;}</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> cblas_daxpby(<span class="keyword">const</span> <span class="keywordtype">int</span> N, <span class="keyword">const</span> <span class="keywordtype">double</span> alpha, <span class="keyword">const</span> <span class="keywordtype">double</span>* X,</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incX, <span class="keyword">const</span> <span class="keywordtype">double</span> beta, <span class="keywordtype">double</span>* Y,</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;                         <span class="keyword">const</span> <span class="keywordtype">int</span> incY) {</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  cblas_dscal(N, beta, Y, incY);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  cblas_daxpy(N, alpha, X, incX, Y, incY);</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="preprocessor">#endif  // USE_MKL</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="preprocessor">#endif  // CAFFE_UTIL_MKL_ALTERNATE_H_</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri May 29 2015 12:07:27 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 6 2015 00:57:02 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

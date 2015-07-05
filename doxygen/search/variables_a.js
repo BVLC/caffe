@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['rand_5fvec_5f',['rand_vec_',['../classcaffe_1_1DropoutLayer.html#a7a2c28420611a960a964e56acdbe2b47',1,'caffe::DropoutLayer']]]
+  ['op_5f',['op_',['../classcaffe_1_1ReductionLayer.html#aa65f46eaf24eca2948592bcb9e127346',1,'caffe::ReductionLayer']]]
 ];

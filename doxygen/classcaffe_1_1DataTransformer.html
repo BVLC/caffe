@@ -126,6 +126,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a168abf1bf9466420da6968178c6edb4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataTransformer.html#a168abf1bf9466420da6968178c6edb4d">Transform</a> (<a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *input_blob, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *transformed_blob)</td></tr>
 <tr class="memdesc:a168abf1bf9466420da6968178c6edb4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies the same transformation defined in the data layer's transform_param block to all the num images in a input_blob.  <a href="#a168abf1bf9466420da6968178c6edb4d">More...</a><br /></td></tr>
 <tr class="separator:a168abf1bf9466420da6968178c6edb4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e43b0fb80cded5bb854e1a06004bebf"><td class="memItemLeft" align="right" valign="top">vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf">InferBlobShape</a> (const Datum &amp;datum)</td></tr>
+<tr class="memdesc:a1e43b0fb80cded5bb854e1a06004bebf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Infers the shape of transformed_blob will have when the transformation is applied to the data.  <a href="#a1e43b0fb80cded5bb854e1a06004bebf">More...</a><br /></td></tr>
+<tr class="separator:a1e43b0fb80cded5bb854e1a06004bebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac829dd6448dcce67acb1e22a2554db4b"><td class="memItemLeft" align="right" valign="top">vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataTransformer.html#ac829dd6448dcce67acb1e22a2554db4b">InferBlobShape</a> (const vector&lt; Datum &gt; &amp;datum_vector)</td></tr>
+<tr class="memdesc:ac829dd6448dcce67acb1e22a2554db4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Infers the shape of transformed_blob will have when the transformation is applied to the data. It uses the first element to infer the shape of the blob.  <a href="#ac829dd6448dcce67acb1e22a2554db4b">More...</a><br /></td></tr>
+<tr class="separator:ac829dd6448dcce67acb1e22a2554db4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb299b1fdc4a859597a6eafc30147eee"><td class="memItemLeft" align="right" valign="top">vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataTransformer.html#abb299b1fdc4a859597a6eafc30147eee">InferBlobShape</a> (const vector&lt; cv::Mat &gt; &amp;mat_vector)</td></tr>
+<tr class="memdesc:abb299b1fdc4a859597a6eafc30147eee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Infers the shape of transformed_blob will have when the transformation is applied to the data. It uses the first element to infer the shape of the blob.  <a href="#abb299b1fdc4a859597a6eafc30147eee">More...</a><br /></td></tr>
+<tr class="separator:abb299b1fdc4a859597a6eafc30147eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34c4e5baeac4b442f7336ac3410fb7b5"><td class="memItemLeft" align="right" valign="top">vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataTransformer.html#a34c4e5baeac4b442f7336ac3410fb7b5">InferBlobShape</a> (const cv::Mat &amp;cv_img)</td></tr>
+<tr class="memdesc:a34c4e5baeac4b442f7336ac3410fb7b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Infers the shape of transformed_blob will have when the transformation is applied to the data.  <a href="#a34c4e5baeac4b442f7336ac3410fb7b5">More...</a><br /></td></tr>
+<tr class="separator:a34c4e5baeac4b442f7336ac3410fb7b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -160,6 +172,110 @@ class caffe::DataTransformer&lt; Dtype &gt;</h3>
 
 <p>Applies common transformations to the input data, such as scaling, mirroring, substracting the image mean... </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a1e43b0fb80cded5bb854e1a06004bebf"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">vector&lt; int &gt; <a class="el" href="classcaffe_1_1DataTransformer.html">caffe::DataTransformer</a>&lt; Dtype &gt;::InferBlobShape </td>
+          <td>(</td>
+          <td class="paramtype">const Datum &amp;&#160;</td>
+          <td class="paramname"><em>datum</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Infers the shape of transformed_blob will have when the transformation is applied to the data. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">datum</td><td>Datum containing the data to be transformed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ac829dd6448dcce67acb1e22a2554db4b"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">vector&lt; int &gt; <a class="el" href="classcaffe_1_1DataTransformer.html">caffe::DataTransformer</a>&lt; Dtype &gt;::InferBlobShape </td>
+          <td>(</td>
+          <td class="paramtype">const vector&lt; Datum &gt; &amp;&#160;</td>
+          <td class="paramname"><em>datum_vector</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Infers the shape of transformed_blob will have when the transformation is applied to the data. It uses the first element to infer the shape of the blob. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">datum_vector</td><td>A vector of Datum containing the data to be transformed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="abb299b1fdc4a859597a6eafc30147eee"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">vector&lt; int &gt; <a class="el" href="classcaffe_1_1DataTransformer.html">caffe::DataTransformer</a>&lt; Dtype &gt;::InferBlobShape </td>
+          <td>(</td>
+          <td class="paramtype">const vector&lt; cv::Mat &gt; &amp;&#160;</td>
+          <td class="paramname"><em>mat_vector</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Infers the shape of transformed_blob will have when the transformation is applied to the data. It uses the first element to infer the shape of the blob. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">mat_vector</td><td>A vector of Mat containing the data to be transformed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a34c4e5baeac4b442f7336ac3410fb7b5"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">vector&lt; int &gt; <a class="el" href="classcaffe_1_1DataTransformer.html">caffe::DataTransformer</a>&lt; Dtype &gt;::InferBlobShape </td>
+          <td>(</td>
+          <td class="paramtype">const cv::Mat &amp;&#160;</td>
+          <td class="paramname"><em>cv_img</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Infers the shape of transformed_blob will have when the transformation is applied to the data. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cv_img</td><td>cv::Mat containing the data to be transformed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="ac3e52731074a73b05ff0527d2febc8f2"></a>
 <div class="memitem">
 <div class="memproto">
@@ -387,7 +503,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri May 29 2015 12:07:30 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 6 2015 00:57:04 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

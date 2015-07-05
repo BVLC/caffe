@@ -141,10 +141,10 @@ Note that if you deviated from file paths suggested in this guide, you’ll need
 
 <p>We all experience times when the power goes out, or we feel like rewarding ourself a little by playing Battlefield (does anyone still remember Quake?). Since we are snapshotting intermediate results during training, we will be able to resume from snapshots. This can be done as easy as:</p>
 
-<pre><code>./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate
+<pre><code>./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_iter_10000.solverstate
 </code></pre>
 
-<p>where in the script <code>caffenet_train_10000.solverstate</code> is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).</p>
+<p>where in the script <code>caffenet_train_iter_10000.solverstate</code> is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).</p>
 
 <h2 id="parting-words">Parting Words</h2>
 

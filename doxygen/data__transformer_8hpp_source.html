@@ -114,38 +114,45 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<span class="keyword">const</span> vector&lt;cv::Mat&gt; &amp; mat_vector,</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* transformed_blob);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<span class="keyword">const</span> cv::Mat&amp; cv_img, <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* transformed_blob);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* input_blob, <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* transformed_blob);</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">int</span> <a class="code" href="classcaffe_1_1DataTransformer.html#ac3e52731074a73b05ff0527d2febc8f2">Rand</a>(<span class="keywordtype">int</span> n);</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<span class="keyword">const</span> Datum&amp; datum, Dtype* transformed_data);</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// Tranformation parameters</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  TransformationParameter param_;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  shared_ptr&lt;Caffe::RNG&gt; rng_;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  Phase phase_;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a> data_mean_;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  vector&lt;Dtype&gt; mean_values_;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;};</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;}  <span class="comment">// namespace caffe</span></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="preprocessor">#endif  // CAFFE_DATA_TRANSFORMER_HPP_</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<span class="keyword">const</span> cv::Mat&amp; cv_img, <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* transformed_blob);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* input_blob, <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* transformed_blob);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  vector&lt;int&gt; <a class="code" href="classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf">InferBlobShape</a>(<span class="keyword">const</span> Datum&amp; datum);</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  vector&lt;int&gt; <a class="code" href="classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf">InferBlobShape</a>(<span class="keyword">const</span> vector&lt;Datum&gt; &amp; datum_vector);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  vector&lt;int&gt; <a class="code" href="classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf">InferBlobShape</a>(<span class="keyword">const</span> vector&lt;cv::Mat&gt; &amp; mat_vector);</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  vector&lt;int&gt; <a class="code" href="classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf">InferBlobShape</a>(<span class="keyword">const</span> cv::Mat&amp; cv_img);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">int</span> <a class="code" href="classcaffe_1_1DataTransformer.html#ac3e52731074a73b05ff0527d2febc8f2">Rand</a>(<span class="keywordtype">int</span> n);</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">Transform</a>(<span class="keyword">const</span> Datum&amp; datum, Dtype* transformed_data);</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  <span class="comment">// Tranformation parameters</span></div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  TransformationParameter param_;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;  shared_ptr&lt;Caffe::RNG&gt; rng_;</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  Phase phase_;</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a> data_mean_;</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  vector&lt;Dtype&gt; mean_values_;</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;};</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;}  <span class="comment">// namespace caffe</span></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;<span class="preprocessor">#endif  // CAFFE_DATA_TRANSFORMER_HPP_</span></div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;</div>
 <div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
+<div class="ttc" id="classcaffe_1_1DataTransformer_html_a1e43b0fb80cded5bb854e1a06004bebf"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html#a1e43b0fb80cded5bb854e1a06004bebf">caffe::DataTransformer::InferBlobShape</a></div><div class="ttdeci">vector&lt; int &gt; InferBlobShape(const Datum &amp;datum)</div><div class="ttdoc">Infers the shape of transformed_blob will have when the transformation is applied to the data...</div><div class="ttdef"><b>Definition:</b> data_transformer.cpp:431</div></div>
 <div class="ttc" id="classcaffe_1_1DataTransformer_html"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html">caffe::DataTransformer</a></div><div class="ttdoc">Applies common transformations to the input data, such as scaling, mirroring, substracting the image ...</div><div class="ttdef"><b>Definition:</b> data_transformer.hpp:17</div></div>
-<div class="ttc" id="classcaffe_1_1DataTransformer_html_a6d807c7dc250e66b62d97d9847278e68"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html#a6d807c7dc250e66b62d97d9847278e68">caffe::DataTransformer::InitRand</a></div><div class="ttdeci">void InitRand()</div><div class="ttdoc">Initialize the Random number generations if needed by the transformation. </div><div class="ttdef"><b>Definition:</b> data_transformer.cpp:399</div></div>
-<div class="ttc" id="classcaffe_1_1DataTransformer_html_ac3e52731074a73b05ff0527d2febc8f2"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html#ac3e52731074a73b05ff0527d2febc8f2">caffe::DataTransformer::Rand</a></div><div class="ttdeci">virtual int Rand(int n)</div><div class="ttdoc">Generates a random integer from Uniform({0, 1, ..., n-1}). </div><div class="ttdef"><b>Definition:</b> data_transformer.cpp:411</div></div>
+<div class="ttc" id="classcaffe_1_1DataTransformer_html_a6d807c7dc250e66b62d97d9847278e68"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html#a6d807c7dc250e66b62d97d9847278e68">caffe::DataTransformer::InitRand</a></div><div class="ttdeci">void InitRand()</div><div class="ttdoc">Initialize the Random number generations if needed by the transformation. </div><div class="ttdef"><b>Definition:</b> data_transformer.cpp:507</div></div>
+<div class="ttc" id="classcaffe_1_1DataTransformer_html_ac3e52731074a73b05ff0527d2febc8f2"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html#ac3e52731074a73b05ff0527d2febc8f2">caffe::DataTransformer::Rand</a></div><div class="ttdeci">virtual int Rand(int n)</div><div class="ttdoc">Generates a random integer from Uniform({0, 1, ..., n-1}). </div><div class="ttdef"><b>Definition:</b> data_transformer.cpp:519</div></div>
 <div class="ttc" id="classcaffe_1_1DataTransformer_html_a1626db49587d506a91e7b70373ace816"><div class="ttname"><a href="classcaffe_1_1DataTransformer.html#a1626db49587d506a91e7b70373ace816">caffe::DataTransformer::Transform</a></div><div class="ttdeci">void Transform(const Datum &amp;datum, Blob&lt; Dtype &gt; *transformed_blob)</div><div class="ttdoc">Applies the transformation defined in the data layer&#39;s transform_param block to the data...</div><div class="ttdef"><b>Definition:</b> data_transformer.cpp:126</div></div>
 <div class="ttc" id="classcaffe_1_1Blob_html"><div class="ttname"><a href="classcaffe_1_1Blob.html">caffe::Blob</a></div><div class="ttdoc">A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...</div><div class="ttdef"><b>Definition:</b> blob.hpp:25</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri May 29 2015 12:07:27 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 6 2015 00:57:02 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

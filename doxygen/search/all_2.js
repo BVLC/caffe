@@ -5,6 +5,7 @@ var searchData=
   ['canonicalaxisindex',['CanonicalAxisIndex',['../classcaffe_1_1Blob.html#a6ce87a58a08438c46a4858929a77ee77',1,'caffe::Blob']]],
   ['channels',['channels',['../classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec',1,'caffe::Blob']]],
   ['checkblobcounts',['CheckBlobCounts',['../classcaffe_1_1Layer.html#adaa95e30dff155409a25ffcb5c8c885e',1,'caffe::Layer']]],
+  ['coeff_5f',['coeff_',['../classcaffe_1_1ReductionLayer.html#a7aeb19ec25f01d4df995ba2122fbfeb3',1,'caffe::ReductionLayer']]],
   ['concat_5fbottom_5fvec_5f',['concat_bottom_vec_',['../classcaffe_1_1SPPLayer.html#a2874ca5b0c4d8f7d970c5a30768d2bc0',1,'caffe::SPPLayer']]],
   ['concat_5flayer_5f',['concat_layer_',['../classcaffe_1_1SPPLayer.html#a02a9d50a48983fa0c6e42cafa85c1eb8',1,'caffe::SPPLayer']]],
   ['concatlayer',['ConcatLayer',['../classcaffe_1_1ConcatLayer.html',1,'caffe']]],

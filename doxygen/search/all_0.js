@@ -12,5 +12,6 @@ var searchData=
   ['argmaxlayer',['ArgMaxLayer',['../classcaffe_1_1ArgMaxLayer.html#a77429601f3d7f27b48720a1b703491be',1,'caffe::ArgMaxLayer']]],
   ['asum_5fdata',['asum_data',['../classcaffe_1_1Blob.html#a7ee118b64a34cdb1acb8533d9b68aa64',1,'caffe::Blob']]],
   ['asum_5fdiff',['asum_diff',['../classcaffe_1_1Blob.html#a7305f3f0b0035d41c95462c0b2dc58c2',1,'caffe::Blob']]],
-  ['autotopblobs',['AutoTopBlobs',['../classcaffe_1_1Layer.html#ad732ca94cb21b4c4e0d6372a530ededf',1,'caffe::Layer::AutoTopBlobs()'],['../classcaffe_1_1LossLayer.html#ad272e6792a781ce4f66a65057cc829d1',1,'caffe::LossLayer::AutoTopBlobs()']]]
+  ['autotopblobs',['AutoTopBlobs',['../classcaffe_1_1Layer.html#ad732ca94cb21b4c4e0d6372a530ededf',1,'caffe::Layer::AutoTopBlobs()'],['../classcaffe_1_1LossLayer.html#ad272e6792a781ce4f66a65057cc829d1',1,'caffe::LossLayer::AutoTopBlobs()']]],
+  ['axis_5f',['axis_',['../classcaffe_1_1ReductionLayer.html#ac42612a3e9d6fadcb2a57041595033bf',1,'caffe::ReductionLayer']]]
 ];

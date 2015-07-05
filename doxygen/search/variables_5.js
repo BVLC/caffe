@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['ignore_5flabel_5f',['ignore_label_',['../classcaffe_1_1AccuracyLayer.html#a2b8c2d647f43ffd6aa14e81f1c5b2bde',1,'caffe::AccuracyLayer::ignore_label_()'],['../classcaffe_1_1SoftmaxWithLossLayer.html#a117d31c7ac538dd7851fb493bfc75d95',1,'caffe::SoftmaxWithLossLayer::ignore_label_()']]],
-  ['inferred_5faxis_5f',['inferred_axis_',['../classcaffe_1_1ReshapeLayer.html#a41111d585f1a9a64fd774ca1bf7d4160',1,'caffe::ReshapeLayer']]]
+  ['has_5fignore_5flabel_5f',['has_ignore_label_',['../classcaffe_1_1AccuracyLayer.html#a4acdfaf6db79fbe1983b8439391ad15e',1,'caffe::AccuracyLayer::has_ignore_label_()'],['../classcaffe_1_1SoftmaxWithLossLayer.html#ad77bc32fa576ad025102d29acf79aefb',1,'caffe::SoftmaxWithLossLayer::has_ignore_label_()']]]
 ];

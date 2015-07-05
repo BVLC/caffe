@@ -67,7 +67,7 @@ In other <code>ENV</code> settings, things may not work as expected.</p>
 
 <p><strong>General dependencies</strong></p>
 
-<pre><code>brew install --fresh -vd snappy leveldb gflags glog szip lmdb
+<pre><code>brew install -vd snappy leveldb gflags glog szip lmdb
 # need the homebrew science source for OpenCV and hdf5
 brew tap homebrew/science
 brew install hdf5 opencv
@@ -85,8 +85,8 @@ Do <code>brew edit opencv</code> and change the lines that look like the two lin
 <p><strong>Remaining dependencies, with / without Python</strong></p>
 
 <pre><code># with Python pycaffe needs dependencies built from source
-brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --fresh -vd boost boost-python
+brew install --build-from-source --with-python -vd protobuf
+brew install --build-from-source -vd boost boost-python
 # without Python the usual installation suffices
 brew install protobuf boost
 </code></pre>
@@ -136,9 +136,9 @@ Make sure that Homebrew doesn’t install any software dependencies in the backg
 
 <p>After this, run</p>
 
-<pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
-brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --fresh -vd boost boost-python
+<pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source -vd $x; done
+brew uninstall protobuf; brew install --build-from-source --with-python -vd protobuf
+brew install --build-from-source -vd boost boost-python
 </code></pre>
 
 <p>If this is not done exactly right then linking errors will trouble you.</p>
