@@ -41,6 +41,12 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   added_data_.Reshape(num, channels_, height_, width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
+  LOG(ERROR) << "Apply data transformations (mirror, scale, crop...)";
+  for (int item_id = 0; item_id < datum_vector.size(); ++item_id) {
+    CHECK_EQ(4, datum_vector[item_id].channels());
+    CHECK_EQ(7, datum_vector[item_id].height());
+    CHECK_EQ(11, datum_vector[item_id].width());
+  }
   this->data_transformer_->Transform(datum_vector, &added_data_);
   // Copy Labels
   Dtype* top_label = added_label_.mutable_cpu_data();

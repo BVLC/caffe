@@ -19,7 +19,7 @@ extern "C" {
 #define DEFINE_VSL_UNARY_FUNC(name, operation) \
   template<typename Dtype> \
   void v##name(const int n, const Dtype* a, Dtype* y) { \
-    CHECK_GT(n, 0); CHECK(a); CHECK(y); \
+    CHECK_GE(n, 0); if (n > 0) { CHECK(a); CHECK(y); } \
     for (int i = 0; i < n; ++i) { operation; } \
   } \
   inline void vs##name( \
@@ -41,7 +41,7 @@ DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));
 #define DEFINE_VSL_UNARY_FUNC_WITH_PARAM(name, operation) \
   template<typename Dtype> \
   void v##name(const int n, const Dtype* a, const Dtype b, Dtype* y) { \
-    CHECK_GT(n, 0); CHECK(a); CHECK(y); \
+    CHECK_GE(n, 0); if (n > 0) { CHECK(a); CHECK(y); } \
     for (int i = 0; i < n; ++i) { operation; } \
   } \
   inline void vs##name( \
@@ -60,7 +60,7 @@ DEFINE_VSL_UNARY_FUNC_WITH_PARAM(Powx, y[i] = pow(a[i], b));
 #define DEFINE_VSL_BINARY_FUNC(name, operation) \
   template<typename Dtype> \
   void v##name(const int n, const Dtype* a, const Dtype* b, Dtype* y) { \
-    CHECK_GT(n, 0); CHECK(a); CHECK(b); CHECK(y); \
+    CHECK_GE(n, 0); if (n > 0) { CHECK(a); CHECK(b); CHECK(y); } \
     for (int i = 0; i < n; ++i) { operation; } \
   } \
   inline void vs##name( \

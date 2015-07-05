@@ -7,7 +7,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/syncedmem.hpp"
+#include "caffe/tensor.hpp"
 #include "caffe/util/math_functions.hpp"
 
 const int kMaxBlobAxes = INT_MAX;
@@ -21,11 +21,10 @@ namespace caffe {
  *
  * TODO(dox): more thorough description.
  */
-template <typename Dtype>
+template<typename Dtype>
 class Blob {
  public:
-  Blob()
-       : data_(), diff_(), count_(0), capacity_(0) {}
+  Blob();
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -60,7 +59,9 @@ class Blob {
     stream << "(" << count_ << ")";
     return stream.str();
   }
-  inline const vector<int>& shape() const { return shape_; }
+  inline const vector<int>& shape() const {
+    return shape_;
+  }
   /**
    * @brief Returns the dimension of the index-th axis (or the negative index-th
    *        axis from the end, if index is negative).
@@ -72,8 +73,12 @@ class Blob {
   inline int shape(int index) const {
     return shape_[CanonicalAxisIndex(index)];
   }
-  inline int num_axes() const { return shape_.size(); }
-  inline int count() const { return count_; }
+  inline int num_axes() const {
+    return shape_.size();
+  }
+  inline int count() const {
+    return count_;
+  }
 
   /**
    * @brief Compute the volume of a slice; i.e., the product of dimensions
@@ -117,12 +122,12 @@ class Blob {
    *        Dies on out of range index.
    */
   inline int CanonicalAxisIndex(int axis_index) const {
-    CHECK_GE(axis_index, -num_axes())
-        << "axis " << axis_index << " out of range for " << num_axes()
-        << "-D Blob with shape " << shape_string();
-    CHECK_LT(axis_index, num_axes())
-        << "axis " << axis_index << " out of range for " << num_axes()
-        << "-D Blob with shape " << shape_string();
+    CHECK_GE(axis_index, -num_axes()) << "axis " << axis_index
+        << " out of range for " << num_axes() << "-D Blob with shape "
+        << shape_string();
+    CHECK_LT(axis_index, num_axes()) << "axis " << axis_index
+        << " out of range for " << num_axes() << "-D Blob with shape "
+        << shape_string();
     if (axis_index < 0) {
       return axis_index + num_axes();
     }
@@ -130,13 +135,21 @@ class Blob {
   }
 
   /// @brief Deprecated legacy shape accessor num: use shape(0) instead.
-  inline int num() const { return LegacyShape(0); }
+  inline int num() const {
+    return LegacyShape(0);
+  }
   /// @brief Deprecated legacy shape accessor channels: use shape(1) instead.
-  inline int channels() const { return LegacyShape(1); }
+  inline int channels() const {
+    return LegacyShape(1);
+  }
   /// @brief Deprecated legacy shape accessor height: use shape(2) instead.
-  inline int height() const { return LegacyShape(2); }
+  inline int height() const {
+    return LegacyShape(2);
+  }
   /// @brief Deprecated legacy shape accessor width: use shape(3) instead.
-  inline int width() const { return LegacyShape(3); }
+  inline int width() const {
+    return LegacyShape(3);
+  }
   inline int LegacyShape(int index) const {
     CHECK_LE(num_axes(), 4)
         << "Cannot use legacy accessors on Blobs with > 4 axes.";
@@ -151,8 +164,8 @@ class Blob {
     return shape(index);
   }
 
-  inline int offset(const int n, const int c = 0, const int h = 0,
-      const int w = 0) const {
+  inline int offset(const int n, const int c = 0, const int h = 0, const int w =
+      0) const {
     CHECK_GE(n, 0);
     CHECK_LE(n, num());
     CHECK_GE(channels(), 0);
@@ -207,14 +220,24 @@ class Blob {
     return cpu_diff()[offset(index)];
   }
 
-  inline const shared_ptr<SyncedMemory>& data() const {
-    CHECK(data_);
-    return data_;
+  inline const shared_ptr<SyncedTensor<Dtype> > data_tensor() const {
+    CHECK(data_tensor_);
+    return data_tensor_;
   }
 
-  inline const shared_ptr<SyncedMemory>& diff() const {
-    CHECK(diff_);
-    return diff_;
+  inline const shared_ptr<SyncedTensor<Dtype> > diff_tensor() const {
+    CHECK(diff_tensor_);
+    return diff_tensor_;
+  }
+
+  inline SyncedTensor<Dtype>& data() const {
+    CHECK(data_tensor_);
+    return *(data_tensor_.get());
+  }
+
+  inline SyncedTensor<Dtype>& diff() const {
+    CHECK(diff_tensor_);
+    return *(diff_tensor_.get());
   }
 
   const Dtype* cpu_data() const;
@@ -266,14 +289,15 @@ class Blob {
   bool ShapeEquals(const BlobProto& other);
 
  protected:
-  shared_ptr<SyncedMemory> data_;
-  shared_ptr<SyncedMemory> diff_;
+  shared_ptr<SyncedTensor<Dtype> > data_tensor_;
+  shared_ptr<SyncedTensor<Dtype> > diff_tensor_;
   vector<int> shape_;
   int count_;
   int capacity_;
 
-  DISABLE_COPY_AND_ASSIGN(Blob);
-};  // class Blob
+DISABLE_COPY_AND_ASSIGN(Blob);
+};
+// class Blob
 
 }  // namespace caffe
 
