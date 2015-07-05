@@ -24,7 +24,12 @@
 #define VIENNACL_WITH_OPENCL
 #endif
 
+#ifndef __APPLE__
 #include "CL/cl.h"
+#else
+#include "OpenCL/cl.h"
+#endif
+
 #include "viennacl/backend/opencl.hpp"
 #include "viennacl/ocl/backend.hpp"
 #include "viennacl/ocl/context.hpp"
