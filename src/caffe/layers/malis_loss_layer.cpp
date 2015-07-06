@@ -6,10 +6,12 @@
 #include <cfloat>
 #include <cmath>
 #include <cstdlib>
+#include <iterator>
 #include <map>
 #include <queue>
 #include <utility>
 #include <vector>
+
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
@@ -346,9 +348,11 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // Labels (size w * h, c values)
     const Dtype* label = bottom[1]->cpu_data();
 
-    // cv::namedWindow("labelled");
-    // cv::namedWindow("prob");
-    // cv::namedWindow("diff");
+    cv::namedWindow("labelled");
+    cv::namedWindow("cdn");
+    cv::namedWindow("cdp");
+    cv::namedWindow("prob");
+    cv::namedWindow("diff");
 
     cv::Mat img(bottom[1]->height(), bottom[1]->width(), CV_8SC1);
 #pragma omp parallel for
@@ -361,7 +365,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     cv::Mat seg = FindBlobs(img);
 
     // This is for debugging only:
-    /*{
+    {
       std::vector<int> labels;
 
       for(int i = 0; i < bottom[1]->height() *bottom[1]->width(); ++i) {
@@ -404,8 +408,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
 
       cv::imshow("labelled", output);
-      cv::waitKey(100);
-    }*/
+    }
 
     Dtype loss_out = 0;
     Dtype classerr_out = 0;
@@ -445,36 +448,28 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         Dtype g2 = label[(i + 1) * bottom[0]->width() + j];
 
         // X positive
-        conn_data_pos[i * bottom[0]->width() + j] = std::max(
-            (p0 + p1) / 2.0, (g0 + g1) / 2.0);
+        conn_data_pos[i * bottom[0]->width() + j] = std::min(
+           std::min(1.0 - std::fabs(p0 - p1), (p0 + p1) / 2.0),
+           std::min(1.0 - std::fabs(g0 - g1), (g0 + g1) / 2.0));
 
         // X negative
-        conn_data_neg[i * bottom[0]->width() + j] = std::min(
-            (p0 + p1) / 2.0, (g0 + g1) / 2.0);
+        conn_data_neg[i * bottom[0]->width() + j] = std::max(
+           std::min(1.0 - std::fabs(p0 - p1), (p0 + p1) / 2.0),
+           std::min(1.0 - std::fabs(g0 - g1), (g0 + g1) / 2.0));
 
         // Y positive
         conn_data_pos[bottom[0]->width() * bottom[0]->height()
-            + i * bottom[0]->width() + j] = std::max(
-            (p0 + p2) / 2.0, (g0 + g2) / 2.0);
+            + i * bottom[0]->width() + j] = std::min(
+           std::min(1.0 - std::fabs(p0 - p2), (p0 + p2) / 2.0),
+           std::min(1.0 - std::fabs(g0 - g2), (g0 + g2) / 2.0));
 
         // Y negative
         conn_data_neg[bottom[0]->width() * bottom[0]->height()
-            + i * bottom[0]->width() + j] = std::min(
-            (p0 + p2) / 2.0, (g0 + g2) / 2.0);
+            + i * bottom[0]->width() + j] = std::max(
+           std::min(1.0 - std::fabs(p0 - p2), (p0 + p2) / 2.0),
+           std::min(1.0 - std::fabs(g0 - g2), (g0 + g2) / 2.0));
       }
     }
-
-    /*cv::Mat cd_pos(bottom[0]->height()-1, bottom[0]->width()-1,
-                   cv::DataType<Dtype>::type,
-                   &conn_data_pos[0], sizeof(Dtype) * (bottom[0]->width()-1));
-    cv::imshow("prob", cd_pos);
-    cv::waitKey(100);
-
-    cv::Mat cd_neg(bottom[0]->height()-1, bottom[0]->width()-1,
-                   cv::DataType<Dtype>::type,
-                   &conn_data_neg[0], sizeof(Dtype) * (bottom[0]->width()-1));
-    cv::imshow("diff", cd_neg);
-    cv::waitKey(0);
 
     auto minmax = std::minmax_element(conn_data_neg.begin(),
                                       conn_data_neg.end());
@@ -488,7 +483,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     std::cout << "Conndata pos min/max: " <<
         conn_data_pos[minmax.first - conn_data_pos.begin()] << " " <<
-        conn_data_pos[minmax.second - conn_data_pos.begin()]  << std::endl;*/
+        conn_data_pos[minmax.second - conn_data_pos.begin()]  << std::endl;
 
 
     Malis(&conn_data_neg[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
@@ -496,13 +491,21 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           false, &dloss_neg[0],
           &loss_out, &classerr_out, &rand_index_out);
 
+    std::cout << "Loss: " << loss_out << std::endl;
+    std::cout << "Class: " << classerr_out << std::endl;
+    std::cout << "Rand: " << rand_index_out << std::endl;
+
     Malis(&conn_data_pos[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
           &nhood_dims_[0], reinterpret_cast<int*>(seg.ptr(0)),
           true, &dloss_pos[0],
           &loss_out, &classerr_out, &rand_index_out);
 
+    std::cout << "Loss: " << loss_out << std::endl;
+    std::cout << "Class: " << classerr_out << std::endl;
+    std::cout << "Rand: " << rand_index_out << std::endl;
 
-    /*minmax = std::minmax_element(dloss_neg.begin(), dloss_neg.end());
+
+    minmax = std::minmax_element(dloss_neg.begin(), dloss_neg.end());
 
     std::cout << "DLoss_neg min/max: " <<
         dloss_neg[minmax.first - dloss_neg.begin()] << " " <<
@@ -518,7 +521,33 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     //caffe_cpu_copy(prob_.count(), prob_data, bottom_diff);
 
-    std::cout << "Before LOSS BACK" << std::endl;*/
+    std::cout << "Before LOSS BACK" << std::endl;
+
+    cv::Mat cd_pos(bottom[0]->height(), bottom[0]->width(),
+                   cv::DataType<Dtype>::type,
+                   &dloss_pos[0], sizeof(Dtype) * bottom[0]->width());
+
+    double minVal, maxVal;
+    cv::Mat tmp;
+
+    cv::minMaxLoc(cd_pos, &minVal, &maxVal);
+    cd_pos.convertTo(tmp, CV_32FC1, 1.0 / (maxVal - minVal),
+        -minVal * 1.0 / (maxVal - minVal));
+
+    cv::imshow("cdp", tmp);
+
+    cv::Mat cd_neg(bottom[0]->height(), bottom[0]->width(),
+                   cv::DataType<Dtype>::type,
+                   &dloss_neg[0], sizeof(Dtype) * bottom[0]->width());
+
+    cv::minMaxLoc(cd_neg, &minVal, &maxVal);
+
+    cd_neg.convertTo(tmp, CV_32FC1, 1.0 / (maxVal - minVal),
+        -minVal * 1.0 / (maxVal - minVal));
+    cv::imshow("cdn", tmp);
+
+    // Clear the diff
+    caffe_set(bottom[0]->count(), Dtype(0.0), bottom_diff);
 
     // Spread out the losses to pixels
     for (int i = 0; i < bottom[0]->height() - 1; ++i) {
@@ -528,70 +557,78 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
         Dtype lyp = dloss_pos[bottom[0]->width()
             * bottom[0]->height() + i * bottom[0]->width() + j];
-        Dtype lyn = dloss_neg[(bottom[0]->width() - 1)
+        Dtype lyn = dloss_neg[bottom[0]->width()
             * bottom[0]->height() + i * bottom[0]->width() + j];
 
-        // Pick labels
-        /*const int l0 = static_cast<int>
-          (label[i * bottom[0]->width() + j]);
+        // Pick label scalings
+        const int l0 = static_cast<int>
+          (label[i * bottom[0]->width() + j]) * 2 - 1;
         const int l1 = static_cast<int>
-          (label[i * bottom[0]->width() + (j + 1)]);
+          (label[i * bottom[0]->width() + (j + 1)]) * 2 - 1;
         const int l2 = static_cast<int>
-          (label[(i + 1) * bottom[0]->width() + j]);*/
+          (label[(i + 1) * bottom[0]->width() + j]) * 2 - 1;
 
         // Center
         bottom_diff[0 * inner_num_ + i * bottom[0]->width() + j] -= 0.5
-            * (lxp + lxn + lyp + lyn);
+             * (lxp + lxn + lyp + lyn);
 
         // Right
         bottom_diff[0 * inner_num_ + i * bottom[0]->width() + (j + 1)] -= 0.5
-            * (lxp + lxn);
+             * (lxp + lxn);
 
         // Bottom
         bottom_diff[0 * inner_num_ + (i + 1) * bottom[0]->width() + j] -= 0.5
-            * (lyp + lyn);
+             * (lyp + lyn);
 
 
         // Center
         bottom_diff[1 * inner_num_ + i * bottom[0]->width() + j] += 0.5
-            * (lxp + lxn + lyp + lyn);
+             * (lxp + lxn + lyp + lyn);
 
         // Right
         bottom_diff[1 * inner_num_ + i * bottom[0]->width() + (j + 1)] += 0.5
-            * (lxp + lxn);
+             * (lxp + lxn);
 
         // Bottom
         bottom_diff[1 * inner_num_ + (i + 1) * bottom[0]->width() + j] += 0.5
-            * (lyp + lyn);
+             * (lyp + lyn);
       }
     }
 
-    /*Dtype* prob_rd = prob_.mutable_cpu_data();
+    Dtype* prob_rd = prob_.mutable_cpu_data();
 
     cv::Mat wrapped_prob(bottom[0]->height(), bottom[0]->width(),
                       cv::DataType<Dtype>::type,
                     prob_rd, sizeof(Dtype) * bottom[0]->width());
     cv::imshow("prob", wrapped_prob);
-    cv::waitKey(100);
 
     cv::Mat wrapped_diff(bottom[0]->height(), bottom[0]->width(),
                       cv::DataType<Dtype>::type,
                     bottom_diff, sizeof(Dtype) * bottom[0]->width());
 
-    double minVal, maxVal;
     cv::minMaxLoc(wrapped_diff, &minVal, &maxVal);
 
     std::cout << "Max loss: " << maxVal << std::endl;
     std::cout << "Min loss: " << minVal << std::endl;
 
-    cv::Mat tmp;
-    wrapped_diff.convertTo(tmp, CV_32FC1, 1.0 / (maxVal - minVal),
-        -minVal * 1.0 / (maxVal - minVal));
+
+    Dtype sum = std::accumulate(bottom_diff,bottom_diff+bottom[0]->height()*bottom[0]->width(),0.0);
+    Dtype mean = sum / (bottom[0]->width()*bottom[0]->height());
+
+    std::vector<Dtype> msd(bottom[0]->height()*bottom[0]->width());
+    std::transform(bottom_diff,bottom_diff+(bottom[0]->height()*bottom[0]->width()),msd.begin(),std::bind2nd(std::minus<Dtype>(), mean));
+
+   Dtype sqsum = std::inner_product(msd.begin(), msd.end(), msd.begin(), 0.0);
+   Dtype stdev = std::sqrt(sqsum/(bottom[0]->width()*bottom[0]->height()));
+
+
+    wrapped_diff.convertTo(tmp, CV_32FC1, 1.0 / (2.0 * stdev),
+        (stdev - mean) * 1.0 / (2.0 * stdev));
 
     cv::imshow("diff", tmp);
-    cv::waitKey(0);
+    cv::waitKey(2);
 
-    std::cout << "After LOSS BACK" << std::endl;*/
+    std::cout << "After LOSS BACK" << std::endl;
   }
 }
 
