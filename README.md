@@ -32,3 +32,21 @@ Please cite Caffe in your publications if it helps your research:
       Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
       Year = {2014}
     }
+
+## Additional Notes
+This fork of Caffe contains an OpenCL backend and additional layers for fast image segmentation.
+This work is partially supported by:
+- AMD
+- HHMI Janelia
+- UZH, INI
+- ETH Zurich
+
+For a C++ frontend and models to use for image semgentation with this fork, see:
+- Frontend: https://github.com/naibaf7/caffe_neural_tool
+- Models: https://github.com/naibaf7/caffe_neural_models
+
+## OpenCL backend
+The backend is supposed to work with all vendors. Note however there might be problems with libOpenCL.so provided by nVidia.
+It is recommended to install another OpenCL implementation after installing nVidia drivers. Possibilities are:
+- Intel OpenCL, recommended if you have an Intel CPU along the nVidia GPU.
+- AMD APP SDK (OpenCL), recommended if you have an AMD GPU or CPU.
