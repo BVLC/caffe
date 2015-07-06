@@ -41,7 +41,7 @@ This work is partially supported by:
 - UZH, INI
 - ETH Zurich
 
-For a C++ frontend and models to use for image semgentation with this fork, see:
+For a C++ frontend and models to use for image segmentation with this fork, see:
 - Frontend: https://github.com/naibaf7/caffe_neural_tool
 - Models: https://github.com/naibaf7/caffe_neural_models
 
