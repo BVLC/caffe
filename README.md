@@ -45,7 +45,7 @@ For a C++ frontend and models to use for image segmentation with this fork, see:
 - Frontend: https://github.com/naibaf7/caffe_neural_tool
 - Models: https://github.com/naibaf7/caffe_neural_models
 
-## OpenCL backend
+## OpenCL Backend
 The backend is supposed to work with all vendors. Note however there might be problems with libOpenCL.so provided by nVidia.
 It is recommended to install another OpenCL implementation after installing nVidia drivers. Possibilities are:
 - Intel OpenCL, recommended if you have an Intel CPU along the nVidia GPU.
