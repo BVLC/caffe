@@ -218,14 +218,14 @@ class TripletLossLayer : public LossLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 4; }
+  virtual inline int ExactNumBottomBlobs() const { return 6; }
   virtual inline const char* type() const { return "TripletLoss"; }
   /**
    * Unlike most loss layers, in the TripletLossLayer we can backpropagate
    * to the first three inputs.
    */
   virtual inline bool AllowForceBackward(const int bottom_index) const {
-    return bottom_index != 3;
+    return bottom_index != 5;
   }
 
  protected:
@@ -268,12 +268,15 @@ class TripletLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> diff_;  // cached for backward pass
   Blob<Dtype> diff_pos;
   Blob<Dtype> diff_neg;
+  Blob<Dtype> diff_par;
   Blob<Dtype> dist_sq_;  // cached for backward pass
   Blob<Dtype> dist_sq_pos;
   Blob<Dtype> dist_sq_neg;
+  Blob<Dtype> dist_sq_par;
   Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
   Blob<Dtype> diff_sq_pos;
   Blob<Dtype> diff_sq_neg;
+  Blob<Dtype> diff_sq_par;
   Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
 };
 

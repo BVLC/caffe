@@ -69,16 +69,18 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   CHECK(status.ok()) << "Failed to open leveldb " << db_filename
       << ". Is it already existing?";
 
-  char label_i;
+  char label_i;  // label for triplet
   char label_j;
   char label_k;
-  char* pixels = new char[3 * rows * cols];
+  char label_l;  // label for pair wise 
+  char label_m;
+  char* pixels = new char[5 * rows * cols];
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
 
   caffe::Datum datum;
-  datum.set_channels(3);  // one channel for each image in the pair
+  datum.set_channels(5);  // one channel for each image in the triplet and pair
   datum.set_height(rows);
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
@@ -87,15 +89,21 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
     int j = caffe::caffe_rng_rand() % num_items;
     int k = caffe::caffe_rng_rand() % num_items;
-    read_image(&image_file, &label_file, i, rows, cols,
+    int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
+    int m = caffe::caffe_rng_rand() % num_items;
+    read_image(&image_file, &label_file, i, rows, cols,  // read triplet groups
         pixels, &label_i);
     read_image(&image_file, &label_file, j, rows, cols,
         pixels + (rows * cols), &label_j);
     read_image(&image_file, &label_file, k, rows, cols,
         pixels + (2 * rows * cols), &label_k);
+    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise groups
+        pixels + (3 * rows * cols), &label_l);
+    read_image(&image_file, &label_file, m, rows, cols,
+        pixels + (4 * rows * cols), &label_m);
 
-    datum.set_data(pixels, 3*rows*cols);
-    if (label_i  == label_j && label_i  != label_k) {
+    datum.set_data(pixels, 5*rows*cols);  // set data
+    if ((label_i  == label_j && label_i  != label_k) && (label_l == label_m)) {
       datum.set_label(1);
       datum.SerializeToString(&value);
       snprintf(key, kMaxKeyLength, "%08d", itemid);
