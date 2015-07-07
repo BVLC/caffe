@@ -248,6 +248,8 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
   Blob<int> stride_;
   /// @brief The spatial dimensions of the padding.
   Blob<int> pad_;
+  /// @brief The spatial dimension of the kernel stride.
+  Blob<int> kstride_;
   /// @brief The spatial dimensions of the convolution input.
   Blob<int> conv_input_shape_;
   /// @brief The spatial dimensions of the input.
@@ -277,13 +279,13 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
     im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
         conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
         kernel_shape_.gpu_data(), pad_.gpu_data(),
-        stride_.gpu_data(), col_buff);
+        stride_.gpu_data(), kstride_.gpu_data(), col_buff);
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
     col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
         conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
         kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-        data);
+        kstride_.gpu_data(), data);
   }
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
