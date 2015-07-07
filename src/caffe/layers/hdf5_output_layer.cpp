@@ -9,10 +9,6 @@
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
-#if defined(USE_GREENTEA) && !defined(USE_CUDA)
-#include "hdf5_output_layer.cu"
-#endif
-
 namespace caffe {
 
 template <typename Dtype>

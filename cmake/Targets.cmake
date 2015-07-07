@@ -89,6 +89,16 @@ function(caffe_pickup_caffe_sources root)
   file(GLOB_RECURSE proto_files ${root}/src/caffe/*.proto)
   list(APPEND srcs ${proto_files})
 
+  # OpenCL but not CUDA backend tweak
+  if(USE_GREENTEA AND NOT USE_CUDA)
+    SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES LANGUAGE CXX)
+    SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES COMPILE_FLAGS "-x c++")
+    SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES LANGUAGE CXX)
+    SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES COMPILE_FLAGS "-x c++")
+    list(APPEND srcs ${cuda})
+    list(APPEND test_srcs ${test_cuda})
+  endif()
+
   # convet to absolute paths
   caffe_convert_absolute_paths(srcs)
   caffe_convert_absolute_paths(cuda)

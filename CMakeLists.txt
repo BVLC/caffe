@@ -27,6 +27,14 @@ caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
 caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
 
+# ---[ Flag consistency check
+if(CPU_ONLY)
+  set(USE_CUDA OFF)
+  set(USE_GREENTEA OFF)
+  set(USE_CUDNN OFF)
+  set(USE_CLBLAS OFF)
+endif()
+
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
 

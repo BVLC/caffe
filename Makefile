@@ -369,17 +369,6 @@ ifeq ($(CPU_ONLY), 1)
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
-# Grentea but not CUDA configuration
-ifeq ($(USE_CUDA), 0)
-	ifeq ($(USE_GREENTEA), 1)
-		OBJS := $(PROTO_OBJS) $(CXX_OBJS)
-		TEST_OBJS := $(TEST_CXX_OBJS)
-		TEST_BINS := $(TEST_CXX_BINS)
-		ALL_WARNS := $(ALL_CXX_WARNS)
-		TEST_FILTER := --gtest_filter="-*CUDNN*"
-	endif
-endif
-
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -611,6 +600,11 @@ ifeq ($(USE_CUDA), 1)
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+else
+	@ echo CXX $<
+	$(Q)$(CXX) $(CXXFLAGS) -c -x c++ $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 endif
