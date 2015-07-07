@@ -7,10 +7,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#if defined(USE_GREENTEA) && !defined(USE_CUDA)
-#include "inner_product_layer.cu"
-#endif
-
 namespace caffe {
 
 template<typename Dtype>
