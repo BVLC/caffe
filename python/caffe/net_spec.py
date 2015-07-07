@@ -22,6 +22,7 @@ from collections import OrderedDict
 
 from .proto import caffe_pb2
 from google import protobuf
+import six
 
 
 def param_name_dict():
@@ -63,12 +64,12 @@ def assign_proto(proto, name, val):
         if isinstance(val[0], dict):
             for item in val:
                 proto_item = getattr(proto, name).add()
-                for k, v in item.iteritems():
+                for k, v in six.iteritems(item):
                     assign_proto(proto_item, k, v)
         else:
             getattr(proto, name).extend(val)
     elif isinstance(val, dict):
-        for k, v in val.iteritems():
+        for k, v in six.iteritems(val):
             assign_proto(getattr(proto, name), k, v)
     else:
         setattr(proto, name, val)
@@ -131,7 +132,7 @@ class Function(object):
                 layer.top.append(self._get_name(top, names, autonames))
         layer.name = self._get_name(self.tops[0], names, autonames)
 
-        for k, v in self.params.iteritems():
+        for k, v in six.iteritems(self.params):
             # special case to handle generic *params
             if k.endswith('param'):
                 assign_proto(layer, k, v)
@@ -161,10 +162,10 @@ class NetSpec(object):
         return self.tops[name]
 
     def to_proto(self):
-        names = {v: k for k, v in self.tops.iteritems()}
+        names = {v: k for k, v in six.iteritems(self.tops)}
         autonames = {}
         layers = OrderedDict()
-        for name, top in self.tops.iteritems():
+        for name, top in six.iteritems(self.tops):
             top.fn._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
         net.layer.extend(layers.values())
