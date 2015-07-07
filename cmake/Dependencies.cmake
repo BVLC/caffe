@@ -85,6 +85,11 @@ include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})
 message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
 
+# ---[ OpenMP
+find_package(OpenMP QUIET)
+# If OpenMP is not found then OpenMP_CXX_FLAGS will be empty
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
 # ---[ BLAS
 if(NOT APPLE)
   set(BLAS "Atlas" CACHE STRING "Selected BLAS library")

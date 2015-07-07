@@ -77,7 +77,6 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
         }
       }
     }
-
   }
 
   void TestBackward() {
