@@ -11,6 +11,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/data_transformer.hpp"
+#include "caffe/image_transformer.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
@@ -97,6 +98,30 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
+};
+
+template <typename Dtype>
+class DocDataLayer : public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit DocDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~DocDataLayer();
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "DocData"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  //virtual inline int MaxTopBlobs() const { return 21; }
+  virtual inline int MaxTopBlobs() const { return 2; }
+
+ protected:
+  virtual void InternalThreadEntry();
+  virtual void CreateImageTransformer(ImageTransformationParameter param);
+
+  shared_ptr<db::DB> db_;
+  shared_ptr<db::Cursor> cursor_;
+  ImageTransformer* image_transformer_;
 };
 
 /**

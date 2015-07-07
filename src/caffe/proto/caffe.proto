@@ -25,6 +25,22 @@ message BlobProtoVector {
   repeated BlobProto blobs = 1;
 }
 
+message Image {
+  // image dimensions
+  optional int32 channels = 1;
+  optional int32 height = 2;
+  optional int32 width = 3;
+
+  // bytes composing the image, encoded or not
+  optional bytes data = 4;
+
+  // the encoding of the image data: e.g. JPEG, PNG.
+  // If "none" (default), it is assumed that data directly holds the pixel
+  // values in C array order indexed by channel, height, width with each 
+  // value taking up a byte, i.e. uint8.
+  optional string encoding = 7 [default = "none"];
+}
+
 message Datum {
   optional int32 channels = 1;
   optional int32 height = 2;
@@ -36,6 +52,80 @@ message Datum {
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
   optional bool encoded = 7 [default = false];
+}
+
+// Next Avaliable field: 48, is_textual_document 
+message DocumentDatum {
+  optional Image image = 1;
+  // image data containing relative importance of each pixel in
+  // the reconstruction error
+  optional Image reconstruction_weights = 2;
+
+  // non-label metadata for image identification
+  optional int32 id = 6;
+  optional int32 dbid = 7;
+  optional string collection = 8;
+  optional string image_name = 9;
+
+  // labels - raw and encoded values
+  // integer encoding typically translates to a 1-of-k encoding in an output layer
+  // while float encoding is typically a regression target with SSE
+  optional string country_str = 10;
+  optional int32 country = 11;  // classification target
+
+  optional string language_str = 12;
+  optional int32 language = 13;  // classification target
+
+  optional string decade_str = 14;
+  optional float decade = 15;  // Lets say 1600 to 2000 normalized to 0-1
+
+  optional string column_count_str = 16;
+  optional int32 column_count = 17;  // regression target
+
+  optional string possible_records_str = 18;
+  optional int32 possible_records = 19;  // regression target
+
+  optional string actual_records_str = 20;
+  optional int32 actual_records = 21;  // regression target
+
+  optional string pages_per_image_str = 22;
+  optional int32 pages_per_image = 23;  // classification target
+
+  optional string docs_per_image_str = 24;
+  optional int32 docs_per_image = 25;  // classification target
+
+  optional string machine_text_str = 26;
+  optional float machine_text = 27;  // regression target
+
+  optional string hand_text_str = 28;
+  optional float hand_text = 29;  // regression target
+
+  optional string layout_category_str = 30;
+  optional float layout_category = 31;  // classifcation target
+
+  optional string layout_type_str = 32;
+  optional int32 layout_type = 33;  // classifcation target
+
+  optional string record_type_broad_str = 34;
+  optional int32 record_type_broad = 35;  // classifcation target
+
+  optional string record_type_fine_str = 36;
+  optional int32 record_type_fine = 37;  // classifcation target
+
+  optional string media_type_str = 38;
+  optional int32 media_type = 39;  // classifcation target
+
+  optional string is_document_str = 40;
+  optional int32 is_document = 41;  // classifcation target
+
+  optional string is_graphical_document_str = 42;
+  optional int32 is_graphical_document = 43;  // classifcation target
+
+  optional string is_historical_document_str = 44;
+  optional int32 is_historical_document = 45;  // classifcation target
+
+  optional string is_textual_document_str = 46;
+  optional int32 is_textual_document = 47;  // classifcation target
 }
 
 message FillerParameter {
@@ -96,7 +186,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 37 (last added: iter_size)
+// SolverParameter next available ID: 38 (last added: snapshot_before_train)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -202,6 +292,8 @@ message SolverParameter {
 
   // If false, don't save a snapshot after training finishes.
   optional bool snapshot_after_train = 28 [default = true];
+  // If true, save a snapshot before training starts
+  optional bool snapshot_before_train = 37 [default = false];
 }
 
 // A message that stores the solver snapshots
@@ -269,7 +361,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 135 (last added: crop_param)
+// LayerParameter next available layer-specific ID: 136 (last added: image_transform_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -306,6 +398,9 @@ message LayerParameter {
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;
+
+  // Parameters for image pre-processing
+  optional ImageTransformationParameter image_transform_param = 135;
 
   // Parameters shared by loss layers.
   optional LossParameter loss_param = 101;
@@ -378,6 +473,131 @@ message TransformationParameter {
   optional uint32 max_resize = 9 [default = 0];
   // If randomly resizing, always choose square dimensions
   optional bool square_resize = 10 [default = true];
+}
+
+message ImageTransformationParameter {
+  repeated ProbImageTransformParameter params = 1;
+}
+
+message ProbImageTransformParameter {
+  repeated ResizeTransformParameter resize_params = 1;
+  repeated CropTransformParameter crop_params = 2;
+  repeated ReflectTransformParameter reflect_params = 3;
+  repeated LinearTransformParameter linear_params = 4;
+  repeated ChannelTransformParameter channel_params = 5;
+
+  // the number of values for each of these fields should match the number
+  // of values for the corresponding fields 1-5.  If left unspecificed,
+  // the weight will be assumed to be 1.
+  repeated float resize_prob_weights = 11;
+  repeated float crop_prob_weights = 12;
+  repeated float reflect_prob_weights = 13;
+  repeated float linear_prob_weights = 14;
+  repeated float channel_prob_weights = 15;
+}
+
+message ResizeTransformParameter {
+  // Fields 1-6 specify the resulting size.  If width is specified, then height
+  // must be also.  If size is specified, then neither width nor height may be.
+  // Same for perc fields.  All perc fields are mutually exclusive with the 
+  // non-perc fields.  If two values are given for any of these fields, they
+  // are to be interpreted as an upper and lower bound on a uniform random 
+  // distribution.  
+ 
+  // directly state the final size in pixels
+  repeated uint32 width = 1;
+  repeated uint32 height = 2;
+  // Shortcut for width == height
+  repeated uint32 size = 3;
+
+  // Output size is a percentage of the total size
+  repeated float width_perc = 4;
+  repeated float height_perc = 5;
+  // Shortcut for width_perc == height_perc, preserves Aspect Ratio
+  repeated float size_perc = 6;
+
+  // as specified in OpenCV.  
+  // See http://docs.opencv.org/modules/imgproc/doc/geometric_transformations.html
+  enum Interpolation {
+    INTER_NEAREST = 0;
+    INTER_LINEAR = 1;
+    INTER_AREA = 2;
+    INTER_CUBIC = 3;
+    INTER_LANCZOS4 = 4;
+  }
+  optional Interpolation interpolation = 7 [default = INTER_LINEAR];
+}
+
+message CropTransformParameter {
+  // directly state the final size in pixels
+  optional uint32 width = 1;
+  optional uint32 height = 2;
+  // Shortcut for width == height
+  optional uint32 size = 3;
+
+  // Output size is a percentage of the total size
+  optional float width_perc = 4;
+  optional float height_perc = 5;
+  // Shortcut for width_perc == height_perc, preserves Aspect Ratio
+  optional float size_perc = 6;
+
+  enum CropLocation {
+    RANDOM = 0;
+    CENTER = 1;
+    RAND_CORNER = 2;
+  }
+  optional CropLocation location = 7 [default = RANDOM];
+}
+
+message ReflectTransformParameter {
+  optional float horz_reflect_prob = 1 [default = 0];
+  optional float vert_reflect_prob = 2 [default = 0];
+}
+
+// computes pixel-wise linear transform: y = scale * x + shift
+message LinearTransformParameter {
+  // both are either specified exactly once, or the same number of
+  // times as the number of channels
+  repeated float shift = 1;
+  repeated float scale = 2;
+
+  // paths to files containing Image messages containing the shift/scale values
+  optional string shift_file = 3;
+  optional string scale_file = 4;
+  // if shift_file or scale_file does not match the dimensions of the input image
+  // exactly, which interpolation to use when resizing shift or scale image
+  enum Interpolation {
+    INTER_NEAREST = 0;
+    INTER_LINEAR = 1;
+    INTER_AREA = 2;
+    INTER_CUBIC = 3;
+    INTER_LANCZOS4 = 4;
+  }
+  optional Interpolation interpolation = 5 [default = INTER_LINEAR];
+  // If shift_file or scale_file contain images that do not match the dimensions
+  // of the input image, then an error should occur (causes iterpolation to be ignored
+  optional bool error_on_size_mismatch = 6 [default = false];
+
+  // if true, perform the shift first: y = (x + shift) * scale
+  optional bool shift_first = 7 [default = false];
+}
+
+
+message ChannelTransformParameter {
+  // exactly one of to_color, to_gray, to_binary must be specified
+
+  // Force the decoded image to have 3 color channels.
+  optional bool to_color = 1 [default = false];
+  // Force the decoded image to have 1 color channel.
+  optional bool to_gray = 2 [default = false];
+  // Force the decoded image to have 1 color channel casting all 
+  // pixels to min/max value based on binary_threshold
+  optional bool to_binary = 3 [default = false];
+  optional float binary_threshold = 4;
+
+  // if true, append the created channel to input channels
+  optional bool append = 5 [default = false];
+
 }
 
 // Message that stores parameters shared by loss layers

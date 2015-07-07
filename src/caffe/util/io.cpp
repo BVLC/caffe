@@ -181,6 +181,66 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   return cv_img;
 }
 
+cv::Mat ImageToCVMat(const Image& img, bool is_color) {
+  if (img.encoding() == "none") {
+    return UnencodedImageToCVMat(img);
+  } else {
+    return EncodedImageToCVMat(img, is_color);
+  }
+}
+
+cv::Mat EncodedImageToCVMat(const Image& img, bool is_color) {
+  cv::Mat cv_img;
+  CHECK_NE(img.encoding(), "none") << "Datum not encoded";
+  const string& data = img.data();
+  std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  cv_img = cv::imdecode(vec_data, cv_read_flag);
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not decode datum ";
+  }
+  return cv_img;
+}
+
+cv::Mat UnencodedImageToCVMat(const Image& img) {
+  int img_channels = img.channels();
+  int img_height = img.height();
+  int img_width = img.width();
+  const string& data = img.data();
+
+  cv::Mat cv_img;
+  int sizes[] = {img_channels, img_height, img_width};
+  cv_img.create(3, sizes, CV_8U);
+  for (int c = 0; c < img_channels; ++c) {
+    for (int h = 0; h < img_height; ++h) {
+	  for (int w = 0; w < img_width; ++w) {
+        int img_index = (c * img_height + h) * img_width + w;
+		int cv_index = (c * cv_img.step[0] + h * cv_img.step[1] + w * cv_img.step[2]);
+		*(cv_img.data + cv_index) = data[img_index];
+      }
+    }
+  }
+
+  return cv_img;
+}
+
+template <typename Dtype>
+void CVMatToArray(const cv::Mat& cv_img, Dtype* out) {
+  int cv_channels = cv_img.channels();
+  int cv_height = cv_img.rows;
+  int cv_width = cv_img.cols;
+  for (int c = 0; c < cv_channels; ++c) {
+    for (int h = 0; h < cv_height; ++h) {
+	  for (int w = 0; w < cv_width; ++w) {
+		int cv_index = (c * cv_img.step[0] + h * cv_img.step[1] + w * cv_img.step[2]);
+		*out = static_cast<Dtype> (*(cv_img.data + cv_index));
+		out++;
+      }
+    }
+  }
+}
+
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
 // If Datum is not encoded will do nothing
 bool DecodeDatumNative(Datum* datum) {
