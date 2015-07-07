@@ -167,6 +167,11 @@ void Solver<Dtype>::Step(int iters) {
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
+  // Save a snapshot if needed.
+  if (param_.snapshot() && param_.snapshot_before_train() && start_iter == 0) {
+    Snapshot();
+  }
+
   while (iter_ < stop_iter) {
     // zero-init the params
     for (int i = 0; i < net_->params().size(); ++i) {
