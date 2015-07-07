@@ -19,10 +19,13 @@ void ConvolutionNDLayer<Dtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
+  const int* kstride_data = this->kstride_.cpu_data();
   this->output_shape_.clear();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
     const int input_dim = input_shape_data[i];
-    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+    const int ext_kernel_shape = (kernel_shape_data[i] - 1)
+        * kstride_data[i] + 1;
+    const int output_dim = (input_dim + 2 * pad_data[i] - ext_kernel_shape)
         / stride_data[i] + 1;
     this->output_shape_.push_back(output_dim);
   }

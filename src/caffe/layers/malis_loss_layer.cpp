@@ -9,6 +9,7 @@
 #include <functional>
 #include <iterator>
 #include <map>
+#include <numeric>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -19,7 +20,7 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-//#define CAFFE_MALIS_DEBUG
+// #define CAFFE_MALIS_DEBUG
 
 namespace caffe {
 
