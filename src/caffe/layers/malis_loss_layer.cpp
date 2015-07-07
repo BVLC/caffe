@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <queue>
@@ -17,6 +18,8 @@
 #include "caffe/layer_factory.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
+
+//#define CAFFE_MALIS_DEBUG
 
 namespace caffe {
 
@@ -283,6 +286,10 @@ void MalisLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     top[1]->ReshapeLike(*bottom[0]);
   }
 
+  conn_dims_.clear();
+  nhood_dims_.clear();
+  nhood_data_.clear();
+
   conn_num_dims_ = 4;
   conn_dims_.push_back(bottom[0]->width());       // X-axis
   conn_dims_.push_back(bottom[0]->height());      // Y-axis
@@ -348,11 +355,13 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // Labels (size w * h, c values)
     const Dtype* label = bottom[1]->cpu_data();
 
+#ifdef CAFFE_MALIS_DEBUG
     cv::namedWindow("labelled");
     cv::namedWindow("cdn");
     cv::namedWindow("cdp");
     cv::namedWindow("prob");
     cv::namedWindow("diff");
+#endif
 
     cv::Mat img(bottom[1]->height(), bottom[1]->width(), CV_8SC1);
 #pragma omp parallel for
@@ -364,44 +373,45 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     cv::Mat seg = FindBlobs(img);
 
+#ifdef CAFFE_MALIS_DEBUG
     // This is for debugging only:
     {
       std::vector<int> labels;
 
-      for(int i = 0; i < bottom[1]->height() *bottom[1]->width(); ++i) {
+      for (int i = 0; i < bottom[1]->height() *bottom[1]->width(); ++i) {
         int val = reinterpret_cast<int*>(seg.ptr(0))[i];
         bool found = false;
-        for(int j = 0; j < labels.size(); ++j) {
-          if(val == labels[j]) {
+        for (int j = 0; j < labels.size(); ++j) {
+          if (val == labels[j]) {
             found = true;
           }
         }
-        if(found == false) {
+        if (found == false) {
           labels.push_back(val);
         }
       }
 
       std::vector<cv::Vec3b> colors;
 
-      for(int i = 0; i < labels.size(); ++i) {
+      for (int i = 0; i < labels.size(); ++i) {
         unsigned char r = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
         unsigned char g = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
         unsigned char b = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
 
-        cv::Vec3b color(r,g,b);
+        cv::Vec3b color(r, g, b);
         colors.push_back(color);
       }
 
       cv::Mat output = cv::Mat::zeros(img.size(), CV_8UC3);
 
-      for(int i = 0; i < bottom[1]->height() *bottom[1]->width(); ++i) {
+      for (int i = 0; i < bottom[1]->height() *bottom[1]->width(); ++i) {
         int val = reinterpret_cast<int*>(seg.ptr(0))[i];
-        if(val == 0) {
-          output.at<cv::Vec3b>(i) = cv::Vec3b(0,0,0);
+        if (val == 0) {
+          output.at<cv::Vec3b>(i) = cv::Vec3b(0, 0, 0);
           continue;
         }
-        for(int j = 0; j < labels.size(); ++j) {
-          if(val == labels[j]) {
+        for (int j = 0; j < labels.size(); ++j) {
+          if (val == labels[j]) {
             output.at<cv::Vec3b>(i) = colors[j];
           }
         }
@@ -409,6 +419,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
       cv::imshow("labelled", output);
     }
+#endif
 
     Dtype loss_out = 0;
     Dtype classerr_out = 0;
@@ -471,6 +482,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
 
+#ifdef CAFFE_MALIS_DEBUG
     auto minmax = std::minmax_element(conn_data_neg.begin(),
                                       conn_data_neg.end());
 
@@ -484,26 +496,28 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     std::cout << "Conndata pos min/max: " <<
         conn_data_pos[minmax.first - conn_data_pos.begin()] << " " <<
         conn_data_pos[minmax.second - conn_data_pos.begin()]  << std::endl;
-
+#endif
 
     Malis(&conn_data_neg[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
           &nhood_dims_[0], reinterpret_cast<int*>(seg.ptr(0)),
           false, &dloss_neg[0],
           &loss_out, &classerr_out, &rand_index_out);
 
+#ifdef CAFFE_MALIS_DEBUG
     std::cout << "Loss: " << loss_out << std::endl;
     std::cout << "Class: " << classerr_out << std::endl;
     std::cout << "Rand: " << rand_index_out << std::endl;
+#endif
 
     Malis(&conn_data_pos[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
           &nhood_dims_[0], reinterpret_cast<int*>(seg.ptr(0)),
           true, &dloss_pos[0],
           &loss_out, &classerr_out, &rand_index_out);
 
+#ifdef MALIS_DEBUG
     std::cout << "Loss: " << loss_out << std::endl;
     std::cout << "Class: " << classerr_out << std::endl;
     std::cout << "Rand: " << rand_index_out << std::endl;
-
 
     minmax = std::minmax_element(dloss_neg.begin(), dloss_neg.end());
 
@@ -516,12 +530,6 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     std::cout << "DLoss_pos min/max: " <<
         dloss_pos[minmax.first - dloss_pos.begin()] << " " <<
         dloss_pos[minmax.second - dloss_pos.begin()]  << std::endl;
-
-    std::cout << "Before PROB BACK" << std::endl;
-
-    //caffe_cpu_copy(prob_.count(), prob_data, bottom_diff);
-
-    std::cout << "Before LOSS BACK" << std::endl;
 
     cv::Mat cd_pos(bottom[0]->height(), bottom[0]->width(),
                    cv::DataType<Dtype>::type,
@@ -545,6 +553,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     cd_neg.convertTo(tmp, CV_32FC1, 1.0 / (maxVal - minVal),
         -minVal * 1.0 / (maxVal - minVal));
     cv::imshow("cdn", tmp);
+#endif
 
     // Clear the diff
     caffe_set(bottom[0]->count(), Dtype(0.0), bottom_diff);
@@ -561,12 +570,12 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             * bottom[0]->height() + i * bottom[0]->width() + j];
 
         // Pick label scalings
-        const int l0 = static_cast<int>
+        /*const int l0 = static_cast<int>
           (label[i * bottom[0]->width() + j]) * 2 - 1;
         const int l1 = static_cast<int>
           (label[i * bottom[0]->width() + (j + 1)]) * 2 - 1;
         const int l2 = static_cast<int>
-          (label[(i + 1) * bottom[0]->width() + j]) * 2 - 1;
+          (label[(i + 1) * bottom[0]->width() + j]) * 2 - 1;*/
 
         // Center
         bottom_diff[0 * inner_num_ + i * bottom[0]->width() + j] -= 0.5
@@ -595,6 +604,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
 
+#ifdef CAFFE_MALIS_DEBUG
     Dtype* prob_rd = prob_.mutable_cpu_data();
 
     cv::Mat wrapped_prob(bottom[0]->height(), bottom[0]->width(),
@@ -612,14 +622,20 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     std::cout << "Min loss: " << minVal << std::endl;
 
 
-    Dtype sum = std::accumulate(bottom_diff,bottom_diff+bottom[0]->height()*bottom[0]->width(),0.0);
+    Dtype sum = std::accumulate(bottom_diff,
+                                bottom_diff
+                                + bottom[0]->height() * bottom[0]->width(),
+                                0.0);
+
     Dtype mean = sum / (bottom[0]->width()*bottom[0]->height());
 
     std::vector<Dtype> msd(bottom[0]->height()*bottom[0]->width());
-    std::transform(bottom_diff,bottom_diff+(bottom[0]->height()*bottom[0]->width()),msd.begin(),std::bind2nd(std::minus<Dtype>(), mean));
+    std::transform(bottom_diff,
+                   bottom_diff + (bottom[0]->height()*bottom[0]->width()),
+                   msd.begin(), std::bind2nd(std::minus<Dtype>(), mean));
 
-   Dtype sqsum = std::inner_product(msd.begin(), msd.end(), msd.begin(), 0.0);
-   Dtype stdev = std::sqrt(sqsum/(bottom[0]->width()*bottom[0]->height()));
+    Dtype sqsum = std::inner_product(msd.begin(), msd.end(), msd.begin(), 0.0);
+    Dtype stdev = std::sqrt(sqsum/(bottom[0]->width()*bottom[0]->height()));
 
 
     wrapped_diff.convertTo(tmp, CV_32FC1, 1.0 / (2.0 * stdev),
@@ -627,8 +643,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     cv::imshow("diff", tmp);
     cv::waitKey(2);
-
-    std::cout << "After LOSS BACK" << std::endl;
+#endif
   }
 }
 
