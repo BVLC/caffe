@@ -1,13 +1,12 @@
-#if defined(USE_GREENTEA) && !defined(USE_CUDA)
-#include "absval_layer.cu"
-#endif
-
 #include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#if defined(USE_GREENTEA) && !defined(USE_CUDA)
+#include "absval_layer.cu"  // NOLINT
+#endif
 
 namespace caffe {
 

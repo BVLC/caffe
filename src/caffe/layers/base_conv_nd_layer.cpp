@@ -98,12 +98,37 @@ void BaseConvolutionNDLayer<Dtype>::LayerSetUp(
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
+  // Setup kernel stride dimensions
+  kstride_.Reshape(spatial_dim_blob_shape);
+  int* kstride_data = kstride_.mutable_cpu_data();
+  if (conv_param.has_kstride_h() || conv_param.has_kstride_w()) {
+    CHECK_EQ(num_spatial_axes_, 2)
+        << "kstride_h & kstride_w can only be used for 2D convolution.";
+    CHECK_EQ(0, conv_param.kstride_size())
+        << "Etiher kstride or kstirde_h/w should be specified; not both.";
+    kstride_data[0] = conv_param.pad_h();
+    kstride_data[1] = conv_param.pad_w();
+  } else {
+    const int num_kstride_dims = conv_param.kstride_size();
+    CHECK(num_kstride_dims == 0 || num_kstride_dims == 1 ||
+          num_kstride_dims == num_spatial_axes_)
+      << "kstride must be specified once, or once per spatial dimension "
+      << "(kstride specified " << num_kstride_dims << " times; "
+      << num_spatial_axes_ << " spatial dims);";
+    const int kDefaultKstride = 1;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      kstride_data[i] = (num_kstride_dims == 0) ? kDefaultKstride :
+          conv_param.kstride((num_kstride_dims == 1) ? 0 : i);
+    }
+  }
+
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
   is_1x1_ = true;
   for (int i = 0; i < num_spatial_axes_; ++i) {
     is_1x1_ &=
-        kernel_shape_data[i] == 1 && stride_data[i] == 1 && pad_data[i] == 0;
+        kernel_shape_data[i] == 1 && stride_data[i] == 1 && pad_data[i] == 0
+        && kstride_data[i] == 1;
     if (!is_1x1_) { break; }
   }
   // Configure output channels and groups.
