@@ -23,32 +23,32 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   // Configure the kernel size, padding, stride, and inputs.
   CHECK(conv_param.has_kernel_shape())
-	<< "Kernel shape is required.";
+    << "Kernel shape is required.";
   if(conv_param.has_pad_shape()) {
     CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.pad_shape().dim_size())
-	  << "Kernel and Pad shape don't match !";
+      << "Kernel and Pad shape don't match !";
   }
   if(conv_param.has_stride_shape()) {
     CHECK_EQ(conv_param.kernel_shape().dim_size(), conv_param.stride_shape().dim_size())
-	  << "Kernel and Stride shape don't match !";
+      << "Kernel and Stride shape don't match !";
   }
   for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
-  	kernel_shape_.push_back(conv_param.kernel_shape().dim(i));
+    kernel_shape_.push_back(conv_param.kernel_shape().dim(i));
     CHECK_GT(kernel_shape_[i], 0) << "Filter dimensions cannot be zero.";
   }
   if(conv_param.has_pad_shape()) {
     for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
-  	  pad_shape_.push_back(conv_param.pad_shape().dim(i));
-	}
+      pad_shape_.push_back(conv_param.pad_shape().dim(i));
+    }
   } else {
-	pad_shape_ = std::vector<int>(kernel_shape_.size(), 0);
+    pad_shape_ = std::vector<int>(kernel_shape_.size(), 0);
   }
   if(conv_param.has_stride_shape()) {
     for(int i = 0; i < conv_param.kernel_shape().dim_size(); ++i) {
-  	  stride_shape_.push_back(conv_param.stride_shape().dim(i));
-	}
+      stride_shape_.push_back(conv_param.stride_shape().dim(i));
+    }
   } else {
-	stride_shape_ = std::vector<int>(kernel_shape_.size(), 1);
+    stride_shape_ = std::vector<int>(kernel_shape_.size(), 1);
   }
   // Configure output channels and groups.
   channels_ = bottom[0]->shape(1);
@@ -57,7 +57,7 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   group_ = this->layer_param_.convolution_param().group();
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
-      << "Number of output should be multiples of group.";
+    << "Number of output should be multiples of group.";
 
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
@@ -80,18 +80,18 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
     // output channels x input channels per-group x kernel height x kernel width
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
-        this->layer_param_.convolution_param().weight_filler()));
+          this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the biases.
     if (bias_term_) {
       vector<int> bias_shape(1, num_output_);
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
-          this->layer_param_.convolution_param().bias_filler()));
+            this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
-  
+
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 
@@ -111,7 +111,7 @@ void CudnnNdConvolutionLayer<Dtype>::LayerSetUp(
   weight_shape[0] /= group_;
   weight_offset_ = 1;
   for(int i = 0; i < weight_shape.size(); ++i) {
-	weight_offset_ *= weight_shape[i];
+    weight_offset_ *= weight_shape[i];
   }
   bias_offset_ = weight_shape[0];
 
@@ -148,12 +148,12 @@ void CudnnNdConvolutionLayer<Dtype>::Reshape(
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK_EQ(num_, bottom[bottom_id]->shape(0))
-	  << "Inputs must have same num.";
+      << "Inputs must have same num.";
     CHECK_EQ(channels_, bottom[bottom_id]->shape(1))
-        << "Inputs must have same channels.";
-  	for(int i = 0; i < bottom[0]->num_axes(); ++i) {
+      << "Inputs must have same channels.";
+    for(int i = 0; i < bottom[0]->num_axes(); ++i) {
       CHECK_EQ(input_shape_[i], bottom[bottom_id]->shape(i)) << "Inputs must have same shape.";
-  	}
+    }
   }
   // Shape the tops.
   compute_output_shape();
@@ -163,12 +163,12 @@ void CudnnNdConvolutionLayer<Dtype>::Reshape(
 
   conv_out_spatial_dim_ = 1;
   for(int i = 2; i < output_shape_.size(); ++i) {
-  	conv_out_spatial_dim_ *= output_shape_[i];
+    conv_out_spatial_dim_ *= output_shape_[i];
   }
 
   kernel_dim_ = channels_;
   for(int i = 0; i < kernel_shape_.size(); ++i) {
-  	kernel_dim_ *= kernel_shape_[i];
+    kernel_dim_ *= kernel_shape_[i];
   }
   weight_offset_ = num_output_ * kernel_dim_ / group_ / group_;
   output_offset_ = num_output_ * conv_out_spatial_dim_ / group_;
@@ -195,13 +195,13 @@ void CudnnNdConvolutionLayer<Dtype>::Reshape(
   bottom_tensor_shape[1] /= group_;
   vector<int> bottom_tensor_stride(input_shape_.size(), 1);
   for(int i = input_shape_.size()-2; i >= 0; --i) {
-	bottom_tensor_stride[i] = input_shape_[i+1] * bottom_tensor_stride[i+1];
+    bottom_tensor_stride[i] = input_shape_[i+1] * bottom_tensor_stride[i+1];
   }
   vector<int> top_tensor_shape(output_shape_);
   top_tensor_shape[1] /= group_;
   vector<int> top_tensor_stride(output_shape_.size(), 1);
   for(int i = output_shape_.size()-2; i >= 0; --i) {
-	top_tensor_stride[i] = output_shape_[i+1] * top_tensor_stride[i+1];
+    top_tensor_stride[i] = output_shape_[i+1] * top_tensor_stride[i+1];
   }
 
   for (int i = 0; i < bottom.size(); i++) {
@@ -215,8 +215,9 @@ void CudnnNdConvolutionLayer<Dtype>::Reshape(
 
   // Tensor descriptor for bias.
   if (this->bias_term_) {
-    cudnn::setTensor4dDesc<Dtype>(&bias_desc_,
-        1, this->num_output_ / this->group_, 1, 1);
+    vector<int> bias_shape(input_shape_.size(), 1);
+    bias_shape[1] = this->num_output_ / this->group_;
+    cudnn::setTensorNdDesc<Dtype>(&bias_desc_, bias_shape);
   }
 }
 
@@ -225,23 +226,23 @@ void CudnnNdConvolutionLayer<Dtype>::compute_output_shape() {
   output_shape_.clear();
   output_shape_.push_back(num_);
   output_shape_.push_back(num_output_);
-  
+
   for(int i = 2; i < input_shape_.size(); ++i) {
     int dim = (input_shape_[i] + 2*pad_shape_[i-2] - kernel_shape_[i-2]) / stride_shape_[i-2] + 1;
-	if(dim > 1){
-	  output_shape_.push_back(dim);
-	}
+    if(dim > 1){
+      output_shape_.push_back(dim);
+    }
   }
 }
 
 template <typename Dtype>
 void CudnnNdConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>* >& bottom, const vector<Blob<Dtype>* >& top) {
-	NOT_IMPLEMENTED;
+  NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
 void CudnnNdConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>* >& bottom, const vector<bool>& propagate_down, const vector<Blob<Dtype>* >& top) {
-	NOT_IMPLEMENTED;
+  NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
