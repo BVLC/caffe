@@ -15,7 +15,7 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA and OpenCL support" OFF)
+caffe_option(CPU_ONLY  "Build Caffe without CUDA and OpenCL support" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" ON)
 caffe_option(USE_GREENTEA "Build Caffe with OpenCL support" ON)
 caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using ViennaClBLAS)" OFF)
@@ -25,7 +25,7 @@ caffe_option(BUILD_python "Build Python wrapper" ON)
 set(python_version "2" CACHE STRING "Specify which python version to use")
 caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
-caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
+caffe_option(BUILD_python_layer "Build the Caffe python layer" ON)
 
 # ---[ Flag consistency check
 if(CPU_ONLY)
