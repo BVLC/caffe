@@ -21,7 +21,81 @@
 
 namespace caffe {
 
+/**
+ * @brief Computes a one edge per dimension 2D affinity graph
+ * for a given segmentation/label map
+ */
+template<typename Dtype>
+class AffinityLayer : public Layer<Dtype> {
+ public:
+  explicit AffinityLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {
+  }
 
+  virtual inline const char* type() const {
+    return "Affinity";
+  }
+
+ protected:
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+ private:
+  std::vector< shared_ptr< Blob<Dtype> > > min_index_;
+  std::vector<int> offsets_;
+};
+
+/**
+ * @brief Computes a connected components map from a segmentation map.
+ */
+template<typename Dtype>
+class ConnectedComponentLayer : public Layer<Dtype> {
+ public:
+  explicit ConnectedComponentLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {
+  }
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+  virtual inline int ExactNumBottomBlobs() const {
+    return 1;
+  }
+
+  virtual inline int ExactNumTopBlobs() const {
+    return 1;
+  }
+
+  virtual inline const char* type() const {
+    return "ConnectedComponent";
+  }
+
+ protected:
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                             const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                              const vector<bool>& propagate_down,
+                              const vector<Blob<Dtype>*>& bottom);
+
+ private:
+     cv::Mat FindBlobs(const int maxlabel, const cv::Mat &input);
+};
+
+/**
+ * @brief Merges and crops feature maps for U-Net architectures.
+ */
 template<typename Dtype>
 class MergeCropLayer : public Layer<Dtype> {
  public:
@@ -37,10 +111,6 @@ class MergeCropLayer : public Layer<Dtype> {
 
   virtual inline int ExactNumBottomBlobs() const {
     return 2;
-  }
-
-  virtual inline int ExactNumTopBlobs() const {
-    return 1;
   }
 
   virtual inline const char* type() const {

@@ -355,6 +355,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  optional AffinityParameter affinity_param = 137;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1029,6 +1030,7 @@ message V1LayerParameter {
   optional TransformationParameter transform_param = 36;
   optional LossParameter loss_param = 42;
   optional V0LayerParameter layer = 1;
+  optional AffinityParameter affinity_param = 43;
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters
@@ -1134,3 +1136,10 @@ message PReLUParameter {
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
+
+message AffinityParameter {
+  // Offset parameter to change the channel to use for creating an affinity graph
+  // Defined once per bottom blob
+  repeated int32 offset = 1;
+}
+

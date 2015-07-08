@@ -776,6 +776,7 @@ class MalisLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MalisLoss"; }
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
@@ -786,30 +787,22 @@ class MalisLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  /// The internal SoftmaxLayer used to map predictions to a distribution.
-  shared_ptr<Layer<Dtype> > softmax_layer_;
-  /// prob stores the output probability predictions from the SoftmaxLayer.
-  Blob<Dtype> prob_;
-  /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
-  vector<Blob<Dtype>*> softmax_bottom_vec_;
-  /// top vector holder used in call to the underlying SoftmaxLayer::Forward
-  vector<Blob<Dtype>*> softmax_top_vec_;
-
-  int softmax_axis_, outer_num_, inner_num_;
+ private:
+  void Malis(const Dtype* conn_data, const int conn_num_dims,
+             const int* conn_dims,
+             const int* nhood_data, const int* nhood_dims,
+             const Dtype* seg_data,
+             const bool pos, Dtype* dloss_data, Dtype* loss_out,
+             Dtype *classerr_out, Dtype *rand_index_out,
+             Dtype margin, Dtype threshold);
 
   int conn_num_dims_;
   std::vector<int> conn_dims_;
   std::vector<int> nhood_data_;
   std::vector<int> nhood_dims_;
 
- private:
-  cv::Mat FindBlobs(const cv::Mat &input);
-
-  void Malis(Dtype* conn_data, int conn_num_dims, int* conn_dims,
-             int* nhood_data, int* nhood_dims, int* seg_data,
-             bool pos, Dtype* dloss_data, Dtype* loss_out,
-             Dtype *classerr_out, Dtype *rand_index_out,
-             Dtype margin = 0.3);
+  Blob<Dtype> dloss_pos_;
+  Blob<Dtype> dloss_neg_;
 };
 
 
