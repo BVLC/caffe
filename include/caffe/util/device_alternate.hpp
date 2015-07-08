@@ -66,6 +66,14 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
       << caffe::curandGetErrorString(status); \
   } while (0)
 
+#define CNMEM_CHECK(condition) \
+  /* Code block avoids redefinition of cudaError_t error */ \
+  do { \
+    cnmemStatus_t error = condition; \
+    CHECK_EQ(error, CNMEM_STATUS_SUCCESS) << " " \
+      << cnmemGetErrorString(error); \
+  } while (0)
+
 // CUDA: grid stride looping
 #define CUDA_KERNEL_LOOP(i, n) \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; \

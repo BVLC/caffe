@@ -15,6 +15,7 @@ using caffe::Layer;
 using caffe::shared_ptr;
 using caffe::Timer;
 using caffe::vector;
+using caffe::MemoryHandlerActivator;
 
 
 DEFINE_int32(gpu, -1,
@@ -117,6 +118,12 @@ int train() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
+#ifdef USE_CNMEM
+  std::vector<int> gpus;
+  gpus.push_back(FLAGS_gpu);
+  MemoryHandlerActivator activator(gpus);
+#endif
 
   LOG(INFO) << "Starting Optimization";
   shared_ptr<caffe::Solver<float> >

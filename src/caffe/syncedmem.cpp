@@ -13,7 +13,7 @@ SyncedMemory::~SyncedMemory() {
 
 #ifndef CPU_ONLY
   if (gpu_ptr_) {
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    MemoryHandler::freeGPU(gpu_ptr_);
   }
 #endif  // CPU_ONLY
 }
@@ -48,13 +48,13 @@ inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
   case UNINITIALIZED:
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    MemoryHandler::mallocGPU(&gpu_ptr_, size_);
     caffe_gpu_memset(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
     break;
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
-      CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+      MemoryHandler::mallocGPU(&gpu_ptr_, size_);
     }
     caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
     head_ = SYNCED;
