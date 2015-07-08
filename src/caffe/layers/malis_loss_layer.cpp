@@ -387,6 +387,9 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype classerr_out = 0;
   Dtype rand_index_out = 0;
 
+  caffe_set(dloss_neg_.count(), Dtype(0.0), dloss_neg_.mutable_cpu_data());
+  caffe_set(dloss_pos_.count(), Dtype(0.0), dloss_pos_.mutable_cpu_data());
+
   Malis(&conn_data_neg[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
         &nhood_dims_[0], bottom[2]->cpu_data(),
         false, dloss_neg_.mutable_cpu_data(),
