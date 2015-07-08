@@ -6,6 +6,12 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#ifdef USE_GREENTEA
+#include "caffe/greentea/greentea.hpp"
+#include "caffe/greentea/greentea_im2col.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -17,11 +23,11 @@ void DeconvolutionNDLayer<Dtype>::Forward_gpu(
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      this->backward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-          top_data + n * this->top_dim_);
+      this->backward_gpu_gemm(bottom_data, n * this->bottom_dim_, weight,
+          top_data, n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
-        this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
+        this->forward_gpu_bias(top_data, n * this->top_dim_, bias);
       }
     }
   }
@@ -41,6 +47,22 @@ void DeconvolutionNDLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       caffe_gpu_set(this->blobs_[1]->count(), Dtype(0),
           this->blobs_[1]->mutable_gpu_diff());
     }
+#endif  // USE CUDA
+  } else {
+#ifdef USE_GREENTEA
+    if (this->param_propagate_down_[0]) {
+      greentea_gpu_set<Dtype>(this->device_context_->id(),
+                              this->blobs_[0]->count(), Dtype(0),
+                              (cl_mem) weight_diff, 0);
+    }
+    if (this->bias_term_ && this->param_propagate_down_[1]) {
+      greentea_gpu_set<Dtype>(this->device_context_->id(),
+                              this->blobs_[1]->count(), Dtype(0),
+                              (cl_mem) (this->blobs_[1]->mutable_gpu_diff()),
+                              0);
+    }
+#endif  // USE_GREENTEA
+  }
     for (int i = 0; i < top.size(); ++i) {
       const Dtype* top_diff = top[i]->gpu_diff();
       const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -49,26 +71,24 @@ void DeconvolutionNDLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       if (this->bias_term_ && this->param_propagate_down_[1]) {
         Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
         for (int n = 0; n < this->num_; ++n) {
-          this->backward_gpu_bias(bias_diff, top_diff + n * this->top_dim_);
+          this->backward_gpu_bias(bias_diff, top_diff, n * this->top_dim_);
         }
       }
       if (this->param_propagate_down_[0] || propagate_down[i]) {
         for (int n = 0; n < this->num_; ++n) {
           // gradient w.r.t. weight. Note that we will accumulate diffs.
           if (this->param_propagate_down_[0]) {
-            this->weight_gpu_gemm(top_diff + n * this->top_dim_,
-                bottom_data + n * this->bottom_dim_, weight_diff);
+            this->weight_gpu_gemm(top_diff, n * this->top_dim_,
+                bottom_data, n * this->bottom_dim_, weight_diff);
           }
           // gradient w.r.t. bottom data, if necessary.
           if (propagate_down[i]) {
-            this->forward_gpu_gemm(top_diff + n * this->top_dim_, weight,
-                bottom_diff + n * this->bottom_dim_);
+            this->forward_gpu_gemm(top_diff, n * this->top_dim_, weight,
+                bottom_diff, n * this->bottom_dim_);
           }
         }
       }
     }
-#endif  // USE CUDA
-  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(DeconvolutionNDLayer);

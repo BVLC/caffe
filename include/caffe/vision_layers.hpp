@@ -296,14 +296,19 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
   // we just called weight_cpu_gemm with the same input.
 
 #ifndef CPU_ONLY
-  void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
-      Dtype* output, bool skip_im2col = false);
-  void forward_gpu_bias(Dtype* output, const Dtype* bias);
-  void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
-      Dtype* col_output);
-  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
-      weights);
-  void backward_gpu_bias(Dtype* bias, const Dtype* input);
+  void forward_gpu_gemm(const Dtype* col_input, const int col_input_off,
+                        const Dtype* weights, Dtype* output,
+                        const int output_off, bool skip_im2col = false);
+  void forward_gpu_bias(Dtype* output, const int output_off, const Dtype* bias);
+  void backward_gpu_gemm(const Dtype* input, const int input_off,
+                         const Dtype* weights, Dtype* col_output,
+                         const int col_output_off);
+  void weight_gpu_gemm(const Dtype* col_input, const int col_input_off,
+                       const Dtype* output, const int output_off,
+                       Dtype* weights);
+  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int input_off);
+
+  shared_ptr< Blob<Dtype> > col_buffer();
 #endif  // !CPU_ONLY
 
   // reverse_dimensions should return true iff we are implementing deconv, so
@@ -359,6 +364,43 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
   }
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
+  inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
+                                       Dtype* col_buff,
+                                       const int col_buff_off) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_->id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_->id());
+    greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem)data, data_off,
+                                  num_spatial_axes_,
+                                  num_kernels_im2col_,
+                                  (cl_mem)(conv_input_shape_.gpu_data()),
+                                  (cl_mem)(col_buffer_.gpu_shape()),
+                                  (cl_mem)(kernel_shape_.gpu_data()),
+                                  (cl_mem)(pad_.gpu_data()),
+                                  (cl_mem)(stride_.gpu_data()),
+                                  (cl_mem)(kstride_.gpu_data()),
+                                  (cl_mem) col_buff, col_buff_off);
+  }
+  inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
+                                       const int col_buff_off, Dtype* data,
+                                       const int data_off) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_->id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_->id());
+    greentea_col2im_nd_gpu<Dtype>(&program, &ctx,
+                                  (cl_mem) col_buff, col_buff_off,
+                                  num_spatial_axes_,
+                                  num_kernels_col2im_,
+                                  (cl_mem)(conv_input_shape_.gpu_data()),
+                                  (cl_mem)(col_buffer_.gpu_shape()),
+                                  (cl_mem)(kernel_shape_.gpu_data()),
+                                  (cl_mem)(pad_.gpu_data()),
+                                  (cl_mem)(stride_.gpu_data()),
+                                  (cl_mem)(kstride_.gpu_data()),
+                                  (cl_mem) data, data_off);
+  }
 #endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
 
