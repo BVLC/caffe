@@ -34,17 +34,19 @@ for dim in dims:
 	print dim
 	key = str(dim)
 	d = caffe.proto.caffe_pb2.DocumentDatum()
+	d.id = dim[0]
 	i = d.image
 
-	i.channels = 3
-	i.width = im.size[0]
-	i.height = im.size[1]
 
 	buf = StringIO.StringIO()
 	r = im.resize(dim)
 	r.save(buf, "JPEG")
 	i.data = buf.getvalue()
 	i.encoding = "JPEG"
+
+	i.channels = 3
+	i.width = r.size[0]
+	i.height = r.size[1]
 
 	txn.put(key, d.SerializeToString())
 	buf.close()
