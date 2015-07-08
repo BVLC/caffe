@@ -14,3 +14,4 @@ protobuf>=2.5.0
 python-gflags>=2.0
 pyyaml>=3.10
 Pillow>=2.3.0
+six>=1.1.0
