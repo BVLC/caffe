@@ -577,9 +577,6 @@ message LinearTransformParameter {
   // If shift_file or scale_file contain images that do not match the dimensions
   // of the input image, then an error should occur (causes iterpolation to be ignored
   optional bool error_on_size_mismatch = 6 [default = false];
-
-  // if true, perform the shift first: y = (x + shift) * scale
-  optional bool shift_first = 7 [default = false];
 }
 
 

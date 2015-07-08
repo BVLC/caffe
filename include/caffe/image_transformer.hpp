@@ -10,15 +10,17 @@
 namespace caffe {
 
 // TODO: verify if the width/height dimension order is correct
+template <typename Dtype>
 class ImageTransformer {
  public:
   explicit ImageTransformer() { InitRand(); }
   virtual ~ImageTransformer() {}
 
   void InitRand();
-  virtual void Transform(const cv::Mat& in, cv::Mat& out);
-  virtual vector<int> InferOutputShape(const vector<int>& in_shape);
-  virtual void SampleTransformParams(const vector<int>& in_shape);
+  void CVMatToArray(const cv::Mat& cv_img, Dtype* out);
+  virtual void Transform(const cv::Mat& in, cv::Mat& out) {}
+  virtual vector<int> InferOutputShape(const vector<int>& in_shape) {return in_shape;}
+  virtual void SampleTransformParams(const vector<int>& in_shape) {};
 
  protected:
   int RandInt(int n);
@@ -26,7 +28,8 @@ class ImageTransformer {
   shared_ptr<Caffe::RNG> rng_;
 };
 
-class ResizeImageTransformer : public ImageTransformer {
+template <typename Dtype>
+class ResizeImageTransformer : public ImageTransformer<Dtype> {
  public:
   explicit ResizeImageTransformer(const ResizeTransformParameter& resize_param);
   virtual ~ResizeImageTransformer() {}
@@ -45,9 +48,10 @@ class ResizeImageTransformer : public ImageTransformer {
   int cur_width_, cur_height_;
 };
 
-class SequenceImageTransformer : public ImageTransformer {
+template <typename Dtype>
+class SequenceImageTransformer : public ImageTransformer<Dtype> {
  public:
-  explicit SequenceImageTransformer(vector<ImageTransformer*>* transformers) :
+  explicit SequenceImageTransformer(vector<ImageTransformer<Dtype>*>* transformers) :
     transformers_(transformers) {}
   virtual ~SequenceImageTransformer() { if (transformers_) delete transformers_; } 
 
@@ -56,12 +60,13 @@ class SequenceImageTransformer : public ImageTransformer {
   virtual void SampleTransformParams(const vector<int>& in_shape);
 
  protected:
-  vector<ImageTransformer*>* transformers_;
+  vector<ImageTransformer<Dtype>*>* transformers_;
 };
 
-class ProbImageTransformer : public ImageTransformer {
+template <typename Dtype>
+class ProbImageTransformer : public ImageTransformer<Dtype> {
  public:
-  explicit ProbImageTransformer(vector<ImageTransformer*>* transformers, vector<float> weights);
+  explicit ProbImageTransformer(vector<ImageTransformer<Dtype>*>* transformers, vector<float> weights);
   virtual ~ProbImageTransformer() { if (transformers_) delete transformers_; }
 
   virtual void Transform(const cv::Mat& in, cv::Mat& out);
@@ -70,13 +75,14 @@ class ProbImageTransformer : public ImageTransformer {
 
  protected:
   void SampleIdx();
-  vector<ImageTransformer*>* transformers_;
+  vector<ImageTransformer<Dtype>*>* transformers_;
   vector<float> probs_;
   int cur_idx_;
 };
 
 // TODO: implement file parameters
-class LinearImageTransformer : public ImageTransformer {
+template <typename Dtype>
+class LinearImageTransformer : public ImageTransformer<Dtype> {
  public:
   explicit LinearImageTransformer(LinearTransformParameter param) :
     param_(param) {};

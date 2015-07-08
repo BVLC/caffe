@@ -121,7 +121,7 @@ class DocDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
-  ImageTransformer* image_transformer_;
+  ImageTransformer<Dtype>* image_transformer_;
 };
 
 /**

@@ -50,6 +50,7 @@ void DocDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   in_shape.push_back(doc.image().height());
 
   // Use data_transformer to infer the expected blob shape from datum.
+  this->image_transformer_->SampleTransformParams(in_shape);
   vector<int> top_shape = this->image_transformer_->InferOutputShape(in_shape);
   this->transformed_data_.Reshape(top_shape);
   // Reshape top[0] and prefetch_data according to the batch_size.
@@ -119,7 +120,7 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
 
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    CVMatToArray(posttransform_img, &(this->transformed_data_));
+    this->image_transformer_->CVMatToArray(posttransform_img, this->transformed_data_.mutable_cpu_data());
     // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = doc.layout_type();
@@ -142,10 +143,10 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
 
 template <typename Dtype>
 void DocDataLayer<Dtype>::CreateImageTransformer(ImageTransformationParameter param) {
-  vector<ImageTransformer*>* transformers = new vector<ImageTransformer*>();
+  vector<ImageTransformer<Dtype>*>* transformers = new vector<ImageTransformer<Dtype>*>();
   for (int i = 0; i < param.params_size(); i++) {
     ProbImageTransformParameter prob_param = param.params(i);
-    vector<ImageTransformer*>* prob_transformers = new vector<ImageTransformer*>();
+    vector<ImageTransformer<Dtype>*>* prob_transformers = new vector<ImageTransformer<Dtype>*>();
 	vector<float> weights;
 
     float weight;
@@ -158,7 +159,7 @@ void DocDataLayer<Dtype>::CreateImageTransformer(ImageTransformationParameter pa
 	  } else {
 	    weight = 1;
 	  }
-	  ImageTransformer* transformer = new ResizeImageTransformer(resize_param);
+	  ImageTransformer<Dtype>* transformer = new ResizeImageTransformer<Dtype>(resize_param);
 	  prob_transformers->push_back(transformer);
 	  weights.push_back(weight);
 	}
@@ -171,15 +172,15 @@ void DocDataLayer<Dtype>::CreateImageTransformer(ImageTransformationParameter pa
 	  } else {
 	    weight = 1;
 	  }
-	  ImageTransformer* transformer = new LinearImageTransformer(resize_param);
+	  ImageTransformer<Dtype>* transformer = new LinearImageTransformer<Dtype>(resize_param);
 	  prob_transformers->push_back(transformer);
 	  weights.push_back(weight);
 	}
 
-    ImageTransformer* prob_transformer = new ProbImageTransformer(prob_transformers, weights);
+    ImageTransformer<Dtype>* prob_transformer = new ProbImageTransformer<Dtype>(prob_transformers, weights);
 	transformers->push_back(prob_transformer);
   }
-  image_transformer_ = new SequenceImageTransformer(transformers);
+  image_transformer_ = new SequenceImageTransformer<Dtype>(transformers);
 }
 
 INSTANTIATE_CLASS(DocDataLayer);

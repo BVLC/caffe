@@ -225,21 +225,6 @@ cv::Mat UnencodedImageToCVMat(const Image& img) {
   return cv_img;
 }
 
-template <typename Dtype>
-void CVMatToArray(const cv::Mat& cv_img, Dtype* out) {
-  int cv_channels = cv_img.channels();
-  int cv_height = cv_img.rows;
-  int cv_width = cv_img.cols;
-  for (int c = 0; c < cv_channels; ++c) {
-    for (int h = 0; h < cv_height; ++h) {
-	  for (int w = 0; w < cv_width; ++w) {
-		int cv_index = (c * cv_img.step[0] + h * cv_img.step[1] + w * cv_img.step[2]);
-		*out = static_cast<Dtype> (*(cv_img.data + cv_index));
-		out++;
-      }
-    }
-  }
-}
 
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
 // If Datum is not encoded will do nothing

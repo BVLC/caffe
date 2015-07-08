@@ -145,9 +145,6 @@ cv::Mat ImageToCVMat(const Image& img, bool is_color);
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
 template <typename Dtype>
-void CVMatToArray(const cv::Mat& cv_img, Dtype* out);
-
-template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
     hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
     Blob<Dtype>* blob);
