@@ -118,10 +118,13 @@ class DocDataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
   virtual void CreateImageTransformer(ImageTransformationParameter param);
+  virtual void SampleDB();
 
-  shared_ptr<db::DB> db_;
-  shared_ptr<db::Cursor> cursor_;
+  vector<shared_ptr<db::DB> > dbs_;
+  vector<shared_ptr<db::Cursor> > cursors_;
+  vector<float> probs_;
   ImageTransformer<Dtype>* image_transformer_;
+  int cur_index_;
 };
 
 /**

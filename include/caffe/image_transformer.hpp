@@ -17,14 +17,15 @@ class ImageTransformer {
   virtual ~ImageTransformer() {}
 
   void InitRand();
+  int RandInt(int n);
+  float RandFloat(float min, float max);
+
   void CVMatToArray(const cv::Mat& cv_img, Dtype* out);
   virtual void Transform(const cv::Mat& in, cv::Mat& out) {}
   virtual vector<int> InferOutputShape(const vector<int>& in_shape) {return in_shape;}
   virtual void SampleTransformParams(const vector<int>& in_shape) {};
 
  protected:
-  int RandInt(int n);
-  float RandFloat(float min, float max);
   shared_ptr<Caffe::RNG> rng_;
 };
 

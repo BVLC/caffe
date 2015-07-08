@@ -22,26 +22,73 @@ DocDataLayer<Dtype>::~DocDataLayer<Dtype>() {
 }
 
 template <typename Dtype>
+void DocDataLayer<Dtype>::SampleDB() {
+  float rand = image_transformer_->RandFloat(0,1);
+  float cum_prob = 0;
+  int i;
+  for (i = 0; i < probs_.size(); i++) {
+    cum_prob += probs_[i];
+	if (cum_prob >= rand) {
+	  break;
+    }
+  }
+  if (i == probs_.size()) {
+    i--;
+  }
+  cur_index_ = i;
+}
+
+template <typename Dtype>
 void DocDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CreateImageTransformer(this->layer_param_.image_transform_param());
-  // Initialize DB
-  db_.reset(db::GetDB(this->layer_param_.data_param().backend()));
-  db_->Open(this->layer_param_.data_param().source(), db::READ);
-  cursor_.reset(db_->NewCursor());
+  DocDataParameter doc_param = this->layer_param_.doc_data_param();
+  CHECK(doc_param.sources_size()) << "No source DBs specified";
 
-  // Check if we should randomly skip a few data points
-  if (this->layer_param_.data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-                        this->layer_param_.data_param().rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
-    while (skip-- > 0) {
-      cursor_->Next();
+  for (int i = 0; i < doc_param.sources_size(); i++) {
+    // Open the ith database
+    shared_ptr<db::DB> db;
+	shared_ptr<db::Cursor> cursor;
+    db.reset(db::GetDB(doc_param.backend()));
+    db->Open(doc_param.sources(i), db::READ);
+
+	cursor.reset(db->NewCursor());
+    // Check if we should randomly skip a few data points
+    if (doc_param.rand_skip()) {
+      unsigned int skip = caffe_rng_rand() %
+                          doc_param.rand_skip();
+      LOG(INFO) << "Skipping first " << skip << " data points.";
+      while (skip-- > 0) {
+        cursor->Next();
+        if (!cursor->valid()) {
+          DLOG(INFO) << "Restarting data prefetching from start.";
+          cursor->SeekToFirst();
+        }
+      }
     }
+	// Push the db handle, cursor, and weight of the ith db
+	dbs_.push_back(db);
+	cursors_.push_back(cursor);
+	if (i < doc_param.weights_size()) {
+	  probs_.push_back(doc_param.weights(i));
+	} else {
+      probs_.push_back(1.0f);
+	}
   }
+  SampleDB();
+
+  float sum = 0;
+  for (int i = 0; i < probs_.size(); i++) {
+    sum += probs_[i];
+  }
+  for (int i = 0; i < probs_.size(); i++) {
+    probs_[i] /= sum;
+  }
+
+  // normalize probability weights
   // Read a data point, to initialize the prefetch and top blobs.
   DocumentDatum doc;
-  doc.ParseFromString(cursor_->value());
+  doc.ParseFromString(cursors_[cur_index_]->value());
 
   vector<int> in_shape;
   in_shape.push_back(1);
@@ -50,11 +97,11 @@ void DocDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   in_shape.push_back(doc.image().height());
 
   // Use data_transformer to infer the expected blob shape from datum.
-  this->image_transformer_->SampleTransformParams(in_shape);
-  vector<int> top_shape = this->image_transformer_->InferOutputShape(in_shape);
+  image_transformer_->SampleTransformParams(in_shape);
+  vector<int> top_shape = image_transformer_->InferOutputShape(in_shape);
   this->transformed_data_.Reshape(top_shape);
   // Reshape top[0] and prefetch_data according to the batch_size.
-  top_shape[0] = this->layer_param_.data_param().batch_size();
+  top_shape[0] = doc_param.batch_size();
   this->prefetch_data_.Reshape(top_shape);
   top[0]->ReshapeLike(this->prefetch_data_);
 
@@ -63,7 +110,7 @@ void DocDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->width();
   // label
   if (this->output_labels_) {
-    vector<int> label_shape(1, this->layer_param_.data_param().batch_size());
+    vector<int> label_shape(1, doc_param.batch_size());
     top[1]->Reshape(label_shape);
     this->prefetch_label_.Reshape(label_shape);
   }
@@ -82,9 +129,9 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
-  const int batch_size = this->layer_param_.data_param().batch_size();
+  const int batch_size = this->layer_param_.doc_data_param().batch_size();
   DocumentDatum doc;
-  doc.ParseFromString(cursor_->value());
+  doc.ParseFromString(cursors_[cur_index_]->value());
 
   vector<int> in_shape;
   in_shape.push_back(1);
@@ -92,9 +139,10 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
   in_shape.push_back(doc.image().width());
   in_shape.push_back(doc.image().height());
   // Use image_transformer to infer the expected blob shape from doc
-  this->image_transformer_->SampleTransformParams(in_shape);
-  vector<int> top_shape = this->image_transformer_->InferOutputShape(in_shape);
+  image_transformer_->SampleTransformParams(in_shape);
+  vector<int> top_shape = image_transformer_->InferOutputShape(in_shape);
   this->transformed_data_.Reshape(top_shape);
+  DLOG(INFO) << "Prefetch db: " << cur_index_ << " Shape: " << this->transformed_data_.shape_string() << " Doc id: " << doc.id();
   // Reshape prefetch_data according to the batch_size.
   top_shape[0] = batch_size;
   this->prefetch_data_.Reshape(top_shape);
@@ -109,18 +157,18 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a datum
     DocumentDatum doc;
-    doc.ParseFromString(cursor_->value());
+    doc.ParseFromString(cursors_[cur_index_]->value());
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply data transformations (mirror, scale, crop...)
 
 	cv::Mat pretransform_img = ImageToCVMat(doc.image(), doc.image().channels() == 3);
 	cv::Mat posttransform_img;
-	this->image_transformer_->Transform(pretransform_img, posttransform_img);
+	image_transformer_->Transform(pretransform_img, posttransform_img);
 
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->image_transformer_->CVMatToArray(posttransform_img, this->transformed_data_.mutable_cpu_data());
+    image_transformer_->CVMatToArray(posttransform_img, this->transformed_data_.mutable_cpu_data());
     // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = doc.layout_type();
@@ -128,10 +176,10 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
     trans_time += timer.MicroSeconds();
     timer.Start();
     // go to the next item.
-    cursor_->Next();
-    if (!cursor_->valid()) {
+    cursors_[cur_index_]->Next();
+    if (!cursors_[cur_index_]->valid()) {
       DLOG(INFO) << "Restarting data prefetching from start.";
-      cursor_->SeekToFirst();
+      cursors_[cur_index_]->SeekToFirst();
     }
   }
   timer.Stop();
@@ -139,6 +187,9 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+
+  // Choose a db at random to pull from on the next batch
+  SampleDB();
 }
 
 template <typename Dtype>

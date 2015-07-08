@@ -361,7 +361,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 136 (last added: image_transform_param)
+// LayerParameter next available layer-specific ID: 137 (last added: doc_data_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -417,7 +417,8 @@ message LayerParameter {
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 134;
-  optional DataParameter data_param = 107;
+  optional DataParameter data_param = 136;
+  optional DocDataParameter doc_data_param = 107;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -680,11 +681,8 @@ message ConvolutionParameter {
   optional Engine engine = 15 [default = DEFAULT];
 }
 
+
 message DataParameter {
-  enum DB {
-    LEVELDB = 0;
-    LMDB = 1;
-  }
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
@@ -694,6 +692,10 @@ message DataParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the database.
   optional uint32 rand_skip = 7 [default = 0];
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
@@ -708,6 +710,18 @@ message DataParameter {
   optional bool mirror = 6 [default = false];
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
+}
+
+message DocDataParameter {
+  repeated string sources = 1;
+
+  repeated float weights = 2;
+
+  optional uint32 batch_size = 3;
+
+  optional uint32 rand_skip = 4;
+
+  optional DataParameter.DB backend = 5;
 }
 
 message DropoutParameter {
