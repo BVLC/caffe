@@ -69,14 +69,25 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
+    TypeParam checksum = 0;
+
     for (int cd = 0; cd < d; ++cd) {
       for (int ch = 0; ch < h; ++ch) {
         for (int cw = 0; cw < w; ++cw) {
           bottom_data[cw + ch * w + cd * w * h] =
               cw + ch * w + cd * w * h;
+          if (cw % 2 == 0 && ch % 2 == 0 && cd % 2 == 0) {
+            checksum += cw + ch * w + cd * w * h;
+          }
         }
       }
     }
+
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+    const TypeParam *top_data = blob_top_->cpu_data();
+
+    EXPECT_EQ(checksum, top_data[0]);
   }
 
   void TestBackward() {
