@@ -249,6 +249,11 @@ void BaseConvolutionNDLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
   col_buffer_.Reshape(col_buffer_shape_);
+  if (Caffe::mode() == Caffe::Brew::GPU) {
+    shared_ptr< Blob<Dtype> > buffer =
+        this->device_context_->template Buffer<Dtype>(0);
+    buffer->Reshape(col_buffer_shape_);
+  }
   bottom_dim_ = bottom[0]->count(channel_axis_);
   top_dim_ = top[0]->count(channel_axis_);
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
@@ -265,93 +270,187 @@ void BaseConvolutionNDLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 #ifndef CPU_ONLY
 
-template <typename Dtype>
+template<typename Dtype>
 void BaseConvolutionNDLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
-    const Dtype* weights, Dtype* output, bool skip_im2col) {
+                                                   const int input_off,
+                                                   const Dtype* weights,
+                                                   Dtype* output,
+                                                   const int output_off,
+                                                   bool skip_im2col) {
   const Dtype* col_buff = input;
-
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (!is_1x1_) {
       if (!skip_im2col) {
-        conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+        conv_im2col_gpu(input + input_off, col_buffer()->mutable_gpu_data());
       }
-      col_buff = col_buffer_.gpu_data();
+      col_buff = col_buffer()->gpu_data();
     }
     for (int g = 0; g < group_; ++g) {
-      caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
-          group_, conv_out_spatial_dim_, kernel_dim_ / group_,
-          (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
-          (Dtype)0., output + output_offset_ * g);
+      caffe_gpu_gemm<Dtype>(
+          CblasNoTrans, CblasNoTrans, conv_out_channels_ / group_,
+          conv_out_spatial_dim_, kernel_dim_ / group_, (Dtype) 1.,
+          weights + weight_offset_ * g,
+          col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 0.,
+          output + output_off + output_offset_ * g);
     }
 #endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    if (!is_1x1_) {
+      if (!skip_im2col) {
+        greentea_conv_im2col_gpu(input, input_off,
+                                 col_buffer()->mutable_gpu_data(), 0);
+      }
+      col_buff = col_buffer()->gpu_data();
+    }
+    for (int g = 0; g < group_; ++g) {
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
+                               CblasNoTrans, conv_out_channels_ / group_,
+                               conv_out_spatial_dim_, kernel_dim_ / group_,
+                               (Dtype) 1., (cl_mem) weights, weight_offset_ * g,
+                               (cl_mem) col_buff,
+                               (is_1x1_ ? input_off : 0) + col_offset_ * g,
+                               (Dtype) 0., (cl_mem) output,
+                               output_off + output_offset_ * g);
+    }
+#endif  // USE_GREENTEA
   }
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void BaseConvolutionNDLayer<Dtype>::forward_gpu_bias(Dtype* output,
-    const Dtype* bias) {
+                                                   const int output_off,
+                                                   const Dtype* bias) {
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-        out_spatial_dim_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
-        (Dtype)1., output);
+                          out_spatial_dim_, 1, (Dtype) 1., bias,
+                          bias_multiplier_.gpu_data(), (Dtype) 1.,
+                          output + output_off);
 #endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
+                             CblasNoTrans, num_output_,
+                             out_spatial_dim_, 1, (Dtype) 1.,
+                             (cl_mem) bias, 0,
+                             (cl_mem) (bias_multiplier_.gpu_data()), 0,
+                             (Dtype) 1., (cl_mem) output, output_off);
+#endif  // USE_GREENTEA
   }
 }
 
-template <typename Dtype>
+
+template<typename Dtype>
 void BaseConvolutionNDLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
-    const Dtype* weights, Dtype* input) {
-  Dtype* col_buff = col_buffer_.mutable_gpu_data();
+                                                    const int output_off,
+                                                    const Dtype* weights,
+                                                    Dtype* input,
+                                                    const int input_off) {
+  Dtype* col_buff = col_buffer()->mutable_gpu_data();
   if (is_1x1_) {
     col_buff = input;
   }
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     for (int g = 0; g < group_; ++g) {
-      caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
-          conv_out_spatial_dim_, conv_out_channels_ / group_,
-          (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
-          (Dtype)0., col_buff + col_offset_ * g);
+      caffe_gpu_gemm<Dtype>(
+          CblasTrans, CblasNoTrans, kernel_dim_ / group_, conv_out_spatial_dim_,
+          conv_out_channels_ / group_, (Dtype) 1., weights + weight_offset_ * g,
+          output + output_off + output_offset_ * g, (Dtype) 0.,
+          col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g);
     }
     if (!is_1x1_) {
-      conv_col2im_gpu(col_buff, input);
+      conv_col2im_gpu(col_buff, input + input_off);
     }
 #endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    for (int g = 0; g < group_; ++g) {
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasTrans,
+                               CblasNoTrans, kernel_dim_ / group_,
+                               conv_out_spatial_dim_,
+                               conv_out_channels_ / group_, (Dtype) 1.,
+                               (cl_mem) weights, weight_offset_ * g,
+                               (cl_mem) output, output_off + output_offset_ * g,
+                               (Dtype) 0., (cl_mem) col_buff,
+                               (is_1x1_ ? input_off : 0) + col_offset_ * g);
+    }
+    if (!is_1x1_) {
+      greentea_conv_col2im_gpu(col_buff, 0, input, input_off);
+    }
+#endif  // USE_GREENTEA
   }
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void BaseConvolutionNDLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
-    const Dtype* output, Dtype* weights) {
+                                                  const int input_off,
+                                                  const Dtype* output,
+                                                  const int output_off,
+                                                  Dtype* weights) {
   const Dtype* col_buff = input;
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (!is_1x1_) {
-      conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
-      col_buff = col_buffer_.gpu_data();
+      conv_im2col_gpu(input + input_off, col_buffer()->mutable_gpu_data());
+      col_buff = col_buffer()->gpu_data();
     }
     for (int g = 0; g < group_; ++g) {
-      caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
-          conv_out_channels_ / group_,
-          kernel_dim_ / group_, conv_out_spatial_dim_,
-          (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
-          (Dtype)1., weights + weight_offset_ * g);
+      caffe_gpu_gemm<Dtype>(
+          CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+          kernel_dim_ / group_, conv_out_spatial_dim_, (Dtype) 1.,
+          output + output_off + output_offset_ * g,
+          col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 1.,
+          weights + weight_offset_ * g);
     }
 #endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    if (!is_1x1_) {
+      greentea_conv_im2col_gpu(input, input_off,
+                               col_buffer()->mutable_gpu_data(), 0);
+      col_buff = col_buffer()->gpu_data();
+    }
+    for (int g = 0; g < group_; ++g) {
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
+                               CblasTrans, conv_out_channels_ / group_,
+                               kernel_dim_ / group_, conv_out_spatial_dim_,
+                               (Dtype) 1., (cl_mem) output,
+                               output_off + output_offset_ * g,
+                               (cl_mem) col_buff,
+                               (is_1x1_ ? input_off : 0) + col_offset_ * g,
+                               (Dtype) 1., (cl_mem) weights,
+                               weight_offset_ * g);
+    }
+#endif  // USE_GREENTEA
   }
 }
 
 template <typename Dtype>
 void BaseConvolutionNDLayer<Dtype>::backward_gpu_bias(Dtype* bias,
-    const Dtype* input) {
+    const Dtype* input, const int input_off) {
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
-      input, bias_multiplier_.gpu_data(), 1., bias);
+      input + input_off, bias_multiplier_.gpu_data(), 1., bias);
 #endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans,
+                             num_output_, out_spatial_dim_, 1.,
+                             (cl_mem) input, input_off,
+                             (cl_mem) (bias_multiplier_.gpu_data()), 0, 1.,
+                             (cl_mem) bias, 0);
+#endif  // USE_GREENTEA
   }
+}
+
+template<typename Dtype>
+shared_ptr< Blob<Dtype> > BaseConvolutionNDLayer<Dtype>::col_buffer() {
+    return this->device_context_->
+        template Buffer<Dtype>(this->device_context_->current_queue_id());
 }
 
 #endif  // !CPU_ONLY
