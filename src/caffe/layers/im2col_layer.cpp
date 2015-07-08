@@ -4,6 +4,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/vision_layers.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -45,6 +46,12 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();
   }
+
+  height_out_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
+  width_out_  = (width_  + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+
+  //this->setupMaskIM2COL();
+  //this->setupMaskCOL2IM();
 }
 
 template <typename Dtype>
@@ -55,11 +62,54 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
+
+  DLOG(INFO) << "BTM shape = ( "<<bottom[0]->num()<<", "<<channels_<<", "<<height_<<", "<<width_<<" )";
+  DLOG(INFO) << "TOP shape = ( "<<bottom[0]->num()<<", "<<channels_ * kernel_h_ * kernel_w_<<", "<<(height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1<<", "<<(width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1<<" )";
+
   top[0]->Reshape(
       bottom[0]->num(), channels_ * kernel_h_ * kernel_w_,
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1,
       (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1);
+
+  height_out_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
+  width_out_  = (width_  + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+
+  this->setupMaskIM2COL();
+  this->setupMaskCOL2IM();
 }
+
+template <typename Dtype>
+bool Im2colLayer<Dtype>::setupMaskIM2COL() {
+
+  if ( height_*width_ <= 0 ) {
+    LOG(WARNING)<<"skipping setup on height_ = "<<height_<<" width_ = "<<width_;
+    return false;
+  }
+
+  index_mask_.Reshape(1, 1, height_, width_);
+  im2col_mask_.Reshape(1, channels_*kernel_h_*kernel_w_, height_out_, width_out_);
+  col2im_mask_.Reshape(1, 1, height_, width_);
+
+  for( int pixel = 0; pixel < height_*width_; pixel++ ) {
+    index_mask_.mutable_cpu_data()[pixel] = pixel;
+  }
+
+  //iSNAPSHOT("index mask", index_mask_.cpu_data(), height_*width_);
+  DLOG(INFO)<<"call im2col_cpu()";
+  im2col_cpu(index_mask_.cpu_data(), channels_, height_,
+            width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+            stride_h_, stride_w_, im2col_mask_.mutable_cpu_data());
+
+  return true;
+}
+
+template <typename Dtype>
+bool Im2colLayer<Dtype>::setupMaskCOL2IM() {
+
+  LOG(WARNING)<<"Waiting for implementation";
+  return false;
+}
+
 
 template <typename Dtype>
 void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -85,24 +135,73 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+template <typename Dtype>
+bool Im2colLayer<Dtype>::hasHKernelOverlap() {
+
+  if ( getHKernelOverlap() > 0 ) {
+    return true;
+  }
+  return false;
+}
+
+template <typename Dtype>
+bool Im2colLayer<Dtype>::hasWKernelOverlap() {
+
+  if ( getWKernelOverlap() > 0 ) {
+    return true;
+  }
+  return false;
+}
+
+template <typename Dtype>
+bool Im2colLayer<Dtype>::hasKernelOverlap() {
+  return (this->hasHKernelOverlap() || this->hasWKernelOverlap());
+}
+
+template <typename Dtype>
+int Im2colLayer<Dtype>::getHKernelOverlap() {
+
+  return kernel_h_ - stride_h_;
+}
+
+template <typename Dtype>
+int Im2colLayer<Dtype>::getWKernelOverlap() {
+
+  return kernel_w_ - stride_w_;
+}
+
 #if defined(USE_OPENCL)
 
 	template<typename Dtype>
 	void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+
 		const Dtype* bottom_data = bottom[0]->gpu_data();
 		Dtype* top_data = (top)[0]->mutable_gpu_data();
 
-		switch (OPENCL_OPT_LEVEL) {
+		if ( this->hasKernelOverlap() ) {
+		  DLOG(INFO)<<"KernelOverlap = "<<Im2colLayer<Dtype>::getHKernelOverlap()<<" rows and "<<Im2colLayer<Dtype>::getWKernelOverlap()<<" cols";
+		}
+
+		int level = 1;
+		switch (level) {
 			case 1:
 			{
+			  // all at once with clim2col_perf3 kernel
 				int bottom_step = bottom[0]->offset(1);
 				int top_step = (top)[0]->offset(1);
-				im2col_gpu(bottom_data, bottom_step, bottom[0]->num(), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data, top_step);
+				im2col_group_gpu(bottom_data, bottom_step, bottom[0]->num(), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data, top_step);
+
+			  // all at once with mask
+        //im2col_group_gpu(bottom_data, this->im2col_mask_.gpu_data(), bottom[0]->num(), channels_, height_, width_, kernel_h_, kernel_w_, height_out_, width_out_, top_data);
 			}
 				break;
 			default:
 				for (int n = 0; n < bottom[0]->num(); ++n) {
-					im2col_gpu(bottom_data + bottom[0]->offset(n), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data + (top)[0]->offset(n));
+					// image by image using clim2col kernel
+				  //im2col_gpu(bottom_data + bottom[0]->offset(n), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data + (top)[0]->offset(n));
+
+				  // image by image using clim2col_perf4 kernel
+				  im2col_gpu(bottom_data, bottom[0]->offset(n), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data, (top)[0]->offset(n));
 				}
 				break;
 		}

@@ -19,6 +19,7 @@
 #include <caffe/util/OpenCL/OpenCLPlatform.hpp>
 #include <caffe/util/OpenCL/OpenCLManager.hpp>
 #include <caffe/util/OpenCL/OpenCLMemory.hpp>
+#include <caffe/util/OpenCL/OpenCLBuffer.hpp>
 
 #include <glog/logging.h>
 
@@ -110,6 +111,9 @@ namespace caffe {
 namespace OpenCL {
 
 	bool clMalloc(void** virtualPtr, size_t);
+  bool clGetBuffer(void** virtualPtr, size_t);
+  bool clBufferSetAvailable(void* virtualPtr, size_t size);
+
 	bool clFree(void* virtualPtr);
 	template<typename T> bool clMemset(void* gpuPtr, const T alpha, const size_t Bytes);
 	bool clMemcpy(void* dst, const void* src, size_t Bytes, int type);
@@ -142,6 +146,7 @@ namespace OpenCL {
 	template<typename T> bool clexp(const int n, const T* array_GPU_x, T* array_GPU_y);
 	template<typename T> bool clgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* B, const T beta, T* C, cl_event* event);
   template<typename T> bool clgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* B, const size_t idx_offset_B, const T beta, T* C, const size_t idx_offset_C, cl_event* event);
+  template<typename T> bool cl_group_gemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const int gm, const int gn, const int gk, const T alpha, const T* A, const size_t idx_offset_A, const T* B, const size_t idx_offset_B, const T beta, T* C, const size_t idx_offset_C, cl_event* event);
   template<typename T> bool clgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const size_t step_A, const T* x, const size_t step_x, const T beta, T* y, const size_t step_y);
   template<typename T> bool clgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y);
 
@@ -152,7 +157,9 @@ namespace OpenCL {
 	template<typename T> bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y);
 	template<typename T> bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const int step_A, const T* x, const int step_x, const T beta, T* y, const int step_y);
 	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* x, const T beta, T* y);
-	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* x, const size_t idx_offset_x, const T beta, T* y, const size_t idx_offset_y);
+  template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* x, const size_t idx_offset_x, const T beta, T* y, const size_t idx_offset_y);
+	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* x, const size_t idx_offset_x, const T beta, T* y, const size_t idx_offset_y, cl_event* event);
+	template<typename T> bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const size_t lda, const T* x, const size_t idx_offset_x, const size_t ldx, const T beta, T* y, const size_t idx_offset_y, const size_t ldy, cl_event* event);
 	template<typename T> bool clBLASaxpy(const int N, const T alpha, const T* X, const int incr_x, T* Y, const int incr_y);
 	bool cl_caffe_gpu_rng_uniform(const int n, unsigned int* r);
 	template<typename T> bool cl_caffe_gpu_rng_uniform(const int n, const T a, const T b, T* r);

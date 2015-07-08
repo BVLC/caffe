@@ -300,9 +300,124 @@ protected:
     //DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data() + idx_offset_C, n, m);
 
 #endif
+  }
 
+  void BLASTestValidationGroupGEMM(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int m, const int n, const int k, const int gm, const int gn, const int gk, size_t idx_offset_A, size_t idx_offset_B, size_t idx_offset_C, Dtype alpha, Dtype beta) {
+
+#if defined(USE_OPENCL)
+
+    int scale      = 4;
+    size_t sizeOfA = m*k;
+    size_t sizeOfB = k*n;
+    size_t sizeOfC = m*n;
+    size_t sizeOfBufferA = scale*scale*sizeOfA;
+    size_t sizeOfBufferB = scale*scale*sizeOfB;
+    size_t sizeOfBufferC = scale*scale*sizeOfC;
+
+    if ( sizeOfA + idx_offset_A > sizeOfBufferA ) {
+      LOG(ERROR)<<"index offset for A = "<<idx_offset_A<<" out of range";
+      EXPECT_TRUE(sizeOfA + idx_offset_A < sizeOfBufferA);
+      return;
+    }
+
+    if ( sizeOfB + idx_offset_B > sizeOfBufferB ) {
+      LOG(ERROR)<<"index offset for B = "<<idx_offset_B<<" out of range";
+      EXPECT_TRUE(sizeOfB + idx_offset_B < sizeOfBufferB);
+      return;
+    }
+
+    if ( sizeOfC + idx_offset_C > sizeOfBufferC ) {
+      LOG(ERROR)<<"index offset for C = "<<idx_offset_C<<" out of range";
+      EXPECT_TRUE(sizeOfC + idx_offset_C < sizeOfBufferC);
+      return;
+    }
+
+    // initialize matrices
+    A->Reshape(1, 1, scale*m, scale*k);
+    B->Reshape(1, 1, scale*k, scale*n);
+    C->Reshape(1, 1, scale*m, scale*n);
+    C_->Reshape(1, 1, scale*m, scale*n);
+
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->A);
+    filler.Fill(this->B);
+    filler.Fill(this->C);
+
+    for ( int i=0; i<scale*m*scale*k; i++ ) {
+      if ( i < idx_offset_A ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_A + m*k ) {
+        A->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      //A->mutable_cpu_data()[i] = 1.0;
+    }
+
+    for ( int i=0; i<scale*k*scale*n; i++ ) {
+      if ( i < idx_offset_B ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_B + n*k ) {
+        B->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      //B->mutable_cpu_data()[i] = (i - idx_offset_B) / (n*k/gn);
+    }
+
+    for ( int i=0; i<scale*m*scale*n; i++ ) {
+      if ( i < idx_offset_C ) {
+        C->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+      if ( i >= idx_offset_C + m*n ) {
+        C->mutable_cpu_data()[i] = 0.0;
+        continue;
+      }
+    }
+
+    for ( int i=0; i<scale*m; i++ ) {
+      for ( int j=0; j<scale*n; j++ ) {
+        C_->mutable_cpu_data()[i*scale*n+j] = C->mutable_cpu_data()[i*scale*n+j];
+      }
+    }
+
+    caffe_gpu_group_gemm<Dtype>(TransA, TransB,
+        m, n, k,
+        gm, gn, gk,
+        alpha,
+        A->gpu_data(),
+        B->gpu_data(),
+        beta,
+        C->mutable_gpu_data());
+
+    for(int i = 0; i < gn; i++ ) {
+      caffe_cpu_gemm<Dtype>(TransA, TransB,
+          m, n/gn, k,
+          alpha,
+          A->cpu_data(),
+          B->cpu_data() + i*k*n/gn,
+          beta,
+          C_->mutable_cpu_data() + i*m*n/gn);
+    }
+
+    //SNAPSHOT2D("A", A->cpu_data() + idx_offset_A, k, m);
+    //SNAPSHOT2D("B", B->cpu_data() + idx_offset_B, n, k);
+    //SNAPSHOT2D("C(CPU)", C_->cpu_data() + idx_offset_C , n, m);
+    //SNAPSHOT2D("C(GPU)", C->cpu_data() + idx_offset_C , n, m);
+
+    for (int i = 0; i < scale*m*scale*n; ++i) {
+      EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
+    }
+    //DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data() + idx_offset_C, n, m);
+
+#endif
 
   }
+
 
   void BLASTestValidationGEMV(const CBLAS_TRANSPOSE TransA, const int m, const int n, size_t idx_offset_A, size_t idx_offset_B, size_t idx_offset_C) {
 
@@ -530,10 +645,24 @@ TYPED_TEST_CASE(BLASTest, TestDtypesAndDevices);
 
 TYPED_TEST(BLASTest, BLASTestPerformanceGEMM) {
 
+#ifndef USE_CLGEMM
+  LOG(ERROR)<<"using clBLAS";
+#else
+  LOG(ERROR)<<"use clgemm";
+#endif
   for ( int i = 0; i < 10; i++ ) {
-    for(int size=16; size<=1024; size*=2 ) {
+    for(int size=16; size<=4096; size*=2 ) {
       this->BLASTestPerformanceGEMM(CblasNoTrans, CblasNoTrans, size,size,size);
-      this->BLASTestPerformanceGEMM(CblasTrans, CblasNoTrans, size,size,size);
+      //this->BLASTestPerformanceGEMM(CblasTrans, CblasNoTrans, size,size,size);
+      //this->BLASTestPerformanceGEMM(CblasNoTrans, CblasTrans, size,size,size);
+      //this->BLASTestPerformanceGEMM(CblasTrans, CblasTrans, size,size,size);
+    }
+
+    for(int size=4128; size<=4128; size*=2 ) {
+      this->BLASTestPerformanceGEMM(CblasNoTrans, CblasNoTrans, size,size,size);
+      //this->BLASTestPerformanceGEMM(CblasTrans, CblasNoTrans, size,size,size);
+      //this->BLASTestPerformanceGEMM(CblasNoTrans, CblasTrans, size,size,size);
+      //this->BLASTestPerformanceGEMM(CblasTrans, CblasTrans, size,size,size);
     }
   }
 }
@@ -576,6 +705,41 @@ TYPED_TEST(BLASTest, BLASTestValidationGEMM) {
     this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,0,0,0, 1.0, 1.0);
     this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,0,0,0, 1.0, 1.0);
     this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,0,0,0, 1.0, 1.0);
+  }
+}
+
+TYPED_TEST(BLASTest, BLASTestValidationGroupGEMM) {
+
+  srand (time(NULL));
+  int min = 1;
+  int max = 128;
+
+  int m;
+  int n;
+  int k;
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,1,1,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,1,1,0,0,0, 1.0, 1.0);
+  }
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,2*n,k,1,2,1,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,2*n,k,1,2,1,0,0,0, 1.0, 1.0);
+  }
+
+  for ( int i = 0; i < 10; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,3*n,k,1,3,1,0,0,0, 1.0, 0.0);
+    this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,3*n,k,1,3,1,0,0,0, 1.0, 1.0);
   }
 }
 

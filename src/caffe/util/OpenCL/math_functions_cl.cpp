@@ -307,7 +307,7 @@ namespace caffe {
 #ifdef USE_CLGEMM
     BOOL_CHECK(caffe::OpenCL::clgemm<T>(clTransA, clTransB, M, N, K, alpha, A, B, beta, C, event));
 #else
-  BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, B, beta, C));
+    BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, B, beta, C));
 #endif
  }
   template void caffe_gpu_gemm<float>(
@@ -426,7 +426,7 @@ namespace caffe {
 #ifdef USE_CLGEMM
     BOOL_CHECK(caffe::OpenCL::clgemm<T>(clTransA, clTransB, M, N, K, alpha, A, idx_offset_A, B, idx_offset_B, beta, C, idx_offset_C, event));
 #else
-    BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, idx_offset_A, B, idx_offset_B, beta, C, idx_offset_C));
+    BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, idx_offset_A, B, idx_offset_B, beta, C, idx_offset_C, event));
 #endif
   }
   template void caffe_gpu_gemm<float>(
@@ -459,6 +459,102 @@ namespace caffe {
       double* C,
       const size_t idx_offset_C,
       cl_event* event);
+
+  template<typename T>
+  void caffe_gpu_gemm(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const T alpha,
+      const T* A,
+      const size_t idx_offset_A,
+      const size_t lda,
+      const T* B,
+      const size_t idx_offset_B,
+      const size_t ldb,
+      const T beta,
+      T* C,
+      const size_t idx_offset_C,
+      const size_t ldc,
+      cl_event* event) {
+
+    clblasTranspose clTransA;
+    switch (TransA) {
+      case CblasNoTrans:
+        clTransA = clblasNoTrans;
+        break;
+      case CblasTrans:
+        clTransA = clblasTrans;
+        break;
+      case CblasConjTrans:
+        clTransA = clblasConjTrans;
+        break;
+      default:
+        LOG(ERROR)<< "unknown transpose mode.";
+        return;
+      }
+
+    clblasTranspose clTransB;
+    switch (TransB) {
+      case CblasNoTrans:
+        clTransB = clblasNoTrans;
+        break;
+      case CblasTrans:
+        clTransB = clblasTrans;
+        break;
+      case CblasConjTrans:
+        clTransB = clblasConjTrans;
+        break;
+      default:
+        LOG(ERROR)<< "unknown transpose mode.";
+        return;
+      }
+
+#ifdef USE_CLGEMM
+    BOOL_CHECK(caffe::OpenCL::clgemm<T>(clTransA, clTransB, M, N, K, alpha, A, idx_offset_A, B, idx_offset_B, beta, C, idx_offset_C, event));
+#else
+    BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, idx_offset_A, lda, B, idx_offset_B, ldb, beta, C, idx_offset_C, ldc, event));
+#endif
+  }
+  template void caffe_gpu_gemm<float>(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const float alpha,
+      const float* A,
+      const size_t idx_offset_A,
+      const size_t lda,
+      const float* B,
+      const size_t idx_offset_B,
+      const size_t ldb,
+      const float beta,
+      float* C,
+      const size_t idx_offset_C,
+      const size_t ldc,
+      cl_event* event);
+  template void caffe_gpu_gemm<double>(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const double alpha,
+      const double* A,
+      const size_t idx_offset_A,
+      const size_t lda,
+      const double* B,
+      const size_t idx_offset_B,
+      const size_t ldb,
+      const double beta,
+      double* C,
+      const size_t idx_offset_C,
+      const size_t ldc,
+      cl_event* event);
+
 
   template<typename T>
   void caffe_gpu_gemm(
@@ -509,9 +605,135 @@ namespace caffe {
       const size_t idx_offset_C);
 
   template<typename T>
+  void caffe_gpu_gemm(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const T alpha,
+      const T* A,
+      const size_t idx_offset_A,
+      const size_t lda,
+      const T* B,
+      const size_t idx_offset_B,
+      const size_t ldb,
+      const T beta,
+      T* C,
+      const size_t idx_offset_C,
+      const size_t ldc
+      ) {
+
+      return caffe_gpu_gemm<T>(TransA, TransB, M, N, K, alpha, A, idx_offset_A, lda, B, idx_offset_B, ldb, beta, C, idx_offset_C, ldc, NULL);
+  }
+  template void caffe_gpu_gemm<float>(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const float alpha,
+      const float* A,
+      const size_t idx_offset_A,
+      const size_t lda,
+      const float* B,
+      const size_t idx_offset_B,
+      const size_t ldb,
+      const float beta,
+      float* C,
+      const size_t idx_offset_C,
+      const size_t ldc);
+  template void caffe_gpu_gemm<double>(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const double alpha,
+      const double* A,
+      const size_t idx_offset_A,
+      const size_t lda,
+      const double* B,
+      const size_t idx_offset_B,
+      const size_t ldb,
+      const double beta,
+      double* C,
+      const size_t idx_offset_C,
+      const size_t ldc);
+
+  template<typename T>
+    void caffe_gpu_group_gemm(
+        const CBLAS_TRANSPOSE TransA,
+        const CBLAS_TRANSPOSE TransB,
+        const int M, const int N, const int K,
+        const int GM, const int GN, const int GK,
+        const T alpha,
+        const T* A,
+        const T* B,
+        const T beta,
+        T* C) {
+
+      clblasTranspose clTransA;
+      switch (TransA) {
+        case CblasNoTrans:
+          clTransA = clblasNoTrans;
+          break;
+        case CblasTrans:
+          clTransA = clblasTrans;
+          break;
+        case CblasConjTrans:
+          clTransA = clblasConjTrans;
+          break;
+        default:
+          LOG(ERROR)<< "unknown transpose mode.";
+          return;
+        }
+
+      clblasTranspose clTransB;
+      switch (TransB) {
+        case CblasNoTrans:
+          clTransB = clblasNoTrans;
+          break;
+        case CblasTrans:
+          clTransB = clblasTrans;
+          break;
+        case CblasConjTrans:
+          clTransB = clblasConjTrans;
+          break;
+        default:
+          LOG(ERROR)<< "unknown transpose mode.";
+          return;
+        }
+
+      BOOL_CHECK(caffe::OpenCL::cl_group_gemm<T>(clTransA, clTransB, M, N, K, GM, GN, GK, alpha, A, 0, B, 0, beta, C, 0, NULL));
+    }
+    template void caffe_gpu_group_gemm<float>(
+        const CBLAS_TRANSPOSE TransA,
+        const CBLAS_TRANSPOSE TransB,
+        const int M, const int N, const int K,
+        const int GM, const int GN, const int GK,
+       const float alpha,
+        const float* A,
+        const float* B,
+        const float beta,
+        float* C);
+    template void caffe_gpu_group_gemm<double>(
+        const CBLAS_TRANSPOSE TransA,
+        const CBLAS_TRANSPOSE TransB,
+        const int M, const int N, const int K,
+        const int GM, const int GN, const int GK,
+        const double alpha,
+        const double* A,
+        const double* B,
+        const double beta,
+        double* C);
+
+  template<typename T>
   void caffe_gpu_axpy(const int N, const T alpha, const T* X, T* Y) {
 
-    BOOL_CHECK(caffe::OpenCL::clBLASaxpy<T>(N, alpha, X, 1, Y, 1));
+    TIME("clBLASaxpy()", {
+        BOOL_CHECK(caffe::OpenCL::clBLASaxpy<T>(N, alpha, X, 1, Y, 1));
+    });
   }
   template void caffe_gpu_axpy<float>(const int N, const float alpha, const float* X, float* Y);
   template void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X, double* Y);
@@ -519,8 +741,12 @@ namespace caffe {
   template<typename T>
   void caffe_gpu_axpby(const int N, const T alpha, const T* X, const T beta, T* Y) {
 
-    caffe_gpu_scal<T>(N, beta, Y);
-    caffe_gpu_axpy<T>(N, alpha, X, Y);
+    TIME("caffe_gpu_scal()", {
+        caffe_gpu_scal<T>(N, beta, Y);
+    });
+    TIME("caffe_gpu_axpy()", {
+        caffe_gpu_axpy<T>(N, alpha, X, Y);
+    });
   }
   template void caffe_gpu_axpby<float>(
       const int N,

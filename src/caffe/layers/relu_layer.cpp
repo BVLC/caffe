@@ -8,6 +8,7 @@
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/relu_layer.hpp>
 #include <caffe/util/OpenCL/definitions.hpp>
+#include <caffe/util/benchmark.hpp>
 #endif
 
 namespace caffe {
@@ -144,7 +145,9 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vec
 	ReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, bottom_data, top_data, negative_slope);
 	CUDA_POST_KERNEL_CHECK;
 	*/
-	BOOL_CHECK( caffe::OpenCL::clReLULayerForward(count, bottom_data, top_data, negative_slope) );
+  TIME("caffe::OpenCL::clReLULayerForward()", {
+      BOOL_CHECK( caffe::OpenCL::clReLULayerForward(count, bottom_data, top_data, negative_slope) );
+  });
 }
 
 template<typename Dtype>
@@ -160,7 +163,9 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vecto
 		ReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, top_diff, bottom_data, bottom_diff, negative_slope);
 		CUDA_POST_KERNEL_CHECK;
 		*/
+	  TIME("caffe::OpenCL::clReLULayerBackward()", {
 		BOOL_CHECK( caffe::OpenCL::clReLULayerBackward(count, top_diff, bottom_data, bottom_diff, negative_slope) );
+	  });
 	}
 }
 

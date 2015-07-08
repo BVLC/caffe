@@ -8,7 +8,9 @@
 #include <map>
 #include <set>
 #include <caffe/util/OpenCL/OpenCLMemory.hpp>
+#include <caffe/util/OpenCL/OpenCLBuffer.hpp>
 #include <caffe/util/OpenCL/definitions.hpp>
+#include <tr1/memory>
 
 
 namespace caffe {
@@ -59,6 +61,10 @@ public:
 	cl_uint getDeviceMemBaseAddrAlign();
 	size_t getMemoryUsage();
   void Synchronize();
+
+  bool getBuffer(std::tr1::shared_ptr<OpenCLBuffer>* ptr, size_t size);
+  bool setBufferAvailable(const void* ptr, size_t size);
+
 protected:
 
 private:
@@ -97,6 +103,7 @@ private:
 
   std::map<std::string, cl_kernel> kernel_map_;
 	std::map<const void*, caffe::OpenCLMemory> memory;
+	std::map<size_t, std::vector< std::tr1::shared_ptr<caffe::OpenCLBuffer>>> buffer;
 };
 
 } // namespace caffe

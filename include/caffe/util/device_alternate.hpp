@@ -103,7 +103,11 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 #include <CL/cl.h>
 
 inline size_t CAFFE_GET_GLOBAL_WORKITEMS(const int problem_size, const int local_size) {
-	return (((size_t) problem_size / (size_t) local_size) + 1) * (size_t) local_size; // returns number larger than problem_size that is divisible by local_size
+  if ( problem_size % local_size == 0 ) {
+    return problem_size;
+  } else {
+    return (((size_t) problem_size / (size_t) local_size) + 1) * (size_t) local_size; // returns number larger than problem_size that is divisible by local_size
+  }
 }
 
 inline size_t CAFFE_GET_LOCAL_WORKITEMS(const int problem_size, const int local_size) {

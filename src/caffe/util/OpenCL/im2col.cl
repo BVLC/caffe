@@ -10,6 +10,8 @@
 #pragma OPENCL EXTENSION cl_amd_fp64 : enable
 #endif
 
+#include "definitions.hpp"
+
 template <class T> __kernel void clim2col(const int n, global T* data_im, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global T* data_col) {
 
 	int idx = get_global_id(0);
@@ -222,3 +224,305 @@ template <class T> __kernel void clcol2im_perf(const int n, global T* data_col, 
 }
 template __attribute__((mangled_name(clcol2im_perfFloat))) kernel void clcol2im_perf(const int n, global float* data_col, const int top_step, const int col_number, const int height, const int width, const int channels, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global float* data_im, const int bottom_step);
 template __attribute__((mangled_name(clcol2im_perfDouble))) kernel void clcol2im_perf(const int n, global double* data_col, const int top_step, const int col_number, const int height, const int width, const int channels, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global double* data_im, const int bottom_step);
+
+
+template <class T> __kernel void clim2col_perf3(const int n, global T* data_im, const int bottom_step, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global T* data_col, const int top_step) {
+
+  int image                 = get_global_id(0)/(width*num_channels);
+  int channel               = (get_global_id(0)-image*num_channels*width)/width;
+  
+  int image_channel_offset  = (image*num_channels + channel)*height*width;
+  int col_channel_offset    = (image*num_channels + channel)*height_col*width_col*kernel_w*kernel_h;
+  
+  global T* im_ptr = data_im;
+  im_ptr += image_channel_offset;
+
+  global T* col_ptr = data_col;
+  col_ptr += col_channel_offset;
+  
+  int gw = get_global_id(0)% (image*num_channels*width + channel*width); // horizontal pixel coordinate
+  int gh = get_global_id(1);                // vertical pixel coordinate
+  
+  if( gw < width && gh < height ) { // thread is inside image
+    int KW2 = kernel_w/2;
+    int KH2 = kernel_h/2;
+
+    int offset_w = KW2 - pad_w;
+    int offset_h = KH2 - pad_h;
+        
+    int mod_w = (gw - offset_w) % stride_w; // if this is zero, the image pixel is in src column
+    int div_w = (gw - offset_w) / stride_w; // this is the horizontal index of the target pixel
+        
+    int mod_h = (gh - offset_h) % stride_h; // if this is zero, the image pixel is in src row 
+    int div_h = (gh - offset_h) / stride_h; // this is the vertical index of the target pixel
+
+    __local T buffer[OPENCL_BLOCK_SIZE+2][OPENCL_BLOCK_SIZE+2];
+
+    // each thread copies one pixel into the buffer
+    int src = width*gh + gw;
+    unsigned int lw = get_local_id(0);
+    unsigned int lh = get_local_id(1);
+    
+    buffer[lh+1][lw+1] = im_ptr[src];
+    
+    if ( lh == 0 ) {
+      if ( gh-1 >= 0 ) {
+        src = width*(gh-1) + gw;
+        buffer[0][lw+1] = im_ptr[src];
+      } else {
+        buffer[0][lw+1] = 0;        
+      }
+    }
+    if ( lh == get_local_size(1)-1 ) {
+      if ( gh+1 < height ) {
+        src = width*(gh+1) + gw;
+        buffer[lh+2][lw+1] = im_ptr[src];
+      } else {
+        buffer[lh+2][lw+1] = 0;        
+      }
+    }
+    if ( lw == 0 ) {
+      if ( gw-1 >= 0 ) {
+        src = width*gh + gw - 1;
+        buffer[lh+1][0] = im_ptr[src];
+      } else {
+        buffer[lh+1][0] = 0;        
+      }
+    }
+    if ( lw == get_local_size(0)-1 ) {
+      if ( gw+1 < width ) {
+        src = width*gh + gw + 1;
+        buffer[lh+1][lw+2] = im_ptr[src];
+      } else {
+        buffer[lh+1][lw+2] = 0;        
+      }
+    }
+    if ( lh == 0 && lw == 0 ) {
+      if ( gh-1 >= 0 && gw-1 >= 0 ) {
+        src = width*(gh-1) + gw - 1;
+        buffer[0][0] = im_ptr[src];        
+      } else {
+        buffer[0][0] = 0;                
+      }
+    }
+    if ( lh == 0 && lw == get_local_size(0)-1 ) {
+      if ( gh-1 >= 0 && gw+1 < width ) {
+        src = width*(gh-1) + gw + 1;
+        buffer[0][lw+2] = im_ptr[src];        
+      } else {
+        buffer[0][lw+2] = 0;                
+      }
+    }
+    if ( lh == get_local_size(1)-1 && lw == 0 ) {
+      if ( gh+1 < height && gw-1 >= 0 ) {
+        src = width*(gh+1) + gw - 1;
+        buffer[lh+2][0] = im_ptr[src];                
+      } else {
+        buffer[lh+2][0] = 0;                       
+      }
+    }
+    if ( lh == get_local_size(1)-1 && lw == get_local_size(0)-1 ) {
+      if ( gh+1 < height && gw+1 < width ) {
+        src = width*(gh+1) + gw + 1;
+        buffer[lh+2][lw+2] = im_ptr[src];                
+      } else {
+        buffer[lh+2][lw+2] = 0;                       
+      }
+    }
+
+    
+    barrier(CLK_LOCAL_MEM_FENCE);
+       
+    if ( mod_w == 0 && div_w < width_col ) {
+      if ( mod_h == 0 && div_h  < height_col ) {
+
+        int bw  = 0;
+        int bh  = 0;
+        int dst = 0;
+        int kernel_src = 0;
+
+        for(int dh = -KH2; dh<= KH2; dh++) {
+          for(int dw = -KW2; dw<= KW2; dw++) {
+             bw = lw + dw + 1;
+             bh = lh + dh + 1;
+             dst = height_col*width_col*kernel_src + width_col*div_h + div_w;
+
+             if ( bw >= 0 && bw < OPENCL_BLOCK_SIZE+2 && bh >= 0 && bh < OPENCL_BLOCK_SIZE+2 ) {
+               col_ptr[dst] = buffer[bh][bw];
+             } else {
+               col_ptr[dst] = 0;
+             }
+             kernel_src++;
+           }           
+         }
+       }
+     } 
+  }
+}
+template __attribute__((mangled_name(clim2col_perf3Float))) kernel void clim2col_perf3(const int n, global float* data_im, const int bottom_step, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global float* data_col, const int top_step);
+template __attribute__((mangled_name(clim2col_perf3Double))) kernel void clim2col_perf3(const int n, global double* data_im, const int bottom_step, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global double* data_col, const int top_step);
+
+template <class T> __kernel void clim2col_perf4(const int n, global T* data_im, const int im_offset, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global T* data_col, const int col_offset) {
+
+  int channel               = get_global_id(0)/width;
+  
+  int image_channel_offset  = channel*height*width;
+  int col_channel_offset    = channel*height_col*width_col*kernel_w*kernel_h;
+  
+  global T* im_ptr = data_im;
+  im_ptr += im_offset;
+  im_ptr += image_channel_offset;
+
+  global T* col_ptr = data_col;
+  col_ptr += col_offset;
+  col_ptr += col_channel_offset;
+  
+  int gw = get_global_id(0)% (channel*width); // horizontal pixel coordinate
+  int gh = get_global_id(1);                // vertical pixel coordinate
+  
+  if( gw < width && gh < height ) { // thread is inside image
+    int KW2 = kernel_w/2;
+    int KH2 = kernel_h/2;
+
+    int offset_w = KW2 - pad_w;
+    int offset_h = KH2 - pad_h;
+        
+    int mod_w = (gw - offset_w) % stride_w; // if this is zero, the image pixel is in src column
+    int div_w = (gw - offset_w) / stride_w; // this is the horizontal index of the target pixel
+        
+    int mod_h = (gh - offset_h) % stride_h; // if this is zero, the image pixel is in src row 
+    int div_h = (gh - offset_h) / stride_h; // this is the vertical index of the target pixel
+
+    __local T buffer[OPENCL_BLOCK_SIZE+2][OPENCL_BLOCK_SIZE+2];
+
+    // each thread copies one pixel into the buffer
+    int src = width*gh + gw;
+    unsigned int lw = get_local_id(0);
+    unsigned int lh = get_local_id(1);
+    
+    buffer[lh+1][lw+1] = im_ptr[src];
+    
+    if ( lh == 0 ) {
+      if ( gh-1 >= 0 ) {
+        src = width*(gh-1) + gw;
+        buffer[0][lw+1] = im_ptr[src];
+      } else {
+        buffer[0][lw+1] = 0;        
+      }
+    }
+    if ( lh == get_local_size(1)-1 ) {
+      if ( gh+1 < height ) {
+        src = width*(gh+1) + gw;
+        buffer[lh+2][lw+1] = im_ptr[src];
+      } else {
+        buffer[lh+2][lw+1] = 0;        
+      }
+    }
+    if ( lw == 0 ) {
+      if ( gw-1 >= 0 ) {
+        src = width*gh + gw - 1;
+        buffer[lh+1][0] = im_ptr[src];
+      } else {
+        buffer[lh+1][0] = 0;        
+      }
+    }
+    if ( lw == get_local_size(0)-1 ) {
+      if ( gw+1 < width ) {
+        src = width*gh + gw + 1;
+        buffer[lh+1][lw+2] = im_ptr[src];
+      } else {
+        buffer[lh+1][lw+2] = 0;        
+      }
+    }
+    if ( lh == 0 && lw == 0 ) {
+      if ( gh-1 >= 0 && gw-1 >= 0 ) {
+        src = width*(gh-1) + gw - 1;
+        buffer[0][0] = im_ptr[src];        
+      } else {
+        buffer[0][0] = 0;                
+      }
+    }
+    if ( lh == 0 && lw == get_local_size(0)-1 ) {
+      if ( gh-1 >= 0 && gw+1 < width ) {
+        src = width*(gh-1) + gw + 1;
+        buffer[0][lw+2] = im_ptr[src];        
+      } else {
+        buffer[0][lw+2] = 0;                
+      }
+    }
+    if ( lh == get_local_size(1)-1 && lw == 0 ) {
+      if ( gh+1 < height && gw-1 >= 0 ) {
+        src = width*(gh+1) + gw - 1;
+        buffer[lh+2][0] = im_ptr[src];                
+      } else {
+        buffer[lh+2][0] = 0;                       
+      }
+    }
+    if ( lh == get_local_size(1)-1 && lw == get_local_size(0)-1 ) {
+      if ( gh+1 < height && gw+1 < width ) {
+        src = width*(gh+1) + gw + 1;
+        buffer[lh+2][lw+2] = im_ptr[src];                
+      } else {
+        buffer[lh+2][lw+2] = 0;                       
+      }
+    }
+
+    
+    barrier(CLK_LOCAL_MEM_FENCE);
+       
+    if ( mod_w == 0 && div_w < width_col ) {
+      if ( mod_h == 0 && div_h  < height_col ) {
+
+        int bw  = 0;
+        int bh  = 0;
+        int dst = 0;
+        int kernel_src = 0;
+
+        for(int dh = -KH2; dh<= KH2; dh++) {
+          for(int dw = -KW2; dw<= KW2; dw++) {
+             bw = lw + dw + 1;
+             bh = lh + dh + 1;
+             dst = height_col*width_col*kernel_src + width_col*div_h + div_w;
+
+             if ( bw >= 0 && bw < OPENCL_BLOCK_SIZE+2 && bh >= 0 && bh < OPENCL_BLOCK_SIZE+2 ) {
+               col_ptr[dst] = buffer[bh][bw];
+             } else {
+               col_ptr[dst] = 0;
+             }
+             kernel_src++;
+           }           
+         }
+       }
+     } 
+  }
+}
+template __attribute__((mangled_name(clim2col_perf4Float))) kernel void clim2col_perf4(const int n, global float* data_im, const int im_offset, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global float* data_col, const int col_offset);
+template __attribute__((mangled_name(clim2col_perf4Double))) kernel void clim2col_perf4(const int n, global double* data_im, const int im_offset, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, const int height_col, const int width_col, global double* data_col, const int col_offset);
+
+
+template <class T> __kernel void clim2col_mask(global T* data_im, global int* mask, const int num_images, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int height_out, const int width_out, global T* data_col) {
+  
+  int ppc                   = height_out*width_out*kernel_h*kernel_w;
+  int image                 = get_global_id(0)/(ppc*num_channels);
+  int channel               = (get_global_id(0)-image*ppc*num_channels)/(ppc);
+  
+  int image_channel_offset  = (image*num_channels + channel)*height*width;
+  int col_channel_offset    = (image*num_channels + channel)*height_out*width_out*kernel_h*kernel_w;
+  
+  global T* im_ptr = data_im;
+  im_ptr += image_channel_offset;
+
+  global T* col_ptr = data_col;
+  col_ptr += col_channel_offset;
+  
+  int pixel = get_global_id(0) % ppc;
+
+  if ( pixel < ppc ) {
+    col_ptr[pixel] = im_ptr[ mask[pixel] ];
+  }
+}
+template __attribute__((mangled_name(clim2col_maskFloat))) kernel void clim2col_mask(global float* data_im, global int* mask, const int num_images, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int height_out, const int width_out, global float* data_col);
+template __attribute__((mangled_name(clim2col_maskDouble))) kernel void clim2col_mask(global double* data_im, global int* mask, const int num_images, const int num_channels, const int height, const int width, const int kernel_h, const int kernel_w, const int height_out, const int width_out, global double* data_col);
+    
+        
+        

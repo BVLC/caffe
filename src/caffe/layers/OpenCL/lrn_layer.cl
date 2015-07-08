@@ -62,7 +62,7 @@ template <class T> __kernel void LRNComputeOutput(const int nthreads, const glob
 	int idx = get_global_id(0);
 	if ( idx < nthreads ) {
 	    out[idx] = in[idx] * pow(scale[idx], negative_beta);		
-	}
+ 	}
 }
 template __attribute__((mangled_name(LRNComputeOutputFloat))) kernel void LRNComputeOutput(const int nthreads, const global float* in, const global float* scale, const float negative_beta, global float* out);
 template __attribute__((mangled_name(LRNComputeOutputDouble))) kernel void LRNComputeOutput(const int nthreads, const global double* in, const global double* scale, const double negative_beta, global double* out);

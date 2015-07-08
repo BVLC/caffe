@@ -8,6 +8,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/definitions.hpp>
+#include <caffe/util/benchmark.hpp>
 #include <caffe/util/OpenCL/softmax_layer.hpp>
 #endif
 
@@ -408,6 +409,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 	int spatial_dim = bottom[0]->height() * bottom[0]->width();
 	caffe_copy(bottom[0]->count(), bottom_data, top_data);
 
+
 	// We need to subtract the max to avoid numerical issues, compute the exp,
 	// and then normalize.
 	// compute max
@@ -439,6 +441,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 	 scale_data);
 	 */
 
+	TIME("SoftmaxLayer<Dtype>::Forward_gpu", {
    BOOL_CHECK( caffe::OpenCL::clkernel_channel_max(num, channels, spatial_dim,
                                                    top_data, scale_data) );
 	 // subtract
@@ -454,6 +457,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 	 // divide
    BOOL_CHECK( caffe::OpenCL::clkernel_channel_div(num, channels, spatial_dim,
                                                    top_data, scale_data) );
+	});
 }
 
 template<typename Dtype>
@@ -482,9 +486,12 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 	 caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
 	 */
 
+  TIME("SoftmaxLayer<Dtype>::Backward_gpu", {
+
 	BOOL_CHECK( caffe::OpenCL::clkernel_channel_dot(num, channels, spatial_dim, top_diff, top_data, scale_data) );
 	BOOL_CHECK( caffe::OpenCL::clkernel_channel_subtract(num, channels, spatial_dim, bottom_diff, scale_data) );
 	caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
+  });
 }
 
 #endif // USE_OPENCL

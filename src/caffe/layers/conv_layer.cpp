@@ -82,41 +82,102 @@ template<typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-  TIME("ConvolutionLayer->Forward_gpu()", {
+  DLOG(INFO)<<"in call ConvolutionLayer<Dtype>::Forward_gpu()";
+  //TIME("ConvolutionLayer->Forward_gpu()", {
   const Dtype* weight = this->blobs_[0]->gpu_data();
-
+  const Dtype* cb_ptr;
   for (int i = 0; i < bottom.size(); ++i) {
+
     const Dtype* bottom_data;
-    TIME("bottom[i]->gpu_data()", {
-        bottom_data = bottom[i]->gpu_data();
-    });
     Dtype* top_data;
-    TIME("top[i]->mutable_gpu_data()", {
-        top_data = top[i]->mutable_gpu_data();
-    });
 
-    for (int n = 0; n < this->num_; ++n) {
+    bottom_data = bottom[i]->gpu_data();
+    top_data = top[i]->mutable_gpu_data();
 
-      TIME("forward_gpu_gemm()", {
-          //this->forward_gpu_gemm(bottom_data + bottom[i]->offset(n), weight, top_data + top[i]->offset(n));
-          this->forward_gpu_gemm(bottom_data, bottom[i]->offset(n), weight, 0, top_data, top[i]->offset(n));
-      });
+    if (! this->is_1x1_) {
+        //conv_im2col_gpu_quick((const Dtype*) input + input_offset, col_buffer_.mutable_gpu_data());
+        // this->conv_im2col_gpu_quick(bottom_data, 0, this->col_buffer_.mutable_gpu_data(), 0);
+        //this->conv_im2col_gpu_all(bottom_data, bottom[i]->offset(0), this->col_buffer_.mutable_gpu_data(), top[i]->offset(0));
+        // all images at once using mask
+        im2col_group_gpu(bottom_data, bottom[i]->offset(1), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_, this->col_buffer_.mutable_gpu_data(), top[i]->offset(1));
+
+        //im2col_group_gpu(bottom_data, this->im2col_mask_.gpu_data(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->height_out_, this->width_out_, this->col_buffer_.mutable_gpu_data());
+        cb_ptr = this->col_buffer_.gpu_data();
+    } else {
+      cb_ptr = bottom_data;
+    }
+
+    if ( this->group_ == 1 ) {
+      size_t M = this->conv_out_channels_ /this->group_;
+      size_t N = this->num_*this->conv_out_spatial_dim_;
+      size_t K = this->kernel_dim_ / this->group_;
+
+      //Dtype* array = NULL;
+      //array = (Dtype*) this->blobs_[0]->cpu_data();
+      //SNAPSHOT2D("WEIGHT", (Dtype*) array, M, K);
+      //array = (Dtype*) bottom[i]->cpu_data();
+      //SNAPSHOT2D("COLBUF", (Dtype*) array, K, N);
+
+      caffe_gpu_group_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+          M, N, K,
+          1, this->num_, 1,
+          (Dtype)1.,
+          (Dtype*) weight,
+          cb_ptr,
+          (Dtype)0.,
+          (Dtype*) top_data);
+
+      //Dtype* C = top[i]->mutable_cpu_data();
+      //SNAPSHOT2D("TOP", C, M, N);
+      //top[i]->mutable_gpu_data();
 
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
-        TIME("forward_gpu_bias()", {
-            //this->forward_gpu_bias(top_data + top[i]->offset(n), bias);
-            this->forward_gpu_bias(top_data, top[i]->offset(n), bias);
-        });
+
+        M = this->num_output_;
+        N = this->height_out_ * this->width_out_ * this->num_;
+        K = 1;
+        caffe_gpu_group_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+            M, N, K,
+            1,this->num_,1,
+            (Dtype)1., bias,
+            this->bias_multiplier_.gpu_data(),
+          (Dtype)1., top_data);
       }
-      OpenCLManager::CurrentPlatform()->CurrentDevice().getNextCommandQueue();
+    } else {
+      for (int n = 0; n < this->num_; ++n) {
+
+            //this->forward_gpu_gemm(bottom_data + bottom[i]->offset(n), weight, top_data + top[i]->offset(n));
+            //this->forward_gpu_gemm(bottom_data, bottom[i]->offset(n), weight, 0, top_data, top[i]->offset(n));
+
+            //size_t M = this->conv_out_channels_ /this->group_;
+            //size_t N = this->conv_out_spatial_dim_;
+            //size_t K = this->kernel_dim_ / this->group_;
+
+            //array = (Dtype*) this->blobs_[0]->cpu_data();
+            //SNAPSHOT2D("WEIGHT["<<n<<"]", (Dtype*) array, M, K);
+
+            //array = (Dtype*) bottom[i]->cpu_data();
+            //SNAPSHOT2D("COLBUF["<<n<<"]", (Dtype*) array + step, K, N);
+
+            this->forward_gpu_gemm(cb_ptr, bottom[i]->offset(n), weight, 0, top_data, top[i]->offset(n));
+
+            //Dtype* C = top[i]->mutable_cpu_data() + top[i]->offset(n);
+            //SNAPSHOT2D("TOP["<<n<<"]", C, M, N);
+            //top[i]->mutable_gpu_data();
+
+            if (this->bias_term_) {
+              const Dtype* bias = this->blobs_[1]->gpu_data();
+              //this->forward_gpu_bias(top_data + top[i]->offset(n), bias);
+              this->forward_gpu_bias(top_data, top[i]->offset(n), bias);
+            }
+            OpenCLManager::CurrentPlatform()->CurrentDevice().getNextCommandQueue();
+      }
+
+      OpenCLManager::CurrentPlatform()->CurrentDevice().setCommandQueueIDX(0);
+      OpenCLManager::CurrentPlatform()->CurrentDevice().waitForCommandQueues();
     }
   }
-  OpenCLManager::CurrentPlatform()->CurrentDevice().setCommandQueueIDX(0);
-  TIME("waitForCommandQueues()", {
-      OpenCLManager::CurrentPlatform()->CurrentDevice().waitForCommandQueues();
-  });
-  });
 }
 
 /// @brief refer to CPU backward -- the BLAS implementation is the same.

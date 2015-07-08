@@ -7,6 +7,7 @@
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/definitions.hpp>
+#include <caffe/util/benchmark.hpp>
 #endif
 
 namespace caffe {
@@ -446,7 +447,15 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(const vector<Blob<Dtype>*>& bottom
   CUDA_POST_KERNEL_CHECK;
 	*/
 
+  //Dtype* array;
+  //array = (Dtype*) bottom[0]->cpu_data();
+  //SNAPSHOT("BOTTOM",array,n_threads);
+
 	BOOL_CHECK( caffe::OpenCL::clLRNFillScale(n_threads, bottom_data, num_, channels_, height_, width_, size_, alpha_ / size_, k_, scale_data) );
+
+	//array = (Dtype*) scale_.cpu_data();
+	//SNAPSHOT("SCALE",array,n_threads);
+
 	n_threads = bottom[0]->count();
 	BOOL_CHECK( caffe::OpenCL::clLRNComputeOutput(n_threads, bottom_data, scale_data, -beta_, top_data) );
 }

@@ -68,6 +68,115 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
 		});
 
 	}
+
+  void Im2colLayerTestForwardValidation(LayerParameter lp, int num_images, int num_channels, int im_width, int im_height) {
+
+    typedef typename TypeParam::Dtype Dtype;
+
+    blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+    blob_bottom_vec_.clear();
+    blob_bottom_vec_.push_back(blob_bottom_);
+
+    Im2colLayer<Dtype> layer(lp);
+    layer.LayerSetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
+
+    // initialize bottom
+    int BTMnum       = this->blob_bottom_->num();
+    int BTMchannels  = this->blob_bottom_->channels();
+    int BTMheight    = this->blob_bottom_->height();
+    int BTMwidth     = this->blob_bottom_->width();
+
+    DLOG(INFO)<<"BBLOB("<<BTMnum<<","<<BTMchannels<<","<<BTMheight<<","<<BTMwidth<<")";
+
+    int pixel = 0;
+    for(int n = 0; n < BTMnum; n++ ) {
+      for(int c = 0; c < BTMchannels; c++ ) {
+        for(int h = 0; h < BTMheight; h++ ) {
+          for(int w = 0; w < BTMwidth; w++ ) {
+             this->blob_bottom_->mutable_cpu_data()[pixel] = pixel;
+             pixel++;
+          }
+        }
+      }
+    }
+
+    // initialize top
+    int TOPnum       = this->blob_top_->num();
+    int TOPchannels  = this->blob_top_->channels();
+    int TOPheight    = this->blob_top_->height();
+    int TOPwidth     = this->blob_top_->width();
+
+    DLOG(INFO)<<"TBLOB("<<TOPnum<<","<<TOPchannels<<","<<TOPheight<<","<<TOPwidth<<")";
+    pixel = 0;
+
+    for(int n = 0; n < TOPnum; n++ ) {
+      for(int c = 0; c < TOPchannels; c++ ) {
+        for(int h = 0; h < TOPheight; h++ ) {
+          for(int w = 0; w < TOPwidth; w++ ) {
+             this->blob_top_->mutable_cpu_data()[pixel] = -1;
+             pixel++;
+          }
+        }
+      }
+    }
+
+    // create result array
+    size_t numTopElements = TOPnum*TOPchannels*TOPheight*TOPwidth;
+    Dtype* cpu_ = (Dtype*) malloc(numTopElements*sizeof(Dtype));
+    Dtype* gpu_ = (Dtype*) malloc(numTopElements*sizeof(Dtype));
+
+    // run on CPU
+    Caffe::set_mode(Caffe::CPU);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    memcpy(cpu_, this->blob_top_->cpu_data(), numTopElements*sizeof(Dtype));
+
+
+    // clear CPU result
+    LOG(INFO)<<"TBLOB("<<TOPnum<<","<<TOPchannels<<","<<TOPheight<<","<<TOPwidth<<")";
+    pixel = 0;
+    for(int n = 0; n < TOPnum; n++ ) {
+      for(int c = 0; c < TOPchannels; c++ ) {
+        for(int h = 0; h < TOPheight; h++ ) {
+          for(int w = 0; w < TOPwidth; w++ ) {
+             this->blob_top_->mutable_cpu_data()[pixel] = -1;
+             pixel++;
+          }
+        }
+      }
+    }
+
+    // run on GPU
+    Caffe::set_mode(Caffe::GPU);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    memcpy(gpu_, this->blob_top_->cpu_data(), numTopElements*sizeof(Dtype));
+
+    // compare results
+    for (int c = 0; c < numTopElements; ++c) {
+      EXPECT_EQ(cpu_[c], gpu_[c]);
+    }
+
+    // print bottom
+    for(int n = 0; n < BTMnum; n++ ) {
+      for(int c = 0; c < BTMchannels; c++ ) {
+        //SNAPSHOT2D("N"<<n<<"C"<<c, this->blob_bottom_->cpu_data() + n*BTMchannels*BTMheight*BTMwidth + c*BTMheight*BTMwidth, BTMheight, BTMwidth);
+      }
+    }
+
+    // print top
+    for(int n = 0; n < TOPnum; n++ ) {
+      for(int c = 0; c < TOPchannels; c++ ) {
+        //SNAPSHOT2D("N"<<n<<"C"<<c, this->blob_top_->cpu_data() + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, TOPheight, TOPwidth);
+        //DIFFSHOT2D("N"<<n<<"C"<<c, \
+            cpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, \
+            gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, \
+            TOPheight, TOPwidth);
+      }
+    }
+
+    //DIFFSHOT("D", cpu_, gpu_, numTopElements);
+  }
+
 };
 
 TYPED_TEST_CASE(Im2colLayerTest, TestDtypesAndDevices);
@@ -94,14 +203,31 @@ TYPED_TEST(Im2colLayerTest, TestForward) {
       layer_param.mutable_convolution_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
+
   Im2colLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
+
   for (int c = 0; c < 27; ++c) {
     EXPECT_EQ(this->blob_bottom_->data_at(0, (c / 9), (c / 3) % 3, c % 3),
         this->blob_top_->data_at(0, c, 0, 0));
   }
+}
+
+TYPED_TEST(Im2colLayerTest, TestForwardValidation) {
+
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_pad(0);
+
+  //this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 32, 32);
+  //this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 5, 6);
+  this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 4, 6);
 }
 
 TYPED_TEST(Im2colLayerTest, TestGradient) {
@@ -153,8 +279,8 @@ TYPED_TEST(Im2colLayerTest, TestRectGradient) {
 
 TYPED_TEST(Im2colLayerTest, TestForwardPerformance){
 
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=1024; i*=2 ) {
-		this->Im2colLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+  for( int c = 0; c < 10; c++ ) {
+		this->Im2colLayerTestForwardPerformance(100, 3, 32, 32);
 	}
 }
 

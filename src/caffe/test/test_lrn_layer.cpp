@@ -115,6 +115,7 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
               Dtype value = blob_bottom.data_at(n, i, h, w);
               scale += value * value * alpha / size;
             }
+            LOG(INFO)<<"scale = "<<scale;
             *(top_data + blob_top->offset(n, c, h, w)) =
               blob_bottom.data_at(n, c, h, w) / pow(scale, beta);
           }

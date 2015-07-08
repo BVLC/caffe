@@ -11,6 +11,7 @@
 #include <caffe/util/OpenCL/OpenCLSupport.hpp>
 #include <caffe/util/OpenCL/OpenCLParser.hpp>
 #include <caffe/util/OpenCL/OpenCLMemory.hpp>
+#include <tr1/memory>
 
 #include <fstream>
 
@@ -568,6 +569,65 @@ bool OpenCLDevice::add(OpenCLMemory& clMem) {
 	memory[clMem.getVirtualPointer()] = clMem;
 
 	return true;
+}
+
+bool OpenCLDevice::getBuffer(std::tr1::shared_ptr<OpenCLBuffer>* ptr, size_t size) {
+
+  if ( size < 1 ) {
+    LOG(ERROR)<<"buffer cannot be smaller than 1Byte.";
+    return false;
+  }
+
+  if ( buffer.find(size) == buffer.end() ) {
+    DLOG(INFO) << this->name() <<" no buffer of size = "<<size<<" found, create new buffer.";
+
+    *ptr = std::tr1::shared_ptr<OpenCLBuffer>(new OpenCLBuffer(size));
+    buffer[size].push_back(*ptr);
+    this->add(**ptr);
+
+    return true;
+  }
+
+  std::vector< std::tr1::shared_ptr<caffe::OpenCLBuffer>>::iterator it;
+  for( it = buffer[size].begin(); it != buffer[size].end(); it++ ) {
+    if ( (*it)->isAvailable() == true ) {
+      DLOG(INFO) << this->name() <<" found available buffer of size = "<<size;
+      (*it)->setUnavailable();
+      *ptr = (*it);
+      return true;
+    }
+  }
+
+  DLOG(INFO) << this->name() <<" found no available buffer of size = "<<size<<" found, create new buffer.";
+  *ptr = std::tr1::shared_ptr<OpenCLBuffer>(new OpenCLBuffer(size));
+  buffer[size].push_back(*ptr);
+  this->add(**ptr);
+  return true;
+}
+
+bool OpenCLDevice::setBufferAvailable(const void* ptr, size_t size) {
+
+  if ( size < 1 ) {
+    LOG(ERROR)<<"buffer cannot be smaller than 1Byte.";
+    return false;
+  }
+
+  if ( buffer.find(size) == buffer.end() ) {
+    DLOG(ERROR) << this->name() <<" no buffer of size = "<<size<<" exists.";
+    return false;
+  }
+
+  std::vector< std::tr1::shared_ptr<caffe::OpenCLBuffer>>::iterator it;
+  for( it = buffer[size].begin(); it != buffer[size].end(); it++ ) {
+    if ( (*it)->getVirtualPointer() == ptr ) {
+      DLOG(INFO) << this->name() <<" set buffer of size = "<<size<<" with virtual address = "<<ptr<<" to available";
+      (*it)->setAvailable();
+      return true;
+    }
+  }
+
+  DLOG(ERROR) << this->name() <<" found no buffer of size = "<<size<<" with virtual address = "<<ptr;
+  return false;
 }
 
 bool OpenCLDevice::rmMemoryPtr(const void* ptr) {

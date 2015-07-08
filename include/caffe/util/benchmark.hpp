@@ -91,6 +91,7 @@ if (gettimeofday(&s, 0) == 0) {\
 }\
 \
 (this); \
+caffe::Caffe::DeviceSync();\
 \
 double end = 0.0;\
 if (gettimeofday(&s, 0) == 0) {\
@@ -100,10 +101,37 @@ if (gettimeofday(&s, 0) == 0) {\
 LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<<"ms"; \
 \
 }
+
+#define FLOPS(name, ops, this) {\
+\
+struct timeval s;\
+\
+double bgn = 0.0;\
+if (gettimeofday(&s, 0) == 0) {\
+  bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+\
+(this); \
+\
+double end = 0.0;\
+if (gettimeofday(&s, 0) == 0) {\
+  end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+\
+LOG(INFO) << "FLOPS("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<<"ms "<<((float) floor(100*ops/(end-bgn)/1000000000))/100<<" GFlop/s"; \
+\
+}
+
+
 #else
 #define TIME(name, this) {\
 (this); \
 }
+
+#define FLOPS(name, ops, this) {\
+(this); \
+}
+
 #define TIME_INIT()
 #define TIME_BGN()
 #define TIME_END(name)
@@ -185,6 +213,23 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 #define KWHT  "\x1B[37m"
 
 #define SNAP_LENGTH 30
+
+#define iSNAPSHOT(name, array, length) \
+  { \
+    char buffer[1024];\
+    std::cout<<name<<"[" << length << "] = ";\
+    int limit_length  = length < SNAP_LENGTH ? length : SNAP_LENGTH;\
+    for( int i = 0; i < limit_length; i++ ) {\
+      sprintf(buffer, "%d ", (array)[i]);\
+      std::cout<<buffer;\
+    }\
+    if ( limit_length < length ) {\
+      sprintf(buffer, "%d ", (array)[length-1]);\
+      std::cout<<" ... "<<buffer;\
+    }\
+    std::cout<<std::endl;\
+  }\
+
 #define SNAPSHOT(name, array, length) \
 	{ \
 		char buffer[1024];\
@@ -201,10 +246,10 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		std::cout<<std::endl;\
 	}\
 
-#define SNAPSHOT2D(name, array, width, height) \
+#define SNAPSHOT2D(name, array, height, width) \
 	{ \
 		char buffer[1024];\
-		std::cout<<name<<"[" << width << " x " << height << "] = " <<std::endl;\
+		std::cout<<name<<"[" << height << " x " << width << "] = " <<std::endl;\
 		int limit_width  = width < SNAP_LENGTH ? width : SNAP_LENGTH;\
 		int limit_height = height < SNAP_LENGTH ? height : SNAP_LENGTH;\
 		for( int i = 0; i < limit_height; i++ ) {\
@@ -232,10 +277,10 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		}\
 	}\
 
-#define DIFFSHOT2D(name, array1, array2, width, height) \
+#define DIFFSHOT2D(name, array1, array2, height, width) \
   { \
     char buffer[1024];\
-    std::cout<<name<<"[" << width << " x " << height << "] = " <<std::endl;\
+    std::cout<<name<<"[" << height << " x " << width << "] = " <<std::endl;\
     int limit_width  = width < SNAP_LENGTH ? width : SNAP_LENGTH;\
     int limit_height = height < SNAP_LENGTH ? height : SNAP_LENGTH;\
     double delta = 0.0;\

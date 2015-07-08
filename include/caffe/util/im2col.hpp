@@ -31,13 +31,28 @@ void im2col_gpu(
 		Dtype* data_col, const size_t data_col_step);
 
 template<typename Dtype>
-void im2col_gpu(
+void im2col_group_gpu(
     const Dtype* data_im, const int bottom_step,
     const int num_images, const int num_channels, const int height, const int width,
 		const int kernel_h, const int kernel_w,
 		const int pad_h, const int pad_w,
 		const int stride_h, const int stride_w,
 		Dtype* data_col, const int top_step);
+
+template<typename Dtype>
+void im2col_group_gpu(
+      const Dtype* data_im,
+      const int* mask,
+      const int num_images,
+      const int num_channels,
+      const int height,
+      const int width,
+      const int kernel_h,
+      const int kernel_w,
+      const int height_out,
+      const int width_out,
+      Dtype* data_col
+      );
 
 template <typename Dtype>
 void col2im_gpu(const Dtype* data_col, const int channels,

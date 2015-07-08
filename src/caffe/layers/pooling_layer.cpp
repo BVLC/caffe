@@ -588,7 +588,7 @@ bool clMaxPoolForward(
 	size_t global1D 	= nthreads;//CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local1D  	= 1;//CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
-	switch(0) {
+	switch(1) {
 	case 1:
 		dim = 3;
 		global 	= &global3D[0];
@@ -892,12 +892,15 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const 
         kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
         mask, top_mask);
     */
+    TIME("caffe::OpenCL::clMaxPoolForward()", {
     BOOL_CHECK(
     		caffe::OpenCL::clMaxPoolForward(count, bottom_data, bottom[0]->num(), channels_,
 					height_, width_, pooled_height_, pooled_width_, kernel_h_,
 					kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
 					mask, top_mask)
     );
+    });
+
     break;
   case PoolingParameter_PoolMethod_AVE:
   	/*
@@ -907,11 +910,13 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const 
         height_, width_, pooled_height_, pooled_width_, kernel_h_,
         kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     */
-  	BOOL_CHECK(
+    TIME("caffe::OpenCL::clAvePoolForward()", {
+    BOOL_CHECK(
   			caffe::OpenCL::clAvePoolForward(count, bottom_data, bottom[0]->num(), channels_,
 					height_, width_, pooled_height_, pooled_width_, kernel_h_,
 					kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data)
   	);
+    });
   	break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     if (this->phase_ == TRAIN) {
@@ -984,6 +989,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const ve
         kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
         bottom_diff);
     */
+    TIME("caffe::OpenCL::clMaxPoolBackward", {
     BOOL_CHECK(
     		caffe::OpenCL::clMaxPoolBackward<Dtype>(
     		        count, top_diff, mask, top_mask, top[0]->num(), channels_,
@@ -991,6 +997,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const ve
     		        kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
     		        bottom_diff)
     );
+    });
     break;
   case PoolingParameter_PoolMethod_AVE:
   	/*
@@ -1000,12 +1007,14 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const ve
         height_, width_, pooled_height_, pooled_width_, kernel_h_,
         kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
     */
+    TIME("caffe::OpenCL::clAvePoolBackward", {
     BOOL_CHECK(
     		caffe::OpenCL::clAvePoolBackward<Dtype>(
     		        count, top_diff, top[0]->num(), channels_,
     		        height_, width_, pooled_height_, pooled_width_, kernel_h_,
     		        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff)
     );
+    });
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
   	/*

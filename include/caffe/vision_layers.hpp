@@ -108,7 +108,14 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   bool bias_term_;
   bool is_1x1_;
 
- private:
+  bool setupMaskIM2COL();
+  bool setupMaskCOL2IM();
+
+  Blob<Dtype> col_buffer_;
+  Blob<int>   index_mask_;
+  Blob<int>   im2col_mask_;
+  Blob<int>   col2im_mask_;
+
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
     im2col_cpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
@@ -133,12 +140,23 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   inline void conv_im2col_gpu(const Dtype* data, const size_t data_offset, Dtype* col_buff, const size_t col_buff_offset) {
     im2col_gpu(data, data_offset, conv_in_channels_, conv_in_height_, conv_in_width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff, col_buff_offset);
   }
+  inline void conv_im2col_gpu_quick(const Dtype* data, const size_t data_offset, Dtype* col_buff, const size_t col_buff_offset) {
+    DLOG(INFO)<<"conv_im2col_gpu_quick called.";
+    im2col_group_gpu(data, this->im2col_mask_.gpu_data(), num_, channels_, height_, width_, kernel_h_, kernel_w_, height_out_, width_out_, col_buff);
+  }
+  inline void conv_im2col_gpu_all(const Dtype* data, const size_t data_offset, Dtype* col_buff, const size_t col_buff_offset) {
+    im2col_gpu(data, data_offset, channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff, col_buff_offset);
+  }
+
+
+
   inline void conv_col2im_gpu(const Dtype* col_buff, const size_t col_buff_offset, Dtype* data, const size_t data_offset) {
     col2im_gpu(col_buff, col_buff_offset, conv_in_channels_, conv_in_height_, conv_in_width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data, data_offset);
   }
-
 #endif
+
+  Blob<Dtype> bias_multiplier_;
 
   int conv_out_channels_;
   int conv_in_channels_;
@@ -150,8 +168,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int col_offset_;
   int output_offset_;
 
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
+ private:
+
 };
 
 /**
@@ -332,7 +350,23 @@ class Im2colLayer : public Layer<Dtype> {
   int stride_h_, stride_w_;
   int channels_;
   int height_, width_;
+  int height_out_, width_out_;
   int pad_h_, pad_w_;
+
+  Blob<int>   index_mask_;
+  Blob<int>   im2col_mask_;
+  Blob<int>   col2im_mask_;
+
+  bool setupMaskIM2COL();
+  bool setupMaskCOL2IM();
+
+ private:
+  bool hasHKernelOverlap();
+  bool hasWKernelOverlap();
+  bool hasKernelOverlap();
+
+  int getHKernelOverlap();
+  int getWKernelOverlap();
 };
 
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.

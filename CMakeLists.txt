@@ -24,9 +24,14 @@ set(python_version "2" CACHE STRING "Specify which python version to use")
 caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
 caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
+caffe_option(ENABLE_GPROF "Build Caffe with GPROF profiling support" OFF)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
+
+if(ENABLE_GPROF)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+endif()
 
 # ---[ Flags
 if(UNIX OR APPLE)

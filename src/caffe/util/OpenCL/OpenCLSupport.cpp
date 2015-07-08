@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include "limits.h"
 #include <exception>
+#include <tr1/memory>
 
 namespace caffe {
 
@@ -166,6 +167,15 @@ const char* what(cl_int value) {
 	case CL_INVALID_GLOBAL_WORK_SIZE:
 		return "CL_INVALID_GLOBAL_WORK_SIZE";
 
+  case CL_QUEUED:
+    return "CL_QUEUED";
+
+  case CL_SUBMITTED:
+    return "CL_SUBMITTED";
+
+  case CL_RUNNING:
+    return "CL_RUNNING";
+
 	case clblasNotImplemented:
 		return "clBLAS: Functionality is not implemented";
 	case clblasNotInitialized:
@@ -275,6 +285,30 @@ bool clMalloc(void** virtualPtr, size_t size) {
 	*virtualPtr = clMem.getVirtualPointer();
 	return true;
 }
+
+bool clGetBuffer(void** virtualPtr, size_t size) {
+
+  std::tr1::shared_ptr<OpenCLPlatform> pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device  = pf->CurrentDevice();
+
+  std::tr1::shared_ptr<OpenCLBuffer> buffer = std::tr1::shared_ptr<OpenCLBuffer>(new OpenCLBuffer(size));;
+  if ( ! device.getBuffer(&buffer, size) ) {
+    return false;
+  }
+  buffer->setUnavailable();
+  *virtualPtr = buffer->getVirtualPointer();
+
+  return true;
+}
+
+bool clBufferSetAvailable(void* virtualPtr, size_t size) {
+
+  std::tr1::shared_ptr<OpenCLPlatform> pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device  = pf->CurrentDevice();
+
+  return device.setBufferAvailable(virtualPtr, size);
+}
+
 
 bool clFree(void* virtualPtr) {
 
@@ -767,6 +801,23 @@ bool clBLASasum(const int N, const void* array_virtual, T* y) {
 		return false;
 	}
 
+  void* asum;
+  caffe::OpenCL::clGetBuffer(&asum, sizeof(T));
+  const void* asum_device;
+  if ( ! clMakeLogical(asum, &asum_device) ) {
+    caffe::OpenCL::clBufferSetAvailable(asum, sizeof(T));
+    return false;
+  }
+
+  void* buf;
+  caffe::OpenCL::clGetBuffer(&buf, N*sizeof(T));
+  const void* buf_device;
+  if ( ! clMakeLogical(buf, &buf_device) ) {
+    caffe::OpenCL::clBufferSetAvailable(buf, N*sizeof(T));
+    return false;
+  }
+
+/*
 	caffe::SyncedMemory asum(sizeof(T));
 	const void* asum_virtual = asum.mutable_gpu_data();
 	const void* asum_logical;
@@ -780,25 +831,35 @@ bool clBLASasum(const int N, const void* array_virtual, T* y) {
 	if ( ! clMakeLogical(buf_virtual, &buf_logical) ) {
 		return false;
 	}
-
+  */
 	const void* array_logical;
 	if ( ! clMakeLogical(array_virtual, &array_logical) ) {
+	  caffe::OpenCL::clBufferSetAvailable(asum, sizeof(T));
+	  caffe::OpenCL::clBufferSetAvailable(buf, N*sizeof(T));
 		return false;
 	}
 
 	if ( typeid(T) == typeid(float) ) {
-		if ( ! CL_CHECK(clblasSasum(N, (cl_mem) asum_logical, 0, (cl_mem) array_logical, 0, 1, (cl_mem) buf_logical, 1, queue, 0, NULL, NULL)) ) {
+		if ( ! CL_CHECK(clblasSasum(N, (cl_mem) asum_device, 0, (cl_mem) array_logical, 0, 1, (cl_mem) buf_device, 1, queue, 0, NULL, NULL)) ) {
+		  caffe::OpenCL::clBufferSetAvailable(asum, sizeof(T));
+		  caffe::OpenCL::clBufferSetAvailable(buf, N*sizeof(T));
 			return false;
 		}
 	}
 
 	if ( typeid(T) == typeid(double) ) {
-		if ( ! CL_CHECK(clblasDasum(N, (cl_mem) asum_logical, 0, (cl_mem) array_logical, 0, 1, (cl_mem) buf_logical, 1, queue, 0, NULL, NULL)) ) {
+		if ( ! CL_CHECK(clblasDasum(N, (cl_mem) asum_device, 0, (cl_mem) array_logical, 0, 1, (cl_mem) buf_device, 1, queue, 0, NULL, NULL)) ) {
+		  caffe::OpenCL::clBufferSetAvailable(asum, sizeof(T));
+		  caffe::OpenCL::clBufferSetAvailable(buf, N*sizeof(T));
 			return false;
 		}
 	}
 
-	*y = *((T*) asum.mutable_cpu_data());
+	//*y = *((T*) asum.mutable_cpu_data());
+  caffe::OpenCL::clMemcpy(y, asum, sizeof(T), caffe::OpenCL::COPY_GPU_TO_CPU);
+  caffe::OpenCL::clBufferSetAvailable(asum, sizeof(T));
+  caffe::OpenCL::clBufferSetAvailable(buf, N*sizeof(T));
+
 	return true;
 }
 template bool clBLASasum<float>(const int N, const void* array_GPU_ptr, float* y);
@@ -1032,10 +1093,12 @@ bool clBLASscal(const int n, const float alpha, const void* array_x_virtual, voi
       LOG(ERROR) << "clblasScopy() failed on GPU "<<device.name();
 			return false;
 		}
+		DLOG(INFO)<<device.name()<<" clblasScopy() succeeded";
 		if ( ! CL_CHECK( clblasSscal(n, alpha, (cl_mem) array_y_logical, 0, 1, 1, queue, 0, NULL, NULL) ) ) {
       LOG(ERROR) << "clblasSscal() failed on GPU "<<device.name();
 			return false;
 		}
+    DLOG(INFO)<<device.name()<<" clblasSscal() succeeded";
 	}
 
 	if( typeid(T) == typeid(double) ) {
@@ -1043,10 +1106,12 @@ bool clBLASscal(const int n, const float alpha, const void* array_x_virtual, voi
       LOG(ERROR) << "clblasDcopy() failed on GPU "<<device.name();
 			return false;
 		}
+    DLOG(INFO)<<device.name()<<" clblasDcopy() succeeded";
 		if ( ! CL_CHECK( clblasDscal(n, alpha, (cl_mem) array_y_logical, 0, 1, 1, queue, 0, NULL, NULL) ) ) {
       LOG(ERROR) << "clblasDscal() failed on GPU "<<device.name();
 			return false;
 		}
+    DLOG(INFO)<<device.name()<<" clblasDscal() succeeded";
 	}
 
 	return true;
@@ -1064,6 +1129,60 @@ bool clBLASdot(const int n, const T* x, const int incx, const T* y, const int in
 		return false;
 	}
 
+  void*   x_base    = clGetMemoryBase(x);
+  if ( ! x_base ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory address for virtual address @ "<<x;
+    return false;
+  }
+  const void* x_device = NULL;
+  if ( ! clMakeLogical(x_base, &x_device) ) {
+    return false;
+  }
+  size_t  x_offset  = clGetMemoryOffset(x);
+  if ( x_offset < 0 ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory offset for virtual address @ "<<x;
+    return false;
+  }
+  x_offset /= sizeof(T);
+  DLOG(INFO)<<x<<" -> "<<x_base<<" with offset = "<<x_offset<<" on "<<x_device;
+
+  void*   y_base    = clGetMemoryBase(y);
+  if ( ! y_base ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory address for virtual address @ "<<y;
+    return false;
+  }
+  const void* y_device = NULL;
+  if ( ! clMakeLogical(y_base, &y_device) ) {
+    return false;
+  }
+  size_t  y_offset  = clGetMemoryOffset(y);
+  if ( y_offset < 0 ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory offset for virtual address @ "<<y;
+    return false;
+  }
+  y_offset /= sizeof(T);
+  DLOG(INFO)<<y<<" -> "<<y_base<<" with offset = "<<y_offset<<" on "<<y_device;
+
+  /*
+  void*   out_base    = clGetMemoryBase(out);
+  if ( ! out_base ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory address for virtual address @ "<<out;
+    return false;
+  }
+  const void* out_device = NULL;
+  if ( ! clMakeLogical(out_base, &out_device) ) {
+    return false;
+  }
+  size_t  out_offset  = clGetMemoryOffset(out);
+  if ( out_offset < 0 ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory offset for virtual address @ "<<out;
+    return false;
+  }
+  out_offset /= sizeof(T);
+  DLOG(INFO)<<out<<" -> "<<out_base<<" with offset = "<<out_offset<<" on "<<out_device;
+  */
+
+/*
 	std::vector<cl_mem> sb;
 	std::map<const void*, std::pair<void*, size_t> > bm;
 
@@ -1076,44 +1195,85 @@ bool clBLASdot(const int n, const T* x, const int incx, const T* y, const int in
 	if ( ! clMakeLogical2(y, &y_logical, sb, bm) ) {
 		return false;
 	}
+	*/
 
+  void* dot;
+  if ( ! caffe::OpenCL::clGetBuffer(&dot, sizeof(T)) )  {
+    LOG(ERROR)<<"failed to get buffer.";
+  }
+  const void* dot_device;
+  if ( ! clMakeLogical(dot, &dot_device) ) {
+    LOG(ERROR)<<"failed to get device";
+    caffe::OpenCL::clBufferSetAvailable(dot, sizeof(T));
+    return false;
+  }
+
+  /*
 	caffe::SyncedMemory dot(sizeof(T));
 	const void* dot_virtual = dot.mutable_gpu_data();
-	const void* dot_logical;
-	if ( ! clMakeLogical2(dot_virtual, &dot_logical, sb, bm) ) {
+	const void* dot_device;
+	if ( ! clMakeLogical(dot_virtual, &dot_device) ) {
 		return false;
 	}
+	*/
 
+  void* buf;
+  if ( ! caffe::OpenCL::clGetBuffer(&buf, n*sizeof(T)) ){
+    LOG(ERROR)<<"failed to get buffer.";
+  }
+  const void* buf_device;
+  if ( ! clMakeLogical(buf, &buf_device) ) {
+    LOG(ERROR)<<"failed to get device.";
+    caffe::OpenCL::clBufferSetAvailable(buf, n*sizeof(T));
+    return false;
+  }
+
+  /*
 	caffe::SyncedMemory buf(n*sizeof(T));
 	const void* buf_virtual = buf.mutable_gpu_data();
-	const void* buf_logical;
+	const void* buf_device;
+
+  if ( ! clMakeLogical(buf_virtual, &buf_device) ) {
+    return false;
+  }
+  */
+	/*
 	if ( ! clMakeLogical2(buf_virtual, &buf_logical, sb, bm) ) {
 		return false;
 	}
-
+	*/
 	if( typeid(T) == typeid(float) ) {
-		if ( ! CL_CHECK( clblasSdot(n, (cl_mem) dot_logical, 0, (cl_mem) x_logical, 0, 1, (cl_mem) y_logical, 0, 1, (cl_mem) buf_logical, 1, queue, 0, NULL, NULL) ) ) {
+		if ( ! CL_CHECK( clblasSdot(n, (cl_mem) dot_device, 0, (cl_mem) x_device, x_offset, 1, (cl_mem) y_device, y_offset, 1, (cl_mem) buf_device, 1, queue, 0, NULL, NULL) ) ) {
       LOG(ERROR) << "clblasSdot() failed on GPU "<<device.name();
-			clReleaseSubBuffers(sb);
-			clReleaseBufferMap(bm);
+      caffe::OpenCL::clBufferSetAvailable(dot, sizeof(T));
+      caffe::OpenCL::clBufferSetAvailable(buf, n*sizeof(T));
+      //clReleaseSubBuffers(sb);
+			//clReleaseBufferMap(bm);
 			return false;
 		}
     DLOG(INFO) << "clblasSdot() succeeded on GPU "<<device.name();
 	}
 
 	if( typeid(T) == typeid(double) ) {
-		if ( ! CL_CHECK( clblasDdot(n, (cl_mem) dot_logical, 0, (cl_mem) x_logical, 0, 1, (cl_mem) y_logical, 0, 1, (cl_mem) buf_logical, 1, queue, 0, NULL, NULL) ) ) {
+		if ( ! CL_CHECK( clblasDdot(n, (cl_mem) dot_device, 0, (cl_mem) x_device, x_offset, 1, (cl_mem) y_device, y_offset, 1, (cl_mem) buf_device, 1, queue, 0, NULL, NULL) ) ) {
       LOG(ERROR) << "clblasDdot() failed on GPU "<<device.name();
-			clReleaseSubBuffers(sb);
-			clReleaseBufferMap(bm);
+      caffe::OpenCL::clBufferSetAvailable(dot, sizeof(T));
+      caffe::OpenCL::clBufferSetAvailable(buf, n*sizeof(T));
+			//clReleaseSubBuffers(sb);
+			//clReleaseBufferMap(bm);
 			return false;
 		}
     DLOG(INFO) << "clblasDdot() succeeded on GPU "<<device.name();
 	}
 
-	clReleaseSubBuffers(sb);
-	clReleaseBufferMap(bm);
-	*out = *((T*) dot.mutable_cpu_data());
+	//clReleaseSubBuffers(sb);
+	//clReleaseBufferMap(bm);
+
+	caffe::OpenCL::clMemcpy(out, dot, sizeof(T), caffe::OpenCL::COPY_GPU_TO_CPU);
+
+  caffe::OpenCL::clBufferSetAvailable(dot, sizeof(T));
+  caffe::OpenCL::clBufferSetAvailable(buf, n*sizeof(T));
+
 	return true;
 }
 template bool clBLASdot<float>(const int n, const float* x, const int incx, const float* y, const int incy, float* out);
@@ -1437,19 +1597,7 @@ bool clgemm(
   DLOG(INFO)<<"GSIZE = ( "<<global[0]<<" | "<<global[1]<<" )";
   DLOG(INFO)<<"LSIZE = ( "<<local[0]<<" | "<<local[1]<<" )";
 
-  //cl_event block;
-  err = clEnqueueNDRangeKernel(*queue, *kernel, numKernelDims, NULL, global, local, 0, NULL, NULL);
-  //clWaitForEvents(1, &block);
-
-  /*
-  if ( event == NULL ) {
-    cl_event block;
-    err = clEnqueueNDRangeKernel(*queue, *kernel, numKernelDims, NULL, global, local, 0, NULL, &block);
-    clWaitForEvents(1, &block);
-  } else {
-    err = clEnqueueNDRangeKernel(*queue, *kernel, numKernelDims, NULL, global, local, 0, NULL, event);
-  }
-  */
+  err = clEnqueueNDRangeKernel(*queue, *kernel, numKernelDims, NULL, global, local, 0, NULL, event);
   if ( err != CL_SUCCESS ) {
     std::ostringstream oss;
     oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<what(err);
@@ -1482,6 +1630,153 @@ template bool clgemm<double>(
     const double beta,
     double* C, const size_t idx_offset_C,
     cl_event* event);
+
+template<typename T>
+bool cl_group_gemm(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m, const int n, const int k,
+    const int gm, const int gn, const int gk,
+    const T alpha,
+    const T* A, const size_t idx_offset_A,
+    const T* B, const size_t idx_offset_B,
+    const T beta,
+    T* C, const size_t idx_offset_C, cl_event* event
+    ) {
+
+
+  if ( gm != 1 ) {
+    LOG(ERROR)<<"partition of M = "<<m<<" into GM = "<<gm<<" currently not supported";
+    return false;
+  }
+  if ( gk != 1 ) {
+    LOG(ERROR)<<"partition of K = "<<m<<" into GK = "<<gk<<" currently not supported";
+    return false;
+  }
+  if ( n % gn != 0  ) {
+    LOG(ERROR)<<"partition of N = "<<n<<" into GN = "<<gn<<" must be even such that N % GN = 0 ";
+    return false;
+  }
+  if (TransA != clblasNoTrans && TransB != clblasNoTrans) {
+    LOG(ERROR)<<"TransA != clblasNoTrans or TransB != clblasNoTrans currently not supported";
+    return false;
+  }
+
+  std::tr1::shared_ptr<OpenCLPlatform> pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice&   device  = pf->CurrentDevice();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
+
+  if ( ! queue ) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
+    return false;
+  }
+
+  int block_size_x;
+  int block_size_y;
+  std::string kernel_name;
+	int numKernelDims = 0;
+
+	if (TransA == clblasNoTrans && TransB == clblasNoTrans) {
+	  kernel_name = clGetKernelName<T>("group_mmul_NA_NB");
+	}
+	if (TransA == clblasTrans && TransB == clblasTrans) {
+	  kernel_name = clGetKernelName<T>("mmul_TA_TB");
+	}
+	if (TransA == clblasTrans && TransB == clblasNoTrans) {
+	  kernel_name = clGetKernelName<T>("mmul_TA_NB");
+	}
+	if (TransA == clblasNoTrans && TransB == clblasTrans) {
+	  kernel_name = clGetKernelName<T>("mmul_NA_TB");
+	}
+
+	block_size_x = OPENCL_BLOCK_SIZE;
+	block_size_y = OPENCL_BLOCK_SIZE;
+	numKernelDims = 2;
+
+	cl_kernel* kernel = device.getKernel(kernel_name);
+	if (kernel == NULL) {
+	  return false;
+	}
+
+  CL_SET_KERNEL_ARG
+  CL_SET_TYPE_KERNEL_ARG(int, m, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, k, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, gm, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, gn, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, gk, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A, kernel)
+  CL_SET_TYPE_KERNEL_ARG(size_t, idx_offset_A, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&B, kernel)
+  CL_SET_TYPE_KERNEL_ARG(size_t, idx_offset_B, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, beta, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&C, kernel)
+  CL_SET_TYPE_KERNEL_ARG(size_t, idx_offset_C, kernel)
+
+  size_t* global = (size_t*) malloc(numKernelDims*sizeof(size_t));
+  size_t* local  = (size_t*) malloc(numKernelDims*sizeof(size_t));
+
+  int global_x = 0;
+  int global_y = 0;
+
+  if ( n % block_size_x == 0 ) {
+    global_x = n;
+  } else {
+    global_x = (n/block_size_x + 1)*block_size_x;
+  }
+
+  if ( m % block_size_y == 0 ) {
+    global_y = m;
+  } else {
+    global_y = (m/block_size_y + 1)*block_size_y;
+  }
+
+  global[0] = global_x;
+  global[1] = global_y;
+  local[0]  = block_size_x;
+  local[1]  = block_size_y;
+
+  DLOG(INFO)<<"MNK   = ( "<<m<<" | "<<n<<" | " << k <<" )";
+  DLOG(INFO)<<"GSIZE = ( "<<global[0]<<" | "<<global[1]<<" )";
+  DLOG(INFO)<<"LSIZE = ( "<<local[0]<<" | "<<local[1]<<" )";
+
+  err = clEnqueueNDRangeKernel(*queue, *kernel, numKernelDims, NULL, global, local, 0, NULL, event);
+  if ( err != CL_SUCCESS ) {
+    std::ostringstream oss;
+    oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<what(err);
+    LOG(ERROR)<<oss.str();
+    throw OpenCLSupportException(oss.str());
+    return false;
+  }
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
+
+  CL_SET_KERNEL_ARG_END
+  return true;
+}
+template bool cl_group_gemm<float>(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m, const int n, const int k,
+    const int gm, const int gn, const int gk,
+    const float alpha,
+    const float* A, const size_t idx_offset_A,
+    const float* B, const size_t idx_offset_B,
+    const float beta,
+    float* C, const size_t idx_offset_C,
+    cl_event* event);
+template bool cl_group_gemm<double>(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m, const int n, const int k,
+    const int gm, const int gn, const int gk,
+    const double alpha,
+    const double* A, const size_t idx_offset_A,
+    const double* B, const size_t idx_offset_B,
+    const double beta,
+    double* C, const size_t idx_offset_C,
+    cl_event* event);
+
 
 template<typename T>
 bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* x, const T beta, T* y) {
@@ -1553,13 +1848,13 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
   int ldc = n;
 
   if( typeid(T) == typeid(float) ) {
+
     if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
        LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
        return false;
      }
      DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<device.name();
   }
-
 
   if( typeid(T) == typeid(double) ) {
     if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
@@ -1575,6 +1870,15 @@ template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTrans
 
 template<typename T>
 bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* x, const size_t idx_offset_x, const T beta, T* y, const size_t idx_offset_y) {
+
+    return clBLASgemm(TransA, TransB, m, n, k, alpha, A, idx_offset_A, x, idx_offset_x, beta, y, idx_offset_y, NULL);
+}
+template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const float alpha, const float* A, const size_t idx_offset_A, const float* x, const size_t idx_offset_x, const float beta, float* y, const size_t idx_offset_y);
+template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const double alpha, const double* A, const size_t idx_offset_A, const double* x, const size_t idx_offset_x, const double beta, double* y, const size_t idx_offset_y);
+
+
+template<typename T>
+bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const size_t idx_offset_A, const T* x, const size_t idx_offset_x, const T beta, T* y, const size_t idx_offset_y, cl_event* event) {
 
   OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
 
@@ -1607,8 +1911,9 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 	int ldb = (TransB == clblasNoTrans) ? n : k;
 	int ldc = n;
 
+	//LOG(INFO)<<"M x N x K = "<<m<<" x "<<n<<" x "<<k;
 	if( typeid(T) == typeid(float) ) {
-		if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, idx_offset_A, lda, (cl_mem) x_logical, idx_offset_x, ldb, beta, (cl_mem) y_logical, idx_offset_y, ldc, OPENCL_NUM_COMMAND_QUEUES, queue, 0, NULL, NULL) ) ) {
+		if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, idx_offset_A, lda, (cl_mem) x_logical, idx_offset_x, ldb, beta, (cl_mem) y_logical, idx_offset_y, ldc, 1, queue, 0, NULL, event) ) ) {
       LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
 			return false;
 		}
@@ -1616,7 +1921,7 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 	}
 
 	if( typeid(T) == typeid(double) ) {
-		if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, idx_offset_A, lda, (cl_mem) x_logical, idx_offset_x, ldb, beta, (cl_mem) y_logical, idx_offset_y, ldc, OPENCL_NUM_COMMAND_QUEUES, queue, 0, NULL, NULL) ) ) {
+		if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, idx_offset_A, lda, (cl_mem) x_logical, idx_offset_x, ldb, beta, (cl_mem) y_logical, idx_offset_y, ldc, 1, queue, 0, NULL, event) ) ) {
       LOG(ERROR) << "clblasDgemm() failed on GPU "<<device.name();
 			return false;
 		}
@@ -1628,8 +1933,92 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 
 	return true;
 }
-template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const float alpha, const float* A, const size_t idx_offset_A, const float* x, const size_t idx_offset_x, const float beta, float* y, const size_t idx_offset_y);
-template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const double alpha, const double* A, const size_t idx_offset_A, const double* x, const size_t idx_offset_x, const double beta, double* y, const size_t idx_offset_y);
+template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const float alpha, const float* A, const size_t idx_offset_A, const float* x, const size_t idx_offset_x, const float beta, float* y, const size_t idx_offset_y, cl_event* event);
+template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const double alpha, const double* A, const size_t idx_offset_A, const double* x, const size_t idx_offset_x, const double beta, double* y, const size_t idx_offset_y, cl_event* event);
+
+
+template<typename T>
+bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB,
+    const int m, const int n, const int k,
+    const T alpha,
+    const T* A, const size_t idx_offset_A, const size_t lda,
+    const T* x, const size_t idx_offset_x, const size_t ldx,
+    const T beta,
+    T* y, const size_t idx_offset_y, const size_t ldy,
+    cl_event* event) {
+
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform()->CurrentDevice();
+
+  cl_command_queue* queue = device.getCurrentCommandQueue();
+  if ( ! queue ) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
+    return false;
+  }
+
+  std::vector<cl_mem> sb;
+  std::map<const void*, std::pair<void*, size_t> > bm;
+
+  const void* A_logical;
+  if ( ! clMakeLogical2(A, &A_logical, sb, bm) ) {
+    return false;
+  }
+
+  const void* x_logical;
+  if ( ! clMakeLogical2(x, &x_logical, sb, bm) ) {
+    return false;
+  }
+
+  const void* y_logical;
+  if ( ! clMakeLogical2(y, &y_logical, sb, bm) ) {
+    return false;
+  }
+
+  // Note that cublas follows fortran order.
+  /*
+  int lda = (TransA == clblasNoTrans) ? k : m;
+  int ldb = (TransB == clblasNoTrans) ? n : k;
+  int ldc = n;
+  */
+
+  LOG(INFO)<<"M x N x K = "<<m<<" x "<<n<<" x "<<k;
+  LOG(INFO)<<"LDA x LDB x LDC = "<<lda<<" x "<<ldx<<" x "<<ldy;
+  if( typeid(T) == typeid(float) ) {
+    if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, idx_offset_A, lda, (cl_mem) x_logical, idx_offset_x, ldx, beta, (cl_mem) y_logical, idx_offset_y, ldy, 1, queue, 0, NULL, event) ) ) {
+      LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
+      return false;
+    }
+    DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<device.name();
+  }
+
+  if( typeid(T) == typeid(double) ) {
+    if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, idx_offset_A, lda, (cl_mem) x_logical, idx_offset_x, ldx, beta, (cl_mem) y_logical, idx_offset_y, ldy, 1, queue, 0, NULL, event) ) ) {
+      LOG(ERROR) << "clblasDgemm() failed on GPU "<<device.name();
+      return false;
+    }
+    DLOG(INFO) << "clblasDgemm() succeeded on GPU "<<device.name();
+  }
+
+  clReleaseBufferMap(bm);
+  clReleaseSubBuffers(sb);
+
+  return true;
+}
+template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB,
+    const int m, const int n, const int k,
+    const float alpha,
+    const float* A, const size_t idx_offset_A, const size_t lda,
+    const float* x, const size_t idx_offset_x, const size_t ldx,
+    const float beta,
+    float* y, const size_t idx_offset_y, const size_t ldy,
+    cl_event* event);
+template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTranspose TransB,
+    const int m, const int n, const int k,
+    const double alpha,
+    const double* A, const size_t idx_offset_A, const size_t lda,
+    const double* x, const size_t idx_offset_x, const size_t ldx,
+    const double beta,
+    double* y, const size_t idx_offset_y, const size_t ldy,
+    cl_event* event);
 
 
 template<typename T>
