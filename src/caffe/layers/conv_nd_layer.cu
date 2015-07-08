@@ -67,6 +67,10 @@ void ConvolutionNDLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
     }
 #endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    // TODO
+#endif  // USE_GREENTEA
   }
 }
 

@@ -205,11 +205,17 @@ void Caffe::EnumerateDevices() {
   for (std::size_t platform_id = 0; platform_id < platforms.size();
       ++platform_id) {
     typedef std::vector<viennacl::ocl::device> devices_type;
-    devices_type devices = platforms[platform_id].devices(CL_DEVICE_TYPE_ALL);
-    for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
-      platform_devices.push_back(
-          std::make_tuple(platforms[platform_id], devices[device_id]));
-      greentea_device_count++;
+    try {
+      devices_type devices = platforms[platform_id].devices(CL_DEVICE_TYPE_ALL);
+      for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
+        platform_devices.push_back(
+            std::make_tuple(platforms[platform_id], devices[device_id]));
+        greentea_device_count++;
+      }
+    } catch (...) {
+      LOG(INFO)<< "OpenCL platform: "
+      << platforms[platform_id].info()
+      << " does not work correctly.";
     }
   }
 #endif
@@ -294,43 +300,52 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   for (std::size_t platform_id = 0; platform_id < platforms.size();
       ++platform_id) {
     typedef std::vector<viennacl::ocl::device> devices_type;
-    devices_type devices = platforms[platform_id].devices(CL_DEVICE_TYPE_ALL);
-    for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
-      platform_devices.push_back(
-          std::make_tuple(platforms[platform_id], devices[device_id]));
-      Get().device_contexts_.emplace_back(
-          DeviceContext(cuda_device_count + greentea_device_count,
-                        Backend::BACKEND_OpenCL));
-      // Check if this device is really used and initialize
-      bool is_used = false;
-      for (int i = 0; i < device_ids.size(); ++i) {
-        int device_id = device_ids[i];
-        if (device_id == cuda_device_count + greentea_device_count) {
-          // Setup actual context and compile kernels for this device
-          viennacl::ocl::setup_context(
-              device_id, std::get<1>(platform_devices[greentea_device_count]));
-          viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-              static_cast<uint64_t>(device_id));
-          viennacl::ocl::program & program = RegisterKernels(&ctx);
-          Get().ocl_programs_.push_back(program);
-          // viennacl::ocl::switch_context(device_id);
-          // viennacl::ocl::switch_device(std::get<1>
-          // (platform_devices[device_id - cuda_device_count]));
+    try {
+      devices_type devices = platforms[platform_id].devices(
+                                                  CL_DEVICE_TYPE_ALL);
+      for (std::size_t device_id = 0; device_id < devices.size();
+                                          ++device_id) {
+        platform_devices.push_back(
+            std::make_tuple(platforms[platform_id], devices[device_id]));
+        Get().device_contexts_.emplace_back(
+            DeviceContext(cuda_device_count + greentea_device_count,
+                          Backend::BACKEND_OpenCL));
+        // Check if this device is really used and initialize
+        bool is_used = false;
+        for (int i = 0; i < device_ids.size(); ++i) {
+          int device_id = device_ids[i];
+          if (device_id == cuda_device_count + greentea_device_count) {
+            // Setup actual context and compile kernels for this device
+            viennacl::ocl::setup_context(
+                device_id, std::get<1>(
+                    platform_devices[greentea_device_count]));
+            viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+                static_cast<uint64_t>(device_id));
+            viennacl::ocl::program & program = RegisterKernels(&ctx);
+            Get().ocl_programs_.push_back(program);
+            // viennacl::ocl::switch_context(device_id);
+            // viennacl::ocl::switch_device(std::get<1>
+            // (platform_devices[device_id - cuda_device_count]));
 
-          // Add defined number of queues
-          for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
-            ctx.add_queue(ctx.current_device());
+            // Add defined number of queues
+            for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
+              ctx.add_queue(ctx.current_device());
+            }
+            Caffe::GetDeviceContext(device_id)->Init();
+            is_used = true;
           }
-          Caffe::GetDeviceContext(device_id)->Init();
-          is_used = true;
         }
+        // Device not used, dummy
+        if (!is_used) {
+          viennacl::ocl::program program;
+          Get().ocl_programs_.push_back(program);
+        }
+        greentea_device_count++;
       }
-      // Device not used, dummy
-      if (!is_used) {
-        viennacl::ocl::program program;
-        Get().ocl_programs_.push_back(program);
-      }
-      greentea_device_count++;
+    } catch (...) {
+      LOG(INFO)<< "OpenCL platform: "
+      << platforms[platform_id].info()
+      << " does not work correctly.";
     }
   }
 #endif  // USE_GREENTEA
