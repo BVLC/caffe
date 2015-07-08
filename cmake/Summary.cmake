@@ -87,7 +87,7 @@ endfunction()
 
 
 ################################################################################################
-# Prints accumulatd caffe configuration summary
+# Prints accumulated caffe configuration summary
 # Usage:
 #   caffe_print_configuration_summary()
 
@@ -119,7 +119,7 @@ function(caffe_print_configuration_summary)
   caffe_status("  BLAS              : " APPLE THEN "Yes (vecLib)" ELSE "Yes (${BLAS})")
   caffe_status("  Boost             :   Yes (ver. ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION})")
   caffe_status("  glog              :   Yes")
-  caffe_status("  gflags            :   Yes")  
+  caffe_status("  gflags            :   Yes")
   caffe_status("  protobuf          : " PROTOBUF_FOUND THEN "Yes (ver. ${PROTOBUF_VERSION})" ELSE "No" )
   caffe_status("  lmdb              : " LMDB_FOUND THEN "Yes (ver. ${LMDB_VERSION})" ELSE "No")
   caffe_status("  Snappy            : " SNAPPY_FOUND THEN "Yes (ver. ${Snappy_VERSION})" ELSE "No" )
