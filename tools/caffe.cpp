@@ -116,8 +116,8 @@ int train() {
   // Set device id and mode
   if (FLAGS_gpu >= 0) {
     LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
-    Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
+    Caffe::SetDevice(FLAGS_gpu);
   } else {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
@@ -150,8 +150,8 @@ int test() {
   // Set device id and mode
   if (FLAGS_gpu >= 0) {
     LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
-    Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
+    Caffe::SetDevice(FLAGS_gpu);
   } else {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
@@ -215,8 +215,8 @@ int time() {
   // Set device id and mode
   if (FLAGS_gpu >= 0) {
     LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
-    Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
+    Caffe::SetDevice(FLAGS_gpu);
   } else {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
