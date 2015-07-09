@@ -181,7 +181,7 @@ void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
 #ifndef CPU_ONLY
 #ifdef USE_GREENTEA
-  if (Caffe::mode() == Caffe::Brew::GPU) {
+  if (Caffe::mode() == Caffe::Brew::GPU && gpu_ptr_ != nullptr) {
     if (device_context_->backend() == Backend::BACKEND_OpenCL) {
       viennacl::ocl::context ctx = viennacl::ocl::get_context(
           device_context_->id());
