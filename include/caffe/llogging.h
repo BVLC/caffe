@@ -18,6 +18,7 @@
 #undef LOG_IF
 #undef CHECK
 #undef CHECK_OP_LOG
+#undef CHECK_LE
 #ifdef DEBUG
 #undef CHECK_EQ
 #endif
