@@ -4,7 +4,7 @@
 #   Caffe and this config file depends on opencv,
 #   so put `find_package(OpenCV)` before searching Caffe
 #   via `find_package(Caffe)`. All other lib/includes
-#   dependencies are hard coded int the file
+#   dependencies are hard coded in the file
 #
 # After successful configuration the following variables
 # will be defined:
@@ -15,7 +15,7 @@
 #
 #   Caffe_HAVE_CUDA    - signals about CUDA support
 #   Caffe_HAVE_CUDNN   - signals about cuDNN support
- 
+
 
 # OpenCV dependency
 
@@ -40,7 +40,7 @@ get_filename_component(Caffe_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 set(Caffe_INCLUDE_DIRS "@Caffe_INCLUDE_DIRS@")
 
 @Caffe_INSTALL_INCLUDE_DIR_APPEND_COMMAND@
- 
+
 # Our library dependencies
 if(NOT TARGET caffe AND NOT caffe_BINARY_DIR)
   include("${Caffe_CMAKE_DIR}/CaffeTargets.cmake")
