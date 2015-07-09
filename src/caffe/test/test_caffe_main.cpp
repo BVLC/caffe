@@ -4,6 +4,10 @@
 #include "caffe/caffe.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 
+#ifndef TEST_DEVICE
+#define TEST_DEVICE 0
+#endif
+
 namespace caffe {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
