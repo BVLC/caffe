@@ -757,28 +757,28 @@ TYPED_TEST(BLASTest, BLASTestValidationGEMMOffset) {
     m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,1,1, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,1,1,1, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,1,1,1, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,1,1,1, 1.0, 1.0);
   }
 
   for ( int i = 0; i < 10; i++ ) {
     m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     k = 1;
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 0.0);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,m,n,k, 1.0, 1.0);
-    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
-    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,m,n,k, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,1,1,1, 1.0, 0.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,1,1, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasNoTrans, m,n,k,1,1,1, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m,n,k,1,1,1, 1.0, 1.0);
+    this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m,n,k,1,1,1, 1.0, 1.0);
   }
 
 }

@@ -265,6 +265,10 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
+  //SNAPSHOT("REF", ref_top_data, this->blob_top_->count());
+  //SNAPSHOT("GPU", top_data, this->blob_top_->count());
+  //DIFFSHOT("DIFF", top_data, ref_top_data, this->blob_top_->count());
+
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();

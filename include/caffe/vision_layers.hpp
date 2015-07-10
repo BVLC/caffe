@@ -54,41 +54,62 @@ class BaseConvolutionLayer : public Layer<Dtype> {
       Dtype* output,
       bool skip_im2col = false);
 
-#if defined(USE_OPENCL)
-  void forward_gpu_gemm(
-      const Dtype* col_input, const size_t col_input_offset,
-      const Dtype* weights, const size_t weights_offset,
-      Dtype* output, const size_t output_offset,
-      bool skip_im2col = false);
-#endif
+  void forward_gpu_bias(
+      Dtype* output,
+      const Dtype* bias);
 
-  void forward_gpu_bias(Dtype* output, const Dtype* bias);
-
-#if defined(USE_OPENCL)
-  void forward_gpu_bias(Dtype* output, const size_t output_offset, const Dtype* bias);
-#endif
-
-  void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
+  void backward_gpu_gemm(
+      const Dtype* input,
+      const Dtype* weights,
       Dtype* col_output);
 
+  void weight_gpu_gemm(
+      const Dtype* col_input,
+      const Dtype* output,
+      Dtype* weights);
+
+  void backward_gpu_bias(
+      Dtype* bias,
+      const Dtype* input);
+
 #if defined(USE_OPENCL)
+  void forward_gpu_gemm(
+      const Dtype* col_input,
+      const size_t col_input_offset,
+      const Dtype* weights,
+      const size_t weights_offset,
+      Dtype* output,
+      const size_t output_offset,
+      bool skip_im2col = false);
+
+  void forward_gpu_bias(
+      Dtype* output,
+      const size_t output_offset,
+      const Dtype* bias);
+
   void backward_gpu_gemm(
-      const Dtype* input, const size_t input_offset,
-      const Dtype* weights, const size_t weights_offset,
-      Dtype* col_output, const size_t col_output_offset);
-#endif
+      const Dtype* input,
+      const size_t input_offset,
+      const Dtype* weights,
+      const size_t weights_offset,
+      Dtype* col_output,
+      const size_t col_output_offset);
 
-  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype* weights);
-#if defined(USE_OPENCL)
-  void weight_gpu_gemm(const Dtype* col_input, const size_t col_input_offset, const Dtype* output, const size_t output_offset, Dtype* weights, const size_t weights_offset);
-#endif
+  void weight_gpu_gemm(
+      const Dtype* col_input,
+      const size_t col_input_offset,
+      const Dtype* output,
+      const size_t output_offset,
+      Dtype* weights,
+      const size_t weights_offset);
 
-  void backward_gpu_bias(Dtype* bias, const Dtype* input);
-#if defined(USE_OPENCL)
-  void backward_gpu_bias(Dtype* bias, const size_t bias_offset, const Dtype* input, const size_t input_offset);
-#endif
-
-#endif
+  void backward_gpu_bias(
+      Dtype* bias,
+      const size_t bias_offset,
+      const Dtype* input,
+      const size_t input_offset);
+#endif // OpenCL Only
+#endif // OpenCL or CUDA
 
   // reverse_dimensions should return true iff we are implementing deconv, so
   // that conv helpers know which dimensions are which.
@@ -110,6 +131,11 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
   bool setupMaskIM2COL();
   bool setupMaskCOL2IM();
+
+  size_t getChannelNumPixels();
+  size_t getImageNumPixels();
+  size_t getImageColLength();
+  size_t getChannelColLength();
 
   Blob<Dtype> col_buffer_;
   Blob<int>   index_mask_;

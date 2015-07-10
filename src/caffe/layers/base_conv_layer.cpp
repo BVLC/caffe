@@ -103,6 +103,28 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 }
 
+
+template <typename Dtype>
+size_t BaseConvolutionLayer<Dtype>::getChannelNumPixels() {
+  return height_*width_;
+}
+
+template <typename Dtype>
+size_t BaseConvolutionLayer<Dtype>::getImageNumPixels() {
+  return channels_*getChannelNumPixels();
+}
+
+template <typename Dtype>
+size_t BaseConvolutionLayer<Dtype>::getChannelColLength() {
+  return height_out_*width_out_;
+}
+
+template <typename Dtype>
+size_t BaseConvolutionLayer<Dtype>::getImageColLength() {
+  return kernel_dim_*getChannelColLength();
+}
+
+
 template <typename Dtype>
 bool BaseConvolutionLayer<Dtype>::setupMaskIM2COL() {
 
@@ -117,6 +139,8 @@ bool BaseConvolutionLayer<Dtype>::setupMaskIM2COL() {
   DLOG(INFO)<<"channels_   = "<<channels_;
   DLOG(INFO)<<"kernel_h_   = "<<kernel_h_;
   DLOG(INFO)<<"kernel_w_   = "<<kernel_w_;
+  DLOG(INFO)<<"stride_h_   = "<<kernel_h_;
+  DLOG(INFO)<<"stride_w_   = "<<kernel_w_;
   DLOG(INFO)<<"height_out_ = "<<height_out_;
   DLOG(INFO)<<"width_out_  = "<<width_out_;
 
@@ -317,22 +341,19 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(
   const Dtype* col_buff     = input;
   size_t col_buffer_offset  = input_offset;
 
-  /*
   if (!is_1x1_) {
     if (!skip_im2col) {
-      TIME("forward_gpu_gemm()->conv_im2col_gpu()",
-          {
-              //conv_im2col_gpu((const Dtype*) input + input_offset, col_buffer_.mutable_gpu_data());
-              conv_im2col_gpu(input, input_offset, col_buffer_.mutable_gpu_data(), 0);
-          });
+      //conv_im2col_gpu((const Dtype*) input + input_offset, col_buffer_.mutable_gpu_data());
+      conv_im2col_gpu(input, input_offset, col_buffer_.mutable_gpu_data(), 0);
       col_buffer_offset = 0;
+
     }
     TIME("forward_gpu_gemm()->col_buffer_.gpu_data()",
         {
     col_buff = col_buffer_.gpu_data();
         });
   }
-  */
+
   TIME("2nd step()",
       {
   for (int g = 0; g < group_; ++g) {
@@ -346,12 +367,6 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(
             (Dtype)0., (Dtype*) output + output_offset + output_offset_ * g);
         */
 
-        /*
-        LOG(INFO)<<"conv_out_channels_    = "<<conv_out_channels_;
-        LOG(INFO)<<"group_                = "<<group_;
-        LOG(INFO)<<"conv_out_spatial_dim_ = "<<conv_out_spatial_dim_;
-        LOG(INFO)<<"kernel_dim_           = "<<kernel_dim_;
-        */
         size_t M = conv_out_channels_ /group_;
         size_t N = conv_out_spatial_dim_;
         size_t K = kernel_dim_ / group_;
@@ -362,6 +377,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(
             (Dtype)1., (Dtype*) weights, weights_offset + weight_offset_ * g,
             col_buff, col_buffer_offset + col_offset_ * g,
             (Dtype)0., (Dtype*) output, output_offset + output_offset_ * g);
+
     });
   }
     });
@@ -399,7 +415,6 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
             (Dtype) 0.,
             (Dtype*) output +  output_offset_ * g);
         */
-
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
             group_, conv_out_spatial_dim_, kernel_dim_ / group_,
             (Dtype)1., (Dtype*) weights, weight_offset_ * g,

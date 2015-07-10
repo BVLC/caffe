@@ -200,7 +200,7 @@ int Im2colLayer<Dtype>::getWKernelOverlap() {
 					// image by image using clim2col kernel
 				  //im2col_gpu(bottom_data + bottom[0]->offset(n), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data + (top)[0]->offset(n));
 
-				  // image by image using clim2col_perf4 kernel
+				  // image by image using clim2col_perf2 kernel
 				  im2col_gpu(bottom_data, bottom[0]->offset(n), channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, top_data, (top)[0]->offset(n));
 				}
 				break;

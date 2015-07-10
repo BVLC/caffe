@@ -73,6 +73,8 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
 
     typedef typename TypeParam::Dtype Dtype;
 
+    LOG(INFO)<<"TestForwardValidation() : images("<<num_images<<") channels("<<num_channels<<") height("<<im_height<<") width("<<im_width<<")";
+
     blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
     blob_bottom_vec_.clear();
     blob_bottom_vec_.push_back(blob_bottom_);
@@ -157,16 +159,17 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
     }
 
     // print bottom
+    Dtype* array = (Dtype*) this->blob_bottom_->cpu_data();
     for(int n = 0; n < BTMnum; n++ ) {
       for(int c = 0; c < BTMchannels; c++ ) {
-        //SNAPSHOT2D("N"<<n<<"C"<<c, this->blob_bottom_->cpu_data() + n*BTMchannels*BTMheight*BTMwidth + c*BTMheight*BTMwidth, BTMheight, BTMwidth);
+        //SNAPSHOT2D("N"<<n<<"C"<<c, array + n*BTMchannels*BTMheight*BTMwidth + c*BTMheight*BTMwidth, BTMheight, BTMwidth);
       }
     }
 
     // print top
     for(int n = 0; n < TOPnum; n++ ) {
       for(int c = 0; c < TOPchannels; c++ ) {
-        //SNAPSHOT2D("N"<<n<<"C"<<c, this->blob_top_->cpu_data() + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, TOPheight, TOPwidth);
+        //SNAPSHOT2D("N"<<n<<"C"<<c,  gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, TOPheight, TOPwidth);
         //DIFFSHOT2D("N"<<n<<"C"<<c, \
             cpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, \
             gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, \
@@ -225,9 +228,23 @@ TYPED_TEST(Im2colLayerTest, TestForwardValidation) {
   convolution_param->set_stride(2);
   convolution_param->set_pad(0);
 
-  //this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 32, 32);
-  //this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 5, 6);
-  this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 4, 6);
+  srand (time(NULL));
+  int min = 3;
+  int max = 64;
+
+  int h;
+  int w;
+
+  for( int im = 1; im <= 3; im++ ) {
+    for( int ch = 1; ch <= 3; ch++ ) {
+      for ( int i = 0; i < 10; i++ ) {
+        h = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+        w = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+        this->Im2colLayerTestForwardValidation(layer_param, im, ch, h, w);
+      }
+    }
+  }
+  this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 6, 4);
 }
 
 TYPED_TEST(Im2colLayerTest, TestGradient) {
