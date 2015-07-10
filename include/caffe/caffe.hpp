@@ -6,6 +6,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"

@@ -108,6 +108,30 @@ void* SyncedMemory::mutable_gpu_data() {
 #endif
 }
 
+const void* SyncedMemory::data(Caffe::Brew brew) {
+  switch (brew) {
+  case Caffe::CPU:
+    return cpu_data();
+  case Caffe::GPU:
+    return gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe brew.";
+    return static_cast<void*>(0);
+  }
+}
+
+void* SyncedMemory::mutable_data(Caffe::Brew brew) {
+  switch (brew) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe brew.";
+    return static_cast<void*>(0);
+  }
+}
+
 
 }  // namespace caffe
 

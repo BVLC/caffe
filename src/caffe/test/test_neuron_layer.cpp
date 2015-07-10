@@ -164,12 +164,26 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(NeuronLayerTest, TestAbsVal) {
+TYPED_TEST(NeuronLayerTest, TestAbsValForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   AbsValLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data    = this->blob_top_->cpu_data();
+  const int count = this->blob_bottom_->count();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_EQ(top_data[i], fabs(bottom_data[i]));
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestAbsValBrewAwareForward) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  AbsValLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.forward(Caffe::CPU, this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* bottom_data = this->blob_bottom_->cpu_data();
   const Dtype* top_data    = this->blob_top_->cpu_data();
   const int count = this->blob_bottom_->count();
