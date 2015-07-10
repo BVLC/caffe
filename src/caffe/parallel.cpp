@@ -119,18 +119,21 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 #ifndef CPU_ONLY
   vector<int> remaining(devices);
 
-  // Group GPUs by board
-  for (int i = 0; i < remaining.size(); ++i) {
-    for (int j = i + 1; j < remaining.size(); ++j) {
-      cudaDeviceProp a, b;
-      CUDA_CHECK(cudaGetDeviceProperties(&a, remaining[i]));
-      CUDA_CHECK(cudaGetDeviceProperties(&b, remaining[j]));
-      if (a.isMultiGpuBoard && b.isMultiGpuBoard) {
-        if (a.multiGpuBoardGroupID == b.multiGpuBoardGroupID) {
-          pairs->push_back(DevicePair(remaining[i], remaining[j]));
-          DLOG(INFO) << "GPU board: " << remaining[i] << ":" << remaining[j];
-          remaining.erase(remaining.begin() + j);
-          break;
+  // Group GPUs by board - some boards can have more than 2 ASICs
+  for (int d = 0; d < remaining.size(); ++d) {
+    for (int i = 0; i < remaining.size(); ++i) {
+      for (int j = i + 1; j < remaining.size(); ++j) {
+        cudaDeviceProp a, b;
+        CUDA_CHECK(cudaGetDeviceProperties(&a, remaining[i]));
+        CUDA_CHECK(cudaGetDeviceProperties(&b, remaining[j]));
+        if (a.isMultiGpuBoard && b.isMultiGpuBoard) {
+          if (a.multiGpuBoardGroupID == b.multiGpuBoardGroupID) {
+              pairs->push_back(DevicePair(remaining[i], remaining[j]));
+              DLOG(INFO) << "GPU board: " << remaining[i]
+                         << ":" << remaining[j];
+              remaining.erase(remaining.begin() + j);
+              break;
+          }
         }
       }
     }
@@ -141,32 +144,40 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   }
   DLOG(INFO) << "GPUs paired by boards, remaining: " << s.str();
 
-  // Group by P2P accessibility
-  for (int i = 0; i < remaining.size(); ++i) {
-    for (int j = i + 1; j < remaining.size(); ++j) {
-      int access;
-      CUDA_CHECK(cudaDeviceCanAccessPeer(&access, remaining[i], remaining[j]));
-      if (access) {
-        pairs->push_back(DevicePair(remaining[i], remaining[j]));
-        DLOG(INFO) << "P2P pair: " << remaining[i] << ":" << remaining[j];
-        remaining.erase(remaining.begin() + j);
-        break;
+  // Group by P2P accessibility - P2P group can be larger than 4 boards
+  for (int d = 0; d < remaining.size(); ++d) {
+    for (int i = 0; i < remaining.size(); ++i) {
+      for (int j = i + 1; j < remaining.size(); ++j) {
+        int access;
+        CUDA_CHECK(cudaDeviceCanAccessPeer(&access,
+                                           remaining[i],
+                                           remaining[j]));
+        if (access) {
+            pairs->push_back(DevicePair(remaining[i], remaining[j]));
+            DLOG(INFO) << "P2P pair: " << remaining[i]
+                       << ":" << remaining[j];
+            remaining.erase(remaining.begin() + j);
+            break;
+        }
       }
     }
   }
   s.str("");
   for (int i = 0; i < remaining.size(); ++i) {
-    s << (i ? ", " : "") << remaining[i];
+      s << (i ? ", " : "") << remaining[i];
   }
   DLOG(INFO) << "GPUs paired by P2P access, remaining: " << s.str();
 
   // Group remaining
-  for (int i = 0; i < remaining.size(); ++i) {
-    for (int j = i + 1; j < remaining.size(); ++j) {
-      pairs->push_back(DevicePair(remaining[i], remaining[j]));
-      DLOG(INFO) << "Remaining pair: " << remaining[i] << ":" << remaining[j];
-      remaining.erase(remaining.begin() + j);
-      break;
+  for (int d = 0; d < remaining.size(); ++d) {  // try to pair everyone
+    for (int i = 0; i < remaining.size(); ++i) {
+      for (int j = i + 1; j < remaining.size(); ++j) {
+          pairs->push_back(DevicePair(remaining[i], remaining[j]));
+          DLOG(INFO) << "Remaining pair: " << remaining[i]
+                     << ":" << remaining[j];
+          remaining.erase(remaining.begin() + j);
+          break;
+      }
     }
   }
   CHECK_EQ(remaining.size(), 1);
