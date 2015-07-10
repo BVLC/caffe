@@ -305,7 +305,7 @@ void P2PSync<Dtype>::on_start(Timer* timer, ostringstream* timing) {
   if (children_.size()) {
     timer->Start();
   }
-  for (int i = 0; i < children_.size(); ++i) {
+  for (int i = children_.size() - 1; i >= 0; i--) {
     Dtype* src = data_;
     Dtype* dst = children_[i]->data_;
 
@@ -319,11 +319,7 @@ void P2PSync<Dtype>::on_start(Timer* timer, ostringstream* timing) {
 
     CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),  //
         cudaMemcpyDeviceToDevice, cudaStreamDefault));
-  }
-  if (children_.size()) {
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
-  }
-  for (int i = 0; i < children_.size(); ++i) {
     children_[i]->queue_.push(this);
   }
   if (children_.size()) {
