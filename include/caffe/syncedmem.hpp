@@ -8,6 +8,9 @@
 
 #include "caffe/greentea/greentea.hpp"
 
+#define OPENCL_PAGE_ALIGN 4096
+#define OPENCL_CACHE_ALIGN 64
+
 namespace caffe {
 
 // Theoretically, CaffeMallocHost and CaffeFreeHost should simply call the
@@ -25,7 +28,10 @@ namespace caffe {
 // does not seem to create a memory bottleneck here.
 
 inline void CaffeMallocHost(void** ptr, size_t size) {
-  *ptr = malloc(size);
+  // Make sure the memory is zero-copy usable in OpenCL
+  // All OpenCL/CUDA memory copy operations might profit from this.
+  posix_memalign(ptr, OPENCL_PAGE_ALIGN,
+                 ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN);
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
