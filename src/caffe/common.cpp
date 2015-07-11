@@ -172,7 +172,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
 }
 
 void Caffe::Synchronize(int device_id) {
-  if(Caffe::mode() == Brew::GPU) {
+  if (Caffe::mode() == Brew::GPU) {
     DeviceContext * device_context = Caffe::GetDeviceContext(device_id);
     if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
