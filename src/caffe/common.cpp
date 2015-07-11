@@ -172,17 +172,19 @@ void Caffe::set_random_seed(const unsigned int seed) {
 }
 
 void Caffe::Synchronize(int device_id) {
-  DeviceContext * device_context = Caffe::GetDeviceContext(device_id);
-  if (device_context->backend() == BACKEND_CUDA) {
+  if(Caffe::mode() == Brew::GPU) {
+    DeviceContext * device_context = Caffe::GetDeviceContext(device_id);
+    if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    cudaDeviceSynchronize();
+      cudaDeviceSynchronize();
 #endif
-  } else {
+    } else {
 #ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        GetDeviceContext(device_id)->id());
-    ctx.get_queue().finish();
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          GetDeviceContext(device_id)->id());
+      ctx.get_queue().finish();
 #endif
+    }
   }
 }
 
