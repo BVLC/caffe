@@ -46,7 +46,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
   void TestForwardSquare() {
     LayerParameter layer_param;
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-    pooling_param->set_kernel_size(2);
+    pooling_param->add_kernel_size(2);
     pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
     const int num = 2;
     const int channels = 2;
@@ -374,8 +374,8 @@ TYPED_TEST(PoolingLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   PoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
@@ -388,9 +388,9 @@ TYPED_TEST(PoolingLayerTest, TestSetupPadded) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
-  pooling_param->set_pad(1);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->add_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   PoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -461,8 +461,8 @@ TYPED_TEST(PoolingLayerTest, TestGradientMax) {
       PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
       pooling_param->set_kernel_h(kernel_h);
       pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
-      pooling_param->set_pad(1);
+      pooling_param->add_stride(2);
+      pooling_param->add_pad(1);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
@@ -476,9 +476,9 @@ TYPED_TEST(PoolingLayerTest, TestForwardMaxPadded) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
-  pooling_param->set_pad(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->add_pad(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   this->blob_bottom_->Reshape(1, 1, 3, 3);
   // Input:
@@ -525,7 +525,7 @@ TYPED_TEST(PoolingLayerTest, TestGradientMaxTopMask) {
       PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
       pooling_param->set_kernel_h(kernel_h);
       pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
+      pooling_param->add_stride(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       this->blob_top_vec_.push_back(this->blob_top_mask_);
       PoolingLayer<Dtype> layer(layer_param);
@@ -541,9 +541,9 @@ TYPED_TEST(PoolingLayerTest, TestForwardAve) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(1);
-  pooling_param->set_pad(1);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(1);
+  pooling_param->add_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   this->blob_bottom_->Reshape(1, 1, 3, 3);
   FillerParameter filler_param;
@@ -577,7 +577,7 @@ TYPED_TEST(PoolingLayerTest, TestGradientAve) {
       PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
       pooling_param->set_kernel_h(kernel_h);
       pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
+      pooling_param->add_stride(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);
@@ -595,8 +595,8 @@ TYPED_TEST(PoolingLayerTest, TestGradientAvePadded) {
       PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
       pooling_param->set_kernel_h(kernel_h);
       pooling_param->set_kernel_w(kernel_w);
-      pooling_param->set_stride(2);
-      pooling_param->set_pad(2);
+      pooling_param->add_stride(2);
+      pooling_param->add_pad(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);

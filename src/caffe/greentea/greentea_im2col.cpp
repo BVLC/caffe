@@ -302,6 +302,7 @@ template void greentea_col2im_nd_gpu<float>(viennacl::ocl::program *prog,
                             cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
                             cl_mem stride, cl_mem kstride, cl_mem data_im,
                             int data_off);
+
 template void greentea_col2im_nd_gpu<double>(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_col,
                             const int data_col_off, const int num_spatial_axes,

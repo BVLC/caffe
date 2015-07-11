@@ -39,8 +39,8 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LayerParameter pool_param;
     pool_param.mutable_pooling_param()->set_pool(
         PoolingParameter_PoolMethod_AVE);
-    pool_param.mutable_pooling_param()->set_pad(pre_pad_);
-    pool_param.mutable_pooling_param()->set_kernel_size(size_);
+    pool_param.mutable_pooling_param()->add_pad(pre_pad_);
+    pool_param.mutable_pooling_param()->add_kernel_size(size_);
     pool_layer_.reset(new PoolingLayer<Dtype>(pool_param));
     pool_layer_->SetUp(square_top_vec_, pool_top_vec_);
     // Set up power_layer_ to compute (1 + alpha_/N^2 s)^-beta_, where s is

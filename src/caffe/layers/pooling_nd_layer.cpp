@@ -14,8 +14,8 @@ using std::min;
 using std::max;
 
 template<typename Dtype>
-void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-                                       const vector<Blob<Dtype>*>& top) {
+void PoolingNDLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                                         const vector<Blob<Dtype>*>& top) {
   // Set the max number of top blobs before calling base Layer::SetUp.
   // If doing MAX pooling, we can optionally output an extra top Blob
   // for the mask.  Otherwise, we only have one top Blob.
@@ -102,41 +102,33 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
                      pooled_width_);
   }
-  // If stochastic pooling, we will initialize the random index part.
-  if (this->layer_param_.pooling_param().pool()
-      == PoolingParameter_PoolMethod_STOCHASTIC) {
-    rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-                      pooled_width_);
-  }
 }
 
 template<typename Dtype>
-void PoolingSKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void PoolingNDLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   LayerSetUp(bottom, top);
 }
 
-// TODO(Yangqing): Is there a faster way to do pooling in the channel-first
-// case?
 template<typename Dtype>
-void PoolingSKLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void PoolingNDLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
-  LOG(FATAL)<< "Forward_cpu() not implemented in PoolingSKLayer.";
+  LOG(FATAL)<< "Forward_cpu() not implemented in PoolingNDLayer.";
 }
 
 template<typename Dtype>
-void PoolingSKLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void PoolingNDLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                          const vector<bool>& propagate_down,
                                          const vector<Blob<Dtype>*>& bottom) {
-  LOG(FATAL)<< "Backward_cpu() not implemented in PoolingSKLayer.";
+  LOG(FATAL)<< "Backward_cpu() not implemented in PoolingNDLayer.";
   return;
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(PoolingSKLayer);
+STUB_GPU(PoolingNDLayer);
 #endif
 
-INSTANTIATE_CLASS(PoolingSKLayer);
-REGISTER_LAYER_CLASS(PoolingSK);
+INSTANTIATE_CLASS(PoolingNDLayer);
+REGISTER_LAYER_CLASS(PoolingND);
 
 }    // namespace caffe

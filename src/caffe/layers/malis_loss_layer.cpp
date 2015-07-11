@@ -176,8 +176,8 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
             // +ve example pairs
             dl = std::max(Dtype(0.0), threshold + margin - conn_data[minEdge]);
             loss += dl * nPair;
-            // Only use indicator for loss
-            dloss_data[minEdge] -= (dl > 0) * nPair;
+            // Use hinge loss
+            dloss_data[minEdge] -= dl * nPair;
             if (conn_data[minEdge] <= threshold) {  // an error
               nPairIncorrect += nPair;
             }
@@ -186,8 +186,8 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
             // -ve example pairs
             dl = std::max(Dtype(0.0), conn_data[minEdge] - threshold + margin);
             loss += dl * nPair;
-            // Only use indicator for loss
-            dloss_data[minEdge] += (dl > 0) * nPair;
+            // Use hinge loss
+            dloss_data[minEdge] += dl * nPair;
             if (conn_data[minEdge] > threshold) {  // an error
               nPairIncorrect += nPair;
             }
