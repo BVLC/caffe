@@ -30,8 +30,9 @@ namespace caffe {
 inline void CaffeMallocHost(void** ptr, size_t size) {
   // Make sure the memory is zero-copy usable in OpenCL
   // All OpenCL/CUDA memory copy operations might profit from this.
-  posix_memalign(ptr, OPENCL_PAGE_ALIGN,
-                 ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN);
+  CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
+                 ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
+        << "Host memory allocation error";
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 

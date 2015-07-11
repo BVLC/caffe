@@ -30,6 +30,14 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
     shape.add_dim(5);  // Height
     shape.add_dim(5);  // Width
     blob_bottom_->Reshape(shape);
+
+    shape.add_dim(1);  // Batch
+    shape.add_dim(1);  // Channels
+    shape.add_dim(1);  // Depth
+    shape.add_dim(1);  // Height
+    shape.add_dim(1);  // Width
+    blob_top_->Reshape(shape);
+
     // fill the values
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
@@ -53,7 +61,9 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
     convolution_param->add_kstride(2);
     convolution_param->add_kstride(2);
 
-    convolution_param->set_num_output(4);
+    convolution_param->set_num_output(1);
+
+    convolution_param->set_axis(1);
 
     convolution_param->mutable_weight_filler()->set_type("constant");
     convolution_param->mutable_weight_filler()->set_value(1);
@@ -91,7 +101,54 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
   }
 
   void TestBackward() {
-    // TODO
+    LayerParameter layer_param;
+    ConvolutionParameter* convolution_param =
+        layer_param.mutable_convolution_param();
+
+    convolution_param->add_kernel_size(3);
+    convolution_param->add_kernel_size(3);
+    convolution_param->add_kernel_size(3);
+
+    convolution_param->add_kstride(2);
+    convolution_param->add_kstride(2);
+    convolution_param->add_kstride(2);
+
+    convolution_param->set_num_output(1);
+
+    convolution_param->set_axis(1);
+
+    convolution_param->mutable_weight_filler()->set_type("constant");
+    convolution_param->mutable_weight_filler()->set_value(1);
+    convolution_param->mutable_bias_filler()->set_type("constant");
+    convolution_param->mutable_bias_filler()->set_value(0);
+
+    ConvolutionNDLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+    TypeParam *top_diff = blob_top_->mutable_cpu_diff();
+
+    *top_diff = 1;
+
+    std::vector<bool> prop_down;
+    prop_down.push_back(true);
+
+    layer.Backward(this->blob_top_vec_, prop_down, this->blob_bottom_vec_);
+
+    const TypeParam *bottom_diff = blob_bottom_->cpu_diff();
+
+    int d = blob_bottom_->shape(2);
+    int h = blob_bottom_->shape(3);
+    int w = blob_bottom_->shape(4);
+
+    for (int cd = 0; cd < d; ++cd) {
+      for (int ch = 0; ch < h; ++ch) {
+        for (int cw = 0; cw < w; ++cw) {
+          if (cw % 2 == 0 && ch % 2 == 0 && cd % 2 == 0) {
+            EXPECT_EQ(1, bottom_diff[cw + ch * w + cd * w * h]);
+          }
+        }
+      }
+    }
   }
 
   Blob<TypeParam>* const blob_bottom_;

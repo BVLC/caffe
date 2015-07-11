@@ -169,15 +169,29 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype *Aptr, *Bptr, *Cptr;
-    clGetMemObjectInfo(A, CL_MEM_HOST_PTR, sizeof(Dtype*), &Aptr, NULL);
-    clGetMemObjectInfo(B, CL_MEM_HOST_PTR, sizeof(Dtype*), &Bptr, NULL);
-    clGetMemObjectInfo(C, CL_MEM_HOST_PTR, sizeof(Dtype*), &Cptr, NULL);
+    Dtype* Aptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       A, true, CL_MAP_READ, sizeof(Dtype) * offA,
+                       sizeof(Dtype) * M * K, 0, NULL, NULL, NULL));
+    Dtype* Bptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       B, true, CL_MAP_READ, sizeof(Dtype) * offB,
+                       sizeof(Dtype) * N * K, 0, NULL, NULL, NULL));
+    Dtype* Cptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       C, true, CL_MAP_READ | CL_MAP_WRITE,
+                       sizeof(Dtype) * offC,
+                       sizeof(Dtype) * M * N, 0, NULL, NULL, NULL));
 
-    caffe_cpu_gemm<Dtype>(TransA, TransB, M, N, K, alpha, Aptr + offA,
-                          Bptr + offB, beta, Cptr + offC);
+    caffe_cpu_gemm<Dtype>(TransA, TransB, M, N, K, alpha, Aptr,
+                          Bptr, beta, Cptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            A, Aptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            B, Bptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            C, Cptr, 0, NULL, NULL);
   } else {
     int lda = (TransA == CblasNoTrans) ? K : M;
     int ldb = (TransB == CblasNoTrans) ? N : K;
@@ -272,15 +286,31 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype *Aptr, *xptr, *yptr;
-    clGetMemObjectInfo(A, CL_MEM_HOST_PTR, sizeof(Dtype*), &Aptr, NULL);
-    clGetMemObjectInfo(x, CL_MEM_HOST_PTR, sizeof(Dtype*), &xptr, NULL);
-    clGetMemObjectInfo(y, CL_MEM_HOST_PTR, sizeof(Dtype*), &yptr, NULL);
+    Dtype* Aptr = reinterpret_cast<Dtype*>(
+                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                        A, true, CL_MAP_READ, sizeof(Dtype) * offA,
+                        sizeof(Dtype) * M * N, 0, NULL, NULL, NULL));
+    Dtype* xptr = reinterpret_cast<Dtype*>(
+                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                        x, true, CL_MAP_READ, sizeof(Dtype) * offx,
+                        sizeof(Dtype) * (TransA == CblasTrans) ? M : N,
+                            0, NULL, NULL, NULL));
+    Dtype* yptr = reinterpret_cast<Dtype*>(
+                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                        y, true, CL_MAP_READ | CL_MAP_WRITE,
+                        sizeof(Dtype) * offy,
+                        sizeof(Dtype) * (TransA == CblasTrans) ? N : M,
+                            0, NULL, NULL, NULL));
 
-    caffe_cpu_gemv<Dtype>(TransA, M, N, alpha, Aptr + offA, xptr + offx, beta,
-                          yptr + offy);
+    caffe_cpu_gemv<Dtype>(TransA, M, N, alpha, Aptr, xptr, beta,
+                          yptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                                A, Aptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                                x, xptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                                y, yptr, 0, NULL, NULL);
   } else {
 #ifndef USE_CLBLAS
 
@@ -346,13 +376,21 @@ void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype *Xptr, *Yptr;
-    clGetMemObjectInfo(X, CL_MEM_HOST_PTR, sizeof(Dtype*), &Xptr, NULL);
-    clGetMemObjectInfo(Y, CL_MEM_HOST_PTR, sizeof(Dtype*), &Yptr, NULL);
+    Dtype* Xptr = reinterpret_cast<Dtype*>(
+                     clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                          X, true, CL_MAP_READ, sizeof(Dtype) * offX,
+                          sizeof(Dtype) * N, 0, NULL, NULL, NULL));
+    Dtype* Yptr = reinterpret_cast<Dtype*>(
+                     clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                          Y, true, CL_MAP_WRITE, sizeof(Dtype) * offY,
+                          sizeof(Dtype) * N, 0, NULL, NULL, NULL));
 
-    caffe_axpy<Dtype>(N, alpha, Xptr + offX, Yptr + offY);
+    caffe_axpy<Dtype>(N, alpha, Xptr, Yptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            X, Xptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            Y, Yptr, 0, NULL, NULL);
   } else {
 #ifndef USE_CLBLAS
 
@@ -443,12 +481,16 @@ void greentea_gpu_scal(const int ctx_id, const int N, const Dtype alpha,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype *xptr;
-    clGetMemObjectInfo(x, CL_MEM_HOST_PTR, sizeof(Dtype*), &xptr, NULL);
-    caffe_scal<Dtype>(N, alpha, xptr + offx);
+    Dtype* xptr = reinterpret_cast<Dtype*>(
+                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                        x, true, CL_MAP_READ | CL_MAP_WRITE,
+                        sizeof(Dtype) * offx,
+                        sizeof(Dtype) * N, 0, NULL, NULL, NULL));
 
+    caffe_scal<Dtype>(N, alpha, xptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            x, xptr, 0, NULL, NULL);
   } else {
 #ifndef USE_CLBLAS
 
@@ -506,13 +548,22 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype *Xptr, *Yptr;
-    clGetMemObjectInfo(X, CL_MEM_HOST_PTR, sizeof(Dtype*), &Xptr, NULL);
-    clGetMemObjectInfo(Y, CL_MEM_HOST_PTR, sizeof(Dtype*), &Yptr, NULL);
+    Dtype* Xptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       X, true, CL_MAP_READ, sizeof(Dtype) * offX,
+                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Yptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       Y, true, CL_MAP_READ, sizeof(Dtype) * offY,
+                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
 
-    *out = caffe_cpu_dot<Dtype>(n, Xptr + offX, Yptr + offY);
+    *out = caffe_cpu_dot<Dtype>(n, Xptr, Yptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            X, Xptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            Y, Yptr, 0, NULL, NULL);
+
   } else {
 #ifndef USE_CLBLAS
     typedef typename viennacl::vector_base<Dtype>::size_type size_type;
@@ -568,12 +619,15 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype* Xptr;
-    clGetMemObjectInfo(X, CL_MEM_HOST_PTR, sizeof(Dtype*), &Xptr, NULL);
-    *Y = caffe_cpu_asum<Dtype>(n, Xptr + offX);
+    Dtype* Xptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       X, true, CL_MAP_READ, sizeof(Dtype) * offX,
+                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
 
+    *Y = caffe_cpu_asum<Dtype>(n, Xptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            X, Xptr, 0, NULL, NULL);
   } else {
 #ifndef USE_CLBLAS
 
@@ -626,13 +680,21 @@ void greentea_gpu_scale(const int ctx_id, const int n, const Dtype alpha,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    // Make sure the OpenCL queue is empty before using CBLAS
-    ctx.get_queue().finish();
-    Dtype *Xptr, *Yptr;
-    clGetMemObjectInfo(X, CL_MEM_HOST_PTR, sizeof(Dtype*), &Xptr, NULL);
-    clGetMemObjectInfo(Y, CL_MEM_HOST_PTR, sizeof(Dtype*), &Yptr, NULL);
-    caffe_cpu_scale<Dtype>(n, alpha, Xptr + offX, Yptr + offY);
+    Dtype* Xptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       X, true, CL_MAP_READ, sizeof(Dtype) * offX,
+                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Yptr = reinterpret_cast<Dtype*>(
+                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                       Y, true, CL_MAP_WRITE, sizeof(Dtype) * offY,
+                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
 
+    caffe_cpu_scale<Dtype>(n, alpha, Xptr, Yptr);
+
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            X, Xptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            Y, Yptr, 0, NULL, NULL);
   } else {
 #ifndef USE_CLBLAS
 

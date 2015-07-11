@@ -21,20 +21,21 @@ SyncedMemory::~SyncedMemory() {
 #ifdef USE_CUDA
       // Free device memory
       cudaFree(gpu_ptr_);
+      gpu_ptr_ = nullptr;
       device_context_->DecreaseMemoryUsage(size_);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       // Free device memory
-      clReleaseMemObject(cl_gpu_mem_);
-      device_context_->DecreaseMemoryUsage(size_);
       viennacl::ocl::context ctx = viennacl::ocl::get_context(
           device_context_->id());
       ctx.get_queue().finish();
-      // Special case, return to avoid double-freeing
-      if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-        return;
-      }
+      CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
+          << "OpenCL memory corruption";
+      gpu_ptr_ = nullptr;
+      cl_gpu_mem_ = nullptr;
+      ctx.get_queue().finish();
+      device_context_->DecreaseMemoryUsage(size_);
 #endif  // USE_GREENTEA
     }
   }
@@ -42,6 +43,7 @@ SyncedMemory::~SyncedMemory() {
   // Free host memory
   if (cpu_ptr_ && own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_);
+    cpu_ptr_ = nullptr;
   }
 }
 
@@ -56,7 +58,7 @@ inline void SyncedMemory::to_cpu() {
     }
     case HEAD_AT_GPU: {
 #ifndef CPU_ONLY
-      if (cpu_ptr_ == NULL) {
+      if (cpu_ptr_ == nullptr) {
         CaffeMallocHost(&cpu_ptr_, size_);
         own_cpu_data_ = true;
       }
@@ -68,11 +70,7 @@ inline void SyncedMemory::to_cpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_->id());
-        ctx.get_queue().finish();
-        // On the CPU, memory is shared (and no copy needed)
-        if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU || !own_cpu_data_) {
-          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
-        }
+        greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
         ctx.get_queue().finish();
 #endif
       }
@@ -105,23 +103,18 @@ inline void SyncedMemory::to_gpu() {
         ctx.get_queue().finish();
         cl_int err;
         if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-          // CPU memory is shared
-          if (cpu_ptr_ == NULL) {
-            CaffeMallocHost(&cpu_ptr_, size_);
-            caffe_memset(size_, 0, cpu_ptr_);
-            own_cpu_data_ = true;
-          }
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
-          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                                       size_, cpu_ptr_, &err);
-          device_context_->IncreaseMemoryUsage(size_);
+                     CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+                     size_, nullptr, &err);
         } else {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                       size_, NULL, &err);
-          device_context_->IncreaseMemoryUsage(size_);
-          int alpha = 0;
-          greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
+                                       size_, nullptr, &err);
         }
+        CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
+                        << size_ << " failed.";
+        device_context_->IncreaseMemoryUsage(size_);
+        int alpha = 0;
+        greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
 #endif  // USE_GREENTEA
@@ -132,7 +125,7 @@ inline void SyncedMemory::to_gpu() {
     case HEAD_AT_CPU: {
       if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
-        if (gpu_ptr_ == NULL) {
+        if (gpu_ptr_ == nullptr) {
           CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
           device_context_->IncreaseMemoryUsage(size_);
         }
@@ -143,25 +136,23 @@ inline void SyncedMemory::to_gpu() {
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_->id());
         ctx.get_queue().finish();
-        if (gpu_ptr_ == NULL) {
+        if (gpu_ptr_ == nullptr) {
           cl_int err;
-          if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU && own_cpu_data_) {
+          if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
             cl_gpu_mem_ = clCreateBuffer(
-                ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                size_, cpu_ptr_, &err);
-            device_context_->IncreaseMemoryUsage(size_);
+                ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+                size_, nullptr, &err);
           } else {
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                         size_, NULL, &err);
-            device_context_->IncreaseMemoryUsage(size_);
+                                         size_, nullptr, &err);
           }
+          CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
+                          << size_ << " failed.";
+          device_context_->IncreaseMemoryUsage(size_);
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
           ctx.get_queue().finish();
         }
-        // On the CPU, memory is shared (and no copy needed)
-        if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU || !own_cpu_data_) {
-          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
-        }
+        greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
         ctx.get_queue().finish();
 #endif  // USE_GREENTEA
       }
@@ -184,25 +175,7 @@ const void* SyncedMemory::cpu_data() {
 
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
-#ifndef CPU_ONLY
-#ifdef USE_GREENTEA
-  if (Caffe::mode() == Caffe::Brew::GPU &&
-    device_context_->backend() == Backend::BACKEND_OpenCL) {
-    viennacl::ocl::context ctx = viennacl::ocl::get_context(
-        device_context_->id());
-    if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-      ctx.get_queue().finish();
-      cpu_ptr_ = data;
-      gpu_ptr_ = nullptr;
-      head_ = HEAD_AT_CPU;
-      own_cpu_data_ = false;
-      // Return, skipping release of the host memory
-      return;
-    }
-  }
-#endif  // USE_GREENTEA
-#endif  // !CPU_ONLY
-  if (own_cpu_data_) {
+  if (cpu_ptr_ && own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_);
   }
   cpu_ptr_ = data;
