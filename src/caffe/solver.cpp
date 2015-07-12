@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-
+#include <fstream>
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
@@ -291,8 +291,16 @@ void Solver<Dtype>::TestAll() {
 
 template <typename Dtype>
 void Solver<Dtype>::Test(const int test_net_id) {
+  string filename(param_.snapshot_prefix());
+  std::ofstream out;
+  string outfilename = filename+".out";
+  out.open(outfilename.c_str(),ios::in|ios::out|ios::app);
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
+
+   out<< "Iteration " << iter_
+            << ", Testing net (#" << test_net_id << ")"<<std::endl;
+
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
       ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
@@ -328,6 +336,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
+    out << "Test loss: " << loss<<std::endl;
   }
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
@@ -342,7 +351,12 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
         << mean_score << loss_msg_stream.str();
+
+    out << "    Test net output #" << i << ": " << output_name << " = "
+        << mean_score << loss_msg_stream.str()<<std::endl;
   }
+
+  out.close();
 }
 
 

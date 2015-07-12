@@ -1,5 +1,5 @@
 #include <glog/logging.h>
-
+#include <fstream>
 #include <cstring>
 #include <map>
 #include <string>
@@ -30,7 +30,10 @@ DEFINE_string(weights, "",
     "Cannot be set simultaneously with snapshot.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
-
+DEFINE_int32(classnum, 50,
+    "The class of label");
+DEFINE_string(outfile,"outfile.txt",
+    "The name of outfile ");
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
 typedef std::map<caffe::string, BrewFunction> BrewMap;
@@ -160,7 +163,14 @@ int test() {
   vector<int> test_score_output_id;
   vector<float> test_score;
   float loss = 0;
+  std::string filename = FLAGS_outfile;
+//LOG(INFO) << "OPEN filename : "<<filename;
+  std::ofstream out(filename.c_str());
   for (int i = 0; i < FLAGS_iterations; ++i) {
+
+    if( !(i%100))
+          LOG(INFO)<<"Iteration : "<<i;
+
     float iter_loss;
     const vector<Blob<float>*>& result =
         caffe_net.Forward(bottom_vec, &iter_loss);
@@ -173,22 +183,37 @@ int test() {
         if (i == 0) {
           test_score.push_back(score);
           test_score_output_id.push_back(j);
-        } else {
+        } 
+        else {
           test_score[idx] += score;
         }
-        const std::string& output_name = caffe_net.blob_names()[
-            caffe_net.output_blob_indices()[j]];
-        LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
-      }
-    }
+        
+        //const std::string& output_name = caffe_net.blob_names()[
+        //     caffe_net.output_blob_indices()[j]];
+        //LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
+        switch (j)
+        {
+            case 0 : out<<"accuracy : "<<score<<std::endl; break;
+            case 1 : out<<"loss : " <<score<<std::endl; break;
+            case 2 : { 
+                    out<<score<<" ";
+                    break;
+
+              }
+        }
+        }
+//LOG(INFO)<<"CLOSE filname : "<<filename;
+     }
+    out <<std::endl;
   }
+  out.close();
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
   for (int i = 0; i < test_score.size(); ++i) {
     const std::string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
-    const float loss_weight = caffe_net.blob_loss_weights()[
-        caffe_net.output_blob_indices()[test_score_output_id[i]]];
+    const float loss_weight =
+        caffe_net.blob_loss_weights()[caffe_net.output_blob_indices()[i]];
     std::ostringstream loss_msg_stream;
     const float mean_score = test_score[i] / FLAGS_iterations;
     if (loss_weight) {
@@ -252,6 +277,9 @@ int time() {
     forward_timer.Start();
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
+      // Although Reshape should be essentially free, we include it here
+      // so that we will notice Reshape performance bugs.
+      layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
