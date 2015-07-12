@@ -40,8 +40,8 @@ bool OpenCLManager::Init() {
   }
 
   std::vector<std::string> cl_files;
-  cl_files.push_back("src/caffe/util/OpenCL/math_functions.cl");
   cl_files.push_back("src/caffe/util/OpenCL/gemm.cl");
+  cl_files.push_back("src/caffe/util/OpenCL/math_functions.cl");
   cl_files.push_back("src/caffe/util/OpenCL/im2col.cl");
   cl_files.push_back("src/caffe/layers/OpenCL/pooling_layer.cl");
   cl_files.push_back("src/caffe/layers/OpenCL/relu_layer.cl");

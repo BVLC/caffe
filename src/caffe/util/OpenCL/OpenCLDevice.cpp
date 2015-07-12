@@ -328,7 +328,7 @@ bool OpenCLDevice::compile(std::string cl_source) {
 		return false;
 	}
 
-	std::string str(std::istreambuf_iterator<char>(std::ifstream(cl_standard.c_str()).rdbuf()), std::istreambuf_iterator<char>());
+  std::string str(std::istreambuf_iterator<char>(std::ifstream(cl_standard.c_str()).rdbuf()), std::istreambuf_iterator<char>());
 	if ( str.size() <= 0 ) {
 		LOG(ERROR) << "failed to read data from file = '"<< cl_standard.c_str() <<"'";
 		return false;
@@ -344,8 +344,9 @@ bool OpenCLDevice::compile(std::string cl_source) {
 	}
 	DLOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for device "<<this->name();
 
-	//-x clc++ -O5
+	//-x clc++ -O5 -cl-std=CL2.0
 	std::string clIncludes = "-cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math -cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -I ../../CL/include/ -I include/caffe/util/OpenCL/";
+
 	err = clBuildProgram(program, 1, &deviceID, clIncludes.c_str(), NULL, NULL);
 	if ( err != CL_SUCCESS ) {
 		LOG(ERROR) << "failed to build OpenCL program from file '" << cl_standard.c_str() << "' : error = " << err;

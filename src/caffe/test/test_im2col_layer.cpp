@@ -71,7 +71,7 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
 
   void Im2colLayerTestForwardValidation(LayerParameter lp, int num_images, int num_channels, int im_width, int im_height) {
 
-    typedef typename TypeParam::Dtype Dtype;
+    //typedef typename TypeParam::Dtype Dtype;
 
     LOG(INFO)<<"TestForwardValidation() : images("<<num_images<<") channels("<<num_channels<<") height("<<im_height<<") width("<<im_width<<")";
 
@@ -158,26 +158,28 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(cpu_[c], gpu_[c]);
     }
 
+    /*
     // print bottom
     Dtype* array = (Dtype*) this->blob_bottom_->cpu_data();
     for(int n = 0; n < BTMnum; n++ ) {
       for(int c = 0; c < BTMchannels; c++ ) {
-        //SNAPSHOT2D("N"<<n<<"C"<<c, array + n*BTMchannels*BTMheight*BTMwidth + c*BTMheight*BTMwidth, BTMheight, BTMwidth);
+        SNAPSHOT2D("N"<<n<<"C"<<c, array + n*BTMchannels*BTMheight*BTMwidth + c*BTMheight*BTMwidth, BTMheight, BTMwidth);
       }
     }
 
     // print top
     for(int n = 0; n < TOPnum; n++ ) {
       for(int c = 0; c < TOPchannels; c++ ) {
-        //SNAPSHOT2D("N"<<n<<"C"<<c,  gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, TOPheight, TOPwidth);
-        //DIFFSHOT2D("N"<<n<<"C"<<c, \
-            cpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, \
-            gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, \
+        SNAPSHOT2D("N"<<n<<"C"<<c,  gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth, TOPheight, TOPwidth);
+        DIFFSHOT2D("N"<<n<<"C"<<c,
+            cpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth,
+            gpu_ + n*TOPchannels*TOPheight*TOPwidth + c*TOPheight*TOPwidth,
             TOPheight, TOPwidth);
       }
     }
 
     //DIFFSHOT("D", cpu_, gpu_, numTopElements);
+     */
   }
 
 };
@@ -220,7 +222,7 @@ TYPED_TEST(Im2colLayerTest, TestForward) {
 
 TYPED_TEST(Im2colLayerTest, TestForwardValidation) {
 
-  typedef typename TypeParam::Dtype Dtype;
+  //typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -245,6 +247,12 @@ TYPED_TEST(Im2colLayerTest, TestForwardValidation) {
     }
   }
   this->Im2colLayerTestForwardValidation(layer_param, 2, 3, 6, 4);
+
+  convolution_param->set_kernel_size(11);
+  convolution_param->set_stride(4);
+  convolution_param->set_pad(0);
+
+  this->Im2colLayerTestForwardValidation(layer_param, 10, 3, 227, 227);
 }
 
 TYPED_TEST(Im2colLayerTest, TestGradient) {

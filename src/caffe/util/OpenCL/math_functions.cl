@@ -137,4 +137,3 @@ template <class T> __kernel void clexp(const int n, global T* x, global T* y) {
 template __attribute__((mangled_name(clexpFloat))) kernel void clexp(const int n, global float* x, global float* y); 
 template __attribute__((mangled_name(clexpDouble))) kernel void clexp(const int n, global double* x, global double* y);
 
-

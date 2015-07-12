@@ -367,14 +367,14 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 
   cl_event bufferEvent = NULL;
 
-#ifdef OPENCL_VERSION_2_2 // at least OpenCL Version 1.2 required, this is slow
+#ifdef OPENCL_VERSION_1_2 // at least OpenCL Version 1.2 required, this is slow
 
 	size_t mem_offset	= clGetMemoryOffset(virtualPtr);
 	cl_mem base 			= (cl_mem) clMem->getLogicalPointer();
 
   cl_int err = clEnqueueFillBuffer(*queue, base, &alpha, sizeof(T),
                                    mem_offset, Bytes, 0, NULL, &bufferEvent);
-  clWaitForEvents(1, &bufferEvent);
+  //clWaitForEvents(1, &bufferEvent);
   if (err != CL_SUCCESS) {
     std::ostringstream oss;
     oss << "clEnqueueFillBuffer() failed on GPU " << device.name()
@@ -414,7 +414,7 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 		throw OpenCLSupportException(oss.str());
 		return false;
 	}
-
+	//clWaitForEvents(1, &bufferEvent);
   DLOG(INFO) << "kernel '"<< kernel_name << "' executed on GPU "
              << device.name();
 
@@ -494,6 +494,7 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
                << device.getMemoryTag(virtualDstPtr) << " " << size
                << " Byte transferred.";
 
+    //clWaitForEvents(1, &copyEvent);
     clMemDst->setEvent(copyEvent);
 
 		break;
@@ -520,6 +521,7 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
                << device.getMemoryTag(virtualSrcPtr) << " to CPU@"
                << virtualDstPtr << " " << size << " Byte transferred.";
 
+    //clWaitForEvents(1, &copyEvent);
     clMemSrc->setEvent(copyEvent);
 
 		break;
@@ -577,6 +579,7 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
                                            offsetDst, size, 0, NULL, &copyEvent) ) ) {
 				return false;
 			}
+      //clWaitForEvents(1, &copyEvent);
       clMemDst->setEvent(copyEvent);
 
 		} else {
@@ -601,12 +604,13 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
       if (!CL_CHECK(clEnqueueCopyBuffer(*queue, (cl_mem) baseSrc, (cl_mem) bufLPtr, offsetSrc, 0, size, 0, NULL, &copyEvent) ) ) {
 				return false;
 			}
-      CL_CHECK( clWaitForEvents(1, &copyEvent) );
+      //CL_CHECK( clWaitForEvents(1, &copyEvent) );
       DLOG(INFO) << device.name() << "> copy "<<device.getMemoryTag(virtualSrcPtr).c_str()<<" with offset " << offsetSrc << " to buffer " <<device.getMemoryTag(bufVPtr).c_str()<< " "<<size<<" Byte transferred.";
 
 			if ( ! CL_CHECK( clEnqueueCopyBuffer(*queue, (cl_mem) bufLPtr, (cl_mem) baseDst, 0, offsetDst, size, 0, NULL, &copyEvent) ) ) {
 				return false;
 			}
+	    //clWaitForEvents(1, &copyEvent);
       clMemDst->setEvent(copyEvent);
 
 			DLOG(INFO) << device.name() << "> copy "<<device.getMemoryTag(bufVPtr).c_str()<<" to "<<device.getMemoryTag(virtualDstPtr).c_str()<<" with offset "<<offsetDst<<" "<<size<<" Byte transferred.";

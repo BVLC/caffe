@@ -94,17 +94,15 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     top_data = top[i]->mutable_gpu_data();
 
     if ( this->group_ == 1 ) {
-
       const Dtype* cb_ptr = bottom_data;
 
-
       if (! this->is_1x1_) {
-          // all images at once using im2col_perf kernel
-          im2col_group_gpu(bottom_data, this->getImageNumPixels(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_, this->col_buffer_.mutable_gpu_data(), this->getImageColLength());
+		    // all images at once using im2col_perf kernel
+		    im2col_group_gpu(bottom_data, this->getImageNumPixels(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_, this->col_buffer_.mutable_gpu_data(), this->getImageColLength());
 
-          // all images at once using mask
-          //im2col_group_gpu(bottom_data, this->im2col_mask_.gpu_data(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->height_out_, this->width_out_, this->col_buffer_.mutable_gpu_data());
-          cb_ptr = this->col_buffer_.gpu_data();
+		    // all images at once using mask
+		    //im2col_group_gpu(bottom_data, this->im2col_mask_.gpu_data(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->height_out_, this->width_out_, this->col_buffer_.mutable_gpu_data());
+		    cb_ptr = this->col_buffer_.gpu_data();
       } else {
         cb_ptr = bottom_data;
       }
@@ -112,6 +110,9 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       size_t M = this->conv_out_channels_ /this->group_;
       size_t N = this->num_*this->conv_out_spatial_dim_;
       size_t K = this->kernel_dim_ / this->group_;
+
+
+      DLOG(INFO)<<"BIG M x N x K = "<<M<<" x "<<N<<" x "<<K;
 
       caffe_gpu_group_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
           M, N, K,
@@ -123,7 +124,8 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           (Dtype*) top_data);
 
       if (this->bias_term_) {
-        const Dtype* bias = this->blobs_[1]->gpu_data();
+        const Dtype* bias = this->blobs_[1]->cpu_data();
+        bias = this->blobs_[1]->gpu_data();
 
         M = this->num_output_;
         N = this->height_out_ * this->width_out_ * this->num_;
@@ -137,6 +139,8 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
     } else {
       for (int n = 0; n < this->num_; ++n) {
+        DLOG(INFO)<<"bottom["<<i<<"]->offset("<<n<<") = "<<bottom[i]->offset(n);
+        DLOG(INFO)<<"top["<<i<<"]->offset("<<n<<") = "<<top[i]->offset(n);
 
             //this->forward_gpu_gemm(bottom_data + bottom[i]->offset(n), weight, top_data + top[i]->offset(n));
             this->forward_gpu_gemm(bottom_data, bottom[i]->offset(n), weight, 0, top_data, top[i]->offset(n));
@@ -199,11 +203,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
       }
     }
-    OpenCLManager::CurrentPlatform()->CurrentDevice().getNextCommandQueue();
-
-  }
-  OpenCLManager::CurrentPlatform()->CurrentDevice().setCommandQueueIDX(0);
-  OpenCLManager::CurrentPlatform()->CurrentDevice().waitForCommandQueues();
+   }
   });
 }
 

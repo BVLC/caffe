@@ -373,8 +373,8 @@ bool clMaxPoolBackward(
   CL_SET_TYPE_KERNEL_ARG(int, pad_w, kernel)
   CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
-	size_t global = nthreads;//CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
-	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {

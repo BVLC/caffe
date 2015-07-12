@@ -128,6 +128,7 @@ inline void SyncedMemory::to_gpu() {
 		head_ = SYNCED;
 		break;
 	case HEAD_AT_GPU:
+    break;
 	case SYNCED:
 		break;
 	}

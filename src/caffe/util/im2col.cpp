@@ -294,8 +294,6 @@ namespace caffe {
 
 
       err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL, &global, &local, 0, NULL, NULL);
-      LOG(INFO)<<"wait for queueu";
-      clFinish(*queue);
       if (err != CL_SUCCESS) {
         LOG(ERROR)<< "Failed to enqueue kernel '"
                   << kernel_name.c_str()
@@ -363,6 +361,19 @@ namespace caffe {
         T* data_col,
         const int top_step) {
 
+      /*
+      LOG(INFO)<<"num_images   = "<<num_images;
+      LOG(INFO)<<"num_channels = "<<num_channels;
+      LOG(INFO)<<"height       = "<<height;
+      LOG(INFO)<<"width        = "<<width;
+      LOG(INFO)<<"kernel_h     = "<<kernel_h;
+      LOG(INFO)<<"kernel_w     = "<<kernel_w;
+      LOG(INFO)<<"pad_h        = "<<pad_h;
+      LOG(INFO)<<"pad_w        = "<<pad_w;
+      LOG(INFO)<<"stride_h     = "<<stride_h;
+      LOG(INFO)<<"stride_w     = "<<stride_w;
+      */
+
       OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
       std::string kernel_name = clGetKernelName < T > ("clim2col_perf");
       //std::string kernel_name = clGetKernelName < T > ("clim2col_perf3");
@@ -406,8 +417,7 @@ namespace caffe {
       size_t global1D = CAFFE_GET_GLOBAL_WORKITEMS(num_kernels, OPENCL_LOCAL_SIZE);
       size_t local1D = CAFFE_GET_LOCAL_WORKITEMS(num_kernels, OPENCL_LOCAL_SIZE);
 
-      int use = 1;
-      switch (use) {
+      switch (OPENCL_OPT_LEVEL) {
         case 1: {
           dim = 3;
           global = &global3D[0];

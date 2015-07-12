@@ -101,8 +101,8 @@ bool clDropoutLayerForward(const int count, const T* bottom_data, const unsigned
   CL_SET_TYPE_KERNEL_ARG(T, scale, kernel)
   CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
 
-	size_t global = count;//CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
-	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
@@ -144,8 +144,8 @@ bool clDropoutLayerBackward(const int count, const T* top_diff, const unsigned i
   CL_SET_TYPE_KERNEL_ARG(T, scale, kernel)
   CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
-	size_t global = count;//CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
-	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {

@@ -223,7 +223,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         bias_multiplier_.mutable_cpu_data());
   }
 
-  this->setupMaskIM2COL();
+  //this->setupMaskIM2COL();
   //this->setupMaskCOL2IM();
 }
 
@@ -371,7 +371,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(
         size_t N = conv_out_spatial_dim_;
         size_t K = kernel_dim_ / group_;
 
-        DLOG(INFO)<<"MNK = "<<M<<" x "<<N<<" x "<<K;
+        DLOG(INFO)<<"SMALL MNK = "<<M<<" x "<<N<<" x "<<K;
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
             M, N, K,
             (Dtype)1., (Dtype*) weights, weights_offset + weight_offset_ * g,

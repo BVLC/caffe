@@ -24,10 +24,16 @@ namespace caffe {
 
 inline void CaffeMallocHost(void** ptr, size_t size) {
   *ptr = malloc(size);
+  if( *ptr == NULL ) {
+    LOG(ERROR)<<"failed to allocate host memory of size = "<<size<<" Byte";
+  } else {
+    DLOG(INFO)<<"allocate "<<size<<" Byte of host memory @"<<*ptr;
+  }
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
 inline void CaffeFreeHost(void* ptr) {
+  DLOG(INFO)<<"free("<<ptr<<")";
   free(ptr);
 }
 

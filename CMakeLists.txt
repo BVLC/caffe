@@ -51,6 +51,7 @@ endif()
 
 
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
+add_definitions(-DOPENCL_OPT_LEVEL=1)
 
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
@@ -76,6 +77,8 @@ add_subdirectory(src/caffe/util/OpenCL)
 add_subdirectory(src/caffe/layers/OpenCL)
 add_subdirectory(src/caffe/test/test_data)
 add_subdirectory(examples/images)
+add_subdirectory(models)
+add_subdirectory(scripts)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)

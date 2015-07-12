@@ -1067,7 +1067,7 @@ template <class T> __kernel void group_mmul_NA_NB(const int M, const int N, cons
   
   int group_size_n  = N / GN;
   int group_n       = x / group_size_n;
-  int group_x       = x % group_size_n;  
+  int group_x       = ( x % group_size_n );  
   int group_y       = y;
 
   // first index of first thread reading A in local workgroup
@@ -1078,64 +1078,55 @@ template <class T> __kernel void group_mmul_NA_NB(const int M, const int N, cons
 
   // step taken by each thread reading A
   int a_stp  = OPENCL_BLOCK_SIZE;
-  
-  // first index of first thread reading B in local workgroup
-  //int b_bgn = OPENCL_BLOCK_SIZE*tile_x;
-  int b_bgn = 0;
-  
-  // last index of first thread reading B in local workgroup
-  //int b_end = b_bgn + group_size_n*(K-1);
-  int b_end = K;
-
-  // step taken by each thread reading B in local workgroup
-  //int b_stp  = OPENCL_BLOCK_SIZE * group_size_n;
-  int b_stp = OPENCL_BLOCK_SIZE;
       
   // accumulates the result
-  T sum = 0.0;
+  __private T sum = 0.0;
 
   int global_x = 0;
   int global_y = 0;
-  
+  int addr;
   // local memory for matrix A
   __local T localMemA[OPENCL_BLOCK_SIZE][OPENCL_BLOCK_SIZE];
 
   // local memory for matrix B
   __local T localMemB[OPENCL_BLOCK_SIZE][OPENCL_BLOCK_SIZE];
   
-  for (int a = a_bgn, b = b_bgn; a <= a_end; a += a_stp, b += b_stp, global_x += OPENCL_BLOCK_SIZE, global_y += OPENCL_BLOCK_SIZE)  {
+  for (int a = a_bgn; a <= a_end; a += a_stp, global_x += OPENCL_BLOCK_SIZE, global_y += OPENCL_BLOCK_SIZE)  {
     
     // each thread in workgroup reads one element of matrix A from global to local memory
-    if ( (thread_x + global_x) < K  ) {
-      localMemA[thread_y][thread_x] = alpha*A_ptr[a + K * thread_y + thread_x];
+    addr = a + K * thread_y + thread_x;
+
+    if ( (thread_x + global_x) < K && addr < M*K ) {
+      localMemA[thread_y][thread_x] = alpha*A_ptr[addr];
     } else { // needed on AMD
       localMemA[thread_y][thread_x] = 0.0;
     }
-      
+
     // each thread in workgroup reads one element of matrix B from global to local memory
-    if ( thread_y + global_y < K ) {      
-      int addr = group_n*(group_size_n*K) + group_x + (thread_y+global_y)*group_size_n;
+    addr = group_n*(group_size_n*K) + ( x % group_size_n ) + (thread_y+global_y)*group_size_n;
+    if ( thread_y + global_y < K  && addr < K*N ) {      
       localMemB[thread_y][thread_x] = B_ptr[addr];
     } else { // needed on AMD
       localMemB[thread_y][thread_x] = 0.0;
     }
-   
+
     // Synchronize the reads of A and B
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // multiply matrix A and B using local memory
     for (int k = 0; k < OPENCL_BLOCK_SIZE; k++) {
       sum += localMemA[thread_y][k] * localMemB[k][thread_x];
+
     }
 
     // Synchronize all sub-results
-    barrier(CLK_LOCAL_MEM_FENCE);   
+    barrier(CLK_LOCAL_MEM_FENCE); 
   }
 
   // write all results back to global memory
   if ( x < N && y < M ) {
 
-    int addr = group_n*group_size_n*M + y*group_size_n + group_x;
+    addr = group_n*group_size_n*M + y*group_size_n + ( x % group_size_n );
     if (addr < M*N ) {
       C_ptr[addr] = sum + beta*C_ptr[addr];
     }

@@ -412,7 +412,60 @@ protected:
     for (int i = 0; i < scale*m*scale*n; ++i) {
       EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
     }
+    //LOG(INFO)<<m<<" x "<<n<<" x "<<k<<" into "<<gm<<" x "<<gn<<" x "<<gk;
     //DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data() + idx_offset_C, n, m);
+
+#endif
+
+  }
+
+  void BLASTestPerformanceGroupGEMM(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int m, const int n, const int k, const int gm, const int gn, const int gk) {
+
+
+#if defined(USE_OPENCL)
+
+    A->Reshape(1, 1, m, k);
+    B->Reshape(1, 1, k, n);
+    C->Reshape(1, 1, m, n);
+
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+
+    filler.Fill(this->A);
+    filler.Fill(this->B);
+    filler.Fill(this->C);
+
+    record r;
+
+    if ( TypeParam::device == Caffe::GPU ) {
+      A->gpu_data();
+      B->gpu_data();
+      C->mutable_gpu_data();
+
+      caffe::Caffe::DeviceSync();
+
+      r.type      = std::string(typeid(Dtype).name());
+      r.num_images    = 1;
+      r.num_channels  = 1;
+      r.img_width     = m;
+      r.img_height    = n;
+
+      BENCH(r, {
+          caffe_gpu_group_gemm<Dtype>(TransA, TransB, m, n, k, gm, gn, gk, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
+      });
+
+      r.type      = std::string(typeid(Dtype).name());
+      r.num_images    = gn;
+      r.num_channels  = 1;
+      r.img_width     = m;
+      r.img_height    = n/gn;
+
+      BENCH(r, {
+      for( int g = 0; g < gn; g++ ) {
+        caffe_gpu_gemm<Dtype>(TransA, TransB, m, n/gn, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
+      }
+      });
+    }
 
 #endif
 
@@ -645,11 +698,6 @@ TYPED_TEST_CASE(BLASTest, TestDtypesAndDevices);
 
 TYPED_TEST(BLASTest, BLASTestPerformanceGEMM) {
 
-#ifndef USE_CLGEMM
-  LOG(ERROR)<<"using clBLAS";
-#else
-  LOG(ERROR)<<"use clgemm";
-#endif
   for ( int i = 0; i < 10; i++ ) {
     for(int size=16; size<=4096; size*=2 ) {
       this->BLASTestPerformanceGEMM(CblasNoTrans, CblasNoTrans, size,size,size);
@@ -741,6 +789,33 @@ TYPED_TEST(BLASTest, BLASTestValidationGroupGEMM) {
     this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,3*n,k,1,3,1,0,0,0, 1.0, 0.0);
     this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, m,3*n,k,1,3,1,0,0,0, 1.0, 1.0);
   }
+
+  /*
+  LOG(ERROR)<<"The BIG one.";
+  this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, 96,30250,363,1,10,1,0,0,0, 1.0, 0.0);
+  */
+}
+
+TYPED_TEST(BLASTest, BLASTestPerformanceGroupGEMM) {
+
+  int repeat    = 1;
+  int numImages = 10000;
+  int m = 32;
+  int n;
+  int k = 32;
+
+  for ( int im = 1; im <= numImages; im += 10 ) {
+    n = im*32;
+    for( int r = 0; r < repeat; r++ ) {
+      this->BLASTestPerformanceGroupGEMM(CblasNoTrans, CblasNoTrans, m,n,k,1,n/32,1);
+    }
+  }
+
+
+  /*
+  LOG(ERROR)<<"The BIG one.";
+  this->BLASTestValidationGroupGEMM(CblasNoTrans, CblasNoTrans, 96,30250,363,1,10,1,0,0,0, 1.0, 0.0);
+  */
 }
 
 TYPED_TEST(BLASTest, BLASTestValidationGEMMOffset) {
