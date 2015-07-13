@@ -64,7 +64,6 @@ message DocumentDatum {
   // non-label metadata for image identification
   optional int32 id = 6;
   optional int32 dbid = 7;
-  optional string collection = 8;
   optional string image_name = 9;
 
   // labels - raw and encoded values
@@ -126,6 +125,9 @@ message DocumentDatum {
 
   optional string is_textual_document_str = 46;
   optional int32 is_textual_document = 47;  // classifcation target
+
+  optional string collection_str = 48;
+  optional int32 collection = 49;
 }
 
 message FillerParameter {
@@ -728,6 +730,10 @@ message DocDataParameter {
   optional uint32 rand_skip = 4;
 
   optional DataParameter.DB backend = 5;
+
+  repeated string label_names = 6;
+
+  optional int32 missing_value = 7 [default = -1];
 }
 
 message DropoutParameter {

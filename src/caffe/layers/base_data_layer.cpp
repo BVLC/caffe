@@ -79,6 +79,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   CreatePrefetchThread();
 }
 
+
 #ifdef CPU_ONLY
 STUB_GPU_FORWARD(BasePrefetchingDataLayer, Forward);
 #endif
