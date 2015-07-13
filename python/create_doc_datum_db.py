@@ -30,7 +30,7 @@ def get_size(size, args):
 		s = int(args.size_str[:-1])
 		scale = float(s) / shorter
 		new_longer = int(longer * scale)
-		mode = (new_longer - s) % args.aspect_ratio_bin
+		mod = (new_longer - s) % args.aspect_ratio_bin
 		if mod >= args.aspect_ratio_bin / 2:
 			new_longer += (args.aspect_ratio_bin - mod)
 		else:
@@ -99,27 +99,31 @@ def main(args):
 		random.shuffle(lines)
 
 	for x,line in enumerate(lines):
-		if x and x % 1000:
+		if x and x % 1000 == 0:
 			print "Processed %d images" % x
-		line = line.rstrip()
-		tokens = line.split()
-		im_file = os.path.join(args.imroot, tokens[0])
-		im = process_im(im_file, args)
-		if len(tokens) > 1:
-			label_file = tokens[1]
-			label_info = process_labels(label_file, args)
-		else:
-			label_info = {}
-		doc_datum = package(im, label_info, args)
-		if args.multiple_db:
-			db_file = os.path.join(args.outdb, "%dx%d_lmdb" % im.size)
-		else:
-			db_file = args.outdb
-		if db_file not in dbs:
-			dbs[db_file] = open_db(db_file)
-		env, txn = dbs[db_file]
-		key = "%d:%s" % (x, os.path.splitext(os.path.basename(im_file))[0])
-		txn.put(key, doc_datum.SerializeToString())
+		try:
+			line = line.rstrip()
+			tokens = line.split()
+			im_file = os.path.join(args.imroot, tokens[0])
+			im = process_im(im_file, args)
+			if len(tokens) > 1:
+				label_file = tokens[1]
+				label_info = process_labels(label_file, args)
+			else:
+				label_info = {}
+			doc_datum = package(im, label_info, args)
+			if args.multiple_db:
+				db_file = os.path.join(args.outdb, "%dx%d_lmdb" % im.size)
+			else:
+				db_file = args.outdb
+			if db_file not in dbs:
+				dbs[db_file] = open_db(db_file)
+			env, txn = dbs[db_file]
+			key = "%d:%s" % (x, os.path.splitext(os.path.basename(im_file))[0])
+			txn.put(key, doc_datum.SerializeToString())
+		except Exception as e:
+			print e
+
 
 	print "Done Processing Images"
 
