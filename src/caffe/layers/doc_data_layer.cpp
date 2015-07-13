@@ -176,6 +176,10 @@ void DocDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     top[i + 1]->Reshape(label_shape);
 	prefetch_labels_.push_back(new Blob<Dtype>(label_shape));
   }
+  // unused, but prevents errors due to inheritance
+  this->output_labels_ = false;
+
+  LOG(INFO) << "DocDataLayer::DataLayerSetup() Done";
 }
 
 // This function is used to create a thread that prefetches the data.
@@ -236,6 +240,10 @@ void DocDataLayer<Dtype>::InternalThreadEntry() {
 	for (int i = 0; i < num_labels_; i++) {
       top_label = prefetch_labels_[i]->mutable_cpu_data();
       top_label[item_id] = GetLabelValue(doc, label_names_[i]);
+	  /*
+	  DLOG(INFO) << "item: " << item_id << " label_idx: " << i << " label_name: " << label_names_[i] << 
+	  	" label_val: " << GetLabelValue(doc, label_names_[i]);
+	  */
 	}
 	label_time += timer.MicroSeconds();
 	timer.Start();

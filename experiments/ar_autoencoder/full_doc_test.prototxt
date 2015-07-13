@@ -1,0 +1,66 @@
+name: "Aspect_Ratio_Test"
+layer {
+  name: "data"
+  type: "DocData"
+  top: "data"
+  top: "language"
+  top: "country"
+  top: "collection"
+  top: "column_count"
+  top: "layout_category"
+  top: "is_document"
+  doc_data_param {
+    sources: "experiments/ar_autoencoder/data/single_512_full_doc_lmdb"
+    batch_size: 1
+    backend: LMDB
+	label_names: "language"
+	label_names: "country"
+	label_names: "collection"
+	label_names: "column_count"
+	label_names: "layout_category"
+	label_names: "is_document"
+  }
+  image_transform_param {
+    #params {
+	#  resize_params {
+	#    size_perc: 0.25
+	#    size_perc: 1
+	#  }
+	#}
+	params {
+	  linear_params {
+		scale: 0.00390625
+	    shift: -0.5
+	  }
+	}
+  }
+}
+
+
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 9
+    stride: 4
+	pad: 4
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
