@@ -79,19 +79,19 @@ message DocumentDatum {
   optional float decade = 15;  // Lets say 1600 to 2000 normalized to 0-1
 
   optional string column_count_str = 16;
-  optional int32 column_count = 17;  // regression target
+  optional float column_count = 17;  // regression target
 
   optional string possible_records_str = 18;
-  optional int32 possible_records = 19;  // regression target
+  optional float possible_records = 19;  // regression target
 
   optional string actual_records_str = 20;
-  optional int32 actual_records = 21;  // regression target
+  optional float actual_records = 21;  // regression target
 
   optional string pages_per_image_str = 22;
-  optional int32 pages_per_image = 23;  // classification target
+  optional float pages_per_image = 23;  // classification target
 
   optional string docs_per_image_str = 24;
-  optional int32 docs_per_image = 25;  // classification target
+  optional float docs_per_image = 25;  // classification target
 
   optional string machine_text_str = 26;
   optional float machine_text = 27;  // regression target
@@ -100,7 +100,7 @@ message DocumentDatum {
   optional float hand_text = 29;  // regression target
 
   optional string layout_category_str = 30;
-  optional float layout_category = 31;  // classifcation target
+  optional int32 layout_category = 31;  // classifcation target
 
   optional string layout_type_str = 32;
   optional int32 layout_type = 33;  // classifcation target
