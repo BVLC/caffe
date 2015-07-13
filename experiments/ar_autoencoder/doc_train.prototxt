@@ -3,30 +3,25 @@ layer {
   name: "data"
   type: "DocData"
   top: "data"
-  data_param {
-    source: "experiments/ar_autoencoder/data/ar_512_single_doc_lmdb"
+  doc_data_param {
+    sources: "experiments/ar_autoencoder/data/ar_512_single_doc_lmdb"
+	weights: 1
+    sources: "experiments/ar_autoencoder/data/ar_256_single_doc_lmdb"
+	weights: 2
     batch_size: 1
     backend: LMDB
   }
   image_transform_param {
     #params {
 	#  resize_params {
-	#    width: 200
-	#	height: 300
+	#    size_perc: 0.25
+	#    size_perc: 1
 	#  }
 	#}
 	params {
 	  linear_params {
-	    shift: 1 
-	    shift: 2 
-	    shift: 3 
 		scale: 0.00390625
-	  }
-	}
-	params {
-	  linear_params {
-	    shift: 1 
-		scale: 2
+	    shift: -0.5
 	  }
 	}
   }
