@@ -15,6 +15,7 @@ apt-get install \
     python-dev python-numpy \
     libleveldb-dev libsnappy-dev libopencv-dev \
     libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev \
+    libboost-regex-dev \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \

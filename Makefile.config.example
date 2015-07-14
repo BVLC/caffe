@@ -66,6 +66,7 @@ PYTHON_LIB := /usr/lib
 # PYTHON_LIB += $(shell brew --prefix numpy)/lib
 
 # Uncomment to support layers written in Python (will link against Python libs)
+# This will require an additional dependency boost_regex provided by boost.
 # WITH_PYTHON_LAYER := 1
 
 # Whatever else you find you need goes here.
