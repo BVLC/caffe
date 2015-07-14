@@ -6,6 +6,7 @@
 #include "caffe/vision_layers.hpp"
 
 #ifdef WITH_PYTHON_LAYER
+#include <boost/regex.hpp>
 #include "caffe/python_layer.hpp"
 #endif
 
@@ -160,14 +161,25 @@ REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
 #ifdef WITH_PYTHON_LAYER
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
+  string module_name = param.python_param().module();
+  string layer_name = param.python_param().layer();
+  // Check injection. This allows nested import.
+  boost::regex expression("[a-zA-Z_][a-zA-Z0-9_]*"
+    "(\\.[a-zA-Z_][a-zA-Z0-9_]*)*");
+  CHECK(boost::regex_match(module_name, expression))
+    << "Module name is invalid: " << module_name;
+  CHECK(boost::regex_match(layer_name, expression))
+    << "Layer name is invalid: " << layer_name;
   Py_Initialize();
   try {
-    bp::object module = bp::import(param.python_param().module().c_str());
-    bp::object layer = module.attr(param.python_param().layer().c_str())(param);
+    bp::object globals = bp::import("__main__").attr("__dict__");
+    bp::exec(("import " + module_name).c_str(), globals, globals);
+    bp::object layer_class = bp::eval((module_name + "." + layer_name).c_str(),
+      globals, globals);
+    bp::object layer = layer_class(param);
     return bp::extract<shared_ptr<PythonLayer<Dtype> > >(layer)();
   } catch (bp::error_already_set) {
-    PyErr_Print();
-    throw;
+    PYTHON_LAYER_ERROR();
   }
 }
 
