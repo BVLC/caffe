@@ -920,14 +920,19 @@ class PoolingNDLayer : public Layer<Dtype> {
             == PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
-  int max_top_blobs_;
-  int pad_h_, pad_w_;
+  Blob<int> kernel_shape_;
+  Blob<int> ext_kernel_shape_;
+  Blob<int> stride_;
+  Blob<int> pad_;
+  Blob<int> kstride_;
+  Blob<int> size_;
+  Blob<int> pooled_size_;
+
+  int channel_axis_;
+  int num_spatial_axes_;
   int channels_;
-  int height_, width_;
-  int pooled_height_, pooled_width_;
-  int kernel_h_, kernel_w_;
-  int stride_h_, stride_w_;
-  int kstride_h_, kstride_w_;
+
+  int max_top_blobs_;
   Blob<int> max_idx_;
 };
 
