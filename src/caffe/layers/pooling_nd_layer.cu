@@ -15,38 +15,75 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void MaxPoolNDForward(const int nthreads, const Dtype* bottom_data,
-                               const int num, const int channels,
-                               const int height, const int width,
-                               const int pooled_height, const int pooled_width,
-                               const int kernel_h, const int kernel_w,
-                               const int ext_kernel_h, const int ext_kernel_w,
-                               const int stride_h, const int stride_w,
-                               const int kstride_h, const int kstride_w,
-                               const int pad_h, const int pad_w,
-                               Dtype* top_data, int* mask, Dtype* top_mask) {
-  CUDA_KERNEL_LOOP(index, nthreads) {
-    int pw = index % pooled_width;
-    int ph = (index / pooled_width) % pooled_height;
-    int c = (index / pooled_width / pooled_height) % channels;
-    int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h - pad_h;
-    int wstart = pw * stride_w - pad_w;
-    int hend = min(hstart + ext_kernel_h, height);
-    int wend = min(wstart + ext_kernel_w, width);
-    hstart = max(hstart, 0);
-    wstart = max(wstart, 0);
-    Dtype maxval = -FLT_MAX;
-    int maxidx = -1;
-    bottom_data += (n * channels + c) * height * width;
-    for (int h = hstart; h < hend; h += kstride_h) {
-      for (int w = wstart; w < wend; w += kstride_w) {
-        if (bottom_data[h * width + w] > maxval) {
-          maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
+__global__ void MaxPoolNDForward(const int n, const int num_axes,
+                                 const Dtype* bottom_data,
+                                 const int channels, const int* size,
+                                 const int* pooled_size, const int* kernel_size,
+                                 const int* ext_kernel_size, const int* stride,
+                                 const int* kstride, const int* pad,
+                                 Dtype* top_data, int* mask, Dtype* top_mask) {
+  int d_idx[6];  // NOLINT(runtime/arrays)
+  int d_start[6];  // NOLINT(runtime/arrays)
+  int d_end[6];  // NOLINT(runtime/arrays)
+  int d_iter[6];  // NOLINT(runtime/arrays)
+  int i;
+
+  CUDA_KERNEL_LOOP(index, n) {
+    int offset = 1;
+    int num = index;
+    for (i = num_axes - 1; i >= 0; --i) {
+      d_idx[i] = index % pooled_size[i];
+      d_start[i] = d_idx[i] * stride[i] - pad[i];
+      d_end[i] = min(d_start[i] + ext_kernel_size[i], size[i]);
+      d_start[i] = max(d_start[i], 0);
+      num /= pooled_size[i];
+      offset *= size[i];
+      d_iter[i] = d_start[i];
+
+      if (d_start[i] >= d_end[i]) {
+        top_data[index] = -FLT_MAX;
+        if (mask) {
+          mask[index] = -1;
+        } else {
+          top_mask[index] = -1;
         }
+        return;
       }
     }
+    int chan = num % channels;
+    num /= channels;
+    offset *= (num * channels + chan);
+
+    Dtype maxval = -FLT_MAX;
+    int maxidx = -1;
+    int final_offset = 0;
+
+    bool incremented;
+    do {
+      final_offset = offset;
+      int size_prod = 1;
+      for (i = num_axes - 1; i >= 0; --i) {
+        final_offset += d_iter[i] * size_prod;
+        size_prod *= size[i];
+      }
+
+      if (bottom_data[final_offset] > maxval) {
+        maxidx = final_offset;
+        maxval = bottom_data[maxidx];
+      }
+
+      incremented = false;
+      for (i = num_axes - 1; i >= 0; --i) {
+        if (d_iter[i] >= d_end[i] - kstride[i]) {
+          d_iter[i] = d_start[i];
+        } else {
+          d_iter[i] += kstride[i];
+          incremented = true;
+          break;
+        }
+      }
+    } while (incremented);
+
     top_data[index] = maxval;
     if (mask) {
       mask[index] = maxidx;
@@ -68,9 +105,6 @@ void PoolingNDLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int* mask = NULL;
   Dtype* top_mask = NULL;
 
-  int ext_kernel_h = (kernel_h_ - 1) * kstride_h_ + 1;
-  int ext_kernel_w = (kernel_w_ - 1) * kstride_w_ + 1;
-
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     switch (this->layer_param_.pooling_param().pool()) {
@@ -82,13 +116,12 @@ void PoolingNDLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
         // NOLINT_NEXT_LINE(whitespace/operators)
         MaxPoolNDForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-                                          CAFFE_CUDA_NUM_THREADS)(
-            count, bottom_data, bottom[0]->num(), channels_,
-            height_, width_, pooled_height_, pooled_width_, kernel_h_,
-            kernel_w_, ext_kernel_h, ext_kernel_w,
-            stride_h_, stride_w_, kstride_h_, kstride_w_,
-            pad_h_, pad_w_, top_data,
-            mask, top_mask);
+                                            CAFFE_CUDA_NUM_THREADS)(
+            count, num_spatial_axes_, bottom_data,
+            channels_, size_.gpu_data(), pooled_size_.gpu_data(),
+            kernel_shape_.gpu_data(), ext_kernel_shape_.gpu_data(),
+            stride_.gpu_data(), kstride_.gpu_data(), pad_.gpu_data(),
+            top_data, mask, top_mask);
         break;
       default: {
         LOG(FATAL)<< "Unknown pooling method.";
@@ -114,17 +147,20 @@ void PoolingNDLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
             CL_KERNEL_SELECT("max_pool_forward_nd"));
         viennacl::ocl::enqueue(
-            oclk_max_pool_forward(count,
-                         WrapHandle((cl_mem) bottom_data, &ctx),
-                bottom[0]->num(), channels_, height_, width_,
-                pooled_height_, pooled_width_, kernel_h_,
-                kernel_w_, ext_kernel_h, ext_kernel_w,
-                stride_h_, stride_w_, kstride_h_, kstride_w_,
-                pad_h_, pad_w_,
-                WrapHandle((cl_mem) top_data, &ctx),
+            oclk_max_pool_forward(count, num_spatial_axes_,
+                WrapHandle((cl_mem)bottom_data, &ctx),
+                channels_,
+                WrapHandle((cl_mem)(size_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)(pooled_size_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)(kernel_shape_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)(ext_kernel_shape_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)(stride_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)(kstride_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)(pad_.gpu_data()), &ctx),
+                WrapHandle((cl_mem)top_data, &ctx),
                 mask == NULL ? 0 : 1,
-                WrapHandle((cl_mem) mask, &ctx),
-                WrapHandle((cl_mem) top_mask, &ctx)),
+                WrapHandle((cl_mem)mask, &ctx),
+                WrapHandle((cl_mem)top_mask, &ctx)),
             ctx.get_queue());
       }
       break;
@@ -138,58 +174,84 @@ void PoolingNDLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void MaxPoolNDBackward(const int nthreads, const Dtype* top_diff,
-                                const int* mask, const Dtype* top_mask,
-                                const int num, const int channels,
-                                const int height, const int width,
-                                const int pooled_height, const int pooled_width,
-                                const int kernel_h, const int kernel_w,
-                                const int ext_kernel_h, const int ext_kernel_w,
-                                const int stride_h, const int stride_w,
-                                const int kstride_h, const int kstride_w,
-                                const int pad_h, const int pad_w,
-                                Dtype* bottom_diff) {
-  CUDA_KERNEL_LOOP(index, nthreads) {
+__global__ void MaxPoolNDBackward(const int n, const int num_axes,
+                                  const Dtype* top_diff, const int* mask,
+                                  const Dtype* top_mask,
+                                  const int channels, const int* size,
+                                  const int* pooled_size,
+                                  const int* kernel_size,
+                                  const int* ext_kernel_size, const int* stride,
+                                  const int* kstride, const int* pad,
+                                  Dtype* bottom_diff) {
+  int d_idx[6];  // NOLINT(runtime/arrays)
+  int d_start[6];  // NOLINT(runtime/arrays)
+  int d_end[6];  // NOLINT(runtime/arrays)
+  int d_iter[6];  // NOLINT(runtime/arrays)
+  int i;
+
+  CUDA_KERNEL_LOOP(index, n) {
     // find out the local index
     // find out the local offset
-    int w = index % width;
-    int h = (index / width) % height;
-    int c = (index / width / height) % channels;
-    int n = index / width / height / channels;
+    int offset = 1;
+    int num = index;
+    for (i = num_axes - 1; i >= 0; --i) {
+      d_idx[i] = num % size[i];
+      d_start[i] = (d_idx[i] < ext_kernel_size[i]) ?
+          d_idx[i] % kstride[i] : (d_idx[i] - ext_kernel_size[i]) + 1;
+      d_end[i] = (d_idx[i] >= pooled_size[i]) ?
+          (pooled_size[i] - 1) - (pooled_size[i] - 1 - d_start[i]) %
+          kstride[i] : d_idx[i];
+      num /= size[i];
+      offset *= pooled_size[i];
+      d_iter[i] = d_start[i];
 
-    int pooled_height_1 = pooled_height - 1;
-    int pooled_width_1 = pooled_width - 1;
-    int phstart = (h < ext_kernel_h) ? h % kstride_h : (h - ext_kernel_h) + 1;
-    int phend =
-        (h >= pooled_height) ?
-            pooled_height_1 - (pooled_height_1 - phstart) % kstride_h : h;
-    int pwstart = (w < ext_kernel_w) ? w % kstride_w : (w - ext_kernel_w) + 1;
-    int pwend =
-        (w >= pooled_width) ?
-            pooled_width_1 - (pooled_width_1 - pwstart) % kstride_w : w;
-
-    Dtype gradient = 0;
-    int offset = (n * channels + c) * pooled_height * pooled_width;
-    top_diff += offset;
-    if (mask) {
-      mask += offset;
-      for (int ph = phstart; ph <= phend; ph += kstride_h) {
-        for (int pw = pwstart; pw <= pwend; pw += kstride_w) {
-          if (mask[ph * pooled_width + pw] == h * width + w) {
-            gradient += top_diff[ph * pooled_width + pw];
-          }
-        }
-      }
-    } else {
-      mask += offset;
-      for (int ph = phstart; ph <= phend; ph += kstride_h) {
-        for (int pw = pwstart; pw <= pwend; pw += kstride_w) {
-          if (top_mask[ph * pooled_width + pw] == h * width + w) {
-            gradient += top_diff[ph * pooled_width + pw];
-          }
-        }
+      if (d_start[i] > d_end[i]) {
+        bottom_diff[index] = 0;
+        return;
       }
     }
+    int chan = num % channels;
+    num /= channels;
+    offset *= (num * channels + chan);
+
+    Dtype gradient = 0;
+    int final_offset = 0;
+    int im_offset = 0;
+
+    bool incremented;
+    do {
+      final_offset = offset;
+      im_offset = 0;
+      int size_prod = 1;
+      int pooled_size_prod = 1;
+      for (i = num_axes - 1; i >= 0; --i) {
+        final_offset += d_iter[i] * pooled_size_prod;
+        im_offset += d_idx[i] * size_prod;
+        size_prod *= size[i];
+        pooled_size_prod *= pooled_size[i];
+      }
+
+      if (mask) {
+        if (mask[final_offset] == im_offset) {
+          gradient += top_diff[final_offset];
+        }
+      } else {
+        if (top_mask[final_offset] == im_offset) {
+          gradient += top_diff[final_offset];
+        }
+      }
+
+      incremented = false;
+      for (i = num_axes - 1; i >= 0; --i) {
+        if (d_iter[i] > d_end[i] - kstride[i]) {
+          d_iter[i] = d_start[i];
+        } else {
+          d_iter[i] += kstride[i];
+          incremented = true;
+          break;
+        }
+      }
+    } while (incremented);
     bottom_diff[index] = gradient;
   }
 }
@@ -207,9 +269,6 @@ void PoolingNDLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int* mask = NULL;
   const Dtype* top_mask = NULL;
 
-  int ext_kernel_h = (kernel_h_ - 1) * kstride_h_ + 1;
-  int ext_kernel_w = (kernel_w_ - 1) * kstride_w_ + 1;
-
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_set(count, Dtype(0.), bottom_diff);
@@ -222,12 +281,11 @@ void PoolingNDLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         // NOLINT_NEXT_LINE(whitespace/operators)
         MaxPoolNDBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-                                           CAFFE_CUDA_NUM_THREADS)(
-            count, top_diff, mask, top_mask, top[0]->num(), channels_,
-            height_, width_, pooled_height_, pooled_width_,
-            kernel_h_, kernel_w_, ext_kernel_h, ext_kernel_w,
-            stride_h_, stride_w_, kstride_h_, kstride_w_,
-            pad_h_, pad_w_,
+                                             CAFFE_CUDA_NUM_THREADS)(
+            count, num_spatial_axes_, top_diff, mask, top_mask,
+            channels_, size_.gpu_data(), pooled_size_.gpu_data(),
+            kernel_shape_.gpu_data(), ext_kernel_shape_.gpu_data(),
+            stride_.gpu_data(), kstride_.gpu_data(), pad_.gpu_data(),
             bottom_diff);
         break;
       default:
@@ -256,16 +314,19 @@ void PoolingNDLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::kernel &oclk_max_pool_backward = program.get_kernel(
             CL_KERNEL_SELECT("max_pool_backward_nd"));
         viennacl::ocl::enqueue(
-            oclk_max_pool_backward(count, WrapHandle((cl_mem) top_diff, &ctx),
-                                   mask == NULL ? 0 : 1,
-                                   WrapHandle((cl_mem) mask, &ctx),
-                                   WrapHandle((cl_mem) top_mask, &ctx),
-                                   top[0]->num(), channels_, height_, width_,
-                                   pooled_height_, pooled_width_, kernel_h_,
-                                   kernel_w_, ext_kernel_h, ext_kernel_w,
-                                   stride_h_, stride_w_, kstride_h_, kstride_w_,
-                                   pad_h_, pad_w_,
-                                   WrapHandle((cl_mem) bottom_diff, &ctx)),
+            oclk_max_pool_backward(
+                count, num_spatial_axes_, WrapHandle((cl_mem) top_diff, &ctx),
+                mask == NULL ? 0 : 1,
+                WrapHandle((cl_mem) mask, &ctx),
+                WrapHandle((cl_mem) top_mask, &ctx), channels_,
+                WrapHandle((cl_mem) (size_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (pooled_size_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (kernel_shape_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (ext_kernel_shape_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (stride_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (kstride_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (pad_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) bottom_diff, &ctx)),
             ctx.get_queue());
       }
         break;

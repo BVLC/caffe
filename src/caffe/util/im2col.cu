@@ -375,9 +375,9 @@ __global__ void im2col_nd_gpu_kernel(const int n, const int num_axes,
         // Old: const int d_max = kernel_shape[i];
         // New (strided, limit is the external kernel size):
         const int d_max = (kernel_shape[i] - 1) * kstride[i] + 1;
-        if (d_iter[i] == d_max - 1) {
+        if (d_iter[i] > d_max - kstride[i]) {
           d_iter[i] = 0;
-        } else {  // d_iter[i] < d_max - 1
+        } else {  // d_iter[i] <= d_max - kstride[i]
           // Old: ++d_iter[i];
           // New (strided, increment by the stride each time):
           d_iter[i] += kstride[i];

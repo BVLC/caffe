@@ -377,7 +377,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
         }
       }
     } else {
-      mask += offset;
+      top_mask += offset;
       for (int ph = phstart; ph <= phend; ph += kstride_h) {
         for (int pw = pwstart; pw <= pwend; pw += kstride_w) {
           if (top_mask[ph * pooled_width + pw] == h * width + w) {

@@ -716,6 +716,7 @@ message PoolingParameter {
   repeated uint32 kstride = 13; // The kernel stride, default 1
   optional uint32 kstride_h = 14;
   optional uint32 kstride_w = 15;
+  optional int32 axis = 16 [default = 1];
 }
 
 message PowerParameter {
