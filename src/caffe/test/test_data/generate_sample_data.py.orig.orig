@@ -1,0 +1,105 @@
+"""
+Generate data used in the HDF5DataLayer test.
+"""
+import os
+import numpy as np
+import h5py
+
+<<<<<<< 5308d9998ae0b1f97b7b99b33fac968421447f3a
+<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
+=======
+# Generate HDF5DataLayer sample_data.h5
+
+=======
+>>>>>>> triplet data generation and network update
+=======
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+>>>>>>> restore
+>>>>>>> triplet data generation and network update
+num_cols = 8
+num_rows = 10
+height = 6
+width = 5
+total_size = num_cols * num_rows * height * width
+
+data = np.arange(total_size)
+data = data.reshape(num_rows, num_cols, height, width)
+data = data.astype('float32')
+
+# We had a bug where data was copied into label, but the tests weren't
+# catching it, so let's make label 1-indexed.
+label = 1 + np.arange(num_rows)[:, np.newaxis]
+label = label.astype('float32')
+
+# We add an extra label2 dataset to test HDF5 layer's ability
+# to handle arbitrary number of output ("top") Blobs.
+label2 = label + 1
+
+print data
+print label
+
+with h5py.File(script_dir + '/sample_data.h5', 'w') as f:
+    f['data'] = data
+    f['label'] = label
+    f['label2'] = label2
+
+with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
+    f.create_dataset(
+        'data', data=data + total_size,
+        compression='gzip', compression_opts=1
+    )
+    f.create_dataset(
+        'label', data=label,
+        compression='gzip', compression_opts=1
+    )
+    f.create_dataset(
+        'label2', data=label2,
+        compression='gzip', compression_opts=1
+    )
+
+<<<<<<< 5308d9998ae0b1f97b7b99b33fac968421447f3a
+<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
+with open(script_dir + '/sample_data_list.txt', 'w') as f:
+    f.write(script_dir + '/sample_data.h5\n')
+    f.write(script_dir + '/sample_data_2_gzip.h5\n')
+<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
+=======
+
+# Generate GradientBasedSolver solver_data.h5
+
+num_cols = 3
+num_rows = 8
+height = 10
+width = 10
+
+data = np.random.randn(num_rows, num_cols, height, width)
+data = data.reshape(num_rows, num_cols, height, width)
+data = data.astype('float32')
+
+targets = np.random.randn(num_rows, 1)
+targets = targets.astype('float32')
+
+print data
+print targets
+
+with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
+    f['data'] = data
+    f['targets'] = targets
+
+with open(script_dir + '/solver_data_list.txt', 'w') as f:
+    f.write(script_dir + '/solver_data.h5\n')
+=======
+with open(os.path.dirname(__file__) + '/sample_data_list.txt', 'w') as f:
+    f.write(os.path.dirname(__file__) + '/sample_data.h5\n')
+    f.write(os.path.dirname(__file__) + '/sample_data_2_gzip.h5\n')
+>>>>>>> triplet data generation and network update
+=======
+with open(script_dir + '/sample_data_list.txt', 'w') as f:
+    f.write(script_dir + '/sample_data.h5\n')
+    f.write(script_dir + '/sample_data_2_gzip.h5\n')
+>>>>>>> restore
+>>>>>>> triplet data generation and network update

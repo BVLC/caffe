@@ -224,10 +224,18 @@ class TripletLossLayer : public LossLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
+<<<<<<< 9a40f059e6e96f739ad502aae165c4bfdbf1f369
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+=======
+  virtual inline int ExactNumBottomBlobs() const { return 4; }
+>>>>>>> New triplet loss layer added(beta1 version-no test source files)
+=======
 <<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
   virtual inline int ExactNumBottomBlobs() const { return 2; }
 =======
   virtual inline int ExactNumBottomBlobs() const { return 4; }
+>>>>>>> triplet data generation and network update
 >>>>>>> triplet data generation and network update
   virtual inline const char* type() const { return "TripletLoss"; }
   /**
@@ -235,10 +243,18 @@ class TripletLossLayer : public LossLayer<Dtype> {
    * to the first three inputs.
    */
   virtual inline bool AllowForceBackward(const int bottom_index) const {
+<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
+<<<<<<< 9a40f059e6e96f739ad502aae165c4bfdbf1f369
+    return bottom_index != 1;
+=======
+    return bottom_index != 3;
+>>>>>>> New triplet loss layer added(beta1 version-no test source files)
+=======
 <<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
     return bottom_index != 1;
 =======
     return bottom_index != 3;
+>>>>>>> triplet data generation and network update
 >>>>>>> triplet data generation and network update
   }
 

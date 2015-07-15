@@ -72,7 +72,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char label_i;
   char label_j;
   char label_k;
-  char* pixels = new char[3 * rows * cols];
+  char label_l;  // label for pair wise
+  char label_m;
+  char* pixels = new char[5 * rows * cols];
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
@@ -84,15 +86,25 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
   for (int itemid = 0; itemid < num_items; ++itemid) {
-    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
+    // pick triplet groups
+    int i = caffe::caffe_rng_rand() % num_items;
     int j = caffe::caffe_rng_rand() % num_items;
     int k = caffe::caffe_rng_rand() % num_items;
+    // pick pair wise groups
+    int l = caffe::caffe_rng_rand() % num_items;
+    int m = caffe::caffe_rng_rand() % num_items;
+    // read triplet groups
     read_image(&image_file, &label_file, i, rows, cols,
         pixels, &label_i);
     read_image(&image_file, &label_file, j, rows, cols,
         pixels + (rows * cols), &label_j);
     read_image(&image_file, &label_file, k, rows, cols,
         pixels + (2 * rows * cols), &label_k);
+    // pair wise groups
+    read_image(&image_file, &label_file, l, rows, cols,
+        pixels + (3 * rows * cols), &label_l);
+    read_image(&image_file, &label_file, m, rows, cols,
+        pixels + (4 * rows * cols), &label_m);
 
     datum.set_data(pixels, 3*rows*cols);
     if (label_i  == label_j && label_i  != label_k) {
