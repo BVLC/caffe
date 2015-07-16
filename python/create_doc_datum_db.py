@@ -8,6 +8,8 @@ import caffe.proto.caffe_pb2
 import random
 import json
 import traceback
+import collections
+import pickle
 from PIL import Image
 
 LABEL_DELIM = '|'
@@ -21,11 +23,11 @@ _languages = list()
 _decade_scale = 1. / 500
 _decade_shift = -1500 * _decade_scale
 _collections = list()
-_col_count_scale = 1. / 10
+_col_count_scale = 1. / 44
 _col_count_shift = 0
-_record_scale = 1.
+_record_scale = 1. / 40
 _record_shift = 0
-_per_image_scale = 1.
+_per_image_scale = 1. / 2
 _per_image_shift = 0
 _machine_text = {'None': 0, 'Some': 0.5, 'Most': 1.0}
 _hand_text = {'None': 0, 'Some': 0.5, 'Most': 1.0}
@@ -58,7 +60,7 @@ def get_size(size, args):
 	elif args.size_str.endswith('l'):
 		s = int(args.size_str[:-1])
 		scale = float(s) / longer
-		new_shorter = int(shorter * scale)
+		new_shorter = int(max(shorter * scale, s / args.truncate))
 		mod = (new_shorter - s) % args.aspect_ratio_bin
 		if mod >= args.aspect_ratio_bin / 2:
 			new_shorter += (args.aspect_ratio_bin - mod)
@@ -71,7 +73,7 @@ def get_size(size, args):
 	elif args.size_str.endswith('s'):
 		s = int(args.size_str[:-1])
 		scale = float(s) / shorter
-		new_longer = int(longer * scale)
+		new_longer = int(min(longer * scale, s * args.truncate))
 		mod = (new_longer - s) % args.aspect_ratio_bin
 		if mod >= args.aspect_ratio_bin / 2:
 			new_longer += (args.aspect_ratio_bin - mod)
@@ -112,7 +114,7 @@ def process_labels(label_file, args):
 
 
 def open_db(db_file):
-	env = lmdb.open(db_file, readonly=False, map_size=int(2 ** 38))
+	env = lmdb.open(db_file, readonly=False, map_size=int(2 ** 38), writemap=True)
 	txn = env.begin(write=True)
 	return env, txn
 	
@@ -243,32 +245,94 @@ def regression(val, scale, shift):
 def list_to_str(l):
 	return "\t" + "\n\t".join(map(lambda tup: "%d:\t%s" % tup, enumerate(l)))
 
-def output_encoding(args):
+def serialize_encoding(args):
+
+	d = {
+			"Country": _countries,
+			"Language": _languages,
+			"Decade": {"shift": _decade_shift, "scale": _decade_scale},
+			"TrainingSetName": _collections,
+			"ColumnCount": {"shift": _col_count_shift, "scale": _col_count_scale},
+			"Records": {"shift": _record_shift, "scale": _record_scale},
+			"PerImage": {"shift": _per_image_shift, "scale": _per_image_scale},
+			"MachineText": _machine_text,
+			"HWText": _hand_text,
+			"LayoutCategory": _layout_categories,
+			"layout_type": _layout_types,
+			"RecordTypeBroad": _record_type_broads,
+			"RecordTypeFine": _record_type_fines,
+			"MediaType": _media_types
+		}
 	out = open(args.out_encoding, 'w')
+	pickle.dump(d, out)
+	out.close()
+
+def load_encoding(args):
+	global _countries
+	global _languages
+	global _decade_scale
+	global _decade_shift
+	global _collections
+	global _col_count_scale
+	global _col_count_shift
+	global _record_scale
+	global _record_shift
+	global _per_image_scale
+	global _per_image_shift
+	global _machine_text
+	global _hand_text
+	global _layout_categories
+	global _layout_types
+	global _record_type_broads
+	global _record_type_fines
+	global _media_types
+	if args.initial_encoding:
+		_in = open(args.initial_encoding, 'rb')
+		d = pickle.load(_in)
+		_countries = d["Country"]
+		_languages = d["Language"]
+		_decade_shift = d["Decade"]["shift"]
+		_decade_scale = d["Decade"]["scale"]
+		_collections = d["TrainingSetName"]
+		_col_count_shift = d["ColumnCount"]["shift"]
+		_col_count_scale = d["ColumnCount"]["scale"]
+		_record_shift = d["Records"]["shift"]
+		_record_scale = d["Records"]["scale"]
+		_per_image_shift = d["PerImage"]["shift"]
+		_per_image_scale = d["PerImage"]["scale"]
+		_machine_text = d["MachineText"]
+		_hand_text = d["HWText"]
+		_layout_categories = d["LayoutCategory"]
+		_layout_types = d["layout_type"]
+		_record_type_broad = d["RecordTypeBroad"]
+		_record_type_fine = d["RecordTypeFine"]
+		_media_types = d["MediaType"]
+
+
+
+def print_encoding(args):
 
 	# layout types
-	out.write("Grid Line Layout Type Mappings\n%s\n\n" % json.dumps(GL_TYPE_MAP, sort_keys=True,
-																indent=4))
-	out.write("layout_type:\n%s\n" % list_to_str(_layout_types))
-	out.write("Country:\n%s\n" % list_to_str(_countries))
-	out.write("Languag:\n%s\n" % list_to_str(_languages))
-	out.write("TrainingSetName:\n%s\n" % list_to_str(_collections))
-	out.write("LayoutCategory:\n%s\n" % list_to_str(_layout_categories))
-	out.write("RecordTypeBroad:\n%s\n" % list_to_str(_record_type_broads))
-	out.write("RecordTypeFine:\n%s\n" % list_to_str(_record_type_broads))
-	out.write("MediaTypes:\n%s\n\n" % list_to_str(_media_types))
+	print "Grid Line Layout Type Mappings\n%s\n\n" % json.dumps(GL_TYPE_MAP, sort_keys=True,
+																indent=4)
+	print "layout_type:\n%s\n" % list_to_str(_layout_types)
+	print "Country:\n%s\n" % list_to_str(_countries)
+	print "Languag:\n%s\n" % list_to_str(_languages)
+	print "TrainingSetName:\n%s\n" % list_to_str(_collections)
+	print "LayoutCategory:\n%s\n" % list_to_str(_layout_categories)
+	print "RecordTypeBroad:\n%s\n" % list_to_str(_record_type_broads)
+	print "RecordTypeFine:\n%s\n" % list_to_str(_record_type_fines)
+	print "MediaTypes:\n%s\n\n" % list_to_str(_media_types)
 
-	out.write("Decade Scale: %f\tShift: %f\n" % (_decade_scale, _decade_shift))
-	out.write("Col Count Scale: %f\tShift: %f\n" % (_col_count_scale, _col_count_shift))
-	out.write("Record Scale: %f\tShift: %f\n" % (_record_scale, _record_shift))
-	out.write("Per Image Scale: %f\tShift: %f\n\n" % (_per_image_scale, _per_image_shift))
+	print "Decade Scale: %f\tShift: %f\n" % (_decade_scale, _decade_shift)
+	print "Col Count Scale: %f\tShift: %f\n" % (_col_count_scale, _col_count_shift)
+	print "Record Scale: %f\tShift: %f\n" % (_record_scale, _record_shift)
+	print "Per Image Scale: %f\tShift: %f\n\n" % (_per_image_scale, _per_image_shift)
 
-	out.write("Machine Text:\n%s\n" % json.dumps(_machine_text, sort_keys=True, indent=4))
-	out.write("Handwritten Text:\n%s\n\n" % json.dumps(_hand_text, sort_keys=True, indent=4))
+	print "Machine Text:\n%s\n" % json.dumps(_machine_text, sort_keys=True, indent=4)
+	print "Handwritten Text:\n%s\n\n" % json.dumps(_hand_text, sort_keys=True, indent=4)
 
-	out.write("Is* : Y=1, N=0\n")
-
-	out.close()
+	print "Is* : Y=1, N=0\n"
 
 def main(args):
 	dbs = {}
@@ -278,27 +342,30 @@ def main(args):
 		except:
 			pass
 
+	load_encoding(args)
+
 	print "Reading Manifest..."
 	lines = open(args.manifest, 'r').readlines()
 	if args.shuffle:
 		print "Shuffling Data..."
 		random.shuffle(lines)
 
+	c = collections.Counter()
 	for x,line in enumerate(lines):
 		if x and x % 1000 == 0:
 			print "Processed %d images" % x
 		try:
 			line = line.rstrip()
 			tokens = line.split()
-			print tokens
 			im_file = os.path.join(args.imroot, tokens[0])
 			im = process_im(im_file, args)
 			if len(tokens) > 1:
 				label_file = tokens[1]
 				label_info = process_labels(label_file, args)
-				print label_info
 			else:
 				label_info = {}
+			if args.collection_folder and "TrainingSetName" not in label_info:
+				label_info["TrainingSetName"] = os.path.basename(os.path.dirname(im_file))
 			doc_datum = package(im, label_info, args)
 			if args.multiple_db:
 				db_file = os.path.join(args.outdb, "%dx%d_lmdb" % im.size)
@@ -306,10 +373,19 @@ def main(args):
 				db_file = args.outdb
 			if db_file not in dbs:
 				dbs[db_file] = open_db(db_file)
+				print "\tOpening %s" % db_file
 			env, txn = dbs[db_file]
 			key = "%d:%s" % (x, os.path.splitext(os.path.basename(im_file))[0])
 			txn.put(key, doc_datum.SerializeToString())
-			print
+			c[db_file] += 1
+			if c[db_file] % 1000 == 0:
+				txn.commit()
+				env.sync()
+				print db_file
+				print env.stat()
+				print env.info()
+				txn = env.begin(write=True)
+				dbs[db_file] = (env, txn)
 		except Exception as e:
 			print e
 			print traceback.print_exc(file=sys.stdout)
@@ -317,7 +393,8 @@ def main(args):
 
 	print "Done Processing Images"
 
-	output_encoding(args)
+	print_encoding(args)
+	serialize_encoding(args)
 
 	for key, val in dbs.items():
 		print "Closing DB: ", key
@@ -335,7 +412,7 @@ def get_args():
 	parser.add_argument('outdb', type=str,
 						help='where to put the db')
 	parser.add_argument('out_encoding', type=str,
-						help='where to put the encoding file')
+						help='where to put the encoding file (pickle file)')
 	parser.add_argument('-g', '--gray', default=False, action="store_true",
 						help='Force images to be grayscale.  Force color if ommited')
 	parser.add_argument('-s', '--size-str', type=str, default="",
@@ -346,6 +423,12 @@ def get_args():
 						help='Output a db for each image size in the $outdb directory')
 	parser.add_argument('-e', '--encoding', type=str, default='none',
 						help='How to store the image in the DocumentDatum')
+	parser.add_argument('-t', '--truncate', type=float, default='2',
+						help='Upper/Lower bound on the image AR')
+	parser.add_argument('-c', '--collection-folder', default=False, action="store_true",
+						help='If the collection or metadata file is missing, use the directory containing the image as the collection')
+	parser.add_argument('-i', '--initial-encoding', default="", type=str,
+						help='Use the specified encoding of metadata to labels (pickle)')
 	parser.add_argument('--no-shuffle', dest="shuffle", default=True, action="store_false",
 						help='How to store the image in the DocumentDatum')
 	args = parser.parse_args()
