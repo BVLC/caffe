@@ -54,7 +54,7 @@ message Datum {
   optional bool encoded = 7 [default = false];
 }
 
-// Next Avaliable field: 48, is_textual_document 
+// Next Avaliable field: 50, collection 
 message DocumentDatum {
   optional Image image = 1;
   // image data containing relative importance of each pixel in
@@ -188,7 +188,8 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 38 (last added: snapshot_before_train)
+// SolverParameter next available ID: 102 (last added: clip_gradients_global)
+// SolverParameter next available ID: 38 (last added: clip_gradients)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -260,6 +261,8 @@ message SolverParameter {
   // whenever their actual L2 norm is larger.
   optional float clip_gradients = 35 [default = -1];
 
+  optional bool clip_gradients_global = 101 [default = true];
+
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
@@ -295,7 +298,7 @@ message SolverParameter {
   // If false, don't save a snapshot after training finishes.
   optional bool snapshot_after_train = 28 [default = true];
   // If true, save a snapshot before training starts
-  optional bool snapshot_before_train = 37 [default = false];
+  optional bool snapshot_before_train = 100 [default = false];
 }
 
 // A message that stores the solver snapshots
