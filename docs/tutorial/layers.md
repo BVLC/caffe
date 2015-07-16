@@ -5,9 +5,7 @@ title: Layer Catalogue
 
 To create a Caffe model you need to define the model architecture in a protocol buffer definition file (prototxt).
 
-Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto). The latest definitions are in the [dev caffe.proto](https://github.com/BVLC/caffe/blob/dev/src/caffe/proto/caffe.proto).
-
-TODO complete list of layers linking to headings
+Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
 
 ### Vision Layers
 
@@ -23,7 +21,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 
 #### Convolution
 
-* LayerType: `CONVOLUTION`
+* Layer type: `Convolution`
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Parameters (`ConvolutionParameter convolution_param`)
@@ -43,15 +41,15 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
     - `n * c_o * h_o * w_o`, where `h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1` and `w_o` likewise.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-      layers {
+      layer {
         name: "conv1"
-        type: CONVOLUTION
+        type: "Convolution"
         bottom: "data"
         top: "conv1"
-        blobs_lr: 1          # learning rate multiplier for the filters
-        blobs_lr: 2          # learning rate multiplier for the biases
-        weight_decay: 1      # weight decay multiplier for the filters
-        weight_decay: 0      # weight decay multiplier for the biases
+        # learning rate and decay multipliers for the filters
+        param { lr_mult: 1 decay_mult: 1 }
+        # learning rate and decay multipliers for the biases
+        param { lr_mult: 2 decay_mult: 0 }
         convolution_param {
           num_output: 96     # learn 96 filters
           kernel_size: 11    # each filter is 11x11
@@ -67,11 +65,11 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
         }
       }
 
-The `CONVOLUTION` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
+The `Convolution` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
 
 #### Pooling
 
-* LayerType: `POOLING`
+* Layer type: `Pooling`
 * CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
 * Parameters (`PoolingParameter pooling_param`)
@@ -87,9 +85,9 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
     - `n * c * h_o * w_o`, where h_o and w_o are computed in the same way as convolution.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-      layers {
+      layer {
         name: "pool1"
-        type: POOLING
+        type: "Pooling"
         bottom: "conv1"
         top: "pool1"
         pooling_param {
@@ -101,7 +99,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 
 #### Local Response Normalization (LRN)
 
-* LayerType: `LRN`
+* Layer type: `LRN`
 * CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
 * CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
 * Parameters (`LRNParameter lrn_param`)
@@ -115,7 +113,7 @@ The local response normalization layer performs a kind of "lateral inhibition" b
 
 #### im2col
 
-`IM2COL` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
+`Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 
 ### Loss Layers
 
@@ -123,19 +121,19 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 
 #### Softmax
 
-* LayerType: `SOFTMAX_LOSS`
+* Layer type: `SoftmaxWithLoss`
 
 The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It's conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.
 
 #### Sum-of-Squares / Euclidean
 
-* LayerType: `EUCLIDEAN_LOSS`
+* Layer type: `EuclideanLoss`
 
 The Euclidean loss layer computes the sum of squares of differences of its two inputs, $$\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2$$.
 
 #### Hinge / Margin
 
-* LayerType: `HINGE_LOSS`
+* Layer type: `HingeLoss`
 * CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
 * CUDA GPU implementation: none yet
 * Parameters (`HingeLossParameter hinge_loss_param`)
@@ -149,17 +147,17 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 * Samples
 
       # L1 Norm
-      layers {
+      layer {
         name: "loss"
-        type: HINGE_LOSS
+        type: "HingeLoss"
         bottom: "pred"
         bottom: "label"
       }
 
       # L2 Norm
-      layers {
+      layer {
         name: "loss"
-        type: HINGE_LOSS
+        type: "HingeLoss"
         bottom: "pred"
         bottom: "label"
         top: "loss"
@@ -172,15 +170,15 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 
 #### Sigmoid Cross-Entropy
 
-`SIGMOID_CROSS_ENTROPY_LOSS`
+`SigmoidCrossEntropyLoss`
 
 #### Infogain
 
-`INFOGAIN_LOSS`
+`InfogainLoss`
 
 #### Accuracy and Top-k
 
-`ACCURACY` scores the output as the accuracy of output with respect to target -- it is not actually a loss and has no backward step.
+`Accuracy` scores the output as the accuracy of output with respect to target -- it is not actually a loss and has no backward step.
 
 ### Activation / Neuron Layers
 
@@ -193,7 +191,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 
 #### ReLU / Rectified-Linear and Leaky-ReLU
 
-* LayerType: `RELU`
+* Layer type: `ReLU`
 * CPU implementation: `./src/caffe/layers/relu_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
 * Parameters (`ReLUParameter relu_param`)
@@ -201,66 +199,66 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
         - `negative_slope` [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-      layers {
+      layer {
         name: "relu1"
-        type: RELU
+        type: "ReLU"
         bottom: "conv1"
         top: "conv1"
       }
 
-Given an input value x, The `RELU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
+Given an input value x, The `ReLU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
 #### Sigmoid
 
-* LayerType: `SIGMOID`
+* Layer type: `Sigmoid`
 * CPU implementation: `./src/caffe/layers/sigmoid_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/sigmoid_layer.cu`
 * Sample (as seen in `./examples/imagenet/mnist_autoencoder.prototxt`)
 
-      layers {
+      layer {
         name: "encode1neuron"
         bottom: "encode1"
         top: "encode1neuron"
-        type: SIGMOID
+        type: "Sigmoid"
       }
 
-The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
+The `Sigmoid` layer computes the output as sigmoid(x) for each input element x.
 
 #### TanH / Hyperbolic Tangent
 
-* LayerType: `TANH`
+* Layer type: `TanH`
 * CPU implementation: `./src/caffe/layers/tanh_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/tanh_layer.cu`
 * Sample
 
-      layers {
+      layer {
         name: "layer"
         bottom: "in"
         top: "out"
-        type: TANH
+        type: "TanH"
       }
 
-The `TANH` layer computes the output as tanh(x) for each input element x.
+The `TanH` layer computes the output as tanh(x) for each input element x.
 
 #### Absolute Value
 
-* LayerType: `ABSVAL`
+* Layer type: `AbsVal`
 * CPU implementation: `./src/caffe/layers/absval_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/absval_layer.cu`
 * Sample
 
-      layers {
+      layer {
         name: "layer"
         bottom: "in"
         top: "out"
-        type: ABSVAL
+        type: "AbsVal"
       }
 
-The `ABSVAL` layer computes the output as abs(x) for each input element x.
+The `AbsVal` layer computes the output as abs(x) for each input element x.
 
 #### Power
 
-* LayerType: `POWER`
+* Layer type: `Power`
 * CPU implementation: `./src/caffe/layers/power_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/power_layer.cu`
 * Parameters (`PowerParameter power_param`)
@@ -270,11 +268,11 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
         - `shift` [default 0]
 * Sample
 
-      layers {
+      layer {
         name: "layer"
         bottom: "in"
         top: "out"
-        type: POWER
+        type: "Power"
         power_param {
           power: 1
           scale: 1
@@ -282,16 +280,16 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
         }
       }
 
-The `POWER` layer computes the output as (shift + scale * x) ^ power for each input element x.
+The `Power` layer computes the output as (shift + scale * x) ^ power for each input element x.
 
 #### BNLL
 
-* LayerType: `BNLL`
+* Layer type: `BNLL`
 * CPU implementation: `./src/caffe/layers/bnll_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/bnll_layer.cu`
 * Sample
 
-      layers {
+      layer {
         name: "layer"
         bottom: "in"
         top: "out"
@@ -309,7 +307,7 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 
 #### Database
 
-* LayerType: `DATA`
+* Layer type: `Data`
 * Parameters
     - Required
         - `source`: the name of the directory containing the database
@@ -322,7 +320,7 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 
 #### In-Memory
 
-* LayerType: `MEMORY_DATA`
+* Layer type: `MemoryData`
 * Parameters
     - Required
         - `batch_size`, `channels`, `height`, `width`: specify the size of input chunks to read from memory
@@ -331,7 +329,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 
 #### HDF5 Input
 
-* LayerType: `HDF5_DATA`
+* Layer type: `HDF5Data`
 * Parameters
     - Required
         - `source`: the name of the file to read from
@@ -339,7 +337,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 
 #### HDF5 Output
 
-* LayerType: `HDF5_OUTPUT`
+* Layer type: `HDF5Output`
 * Parameters
     - Required
         - `file_name`: name of file to write to
@@ -348,7 +346,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 
 #### Images
 
-* LayerType: `IMAGE_DATA`
+* Layer type: `ImageData`
 * Parameters
     - Required
         - `source`: name of a text file, with each line giving an image filename and label
@@ -360,17 +358,17 @@ The HDF5 output layer performs the opposite function of the other layers in this
 
 #### Windows
 
-`WINDOW_DATA`
+`WindowData`
 
 #### Dummy
 
-`DUMMY_DATA` is for development and debugging. See `DummyDataParameter`.
+`DummyData` is for development and debugging. See `DummyDataParameter`.
 
 ### Common Layers
 
 #### Inner Product
 
-* LayerType: `INNER_PRODUCT`
+* Layer type: `InnerProduct`
 * CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
 * Parameters (`InnerProductParameter inner_product_param`)
@@ -387,13 +385,13 @@ The HDF5 output layer performs the opposite function of the other layers in this
     - `n * c_o * 1 * 1`
 * Sample
 
-      layers {
+      layer {
         name: "fc8"
-        type: INNER_PRODUCT
-        blobs_lr: 1          # learning rate multiplier for the filters
-        blobs_lr: 2          # learning rate multiplier for the biases
-        weight_decay: 1      # weight decay multiplier for the filters
-        weight_decay: 0      # weight decay multiplier for the biases
+        type: "InnerProduct"
+        # learning rate and decay multipliers for the weights
+        param { lr_mult: 1 decay_mult: 1 }
+        # learning rate and decay multipliers for the biases
+        param { lr_mult: 2 decay_mult: 0 }
         inner_product_param {
           num_output: 1000
           weight_filler {
@@ -409,79 +407,118 @@ The HDF5 output layer performs the opposite function of the other layers in this
         top: "fc8"
       }
 
-The `INNER_PRODUCT` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
+The `InnerProduct` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
 
 #### Splitting
 
-The `SPLIT` layer is a utility layer that splits an input blob to multiple output blobs. This is used when a blob is fed into multiple output layers.
+The `Split` layer is a utility layer that splits an input blob to multiple output blobs. This is used when a blob is fed into multiple output layers.
 
 #### Flattening
 
-The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * h * w` to a simple vector output of shape `n * (c*h*w) * 1 * 1`.
+The `Flatten` layer is a utility layer that flattens an input of shape `n * c * h * w` to a simple vector output of shape `n * (c*h*w)`
+
+#### Reshape
+
+* Layer type: `Reshape`
+* Implementation: `./src/caffe/layers/reshape_layer.cpp`
+* Parameters (`ReshapeParameter reshape_param`)
+    - Optional: (also see detailed description below)
+        - `shape`
+
+* Input
+    - a single blob with arbitrary dimensions
+* Output
+    - the same blob, with modified dimensions, as specified by `reshape_param`
+
+* Sample
+
+        layer {
+          name: "reshape"
+          type: "Reshape"
+          bottom: "input"
+          top: "output"
+          reshape_param {
+            shape {
+              dim: 0  # copy the dimension from below
+              dim: 2
+              dim: 3
+              dim: -1 # infer it from the other dimensions
+            }
+          }
+        }
+
+The `Reshape` layer can be used to change the dimensions of its input, without changing its data. Just like the `Flatten` layer, only the dimensions are changed; no data is copied in the process.
+
+Output dimensions are specified by the `ReshapeParam` proto. Positive numbers are used directly, setting the corresponding dimension of the output blob. In addition, two special values are accepted for any of the target dimension values:
+
+* **0** means "copy the respective dimension of the bottom layer". That is, if the bottom has 2 as its 1st dimension, the top will have 2 as its 1st dimension as well, given `dim: 0` as the 1st target dimension.
+* **-1** stands for "infer this from the other dimensions". This behavior is similar to that of -1 in *numpy*'s or `[]` for *MATLAB*'s reshape: this dimension is calculated to keep the overall element count the same as in the bottom layer. At most one -1 can be used in a reshape operation.
+
+As another example, specifying `reshape_param { shape { dim: 0 dim: -1 } }` makes the layer behave in exactly the same way as the `Flatten` layer.
 
 #### Concatenation
 
-* LayerType: `CONCAT`
+* Layer type: `Concat`
 * CPU implementation: `./src/caffe/layers/concat_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
 * Parameters (`ConcatParameter concat_param`)
     - Optional
-        - `concat_dim` [default 1]: 0 for concatenation along num and 1 for channels.
+        - `axis` [default 1]: 0 for concatenation along num and 1 for channels.
 * Input
     - `n_i * c_i * h * w` for each input blob i from 1 to K.
 * Output
-    - if `concat_dim = 0`: `(n_1 + n_2 + ... + n_K) * c_1 * h * w`, and all input `c_i` should be the same.
-    - if `concat_dim = 1`: `n_1 * (c_1 + c_2 + ... + c_K) * h * w`, and all input `n_i` should be the same.
+    - if `axis = 0`: `(n_1 + n_2 + ... + n_K) * c_1 * h * w`, and all input `c_i` should be the same.
+    - if `axis = 1`: `n_1 * (c_1 + c_2 + ... + c_K) * h * w`, and all input `n_i` should be the same.
 * Sample
 
-      layers {
+      layer {
         name: "concat"
         bottom: "in1"
         bottom: "in2"
         top: "out"
-        type: CONCAT
+        type: "Concat"
         concat_param {
-          concat_dim: 1
+          axis: 1
         }
       }
 
-The `CONCAT` layer is a utility layer that concatenates its multiple input blobs to one single output blob. Currently, the layer supports concatenation along num or channels only.
+The `Concat` layer is a utility layer that concatenates its multiple input blobs to one single output blob.
 
 #### Slicing
 
-The `SLICE` layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.
+The `Slice` layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.
 
 * Sample
 
-      layers {
+      layer {
         name: "slicer_label"
-        type: SLICE
+        type: "Slice"
         bottom: "label"
         ## Example of label with a shape N x 3 x 1 x 1
         top: "label1"
         top: "label2"
         top: "label3"
         slice_param {
-            slice_dim: 1
-            slice_point: 1
-            slice_point: 2
+          axis: 1
+          slice_point: 1
+          slice_point: 2
         }
       }
 
-`slice_dim` indicates the target dimension and can assume only two values: 0 for num or 1 for channel; `slice_point` indicates indexes in the selected dimension (the number of indexes must be equal to the number of top blobs minus one). 
+`axis` indicates the target axis; `slice_point` indicates indexes in the selected dimension (the number of indices must be equal to the number of top blobs minus one).
 
 
 #### Elementwise Operations
 
-`ELTWISE`
+`Eltwise`
 
 #### Argmax
 
-`ARGMAX`
+`ArgMax`
 
 #### Softmax
 
-`SOFTMAX`
+`Softmax`
 
 #### Mean-Variance Normalization
 

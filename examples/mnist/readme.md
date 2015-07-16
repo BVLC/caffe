@@ -38,9 +38,9 @@ Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.
 
 Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:
 
-    layers {
+    layer {
       name: "mnist"
-      type: DATA
+      type: "Data"
       data_param {
         source: "mnist_train_lmdb"
         backend: LMDB
@@ -57,14 +57,14 @@ Specifically, this layer has name `mnist`, type `data`, and it reads the data fr
 
 Let's define the first convolution layer:
 
-    layers {
+    layer {
       name: "conv1"
-      type: CONVOLUTION
-      blobs_lr: 1.
-      blobs_lr: 2.
+      type: "Convolution"
+      param { lr_mult: 1 }
+      param { lr_mult: 2 }
       convolution_param {
         num_output: 20
-        kernelsize: 5
+        kernel_size: 5
         stride: 1
         weight_filler {
           type: "xavier"
@@ -81,15 +81,15 @@ This layer takes the `data` blob (it is provided by the data layer), and produce
 
 The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the `xavier` algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.
 
-`blobs_lr` are the learning rate adjustments for the layer's learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.
+`lr_mult`s are the learning rate adjustments for the layer's learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.
 
 ### Writing the Pooling Layer
 
 Phew. Pooling layers are actually much easier to define:
 
-    layers {
+    layer {
       name: "pool1"
-      type: POOLING
+      type: "Pooling"
       pooling_param {
         kernel_size: 2
         stride: 2
@@ -107,11 +107,11 @@ Similarly, you can write up the second convolution and pooling layers. Check `$C
 
 Writing a fully connected layer is also simple:
 
-    layers {
+    layer {
       name: "ip1"
-      type: INNER_PRODUCT
-      blobs_lr: 1.
-      blobs_lr: 2.
+      type: "InnerProduct"
+      param { lr_mult: 1 }
+      param { lr_mult: 2 }
       inner_product_param {
         num_output: 500
         weight_filler {
@@ -125,15 +125,15 @@ Writing a fully connected layer is also simple:
       top: "ip1"
     }
 
-This defines a fully connected layer (for some legacy reason, Caffe calls it an `innerproduct` layer) with 500 outputs. All other lines look familiar, right?
+This defines a fully connected layer (known in Caffe as an `InnerProduct` layer) with 500 outputs. All other lines look familiar, right?
 
 ### Writing the ReLU Layer
 
 A ReLU Layer is also simple:
 
-    layers {
+    layer {
       name: "relu1"
-      type: RELU
+      type: "ReLU"
       bottom: "ip1"
       top: "ip1"
     }
@@ -142,11 +142,11 @@ Since ReLU is an element-wise operation, we can do *in-place* operations to save
 
 After the ReLU layer, we will write another innerproduct layer:
 
-    layers {
+    layer {
       name: "ip2"
-      type: INNER_PRODUCT
-      blobs_lr: 1.
-      blobs_lr: 2.
+      type: "InnerProduct"
+      param { lr_mult: 1 }
+      param { lr_mult: 2 }
       inner_product_param {
         num_output: 10
         weight_filler {
@@ -164,9 +164,9 @@ After the ReLU layer, we will write another innerproduct layer:
 
 Finally, we will write the loss!
 
-    layers {
+    layer {
       name: "loss"
-      type: SOFTMAX_LOSS
+      type: "SoftmaxWithLoss"
       bottom: "ip2"
       bottom: "label"
     }
@@ -178,7 +178,7 @@ The `softmax_loss` layer implements both the softmax and the multinomial logisti
 
 Layer definitions can include rules for whether and when they are included in the network definition, like the one below:
 
-    layers {
+    layer {
       // ...layer definition...
       include: { phase: TRAIN }
     }
@@ -190,7 +190,7 @@ In the above example, this layer will be included only in `TRAIN` phase.
 If we change `TRAIN` with `TEST`, then this layer will be used only in test phase.
 By default, that is without layer rules, a layer is always included in the network.
 Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase.
-Also, there is an `ACCURACY` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
+Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 
 ## Define the MNIST Solver
 
@@ -283,5 +283,5 @@ and you will be using CPU for training. Isn't that easy?
 
 MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.
 
-### How to reduce the learning rate a fixed steps?
+### How to reduce the learning rate at fixed steps?
 Look at lenet_multistep_solver.prototxt

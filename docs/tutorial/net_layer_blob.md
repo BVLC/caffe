@@ -11,22 +11,20 @@ We will go over the details of these components in more detail.
 
 ## Blob storage and communication
 
-A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is a 4-dimensional array that stores things in the order of (Num, Channels, Height and Width), from major to minor, and stored in a C-contiguous fashion.  The main reason for putting Num (the name is due to legacy reasons, and is equivalent to the notation of "batch" as in minibatch SGD).
+A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is an N-dimensional array stored in a C-contiguous fashion.
 
-Caffe stores and communicates data in 4-dimensional arrays called blobs. Blobs provide a unified memory interface, holding data e.g. batches of images, model parameters, and derivatives for optimization.
+Caffe stores and communicates data using blobs. Blobs provide a unified memory interface holding data; e.g., batches of images, model parameters, and derivatives for optimization.
 
 Blobs conceal the computational and mental overhead of mixed CPU/GPU operation by synchronizing from the CPU host to the GPU device as needed. Memory on the host and device is allocated on demand (lazily) for efficient memory usage.
 
-The conventional blob dimensions for data are number N x channel K x height H x width W. Blob memory is row-major in layout so the last / rightmost dimension changes fastest. For example, the value at index (n, k, h, w) is physically located at index ((n * K + k) * H + h) * W + w.
+The conventional blob dimensions for batches of image data are number N x channel K x height H x width W. Blob memory is row-major in layout, so the last / rightmost dimension changes fastest. For example, in a 4D blob, the value at index (n, k, h, w) is physically located at index ((n * K + k) * H + h) * W + w.
 
-- Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images B = 256.
+- Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images N = 256.
 - Channel / K is the feature dimension e.g. for RGB images K = 3.
 
-Note that although we have designed blobs with its dimensions corresponding to image applications, they are named purely for notational purpose and it is totally valid for you to do non-image applications. For example, if you simply need fully-connected networks like the conventional multi-layer perceptron, use blobs of dimensions (Num, Channels, 1, 1) and call the InnerProductLayer (which we will cover soon).
+Note that although many blobs in Caffe examples are 4D with axes for image applications, it is totally valid to use blobs for non-image applications. For example, if you simply need fully-connected networks like the conventional multi-layer perceptron, use 2D blobs (shape (N, D)) and call the InnerProductLayer (which we will cover soon).
 
-Caffe operations are general with respect to the channel dimension / K. Grayscale and hyperspectral imagery are fine. Caffe can likewise model and process arbitrary vectors in blobs with singleton. That is, the shape of blob holding 1000 vectors of 16 feature dimensions is 1000 x 16 x 1 x 1.
-
-Parameter blob dimensions vary according to the type and configuration of the layer. For a convolution layer with 96 filters of 11 x 11 spatial dimension and 3 inputs the blob is 96 x 3 x 11 x 11. For an inner product / fully-connected layer with 1000 output channels and 1024 input channels the parameter blob is 1 x 1 x 1000 x 1024.
+Parameter blob dimensions vary according to the type and configuration of the layer. For a convolution layer with 96 filters of 11 x 11 spatial dimension and 3 inputs the blob is 96 x 3 x 11 x 11. For an inner product / fully-connected layer with 1000 output channels and 1024 input channels the parameter blob is 1000 x 1024.
 
 For custom data it may be necessary to hack your own input preparation tool or data layer. However once your data is in your job is done. The modularity of layers accomplishes the rest of the work for you.
 
@@ -95,9 +93,9 @@ A simple logistic regression classifier
 is defined by
 
     name: "LogReg"
-    layers {
+    layer {
       name: "mnist"
-      type: DATA
+      type: "Data"
       top: "data"
       top: "label"
       data_param {
@@ -105,18 +103,18 @@ is defined by
         batch_size: 64
       }
     }
-    layers {
+    layer {
       name: "ip"
-      type: INNER_PRODUCT
+      type: "InnerProduct"
       bottom: "data"
       top: "ip"
       inner_product_param {
         num_output: 2
       }
     }
-    layers {
+    layer {
       name: "loss"
-      type: SOFTMAX_LOSS
+      type: "SoftmaxWithLoss"
       bottom: "ip"
       bottom: "label"
       top: "loss"
@@ -135,19 +133,19 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
     I0902 22:52:17.935807 2079114000 data_layer.cpp:135] Opening leveldb input_leveldb
     I0902 22:52:17.937155 2079114000 data_layer.cpp:195] output data size: 64,1,28,28
     I0902 22:52:17.938570 2079114000 net.cpp:103] Top shape: 64 1 28 28 (50176)
-    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 1 1 1 (64)
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
     I0902 22:52:17.938611 2079114000 net.cpp:67] Creating Layer ip
     I0902 22:52:17.938617 2079114000 net.cpp:394] ip <- data
     I0902 22:52:17.939177 2079114000 net.cpp:356] ip -> ip
     I0902 22:52:17.939196 2079114000 net.cpp:96] Setting up ip
-    I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 1 1 (128)
+    I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
     I0902 22:52:17.941270 2079114000 net.cpp:67] Creating Layer loss
     I0902 22:52:17.941305 2079114000 net.cpp:394] loss <- ip
     I0902 22:52:17.941314 2079114000 net.cpp:394] loss <- label
     I0902 22:52:17.941323 2079114000 net.cpp:356] loss -> loss
     # set up the loss and configure the backward pass
     I0902 22:52:17.941328 2079114000 net.cpp:96] Setting up loss
-    I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: 1 1 1 1 (1)
+    I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
     I0902 22:52:17.941329 2079114000 net.cpp:109]     with loss weight 1
     I0902 22:52:17.941779 2079114000 net.cpp:170] loss needs backward computation.
     I0902 22:52:17.941787 2079114000 net.cpp:170] ip needs backward computation.

@@ -6,7 +6,8 @@ title: Installation: Ubuntu
 
 **General dependencies**
 
-    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
+    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler
+    sudo apt-get install --no-install-recommends libboost-all-dev
 
 **CUDA**: Install via the NVIDIA package instead of `apt-get` to be certain of the library and driver versions.
 Install the library and latest driver separately; the driver bundled with the library is usually out-of-date.
@@ -20,7 +21,7 @@ This can be skipped for CPU-only installation.
 
 Everything is packaged in 14.04.
 
-    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
+    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 
 **Remaining dependencies, 12.04**
 

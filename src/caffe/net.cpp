@@ -79,10 +79,17 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
+    if (layer_param.propagate_down_size() > 0) {
+      CHECK_EQ(layer_param.propagate_down_size(),
+          layer_param.bottom_size())
+          << "propagate_down param must be specified "
+          << "either 0 or bottom_size times ";
+    }
     layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = false;
+
     // Figure out this layer's input and output
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
@@ -151,15 +158,33 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.
+  // Also checks if all bottom blobs don't need backward computation (possible
+  // because the skip_propagate_down param) and so we can skip bacward
+  // computation for the entire layer
   set<string> blobs_under_loss;
+  set<string> blobs_skip_backp;
   for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
     bool layer_contributes_loss = false;
+    bool layer_skip_propagate_down = true;
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
       if (layers_[layer_id]->loss(top_id) ||
           (blobs_under_loss.find(blob_name) != blobs_under_loss.end())) {
         layer_contributes_loss = true;
+      }
+      if (blobs_skip_backp.find(blob_name) == blobs_skip_backp.end()) {
+        layer_skip_propagate_down = false;
+      }
+      if (layer_contributes_loss && !layer_skip_propagate_down)
         break;
+    }
+    // If this layer can skip backward computation, also all his bottom blobs
+    // don't need backpropagation
+    if (layer_need_backward_[layer_id] && layer_skip_propagate_down) {
+      layer_need_backward_[layer_id] = false;
+      for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
+               ++bottom_id) {
+        bottom_need_backward_[layer_id][bottom_id] = false;
       }
     }
     if (!layer_contributes_loss) { layer_need_backward_[layer_id] = false; }
@@ -177,6 +202,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blobs_under_loss.insert(blob_name);
       } else {
         bottom_need_backward_[layer_id][bottom_id] = false;
+      }
+      if (!bottom_need_backward_[layer_id][bottom_id]) {
+        const string& blob_name =
+                   blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
+        blobs_skip_backp.insert(blob_name);
       }
     }
   }
@@ -367,9 +397,9 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
 
 // Helper for Net::Init: add a new bottom blob to the net.
 template <typename Dtype>
-int Net<Dtype>::AppendBottom(const NetParameter& param,
-    const int layer_id, const int bottom_id,
-    set<string>* available_blobs, map<string, int>* blob_name_to_idx) {
+int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
+    const int bottom_id, set<string>* available_blobs,
+    map<string, int>* blob_name_to_idx) {
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
@@ -381,7 +411,12 @@ int Net<Dtype>::AppendBottom(const NetParameter& param,
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
   bottom_id_vecs_[layer_id].push_back(blob_id);
   available_blobs->erase(blob_name);
-  const bool need_backward = blob_need_backward_[blob_id];
+  bool propagate_down = true;
+  // Check if the backpropagation on bottom_id should be skipped
+  if (layer_param.propagate_down_size() > 0)
+    propagate_down = layer_param.propagate_down(bottom_id);
+  const bool need_backward = blob_need_backward_[blob_id] &&
+                          propagate_down;
   bottom_need_backward_[layer_id].push_back(need_backward);
   return blob_id;
 }
@@ -410,7 +445,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     // (i.e., not given a param_name) or explicitly given a name that we
     // haven't already seen.
     param_owners_.push_back(-1);
-    if (param_size) {
+    if (param_name.size()) {
       param_names_index_[param_name] = net_param_id;
     }
   } else {
@@ -470,7 +505,6 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   }
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
-    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -756,15 +790,15 @@ void Net<Dtype>::Update() {
       owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
       caffe_add(count, this_diff, owner_diff, owner_diff);
       break;
-#ifndef CPU_ONLY
     case Caffe::GPU:
+#ifndef CPU_ONLY
       this_diff = params_[i]->gpu_diff();
       owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
       caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
-      break;
 #else
       NO_GPU;
 #endif
+      break;
     default:
       LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
     }
