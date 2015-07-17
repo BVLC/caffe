@@ -41,14 +41,15 @@ def parse_log_file(args):
 					debug_state = "Test"
 			if cur_iter < 0:
 				continue
-			if (len(tokens) > 14 and tokens[4] in ["Train", "Test"] and 
+			if (len(tokens) > 10 and tokens[4] in ["Train", "Test"] and 
 					tokens[5] == "net" and tokens[6] == "output"):
 				loss_name = tokens[8]
 				assert tokens[9] == '='
 				raw_loss_val = float(tokens[10])
-				scaled_loss_val = float(tokens[14])
 				sequences["%s_Losses" % tokens[4]]["%s_raw" % loss_name].append( (cur_iter, raw_loss_val) )
-				sequences["%s_Losses" % tokens[4]]["%s_scaled" % loss_name].append( (cur_iter, scaled_loss_val) )
+				if len(tokens) > 14:
+					scaled_loss_val = float(tokens[14])
+					sequences["%s_Losses" % tokens[4]]["%s_scaled" % loss_name].append( (cur_iter, scaled_loss_val) )
 				debug_state = "Train"
 			if len(tokens) > 8 and tokens[6] == 'lr':
 				lr = float(tokens[8])
@@ -107,21 +108,27 @@ def parse_log_file(args):
 def plot(lists, out_file, title="", xlabel="", ylabel=""):
 	_max = -1000000
 	_min = 10000000
+	graph = False
 	for name in lists:
 		print name
 		l = lists[name]
-		x, y = zip(*l)
-		plt.plot(x, y, label=name)
-		_max = max(_max, max(map(abs, y)))
-		_min = min(_min, min(map(abs, y)))
-	plt.xlabel(xlabel)
-	plt.xlabel(ylabel)
-	plt.title(title)
+		graph |= bool(l)
+		if l:
+			x, y = zip(*l)
+			plt.plot(x, y, label=name)
+			_max = max(_max, max(map(abs, y)))
+			_min = min(_min, min(map(abs, y)))
+	if graph:
+		plt.xlabel(xlabel)
+		plt.xlabel(ylabel)
+		plt.title(title)
+		if len(lists) > 1:
+			plt.legend()
 
-	if _min and abs(_max / _min) > 80:
-		plt.yscale("symlog", basey=10, linthreshy=_min*3)
+		if _min and abs(_max / _min) > 80:
+			plt.yscale("symlog", basey=10, linthreshy=_min*3)
 
-	plt.savefig(out_file)
+		plt.savefig(out_file)
 	plt.clf()
 	
 def plot_per_layer_graphs(d, out_dir, label):
@@ -134,8 +141,9 @@ def plot_per_layer_graphs(d, out_dir, label):
 		for blob in layer_d:
 			blob_tups = layer_d[blob]
 			out_file = os.path.join(out_dir, "layer_%s_blob_%s.png" % (layer, blob))
-			plot({"blob %s" % label : blob_tups}, out_file, "Layer %s: blob %s %s" % (layer, blob, label),
-				"Iterations", label)
+			if blob_tups:
+				plot({"blob %s" % label : blob_tups}, out_file, "Layer %s: blob %s %s" % (layer, blob, label),
+					"Iterations", label)
 			
 
 def main(args):
@@ -150,6 +158,7 @@ def main(args):
 	for phase in ["Train", "Test"]:
 		d = sequences["%s_Losses" % phase]
 		for loss_name, tups in d.items():
+			print phase, loss_name
 			plot({loss_name: tups}, os.path.join(args.out_dir, "%s_loss_%s.png" % (phase, loss_name)),
 				"%s loss: %s" % (phase, loss_name), "Iterations", loss_name)
 			if phase == "Train" and loss_name in sequences["Test_Losses"]:
