@@ -440,6 +440,28 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
+  enum CuDNNFwdAlgorithm {
+    IMPLICIT_GEMM = 0;
+    IMPLICIT_PRECOMP_GEMM = 1;
+    GEMM = 2;
+    DIRECT = 3;
+    FWD_FFT = 4;
+  }
+  optional CuDNNFwdAlgorithm CuDNNFwdAlgo = 16 [default = IMPLICIT_GEMM];
+  enum CuDNNBwdFilterAlgorithm {
+    BWD_FILTER_ALGO_0 = 0;
+    BWD_FILTER_ALGO_1 = 1;
+    BWD_FILTER_FFT = 2;
+  }
+  optional CuDNNBwdFilterAlgorithm CuDNNBwdFilterAlgo = 17 [default = BWD_FILTER_ALGO_0];
+  enum CuDNNBwdDataAlgorithm {
+    BWD_DATA_ALGO_0 = 0;
+    BWD_DATA_ALGO_1 = 1;
+    BWD_DATA_FFT = 2;
+    BWD_DATA_ALGO_2 = 3;
+  }
+  optional CuDNNBwdDataAlgorithm CuDNNBwdDataAlgo = 18 [default = BWD_DATA_ALGO_0];
+  optional uint32 CuDNNWorkspaceSize = 19 [default = 10485760]; // 10MB default
 }
 
 message DataParameter {
@@ -607,6 +629,12 @@ message LRNParameter {
   }
   optional NormRegion norm_region = 4 [default = ACROSS_CHANNELS];
   optional float k = 5 [default = 1.];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 6 [default = DEFAULT];
 }
 
 message MemoryDataParameter {
