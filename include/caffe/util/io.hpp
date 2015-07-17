@@ -2,7 +2,6 @@
 #define CAFFE_UTIL_IO_H_
 
 #include <boost/filesystem.hpp>
-#include <string>
 
 #include "google/protobuf/message.h"
 

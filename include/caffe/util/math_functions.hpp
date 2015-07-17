@@ -150,6 +150,9 @@ void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 // Decaf gpu gemm provides an interface that is almost the same as the cpu
 // gemm function - following the c convention and calling the fortran-order
 // gpu code under the hood.
+
+void caffe_gpu_fill_buffer_size_t(int N, int alpha, void * X);
+
 template <typename Dtype>
 void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -169,24 +172,49 @@ template <typename Dtype>
 void caffe_gpu_axpby(const int N, const Dtype alpha, const Dtype* X,
     const Dtype beta, Dtype* Y);
 
+template <typename Dtype>
+void caffe_gpu_scal(const int N, const Dtype alpha, Dtype *X);
+
+template <typename Dtype>
+void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
+
+template <typename Dtype>
+void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
+
+//
+// Below functions are for all GPU modes (both OCL and CUDA)
+//
+
 void caffe_gpu_memcpy(const size_t N, const void *X, void *Y);
 
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
 
 inline void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
-#ifndef CPU_ONLY
-  CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
+#ifdef USE_OCL
+  ClState& state = Caffe::cl_state();
+  ClMemOff<uint8_t> bufX = state.get_buffer_mem(X);
+  if (alpha == 0) {
+    cl_command_queue queue = state.get_command_queue();
+    void* mapped_mem_ptr = clEnqueueMapBuffer(queue, bufX.memobj, CL_TRUE,
+        CL_MAP_WRITE, 0, N, 0, NULL, NULL, NULL);
+    memset(mapped_mem_ptr, 0, N);
+    clEnqueueUnmapMemObject(queue, bufX.memobj, mapped_mem_ptr, 0, NULL, NULL);
+  } else {
+    char a = static_cast<char>(alpha);
+    OCL_CHECK(clEnqueueFillBuffer(state.get_command_queue(), bufX.memobj,
+        &a, sizeof a, bufX.offset, N, 0, NULL, NULL));
+  }
 #else
-  NO_GPU;
+  CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
 #endif
 }
 
 template <typename Dtype>
 void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
-
-template <typename Dtype>
-void caffe_gpu_scal(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
 void caffe_gpu_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);
@@ -232,14 +260,8 @@ template <typename Dtype>
 void caffe_gpu_rng_bernoulli(const int n, const Dtype p, int* r);
 
 template <typename Dtype>
-void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
-
-template <typename Dtype>
 uint32_t caffe_gpu_hamming_distance(const int n, const Dtype* x,
                                     const Dtype* y);
-
-template <typename Dtype>
-void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y);
 
 template<typename Dtype>
 void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);
@@ -249,9 +271,6 @@ void caffe_gpu_sgnbit(const int n, const Dtype* x, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_fabs(const int n, const Dtype* x, Dtype* y);
-
-template <typename Dtype>
-void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
 #define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
 template<typename Dtype> \

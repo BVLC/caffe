@@ -20,6 +20,13 @@
 # Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
 
+# uncomment to enable OCL backend.
+# OCL switch
+USE_OCL := 1
+
+# Uncomment for FFT
+# USE_FFT := 1
+
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++

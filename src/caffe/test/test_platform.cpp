@@ -8,7 +8,21 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+#ifdef USE_OCL
+#include "caffe/util/cl_state.hpp"
+#endif
+
 namespace caffe {
+
+#ifdef USE_OCL
+
+class PlatformTest : public ::testing::Test {};
+
+TEST_F(PlatformTest, TestInitialization) {
+  Caffe::cl_state().print_properties(cout);
+}
+
+#else
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
@@ -51,6 +65,8 @@ TEST_F(PlatformTest, TestInitialization) {
          (CAFFE_TEST_CUDA_PROP.unifiedAddressing ? "Yes" : "No"));
   EXPECT_TRUE(true);
 }
+
+#endif  // USE_OCL
 
 }  // namespace caffe
 

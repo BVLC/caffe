@@ -3,6 +3,12 @@
 
 #include <cstdlib>
 
+#if defined(WIN32)
+#define _mm_malloc(a, b) _aligned_malloc(a, b)
+#else
+#include <mm_malloc.h>
+#endif 
+
 #include "caffe/common.hpp"
 
 namespace caffe {
@@ -15,8 +21,13 @@ namespace caffe {
 inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
+#ifndef USE_OCL
     CUDA_CHECK(cudaMallocHost(ptr, size));
     *use_cuda = true;
+#else
+    *ptr = _mm_malloc(size, 4096);
+    *use_cuda = false;
+#endif
     return;
   }
 #endif
@@ -27,8 +38,14 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 
 inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #ifndef CPU_ONLY
-  if (use_cuda) {
-    CUDA_CHECK(cudaFreeHost(ptr));
+  if (Caffe::mode() == Caffe::GPU) {
+#ifndef USE_OCL
+    if (use_cuda) {
+      CUDA_CHECK(cudaFreeHost(ptr));
+    }
+#else
+    _mm_free(ptr);
+#endif
     return;
   }
 #endif
@@ -47,29 +64,34 @@ class SyncedMemory {
   SyncedMemory()
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1), zero_copy_mem_(false) {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1), zero_copy_mem_(false){}
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
   const void* gpu_data();
   void set_gpu_data(void* data);
+  const void* gpu_data_with_zero_copy();
   void* mutable_cpu_data();
   void* mutable_gpu_data();
+  void* mutable_gpu_data_with_zero_copy(const size_t size, void* host_ptr);
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
 
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   void async_gpu_push(const cudaStream_t& stream);
+#endif
 #endif
 
  private:
   void to_cpu();
   void to_gpu();
+  void to_gpu_with_zero_copy(const size_t size, void* host_ptr);
   void* cpu_ptr_;
   void* gpu_ptr_;
   size_t size_;
@@ -78,6 +100,7 @@ class SyncedMemory {
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
+  bool zero_copy_mem_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

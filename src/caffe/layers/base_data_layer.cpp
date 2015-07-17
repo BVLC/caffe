@@ -69,10 +69,12 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   cudaStream_t stream;
   if (Caffe::mode() == Caffe::GPU) {
     CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
   }
+#endif
 #endif
 
   try {
@@ -81,8 +83,10 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
       load_batch(batch);
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
+#ifndef USE_OCL
         batch->data_.data().get()->async_gpu_push(stream);
         CUDA_CHECK(cudaStreamSynchronize(stream));
+#endif
       }
 #endif
       prefetch_full_.push(batch);
@@ -92,7 +96,9 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
+#ifndef USE_OCL
     CUDA_CHECK(cudaStreamDestroy(stream));
+#endif
   }
 #endif
 }

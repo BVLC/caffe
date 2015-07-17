@@ -29,6 +29,77 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     const vector<bool>& propagate_down, \
     const vector<Blob<Dtype>*>& bottom) { NO_GPU; } \
 
+#elif defined(USE_OCL)  // OCL GPU + CPU
+
+#ifdef USE_FFT
+#include "caffe/util/cl_fft_state.hpp"
+#endif
+
+#include "caffe/util/cl_state.hpp"
+
+#ifdef USE_FFT
+#define CLFFT_CHECK(condition) \
+  do { \
+    clfftStatus status = (condition); \
+    CHECK_EQ(status, CLFFT_SUCCESS) << " " \
+      << caffe::clfftGetErrorString(status); \
+  } while (0)
+#endif
+
+#define OCL_CHECK(condition) \
+  do { \
+    cl_int error = (condition); \
+    CHECK_EQ(error, CL_SUCCESS) << " " << caffe::clGetErrorString(error); \
+  } while (0)
+
+#define STUB_GPU(classname) \
+template <typename Dtype> \
+void classname<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, \
+    vector<Blob<Dtype>*>* top) { NOT_DEFINED; } \
+template <typename Dtype> \
+void classname<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, \
+    const vector<bool>& propagate_down, \
+    vector<Blob<Dtype>*>* bottom) { NOT_DEFINED; } \
+
+#define STUB_GPU_FORWARD(classname, funcname) \
+template <typename Dtype> \
+void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
+    vector<Blob<Dtype>*>* top) { NOT_DEFINED; } \
+
+#define STUB_GPU_BACKWARD(classname, funcname) \
+template <typename Dtype> \
+void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
+    const vector<bool>& propagate_down, \
+    vector<Blob<Dtype>*>* bottom) { NOT_DEFINED; } \
+
+namespace caffe {
+
+#ifdef USE_FFT
+const char* clfftGetErrorString(clfftStatus status);
+#endif
+
+const char* clGetErrorString(cl_int error);
+
+#define OCL_LOCAL_WORKGROUP_SIZE 256
+
+// OCL: number of work groups
+inline int CAFFE_GET_BLOCKS(const int N) {
+  return (N + OCL_LOCAL_WORKGROUP_SIZE - 1) / OCL_LOCAL_WORKGROUP_SIZE;
+}
+inline int CAFFE_GET_BLOCKS(const int N, const int lws) {
+  return (N + lws - 1) / lws;
+}
+
+// OCL: get padded global work size
+inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N) {
+  return CAFFE_GET_BLOCKS(N) * OCL_LOCAL_WORKGROUP_SIZE;
+}
+inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N, const int lws) {
+  return CAFFE_GET_BLOCKS(N, lws) * lws;
+}
+
+}  // namespace caffe
+
 #else  // Normal GPU + CPU Caffe.
 
 #include <cublas_v2.h>

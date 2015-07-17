@@ -220,10 +220,12 @@ class Blob {
   void set_cpu_data(Dtype* data);
   const int* gpu_shape() const;
   const Dtype* gpu_data() const;
+  const Dtype* gpu_data_with_zero_copy() const;
   const Dtype* cpu_diff() const;
   const Dtype* gpu_diff() const;
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
+  Dtype* mutable_gpu_data_with_zero_copy(const int N, Dtype* host_ptr);
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
   void Update();

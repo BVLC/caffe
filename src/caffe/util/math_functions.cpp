@@ -4,8 +4,15 @@
 #include <limits>
 
 #include "caffe/common.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
+
+
+#ifdef _MSC_VER 
+#define __builtin_popcount __popcnt 
+#define __builtin_popcountl __popcnt
+#endif
 
 namespace caffe {
 
@@ -86,11 +93,13 @@ template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
     if (Caffe::mode() == Caffe::GPU) {
-#ifndef CPU_ONLY
+#ifdef CPU_ONLY
+      NO_GPU;
+#elif defined(USE_OCL)
+      caffe_gpu_memcpy(N * sizeof(Dtype), X, Y);
+#else
       // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
-#else
-      NO_GPU;
 #endif
     } else {
       memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
@@ -230,6 +239,7 @@ unsigned int caffe_rng_rand() {
   return (*caffe_rng())();
 }
 
+#undef max
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b) {
   return boost::math::nextafter<Dtype>(
@@ -353,8 +363,13 @@ int caffe_cpu_hamming_distance<float>(const int n, const float* x,
                                   const float* y) {
   int dist = 0;
   for (int i = 0; i < n; ++i) {
+#ifdef _MSC_VER
+    dist += __popcnt(static_cast<uint32_t>(x[i]) ^
+                       static_cast<uint32_t>(y[i]));
+#else
     dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
                                static_cast<uint32_t>(y[i]));
+#endif
   }
   return dist;
 }
@@ -364,8 +379,13 @@ int caffe_cpu_hamming_distance<double>(const int n, const double* x,
                                    const double* y) {
   int dist = 0;
   for (int i = 0; i < n; ++i) {
+#ifdef _MSC_VER
+    dist += __popcnt64(static_cast<uint64_t>(x[i]) ^
+                       static_cast<uint64_t>(y[i]));
+#else
     dist += __builtin_popcountl(static_cast<uint64_t>(x[i]) ^
                                 static_cast<uint64_t>(y[i]));
+#endif
   }
   return dist;
 }
