@@ -15,9 +15,10 @@ def init_network(args):
 	for name in net.blobs:
 		net.blobs[name].reshape(1, *(net.blobs[name].data.shape[1:]))
 	transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
+	print "HERE: ",net.blobs['data'].data.shape
 	transformer.set_transpose('data', (2,0,1))
-	transformer.set_mean('data', np.load('python/caffe/imagenet/ilsvrc_2012_mean.npy').mean(1).mean(1))
-	transformer.set_raw_scale('data', 255)
+	#transformer.set_mean('data', np.load('python/caffe/imagenet/ilsvrc_2012_mean.npy').mean(1).mean(1))
+	transformer.set_raw_scale('data', 0.00390625)
 	#transformer.set_channel_swap('data', (2,1,0))
 	net.transformer = transformer
 	caffe.set_mode_cpu()
@@ -130,7 +131,7 @@ def save_activations(net, args):
 		print im_f
 		outdir = os.path.join(args.output_dir, os.path.splitext(os.path.basename(im_f))[0])
 		os.mkdir(outdir)
-		im = caffe.io.load_image(im_f)
+		im = caffe.io.load_image(im_f, color=False)
 		net.blobs['data'].data[...] = net.transformer.preprocess('data', im)
 		net.forward()
 		for name, data in net.blobs.items():
