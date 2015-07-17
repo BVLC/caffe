@@ -1,6 +1,6 @@
+#include <memory>
 #include <string>
 
-#include "boost/scoped_ptr.hpp"
 #include "gtest/gtest.h"
 
 #include "caffe/common.hpp"
@@ -12,7 +12,7 @@
 
 namespace caffe {
 
-using boost::scoped_ptr;
+using std::unique_ptr;
 
 template <typename TypeParam>
 class DBTest : public ::testing::Test {
@@ -26,9 +26,9 @@ class DBTest : public ::testing::Test {
     source_ += "/db";
     string keys[] = {"cat.jpg", "fish-bike.jpg"};
     LOG(INFO) << "Using temporary db " << source_;
-    scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+    unique_ptr<db::DB> db(db::GetDB(TypeParam::backend));
     db->Open(this->source_, db::NEW);
-    scoped_ptr<db::Transaction> txn(db->NewTransaction());
+    unique_ptr<db::Transaction> txn(db->NewTransaction());
     for (int i = 0; i < 2; ++i) {
       Datum datum;
       ReadImageToDatum(root_images_ + keys[i], i, &datum);
@@ -62,13 +62,13 @@ typedef ::testing::Types<TypeLevelDB, TypeLMDB> TestTypes;
 TYPED_TEST_CASE(DBTest, TestTypes);
 
 TYPED_TEST(DBTest, TestGetDB) {
-  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  unique_ptr<db::DB> db(db::GetDB(TypeParam::backend));
 }
 
 TYPED_TEST(DBTest, TestNext) {
-  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  unique_ptr<db::DB> db(db::GetDB(TypeParam::backend));
   db->Open(this->source_, db::READ);
-  scoped_ptr<db::Cursor> cursor(db->NewCursor());
+  unique_ptr<db::Cursor> cursor(db->NewCursor());
   EXPECT_TRUE(cursor->valid());
   cursor->Next();
   EXPECT_TRUE(cursor->valid());
@@ -77,9 +77,9 @@ TYPED_TEST(DBTest, TestNext) {
 }
 
 TYPED_TEST(DBTest, TestSeekToFirst) {
-  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  unique_ptr<db::DB> db(db::GetDB(TypeParam::backend));
   db->Open(this->source_, db::READ);
-  scoped_ptr<db::Cursor> cursor(db->NewCursor());
+  unique_ptr<db::Cursor> cursor(db->NewCursor());
   cursor->Next();
   cursor->SeekToFirst();
   EXPECT_TRUE(cursor->valid());
@@ -93,9 +93,9 @@ TYPED_TEST(DBTest, TestSeekToFirst) {
 }
 
 TYPED_TEST(DBTest, TestKeyValue) {
-  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  unique_ptr<db::DB> db(db::GetDB(TypeParam::backend));
   db->Open(this->source_, db::READ);
-  scoped_ptr<db::Cursor> cursor(db->NewCursor());
+  unique_ptr<db::Cursor> cursor(db->NewCursor());
   EXPECT_TRUE(cursor->valid());
   string key = cursor->key();
   Datum datum;
@@ -117,9 +117,9 @@ TYPED_TEST(DBTest, TestKeyValue) {
 }
 
 TYPED_TEST(DBTest, TestWrite) {
-  scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
+  unique_ptr<db::DB> db(db::GetDB(TypeParam::backend));
   db->Open(this->source_, db::WRITE);
-  scoped_ptr<db::Transaction> txn(db->NewTransaction());
+  unique_ptr<db::Transaction> txn(db->NewTransaction());
   Datum datum;
   ReadFileToDatum(this->root_images_ + "cat.jpg", 0, &datum);
   string out;

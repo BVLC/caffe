@@ -1,7 +1,6 @@
 #ifndef CAFFE_LAYER_H_
 #define CAFFE_LAYER_H_
 
-#include <algorithm>
 #include <string>
 #include <vector>
 

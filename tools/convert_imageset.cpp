@@ -10,11 +10,11 @@
 
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
@@ -25,7 +25,7 @@
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
-using boost::scoped_ptr;
+using std::unique_ptr;
 
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
@@ -88,9 +88,9 @@ int main(int argc, char** argv) {
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
   // Create new DB
-  scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
+  unique_ptr<db::DB> db(db::GetDB(FLAGS_backend));
   db->Open(argv[3], db::NEW);
-  scoped_ptr<db::Transaction> txn(db->NewTransaction());
+  unique_ptr<db::Transaction> txn(db->NewTransaction());
 
   // Storing to db
   std::string root_folder(argv[1]);
