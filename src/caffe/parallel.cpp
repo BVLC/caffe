@@ -119,8 +119,11 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 #ifndef CPU_ONLY
   vector<int> remaining(devices);
 
-  // Group GPUs by board - some boards can have more than 2 ASICs
-  for (int d = 0; d < remaining.size(); ++d) {
+  // Depth for reduction tree
+  int remaining_depth = (int)ceil(log2(remaining.size()));
+
+  // Group GPUs by board 
+  for (int d = 0; d < remaining_depth; ++d) {
     for (int i = 0; i < remaining.size(); ++i) {
       for (int j = i + 1; j < remaining.size(); ++j) {
         cudaDeviceProp a, b;
@@ -144,8 +147,9 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   }
   DLOG(INFO) << "GPUs paired by boards, remaining: " << s.str();
 
-  // Group by P2P accessibility - P2P group can be larger than 4 boards
-  for (int d = 0; d < remaining.size(); ++d) {
+  // Group by P2P accessibility
+  remaining_depth = ceil(log2(remaining.size()));
+  for (int d = 0; d < remaining_depth; ++d) {
     for (int i = 0; i < remaining.size(); ++i) {
       for (int j = i + 1; j < remaining.size(); ++j) {
         int access;
@@ -169,18 +173,19 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   DLOG(INFO) << "GPUs paired by P2P access, remaining: " << s.str();
 
   // Group remaining
-  for (int d = 0; d < remaining.size(); ++d) {  // try to pair everyone
+  remaining_depth = ceil(log2(remaining.size()));
+  for (int d = 0; d < remaining_depth; ++d) { 
     for (int i = 0; i < remaining.size(); ++i) {
-      for (int j = i + 1; j < remaining.size(); ++j) {
-          pairs->push_back(DevicePair(remaining[i], remaining[j]));
+          pairs->push_back(DevicePair(remaining[i], remaining[i+1]));
           DLOG(INFO) << "Remaining pair: " << remaining[i]
-                     << ":" << remaining[j];
-          remaining.erase(remaining.begin() + j);
-          break;
-      }
+                     << ":" << remaining[i+1];
+          remaining.erase(remaining.begin() + i+1);
     }
   }
+
+  // Should only be the parent node remaining
   CHECK_EQ(remaining.size(), 1);
+  
   pairs->insert(pairs->begin(), DevicePair(-1, remaining[0]));
 
   CHECK(pairs->size() == devices.size());
