@@ -183,9 +183,10 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
         Dtype count;
         caffe_gpu_asum(nthreads, counts, &count);
         // Fix the division by zero bug
-        if (count > 0) {
-          caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
+        if (count == 0) {
+          count = num;
         }
+        caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
       } else {
         caffe_gpu_scal(prob_.count(), loss_weight / num, bottom_diff);
       }
@@ -228,15 +229,16 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       if (normalize_) {
         Dtype count;
         greentea_gpu_asum<Dtype>(this->device_context_->id(),
-                          nthreads, counts, 0, &count);
+            nthreads, counts, 0, &count);
         // Fix the division by zero bug
-        if (count > 0) {
-          greentea_gpu_scal<Dtype>(this->device_context_->id(),
-                          prob_.count(), loss_weight / count, bottom_diff, 0);
+        if (count == 0) {
+          count = num;
         }
+        greentea_gpu_scal<Dtype>(this->device_context_->id(),
+            prob_.count(), loss_weight / count, bottom_diff, 0);
       } else {
         greentea_gpu_scal<Dtype>(this->device_context_->id(),
-                          prob_.count(), loss_weight / num, bottom_diff, 0);
+            prob_.count(), loss_weight / num, bottom_diff, 0);
       }
       if (bottom.size() == 3) {
         // TODO: Correct this for easy diff scaling
