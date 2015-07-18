@@ -69,9 +69,10 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
       Dtype count;
       caffe_gpu_asum(nthreads, counts, &count);
       if (count == 0) {
-        count = num;
+        loss = 0;
+      } else {
+        loss /= count;
       }
-      loss /= count;
     } else {
       loss /= num;
     }
@@ -115,9 +116,10 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
       greentea_gpu_asum(this->device_context_->id(), nthreads, counts, 0,
                         &count);
       if (count == 0) {
-        count = num;
+        loss = 0;
+      } else {
+        loss /= count;
       }
-      loss /= count;
     } else {
       loss /= num;
     }
@@ -188,11 +190,11 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       if (normalize_) {
         Dtype count;
         caffe_gpu_asum(nthreads, counts, &count);
-        // Fix the division by zero bug
         if (count == 0) {
-          count = num;
+          caffe_gpu_set<Dtype>(prob_.count(), 0.0, bottom_diff);
+        } else {
+          caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
         }
-        caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
       } else {
         caffe_gpu_scal(prob_.count(), loss_weight / num, bottom_diff);
       }
@@ -236,12 +238,13 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
         Dtype count;
         greentea_gpu_asum<Dtype>(this->device_context_->id(),
             nthreads, counts, 0, &count);
-        // Fix the division by zero bug
         if (count == 0) {
-          count = num;
-        }
-        greentea_gpu_scal<Dtype>(this->device_context_->id(),
+          greentea_gpu_set<Dtype>(this->device_context_->id(),
+                           prob_.count(), 0.0, bottom_diff, 0);
+        } else {
+          greentea_gpu_scal<Dtype>(this->device_context_->id(),
             prob_.count(), loss_weight / count, bottom_diff, 0);
+        }
       } else {
         greentea_gpu_scal<Dtype>(this->device_context_->id(),
             prob_.count(), loss_weight / num, bottom_diff, 0);
