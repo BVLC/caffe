@@ -40,7 +40,7 @@ def get_edge_label(layer):
 
     if layer.type == 'Data':
         edge_label = 'Batch ' + str(layer.data_param.batch_size)
-    elif layer.type == 'Convolution':
+    elif layer.type == 'Convolution' or layer.type == 'ConvolutionND' or layer.type == 'ConvolutionSK':
         edge_label = str(layer.convolution_param.num_output)
     elif layer.type == 'InnerProduct':
         edge_label = str(layer.inner_product_param.num_output)
@@ -74,32 +74,36 @@ def get_layer_label(layer, rankdir):
         # horizontal space is not; separate words with newlines
         separator = '\\n'
 
-    if layer.type == 'Convolution':
+    if layer.type == 'Convolution' or layer.type == 'ConvolutionND' or layer.type == 'ConvolutionSK':
         # Outer double quotes needed or else colon characters don't parse
         # properly
-        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
+        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
                      (layer.name,
                       separator,
                       layer.type,
                       separator,
-                      layer.convolution_param.kernel_size,
+                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size) > 0 else 1,
                       separator,
-                      layer.convolution_param.stride,
+                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride) > 0 else 1,
                       separator,
-                      layer.convolution_param.pad)
-    elif layer.type == 'Pooling':
+                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad) > 0 else 0,
+                      separator,
+                      layer.convolution_param.kstride[0] if len(layer.convolution_param.kstride) > 0 else 1)
+    elif layer.type == 'Pooling' or layer.type == 'PoolingND' or layer.type == 'PoolingSK':
         pooling_types_dict = get_pooling_types_dict()
-        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
+        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
                      (layer.name,
                       separator,
                       pooling_types_dict[layer.pooling_param.pool],
                       layer.type,
                       separator,
-                      layer.pooling_param.kernel_size,
+                      layer.pooling_param.kernel_size[0] if len(layer.pooling_param.kernel_size) > 0 else 1,
                       separator,
-                      layer.pooling_param.stride,
+                      layer.pooling_param.stride[0] if len(layer.pooling_param.stride) > 0 else 1,
                       separator,
-                      layer.pooling_param.pad)
+                      layer.pooling_param.pad[0] if len(layer.pooling_param.pad) > 0 else 0,
+                      separator,
+                      layer.pooling_param.kstride[0] if len(layer.pooling_param.kstride) > 0 else 1)
     else:
         node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
     return node_label
@@ -109,9 +113,9 @@ def choose_color_by_layertype(layertype):
     """Define colors for nodes based on the layer type.
     """
     color = '#6495ED'  # Default
-    if layertype == 'Convolution':
+    if layertype == 'Convolution' or layertype == 'ConvolutionND' or layertype == 'ConvolutionSK':
         color = '#FF5050'
-    elif layertype == 'Pooling':
+    elif layertype == 'Pooling' or layertype == 'PoolingND' or layertype == 'PoolingSK':
         color = '#FF9900'
     elif layertype == 'InnerProduct':
         color = '#CC33FF'
