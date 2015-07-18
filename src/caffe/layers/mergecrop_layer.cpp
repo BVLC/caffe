@@ -9,7 +9,37 @@ namespace caffe {
 template<typename Dtype>
 void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
-  // Nothing to do here, other than the reshaping
+  std::vector<int> forward_shape(1);
+  forward_shape[0] = 2;
+
+  std::vector<int> backward_shape(1);
+  backward_shape[0] = 2;
+
+  forward.Reshape(forward_shape);
+  backward.Reshape(backward_shape);
+
+  int* forward_data = forward.mutable_cpu_data();
+  int* backward_data = backward.mutable_cpu_data();
+
+  // By default, forward both a and b
+  forward_data[0] = 1;
+  forward_data[1] = 1;
+
+  // By default, backward a and do not backward b
+  backward_data[0] = 1;
+  backward_data[1] = 0;
+
+
+  if (this->layer_param_.has_mergecrop_param()) {
+    MergeCropParameter mergecrop_param = this->layer_param_.mergecrop_param();
+    for (int i = 0; i < mergecrop_param.forward_size(); ++i) {
+      forward_data[i] = mergecrop_param.forward(i);
+    }
+    for (int i = 0; i < mergecrop_param.backward_size(); ++i) {
+      backward_data[i] = mergecrop_param.backward(i);
+    }
+  }
+
   Reshape(bottom, top);
 }
 
