@@ -5,6 +5,8 @@ test_state: { stage: 'test-on-test' }
 test_iter: 100
 test_interval: 500
 test_compute_loss: true
+base_lr: 1.0
+lr_policy: "fixed"
 momentum: 0.95
 delta: 1e-8
 display: 100

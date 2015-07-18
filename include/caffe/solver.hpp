@@ -82,12 +82,12 @@ class SGDSolver : public Solver<Dtype> {
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
 
  protected:
+  void PreSolve();
   Dtype GetLearningRate();
   virtual void ApplyUpdate();
   virtual void Normalize(int param_id);
   virtual void Regularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
-  virtual void PreSolve();
   virtual void ClipGradients();
   virtual void SnapshotSolverState(const string& model_filename);
   virtual void SnapshotSolverStateToBinaryProto(const string& model_filename);
@@ -162,19 +162,13 @@ template <typename Dtype>
 class AdaDeltaSolver : public SGDSolver<Dtype> {
  public:
   explicit AdaDeltaSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) { PreSolve(); constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param) { AdaDeltaPreSolve(); }
   explicit AdaDeltaSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) { PreSolve(); constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param_file) { AdaDeltaPreSolve(); }
 
  protected:
-  virtual void PreSolve();
-  virtual void ComputeUpdateValue();
-  void constructor_sanity_check() {
-    CHECK_EQ(0, this->param_.base_lr())
-        << "Learning rate cannot be used with AdaDelta.";
-    CHECK_EQ("", this->param_.lr_policy())
-        << "Learning rate policy cannot be applied to AdaDelta.";
-  }
+  void AdaDeltaPreSolve();
+  virtual void ComputeUpdateValue(int param_id, Dtype rate);
 
   DISABLE_COPY_AND_ASSIGN(AdaDeltaSolver);
 };
