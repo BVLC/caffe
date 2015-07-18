@@ -356,6 +356,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
   optional AffinityParameter affinity_param = 137;
+  optional MergeCropParameter mergecrop_param = 138;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1143,3 +1144,9 @@ message AffinityParameter {
   repeated int32 offset = 1;
 }
 
+message MergeCropParameter {
+  // Forward and backward enable/disable
+  // Defined once per bottom blob
+  repeated bool forward = 1;
+  repeated bool backward = 2;
+}
