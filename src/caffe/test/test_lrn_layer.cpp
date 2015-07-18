@@ -248,7 +248,7 @@ TYPED_TEST(LRNLayerTest, TestGradientWithinChannel) {
 
 #ifdef USE_CUDNN
 template <typename Dtype>
-class CuDNNLRNLayerTest : public ::testing::Test {
+class CuDNNLRNLayerTest : public GPUDeviceTest<Dtype> {
  protected:
   CuDNNLRNLayerTest()
       : epsilon_(Dtype(1e-5)),
@@ -395,7 +395,6 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardWithinChannel) {
-  Caffe::set_mode(Caffe::GPU);
   typedef TypeParam Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_norm_region(
