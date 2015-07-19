@@ -153,6 +153,30 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
+template <typename Dtype>
+void ImageDataLayer<Dtype>::Reset() {
+  // Make sure prefetch thread is not running before we modify lines_id_.
+  this->JoinPrefetchThread();
+  // If shuffle is set, Reset would need to somehow re-initialize the RNG state
+  // for a working implementation.
+  if (this->layer_param_.image_data_param().shuffle()) {
+    LOG(FATAL) << "Reset not implemented for ImageDataLayer with shuffle";
+  }
+  lines_id_ = 0;
+
+  // If this is not the initial call to Reset (i.e., the layer was already fully
+  // set up), need to CreatePrefetchThread as prefetch_data_ currently holds
+  // the previous batch (from the previous call to CreatePrefetchThread, before
+  // Reset was called).
+  //
+  // Otherwise (if this *is* ths initial call to Reset, as indicated by
+  // this->data_transformer_ being NULL), BasePrefetchingDataLayer::LayerSetUp
+  // will do CreatePrefetchThread, so we skip it here.
+  if (this->data_transformer_) {
+    this->CreatePrefetchThread();
+  }
+}
+
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 

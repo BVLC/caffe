@@ -36,6 +36,15 @@ class PythonLayer : public Layer<Dtype> {
     }
   }
 
+  virtual void Reset() {
+    try {
+      self_.attr("reset")();
+    } catch (bp::error_already_set) {
+      PyErr_Print();
+      throw;
+    }
+  }
+
   virtual inline const char* type() const { return "Python"; }
 
  protected:

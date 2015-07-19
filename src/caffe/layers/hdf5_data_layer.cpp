@@ -90,7 +90,6 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   source_file.close();
   num_files_ = hdf_filenames_.size();
-  current_file_ = 0;
   LOG(INFO) << "Number of HDF5 files: " << num_files_;
   CHECK_GE(num_files_, 1) << "Must have at least 1 HDF5 filename listed in "
     << source;
@@ -108,6 +107,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Load the first HDF5 file and initialize the line counter.
+  current_file_ = 0;
   LoadHDF5FileData(hdf_filenames_[file_permutation_[current_file_]].c_str());
   current_row_ = 0;
 
@@ -123,6 +123,15 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     top[i]->Reshape(top_shape);
   }
+}
+
+template <typename Dtype>
+void HDF5DataLayer<Dtype>::Reset() {
+  CHECK(!this->layer_param_.hdf5_data_param().shuffle())
+      << this->type() << "Layer can't reset if shuffle is set.";
+  current_file_ = 0;
+  LoadHDF5FileData(hdf_filenames_[file_permutation_[current_file_]].c_str());
+  current_row_ = 0;
 }
 
 template <typename Dtype>

@@ -82,10 +82,12 @@ template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit DataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype>(param),
+        skip_initialized_(false) {}
   virtual ~DataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reset();
 
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
@@ -97,6 +99,9 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
+
+  unsigned int skip_;
+  bool skip_initialized_;
 };
 
 /**
@@ -114,6 +119,7 @@ class DummyDataLayer : public Layer<Dtype> {
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+  virtual void Reset();
 
   virtual inline const char* type() const { return "DummyData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
@@ -147,6 +153,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+  virtual void Reset();
 
   virtual inline const char* type() const { return "HDF5Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
@@ -227,6 +234,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~ImageDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reset();
 
   virtual inline const char* type() const { return "ImageData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
@@ -300,6 +308,9 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~WindowDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Reset isn't implemented for WindowDataLayer -- for a working
+  // implementation, the RNG would need to be reset to its initial state.
+  virtual void Reset() { NOT_IMPLEMENTED; }
 
   virtual inline const char* type() const { return "WindowData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }

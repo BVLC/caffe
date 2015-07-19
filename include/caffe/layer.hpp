@@ -101,6 +101,12 @@ class Layer {
       const vector<Blob<Dtype>*>& top) = 0;
 
   /**
+   * @brief Resets the Layer&'s internal state (not including any
+   *        parameter Blob&s, which keep their values).
+   */
+  virtual void Reset() {}
+
+  /**
    * @brief Given the bottom blobs, compute the top blobs and the loss.
    *
    * @param bottom

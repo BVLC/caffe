@@ -96,7 +96,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 37 (last added: iter_size)
+// SolverParameter next available ID: 38 (last added: test_net_reset)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -142,6 +142,16 @@ message SolverParameter {
   // If true, run an initial test pass before the first iteration,
   // ensuring memory availability and printing the starting value of the loss.
   optional bool test_initialization = 32 [default = true];
+  // Specify whether to "reset" each test net at the beginning of each test,
+  // such that each test is performed on the same subset of the data.
+  // This feature is not implemented for all layer types -- for example, it is
+  // unimplemented for the WINDOW_DATA layer.
+  //
+  // This should be unspecified (in which case it is set to false for all test
+  // nets), specified once (in which case the setting is applied to all test
+  // nets), or specified exactly once per test net.
+  repeated bool test_net_reset = 37;
+
   optional float base_lr = 5; // The base learning rate
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
