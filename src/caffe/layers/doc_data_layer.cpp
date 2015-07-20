@@ -294,13 +294,25 @@ void DocDataLayer<Dtype>::CreateImageTransformer(ImageTransformationParameter pa
 
     // Linear
 	for (int j = 0; j < prob_param.linear_params_size(); j++) {
-	  LinearTransformParameter resize_param = prob_param.linear_params(j); 
+	  LinearTransformParameter linear_param = prob_param.linear_params(j); 
 	  if (j < prob_param.linear_prob_weights_size()) {
 	    weight = prob_param.linear_prob_weights(j);
 	  } else {
 	    weight = 1;
 	  }
-	  ImageTransformer<Dtype>* transformer = new LinearImageTransformer<Dtype>(resize_param);
+	  ImageTransformer<Dtype>* transformer = new LinearImageTransformer<Dtype>(linear_param);
+	  prob_transformers->push_back(transformer);
+	  weights.push_back(weight);
+	}
+	// Crop
+	for (int j = 0; j < prob_param.crop_params_size(); j++) {
+	  CropTransformParameter crop_param = prob_param.crop_params(j); 
+	  if (j < prob_param.crop_prob_weights_size()) {
+	    weight = prob_param.crop_prob_weights(j);
+	  } else {
+	    weight = 1;
+	  }
+	  ImageTransformer<Dtype>* transformer = new CropImageTransformer<Dtype>(crop_param);
 	  prob_transformers->push_back(transformer);
 	  weights.push_back(weight);
 	}
