@@ -593,11 +593,32 @@ void CropImageTransformer<Dtype>::Transform(const cv::Mat& in, cv::Mat& out) {
   out = in(roi);
 }
 
+template <typename Dtype>
+void ReflectImageTransformer<Dtype>::Transform(const cv::Mat& in, cv::Mat& out) {
+  bool do_horz_reflect = (param_.horz_reflect_prob() >= this->RandFloat(0, 1));
+  bool do_vert_reflect = (param_.vert_reflect_prob() >= this->RandFloat(0, 1));
+  if (do_horz_reflect || do_vert_reflect) {
+    int flip_code;
+	if (do_horz_reflect && do_vert_reflect) {
+	  flip_code = -1;
+	} else if (do_horz_reflect) {
+	  flip_code = 0;
+	} else {
+	  flip_code = 1;
+	}
+	cv::flip(in, out, flip_code);
+  } else {
+    // no op
+    out = in;
+  }
+}
+
 INSTANTIATE_CLASS(ImageTransformer);
 INSTANTIATE_CLASS(ResizeImageTransformer);
 INSTANTIATE_CLASS(SequenceImageTransformer);
 INSTANTIATE_CLASS(ProbImageTransformer);
 INSTANTIATE_CLASS(LinearImageTransformer);
 INSTANTIATE_CLASS(CropImageTransformer);
+INSTANTIATE_CLASS(ReflectImageTransformer);
 
 }  // namespace caffe

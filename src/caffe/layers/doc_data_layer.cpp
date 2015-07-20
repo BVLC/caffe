@@ -316,6 +316,18 @@ void DocDataLayer<Dtype>::CreateImageTransformer(ImageTransformationParameter pa
 	  prob_transformers->push_back(transformer);
 	  weights.push_back(weight);
 	}
+	// Reflect
+	for (int j = 0; j < prob_param.reflect_params_size(); j++) {
+	  ReflectTransformParameter reflect_param = prob_param.reflect_params(j); 
+	  if (j < prob_param.reflect_prob_weights_size()) {
+	    weight = prob_param.reflect_prob_weights(j);
+	  } else {
+	    weight = 1;
+	  }
+	  ImageTransformer<Dtype>* transformer = new ReflectImageTransformer<Dtype>(reflect_param);
+	  prob_transformers->push_back(transformer);
+	  weights.push_back(weight);
+	}
 
     ImageTransformer<Dtype>* prob_transformer = new ProbImageTransformer<Dtype>(prob_transformers, weights);
 	transformers->push_back(prob_transformer);

@@ -118,6 +118,19 @@ class CropImageTransformer : public ImageTransformer<Dtype> {
   int cur_height_, cur_width_;
 };
 
+template <typename Dtype>
+class ReflectImageTransformer : public ImageTransformer<Dtype> {
+ public:
+  explicit ReflectImageTransformer(ReflectTransformParameter param) :
+    param_(param) {};
+  virtual ~ReflectImageTransformer() {};
+
+  virtual void Transform(const cv::Mat& in, cv::Mat& out);
+
+ protected:
+  ReflectTransformParameter param_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_IMAGE_TRANSFORMER_HPP_
