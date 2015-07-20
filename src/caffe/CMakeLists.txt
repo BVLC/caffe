@@ -17,8 +17,10 @@ if(HAVE_CUDA)
   list(APPEND srcs ${cuda_objs} ${cuda})
 endif()
 
-set(caffe_force_link_header "${CMAKE_BINARY_DIR}/caffe_force_link.h")
-list(APPEND srcs ${caffe_force_link_header})
+if(MSVC)
+    set(caffe_force_link_header "${CMAKE_BINARY_DIR}/caffe_force_link.h")
+    list(APPEND srcs ${caffe_force_link_header})
+endif()
 
 add_library(caffe ${srcs})
 target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
@@ -38,7 +40,9 @@ endif()
 # ---[ Install
 install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION include)
 install(FILES ${proto_hdrs} DESTINATION include/caffe/proto)
-install(FILES ${caffe_force_link_header} DESTINATION include)
+if(MSVC)
+    install(FILES ${caffe_force_link_header} DESTINATION include)
+endif()
 install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
 
 file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)
