@@ -97,6 +97,27 @@ class LinearImageTransformer : public ImageTransformer<Dtype> {
   LinearTransformParameter param_;
 };
 
+template <typename Dtype>
+class CropImageTransformer : public ImageTransformer<Dtype> {
+ public:
+  explicit CropImageTransformer(CropTransformParameter param) :
+    param_(param) {};
+  virtual ~CropImageTransformer() {};
+
+  virtual void Transform(const cv::Mat& in, cv::Mat& out);
+  virtual vector<int> InferOutputShape(const vector<int>& in_shape);
+  virtual void SampleTransformParams(const vector<int>& in_shape);
+
+ protected:
+  CropTransformParameter param_;
+  void ValidateParam();
+  void SampleFixedIndependent();
+  void SampleFixedTied();
+  void SamplePercIndependent(int in_width, int in_height);
+  void SamplePercTied(int in_width, int in_height);
+  int cur_height_, cur_width_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_IMAGE_TRANSFORMER_HPP_

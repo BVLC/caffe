@@ -541,17 +541,17 @@ message ResizeTransformParameter {
 }
 
 message CropTransformParameter {
-  // directly state the final size in pixels
-  optional uint32 width = 1;
-  optional uint32 height = 2;
+  // directly state the final size in pixels.  2 values indicate ranges
+  repeated uint32 width = 1;
+  repeated uint32 height = 2;
   // Shortcut for width == height
-  optional uint32 size = 3;
+  repeated uint32 size = 3;
 
   // Output size is a percentage of the total size
-  optional float width_perc = 4;
-  optional float height_perc = 5;
+  repeated float width_perc = 4;
+  repeated float height_perc = 5;
   // Shortcut for width_perc == height_perc, preserves Aspect Ratio
-  optional float size_perc = 6;
+  repeated float size_perc = 6;
 
   enum CropLocation {
     RANDOM = 0;
