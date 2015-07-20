@@ -114,6 +114,9 @@ def plot(lists, out_file, title="", xlabel="", ylabel=""):
 		l = lists[name]
 		graph |= bool(l)
 		if l:
+			while len(l) > 18000:
+				# downsample for plotting
+				l = l[::2]
 			x, y = zip(*l)
 			plt.plot(x, y, label=name)
 			_max = max(_max, max(map(abs, y)))
