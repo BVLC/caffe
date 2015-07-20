@@ -181,6 +181,19 @@ def main(args):
 		"L2_Gradients" : sequences["Network_Parameter_Norms"]["L2_Gradients"]}, os.path.join(args.out_dir, "Param_Gradient_Norms.png"),
 		"Parameter Gradient Norms", "Iterations", "Norm")
 
+	# fix Test Layer Activations to get an average over all the batches
+	for layer in sequences['Test_Layer_Activations']:
+		for blob in sequences['Test_Layer_Activations'][layer]:
+			for _iter in list(sequences['Test_Layer_Activations'][layer][blob].keys()):
+				l = sequences['Test_Layer_Activations'][layer][blob][_iter]
+				if l:
+					avg = sum(l) / len(l)
+					sequences['Test_Layer_Activations'][layer][blob][_iter] = avg
+				else:
+					del sequences['Test_Layer_Activations'][layer][blob][_iter]
+
+	plot_per_layer_graphs(sequences["Test_Layer_Activations"], os.path.join(args.out_dir, "Test_Layer_Activations"), "activation")
+
 
 def get_args():
 	parser = argparse.ArgumentParser(description="Creates an LMDB of DocumentDatums")
