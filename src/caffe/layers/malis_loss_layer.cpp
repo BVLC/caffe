@@ -195,7 +195,11 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
         }
       }
 
-      dloss_data[minEdge] /= nPairNorm;
+      if (nPairNorm > 0) {
+        dloss_data[minEdge] /= nPairNorm;
+      } else {
+        dloss_data[minEdge] = 0;
+      }
 
       if (dsets.find_set(set1) == set2) {
         std::swap(set1, set2);
@@ -217,7 +221,11 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
 
   /* Return items */
   double classerr, randIndex;
-  loss /= nPairNorm;
+  if (nPairNorm > 0) {
+    loss /= nPairNorm;
+  } else {
+    loss = 0;
+  }
   *loss_out = loss;
   classerr = static_cast<double>(nPairIncorrect)
       / static_cast<double>(nPairNorm);
