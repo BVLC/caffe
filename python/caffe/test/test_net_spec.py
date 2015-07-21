@@ -43,7 +43,7 @@ def anon_lenet(batch_size):
 
 class TestNetSpec(unittest.TestCase):
     def load_net(self, net_proto):
-        f = tempfile.NamedTemporaryFile(delete=False)
+        f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         f.write(str(net_proto))
         f.close()
         return caffe.Net(f.name, caffe.TEST)
