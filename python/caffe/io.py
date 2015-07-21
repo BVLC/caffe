@@ -102,13 +102,14 @@ class Transformer:
     ----------
     net : a Net for which the input should be prepared
     """
-    def __init__(self, inputs):
+    def __init__(self, inputs, resize=True):
         self.inputs = inputs
         self.transpose = {}
         self.channel_swap = {}
         self.raw_scale = {}
         self.mean = {}
         self.input_scale = {}
+		self.do_resize = resize
 
     def __check_input(self, in_):
         if in_ not in self.inputs:
@@ -143,7 +144,7 @@ class Transformer:
         mean = self.mean.get(in_)
         input_scale = self.input_scale.get(in_)
         in_dims = self.inputs[in_][2:]
-        if caffe_in.shape[:2] != in_dims:
+        if self.do_resize and caffe_in.shape[:2] != in_dims:
             caffe_in = resize_image(caffe_in, in_dims)
         if transpose is not None:
             caffe_in = caffe_in.transpose(transpose)
