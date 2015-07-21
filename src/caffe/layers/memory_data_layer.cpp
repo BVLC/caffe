@@ -81,7 +81,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
-    const vector<vector<int>>& labels) {
+    const vector<vector<int> >& labels) {
   size_t num = mat_vector.size();
   CHECK(!has_new_data_) <<
       "Can't add mat until current data has been consumed.";

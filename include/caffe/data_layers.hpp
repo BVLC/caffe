@@ -262,7 +262,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
       const vector<int>& labels);
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
-      const vector<vector<int>>& labels);
+      const vector<vector<int> >& labels);
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
