@@ -137,6 +137,9 @@ class Net {
   inline const vector<Dtype>& blob_loss_weights() const {
     return blob_loss_weights_;
   }
+  inline const vector<bool>& layer_need_backward() const {
+    return layer_need_backward_;
+  }
   /// @brief returns the parameters
   inline const vector<shared_ptr<Blob<Dtype> > >& params() const {
     return params_;

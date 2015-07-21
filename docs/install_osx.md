@@ -10,12 +10,12 @@ In the following, we assume that you're using Anaconda Python and Homebrew.
 
 **CUDA**: Install via the NVIDIA package that includes both CUDA and the bundled driver. **CUDA 7 is strongly suggested.** Older CUDA require `libstdc++` while clang++ is the default compiler and `libc++` the default standard library on OS X 10.9+. This disagreement makes it necessary to change the compilation settings for each of the dependencies. This is prone to error.
 
-**Library Path**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
+**Library Path**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
 In other `ENV` settings, things may not work as expected.
 
 **General dependencies**
 
-    brew install --fresh -vd snappy leveldb gflags glog szip lmdb
+    brew install -vd snappy leveldb gflags glog szip lmdb
     # need the homebrew science source for OpenCV and hdf5
     brew tap homebrew/science
     brew install hdf5 opencv
@@ -31,8 +31,8 @@ If using Anaconda Python, HDF5 is bundled and the `hdf5` formula can be skipped.
 **Remaining dependencies, with / without Python**
 
     # with Python pycaffe needs dependencies built from source
-    brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost boost-python
+    brew install --build-from-source --with-python -vd protobuf
+    brew install --build-from-source -vd boost boost-python
     # without Python the usual installation suffices
     brew install protobuf boost
 
@@ -78,9 +78,9 @@ To edit the formulae in turn, run
 
 After this, run
 
-    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
-    brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost boost-python
+    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source -vd $x; done
+    brew uninstall protobuf; brew install --build-from-source --with-python -vd protobuf
+    brew install --build-from-source -vd boost boost-python
 
 If this is not done exactly right then linking errors will trouble you.
 

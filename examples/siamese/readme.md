@@ -39,13 +39,19 @@ exactly the same as the [LeNet model](mnist.html), the only difference is that
 we have replaced the top layers that produced probabilities over the 10 digit
 classes with a linear "feature" layer that produces a 2 dimensional vector.
 
-    layers {
+    layer {
       name: "feat"
-      type: INNER_PRODUCT
+      type: "InnerProduct"
       bottom: "ip2"
       top: "feat"
-      blobs_lr: 1
-      blobs_lr: 2
+      param {
+        name: "feat_w"
+        lr_mult: 1
+      }
+      param {
+        name: "feat_b"
+        lr_mult: 2
+      }
       inner_product_param {
         num_output: 2
       }
@@ -64,17 +70,19 @@ earlier. Each entry in this database contains the image data for a pair of
 images (`pair_data`) and a binary label saying if they belong to the same class
 or different classes (`sim`).
 
-    layers {
+    layer {
       name: "pair_data"
-      type: DATA
+      type: "Data"
       top: "pair_data"
       top: "sim"
-      data_param {
-        source: "examples/siamese/mnist-siamese-train-leveldb"
+      include { phase: TRAIN }
+      transform_param {
         scale: 0.00390625
+      }
+      data_param {
+        source: "examples/siamese/mnist_siamese_train_leveldb"
         batch_size: 64
       }
-      include: { phase: TRAIN }
     }
 
 In order to pack a pair of images into the same blob in the database we pack one
@@ -83,16 +91,16 @@ so we add a slice layer after the data layer. This takes the `pair_data` and
 slices it along the channel dimension so that we have a single image in `data`
 and its paired image in `data_p.`
 
-    layers {
-        name: "slice_pair"
-        type: SLICE
-        bottom: "pair_data"
-        top: "data"
-        top: "data_p"
-        slice_param {
-            slice_dim: 1
-            slice_point: 1
-        }
+    layer {
+      name: "slice_pair"
+      type: "Slice"
+      bottom: "pair_data"
+      top: "data"
+      top: "data_p"
+      slice_param {
+        slice_dim: 1
+        slice_point: 1
+      }
     }
 
 ### Building the First Side of the Siamese Net
@@ -105,17 +113,17 @@ parameters allows Caffe to share the parameters between layers on both sides of
 the siamese net. In the definition this looks like:
 
     ...
-    param: "conv1_w"
-    param: "conv1_b"
+    param { name: "conv1_w" ...  }
+    param { name: "conv1_b" ...  }
     ...
-    param: "conv2_w"
-    param: "conv2_b"
+    param { name: "conv2_w" ...  }
+    param { name: "conv2_b" ...  }
     ...
-    param: "ip1_w"
-    param: "ip1_b"
+    param { name: "ip1_w" ...  }
+    param { name: "ip1_b" ...  }
     ...
-    param: "ip2_w"
-    param: "ip2_b"
+    param { name: "ip2_w" ...  }
+    param { name: "ip2_b" ...  }
     ...
 
 ### Building the Second Side of the Siamese Net
@@ -133,9 +141,9 @@ an Invariant Mapping". This loss function encourages matching pairs to be close
 together in feature space while pushing non-matching pairs apart. This cost
 function is implemented with the `CONTRASTIVE_LOSS` layer:
 
-    layers {
+    layer {
         name: "loss"
-        type: CONTRASTIVE_LOSS
+        type: "ContrastiveLoss"
         contrastive_loss_param {
             margin: 1.0
         }

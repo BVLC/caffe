@@ -31,7 +31,7 @@ endfunction()
 ################################################################################################
 # Collecting sources from globbing and appending to output list variable
 # Usage:
-#   caffe_source_group(<output_variable> GLOB[_RECURSE] <globbing_expression>)
+#   caffe_collect_sources(<output_variable> GLOB[_RECURSE] <globbing_expression>)
 function(caffe_collect_sources variable)
   cmake_parse_arguments(CAFFE_COLLECT_SOURCES "" "" "GLOB;GLOB_RECURSE" ${ARGN})
   if(CAFFE_COLLECT_SOURCES_GLOB)
@@ -110,6 +110,10 @@ function(caffe_default_properties target)
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+  # make sure we build all external depepdencies first
+  if (DEFINED external_project_dependencies)
+    add_dependencies(${target} ${external_project_dependencies})
+  endif()
 endfunction()
 
 ################################################################################################
@@ -140,12 +144,12 @@ function(caffe_configure_testdatafile file)
   set(result "")
   foreach(line ${__lines})
     set(result "${result}${PROJECT_SOURCE_DIR}/${line}\n")
-  endforeach()  
+  endforeach()
   file(WRITE ${file}.gen.cmake ${result})
 endfunction()
 
 ################################################################################################
-# Filter outs all files that are not inlcuded in selected list
+# Filter out all files that are not included in selected list
 # Usage:
 #   caffe_leave_only_selected_tests(<filelist_variable> <selected_list>)
 function(caffe_leave_only_selected_tests file_list)

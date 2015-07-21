@@ -10,15 +10,15 @@ New input types are supported by developing a new data layer -- the rest of the 
 
 This data layer definition
 
-    layers {
+    layer {
       name: "mnist"
-      # DATA layer loads leveldb or lmdb storage DBs for high-throughput.
-      type: DATA
+      # Data layer loads leveldb or lmdb storage DBs for high-throughput.
+      type: "Data"
       # the 1st top is the data itself: the name is only convention
       top: "data"
       # the 2nd top is the ground truth: the name is only convention
       top: "label"
-      # the DATA layer configuration
+      # the Data layer configuration
       data_param {
         # path to the DB
         source: "examples/mnist/mnist_train_lmdb"
@@ -46,9 +46,9 @@ The (data, label) pairing is a convenience for classification models.
 
 **Transformations**: data preprocessing is parametrized by transformation messages within the data layer definition.
 
-    layers {
+    layer {
       name: "data"
-      type: DATA
+      type: "Data"
       [...]
       transform_param {
         scale: 0.1

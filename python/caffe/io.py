@@ -8,15 +8,16 @@ try:
     from caffe.proto import caffe_pb2
 except:
     import sys
-    if sys.version_info >= (3,0):
+    if sys.version_info >= (3, 0):
         print("Failed to include caffe_pb2, things might go wrong!")
     else:
         raise
 
-## proto / datum / ndarray conversion
 
+## proto / datum / ndarray conversion
 def blobproto_to_array(blob, return_diff=False):
-    """Convert a blob proto to an array. In default, we will just return the data,
+    """
+    Convert a blob proto to an array. In default, we will just return the data,
     unless return_diff is True, in which case we will return the diff.
     """
     if return_diff:
@@ -35,7 +36,7 @@ def array_to_blobproto(arr, diff=None):
     if arr.ndim != 4:
         raise ValueError('Incorrect array shape.')
     blob = caffe_pb2.BlobProto()
-    blob.num, blob.channels, blob.height, blob.width = arr.shape;
+    blob.num, blob.channels, blob.height, blob.width = arr.shape
     blob.data.extend(arr.astype(float).flat)
     if diff is not None:
         blob.diff.extend(diff.astype(float).flat)
@@ -81,7 +82,7 @@ def datum_to_array(datum):
     as one can easily get it by calling datum.label.
     """
     if len(datum.data):
-        return np.fromstring(datum.data, dtype = np.uint8).reshape(
+        return np.fromstring(datum.data, dtype=np.uint8).reshape(
             datum.channels, datum.height, datum.width)
     else:
         return np.array(datum.float_data).astype(float).reshape(
@@ -97,8 +98,9 @@ class Transformer:
     Note: this is mostly for illustrative purposes and it is likely better
     to define your own input preprocessing routine for your needs.
 
-    Take
-    net: a Net for which the input should be prepared
+    Parameters
+    ----------
+    net : a Net for which the input should be prepared
     """
     def __init__(self, inputs):
         self.inputs = inputs
@@ -108,12 +110,10 @@ class Transformer:
         self.mean = {}
         self.input_scale = {}
 
-
     def __check_input(self, in_):
         if in_ not in self.inputs:
             raise Exception('{} is not one of the net inputs: {}'.format(
                 in_, self.inputs))
-
 
     def preprocess(self, in_, data):
         """
@@ -126,12 +126,14 @@ class Transformer:
         - subtract mean
         - scale feature
 
-        Take
-        in_: name of input blob to preprocess for
-        data: (H' x W' x K) ndarray
+        Parameters
+        ----------
+        in_ : name of input blob to preprocess for
+        data : (H' x W' x K) ndarray
 
-        Give
-        caffe_in: (K x H x W) ndarray for input to a Net
+        Returns
+        -------
+        caffe_in : (K x H x W) ndarray for input to a Net
         """
         self.__check_input(in_)
         caffe_in = data.astype(np.float32, copy=False)
@@ -154,7 +156,6 @@ class Transformer:
         if input_scale is not None:
             caffe_in *= input_scale
         return caffe_in
-
 
     def deprocess(self, in_, data):
         """
@@ -179,15 +180,15 @@ class Transformer:
             decaf_in = decaf_in.transpose([transpose[t] for t in transpose])
         return decaf_in
 
-
     def set_transpose(self, in_, order):
         """
         Set the input channel order for e.g. RGB to BGR conversion
         as needed for the reference ImageNet model.
 
-        Take
-        in_: which input to assign this channel order
-        order: the order to transpose the dimensions
+        Parameters
+        ----------
+        in_ : which input to assign this channel order
+        order : the order to transpose the dimensions
         """
         self.__check_input(in_)
         if len(order) != len(self.inputs[in_]) - 1:
@@ -195,16 +196,16 @@ class Transformer:
                             'dimensions as the input.')
         self.transpose[in_] = order
 
-
     def set_channel_swap(self, in_, order):
         """
         Set the input channel order for e.g. RGB to BGR conversion
         as needed for the reference ImageNet model.
         N.B. this assumes the channels are the first dimension AFTER transpose.
 
-        Take
-        in_: which input to assign this channel order
-        order: the order to take the channels.
+        Parameters
+        ----------
+        in_ : which input to assign this channel order
+        order : the order to take the channels.
             (2,1,0) maps RGB to BGR for example.
         """
         self.__check_input(in_)
@@ -213,7 +214,6 @@ class Transformer:
                             'dimensions as the input channels.')
         self.channel_swap[in_] = order
 
-
     def set_raw_scale(self, in_, scale):
         """
         Set the scale of raw features s.t. the input blob = input * scale.
@@ -221,21 +221,22 @@ class Transformer:
         like CaffeNet and AlexNet represent images in [0, 255] so the raw_scale
         of these models must be 255.
 
-        Take
-        in_: which input to assign this scale factor
-        scale: scale coefficient
+        Parameters
+        ----------
+        in_ : which input to assign this scale factor
+        scale : scale coefficient
         """
         self.__check_input(in_)
         self.raw_scale[in_] = scale
-
 
     def set_mean(self, in_, mean):
         """
         Set the mean to subtract for centering the data.
 
-        Take
-        in_: which input to assign this mean.
-        mean: mean ndarray (input dimensional or broadcastable)
+        Parameters
+        ----------
+        in_ : which input to assign this mean.
+        mean : mean ndarray (input dimensional or broadcastable)
         """
         self.__check_input(in_)
         ms = mean.shape
@@ -254,16 +255,16 @@ class Transformer:
                 raise ValueError('Mean shape incompatible with input shape.')
         self.mean[in_] = mean
 
-
     def set_input_scale(self, in_, scale):
         """
         Set the scale of preprocessed inputs s.t. the blob = blob * scale.
         N.B. input_scale is done AFTER mean subtraction and other preprocessing
         while raw_scale is done BEFORE.
 
-        Take
-        in_: which input to assign this scale factor
-        scale: scale coefficient
+        Parameters
+        ----------
+        in_ : which input to assign this scale factor
+        scale : scale coefficient
         """
         self.__check_input(in_)
         self.input_scale[in_] = scale
@@ -275,13 +276,16 @@ def load_image(filename, color=True):
     """
     Load an image converting from grayscale or alpha as needed.
 
-    Take
-    filename: string
-    color: flag for color format. True (default) loads as RGB while False
+    Parameters
+    ----------
+    filename : string
+    color : boolean
+        flag for color format. True (default) loads as RGB while False
         loads as intensity (if image is already grayscale).
 
-    Give
-    image: an image with type np.float32 in range [0, 1]
+    Returns
+    -------
+    image : an image with type np.float32 in range [0, 1]
         of size (H x W x 3) in RGB or
         of size (H x W x 1) in grayscale.
     """
@@ -299,24 +303,28 @@ def resize_image(im, new_dims, interp_order=1):
     """
     Resize an image array with interpolation.
 
-    Take
-    im: (H x W x K) ndarray
-    new_dims: (height, width) tuple of new dimensions.
-    interp_order: interpolation order, default is linear.
+    Parameters
+    ----------
+    im : (H x W x K) ndarray
+    new_dims : (height, width) tuple of new dimensions.
+    interp_order : interpolation order, default is linear.
 
-    Give
-    im: resized ndarray with shape (new_dims[0], new_dims[1], K)
+    Returns
+    -------
+    im : resized ndarray with shape (new_dims[0], new_dims[1], K)
     """
     if im.shape[-1] == 1 or im.shape[-1] == 3:
         im_min, im_max = im.min(), im.max()
         if im_max > im_min:
-            # skimage is fast but only understands {1,3} channel images in [0, 1].
+            # skimage is fast but only understands {1,3} channel images
+            # in [0, 1].
             im_std = (im - im_min) / (im_max - im_min)
             resized_std = resize(im_std, new_dims, order=interp_order)
             resized_im = resized_std * (im_max - im_min) + im_min
         else:
             # the image is a constant -- avoid divide by 0
-            ret = np.empty((new_dims[0], new_dims[1], im.shape[-1]), dtype=np.float32)
+            ret = np.empty((new_dims[0], new_dims[1], im.shape[-1]),
+                           dtype=np.float32)
             ret.fill(im_min)
             return ret
     else:
@@ -330,12 +338,14 @@ def oversample(images, crop_dims):
     """
     Crop images into the four corners, center, and their mirrored versions.
 
-    Take
-    image: iterable of (H x W x K) ndarrays
-    crop_dims: (height, width) tuple for the crops.
+    Parameters
+    ----------
+    image : iterable of (H x W x K) ndarrays
+    crop_dims : (height, width) tuple for the crops.
 
-    Give
-    crops: (10*N x H x W x K) ndarray of crops for number of inputs N.
+    Returns
+    -------
+    crops : (10*N x H x W x K) ndarray of crops for number of inputs N.
     """
     # Dimensions and center.
     im_shape = np.array(images[0].shape)
@@ -359,7 +369,7 @@ def oversample(images, crop_dims):
 
     # Extract crops
     crops = np.empty((10 * len(images), crop_dims[0], crop_dims[1],
-                            im_shape[-1]), dtype=np.float32)
+                      im_shape[-1]), dtype=np.float32)
     ix = 0
     for im in images:
         for crop in crops_ix:

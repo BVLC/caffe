@@ -6,6 +6,7 @@ import numpy as np
 import caffe
 from test_net import simple_net_file
 
+
 class TestSolver(unittest.TestCase):
     def setUp(self):
         self.num_output = 13

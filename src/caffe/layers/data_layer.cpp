@@ -38,32 +38,17 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       cursor_->Next();
     }
   }
-  // Read a data point, and use it to initialize the top blob.
+  // Read a data point, to initialize the prefetch and top blobs.
   Datum datum;
   datum.ParseFromString(cursor_->value());
+  // Use data_transformer to infer the expected blob shape from datum.
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  this->transformed_data_.Reshape(top_shape);
+  // Reshape top[0] and prefetch_data according to the batch_size.
+  top_shape[0] = this->layer_param_.data_param().batch_size();
+  this->prefetch_data_.Reshape(top_shape);
+  top[0]->ReshapeLike(this->prefetch_data_);
 
-  bool force_color = this->layer_param_.data_param().force_encoded_color();
-  if ((force_color && DecodeDatum(&datum, true)) ||
-      DecodeDatumNative(&datum)) {
-    LOG(INFO) << "Decoding Datum";
-  }
-  // image
-  int crop_size = this->layer_param_.transform_param().crop_size();
-  if (crop_size > 0) {
-    top[0]->Reshape(this->layer_param_.data_param().batch_size(),
-        datum.channels(), crop_size, crop_size);
-    this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
-        datum.channels(), crop_size, crop_size);
-    this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
-  } else {
-    top[0]->Reshape(
-        this->layer_param_.data_param().batch_size(), datum.channels(),
-        datum.height(), datum.width());
-    this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
-        datum.channels(), datum.height(), datum.width());
-    this->transformed_data_.Reshape(1, datum.channels(),
-      datum.height(), datum.width());
-  }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
@@ -86,25 +71,17 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
 
-  // Reshape on single input batches for inputs of varying dimension.
+  // Reshape according to the first datum of each batch
+  // on single input batches allows for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
-  const int crop_size = this->layer_param_.transform_param().crop_size();
-  bool force_color = this->layer_param_.data_param().force_encoded_color();
-  if (batch_size == 1 && crop_size == 0) {
-    Datum datum;
-    datum.ParseFromString(cursor_->value());
-    if (datum.encoded()) {
-      if (force_color) {
-        DecodeDatum(&datum, true);
-      } else {
-        DecodeDatumNative(&datum);
-      }
-    }
-    this->prefetch_data_.Reshape(1, datum.channels(),
-        datum.height(), datum.width());
-    this->transformed_data_.Reshape(1, datum.channels(),
-        datum.height(), datum.width());
-  }
+  Datum datum;
+  datum.ParseFromString(cursor_->value());
+  // Use data_transformer to infer the expected blob shape from datum.
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  this->transformed_data_.Reshape(top_shape);
+  // Reshape prefetch_data according to the batch_size.
+  top_shape[0] = batch_size;
+  this->prefetch_data_.Reshape(top_shape);
 
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
@@ -112,48 +89,31 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
+  timer.Start();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    timer.Start();
-    // get a blob
+    // get a datum
     Datum datum;
     datum.ParseFromString(cursor_->value());
-
-    cv::Mat cv_img;
-    if (datum.encoded()) {
-      if (force_color) {
-        cv_img = DecodeDatumToCVMat(datum, true);
-      } else {
-        cv_img = DecodeDatumToCVMatNative(datum);
-      }
-      if (cv_img.channels() != this->transformed_data_.channels()) {
-        LOG(WARNING) << "Your dataset contains encoded images with mixed "
-        << "channel sizes. Consider adding a 'force_color' flag to the "
-        << "model definition, or rebuild your dataset using "
-        << "convert_imageset.";
-      }
-    }
     read_time += timer.MicroSeconds();
     timer.Start();
-
     // Apply data transformations (mirror, scale, crop...)
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    if (datum.encoded()) {
-      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
-    } else {
-      this->data_transformer_->Transform(datum, &(this->transformed_data_));
-    }
+    this->data_transformer_->Transform(datum, &(this->transformed_data_));
+    // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
     trans_time += timer.MicroSeconds();
-    // go to the next iter
+    timer.Start();
+    // go to the next item.
     cursor_->Next();
     if (!cursor_->valid()) {
       DLOG(INFO) << "Restarting data prefetching from start.";
       cursor_->SeekToFirst();
     }
   }
+  timer.Stop();
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";

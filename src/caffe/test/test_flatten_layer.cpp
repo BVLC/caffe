@@ -42,13 +42,48 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 3 * 6 * 5);
-  EXPECT_EQ(this->blob_top_->height(), 1);
-  EXPECT_EQ(this->blob_top_->width(), 1);
+  ASSERT_EQ(this->blob_top_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
 }
 
-TYPED_TEST(FlattenLayerTest, Test) {
+TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_flatten_param()->set_axis(2);
+  FlattenLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_top_->num_axes(), 3);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3);
+  EXPECT_EQ(this->blob_top_->shape(2), 6 * 5);
+}
+
+TYPED_TEST(FlattenLayerTest, TestSetupWithEndAxis) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_flatten_param()->set_end_axis(-2);
+  FlattenLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_top_->num_axes(), 3);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3 * 6);
+  EXPECT_EQ(this->blob_top_->shape(2), 5);
+}
+
+TYPED_TEST(FlattenLayerTest, TestSetupWithStartAndEndAxis) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_flatten_param()->set_axis(0);
+  layer_param.mutable_flatten_param()->set_end_axis(-2);
+  FlattenLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_top_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_->shape(0), 2 * 3 * 6);
+  EXPECT_EQ(this->blob_top_->shape(1), 5);
+}
+
+TYPED_TEST(FlattenLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
@@ -70,6 +105,5 @@ TYPED_TEST(FlattenLayerTest, TestGradient) {
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
-
 
 }  // namespace caffe

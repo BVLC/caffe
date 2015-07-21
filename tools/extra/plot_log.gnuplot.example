@@ -39,8 +39,8 @@ set key right
 
 # Training loss vs. training iterations
 set title "Training loss vs. training iterations"
-set xlabel "Training loss"
-set ylabel "Training iterations"
+set xlabel "Training iterations"
+set ylabel "Training loss"
 plot "mnist.log.train" using 1:3 title "mnist"
 
 # Training loss vs. training time

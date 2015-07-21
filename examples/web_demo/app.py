@@ -17,7 +17,7 @@ import exifutil
 
 import caffe
 
-REPO_DIRNAME = os.path.abspath(os.path.dirname(__file__) + '/../..')
+REPO_DIRNAME = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../..')
 UPLOAD_FOLDER = '/tmp/caffe_demos_uploads'
 ALLOWED_IMAGE_EXTENSIONS = set(['png', 'bmp', 'jpg', 'jpe', 'jpeg', 'gif'])
 

@@ -16,7 +16,7 @@
 namespace caffe {
 
 template <typename Dtype>
-class AccuracyLayerTest : public ::testing::Test {
+class AccuracyLayerTest : public CPUDeviceTest<Dtype> {
  protected:
   AccuracyLayerTest()
       : blob_bottom_data_(new Blob<Dtype>()),
@@ -92,7 +92,6 @@ TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -118,7 +117,6 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
-  Caffe::set_mode(Caffe::CPU);
   this->blob_bottom_data_->Reshape(2, 10, 4, 5);
   vector<int> label_shape(3);
   label_shape[0] = 2; label_shape[1] = 4; label_shape[2] = 5;
@@ -162,7 +160,6 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
-  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   const TypeParam kIgnoreLabelValue = -1;
   layer_param.mutable_accuracy_param()->set_ignore_label(kIgnoreLabelValue);
