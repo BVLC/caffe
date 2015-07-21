@@ -252,13 +252,24 @@ int time() {
     forward_timer.Start();
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
+	  //LOG(INFO) << "Forward layer: " << i << " " << layers[i]->type();
+	  //for (int k = 0; k < top_vecs[i].size(); k++) {
+	  //    LOG(INFO) << "\tTop " << k << ": " << top_vecs[i][k]->shape_string();
+	  //}
+	  //for (int k = 0; k < bottom_vecs[i].size(); k++) {
+	  //    LOG(INFO) << "\tBottom: " << bottom_vecs[i][k]->shape_string();
+      //}
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+	  //for (int k = 0; k < top_vecs[i].size(); k++) {
+	  //    LOG(INFO) << "\tTop " << k << ": " << top_vecs[i][k]->shape_string();
+	  //}
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
     backward_timer.Start();
     for (int i = layers.size() - 1; i >= 0; --i) {
       timer.Start();
+	  //LOG(INFO) << "Backward layer: " << i << " " << layers[i]->type();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
       backward_time_per_layer[i] += timer.MicroSeconds();

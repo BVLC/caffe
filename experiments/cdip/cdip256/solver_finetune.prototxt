@@ -1,0 +1,14 @@
+net: "experiments/cdip256/finetune.prototxt"
+test_iter: 800
+test_interval: 4000
+base_lr: 0.0001
+lr_policy: "step"
+gamma: 0.5
+stepsize: 200000
+display: 80
+max_iter: 1800000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 20000
+snapshot_prefix: "experiments/cdip256/finetune/cdip256_finetune"
+solver_mode: GPU

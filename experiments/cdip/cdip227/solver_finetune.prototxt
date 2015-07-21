@@ -1,0 +1,13 @@
+net: "experiments/cdip227/finetune.prototxt"
+test_iter: 800
+test_interval: 4000
+base_lr: 0.01
+lr_policy: "poly"
+power: 3
+display: 80
+max_iter: 1800000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 20000
+snapshot_prefix: "experiments/cdip227/finetune/cdip227_finetune"
+solver_mode: GPU

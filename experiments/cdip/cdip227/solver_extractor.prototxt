@@ -1,0 +1,12 @@
+net: "experiments/cdip227/extractor.prototxt"
+test_iter: 800
+test_interval: 4000
+base_lr: 0.01
+lr_policy: "fixed"
+display: 80
+max_iter: 1800000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 20000
+snapshot_prefix: "experiments/cdip227/extractor/cdip227_extractor"
+solver_mode: GPU

@@ -91,3 +91,6 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+# Log Dir
+logs/*

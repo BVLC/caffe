@@ -1,0 +1,14 @@
+net: "experiments/autoencoder/stacked1/train_val.prototxt"
+test_iter: 960
+test_interval: 10000
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.5
+stepsize: 200000
+display: 40
+max_iter: 1800000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 20000
+snapshot_prefix: "experiments/autoencoder/stacked1/snapshots/stacked1"
+solver_mode: GPU

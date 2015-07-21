@@ -1,0 +1,14 @@
+net: "experiments/autoencoder/rectangle1/train_val.prototxt"
+test_iter: 9860
+test_interval: 40000
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.5
+stepsize: 800000
+display: 40
+max_iter: 7200000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 160000
+snapshot_prefix: "experiments/autoencoder/rectangle1/snapshots/rectangle1"
+solver_mode: GPU

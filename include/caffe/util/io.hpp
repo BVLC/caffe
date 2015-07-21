@@ -138,6 +138,10 @@ cv::Mat ReadImageToCVMat(const string& filename);
 cv::Mat DecodeDatumToCVMatNative(const Datum& datum);
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color);
 
+cv::Mat EncodedImageToCVMat(const Image& img, bool is_color);
+cv::Mat UnencodedImageToCVMat(const Image& img);
+cv::Mat ImageToCVMat(const Image& img, bool is_color);
+
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
 template <typename Dtype>

@@ -1,0 +1,9 @@
+net: "paralleldb/defs/parallel_lmdb.prototxt"
+test_interval: 0
+max_iter: 1
+solver_mode: CPU
+lr_policy: "step"
+base_lr: 0.01
+gamma: 0.1
+stepsize: 100000
+display: 20
