@@ -51,6 +51,12 @@ function(caffe_generate_export_configs)
     list(APPEND DEFINITIONS -DUSE_CUDNN)
   endif()
 
+  if(NOT HAVE_CNMEM)
+    set(HAVE_CNMEM FALSE)
+  else()
+    list(APPEND DEFINITIONS -DUSE_CNMEM)
+  endif()
+
   if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
     list(APPEND Caffe_DEFINITIONS -DUSE_MKL)
   endif()
