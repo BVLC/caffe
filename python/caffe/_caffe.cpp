@@ -7,6 +7,7 @@
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <google/protobuf/text_format.h>
 #include <numpy/arrayobject.h>
 
 // these need to be included after boost on OS X
@@ -134,6 +135,14 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(filename, &param);
+  return GetSolver<Dtype>(param);
+}
+Solver<Dtype>* GetSolverFromString(const string& proto_txt) {
+  using google::protobuf::TextFormat;
+  SolverParameter param;
+  bool success = TextFormat::ParseFromString(proto_txt, &param);
+  if (!success)
+    LOG(FATAL) << "Malformatted proto_txt string";
   return GetSolver<Dtype>(param);
 }
 
@@ -275,6 +284,8 @@ BOOST_PYTHON_MODULE(_caffe) {
         "AdaGradSolver", bp::init<string>());
 
   bp::def("get_solver", &GetSolverFromFile,
+      bp::return_value_policy<bp::manage_new_object>());
+  bp::def("get_solver_from_string", &GetSolverFromString,
       bp::return_value_policy<bp::manage_new_object>());
 
   // vector wrappers for all the vector types we use
