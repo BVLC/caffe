@@ -100,7 +100,8 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   Dtype* top_label = added_label_.mutable_cpu_data();
   for (int item_id = 0; item_id < num; ++item_id) {
     for (int label_id = 0; label_id < label_channels_; label_id++) {
-      top_label[item_id * label_channels_ + label_id] = labels[item_id][label_id];
+      top_label[item_id * label_channels_ + label_id] = 
+        labels[item_id][label_id];
     }
   }
   // num_images == batch_size_
