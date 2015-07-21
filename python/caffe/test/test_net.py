@@ -2,6 +2,7 @@ import unittest
 import tempfile
 import os
 import numpy as np
+import six
 
 import caffe
 
@@ -10,7 +11,7 @@ def simple_net_file(num_output):
     """Make a simple net prototxt, based on test_net.cpp, returning the name
     of the (temporary) file."""
 
-    f = tempfile.NamedTemporaryFile(delete=False)
+    f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
     f.write("""name: 'testnet' force_backward: true
     layer { type: 'DummyData' name: 'data' top: 'data' top: 'label'
       dummy_data_param { num: 5 channels: 2 height: 3 width: 4
@@ -47,7 +48,7 @@ class TestNet(unittest.TestCase):
     def test_memory(self):
         """Check that holding onto blob data beyond the life of a Net is OK"""
 
-        params = sum(map(list, self.net.params.itervalues()), [])
+        params = sum(map(list, six.itervalues(self.net.params)), [])
         blobs = self.net.blobs.values()
         del self.net
 
@@ -67,7 +68,7 @@ class TestNet(unittest.TestCase):
         self.assertEqual(self.net.outputs, ['loss'])
 
     def test_save_and_read(self):
-        f = tempfile.NamedTemporaryFile(delete=False)
+        f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
         f.close()
         self.net.save(f.name)
         net_file = simple_net_file(self.num_output)
