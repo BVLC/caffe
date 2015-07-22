@@ -184,6 +184,10 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // data mean
   has_mean_file_ = this->transform_param_.has_mean_file();
   has_mean_values_ = this->transform_param_.mean_value_size() > 0;
+  has_mean_stddev_ = this->transform_param_.has_mean_stddev();
+
+  LOG(ERROR) << "has_mean_stddev_ = " << has_mean_stddev_;
+
   if (has_mean_file_) {
     const string& mean_file =
           this->transform_param_.mean_file();
@@ -193,8 +197,11 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     data_mean_.FromProto(blob_proto);
   }
   if (has_mean_values_) {
+    LOG(ERROR) << "has mean values";
     CHECK(has_mean_file_ == false) <<
       "Cannot specify mean_file and mean_value at the same time";
+    CHECK(has_mean_stddev_ == false) <<
+      "Cannot specify mean_value and mean_stddev at the same time";
     for (int c = 0; c < this->transform_param_.mean_value_size(); ++c) {
       mean_values_.push_back(this->transform_param_.mean_value(c));
     }
@@ -390,6 +397,38 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
         cv::flip(cv_cropped_img, cv_cropped_img, 1);
       }
 
+      int N = cv_cropped_img.rows * cv_cropped_img.cols;
+      float per_image_means[channels];
+      float per_image_stddevs[channels];
+      memset(per_image_means, 0, sizeof(per_image_means));
+      memset(per_image_stddevs, 0, sizeof(per_image_stddevs));
+
+      // compute mean and stddev for this image
+      for (int h = 0; h < cv_cropped_img.rows; ++h) {
+        const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+        int img_index = 0;
+        for (int w = 0; w < cv_cropped_img.cols; ++w) {
+          for (int c = 0; c < channels; ++c) {
+            Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+            per_image_means[c] += 1.f * pixel / N;
+          }
+        }
+      }
+      // stddev
+      for (int h = 0; h < cv_cropped_img.rows; ++h) {
+        const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+        int img_index = 0;
+        for (int w = 0; w < cv_cropped_img.cols; ++w) {
+          for (int c = 0; c < channels; ++c) {
+            Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+            per_image_stddevs[c] += 1.f * (pixel - per_image_means[c]) * (pixel - per_image_means[c]) / (N - 1);
+          }
+        }
+      }
+      for(int c = 0; c < channels; ++c) {
+        per_image_stddevs[c] = sqrt(per_image_stddevs[c]);
+      }
+
       // copy the warped window into top_data
       for (int h = 0; h < cv_cropped_img.rows; ++h) {
         const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
@@ -407,6 +446,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
             } else {
               if (this->has_mean_values_) {
                 top_data[top_index] = (pixel - this->mean_values_[c]) * scale;
+              } else if(this->has_mean_stddev_) {
+                top_data[top_index] = (pixel - per_image_means[c]) / per_image_stddevs[c];
               } else {
                 top_data[top_index] = pixel * scale;
               }
