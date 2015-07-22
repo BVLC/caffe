@@ -41,7 +41,7 @@ These dependencies need manual installation in 12.04.
     export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1
     make && make install
     # lmdb
-    git clone https://gitorious.org/mdb/mdb.git
+    git clone https://github.com/LMDB/lmdb
     cd mdb/libraries/liblmdb
     make && make install
 
