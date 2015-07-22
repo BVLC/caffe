@@ -1,0 +1,340 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Solver / Model Optimization
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="solver">Solver</h1>
+
+<p>The solver orchestrates model optimization by coordinating the network’s forward inference and backward gradients to form parameter updates that attempt to improve the loss.
+The responsibilities of learning are divided between the Solver for overseeing the optimization and generating parameter updates and the Net for yielding loss and gradients.</p>
+
+<p>The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov’s Accelerated Gradient (NESTEROV).</p>
+
+<p>The solver</p>
+
+<ol>
+  <li>scaffolds the optimization bookkeeping and creates the training network for learning and test network(s) for evaluation.</li>
+  <li>iteratively optimizes by calling forward / backward and updating parameters</li>
+  <li>(periodically) evaluates the test networks</li>
+  <li>snapshots the model and solver state throughout the optimization</li>
+</ol>
+
+<p>where each iteration</p>
+
+<ol>
+  <li>calls network forward to compute the output and loss</li>
+  <li>calls network backward to compute the gradients</li>
+  <li>incorporates the gradients into parameter updates according to the solver method</li>
+  <li>updates the solver state according to learning rate, history, and method</li>
+</ol>
+
+<p>to take the weights all the way from initialization to learned model.</p>
+
+<p>Like Caffe models, Caffe solvers run in CPU / GPU modes.</p>
+
+<h2 id="methods">Methods</h2>
+
+<p>The solver methods address the general optimization problem of loss minimization.
+For dataset <script type="math/tex">D</script>, the optimization objective is the average loss over all <script type="math/tex">|D|</script> data instances throughout the dataset</p>
+
+<script type="math/tex; mode=display">L(W) = \frac{1}{|D|} \sum_i^{|D|} f_W\left(X^{(i)}\right) + \lambda r(W)</script>
+
+<p>where <script type="math/tex">f_W\left(X^{(i)}\right)</script> is the loss on data instance <script type="math/tex">X^{(i)}</script> and <script type="math/tex">r(W)</script> is a regularization term with weight <script type="math/tex">\lambda</script>.
+<script type="math/tex">|D|</script> can be very large, so in practice, in each solver iteration we use a stochastic approximation of this objective, drawing a mini-batch of <script type="math/tex">% <![CDATA[
+N << |D| %]]></script> instances:</p>
+
+<script type="math/tex; mode=display">L(W) \approx \frac{1}{N} \sum_i^N f_W\left(X^{(i)}\right) + \lambda r(W)</script>
+
+<p>The model computes <script type="math/tex">f_W</script> in the forward pass and the gradient <script type="math/tex">\nabla f_W</script> in the backward pass.</p>
+
+<p>The parameter update <script type="math/tex">\Delta W</script> is formed by the solver from the error gradient <script type="math/tex">\nabla f_W</script>, the regularization gradient <script type="math/tex">\nabla r(W)</script>, and other particulars to each method.</p>
+
+<h3 id="sgd">SGD</h3>
+
+<p><strong>Stochastic gradient descent</strong> (<code>solver_type: SGD</code>) updates the weights <script type="math/tex"> W </script> by a linear combination of the negative gradient <script type="math/tex"> \nabla L(W) </script> and the previous weight update <script type="math/tex"> V_t </script>.
+The <strong>learning rate</strong> <script type="math/tex"> \alpha </script> is the weight of the negative gradient.
+The <strong>momentum</strong> <script type="math/tex"> \mu </script> is the weight of the previous update.</p>
+
+<p>Formally, we have the following formulas to compute the update value <script type="math/tex"> V_{t+1} </script> and the updated weights <script type="math/tex"> W_{t+1} </script> at iteration <script type="math/tex"> t+1 </script>, given the previous weight update <script type="math/tex"> V_t </script> and current weights <script type="math/tex"> W_t </script>:</p>
+
+<script type="math/tex; mode=display">
+V_{t+1} = \mu V_t - \alpha \nabla L(W_t)
+</script>
+
+<script type="math/tex; mode=display">
+W_{t+1} = W_t + V_{t+1}
+</script>
+
+<p>The learning “hyperparameters” (<script type="math/tex">\alpha</script> and <script type="math/tex">\mu</script>) might require a bit of tuning for best results.
+If you’re not sure where to start, take a look at the “Rules of thumb” below, and for further information you might refer to Leon Bottou’s <a href="http://research.microsoft.com/pubs/192769/tricks-2012.pdf">Stochastic Gradient Descent Tricks</a> [1].</p>
+
+<p>[1] L. Bottou.
+    <a href="http://research.microsoft.com/pubs/192769/tricks-2012.pdf">Stochastic Gradient Descent Tricks</a>.
+    <em>Neural Networks: Tricks of the Trade</em>: Springer, 2012.</p>
+
+<h4 id="rules-of-thumb-for-setting-the-learning-rate--alpha--and-momentum--mu-">Rules of thumb for setting the learning rate <script type="math/tex"> \alpha </script> and momentum <script type="math/tex"> \mu </script></h4>
+
+<p>A good strategy for deep learning with SGD is to initialize the learning rate <script type="math/tex"> \alpha </script> to a value around <script type="math/tex"> \alpha \approx 0.01 = 10^{-2} </script>, and dropping it by a constant factor (e.g., 10) throughout training when the loss begins to reach an apparent “plateau”, repeating this several times.
+Generally, you probably want to use a momentum <script type="math/tex"> \mu = 0.9 </script> or similar value.
+By smoothing the weight updates across iterations, momentum tends to make deep learning with SGD both stabler and faster.</p>
+
+<p>This was the strategy used by Krizhevsky et al. [1] in their famously winning CNN entry to the ILSVRC-2012 competition, and Caffe makes this strategy easy to implement in a <code>SolverParameter</code>, as in our reproduction of [1] at <code>./examples/imagenet/alexnet_solver.prototxt</code>.</p>
+
+<p>To use a learning rate policy like this, you can put the following lines somewhere in your solver prototxt file:</p>
+
+<pre><code>base_lr: 0.01     # begin training at a learning rate of 0.01 = 1e-2
+
+lr_policy: "step" # learning rate policy: drop the learning rate in "steps"
+                  # by a factor of gamma every stepsize iterations
+
+gamma: 0.1        # drop the learning rate by a factor of 10
+                  # (i.e., multiply it by a factor of gamma = 0.1)
+
+stepsize: 100000  # drop the learning rate every 100K iterations
+
+max_iter: 350000  # train for 350K iterations total
+
+momentum: 0.9
+</code></pre>
+
+<p>Under the above settings, we’ll always use <code>momentum</code> <script type="math/tex"> \mu = 0.9 </script>.
+We’ll begin training at a <code>base_lr</code> of <script type="math/tex"> \alpha = 0.01 = 10^{-2} </script> for the first 100,000 iterations, then multiply the learning rate by <code>gamma</code> (<script type="math/tex"> \gamma </script>) and train at <script type="math/tex"> \alpha' = \alpha \gamma = (0.01) (0.1) = 0.001 = 10^{-3} </script> for iterations 100K-200K, then at <script type="math/tex"> \alpha'' = 10^{-4} </script> for iterations 200K-300K, and finally train until iteration 350K (since we have <code>max_iter: 350000</code>) at <script type="math/tex"> \alpha''' = 10^{-5} </script>.</p>
+
+<p>Note that the momentum setting <script type="math/tex"> \mu </script> effectively multiplies the size of your updates by a factor of <script type="math/tex"> \frac{1}{1 - \mu} </script> after many iterations of training, so if you increase <script type="math/tex"> \mu </script>, it may be a good idea to <strong>decrease</strong> <script type="math/tex"> \alpha </script> accordingly (and vice versa).</p>
+
+<p>For example, with <script type="math/tex"> \mu = 0.9 </script>, we have an effective update size multiplier of <script type="math/tex"> \frac{1}{1 - 0.9} = 10 </script>.
+If we increased the momentum to <script type="math/tex"> \mu = 0.99 </script>, we’ve increased our update size multiplier to 100, so we should drop <script type="math/tex"> \alpha </script> (<code>base_lr</code>) by a factor of 10.</p>
+
+<p>Note also that the above settings are merely guidelines, and they’re definitely not guaranteed to be optimal (or even work at all!) in every situation.
+If learning diverges (e.g., you start to see very large or <code>NaN</code> or <code>inf</code> loss values or outputs), try dropping the <code>base_lr</code> (e.g., <code>base_lr: 0.001</code>) and re-training, repeating this until you find a <code>base_lr</code> value that works.</p>
+
+<p>[1] A. Krizhevsky, I. Sutskever, and G. Hinton.
+    <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf">ImageNet Classification with Deep Convolutional Neural Networks</a>.
+    <em>Advances in Neural Information Processing Systems</em>, 2012.</p>
+
+<h3 id="adagrad">AdaGrad</h3>
+
+<p>The <strong>adaptive gradient</strong> (<code>solver_type: ADAGRAD</code>) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to “find needles in haystacks in the form of very predictive but rarely seen features,” in Duchi et al.’s words.
+Given the update information from all previous iterations <script type="math/tex"> \left( \nabla L(W) \right)_{t'} </script> for <script type="math/tex"> t' \in \{1, 2, ..., t\} </script>,
+the update formulas proposed by [1] are as follows, specified for each component <script type="math/tex">i</script> of the weights <script type="math/tex">W</script>:</p>
+
+<script type="math/tex; mode=display">
+(W_{t+1})_i =
+(W_t)_i - \alpha
+\frac{\left( \nabla L(W_t) \right)_{i}}{
+    \sqrt{\sum_{t'=1}^{t} \left( \nabla L(W_{t'}) \right)_i^2}
+}
+</script>
+
+<p>Note that in practice, for weights <script type="math/tex"> W \in \mathcal{R}^d </script>, AdaGrad implementations (including the one in Caffe) use only <script type="math/tex"> \mathcal{O}(d) </script> extra storage for the historical gradient information (rather than the <script type="math/tex"> \mathcal{O}(dt) </script> storage that would be necessary to store each historical gradient individually).</p>
+
+<p>[1] J. Duchi, E. Hazan, and Y. Singer.
+    <a href="http://www.magicbroom.info/Papers/DuchiHaSi10.pdf">Adaptive Subgradient Methods for Online Learning and Stochastic Optimization</a>.
+    <em>The Journal of Machine Learning Research</em>, 2011.</p>
+
+<h3 id="nag">NAG</h3>
+
+<p><strong>Nesterov’s accelerated gradient</strong> (<code>solver_type: NESTEROV</code>) was proposed by Nesterov [1] as an “optimal” method of convex optimization, achieving a convergence rate of <script type="math/tex"> \mathcal{O}(1/t^2) </script> rather than the <script type="math/tex"> \mathcal{O}(1/t) </script>.
+Though the required assumptions to achieve the <script type="math/tex"> \mathcal{O}(1/t^2) </script> convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].</p>
+
+<p>The weight update formulas look very similar to the SGD updates given above:</p>
+
+<script type="math/tex; mode=display">
+V_{t+1} = \mu V_t - \alpha \nabla L(W_t + \mu V_t)
+</script>
+
+<script type="math/tex; mode=display">
+W_{t+1} = W_t + V_{t+1}
+</script>
+
+<p>What distinguishes the method from SGD is the weight setting <script type="math/tex"> W </script> on which we compute the error gradient <script type="math/tex"> \nabla L(W) </script> – in NAG we take the gradient on weights with added momentum <script type="math/tex"> \nabla L(W_t + \mu V_t) </script>; in SGD we simply take the gradient <script type="math/tex"> \nabla L(W_t) </script> on the current weights themselves.</p>
+
+<p>[1] Y. Nesterov.
+    A Method of Solving a Convex Programming Problem with Convergence Rate <script type="math/tex">\mathcal{O}(1/\sqrt{k})</script>.
+    <em>Soviet Mathematics Doklady</em>, 1983.</p>
+
+<p>[2] I. Sutskever, J. Martens, G. Dahl, and G. Hinton.
+    <a href="http://www.cs.toronto.edu/~fritz/absps/momentum.pdf">On the Importance of Initialization and Momentum in Deep Learning</a>.
+    <em>Proceedings of the 30th International Conference on Machine Learning</em>, 2013.</p>
+
+<h2 id="scaffolding">Scaffolding</h2>
+
+<p>The solver scaffolding prepares the optimization method and initializes the model to be learned in <code>Solver::Presolve()</code>.</p>
+
+<pre><code>&gt; caffe train -solver examples/mnist/lenet_solver.prototxt
+I0902 13:35:56.474978 16020 caffe.cpp:90] Starting Optimization
+I0902 13:35:56.475190 16020 solver.cpp:32] Initializing solver from parameters:
+test_iter: 100
+test_interval: 500
+base_lr: 0.01
+display: 100
+max_iter: 10000
+lr_policy: "inv"
+gamma: 0.0001
+power: 0.75
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 5000
+snapshot_prefix: "examples/mnist/lenet"
+solver_mode: GPU
+net: "examples/mnist/lenet_train_test.prototxt"
+</code></pre>
+
+<p>Net initialization</p>
+
+<pre><code>I0902 13:35:56.655681 16020 solver.cpp:72] Creating training net from net file: examples/mnist/lenet_train_test.prototxt
+[...]
+I0902 13:35:56.656740 16020 net.cpp:56] Memory required for data: 0
+I0902 13:35:56.656791 16020 net.cpp:67] Creating Layer mnist
+I0902 13:35:56.656811 16020 net.cpp:356] mnist -&gt; data
+I0902 13:35:56.656846 16020 net.cpp:356] mnist -&gt; label
+I0902 13:35:56.656874 16020 net.cpp:96] Setting up mnist
+I0902 13:35:56.694052 16020 data_layer.cpp:135] Opening lmdb examples/mnist/mnist_train_lmdb
+I0902 13:35:56.701062 16020 data_layer.cpp:195] output data size: 64,1,28,28
+I0902 13:35:56.701146 16020 data_layer.cpp:236] Initializing prefetch
+I0902 13:35:56.701196 16020 data_layer.cpp:238] Prefetch initialized.
+I0902 13:35:56.701212 16020 net.cpp:103] Top shape: 64 1 28 28 (50176)
+I0902 13:35:56.701230 16020 net.cpp:103] Top shape: 64 1 1 1 (64)
+[...]
+I0902 13:35:56.703737 16020 net.cpp:67] Creating Layer ip1
+I0902 13:35:56.703753 16020 net.cpp:394] ip1 &lt;- pool2
+I0902 13:35:56.703778 16020 net.cpp:356] ip1 -&gt; ip1
+I0902 13:35:56.703797 16020 net.cpp:96] Setting up ip1
+I0902 13:35:56.728127 16020 net.cpp:103] Top shape: 64 500 1 1 (32000)
+I0902 13:35:56.728142 16020 net.cpp:113] Memory required for data: 5039360
+I0902 13:35:56.728175 16020 net.cpp:67] Creating Layer relu1
+I0902 13:35:56.728194 16020 net.cpp:394] relu1 &lt;- ip1
+I0902 13:35:56.728219 16020 net.cpp:345] relu1 -&gt; ip1 (in-place)
+I0902 13:35:56.728240 16020 net.cpp:96] Setting up relu1
+I0902 13:35:56.728256 16020 net.cpp:103] Top shape: 64 500 1 1 (32000)
+I0902 13:35:56.728270 16020 net.cpp:113] Memory required for data: 5167360
+I0902 13:35:56.728287 16020 net.cpp:67] Creating Layer ip2
+I0902 13:35:56.728304 16020 net.cpp:394] ip2 &lt;- ip1
+I0902 13:35:56.728333 16020 net.cpp:356] ip2 -&gt; ip2
+I0902 13:35:56.728356 16020 net.cpp:96] Setting up ip2
+I0902 13:35:56.728690 16020 net.cpp:103] Top shape: 64 10 1 1 (640)
+I0902 13:35:56.728705 16020 net.cpp:113] Memory required for data: 5169920
+I0902 13:35:56.728734 16020 net.cpp:67] Creating Layer loss
+I0902 13:35:56.728747 16020 net.cpp:394] loss &lt;- ip2
+I0902 13:35:56.728767 16020 net.cpp:394] loss &lt;- label
+I0902 13:35:56.728786 16020 net.cpp:356] loss -&gt; loss
+I0902 13:35:56.728811 16020 net.cpp:96] Setting up loss
+I0902 13:35:56.728837 16020 net.cpp:103] Top shape: 1 1 1 1 (1)
+I0902 13:35:56.728849 16020 net.cpp:109]     with loss weight 1
+I0902 13:35:56.728878 16020 net.cpp:113] Memory required for data: 5169924
+</code></pre>
+
+<p>Loss</p>
+
+<pre><code>I0902 13:35:56.728893 16020 net.cpp:170] loss needs backward computation.
+I0902 13:35:56.728909 16020 net.cpp:170] ip2 needs backward computation.
+I0902 13:35:56.728924 16020 net.cpp:170] relu1 needs backward computation.
+I0902 13:35:56.728938 16020 net.cpp:170] ip1 needs backward computation.
+I0902 13:35:56.728953 16020 net.cpp:170] pool2 needs backward computation.
+I0902 13:35:56.728970 16020 net.cpp:170] conv2 needs backward computation.
+I0902 13:35:56.728984 16020 net.cpp:170] pool1 needs backward computation.
+I0902 13:35:56.728998 16020 net.cpp:170] conv1 needs backward computation.
+I0902 13:35:56.729014 16020 net.cpp:172] mnist does not need backward computation.
+I0902 13:35:56.729027 16020 net.cpp:208] This network produces output loss
+I0902 13:35:56.729053 16020 net.cpp:467] Collecting Learning Rate and Weight Decay.
+I0902 13:35:56.729071 16020 net.cpp:219] Network initialization done.
+I0902 13:35:56.729085 16020 net.cpp:220] Memory required for data: 5169924
+I0902 13:35:56.729277 16020 solver.cpp:156] Creating test net (#0) specified by net file: examples/mnist/lenet_train_test.prototxt
+</code></pre>
+
+<p>Completion</p>
+
+<pre><code>I0902 13:35:56.806970 16020 solver.cpp:46] Solver scaffolding done.
+I0902 13:35:56.806984 16020 solver.cpp:165] Solving LeNet
+</code></pre>
+
+<h2 id="updating-parameters">Updating Parameters</h2>
+
+<p>The actual weight update is made by the solver then applied to the net parameters in <code>Solver::ComputeUpdateValue()</code>.
+The <code>ComputeUpdateValue</code> method incorporates any weight decay <script type="math/tex"> r(W) </script> into the weight gradients (which currently just contain the error gradients) to get the final gradient with respect to each network weight.
+Then these gradients are scaled by the learning rate <script type="math/tex"> \alpha </script> and the update to subtract is stored in each parameter Blob’s <code>diff</code> field.
+Finally, the <code>Blob::Update</code> method is called on each parameter blob, which performs the final update (subtracting the Blob’s <code>diff</code> from its <code>data</code>).</p>
+
+<h2 id="snapshotting-and-resuming">Snapshotting and Resuming</h2>
+
+<p>The solver snapshots the weights and its own state during training in <code>Solver::Snapshot()</code> and <code>Solver::SnapshotSolverState()</code>.
+The weight snapshots export the learned model while the solver snapshots allow training to be resumed from a given point.
+Training is resumed by <code>Solver::Restore()</code> and <code>Solver::RestoreSolverState()</code>.</p>
+
+<p>Weights are saved without extension while solver states are saved with <code>.solverstate</code> extension.
+Both files will have an <code>_iter_N</code> suffix for the snapshot iteration number.</p>
+
+<p>Snapshotting is configured by:</p>
+
+<pre><code># The snapshot interval in iterations.
+snapshot: 5000
+# File path prefix for snapshotting model weights and solver state.
+# Note: this is relative to the invocation of the `caffe` utility, not the
+# solver definition file.
+snapshot_prefix: "/path/to/model"
+# Snapshot the diff along with the weights. This can help debugging training
+# but takes more storage.
+snapshot_diff: false
+# A final snapshot is saved at the end of training unless
+# this flag is set to false. The default is true.
+snapshot_after_train: true
+</code></pre>
+
+<p>in the solver definition prototxt.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

@@ -1,0 +1,379 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Interfaces
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="interfaces">Interfaces</h1>
+
+<p>Caffe has command line, Python, and MATLAB interfaces for day-to-day usage, interfacing with research code, and rapid prototyping. While Caffe is a C++ library at heart and it exposes a modular interface for development, not every occasion calls for custom compilation. The cmdcaffe, pycaffe, and matcaffe interfaces are here for you.</p>
+
+<h2 id="command-line">Command Line</h2>
+
+<p>The command line interface – cmdcaffe – is the <code>caffe</code> tool for model training, scoring, and diagnostics. Run <code>caffe</code> without any arguments for help. This tool and others are found in caffe/build/tools. (The following example calls require completing the LeNet / MNIST example first.)</p>
+
+<p><strong>Training</strong>: <code>caffe train</code> learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:</p>
+
+<ul>
+  <li>All training requires a solver configuration through the <code>-solver solver.prototxt</code> argument. </li>
+  <li>Resuming requires the <code>-snapshot model_iter_1000.solverstate</code> argument to load the solver snapshot. </li>
+  <li>Fine-tuning requires the <code>-weights model.caffemodel</code> argument for the model initialization.</li>
+</ul>
+
+<p>For example, you can run:</p>
+
+<pre><code># train LeNet
+caffe train -solver examples/mnist/lenet_solver.prototxt
+# train on GPU 2
+caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 2
+# resume training from the half-way point snapshot
+caffe train -solver examples/mnist/lenet_solver.prototxt -snapshot examples/mnist/lenet_iter_5000.solverstate
+</code></pre>
+
+<p>For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but the training call alone is</p>
+
+<pre><code># fine-tune CaffeNet model weights for style recognition
+caffe train -solver examples/finetuning_on_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel
+</code></pre>
+
+<p><strong>Testing</strong>: <code>caffe test</code> scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.</p>
+
+<pre><code>#
+# score the learned LeNet model on the validation set as defined in the 
+# model architeture lenet_train_test.prototxt
+caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+</code></pre>
+
+<p><strong>Benchmarking</strong>: <code>caffe time</code> benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.</p>
+
+<pre><code># (These example calls require you complete the LeNet / MNIST example first.)
+# time LeNet training on CPU for 10 iterations
+caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
+# time LeNet training on GPU for the default 50 iterations
+caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
+# time a model architecture with the given weights on the first GPU for 10 iterations
+caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
+</code></pre>
+
+<p><strong>Diagnostics</strong>: <code>caffe device_query</code> reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.</p>
+
+<pre><code># query the first device
+caffe device_query -gpu 0
+</code></pre>
+
+<h2 id="python">Python</h2>
+
+<p>The Python interface – pycaffe – is the <code>caffe</code> module and its scripts in caffe/python. <code>import caffe</code> to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.</p>
+
+<ul>
+  <li><code>caffe.Net</code> is the central interface for loading, configuring, and running models. <code>caffe.Classsifier</code> and <code>caffe.Detector</code> provide convenience interfaces for common tasks.</li>
+  <li><code>caffe.SGDSolver</code> exposes the solving interface.</li>
+  <li><code>caffe.io</code> handles input / output with preprocessing and protocol buffers.</li>
+  <li><code>caffe.draw</code> visualizes network architectures.</li>
+  <li>Caffe blobs are exposed as numpy ndarrays for ease-of-use and efficiency.</li>
+</ul>
+
+<p>Tutorial IPython notebooks are found in caffe/examples: do <code>ipython notebook caffe/examples</code> to try them. For developer reference docstrings can be found throughout the code.</p>
+
+<p>Compile pycaffe by <code>make pycaffe</code>. The module dir caffe/python/caffe should be installed in your PYTHONPATH for <code>import caffe</code>.</p>
+
+<h2 id="matlab">MATLAB</h2>
+
+<p>The MATLAB interface – matcaffe – is the <code>caffe</code> package in caffe/matlab in which you can integrate Caffe in your Matlab code.</p>
+
+<p>In MatCaffe, you can</p>
+
+<ul>
+  <li>Creating multiple Nets in Matlab</li>
+  <li>Do forward and backward computation</li>
+  <li>Access any layer within a network, and any parameter blob in a layer</li>
+  <li>Get and set data or diff to any blob within a network, not restricting to input blobs or output blobs</li>
+  <li>Save a network’s parameters to file, and load parameters from file</li>
+  <li>Reshape a blob and reshape a network</li>
+  <li>Edit network parameter and do network surgery</li>
+  <li>Create multiple Solvers in Matlab for training</li>
+  <li>Resume training from solver snapshots</li>
+  <li>Access train net and test nets in a solver</li>
+  <li>Run for a certain number of iterations and give back control to Matlab</li>
+  <li>Intermingle arbitrary Matlab code with gradient steps</li>
+</ul>
+
+<p>An ILSVRC image classification demo is in caffe/matlab/demo/classification_demo.m (you need to download BVLC CaffeNet from <a href="http://caffe.berkeleyvision.org/model_zoo.html">Model Zoo</a> to run it).</p>
+
+<h3 id="build-matcaffe">Build MatCaffe</h3>
+
+<p>Build MatCaffe with <code>make all matcaffe</code>. After that, you may test it using <code>make mattest</code>.</p>
+
+<p>Common issue: if you run into error messages like <code>libstdc++.so.6:version 'GLIBCXX_3.4.15' not found</code> during <code>make mattest</code>, then it usually means that your Matlab’s runtime libraries do not match your compile-time libraries. You may need to do the following before you start Matlab:</p>
+
+<pre><code>export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda/lib64
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+</code></pre>
+
+<p>Or the equivalent based on where things are installed on your system, and do <code>make mattest</code> again to see if the issue is fixed. Note: this issue is sometimes more complicated since during its startup Matlab may overwrite your <code>LD_LIBRARY_PATH</code> environment variable. You can run <code>!ldd ./matlab/+caffe/private/caffe_.mexa64</code> (the mex extension may differ on your system) in Matlab to see its runtime libraries, and preload your compile-time libraries by exporting them to your <code>LD_PRELOAD</code> environment variable.</p>
+
+<p>After successful building and testing, add this package to Matlab search PATH by starting <code>matlab</code> from caffe root folder and running the following commands in Matlab command window.</p>
+
+<pre><code>addpath ./matlab
+</code></pre>
+
+<p>You can save your Matlab search PATH by running <code>savepath</code> so that you don’t have to run the command above again every time you use MatCaffe.</p>
+
+<h3 id="use-matcaffe">Use MatCaffe</h3>
+
+<p>MatCaffe is very similar to PyCaffe in usage.</p>
+
+<p>Examples below shows detailed usages and assumes you have downloaded BVLC CaffeNet from <a href="http://caffe.berkeleyvision.org/model_zoo.html">Model Zoo</a> and started <code>matlab</code> from caffe root folder.</p>
+
+<pre><code>model = './models/bvlc_reference_caffenet/deploy.prototxt';
+weights = './models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel';
+</code></pre>
+
+<h4 id="set-mode-and-device">Set mode and device</h4>
+
+<p><strong>Mode and device should always be set BEFORE you create a net or a solver.</strong></p>
+
+<p>Use CPU:</p>
+
+<pre><code>caffe.set_mode_cpu();
+</code></pre>
+
+<p>Use GPU and specify its gpu_id:</p>
+
+<pre><code>caffe.set_mode_gpu();
+caffe.set_device(gpu_id);
+</code></pre>
+
+<h4 id="create-a-network-and-access-its-layers-and-blobs">Create a network and access its layers and blobs</h4>
+
+<p>Create a network:</p>
+
+<pre><code>net = caffe.Net(model, weights, 'test'); % create net and load weights
+</code></pre>
+
+<p>Or</p>
+
+<pre><code>net = caffe.Net(model, 'test'); % create net but not load weights
+net.copy_from(weights); % load weights
+</code></pre>
+
+<p>which creates <code>net</code> object as</p>
+
+<pre><code>  Net with properties:
+
+           layer_vec: [1x23 caffe.Layer]
+            blob_vec: [1x15 caffe.Blob]
+              inputs: {'data'}
+             outputs: {'prob'}
+    name2layer_index: [23x1 containers.Map]
+     name2blob_index: [15x1 containers.Map]
+         layer_names: {23x1 cell}
+          blob_names: {15x1 cell}
+</code></pre>
+
+<p>The two <code>containers.Map</code> objects are useful to find the index of a layer or a blob by its name.</p>
+
+<p>You have access to every blob in this network. To fill blob ‘data’ with all ones:</p>
+
+<pre><code>net.blobs('data').set_data(ones(net.blobs('data').shape));
+</code></pre>
+
+<p>To multiply all values in blob ‘data’ by 10:</p>
+
+<pre><code>net.blobs('data').set_data(net.blobs('data').get_data() * 10);
+</code></pre>
+
+<p><strong>Be aware that since Matlab is 1-indexed and column-major, the usual 4 blob dimensions in Matlab are <code>[width, height, channels, num]</code>, and <code>width</code> is the fastest dimension. Also be aware that images are in BGR channels.</strong> Also, Caffe uses single-precision float data. If your data is not single, <code>set_data</code> will automatically convert it to single.</p>
+
+<p>You also have access to every layer, so you can do network surgery. For example, to multiply conv1 parameters by 10:</p>
+
+<pre><code>net.params('conv1', 1).set_data(net.params('conv1', 1).get_data() * 10); % set weights
+net.params('conv1', 2).set_data(net.params('conv1', 2).get_data() * 10); % set bias
+</code></pre>
+
+<p>Alternatively, you can use</p>
+
+<pre><code>net.layers('conv1').params(1).set_data(net.layers('conv1').params(1).get_data() * 10);
+net.layers('conv1').params(2).set_data(net.layers('conv1').params(2).get_data() * 10);
+</code></pre>
+
+<p>To save the network you just modified:</p>
+
+<pre><code>net.save('my_net.caffemodel');
+</code></pre>
+
+<p>To get a layer’s type (string):</p>
+
+<pre><code>layer_type = net.layers('conv1').type;
+</code></pre>
+
+<h4 id="forward-and-backward">Forward and backward</h4>
+
+<p>Forward pass can be done using <code>net.forward</code> or <code>net.forward_prefilled</code>. Function <code>net.forward</code> takes in a cell array of N-D arrays containing data of input blob(s) and outputs a cell array containing data from output blob(s). Function <code>net.forward_prefilled</code> uses existing data in input blob(s) during forward pass, takes no input and produces no output. After creating some data for input blobs like <code>data = rand(net.blobs('data').shape);</code> you can run</p>
+
+<pre><code>res = net.forward({data});
+prob = res{1};
+</code></pre>
+
+<p>Or</p>
+
+<pre><code>net.blobs('data').set_data(data);
+net.forward_prefilled();
+prob = net.blobs('prob').get_data();
+</code></pre>
+
+<p>Backward is similar using <code>net.backward</code> or <code>net.backward_prefilled</code> and replacing <code>get_data</code> and <code>set_data</code> with <code>get_diff</code> and <code>set_diff</code>. After creating some gradients for output blobs like <code>prob_diff = rand(net.blobs('prob').shape);</code> you can run</p>
+
+<pre><code>res = net.backward({prob_diff});
+data_diff = res{1};
+</code></pre>
+
+<p>Or</p>
+
+<pre><code>net.blobs('prob').set_diff(prob_diff);
+net.backward_prefilled();
+data_diff = net.blobs('data').get_diff();
+</code></pre>
+
+<p><strong>However, the backward computation above doesn’t get correct results, because Caffe decides that the network does not need backward computation. To get correct backward results, you need to set <code>'force_backward: true'</code> in your network prototxt.</strong></p>
+
+<p>After performing forward or backward pass, you can also get the data or diff in internal blobs. For example, to extract pool5 features after forward pass:</p>
+
+<pre><code>pool5_feat = net.blobs('pool5').get_data();
+</code></pre>
+
+<h4 id="reshape">Reshape</h4>
+
+<p>Assume you want to run 1 image at a time instead of 10:</p>
+
+<pre><code>net.blobs('data').reshape([227 227 3 1]); % reshape blob 'data'
+net.reshape();
+</code></pre>
+
+<p>Then the whole network is reshaped, and now <code>net.blobs('prob').shape</code> should be <code>[1000 1]</code>;</p>
+
+<h4 id="training">Training</h4>
+
+<p>Assume you have created training and validation lmdbs following our <a href="http://caffe.berkeleyvision.org/gathered/examples/imagenet.html">ImageNET Tutorial</a>, to create a solver and train on ILSVRC 2012 classification dataset:</p>
+
+<pre><code>solver = caffe.Solver('./models/bvlc_reference_caffenet/solver.prototxt');
+</code></pre>
+
+<p>which creates <code>solver</code> object as</p>
+
+<pre><code>  Solver with properties:
+
+          net: [1x1 caffe.Net]
+    test_nets: [1x1 caffe.Net]
+</code></pre>
+
+<p>To train:</p>
+
+<pre><code>solver.solve();
+</code></pre>
+
+<p>Or train for only 1000 iterations (so that you can do something to its net before training more iterations)</p>
+
+<pre><code>solver.step(1000);
+</code></pre>
+
+<p>To get iteration number:</p>
+
+<pre><code>iter = solver.iter();
+</code></pre>
+
+<p>To get its network:</p>
+
+<pre><code>train_net = solver.net;
+test_net = solver.test_nets(1);
+</code></pre>
+
+<p>To resume from a snapshot “your_snapshot.solverstate”:</p>
+
+<pre><code>solver.restore('your_snapshot.solverstate');
+</code></pre>
+
+<h4 id="input-and-output">Input and output</h4>
+
+<p><code>caffe.io</code> class provides basic input functions <code>load_image</code> and <code>read_mean</code>. For example, to read ILSVRC 2012 mean file (assume you have downloaded imagenet example auxiliary files by running <code>./data/ilsvrc12/get_ilsvrc_aux.sh</code>):</p>
+
+<pre><code>mean_data = caffe.io.read_mean('./data/ilsvrc12/imagenet_mean.binaryproto');
+</code></pre>
+
+<p>To read Caffe’s example image and resize to <code>[width, height]</code> and suppose we want <code>width = 256; height = 256;</code></p>
+
+<pre><code>im_data = caffe.io.load_image('./examples/images/cat.jpg');
+im_data = imresize(im_data, [width, height]); % resize using Matlab's imresize
+</code></pre>
+
+<p><strong>Keep in mind that <code>width</code> is the fastest dimension and channels are BGR, which is different from the usual way that Matlab stores an image.</strong> If you don’t want to use <code>caffe.io.load_image</code> and prefer to load an image by yourself, you can do</p>
+
+<pre><code>im_data = imread('./examples/images/cat.jpg'); % read image
+im_data = im_data(:, :, [3, 2, 1]); % convert from RGB to BGR
+im_data = permute(im_data, [2, 1, 3]); % permute width and height
+im_data = single(im_data); % convert to single precision
+</code></pre>
+
+<p>Also, you may take a look at caffe/matlab/demo/classification_demo.m to see how to prepare input by taking crops from an image.</p>
+
+<p>We show in caffe/matlab/hdf5creation how to read and write HDF5 data with Matlab. We do not provide extra functions for data output as Matlab itself is already quite powerful in output.</p>
+
+<h4 id="clear-nets-and-solvers">Clear nets and solvers</h4>
+
+<p>Call <code>caffe.reset_all()</code> to clear all solvers and stand-alone nets you have created.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

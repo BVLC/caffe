@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Model Zoo
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="caffe-model-zoo">Caffe Model Zoo</h1>
+
+<p>Lots of researchers and engineers have made Caffe models for different tasks with all kinds of architectures and data.
+These models are learned and applied for problems ranging from simple regression, to large-scale visual classification, to Siamese networks for image similarity, to speech and robotics applications.</p>
+
+<p>To help share these models, we introduce the model zoo framework:</p>
+
+<ul>
+  <li>A standard format for packaging Caffe model info.</li>
+  <li>Tools to upload/download model info to/from Github Gists, and to download trained <code>.caffemodel</code> binaries.</li>
+  <li>A central wiki page for sharing model info Gists.</li>
+</ul>
+
+<h2 id="where-to-get-trained-models">Where to get trained models</h2>
+
+<p>First of all, we bundle BVLC-trained models for unrestricted, out of the box use.
+<br />
+See the <a href="#bvlc-model-license">BVLC model license</a> for details.
+Each one of these can be downloaded by running <code>scripts/download_model_binary.py &lt;dirname&gt;</code> where <code>&lt;dirname&gt;</code> is specified below:</p>
+
+<ul>
+  <li><strong>BVLC Reference CaffeNet</strong> in <code>models/bvlc_reference_caffenet</code>: AlexNet trained on ILSVRC 2012, with a minor variation from the version as described in <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks">ImageNet classification with deep convolutional neural networks</a> by Krizhevsky et al. in NIPS 2012. (Trained by Jeff Donahue @jeffdonahue)</li>
+  <li><strong>BVLC AlexNet</strong> in <code>models/bvlc_alexnet</code>: AlexNet trained on ILSVRC 2012, almost exactly as described in <a href="http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks">ImageNet classification with deep convolutional neural networks</a> by Krizhevsky et al. in NIPS 2012. (Trained by Evan Shelhamer @shelhamer)</li>
+  <li><strong>BVLC Reference R-CNN ILSVRC-2013</strong> in <code>models/bvlc_reference_rcnn_ilsvrc13</code>: pure Caffe implementation of <a href="https://github.com/rbgirshick/rcnn">R-CNN</a> as described by Girshick et al. in CVPR 2014. (Trained by Ross Girshick @rbgirshick)</li>
+  <li><strong>BVLC GoogLeNet</strong> in <code>models/bvlc_googlenet</code>: GoogLeNet trained on ILSVRC 2012, almost exactly as described in <a href="http://arxiv.org/abs/1409.4842">Going Deeper with Convolutions</a> by Szegedy et al. in ILSVRC 2014. (Trained by Sergio Guadarrama @sguada)</li>
+</ul>
+
+<p><strong>Community models</strong> made by Caffe users are posted to a publicly editable <a href="https://github.com/BVLC/caffe/wiki/Model-Zoo">wiki page</a>.
+These models are subject to conditions of their respective authors such as citation and license.
+Thank you for sharing your models!</p>
+
+<h2 id="model-info-format">Model info format</h2>
+
+<p>A caffe model is distributed as a directory containing:</p>
+
+<ul>
+  <li>Solver/model prototxt(s)</li>
+  <li><code>readme.md</code> containing
+    <ul>
+      <li>YAML frontmatter
+        <ul>
+          <li>Caffe version used to train this model (tagged release or commit hash).</li>
+          <li>[optional] file URL and SHA1 of the trained <code>.caffemodel</code>.</li>
+          <li>[optional] github gist id.</li>
+        </ul>
+      </li>
+      <li>Information about what data the model was trained on, modeling choices, etc.</li>
+      <li>License information.</li>
+    </ul>
+  </li>
+  <li>[optional] Other helpful scripts.</li>
+</ul>
+
+<h3 id="hosting-model-info">Hosting model info</h3>
+
+<p>Github Gist is a good format for model info distribution because it can contain multiple files, is versionable, and has in-browser syntax highlighting and markdown rendering.</p>
+
+<p><code>scripts/upload_model_to_gist.sh &lt;dirname&gt;</code> uploads non-binary files in the model directory as a Github Gist and prints the Gist ID. If <code>gist_id</code> is already part of the <code>&lt;dirname&gt;/readme.md</code> frontmatter, then updates existing Gist.</p>
+
+<p>Try doing <code>scripts/upload_model_to_gist.sh models/bvlc_alexnet</code> to test the uploading (don’t forget to delete the uploaded gist afterward).</p>
+
+<p>Downloading model info is done just as easily with <code>scripts/download_model_from_gist.sh &lt;gist_id&gt; &lt;dirname&gt;</code>.</p>
+
+<h3 id="hosting-trained-models">Hosting trained models</h3>
+
+<p>It is up to the user where to host the <code>.caffemodel</code> file.
+We host our BVLC-provided models on our own server.
+Dropbox also works fine (tip: make sure that <code>?dl=1</code> is appended to the end of the URL).</p>
+
+<p><code>scripts/download_model_binary.py &lt;dirname&gt;</code> downloads the <code>.caffemodel</code> from the URL specified in the <code>&lt;dirname&gt;/readme.md</code> frontmatter and confirms SHA1.</p>
+
+<h2 id="bvlc-model-license">BVLC model license</h2>
+
+<p>The Caffe models bundled by the BVLC are released for unrestricted use.</p>
+
+<p>These models are trained on data from the <a href="http://www.image-net.org/">ImageNet project</a> and training data includes internet photos that may be subject to copyright.</p>
+
+<p>Our present understanding as researchers is that there is no restriction placed on the open release of these learned model weights, since none of the original images are distributed in whole or in part.
+To the extent that the interpretation arises that weights are derivative works of the original copyright holder and they assert such a copyright, UC Berkeley makes no representations as to what use is allowed other than to consider our present release in the spirit of fair use in the academic mission of the university to disseminate knowledge and tools as broadly as possible without restriction.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

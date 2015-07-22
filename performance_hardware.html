@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Performance and Hardware Configuration
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="performance-and-hardware-configuration">Performance and Hardware Configuration</h1>
+
+<p>To measure performance on different NVIDIA GPUs we use CaffeNet, the Caffe reference ImageNet model.</p>
+
+<p>For training, each time point is 20 iterations/minibatches of 256 images for 5,120 images total. For testing, a 50,000 image validation set is classified.</p>
+
+<p><strong>Acknowledgements</strong>: BVLC members are very grateful to NVIDIA for providing several GPUs to conduct this research.</p>
+
+<h2 id="nvidia-k40">NVIDIA K40</h2>
+
+<p>Performance is best with ECC off and boost clock enabled. While ECC makes a negligible difference in speed, disabling it frees ~1 GB of GPU memory.</p>
+
+<p>Best settings with ECC off and maximum clock speed in standard Caffe:</p>
+
+<ul>
+  <li>Training is 26.5 secs / 20 iterations (5,120 images)</li>
+  <li>Testing is 100 secs / validation set (50,000 images)</li>
+</ul>
+
+<p>Best settings with Caffe + <a href="http://nvidia.com/cudnn">cuDNN acceleration</a>:</p>
+
+<ul>
+  <li>Training is 19.2 secs / 20 iterations (5,120 images)</li>
+  <li>Testing is 60.7 secs / validation set (50,000 images)</li>
+</ul>
+
+<p>Other settings:</p>
+
+<ul>
+  <li>ECC on, max speed: training 26.7 secs / 20 iterations, test 101 secs / validation set</li>
+  <li>ECC on, default speed: training 31 secs / 20 iterations, test 117 secs / validation set</li>
+  <li>ECC off, default speed: training 31 secs / 20 iterations, test 118 secs / validation set</li>
+</ul>
+
+<h3 id="k40-configuration-tips">K40 configuration tips</h3>
+
+<p>For maximum K40 performance, turn off ECC and boost the clock speed (at your own risk).</p>
+
+<p>To turn off ECC, do</p>
+
+<pre><code>sudo nvidia-smi -i 0 --ecc-config=0    # repeat with -i x for each GPU ID
+</code></pre>
+
+<p>then reboot.</p>
+
+<p>Set the “persistence” mode of the GPU settings by</p>
+
+<pre><code>sudo nvidia-smi -pm 1
+</code></pre>
+
+<p>and then set the clock speed with</p>
+
+<pre><code>sudo nvidia-smi -i 0 -ac 3004,875    # repeat with -i x for each GPU ID
+</code></pre>
+
+<p>but note that this configuration resets across driver reloading / rebooting. Include these commands in a boot script to initialize these settings. For a simple fix, add these commands to <code>/etc/rc.local</code> (on Ubuntu).</p>
+
+<h2 id="nvidia-titan">NVIDIA Titan</h2>
+
+<p>Training: 26.26 secs / 20 iterations (5,120 images).
+Testing: 100 secs / validation set (50,000 images).</p>
+
+<p>cuDNN Training: 20.25 secs / 20 iterations (5,120 images).
+cuDNN Testing: 66.3 secs / validation set (50,000 images).</p>
+
+<h2 id="nvidia-k20">NVIDIA K20</h2>
+
+<p>Training: 36.0 secs / 20 iterations (5,120 images).
+Testing: 133 secs / validation set (50,000 images).</p>
+
+<h2 id="nvidia-gtx-770">NVIDIA GTX 770</h2>
+
+<p>Training: 33.0 secs / 20 iterations (5,120 images).
+Testing: 129 secs / validation set (50,000 images).</p>
+
+<p>cuDNN Training: 24.3 secs / 20 iterations (5,120 images).
+cuDNN Testing: 104 secs / validation set (50,000 images).</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>
