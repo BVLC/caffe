@@ -122,7 +122,7 @@ def choose_color_by_layertype(layertype):
     return color
 
 
-def get_pydot_graph(caffe_net, rankdir, label_edges=True):
+def get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size, label_edges=True):
     """Create a data structure which represents the `caffe_net`.
 
     Parameters
@@ -137,9 +137,17 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
     -------
     pydot graph object
     """
+
     pydot_graph = pydot.Dot(caffe_net.name,
                             graph_type='digraph',
                             rankdir=rankdir)
+
+    if margin != '': pydot_graph.set('margin',margin)
+    if page != '': pydot_graph.set('page', page)
+    if pagesize != '': pydot_graph.set('pagesize', pagesize)
+    if size != '': pydot_graph.set('size', size)
+
+
     pydot_nodes = {}
     pydot_edges = []
     for layer in caffe_net.layer:
@@ -181,7 +189,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
     return pydot_graph
 
 
-def draw_net(caffe_net, rankdir, ext='png'):
+def draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext='png'):
     """Draws a caffe net and returns the image string encoded using the given
     extension.
 
@@ -196,10 +204,10 @@ def draw_net(caffe_net, rankdir, ext='png'):
     string :
         Postscript representation of the graph.
     """
-    return get_pydot_graph(caffe_net, rankdir).create(format=ext)
+    return get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size).create(format=ext)
 
 
-def draw_net_to_file(caffe_net, filename, rankdir='LR'):
+def draw_net_to_file(caffe_net, filename, rankdir='LR', margin='', page='', pagesize='', size=''):
     """Draws a caffe net, and saves it to file using the format given as the
     file extension. Use '.raw' to output raw text that you can manually feed
     to graphviz to draw graphs.
@@ -214,4 +222,4 @@ def draw_net_to_file(caffe_net, filename, rankdir='LR'):
     """
     ext = filename[filename.rfind('.')+1:]
     with open(filename, 'wb') as fid:
-        fid.write(draw_net(caffe_net, rankdir, ext))
+        fid.write(draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext))
