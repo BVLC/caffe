@@ -10,7 +10,7 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-const int kMaxBlobAxes = INT_MAX;
+const int kMaxBlobAxes = 32;
 
 namespace caffe {
 
