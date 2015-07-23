@@ -27,12 +27,11 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // Forward through cuDNN in parallel over groups.
     for (int g = 0; g < this->group_; g++) {
 #ifdef USE_CNMEM
-      MemoryHandler::mallocGPU(&workspace[0], workspace_fwd_sizes_[i],
-                               stream_[0]);
+      MemoryHandler::mallocGPU(&workspace[0], workspace_fwd_sizes_[i]);
 #endif
       // Filters.
       // CUDNN_CHECK(cudnnConvolutionForward(handle_[g],
-      CUDNN_CHECK(cudnnConvolutionForward(handle_[0],
+      CUDNN_CHECK(cudnnConvolutionForward(Caffe::cudnn_handle(),
             cudnn::dataType<Dtype>::one,
             bottom_descs_[i], bottom_data + bottom_offset_ * g,
             filter_desc_, weight + this->weight_offset_ * g,
@@ -42,7 +41,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
             top_descs_[i], top_data + top_offset_ * g));
 
 #ifdef USE_CNMEM
-      MemoryHandler::freeGPU(workspace[0], stream_[0]);
+      MemoryHandler::freeGPU(workspace[0]);
       workspace[0] = NULL;
 #endif
       // Bias.
@@ -53,7 +52,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 #else
         CUDNN_CHECK(cudnnAddTensor
 #endif
-              (handle_[0], CUDNN_ADD_SAME_C,
+              (Caffe::cudnn_handle(), CUDNN_ADD_SAME_C,
               cudnn::dataType<Dtype>::one,
               bias_desc_, bias_data + bias_offset_ * g,
               cudnn::dataType<Dtype>::one,
@@ -64,7 +63,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
 }
 
@@ -89,7 +88,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     for (int g = 0; g < this->group_; g++) {
       // Gradient w.r.t. bias.
       if (this->bias_term_ && this->param_propagate_down_[1]) {
-        CUDNN_CHECK(cudnnConvolutionBackwardBias(handle_[0],
+        CUDNN_CHECK(cudnnConvolutionBackwardBias(Caffe::cudnn_handle(),
               cudnn::dataType<Dtype>::one,
               top_descs_[i],  top_diff + top_offset_ * g,
               cudnn::dataType<Dtype>::one,
@@ -99,12 +98,11 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       // Gradient w.r.t. weights.
       if (this->param_propagate_down_[0]) {
 #ifdef USE_CNMEM
-        MemoryHandler::mallocGPU(&workspace[0], workspace_bwd_filter_sizes_[i],
-                         stream_[0]);
+        MemoryHandler::mallocGPU(&workspace[0], workspace_bwd_filter_sizes_[i]);
 #endif
         const Dtype* bottom_data = bottom[i]->gpu_data();
         CUDNN_CHECK(cudnnConvolutionBackwardFilter_v3(
-              handle_[0],
+              Caffe::cudnn_handle(),
               cudnn::dataType<Dtype>::one,
               bottom_descs_[i], bottom_data + bottom_offset_ * g,
               top_descs_[i],    top_diff + top_offset_ * g,
@@ -113,7 +111,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               cudnn::dataType<Dtype>::one,
               filter_desc_, weight_diff + this->weight_offset_ * g));
 #ifdef USE_CNMEM
-        MemoryHandler::freeGPU(workspace[0], stream_[0]);
+        MemoryHandler::freeGPU(workspace[0]);
         workspace[0] = NULL;
 #endif
       }
@@ -125,11 +123,10 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
 #ifdef USE_CNMEM
-        MemoryHandler::mallocGPU(&workspace[0], workspace_bwd_data_sizes_[i],
-                         stream_[0]);
+        MemoryHandler::mallocGPU(&workspace[0], workspace_bwd_data_sizes_[i]);
 #endif
         CUDNN_CHECK(cudnnConvolutionBackwardData_v3(
-              handle_[0],
+              Caffe::cudnn_handle(),
               cudnn::dataType<Dtype>::one,
               filter_desc_, weight + this->weight_offset_ * g,
               top_descs_[i], top_diff + top_offset_ * g,
@@ -138,7 +135,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               cudnn::dataType<Dtype>::zero,
               bottom_descs_[i], bottom_diff + bottom_offset_ * g));
 #ifdef USE_CNMEM
-        MemoryHandler::freeGPU(workspace[0], stream_[0]);
+        MemoryHandler::freeGPU(workspace[0]);
         workspace[0] = NULL;
 #endif
       }
@@ -147,7 +144,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamLegacy));
   }
 }
 
