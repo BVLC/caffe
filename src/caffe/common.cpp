@@ -98,7 +98,11 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
+    : cublas_handle_(NULL), curand_generator_(NULL),
+#ifdef USE_CUDNN
+    cudnn_handle_(NULL),
+#endif
+    random_generator_(),
     mode_(Caffe::CPU), solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
@@ -112,6 +116,11 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+#ifdef USE_CUDNN
+  if (cudnnCreate(&cudnn_handle_) != CUDNN_STATUS_SUCCESS) {
+    LOG(ERROR) << "Cannot create cuDNN handle. cuDNN won't be available.";
+  }
+#endif
 }
 
 Caffe::~Caffe() {
@@ -119,6 +128,9 @@ Caffe::~Caffe() {
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
+#ifdef USE_CUDNN
+  if (cudnn_handle_) CUDNN_CHECK(cudnnDestroy(cudnn_handle_));
+#endif
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -157,6 +169,10 @@ void Caffe::SetDevice(const int device_id) {
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
+#ifdef USE_CUDNN
+  if (Get().cublas_handle_) CUDNN_CHECK(cudnnDestroy(Get().cudnn_handle_));
+  CUDNN_CHECK(cudnnCreate(&Get().cudnn_handle_));
+#endif
 }
 
 void Caffe::DeviceQuery() {
@@ -300,7 +316,7 @@ void MemoryHandler::Init() {
       size_t free_mem, used_mem;
       CUDA_CHECK(cudaMemGetInfo(&free_mem, &used_mem));
 
-      devs[i].size = size_t(0.8*free_mem);
+      devs[i].size = size_t(0.95*free_mem);
       devs[i].numStreams = 0;
       devs[i].streams = NULL;
     }
