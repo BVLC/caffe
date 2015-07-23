@@ -40,6 +40,36 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_datum_means, float* per_da
   }
 }
 
+template<typename Dtype>
+void DataTransformer<Dtype>::GetMeanStddev(float* per_image_means, float* per_image_stddevs, int channels, int height, int width, int h_off, int w_off, const cv::Mat& img) {
+  int N = width * height;
+  // compute mean and stddev for this image
+  for (int h = 0; h < height; ++h) {
+    const uchar* ptr = img.ptr<uchar>(h);
+    int img_index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+        per_image_means[c] += 1.f * pixel / N;
+      }
+    }
+  }
+  // stddev
+  for (int h = 0; h < height; ++h) {
+    const uchar* ptr = img.ptr<uchar>(h);
+    int img_index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+        per_image_stddevs[c] += 1.f * (pixel - per_image_means[c]) * (pixel - per_image_means[c]) / (N - 1);
+      }
+    }
+  }
+  for(int c = 0; c < channels; ++c) {
+    per_image_stddevs[c] = sqrt(per_image_stddevs[c]);
+  }
+}
+
 
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
@@ -80,6 +110,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Dtype* transformed_data) {
+
   const string& data = datum.data();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
@@ -138,37 +169,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   memset(per_datum_means, 0, sizeof(per_datum_means));
   memset(per_datum_stddevs, 0, sizeof(per_datum_stddevs));
 
-  GetMeanStddev(per_datum_means, per_datum_stddevs, datum_channels, height, width, h_off, w_off, data);
+  if(has_mean_stddev) {
+    GetMeanStddev(per_datum_means, per_datum_stddevs, datum_channels, height, width, h_off, w_off, data);
+  }
 
   int top_index, data_index;
   Dtype datum_element;
-/*
-  // compute mean and stddev for this image
-  Dtype datum_element;
-  int top_index, data_index;
-  for(int c = 0; c < datum_channels; ++c) {
-    for(int h = 0; h < height; ++h) {
-      for(int w = 0; w < width; ++w) {
-        data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
-        datum_element = static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-        per_datum_means[c] += 1.f * datum_element / N;
-      }
-    }
-  }
-  // stddev
-  for(int c = 0; c < datum_channels; ++c) {
-    for(int h = 0; h < height; ++h) {
-      for(int w = 0; w < width; ++w) {
-        data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
-        datum_element = static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-        per_datum_stddevs[c] += 1.f * (datum_element - per_datum_means[c]) * (datum_element - per_datum_means[c]) / (N - 1);
-      }
-    }
-  }
-  for(int c = 0; c < datum_channels; ++c) {
-    per_datum_stddevs[c] = sqrt(per_datum_stddevs[c]);
-  }
-*/
 
   for (int c = 0; c < datum_channels; ++c) {
     for (int h = 0; h < height; ++h) {
@@ -207,6 +213,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
+
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
     CHECK(!param_.force_color() && !param_.force_gray())
@@ -297,6 +304,9 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
+
+  LOG(ERROR) << "Inside Transform";
+
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
@@ -320,6 +330,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
   const bool has_mean_stddev = param_.has_mean_stddev();
+
+  LOG(ERROR) << "has_mean_stddev = " << has_mean_stddev;
 
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
@@ -366,36 +378,13 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_cropped_img.data);
 
-  int N = width * height;
   float per_image_means[img_channels];
   float per_image_stddevs[img_channels];
   memset(per_image_means, 0, sizeof(per_image_means));
   memset(per_image_stddevs, 0, sizeof(per_image_stddevs));
 
-  // compute mean and stddev for this image
-  for (int h = 0; h < height; ++h) {
-    const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
-    int img_index = 0;
-    for (int w = 0; w < width; ++w) {
-      for (int c = 0; c < img_channels; ++c) {
-        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-        per_image_means[c] += 1.f * pixel / N;
-      }
-    }
-  }
-  // stddev
-  for (int h = 0; h < height; ++h) {
-    const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
-    int img_index = 0;
-    for (int w = 0; w < width; ++w) {
-      for (int c = 0; c < img_channels; ++c) {
-        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-        per_image_stddevs[c] += 1.f * (pixel - per_image_means[c]) * (pixel - per_image_means[c]) / (N - 1);
-      }
-    }
-  }
-  for(int c = 0; c < img_channels; ++c) {
-    per_image_stddevs[c] = sqrt(per_image_stddevs[c]);
+  if(has_mean_stddev) {
+    GetMeanStddev(per_image_means, per_image_stddevs, img_channels, height, width, h_off, w_off, cv_cropped_img);
   }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
@@ -417,9 +406,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           transformed_data[top_index] =
             (pixel - mean[mean_index]) * scale;
         } else if(has_mean_stddev) {
+          float eps = 1e-9;
           transformed_data[top_index] =
-            (pixel - per_image_means[c]) / per_image_stddevs[c];
-            LOG(INFO) << "A: subtracting " << per_image_means[c] << " and div by " << per_image_stddevs[c] << " to get " << transformed_data[top_index];
+            (pixel - per_image_means[c]) / (eps + per_image_stddevs[c]);
+            LOG(ERROR) << "subtracting " << per_image_means[c] << " and div by " << per_image_stddevs[c] << " to get " << transformed_data[top_index];
         } else {
           if (has_mean_values) {
             transformed_data[top_index] =
@@ -436,8 +426,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
                                        Blob<Dtype>* transformed_blob) {
-
-  LOG(WARNING) << "Inside DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob)";
 
   const int crop_size = param_.crop_size();
   const int input_num = input_blob->num();
