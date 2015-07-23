@@ -16,7 +16,6 @@ void CuDNNSoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   SoftmaxLayer<Dtype>::LayerSetUp(bottom, top);
   // Initialize CUDNN.
-  CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
   handles_setup_ = true;
@@ -41,7 +40,6 @@ CuDNNSoftmaxLayer<Dtype>::~CuDNNSoftmaxLayer() {
 
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
-  cudnnDestroy(handle_);
 }
 
 INSTANTIATE_CLASS(CuDNNSoftmaxLayer);

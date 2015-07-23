@@ -21,7 +21,7 @@ void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif
 
   CUDNN_CHECK(cudnnDivisiveNormalizationForward(
-        handle_, norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
+        Caffe::cudnn_handle(), norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
         cudnn::dataType<Dtype>::one,
         bottom_desc_, bottom_data,
         NULL,  // srcMeansData
@@ -51,7 +51,7 @@ void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif
 
   CUDNN_CHECK(cudnnDivisiveNormalizationBackward(
-        handle_, norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
+        Caffe::cudnn_handle(), norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
         cudnn::dataType<Dtype>::one,
         bottom_desc_, bottom_data,
         NULL, top_diff,  // NULL - srcMeansData
