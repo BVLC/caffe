@@ -15,6 +15,7 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/msvc.hpp"
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);

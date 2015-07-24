@@ -37,7 +37,9 @@ if(USE_libstdcpp)
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
+if(NOT MSVC) # rely on gtest header to determine what to do
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
+endif(NOT MSVC)
 
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
@@ -60,7 +62,11 @@ add_subdirectory(matlab)
 add_subdirectory(docs)
 
 # ---[ Linter target
-add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
+if(MSVC)
+  find_package(PythonInterp 2)
+  set(PYTHON2_EXECUTABLE ${PYTHON_EXECUTABLE} CACHE FILEPATH "Path to the python 2.x executable")
+endif()
+add_custom_target(lint COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -DPYTHON2_EXECUTABLE=${PYTHON2_EXECUTABLE} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
 
 # ---[ pytest target
 add_custom_target(pytest COMMAND python${python_version} -m unittest discover -s caffe/test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python )

@@ -1,4 +1,20 @@
+#ifndef _MSC_VER
 #include <unistd.h>  // for usleep
+#else
+#include "caffe/util/msvc.hpp"
+static inline void usleep(__int64 usec) {
+    HANDLE timer;
+    LARGE_INTEGER ft;
+
+    // Convert to 100 nanosecond interval
+    // negative value indicates relative time
+    ft.QuadPart = -(10 * usec);
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+}
+#endif
 
 #include "gtest/gtest.h"
 

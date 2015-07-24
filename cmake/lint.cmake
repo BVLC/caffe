@@ -1,6 +1,14 @@
 
-set(CMAKE_SOURCE_DIR ..)
-set(LINT_COMMAND ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
+get_filename_component(CMAKE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+if(NOT MSVC)
+    set(LINT_COMMAND ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
+else()
+    if(NOT PYTHON2_EXECUTABLE)
+        message(FATAL_ERROR "Cannot lint without python 2")
+    endif()
+    # format output so VS can bring us to the offending file/line
+    set(LINT_COMMAND ${PYTHON2_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py --output=vs7)
+endif()
 set(SRC_FILE_EXTENSIONS h hpp hu c cpp cu cc)
 set(EXCLUDE_FILE_EXTENSTIONS pb.h pb.cc)
 set(LINT_DIRS include src/caffe examples tools python matlab)
@@ -22,7 +30,9 @@ foreach(ext ${EXCLUDE_FILE_EXTENSTIONS})
 endforeach()
 
 # exclude generated pb files
-list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+if(EXCLUDED_FILES)
+    list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+endif()
 
 execute_process(
     COMMAND ${LINT_COMMAND} ${LINT_SOURCES}
@@ -36,11 +46,20 @@ list(GET LINT_OUTPUT -1 LINT_RESULT)
 list(REMOVE_AT LINT_OUTPUT -1)
 string(REPLACE " " ";" LINT_RESULT ${LINT_RESULT})
 list(GET LINT_RESULT -1 NUM_ERRORS)
-if(NUM_ERRORS GREATER 0)
+if(NUM_ERRORS GREATER 0)    
     foreach(msg ${LINT_OUTPUT})
         string(FIND ${msg} "Done" result)
-        if(result LESS 0)
-            message(STATUS ${msg})
+        if(result LESS 0)    
+            if(MSVC)
+              # avoid STATUS since it adds two dashes and prevents
+              # VS from properly parsing the messages.
+              # TODO: parse ${msg} so that we can add error or warning
+              # so that lint errors appear in the Error List. Or maybe
+              # should we just modify the cpp_lint.py?
+              message("${msg}")
+            else()            
+              message(STATUS ${msg})
+            endif()
         endif()
     endforeach()
     message(FATAL_ERROR "Lint found ${NUM_ERRORS} errors!")

@@ -57,7 +57,12 @@ struct TypeLMDB {
 DataParameter_DB TypeLMDB::backend = DataParameter_DB_LMDB;
 
 // typedef ::testing::Types<TypeLmdb> TestTypes;
+#ifndef _MSC_VER
 typedef ::testing::Types<TypeLevelDB, TypeLMDB> TestTypes;
+#else
+typedef ::testing::Types<TypeLevelDB> TestTypes;
+#endif  // _MSC_VER
+
 
 TYPED_TEST_CASE(DBTest, TestTypes);
 
