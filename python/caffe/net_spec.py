@@ -44,8 +44,6 @@ def to_proto(*tops):
     """Generate a NetParameter that contains all layers needed to compute
     all arguments."""
 
-    if not isinstance(tops, tuple):
-        tops = (tops,)
     layers = OrderedDict()
     autonames = {}
     for top in tops:
