@@ -18,7 +18,7 @@ for specifying nets. In particular, the automatically generated layer names
 are not guaranteed to be forward-compatible.
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 
 from .proto import caffe_pb2
 from google import protobuf
@@ -45,7 +45,7 @@ def to_proto(*tops):
     all arguments."""
 
     layers = OrderedDict()
-    autonames = {}
+    autonames = Counter()
     for top in tops:
         top.fn._to_proto(layers, {}, autonames)
     net = caffe_pb2.NetParameter()
@@ -107,9 +107,8 @@ class Function(object):
 
     def _get_name(self, top, names, autonames):
         if top not in names:
-            n = autonames.setdefault(top.fn.type_name, 1)
             autonames[top.fn.type_name] += 1
-            names[top] = top.fn.type_name + str(n)
+            names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
         return names[top]
 
     def _to_proto(self, layers, names, autonames):
@@ -161,7 +160,7 @@ class NetSpec(object):
 
     def to_proto(self):
         names = {v: k for k, v in six.iteritems(self.tops)}
-        autonames = {}
+        autonames = Counter()
         layers = OrderedDict()
         for name, top in six.iteritems(self.tops):
             top.fn._to_proto(layers, names, autonames)
