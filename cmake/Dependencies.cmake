@@ -2,12 +2,10 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-set(Boost_COMPONENTS system thread)
 if(MSVC)
-    add_definitions(-DBOOST_ALL_NO_LIB)
-    #list(APPEND Boost_COMPONENTS filesystem date_time)
+    add_definitions(-DBOOST_ALL_NO_LIB)    
 endif()
-find_package(Boost 1.46 REQUIRED COMPONENTS ${Boost_COMPONENTS})
+find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 
