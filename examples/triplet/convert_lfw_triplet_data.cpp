@@ -45,8 +45,10 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
   image_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
+  CHECK_EQ(magic, 2051) << "Incorrect image file magic.";
   label_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
+  CHECK_EQ(magic, 2049) << "Incorrect label file magic.";
   image_file.read(reinterpret_cast<char*>(&num_items), 4);
   num_items = swap_endian(num_items);
   label_file.read(reinterpret_cast<char*>(&num_labels), 4);
@@ -67,33 +69,45 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   CHECK(status.ok()) << "Failed to open leveldb " << db_filename
       << ". Is it already existing?";
 
-  char label_i;
+  char label_i;  // label for triplet
   char label_j;
   char label_k;
-  char* pixels = new char[3 * rows * cols];
+  char label_l;  // label for pair wise
+  char label_m;
+  char* pixels = new char[5 * rows * cols];
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
 
   caffe::Datum datum;
-  datum.set_channels(3);  // one channel for each image in the pair
+  datum.set_channels(5);  // one channel for each image in the triplet and pair
   datum.set_height(rows);
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
   for (int itemid = 0; itemid < num_items; ++itemid) {
-    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
+    // pick triplet groups
+    int i = caffe::caffe_rng_rand() % num_items;
     int j = caffe::caffe_rng_rand() % num_items;
     int k = caffe::caffe_rng_rand() % num_items;
+    // pick pair wise groups
+    int l = caffe::caffe_rng_rand() % num_items;
+    int m = caffe::caffe_rng_rand() % num_items;
+    // read triplet groups
     read_image(&image_file, &label_file, i, rows, cols,
         pixels, &label_i);
     read_image(&image_file, &label_file, j, rows, cols,
         pixels + (rows * cols), &label_j);
     read_image(&image_file, &label_file, k, rows, cols,
         pixels + (2 * rows * cols), &label_k);
+    // read pair wise groups
+    read_image(&image_file, &label_file, l, rows, cols,
+        pixels + (3 * rows * cols), &label_l);
+    read_image(&image_file, &label_file, m, rows, cols,
+        pixels + (4 * rows * cols), &label_m);
 
-    datum.set_data(pixels, 3*rows*cols);
-    if (label_i  == label_j && label_i  != label_k) {
+    datum.set_data(pixels, 5*rows*cols);  // set data
+    if ((label_i  == label_j && label_i  != label_k) && (label_l == label_m)) {
       datum.set_label(1);
       datum.SerializeToString(&value);
       snprintf(key, kMaxKeyLength, "%08d", itemid);
