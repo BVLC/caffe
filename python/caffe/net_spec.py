@@ -188,7 +188,9 @@ class Layers(object):
     def __getattr__(self, name):
         def layer_fn(*args, **kwargs):
             fn = Function(name, args, kwargs)
-            if fn.ntop == 1:
+            if fn.ntop == 0:
+                return fn
+            elif fn.ntop == 1:
                 return fn.tops[0]
             else:
                 return fn.tops
