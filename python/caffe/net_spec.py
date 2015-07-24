@@ -108,7 +108,15 @@ class Function(object):
             del self.params['in_place']
         self.tops = tuple(Top(self, n) for n in range(self.ntop))
 
-    def _get_name(self, top, names, autonames):
+    def _get_name(self, names, autonames):
+        if self not in names and self.ntop > 0:
+            names[self] = self._get_top_name(self.tops[0], names, autonames)
+        elif self not in names:
+            autonames[self.type_name] += 1
+            names[self] = self.type_name + str(autonames[self.type_name])
+        return names[self]
+
+    def _get_top_name(self, top, names, autonames):
         if top not in names:
             autonames[top.fn.type_name] += 1
             names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
@@ -129,8 +137,8 @@ class Function(object):
             layer.top.extend(layer.bottom)
         else:
             for top in self.tops:
-                layer.top.append(self._get_name(top, names, autonames))
-        layer.name = self._get_name(self.tops[0], names, autonames)
+                layer.top.append(self._get_top_name(top, names, autonames))
+        layer.name = self._get_name(names, autonames)
 
         for k, v in six.iteritems(self.params):
             # special case to handle generic *params
