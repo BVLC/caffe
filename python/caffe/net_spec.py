@@ -87,6 +87,9 @@ class Top(object):
 
         return to_proto(self)
 
+    def _to_proto(self, layers, names, autonames):
+        return self.fn._to_proto(layers, names, autonames)
+
 
 class Function(object):
     """A Function specifies a layer, its parameters, and its inputs (which
@@ -116,7 +119,7 @@ class Function(object):
             return
         bottom_names = []
         for inp in self.inputs:
-            inp.fn._to_proto(layers, names, autonames)
+            inp._to_proto(layers, names, autonames)
             bottom_names.append(layers[inp.fn].top[inp.n])
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type_name
@@ -163,7 +166,7 @@ class NetSpec(object):
         autonames = Counter()
         layers = OrderedDict()
         for name, top in six.iteritems(self.tops):
-            top.fn._to_proto(layers, names, autonames)
+            top._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
         net.layer.extend(layers.values())
         return net
