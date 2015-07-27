@@ -12,13 +12,13 @@ namespace caffe {
 
 template<typename Dtype>
 void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_datum_means,
-                                           std::vector<float>* per_datum_stddevs,
-                                           int channels,
-                                           int height,
-                                           int width,
-                                           int h_off,
-                                           int w_off,
-                                           const string& data) {
+                                         std::vector<float>* per_datum_stddevs,
+                                         int channels,
+                                         int height,
+                                         int width,
+                                         int h_off,
+                                         int w_off,
+                                         const string& data) {
   // mean
   Dtype datum_element;
   int N = width * height;
@@ -53,13 +53,13 @@ void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_datum_means,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_image_means,
-                                           std::vector<float>* per_image_stddevs,
-                                           int channels,
-                                           int height,
-                                           int width,
-                                           int h_off,
-                                           int w_off,
-                                           const cv::Mat& img) {
+                                         std::vector<float>* per_image_stddevs,
+                                         int channels,
+                                         int height,
+                                         int width,
+                                         int h_off,
+                                         int w_off,
+                                         const cv::Mat& img) {
   int N = width * height;
   // compute mean and stddev for this image
   for (int h = 0; h < height; ++h) {
