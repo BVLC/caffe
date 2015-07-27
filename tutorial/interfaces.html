@@ -65,8 +65,8 @@
 <p><strong>Training</strong>: <code>caffe train</code> learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:</p>
 
 <ul>
-  <li>All training requires a solver configuration through the <code>-solver solver.prototxt</code> argument. </li>
-  <li>Resuming requires the <code>-snapshot model_iter_1000.solverstate</code> argument to load the solver snapshot. </li>
+  <li>All training requires a solver configuration through the <code>-solver solver.prototxt</code> argument.</li>
+  <li>Resuming requires the <code>-snapshot model_iter_1000.solverstate</code> argument to load the solver snapshot.</li>
   <li>Fine-tuning requires the <code>-weights model.caffemodel</code> argument for the model initialization.</li>
 </ul>
 
@@ -88,8 +88,7 @@ caffe train -solver examples/finetuning_on_flickr_style/solver.prototxt -weights
 
 <p><strong>Testing</strong>: <code>caffe test</code> scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.</p>
 
-<pre><code>#
-# score the learned LeNet model on the validation set as defined in the 
+<pre><code># score the learned LeNet model on the validation set as defined in the
 # model architeture lenet_train_test.prototxt
 caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 </code></pre>
@@ -125,7 +124,8 @@ caffe device_query -gpu 0
 
 <p>Tutorial IPython notebooks are found in caffe/examples: do <code>ipython notebook caffe/examples</code> to try them. For developer reference docstrings can be found throughout the code.</p>
 
-<p>Compile pycaffe by <code>make pycaffe</code>. The module dir caffe/python/caffe should be installed in your PYTHONPATH for <code>import caffe</code>.</p>
+<p>Compile pycaffe by <code>make pycaffe</code>.
+Add the module directory to your <code>$PYTHONPATH</code> by <code>export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH</code> or the like for <code>import caffe</code>.</p>
 
 <h2 id="matlab">MATLAB</h2>
 
