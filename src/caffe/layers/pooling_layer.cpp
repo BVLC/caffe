@@ -222,7 +222,83 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    // The stochastic pooling method uses "probabilistic weighting" at test time
+    // and thus we need to distinguish between the training and testing phase
+    if (this->phase_ == TRAIN) {
+      // We need to create the random index as well.
+      caffe_rng_uniform(top_count, Dtype(0), Dtype(1),
+                        rand_idx_.mutable_cpu_data());
+      Dtype* rand_idx = rand_idx_.mutable_cpu_data();
+      for (int n = 0; n < bottom[0]->num(); ++n) {
+        for (int c = 0; c < channels_; ++c) {
+          int index_offset = (n * channels_ + c) * height_;
+          for (int ph = 0; ph < pooled_height_; ++ph) {
+            for (int pw = 0; pw < pooled_width_; ++pw) {
+              int hstart = ph * stride_h_;
+              int wstart = pw * stride_w_;
+              int hend = min(hstart + kernel_h_, height_);
+              int wend = min(wstart + kernel_w_, width_);
+              int index = ph * pooled_width_ + pw;
+              Dtype cumsum = 0.;
+              // First pass: get sum for normalization
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  cumsum = bottom_data[h * width_ + w];
+                }
+              }
+              // Draw auxiliary variable from uniform distribution and use as
+              // activation threshold
+              const float thres = rand_idx[index] * cumsum;
+              // Second pass: get value and set index.
+              // Draw from multinomial distribution
+              cumsum = 0;
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  cumsum += bottom_data[h * width_ + w];
+                  if (cumsum >= thres) {
+                    rand_idx[index] = (index_offset + h) * width_ + w;
+                    top_data[index] = bottom_data[h * width_ + w];
+                    goto nextOutputNeuron;
+                  }
+                }
+              }
+              nextOutputNeuron: {}
+            }
+          }
+          // compute offset
+          bottom_data += bottom[0]->offset(0, 1);
+          top_data += top[0]->offset(0, 1);
+          rand_idx += top[0]->offset(0, 1);
+        }
+      }
+    } else {
+      // Compute probabilistic weighting
+      for (int n = 0; n < bottom[0]->num(); ++n) {
+        for (int c = 0; c < channels_; ++c) {
+          for (int ph = 0; ph < pooled_height_; ++ph) {
+            for (int pw = 0; pw < pooled_width_; ++pw) {
+              int hstart = ph * stride_h_;
+              int wstart = pw * stride_w_;
+              int hend = min(hstart + kernel_h_, height_);
+              int wend = min(wstart + kernel_w_, width_);
+              Dtype cumsum = FLT_MIN;
+              Dtype cumvalues = 0;
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  cumsum += bottom_data[h * width_ + w];
+                  cumvalues +=
+                      bottom_data[h * width_ + w] * bottom_data[h * width_ + w];
+                }
+              }
+              top_data[ph * pooled_width_ + pw] = cumvalues / cumsum;
+            }
+          }
+          // compute offset
+          bottom_data += bottom[0]->offset(0, 1);
+          top_data += top[0]->offset(0, 1);
+        }
+      }
+    }
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
@@ -301,8 +377,39 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
     break;
-  case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    case PoolingParameter_PoolMethod_STOCHASTIC : {
+      // The main loop
+      const Dtype* rand_idx = rand_idx_.cpu_data();
+      for (int n = 0; n < top[0]->num(); ++n) {
+        for (int c = 0; c < channels_; ++c) {
+          int index_offset = (n * channels_ + c) * height_;
+          for (int ph = 0; ph < pooled_height_; ++ph) {
+            for (int pw = 0; pw < pooled_width_; ++pw) {
+              int hstart = ph * stride_h_ - pad_h_;
+              int wstart = pw * stride_w_ - pad_w_;
+              int hend = min(hstart + kernel_h_, height_ + pad_h_);
+              int wend = min(wstart + kernel_w_, width_ + pad_w_);
+              hstart = max(hstart, 0);
+              wstart = max(wstart, 0);
+              hend = min(hend, height_);
+              wend = min(wend, width_);
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  bottom_diff[h * width_ + w] +=
+                    top_diff[ph * pooled_width_ + pw] *
+                      ((index_offset + h) * width_ + w
+                        == static_cast<int>(rand_idx[ph * pooled_width_ + pw]));
+                }
+              }
+            }
+          }
+          // offset
+          bottom_diff += bottom[0]->offset(0, 1);
+          top_diff += top[0]->offset(0, 1);
+          rand_idx += top[0]->offset(0, 1);
+        }
+      }
+    }
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
