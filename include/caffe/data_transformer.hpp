@@ -22,14 +22,14 @@ class DataTransformer {
   /**
    * @brief Compute the mean and standard deviation for each channel in a Datum
    */
-  void GetMeanStddev(float* per_datum_means, float* per_datum_stddevs,
+  void GetMeanStddev(std::vector<float>* per_datum_means, std::vector<float>* per_datum_stddevs,
                      int channels, int height, int width, int h_off, int w_off,
                      const string& data);
 
   /**
    * @brief Compute the mean and standard deviation for each channel in a cv::Mat
    */
-  void GetMeanStddev(float* per_datum_means, float* per_datum_stddevs,
+  void GetMeanStddev(std::vector<float>* per_datum_means, std::vector<float>* per_datum_stddevs,
                      int channels, int height, int width, int h_off, int w_off,
                      const cv::Mat& data);
 

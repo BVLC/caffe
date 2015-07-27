@@ -11,8 +11,8 @@
 namespace caffe {
 
 template<typename Dtype>
-void DataTransformer<Dtype>::GetMeanStddev(float* per_datum_means,
-                                           float* per_datum_stddevs,
+void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_datum_means,
+                                           std::vector<float>* per_datum_stddevs,
                                            int channels,
                                            int height,
                                            int width,
@@ -29,7 +29,7 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_datum_means,
         data_index = (c * height + h_off + h) * width + w_off + w;
         datum_element =
           static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-        per_datum_means[c] += 1.f * datum_element / N;
+        per_datum_means->at(c) += 1.f * datum_element / N;
       }
     }
   }
@@ -40,20 +40,20 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_datum_means,
         data_index = (c * height + h_off + h) * width + w_off + w;
         datum_element =
           static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-        per_datum_stddevs[c] += 1.f *
-          (datum_element - per_datum_means[c]) *
-          (datum_element - per_datum_means[c]) / (N - 1);
+        per_datum_stddevs->at(c) += 1.f *
+          (datum_element - per_datum_means->at(c)) *
+          (datum_element - per_datum_means->at(c)) / (N - 1);
       }
     }
   }
   for (int c = 0; c < channels; ++c) {
-    per_datum_stddevs[c] = sqrt(per_datum_stddevs[c]);
+    per_datum_stddevs->at(c) = sqrt(per_datum_stddevs->at(c));
   }
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::GetMeanStddev(float* per_image_means,
-                                           float* per_image_stddevs,
+void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_image_means,
+                                           std::vector<float>* per_image_stddevs,
                                            int channels,
                                            int height,
                                            int width,
@@ -68,7 +68,7 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_image_means,
     for (int w = 0; w < width; ++w) {
       for (int c = 0; c < channels; ++c) {
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-        per_image_means[c] += 1.f * pixel / N;
+        per_image_means->at(c) += 1.f * pixel / N;
       }
     }
   }
@@ -79,14 +79,14 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_image_means,
     for (int w = 0; w < width; ++w) {
       for (int c = 0; c < channels; ++c) {
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-        per_image_stddevs[c] +=
-          1.f * (pixel - per_image_means[c]) *
-                (pixel - per_image_means[c]) / (N - 1);
+        per_image_stddevs->at(c) +=
+          1.f * (pixel - per_image_means->at(c)) *
+                (pixel - per_image_means->at(c)) / (N - 1);
       }
     }
   }
   for (int c = 0; c < channels; ++c) {
-    per_image_stddevs[c] = sqrt(per_image_stddevs[c]);
+    per_image_stddevs->at(c) = sqrt(per_image_stddevs->at(c));
   }
 }
 
