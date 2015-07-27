@@ -2,7 +2,7 @@
 #define CAFFE_DATA_TRANSFORMER_HPP
 
 #include <vector>
-#inclued <string>
+#include <string>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
