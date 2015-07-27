@@ -41,7 +41,8 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_datum_means,
         datum_element =
           static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
         per_datum_stddevs[c] += 1.f *
-          (datum_element - per_datum_means[c]) * (datum_element - per_datum_means[c]) / (N - 1);
+          (datum_element - per_datum_means[c]) *
+          (datum_element - per_datum_means[c]) / (N - 1);
       }
     }
   }
@@ -79,7 +80,8 @@ void DataTransformer<Dtype>::GetMeanStddev(float* per_image_means,
       for (int c = 0; c < channels; ++c) {
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
         per_image_stddevs[c] +=
-          1.f * (pixel - per_image_means[c]) * (pixel - per_image_means[c]) / (N - 1);
+          1.f * (pixel - per_image_means[c]) *
+                (pixel - per_image_means[c]) / (N - 1);
       }
     }
   }
@@ -182,13 +184,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   Dtype datum_element;
-  float per_datum_means[datum_channels];
-  float per_datum_stddevs[datum_channels];
-  memset(per_datum_means, 0, sizeof(per_datum_means));
-  memset(per_datum_stddevs, 0, sizeof(per_datum_stddevs));
+  std::vector<float> per_datum_means(datum_channels);
+  std::vector<float> per_datum_stddevs(datum_channels);
 
   if (has_mean_stddev) {
-    GetMeanStddev(per_datum_means, per_datum_stddevs, datum_channels, height, width, h_off, w_off, data);
+    GetMeanStddev(per_datum_means, per_datum_stddevs, datum_channels,
+                  height, width, h_off, w_off, data);
   }
 
   int top_index, data_index;
@@ -388,10 +389,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_cropped_img.data);
 
-  float per_image_means[img_channels];
-  float per_image_stddevs[img_channels];
-  memset(per_image_means, 0, sizeof(per_image_means));
-  memset(per_image_stddevs, 0, sizeof(per_image_stddevs));
+  std::vector<float> per_image_means(img_channels);
+  std::vector<float> per_image_stddevs(img_channels);
 
   if (has_mean_stddev) {
     GetMeanStddev(per_image_means, per_image_stddevs, img_channels,
