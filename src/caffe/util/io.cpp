@@ -12,7 +12,6 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -222,7 +221,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
     for (int w = 0; w < datum_width; ++w) {
       for (int c = 0; c < datum_channels; ++c) {
         int datum_index = (c * datum_height + h) * datum_width + w;
-        buffer[datum_index] = static_cast<uchar>(ptr[img_index++]);
+        buffer[datum_index] = static_cast<char>(ptr[img_index++]);
       }
     }
   }

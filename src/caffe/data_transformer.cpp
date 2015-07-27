@@ -304,9 +304,6 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
-
-  LOG(ERROR) << "Inside Transform";
-
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
@@ -330,8 +327,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
   const bool has_mean_stddev = param_.has_mean_stddev();
-
-  LOG(ERROR) << "has_mean_stddev = " << has_mean_stddev;
 
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
@@ -409,8 +404,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           float eps = 1e-9;
           transformed_data[top_index] =
             (pixel - per_image_means[c]) / (eps + per_image_stddevs[c]);
-            LOG(ERROR) << "subtracting " << per_image_means[c] << " and div by " << per_image_stddevs[c] << " to get " << transformed_data[top_index];
-        } else {
           if (has_mean_values) {
             transformed_data[top_index] =
               (pixel - mean_values_[c]) * scale;
