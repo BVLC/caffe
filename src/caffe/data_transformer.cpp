@@ -188,7 +188,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   std::vector<float> per_datum_stddevs(datum_channels);
 
   if (has_mean_stddev) {
-    GetMeanStddev(per_datum_means, per_datum_stddevs, datum_channels,
+    GetMeanStddev(&per_datum_means, &per_datum_stddevs, datum_channels,
                   height, width, h_off, w_off, data);
   }
 
@@ -393,7 +393,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   std::vector<float> per_image_stddevs(img_channels);
 
   if (has_mean_stddev) {
-    GetMeanStddev(per_image_means, per_image_stddevs, img_channels,
+    GetMeanStddev(&per_image_means, &per_image_stddevs, img_channels,
                   height, width, h_off, w_off, cv_cropped_img);
   }
 
