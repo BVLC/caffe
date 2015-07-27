@@ -110,7 +110,6 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Dtype* transformed_data) {
-
   const string& data = datum.data();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
@@ -164,6 +163,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
   }
 
+  Dtype datum_element;
   float per_datum_means[datum_channels];
   float per_datum_stddevs[datum_channels];
   memset(per_datum_means, 0, sizeof(per_datum_means));
@@ -174,8 +174,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   int top_index, data_index;
-  Dtype datum_element;
-
   for (int c = 0; c < datum_channels; ++c) {
     for (int h = 0; h < height; ++h) {
       for (int w = 0; w < width; ++w) {
@@ -213,7 +211,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
-
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
     CHECK(!param_.force_color() && !param_.force_gray())
@@ -419,7 +416,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
                                        Blob<Dtype>* transformed_blob) {
-
   const int crop_size = param_.crop_size();
   const int input_num = input_blob->num();
   const int input_channels = input_blob->channels();
