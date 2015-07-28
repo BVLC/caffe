@@ -448,7 +448,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
                 top_data[top_index] = (pixel - this->mean_values_[c]) * scale;
               } else if (this->has_mean_stddev_) {
                 float eps = 1e-9;
-                top_data[top_index] = (pixel - per_image_means[c]) / (per_image_stddevs[c] + eps);
+                top_data[top_index] =
+                  (pixel - per_image_means[c]) / (per_image_stddevs[c] + eps);
               } else {
                 top_data[top_index] = pixel * scale;
               }
