@@ -131,6 +131,16 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       PyArray_DIMS(data_arr)[0]);
 }
 
+const vector<int>& Net_BottomsForLayer(const Net<Dtype>& net,
+                                                int layer_idx) {
+  return net.bottom_id_vecs()[layer_idx];
+}
+
+const vector<int>& Net_TopsForLayer(const Net<Dtype>& net,
+                                             int layer_idx) {
+  return net.top_id_vecs()[layer_idx];
+}
+
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(filename, &param);
@@ -226,7 +236,11 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
-    .def("save", &Net_Save);
+    .def("save", &Net_Save)
+    .def("_bottoms_for_layer", &Net_BottomsForLayer,
+        bp::return_value_policy<bp::copy_const_reference>())
+    .def("_tops_for_layer", &Net_TopsForLayer,
+        bp::return_value_policy<bp::copy_const_reference>());
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)

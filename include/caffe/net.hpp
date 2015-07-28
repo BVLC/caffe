@@ -124,12 +124,18 @@ class Net {
   inline const vector<vector<Blob<Dtype>*> >& bottom_vecs() const {
     return bottom_vecs_;
   }
+  inline const vector<vector<int> >& bottom_id_vecs() const {
+    return bottom_id_vecs_;
+  }
   /**
    * @brief returns the top vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
    */
   inline const vector<vector<Blob<Dtype>*> >& top_vecs() const {
     return top_vecs_;
+  }
+  inline const vector<vector<int> >& top_id_vecs() const {
+    return top_id_vecs_;
   }
   inline const vector<vector<bool> >& bottom_need_backward() const {
     return bottom_need_backward_;

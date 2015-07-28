@@ -77,7 +77,9 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
 
     if end is not None:
         end_ind = list(self._layer_names).index(end)
-        outputs = set([end] + blobs)
+        outputs = set(blobs)
+        outputs.update([self._blob_names[idx]
+                        for idx in self._tops_for_layer(end_ind)])
     else:
         end_ind = len(self.layers) - 1
         outputs = set(self.outputs + blobs)
@@ -125,7 +127,9 @@ def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
 
     if end is not None:
         end_ind = list(self._layer_names).index(end)
-        outputs = set([end] + diffs)
+        outputs = set(diffs)
+        outputs.update([self._blob_names[idx]
+                        for idx in self._bottoms_for_layer(end_ind)])
     else:
         end_ind = 0
         outputs = set(self.inputs + diffs)
@@ -268,6 +272,18 @@ def _Net_batch(self, blobs):
                                                  padding])
         yield padded_batch
 
+def _Net_bottoms_for_layer(self, layer_name):
+    layer_idx = list(self._layer_names).index(layer_name);
+    blob_idx = self._bottoms_for_layer(layer_idx);
+    return OrderedDict([(self._blob_names[idx], self._blobs[idx])
+                        for idx in blob_idx]);
+
+def _Net_tops_for_layer(self, layer_name):
+    layer_idx = list(self._layer_names).index(layer_name);
+    blob_idx = self._tops_for_layer(layer_idx);
+    return OrderedDict([(self._blob_names[idx], self._blobs[idx])
+                        for idx in blob_idx]);
+
 # Attach methods to Net.
 Net.blobs = _Net_blobs
 Net.params = _Net_params
@@ -279,3 +295,5 @@ Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
 Net.inputs = _Net_inputs
 Net.outputs = _Net_outputs
+Net.bottoms_for_layer = _Net_bottoms_for_layer
+Net.tops_for_layer = _Net_tops_for_layer
