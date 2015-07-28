@@ -419,7 +419,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           for (int w = 0; w < cv_cropped_img.cols; ++w) {
             for (int c = 0; c < channels; ++c) {
               Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-              per_image_stddevs[c] += 1.f * (pixel - per_image_means[c]) * (pixel - per_image_means[c]) / (N - 1);
+              per_image_stddevs[c] += 1.f * (pixel - per_image_means[c]) *
+                                      (pixel - per_image_means[c]) / (N - 1);
             }
           }
         }
@@ -446,8 +447,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
               if (this->has_mean_values_) {
                 top_data[top_index] = (pixel - this->mean_values_[c]) * scale;
               } else if (this->has_mean_stddev_) {
-                LOG(ERROR) << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-                top_data[top_index] = (pixel - per_image_means[c]) / per_image_stddevs[c];
+                float eps = 1e-9;
+                top_data[top_index] = (pixel - per_image_means[c]) / (per_image_stddevs[c] + eps);
               } else {
                 top_data[top_index] = pixel * scale;
               }

@@ -12,7 +12,6 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
