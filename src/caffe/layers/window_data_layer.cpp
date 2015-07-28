@@ -185,6 +185,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   has_mean_file_ = this->transform_param_.has_mean_file();
   has_mean_values_ = this->transform_param_.mean_value_size() > 0;
   has_mean_stddev_ = this->transform_param_.has_mean_stddev();
+  LOG(ERROR) << "has mean stddev = " << has_mean_stddev_;
 
   if (has_mean_file_) {
     const string& mean_file =
@@ -395,6 +396,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       }
 
       int N = cv_cropped_img.rows * cv_cropped_img.cols;
+
       std::vector<float> per_image_means(channels, 0.f);
       std::vector<float> per_image_stddevs(channels, 0.f);
 
@@ -417,9 +419,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           for (int w = 0; w < cv_cropped_img.cols; ++w) {
             for (int c = 0; c < channels; ++c) {
               Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-              per_image_stddevs[c] +=
-                1.f * (pixel - per_image_means[c]) *
-                      (pixel - per_image_means[c]) / (N - 1);
+              per_image_stddevs[c] += 1.f * (pixel - per_image_means[c]) * (pixel - per_image_means[c]) / (N - 1);
             }
           }
         }
@@ -446,8 +446,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
               if (this->has_mean_values_) {
                 top_data[top_index] = (pixel - this->mean_values_[c]) * scale;
               } else if (this->has_mean_stddev_) {
-                top_data[top_index] =
-                  (pixel - per_image_means[c]) / per_image_stddevs[c];
+                LOG(ERROR) << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+                top_data[top_index] = (pixel - per_image_means[c]) / per_image_stddevs[c];
               } else {
                 top_data[top_index] = pixel * scale;
               }

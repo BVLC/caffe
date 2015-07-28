@@ -12,13 +12,13 @@ namespace caffe {
 
 template<typename Dtype>
 void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_datum_means,
-                                         std::vector<float>* per_datum_stddevs,
-                                         int channels,
-                                         int height,
-                                         int width,
-                                         int h_off,
-                                         int w_off,
-                                         const string& data) {
+                                           std::vector<float>* per_datum_stddevs,
+                                           int channels,
+                                           int height,
+                                           int width,
+                                           int h_off,
+                                           int w_off,
+                                           const string& data) {
   // mean
   Dtype datum_element;
   int N = width * height;
@@ -53,13 +53,13 @@ void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_datum_means,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_image_means,
-                                         std::vector<float>* per_image_stddevs,
-                                         int channels,
-                                         int height,
-                                         int width,
-                                         int h_off,
-                                         int w_off,
-                                         const cv::Mat& img) {
+                                           std::vector<float>* per_image_stddevs,
+                                           int channels,
+                                           int height,
+                                           int width,
+                                           int h_off,
+                                           int w_off,
+                                           const cv::Mat& img) {
   int N = width * height;
   // compute mean and stddev for this image
   for (int h = 0; h < height; ++h) {
@@ -89,7 +89,6 @@ void DataTransformer<Dtype>::GetMeanStddev(std::vector<float>* per_image_means,
     per_image_stddevs->at(c) = sqrt(per_image_stddevs->at(c));
   }
 }
-
 
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
@@ -212,8 +211,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           transformed_data[top_index] =
             (datum_element - mean[data_index]) * scale;
         } else if (has_mean_stddev) {
+          float eps = 1e-9; // avoid div by 0
           transformed_data[top_index] =
-            (datum_element - per_datum_means[c]) / per_datum_stddevs[c];
+            (datum_element - per_datum_means[c]) / (per_datum_stddevs[c] + eps);
         } else {
           if (has_mean_values) {
             transformed_data[top_index] =
@@ -419,9 +419,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           float eps = 1e-9;
           transformed_data[top_index] =
             (pixel - per_image_means[c]) / (eps + per_image_stddevs[c]);
+        } else {
           if (has_mean_values) {
-            transformed_data[top_index] =
-              (pixel - mean_values_[c]) * scale;
+              transformed_data[top_index] =
+                (pixel - mean_values_[c]) * scale;
           } else {
             transformed_data[top_index] = pixel * scale;
           }
