@@ -42,7 +42,7 @@ These dependencies need manual installation in 12.04.
     make && make install
     # lmdb
     git clone https://github.com/LMDB/lmdb
-    cd mdb/libraries/liblmdb
+    cd lmdb/libraries/liblmdb
     make && make install
 
 Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.
