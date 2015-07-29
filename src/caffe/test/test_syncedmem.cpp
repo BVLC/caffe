@@ -104,21 +104,21 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   SyncedMemory mem(10);
   void* gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
-  caffe_gpu_memset(mem.size(), (char) 1, gpu_data);
+  caffe_gpu_memset(mem.size(), static_cast<char>(1), gpu_data);
   const void* cpu_data = mem.cpu_data();
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((static_cast<const char*>(cpu_data))[i], (char) 1);
-    //EXPECT_EQ(cpu_data[i], 1);
+    EXPECT_EQ((static_cast<const char*>(cpu_data))[i], static_cast<char>(1));
+    // EXPECT_EQ(cpu_data[i], 1);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
 
   gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
-  caffe_gpu_memset(mem.size(), (char) 2, gpu_data);
+  caffe_gpu_memset(mem.size(), static_cast<char>(2), gpu_data);
   cpu_data = mem.cpu_data();
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((static_cast<const char*>(cpu_data))[i], (char) 2);
-    //EXPECT_EQ(cpu_data[i], 2);
+    EXPECT_EQ((static_cast<const char*>(cpu_data))[i], static_cast<char>(2));
+    // EXPECT_EQ(cpu_data[i], 2);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
 }

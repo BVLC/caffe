@@ -7,10 +7,10 @@
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-#include "caffe/util/benchmark.hpp"
 
 
 namespace caffe {
@@ -153,8 +153,8 @@ void Solver<Dtype>::InitTestNets() {
       net_state.MergeFrom(param_.test_state(i));
     }
     net_params[i].mutable_state()->CopyFrom(net_state);
-    LOG(INFO)
-        << "Creating test net (#" << i << ") specified by " << sources[i];
+    LOG(INFO) <<  "Creating test net (#"
+             << i << ") specified by " << sources[i];
     test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     test_nets_[i]->set_debug_info(param_.debug_info());
   }
@@ -170,7 +170,7 @@ void Solver<Dtype>::Step(int iters) {
   Dtype smoothed_loss = 0;
 
   for (; iter_ < stop_iter; ++iter_) {
-    DLOG(INFO)<<"current iteration = "<<iter_;
+    DLOG(INFO) << "current iteration = " << iter_;
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -192,7 +192,8 @@ void Solver<Dtype>::Step(int iters) {
       losses[idx] = loss;
     }
     if (display) {
-      LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
+      LOG(INFO) << "Iteration "
+               << iter_ << ", loss = " << smoothed_loss;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -205,7 +206,8 @@ void Solver<Dtype>::Step(int iters) {
           ostringstream loss_msg_stream;
           if (loss_weight) {
             loss_msg_stream << " (* " << loss_weight
-                            << " = " << loss_weight * result_vec[k] << " loss)";
+                            << " = " << loss_weight * result_vec[k]
+                           << " loss)";
           }
           LOG(INFO) << "    Train net output #"
               << score_index++ << ": " << output_name << " = "
@@ -402,7 +404,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
     if (this->current_step_ < this->param_.stepvalue_size() &&
           this->iter_ >= this->param_.stepvalue(this->current_step_)) {
       this->current_step_++;
-      LOG(INFO) << "MultiStep Status: Iteration " <<
+      LOG(INFO) << "MultiStep Status: Iteration "  <<
       this->iter_ << ", step = " << this->current_step_;
     }
     rate = this->param_.base_lr() *
@@ -662,7 +664,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
       if (local_decay) {
         if (regularization_type == "L2") {
           // add weight decay
-          DLOG(INFO)<<"HERE";
+          DLOG(INFO) << "HERE";
           caffe_gpu_axpy(net_params[param_id]->count(),
               local_decay,
               net_params[param_id]->gpu_data(),
@@ -671,7 +673,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
           caffe_gpu_sign(net_params[param_id]->count(),
               net_params[param_id]->gpu_data(),
               this->temp_[param_id]->mutable_gpu_data());
-          DLOG(INFO)<<"HERE";
+          DLOG(INFO) << "HERE";
           caffe_gpu_axpy(net_params[param_id]->count(),
               local_decay,
               this->temp_[param_id]->gpu_data(),
@@ -785,7 +787,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
       if (local_decay) {
         if (regularization_type == "L2") {
           // add weight decay
-          DLOG(INFO)<<"HERE";
+          DLOG(INFO) << "HERE";
           caffe_gpu_axpy(net_params[param_id]->count(),
               local_decay,
               net_params[param_id]->gpu_data(),
@@ -794,7 +796,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
           caffe_gpu_sign(net_params[param_id]->count(),
               net_params[param_id]->gpu_data(),
               this->temp_[param_id]->mutable_gpu_data());
-          DLOG(INFO)<<"HERE";
+          DLOG(INFO) << "HERE";
           caffe_gpu_axpy(net_params[param_id]->count(),
               local_decay,
               this->temp_[param_id]->gpu_data(),

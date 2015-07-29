@@ -1,3 +1,8 @@
+#if defined(USE_OPENCL)
+#include <caffe/util/benchmark.hpp>
+#include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#endif
+
 #include <algorithm>
 #include <vector>
 
@@ -5,36 +10,33 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#if defined(USE_OPENCL)
-#include <caffe/util/OpenCL/OpenCLDevice.hpp>
-#include <caffe/util/benchmark.hpp>
-#endif
-
 namespace caffe {
 
-template <typename Dtype>
-void ExpLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void ExpLayer<Dtype>::LayerSetUp(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::LayerSetUp(bottom, top);
   const Dtype base = this->layer_param_.exp_param().base();
   if (base != Dtype(-1)) {
-    CHECK_GT(base, 0) << "base must be strictly positive.";
+    CHECK_GT(base, 0)<< "base must be strictly positive.";
   }
   // If base == -1, interpret the base as e and set log_base = 1 exactly.
   // Otherwise, calculate its log explicitly.
   const Dtype log_base = (base == Dtype(-1)) ? Dtype(1) : log(base);
-  CHECK(!isnan(log_base))
-      << "NaN result: log(base) = log(" << base << ") = " << log_base;
-  CHECK(!isinf(log_base))
-      << "Inf result: log(base) = log(" << base << ") = " << log_base;
+  CHECK(!isnan(log_base)) << "NaN result: log(base) = log(" << base << ") = "
+                             << log_base;
+  CHECK(!isinf(log_base)) << "Inf result: log(base) = log(" << base << ") = "
+                             << log_base;
   const Dtype input_scale = this->layer_param_.exp_param().scale();
   const Dtype input_shift = this->layer_param_.exp_param().shift();
   inner_scale_ = log_base * input_scale;
   outer_scale_ = (input_shift == Dtype(0)) ? Dtype(1) : pow(base, input_shift);
 }
 
-template <typename Dtype>
-void ExpLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void ExpLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const int count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -50,10 +52,14 @@ void ExpLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void ExpLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) { return; }
+template<typename Dtype>
+void ExpLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0]) {
+    return;
+  }
   const int count = bottom[0]->count();
   const Dtype* top_data = top[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -65,8 +71,9 @@ void ExpLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #if defined(USE_OPENCL)
-template <typename Dtype>
-void ExpLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void ExpLayer<Dtype>::Forward_gpu(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const int count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -82,10 +89,14 @@ void ExpLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void ExpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) { return; }
+template<typename Dtype>
+void ExpLayer<Dtype>::Backward_gpu(
+    const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0]) {
+    return;
+  }
   const int count = bottom[0]->count();
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* top_diff = top[0]->gpu_diff();
@@ -98,7 +109,7 @@ void ExpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
 #endif
 
-#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#if defined(CPU_ONLY) && !defined(USE_OPENCL)
 STUB_GPU(ExpLayer);
 #endif
 

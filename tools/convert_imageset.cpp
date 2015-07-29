@@ -50,7 +50,7 @@ DEFINE_bool(check_size, false,
 DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
 DEFINE_string(encode_type, "",
-    "Optional: What type should we encode the image as ('png','jpg',...).");
+    "Optional: What type should we encode the image as ('png','jpg', ...).");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);

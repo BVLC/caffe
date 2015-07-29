@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -70,48 +71,50 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 
-  void EuclideanLossLayerTestSetup(int num_images, int num_channels, int im_width, int im_height) {
+  void EuclideanLossLayerTestSetup(int num_images, int num_channels,
+                                   int im_width, int im_height) {
+    blob_bottom_data_->Reshape(num_images, num_channels, im_height, im_width);
+    blob_bottom_label_->Reshape(num_images, num_channels, im_height, im_width);
 
-	  blob_bottom_data_->Reshape(num_images, num_channels, im_height, im_width);
-	  blob_bottom_label_->Reshape(num_images, num_channels, im_height, im_width);
+    FillerParameter filler_param;
+    UniformFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_data_);
+    filler.Fill(this->blob_bottom_label_);
 
-	  FillerParameter filler_param;
-	  UniformFiller<Dtype> filler(filler_param);
-	  filler.Fill(this->blob_bottom_data_);
-	  filler.Fill(this->blob_bottom_label_);
-
-	  blob_bottom_vec_.clear();
-	  blob_bottom_vec_.push_back(blob_bottom_data_);
-	  blob_bottom_vec_.push_back(blob_bottom_label_);
+    blob_bottom_vec_.clear();
+    blob_bottom_vec_.push_back(blob_bottom_data_);
+    blob_bottom_vec_.push_back(blob_bottom_label_);
   }
 
-  void EuclideanLossLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+  void EuclideanLossLayerTestForwardPerformance(int num_images,
+                                                int num_channels, int im_width,
+                                                int im_height) {
+    this->EuclideanLossLayerTestSetup(num_images, num_channels,
+                                      im_width, im_height);
 
-	  this->EuclideanLossLayerTestSetup(num_images, num_channels, im_width, im_height);
-
-	  LayerParameter layer_param;
-	  EuclideanLossLayer<Dtype> layer(layer_param);
-	  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    LayerParameter layer_param;
+    EuclideanLossLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
-			blob_bottom_data_->mutable_gpu_data();
-			blob_bottom_data_->mutable_gpu_diff();
-			blob_bottom_label_->mutable_gpu_data();
-			blob_bottom_label_->mutable_gpu_diff();
-			blob_top_loss_->mutable_gpu_data();
-			blob_top_loss_->mutable_gpu_diff();
+      blob_bottom_data_->mutable_gpu_data();
+      blob_bottom_data_->mutable_gpu_diff();
+      blob_bottom_label_->mutable_gpu_data();
+      blob_bottom_label_->mutable_gpu_diff();
+      blob_top_loss_->mutable_gpu_data();
+      blob_top_loss_->mutable_gpu_diff();
 #endif
 
-	  record r;
-	  r.type 			= std::string(typeid(Dtype).name());
-	  r.num_images 		= num_images;
-	  r.num_channels 	= num_channels;
-	  r.img_width		= im_width;
-	  r.img_height		= im_height;
+    record r;
+    r.type       = std::string(typeid(Dtype).name());
+    r.num_images     = num_images;
+    r.num_channels   = num_channels;
+    r.img_width    = im_width;
+    r.img_height    = im_height;
 
-	  BENCH(r, {
-			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-	  });
+    BENCH(r, {
+        layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    });
   }
 };
 
@@ -134,10 +137,10 @@ TYPED_TEST(EuclideanLossLayerTest, TestGradient) {
 }
 
 TYPED_TEST(EuclideanLossLayerTest, TestForwardPerformance) {
-
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
-		this->EuclideanLossLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
-	}
+  for ( int i = TEST_IMAGE_WIDTH_MIN; i <= TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+    this->EuclideanLossLayerTestForwardPerformance(TEST_NUM_IMAGES,
+                                                   TEST_NUM_CHANNELS, i, i);
+  }
 }
 
 }  // namespace caffe

@@ -47,68 +47,69 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 class Layer;
 
-template <typename Dtype>
+template<typename Dtype>
 class LayerRegistry {
  public:
-  typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
-  typedef std::map<string, Creator> CreatorRegistry;
+    typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+    typedef std::map<string, Creator> CreatorRegistry;
 
-  static CreatorRegistry& Registry() {
-    static CreatorRegistry* g_registry_ = new CreatorRegistry();
-    return *g_registry_;
-  }
+    static CreatorRegistry& Registry() {
+      static CreatorRegistry* g_registry_ = new CreatorRegistry();
+      return *g_registry_;
+    }
 
-  // Adds a creator.
-  static void AddCreator(const string& type, Creator creator) {
-    CreatorRegistry& registry = Registry();
-    CHECK_EQ(registry.count(type), 0)
-        << "Layer type " << type << " already registered.";
-    registry[type] = creator;
-  }
+    // Adds a creator.
+    static void AddCreator(const string& type, Creator creator) {
+      CreatorRegistry& registry = Registry();
+      CHECK_EQ(registry.count(type), 0) << "Layer type "
+                                        << type << " already registered.";
+      registry[type] = creator;
+    }
 
-  // Get a layer using a LayerParameter.
-  static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
-    LOG(INFO) << "Creating layer " << param.name();
-    const string& type = param.type();
-    CreatorRegistry& registry = Registry();
-    CHECK_EQ(registry.count(type), 1) << "Unknown layer type: " << type
-        << " (known types: " << LayerTypeList() << ")";
-    return registry[type](param);
-  }
+    // Get a layer using a LayerParameter.
+    static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
+      LOG(INFO)<< "Creating layer " << param.name();
+      const string& type = param.type();
+      CreatorRegistry& registry = Registry();
+      CHECK_EQ(registry.count(type), 1) << "Unknown layer type: " << type
+      << " (known types: " << LayerTypeList() << ")";
+      return registry[type](param);
+    }
 
  private:
-  // Layer registry should never be instantiated - everything is done with its
-  // static variables.
-  LayerRegistry() {}
+    // Layer registry should never be instantiated - everything is done with its
+    // static variables.
+    LayerRegistry() {}
 
-  static string LayerTypeList() {
-    CreatorRegistry& registry = Registry();
-    string layer_types;
-    for (typename CreatorRegistry::iterator iter = registry.begin();
-         iter != registry.end(); ++iter) {
-      if (iter != registry.begin()) {
-        layer_types += ", ";
+    static string LayerTypeList() {
+      CreatorRegistry& registry = Registry();
+      string layer_types;
+      for (typename CreatorRegistry::iterator iter = registry.begin();
+          iter != registry.end(); ++iter) {
+        if (iter != registry.begin()) {
+          layer_types += ", ";
+        }
+        layer_types += iter->first;
       }
-      layer_types += iter->first;
+      return layer_types;
     }
-    return layer_types;
-  }
 };
 
-
-template <typename Dtype>
+template<typename Dtype>
 class LayerRegisterer {
  public:
-  LayerRegisterer(const string& type,
-                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
-    //LOG(INFO) << "Registering layer type: " << type;
-    LayerRegistry<Dtype>::AddCreator(type, creator);
-  }
+    LayerRegisterer(
+        const string& type,
+        shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+      // LOG(INFO)  <<  "Registering layer type: "  <<  type;
+      LayerRegistry<Dtype>::AddCreator(
+          type,
+          creator);
+    }
 };
-
 
 #define REGISTER_LAYER_CREATOR(type, creator)                                  \
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \

@@ -10,23 +10,25 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void InfogainLossLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   if (bottom.size() < 3) {
     CHECK(this->layer_param_.infogain_loss_param().has_source())
-        << "Infogain matrix source must be specified.";
+           << "Infogain matrix source must be specified.";
     BlobProto blob_proto;
     ReadProtoFromBinaryFile(
-      this->layer_param_.infogain_loss_param().source(), &blob_proto);
+        this->layer_param_.infogain_loss_param().source(), &blob_proto);
     infogain_.FromProto(blob_proto);
   }
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void InfogainLossLayer<Dtype>::Reshape(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
   Blob<Dtype>* infogain = NULL;
   if (bottom.size() < 3) {
@@ -45,9 +47,9 @@ void InfogainLossLayer<Dtype>::Reshape(
   CHECK_EQ(infogain->width(), dim);
 }
 
-
-template <typename Dtype>
-void InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void InfogainLossLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -70,17 +72,18 @@ void InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   top[0]->mutable_cpu_data()[0] = loss / num;
 }
 
-template <typename Dtype>
-void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+template<typename Dtype>
+void InfogainLossLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
-    LOG(FATAL) << this->type()
-               << " Layer cannot backpropagate to label inputs.";
+    LOG(FATAL)<< this->type()
+    << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down.size() > 2 && propagate_down[2]) {
     LOG(FATAL) << this->type()
-               << " Layer cannot backpropagate to infogain inputs.";
+    << " Layer cannot backpropagate to infogain inputs.";
   }
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->cpu_data();

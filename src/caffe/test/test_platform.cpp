@@ -15,7 +15,6 @@ extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 class PlatformTest : public ::testing::Test {};
 
 TEST_F(PlatformTest, TestInitialization) {
-
 #ifdef USE_CUDA
   printf("Major revision number:         %d\n",  CAFFE_TEST_CUDA_PROP.major);
   printf("Minor revision number:         %d\n",  CAFFE_TEST_CUDA_PROP.minor);
@@ -55,11 +54,13 @@ TEST_F(PlatformTest, TestInitialization) {
 #endif
 
 #ifdef USE_OPENCL
-  EXPECT_TRUE( caffe::OpenCLManager::Init() );
+  EXPECT_TRUE(caffe::OpenCLManager::Init());
   OpenCLManager::Print();
-  std::cout << "Current platform: =============================" << std::endl;
+  std::cout << "Current platform: ============================="
+            << std::endl;
   OpenCLManager::CurrentPlatform()->print();
-  std::cout << "Current Device ================================" << std::endl;
+  std::cout << "Current Device ================================"
+            << std::endl;
   OpenCLManager::CurrentPlatform()->CurrentDevice().print();
 #endif
 }

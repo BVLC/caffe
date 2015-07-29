@@ -16,7 +16,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     : param_(param), phase_(phase) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
-    CHECK_EQ(param_.mean_value_size(), 0) <<
+    CHECK_EQ(param_.mean_value_size(), 0)  <<
       "Cannot specify mean_file and mean_value at the same time";
     const string& mean_file = param.mean_file();
     LOG(INFO) << "Loading mean file from: " << mean_file;
@@ -26,7 +26,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
   }
   // check if we want to use mean_value
   if (param_.mean_value_size() > 0) {
-    CHECK(param_.has_mean_file() == false) <<
+    CHECK(param_.has_mean_file() == false)  <<
       "Cannot specify mean_file and mean_value at the same time";
     for (int c = 0; c < param_.mean_value_size(); ++c) {
       mean_values_.push_back(param_.mean_value(c));
@@ -61,7 +61,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels)  <<
      "Specify either 1 mean_value or as many as channels: " << datum_channels;
     if (datum_channels > 1 && mean_values_.size() == 1) {
       // Replicate the mean_value for simplicity
@@ -163,7 +163,7 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   const int width = transformed_blob->width();
 
   CHECK_GT(datum_num, 0) << "There is no datum to add";
-  CHECK_LE(datum_num, num) <<
+  CHECK_LE(datum_num, num)  <<
     "The size of datum_vector must be no greater than transformed_blob->num()";
   Blob<Dtype> uni_blob(1, channels, height, width);
   for (int item_id = 0; item_id < datum_num; ++item_id) {
@@ -183,7 +183,7 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
   const int width = transformed_blob->width();
 
   CHECK_GT(mat_num, 0) << "There is no MAT to add";
-  CHECK_EQ(mat_num, num) <<
+  CHECK_EQ(mat_num, num)  <<
     "The size of mat_vector must be equals to transformed_blob->num()";
   Blob<Dtype> uni_blob(1, channels, height, width);
   for (int item_id = 0; item_id < mat_num; ++item_id) {
@@ -230,7 +230,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels)  <<
      "Specify either 1 mean_value or as many as channels: " << img_channels;
     if (img_channels > 1 && mean_values_.size() == 1) {
       // Replicate the mean_value for simplicity
@@ -350,7 +350,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   }
 
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == input_channels) <<
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == input_channels)  <<
      "Specify either 1 mean_value or as many as channels: " << input_channels;
     if (mean_values_.size() == 1) {
       caffe_add_scalar(input_blob->count(), -(mean_values_[0]), input_data);

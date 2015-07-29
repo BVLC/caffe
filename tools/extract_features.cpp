@@ -44,12 +44,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   const int num_required_args = 7;
   if (argc < num_required_args) {
-    LOG(ERROR)<<
+    LOG(ERROR) <<
     "This program takes in a trained network and an input data layer, and then"
     " extract features of the input data produced by the net.\n"
     "Usage: extract_features  pretrained_net_param"
-    "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
-    "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type"
+    "  feature_extraction_proto_file  extract_feature_blob_name1[, name2, ...]"
+    "  save_feature_dataset_name1[, name2, ...]  num_mini_batches  db_type"
     "  [CPU/GPU] [DEVICE_ID=0]\n"
     "Note: you can extract multiple features in one pass by specifying"
     " multiple feature blob names and dataset names seperated by ','."
@@ -61,7 +61,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   arg_pos = num_required_args;
   if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {
-    LOG(ERROR)<< "Using GPU";
+    LOG(ERROR) <<  "Using GPU";
     uint device_id = 0;
     if (argc > arg_pos + 1) {
       device_id = atoi(argv[arg_pos + 1]);
@@ -106,19 +106,19 @@ int feature_extraction_pipeline(int argc, char** argv) {
    }
    */
   std::string feature_extraction_proto(argv[++arg_pos]);
-  shared_ptr<Net<Dtype> > feature_extraction_net(
+  boost::shared_ptr<Net<Dtype> >feature_extraction_net(
       new Net<Dtype>(feature_extraction_proto, caffe::TEST));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
   std::string extract_feature_blob_names(argv[++arg_pos]);
   std::vector<std::string> blob_names;
-  boost::split(blob_names, extract_feature_blob_names, boost::is_any_of(","));
+  boost::split(blob_names, extract_feature_blob_names, boost::is_any_of(", "));
 
   std::string save_feature_dataset_names(argv[++arg_pos]);
   std::vector<std::string> dataset_names;
   boost::split(dataset_names, save_feature_dataset_names,
-               boost::is_any_of(","));
-  CHECK_EQ(blob_names.size(), dataset_names.size()) <<
+               boost::is_any_of(", "));
+  CHECK_EQ(blob_names.size(), dataset_names.size())  <<
       " the number of blob names and dataset names must be equal";
   size_t num_features = blob_names.size();
 
@@ -130,18 +130,18 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   int num_mini_batches = atoi(argv[++arg_pos]);
 
-  std::vector<shared_ptr<db::DB> > feature_dbs;
-  std::vector<shared_ptr<db::Transaction> > txns;
+  std::vector<boost::shared_ptr<db::DB> > feature_dbs;
+  std::vector<boost::shared_ptr<db::Transaction> > txns;
   for (size_t i = 0; i < num_features; ++i) {
-    LOG(INFO)<< "Opening dataset " << dataset_names[i];
-    shared_ptr<db::DB> db(db::GetDB(argv[++arg_pos]));
+    LOG(INFO) <<  "Opening dataset " << dataset_names[i];
+    boost::shared_ptr<db::DB> db(db::GetDB(argv[++arg_pos]));
     db->Open(dataset_names.at(i), db::NEW);
     feature_dbs.push_back(db);
-    shared_ptr<db::Transaction> txn(db->NewTransaction());
+    boost::shared_ptr<db::Transaction> txn(db->NewTransaction());
     txns.push_back(txn);
   }
 
-  LOG(ERROR)<< "Extacting Features";
+  LOG(ERROR) <<  "Extacting Features";
 
   Datum datum;
   const int kMaxKeyStrLength = 100;
@@ -151,7 +151,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     for (int i = 0; i < num_features; ++i) {
-      const shared_ptr<Blob<Dtype> > feature_blob = feature_extraction_net
+      const boost::shared_ptr<Blob<Dtype> >feature_blob = feature_extraction_net
           ->blob_by_name(blob_names[i]);
       int batch_size = feature_blob->num();
       int dim_features = feature_blob->count() / batch_size;
@@ -176,7 +176,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         if (image_indices[i] % 1000 == 0) {
           txns.at(i)->Commit();
           txns.at(i).reset(feature_dbs.at(i)->NewTransaction());
-          LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+          LOG(ERROR) <<  "Extracted features of " << image_indices[i]  <<
               " query images for feature blob " << blob_names[i];
         }
       }  // for (int n = 0; n < batch_size; ++n)
@@ -187,12 +187,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
     if (image_indices[i] % 1000 != 0) {
       txns.at(i)->Commit();
     }
-    LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+    LOG(ERROR) <<  "Extracted features of " << image_indices[i]  <<
         " query images for feature blob " << blob_names[i];
     feature_dbs.at(i)->Close();
   }
 
-  LOG(ERROR)<< "Successfully extracted the features!";
+  LOG(ERROR) <<  "Successfully extracted the features!";
   return 0;
 }
 

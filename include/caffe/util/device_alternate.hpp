@@ -1,13 +1,13 @@
 #ifndef CAFFE_UTIL_DEVICE_ALTERNATE_H_
 #define CAFFE_UTIL_DEVICE_ALTERNATE_H_
 
-#if defined(CPU_ONLY) || defined(USE_OPENCL)// CPU-only Caffe.
+#if defined(CPU_ONLY) || defined(USE_OPENCL)  // CPU-only Caffe.
 
 #include <vector>
 
 // Stub out GPU calls as unavailable.
 
-#define NO_GPU LOG(FATAL) << "Cannot use GPU in CPU-only Caffe: check mode."
+#define NO_GPU LOG(FATAL)  <<  "Cannot use GPU in CPU-only Caffe: check mode."
 
 #define STUB_GPU(classname) \
 template <typename Dtype> \
@@ -38,9 +38,7 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 #include <driver_types.h>  // cuda driver types
 #ifdef USE_CUDNN  // cuDNN acceleration library.
 #include "caffe/util/cudnn.hpp"
-#endif
-
-//
+#endif  //
 // CUDA macros
 //
 
@@ -49,21 +47,21 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
   /* Code block avoids redefinition of cudaError_t error */ \
   do { \
     cudaError_t error = condition; \
-    CHECK_EQ(error, cudaSuccess) << " " << cudaGetErrorString(error); \
+    CHECK_EQ(error, cudaSuccess)  <<  " "  <<  cudaGetErrorString(error); \
   } while (0)
 
 #define CUBLAS_CHECK(condition) \
   do { \
     cublasStatus_t status = condition; \
-    CHECK_EQ(status, CUBLAS_STATUS_SUCCESS) << " " \
-      << caffe::cublasGetErrorString(status); \
+    CHECK_EQ(status, CUBLAS_STATUS_SUCCESS)  <<  " " \
+       <<  caffe::cublasGetErrorString(status); \
   } while (0)
 
 #define CURAND_CHECK(condition) \
   do { \
     curandStatus_t status = condition; \
-    CHECK_EQ(status, CURAND_STATUS_SUCCESS) << " " \
-      << caffe::curandGetErrorString(status); \
+    CHECK_EQ(status, CURAND_STATUS_SUCCESS)  <<  " " \
+       <<  caffe::curandGetErrorString(status); \
   } while (0)
 
 // CUDA: grid stride looping
@@ -78,22 +76,20 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 namespace caffe {
 
 // CUDA: library error reporting.
-const char* cublasGetErrorString(cublasStatus_t error);
-const char* curandGetErrorString(curandStatus_t error);
+  const char* cublasGetErrorString(cublasStatus_t error);
+  const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: thread number configuration.
 // Use 1024 threads per block, which requires cuda sm_2x or above,
 // or fall back to attempt compatibility (best of luck to you).
 #if __CUDA_ARCH__ >= 200
-    const int CAFFE_CUDA_NUM_THREADS = 1024;
+  const int CAFFE_CUDA_NUM_THREADS = 1024;
 #else
-    const int CAFFE_CUDA_NUM_THREADS = 512;
-#endif
-
-// CUDA: number of blocks for threads.
-inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
-}
+  const int CAFFE_CUDA_NUM_THREADS = 512;
+#endif  // CUDA: number of blocks for threads.
+  inline int CAFFE_GET_BLOCKS(const int N) {
+    return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  }
 
 }  // namespace caffe
 
@@ -102,18 +98,23 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 #if defined(USE_OPENCL)
 #include <CL/cl.h>
 
-inline size_t CAFFE_GET_GLOBAL_WORKITEMS(const int problem_size, const int local_size) {
-  if ( problem_size % local_size == 0 ) {
+inline size_t CAFFE_GET_GLOBAL_WORKITEMS(
+    const int problem_size,
+    const int local_size) {
+  if (problem_size % local_size == 0) {
     return problem_size;
   } else {
-    return (((size_t) problem_size / (size_t) local_size) + 1) * (size_t) local_size; // returns number larger than problem_size that is divisible by local_size
+    return (((size_t) problem_size / (size_t) local_size) + 1)
+        * (size_t) local_size;  // returns number larger than problem_size that
+                                // is divisible by local_size
   }
 }
 
-inline size_t CAFFE_GET_LOCAL_WORKITEMS(const int problem_size, const int local_size) {
-	return (size_t) local_size;
+inline size_t CAFFE_GET_LOCAL_WORKITEMS(
+    const int problem_size,
+    const int local_size) {
+  return (size_t) local_size;
 }
-#endif // USE_OPENCL
-
+#endif  // USE_OPENCL
 
 #endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_

@@ -210,7 +210,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
           // At TEST time, check that we always get center value.
           if (phase == caffe::TEST) {
             EXPECT_EQ(center_value, this->blob_top_data_->cpu_data()[i * 2 + j])
-                << "debug: iter " << iter << " i " << i << " j " << j;
+                << "debug: iter "
+                << iter << " i " << i << " j " << j;
           }
         }
       }

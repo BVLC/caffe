@@ -8,7 +8,7 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void DeconvolutionLayer<Dtype>::compute_output_shape() {
   this->height_out_ = this->stride_h_ * (this->height_ - 1) + this->kernel_h_
       - 2 * this->pad_h_;
@@ -16,15 +16,18 @@ void DeconvolutionLayer<Dtype>::compute_output_shape() {
       - 2 * this->pad_w_;
 }
 
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void DeconvolutionLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      this->backward_cpu_gemm(bottom_data + bottom[i]->offset(n), weight,
+      this->backward_cpu_gemm(
+          bottom_data + bottom[i]->offset(n),
+          weight,
           top_data + top[i]->offset(n));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
@@ -34,16 +37,20 @@ void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype>
+void DeconvolutionLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   if (this->param_propagate_down_[0]) {
     caffe_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
   }
   if (this->bias_term_ && this->param_propagate_down_[1]) {
-    caffe_set(this->blobs_[1]->count(), Dtype(0),
+    caffe_set(
+        this->blobs_[1]->count(),
+        Dtype(0),
         this->blobs_[1]->mutable_cpu_diff());
   }
   for (int i = 0; i < top.size(); ++i) {
@@ -61,13 +68,15 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < this->num_; ++n) {
         // Gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_cpu_gemm(top_diff + top[i]->offset(n),
-              bottom_data + bottom[i]->offset(n), weight_diff);
+          this->weight_cpu_gemm(top_diff + top[i]->offset(n), bottom_data
+              + bottom[i]->offset(n), weight_diff);
         }
         // Gradient w.r.t. bottom data, if necessary, reusing the column buffer
         // we might have just computed above.
         if (propagate_down[i]) {
-          this->forward_cpu_gemm(top_diff + top[i]->offset(n), weight,
+          this->forward_cpu_gemm(
+              top_diff + top[i]->offset(n),
+              weight,
               bottom_diff + bottom[i]->offset(n),
               this->param_propagate_down_[0]);
         }
@@ -78,15 +87,18 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 #if defined(USE_OPENCL)
 
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void DeconvolutionLayer<Dtype>::Forward_gpu(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      this->backward_gpu_gemm(bottom_data + bottom[i]->offset(n), weight,
+      this->backward_gpu_gemm(
+          bottom_data + bottom[i]->offset(n),
+          weight,
           top_data + top[i]->offset(n));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
@@ -96,16 +108,20 @@ void DeconvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype>
+void DeconvolutionLayer<Dtype>::Backward_gpu(
+    const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   if (this->param_propagate_down_[0]) {
     caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
   }
   if (this->bias_term_ && this->param_propagate_down_[1]) {
-    caffe_gpu_set(this->blobs_[1]->count(), Dtype(0),
+    caffe_gpu_set(
+        this->blobs_[1]->count(),
+        Dtype(0),
         this->blobs_[1]->mutable_gpu_diff());
   }
   for (int i = 0; i < top.size(); ++i) {
@@ -123,12 +139,14 @@ void DeconvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_gpu_gemm(top_diff + top[i]->offset(n),
-              bottom_data + bottom[i]->offset(n), weight_diff);
+          this->weight_gpu_gemm(top_diff + top[i]->offset(n), bottom_data
+              + bottom[i]->offset(n), weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
-          this->forward_gpu_gemm(top_diff + top[i]->offset(n), weight,
+          this->forward_gpu_gemm(
+              top_diff + top[i]->offset(n),
+              weight,
               bottom_diff + bottom[i]->offset(n));
         }
       }
@@ -138,7 +156,7 @@ void DeconvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
 #endif
 
-#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#if defined(CPU_ONLY) && !defined(USE_OPENCL)
 STUB_GPU(DeconvolutionLayer);
 #endif
 

@@ -22,12 +22,14 @@ bool UpgradeV0Net(const NetParameter& v0_net_param, NetParameter* net_param);
 // For any padding layer, remove it and put its pad parameter in any layers
 // taking its top blob as input.
 // Error if any of these above layers are not-conv layers.
-void UpgradeV0PaddingLayers(const NetParameter& param,
-                            NetParameter* param_upgraded_pad);
+void UpgradeV0PaddingLayers(
+    const NetParameter& param,
+    NetParameter* param_upgraded_pad);
 
 // Upgrade a single V0LayerConnection to the V1LayerParameter format.
-bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
-                             V1LayerParameter* layer_param);
+bool UpgradeV0LayerParameter(
+    const V1LayerParameter& v0_layer_connection,
+    V1LayerParameter* layer_param);
 
 V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
@@ -45,8 +47,9 @@ bool NetNeedsV1ToV2Upgrade(const NetParameter& net_param);
 // deprecated V1LayerParameters.
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param);
 
-bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
-                             LayerParameter* layer_param);
+bool UpgradeV1LayerParameter(
+    const V1LayerParameter& v1_layer_param,
+    LayerParameter* layer_param);
 
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 
@@ -54,11 +57,13 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param);
 
 // Read parameters from a file into a NetParameter proto message.
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
-                                    NetParameter* param);
-void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
-                                      NetParameter* param);
+void ReadNetParamsFromTextFileOrDie(
+    const string& param_file,
+    NetParameter* param);
+void ReadNetParamsFromBinaryFileOrDie(
+    const string& param_file,
+    NetParameter* param);
 
 }  // namespace caffe
 
-#endif   // CAFFE_UTIL_UPGRADE_PROTO_H_
+#endif  // CAFFE_UTIL_UPGRADE_PROTO_H_

@@ -172,8 +172,6 @@ shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
 }
 
 REGISTER_LAYER_CREATOR(Python, GetPythonLayer);
-#endif
-
-// Layers that use their constructor as their default creator should be
+#endif  // Layers that use their constructor as their default creator should be
 // registered in their corresponding cpp files. Do not register them here.
 }  // namespace caffe

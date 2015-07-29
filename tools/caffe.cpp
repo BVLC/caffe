@@ -118,10 +118,11 @@ int train() {
   }
 
   // Set device id and mode
-#if ! (defined(USE_CUDA) || defined(USE_OPENCL))
-  if (FLAGS_gpu >= 0 ) {
-  	LOG(WARNING)<<"This build of Caffe was build without GPU support, switching to CPU mode.";
-  	FLAGS_gpu = -1;
+#if !(defined(USE_CUDA) || defined(USE_OPENCL))
+  if ( FLAGS_gpu >= 0 ) {
+    LOG(WARNING) << "This build of Caffe was build without GPU support"
+                    ", switching to CPU mode.";
+    FLAGS_gpu = -1;
   }
 #endif
 
@@ -135,7 +136,7 @@ int train() {
   }
 
   LOG(INFO) << "Starting Optimization";
-  shared_ptr<caffe::Solver<float> >
+  boost::shared_ptr<caffe::Solver<float> >
     solver(caffe::GetSolver<float>(solver_param));
 
   if (FLAGS_snapshot.size()) {
@@ -159,10 +160,11 @@ int test() {
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
 
   // Set device id and mode
-#if ! (defined(USE_CUDA) || defined(USE_OPENCL))
-  if (FLAGS_gpu >= 0 ) {
-  	LOG(WARNING)<<"This build of Caffe was build without GPU support, switching to CPU mode.";
-  	FLAGS_gpu = -1;
+#if !(defined(USE_CUDA) || defined(USE_OPENCL))
+  if ( FLAGS_gpu >= 0 ) {
+    LOG(WARNING) << "This build of Caffe was build without GPU support"
+                    ", switching to CPU mode.";
+    FLAGS_gpu = -1;
   }
 #endif
 
@@ -232,10 +234,11 @@ int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
 
   // Set device id and mode
-#if ! (defined(USE_CUDA) || defined(USE_OPENCL))
-  if (FLAGS_gpu >= 0 ) {
-  	LOG(WARNING)<<"This build of Caffe was build without GPU support, switching to CPU mode.";
-  	FLAGS_gpu = -1;
+#if !(defined(USE_CUDA) || defined(USE_OPENCL))
+  if ( FLAGS_gpu >= 0 ) {
+    LOG(WARNING) << "This build of Caffe was build without GPU support"
+                    ", switching to CPU mode.";
+    FLAGS_gpu = -1;
   }
 #endif
 
@@ -262,7 +265,7 @@ int time() {
   LOG(INFO) << "Performing Backward";
   caffe_net.Backward();
 
-  const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
+  const vector<boost::shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
   const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =

@@ -14,8 +14,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-//#include "caffe/test/test_caffe_main.hpp"
-
 namespace caffe {
 
 template <typename Dtype>
@@ -64,7 +62,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     const int layer_id = -1;  // inputs have fake layer ID -1
     AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
   }
-  DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+  DLOG(INFO) << "Memory required for data: "
+             << memory_used_ * sizeof(Dtype);
   // For each layer, set up its input and output
   bottom_vecs_.resize(param.layer_size());
   top_vecs_.resize(param.layer_size());

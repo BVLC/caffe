@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -16,120 +17,121 @@
 
 namespace caffe {
 
-template <typename TypeParam>
-class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
-  typedef typename TypeParam::Dtype Dtype;
+template<typename TypeParam>
+class InfogainLossLayerTest: public MultiDeviceTest<TypeParam> {
+    typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  InfogainLossLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
-        blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
-        blob_bottom_infogain_(new Blob<Dtype>(1, 1, 5, 5)),
-        blob_top_loss_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
-    FillerParameter filler_param;
-    PositiveUnitballFiller<Dtype> filler(filler_param);
-    filler.Fill(this->blob_bottom_data_);
-    blob_bottom_vec_.push_back(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
-      blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
+    InfogainLossLayerTest()
+        :
+            blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
+            blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
+            blob_bottom_infogain_(new Blob<Dtype>(1, 1, 5, 5)),
+            blob_top_loss_(new Blob<Dtype>()) {
+      Caffe::set_random_seed(1701);
+      FillerParameter filler_param;
+      PositiveUnitballFiller<Dtype> filler(filler_param);
+      filler.Fill(this->blob_bottom_data_);
+      blob_bottom_vec_.push_back(blob_bottom_data_);
+      for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+        blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
+      }
+      blob_bottom_vec_.push_back(blob_bottom_label_);
+      filler_param.set_min(0.1);
+      filler_param.set_max(2.0);
+      UniformFiller<Dtype> infogain_filler(filler_param);
+      infogain_filler.Fill(this->blob_bottom_infogain_);
+      blob_bottom_vec_.push_back(blob_bottom_infogain_);
+      blob_top_vec_.push_back(blob_top_loss_);
     }
-    blob_bottom_vec_.push_back(blob_bottom_label_);
-    filler_param.set_min(0.1);
-    filler_param.set_max(2.0);
-    UniformFiller<Dtype> infogain_filler(filler_param);
-    infogain_filler.Fill(this->blob_bottom_infogain_);
-    blob_bottom_vec_.push_back(blob_bottom_infogain_);
-    blob_top_vec_.push_back(blob_top_loss_);
-  }
-  virtual ~InfogainLossLayerTest() {
-    delete blob_bottom_data_;
-    delete blob_bottom_label_;
-    delete blob_bottom_infogain_;
-    delete blob_top_loss_;
-  }
-  Blob<Dtype>* const blob_bottom_data_;
-  Blob<Dtype>* const blob_bottom_label_;
-  Blob<Dtype>* const blob_bottom_infogain_;
-  Blob<Dtype>* const blob_top_loss_;
-  vector<Blob<Dtype>*> blob_bottom_vec_;
-  vector<Blob<Dtype>*> blob_top_vec_;
+    virtual ~InfogainLossLayerTest() {
+      delete blob_bottom_data_;
+      delete blob_bottom_label_;
+      delete blob_bottom_infogain_;
+      delete blob_top_loss_;
+    }
+    Blob<Dtype>* const blob_bottom_data_;
+    Blob<Dtype>* const blob_bottom_label_;
+    Blob<Dtype>* const blob_bottom_infogain_;
+    Blob<Dtype>* const blob_top_loss_;
+    vector<Blob<Dtype>*> blob_bottom_vec_;
+    vector<Blob<Dtype>*> blob_top_vec_;
 
-	void InfogainLossLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+    void InfogainLossLayerTestForwardPerformance(
+        int num_images,
+        int num_channels,
+        int im_width,
+        int im_height) {
+      typedef typename TypeParam::Dtype Dtype;
+      LayerParameter layer_param;
+      InfogainLossLayer<Dtype> layer(layer_param);
 
-		typedef typename TypeParam::Dtype Dtype;
-		LayerParameter layer_param;
-		InfogainLossLayer<Dtype> layer(layer_param);
+      blob_bottom_data_->Reshape(num_images, num_channels, 1, 1);
+      blob_bottom_label_->Reshape(num_images, 1, 1, 1);
+      blob_bottom_infogain_->Reshape(1, 1, num_channels, num_channels);
 
-		blob_bottom_data_->Reshape(num_images, num_channels, 1, 1);
-		blob_bottom_label_->Reshape(num_images, 1, 1, 1);
-		blob_bottom_infogain_->Reshape(1, 1, num_channels, num_channels);
+      FillerParameter filler_param;
+      UniformFiller<Dtype> filler(filler_param);
+      filler.Fill(this->blob_bottom_data_);
 
-		FillerParameter filler_param;
-		UniformFiller<Dtype> filler(filler_param);
-		filler.Fill(this->blob_bottom_data_);
+      for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+        blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
+      }
 
-		for (int i = 0; i < blob_bottom_label_->count(); ++i) {
-			blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
-		}
+      filler_param.set_min(0.1);
+      filler_param.set_max(2.0);
+      UniformFiller<Dtype> infogain_filler(filler_param);
+      infogain_filler.Fill(this->blob_bottom_infogain_);
 
-		filler_param.set_min(0.1);
-		filler_param.set_max(2.0);
-		UniformFiller<Dtype> infogain_filler(filler_param);
-		infogain_filler.Fill(this->blob_bottom_infogain_);
+      blob_bottom_vec_.clear();
+      blob_bottom_vec_.push_back(blob_bottom_data_);
+      blob_bottom_vec_.push_back(blob_bottom_label_);
+      blob_bottom_vec_.push_back(blob_bottom_infogain_);
 
-		blob_bottom_vec_.clear();
-		blob_bottom_vec_.push_back(blob_bottom_data_);
-		blob_bottom_vec_.push_back(blob_bottom_label_);
-		blob_bottom_vec_.push_back(blob_bottom_infogain_);
-
-		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+      layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
-		blob_bottom_data_->mutable_gpu_data();
-		blob_bottom_data_->mutable_gpu_diff();
-		blob_bottom_label_->mutable_gpu_data();
-		blob_bottom_label_->mutable_gpu_diff();
-		blob_bottom_infogain_->mutable_gpu_data();
-		blob_bottom_infogain_->mutable_gpu_diff();
-		blob_top_loss_->mutable_gpu_data();
-		blob_top_loss_->mutable_gpu_diff();
+      blob_bottom_data_->mutable_gpu_data();
+      blob_bottom_data_->mutable_gpu_diff();
+      blob_bottom_label_->mutable_gpu_data();
+      blob_bottom_label_->mutable_gpu_diff();
+      blob_bottom_infogain_->mutable_gpu_data();
+      blob_bottom_infogain_->mutable_gpu_diff();
+      blob_top_loss_->mutable_gpu_data();
+      blob_top_loss_->mutable_gpu_diff();
 #endif
 
-		record r;
-		r.type = std::string(typeid(Dtype).name());
-		r.num_images = num_images;
-		r.num_channels = num_channels;
-		r.img_width = im_width;
-		r.img_height = im_height;
+      record r;
+      r.type = std::string(typeid(Dtype).name());
+      r.num_images = num_images;
+      r.num_channels = num_channels;
+      r.img_width = im_width;
+      r.img_height = im_height;
 
-		BENCH(r, {
-			layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_)
-			;
-		});
-	}
-
+      BENCH(r, {
+        layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+      });
+    }
 };
 
 TYPED_TEST_CASE(InfogainLossLayerTest, TestDtypesAndDevices);
 
-
 TYPED_TEST(InfogainLossLayerTest, TestGradient) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  InfogainLossLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-4, 2e-2, 1701, 1, 0.01);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_, 0);
+typedef typename TypeParam::Dtype Dtype;
+LayerParameter layer_param;
+InfogainLossLayer<Dtype> layer(layer_param);
+GradientChecker<Dtype> checker(1e-4, 2e-2, 1701, 1, 0.01);
+checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+    this->blob_top_vec_, 0);
 }
 
 TYPED_TEST(InfogainLossLayerTest, TestForwardPerformance) {
-
-	for( int num_images = 10; num_images <= 10000; num_images *= 10 ) {
-		for ( int num_channels = 2; num_channels <= 4096; num_channels *= 2 ) {
-			this->InfogainLossLayerTestForwardPerformance(num_images, num_channels, 1, 1);
-		}
-	}
+for (int num_images = 10; num_images <= 10000; num_images *= 10) {
+  for (int num_channels = 2; num_channels <= 4096; num_channels *= 2) {
+    this->InfogainLossLayerTestForwardPerformance(num_images, num_channels,
+                                                  1, 1);
+  }
+}
 }
 
 }  // namespace caffe

@@ -3,7 +3,8 @@
 #include <sys/stat.h>
 #include <string>
 
-namespace caffe { namespace db {
+namespace caffe {
+namespace db {
 
 const size_t LMDB_MAP_SIZE = 1099511627776;  // 1 TB
 
@@ -15,23 +16,24 @@ void LevelDB::Open(const string& source, Mode mode) {
   options.error_if_exists = mode == NEW;
   options.create_if_missing = mode != READ;
   leveldb::Status status = leveldb::DB::Open(options, source, &db_);
-  CHECK(status.ok()) << "Failed to open leveldb " << source
-                     << std::endl << status.ToString();
-  LOG(INFO) << "Opened leveldb " << source;
+  CHECK(status.ok()) << "Failed to open leveldb "
+                     << source << std::endl
+                     << status.ToString();
+  LOG(INFO)<< "Opened leveldb " << source;
 }
 
 void LMDB::Open(const string& source, Mode mode) {
   MDB_CHECK(mdb_env_create(&mdb_env_));
   MDB_CHECK(mdb_env_set_mapsize(mdb_env_, LMDB_MAP_SIZE));
   if (mode == NEW) {
-    CHECK_EQ(mkdir(source.c_str(), 0744), 0) << "mkdir " << source << "failed";
+    CHECK_EQ(mkdir(source.c_str(), 0744), 0)<< "mkdir " << source << "failed";
   }
   int flags = 0;
   if (mode == READ) {
     flags = MDB_RDONLY | MDB_NOTLS;
   }
   MDB_CHECK(mdb_env_open(mdb_env_, source.c_str(), flags, 0664));
-  LOG(INFO) << "Opened lmdb " << source;
+  LOG(INFO)<< "Opened lmdb " << source;
 }
 
 LMDBCursor* LMDB::NewCursor() {
@@ -61,14 +63,14 @@ void LMDBTransaction::Put(const string& key, const string& value) {
 
 DB* GetDB(DataParameter::DB backend) {
   switch (backend) {
-  case DataParameter_DB_LEVELDB:
-    return new LevelDB();
-  case DataParameter_DB_LMDB:
-    return new LMDB();
-  default:
-    LOG(FATAL) << "Unknown database backend";
+    case DataParameter_DB_LEVELDB:
+      return new LevelDB();
+    case DataParameter_DB_LMDB:
+      return new LMDB();
+    default:
+      LOG(FATAL)<< "Unknown database backend";
+    }
   }
-}
 
 DB* GetDB(const string& backend) {
   if (backend == "leveldb") {

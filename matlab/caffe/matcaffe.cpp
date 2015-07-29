@@ -42,7 +42,7 @@ static int init_key = -2;
 //   % reshape to a fixed size (e.g., 227x227)
 //   im = imresize(im, [IMAGE_DIM IMAGE_DIM], 'bilinear');
 //   % permute from RGB to BGR and subtract the data mean (already in BGR)
-//   im = im(:,:,[3 2 1]) - data_mean;
+//   im = im(:, :, [3 2 1]) - data_mean;
 //   % flip width and height to make width the fastest dimension
 //   im = permute(im, [2 1 3]);
 //
@@ -341,7 +341,7 @@ static void is_initialized(MEX_ARGS) {
 
 static void read_mean(MEX_ARGS) {
     if (nrhs != 1) {
-        mexErrMsgTxt("Usage: caffe('read_mean', 'path_to_binary_mean_file'");
+        mexErrMsgTxt("Usage: caffe('read_mean','path_to_binary_mean_file'");
         return;
     }
     const string& mean_file = mxArrayToString(prhs[0]);

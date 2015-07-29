@@ -293,7 +293,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     if (force_backward) {
       proto << "force_backward: true ";
     }
-    proto <<
+    proto  <<
         "layer { "
         "  name: 'data' "
         "  type: 'DummyData' "
@@ -314,7 +314,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "  type: 'InnerProduct' "
         "  inner_product_param { "
         "    num_output: 10 "
-        "    bias_term: " << bias_term <<
+        "    bias_term: " << bias_term  <<
         "    weight_filler { "
         "      type: 'gaussian' "
         "      std: 10 "
@@ -322,25 +322,25 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "  } "
         "  param { "
         "    name: 'unsharedweights1' "
-        "    lr_mult: " << blobs_lr_w1 <<
+        "    lr_mult: " << blobs_lr_w1  <<
         "  } ";
     if (bias_term) {
       proto << "  param { lr_mult: " << blobs_lr_b1 << " } ";
     }
-    proto <<
+    proto  <<
         "  bottom: 'data' "
         "  top: 'innerproduct1' ";
     if (midnet_loss_weight) {
       proto << "  loss_weight: " << *midnet_loss_weight << " ";
     }
-    proto <<
+    proto  <<
         "} "
         "layer { "
         "  name: 'innerproduct2' "
         "  type: 'InnerProduct' "
         "  inner_product_param { "
         "    num_output: 10 "
-        "    bias_term: " << bias_term <<
+        "    bias_term: " << bias_term  <<
         "    weight_filler { "
         "      type: 'gaussian' "
         "      std: 10 "
@@ -348,12 +348,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "  } "
         "  param { "
         "    name: 'unsharedweights2' "
-        "    lr_mult: " << blobs_lr_w2 <<
+        "    lr_mult: " << blobs_lr_w2  <<
         "  } ";
     if (bias_term) {
       proto << "  param { lr_mult: " << blobs_lr_b2 << " } ";
     }
-    proto <<
+    proto  <<
         "  bottom: 'data' "
         "  top: 'innerproduct2' "
         "} "
@@ -363,7 +363,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     if (loss_weight) {
       proto << "  loss_weight: " << *loss_weight << " ";
     }
-    proto <<
+    proto  <<
         "  bottom: 'innerproduct1' "
         "  bottom: 'innerproduct2' "
         "} ";

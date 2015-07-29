@@ -30,9 +30,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
     layer_idx_to_layer_name[i] = layer_param.name();
     for (int j = 0; j < layer_param.bottom_size(); ++j) {
       const string& blob_name = layer_param.bottom(j);
-      if (blob_name_to_last_top_idx.find(blob_name) ==
-          blob_name_to_last_top_idx.end()) {
-        LOG(FATAL) << "Unknown blob input " << blob_name << " to layer " << j;
+      if (blob_name_to_last_top_idx.find(blob_name)
+          == blob_name_to_last_top_idx.end()) {
+        LOG(FATAL)<< "Unknown blob input " << blob_name << " to layer " << j;
       }
       const pair<int, int>& bottom_idx = make_pair(i, j);
       const pair<int, int>& top_idx = blob_name_to_last_top_idx[blob_name];
@@ -66,7 +66,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       LayerParameter* split_layer_param = param_split->add_layer();
       const float kZeroLossWeight = 0;
       ConfigureSplitLayer(layer_name, blob_name, i, split_count,
-          kZeroLossWeight, split_layer_param);
+                           kZeroLossWeight, split_layer_param);
     }
   }
   for (int i = 0; i < param.layer_size(); ++i) {
@@ -80,8 +80,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[top_idx.first];
         const string& blob_name = layer_param->bottom(j);
-        layer_param->set_bottom(j, SplitBlobName(layer_name,
-            blob_name, top_idx.second, top_idx_to_bottom_split_idx[top_idx]++));
+        layer_param->set_bottom(j, SplitBlobName(layer_name, blob_name,
+                                top_idx.second,
+                                top_idx_to_bottom_split_idx[top_idx]++));
       }
     }
     // Create split layer for any top blobs used by other layer as bottom
@@ -94,8 +95,8 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
         const string& blob_name = layer_param->top(j);
         LayerParameter* split_layer_param = param_split->add_layer();
         const float loss_weight = top_idx_to_loss_weight[top_idx];
-        ConfigureSplitLayer(layer_name, blob_name, j, split_count,
-            loss_weight, split_layer_param);
+        ConfigureSplitLayer(layer_name, blob_name, j, split_count, loss_weight,
+                            split_layer_param);
         if (loss_weight) {
           layer_param->clear_loss_weight();
           top_idx_to_bottom_split_idx[top_idx]++;
@@ -105,16 +106,20 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
   }
 }
 
-void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
-    const int blob_idx, const int split_count, const float loss_weight,
+void ConfigureSplitLayer(
+    const string& layer_name,
+    const string& blob_name,
+    const int blob_idx,
+    const int split_count,
+    const float loss_weight,
     LayerParameter* split_layer_param) {
   split_layer_param->Clear();
   split_layer_param->add_bottom(blob_name);
   split_layer_param->set_name(SplitLayerName(layer_name, blob_name, blob_idx));
   split_layer_param->set_type("Split");
   for (int k = 0; k < split_count; ++k) {
-    split_layer_param->add_top(
-        SplitBlobName(layer_name, blob_name, blob_idx, k));
+    split_layer_param->add_top(SplitBlobName(layer_name, blob_name,
+                                             blob_idx, k));
     if (loss_weight) {
       if (k == 0) {
         split_layer_param->add_loss_weight(loss_weight);
@@ -125,7 +130,9 @@ void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
   }
 }
 
-string SplitLayerName(const string& layer_name, const string& blob_name,
+string SplitLayerName(
+    const string& layer_name,
+    const string& blob_name,
     const int blob_idx) {
   ostringstream split_layer_name;
   split_layer_name << blob_name << "_" << layer_name << "_" << blob_idx
@@ -133,8 +140,11 @@ string SplitLayerName(const string& layer_name, const string& blob_name,
   return split_layer_name.str();
 }
 
-string SplitBlobName(const string& layer_name, const string& blob_name,
-    const int blob_idx, const int split_idx) {
+string SplitBlobName(
+    const string& layer_name,
+    const string& blob_name,
+    const int blob_idx,
+    const int split_idx) {
   ostringstream split_blob_name;
   split_blob_name << blob_name << "_" << layer_name << "_" << blob_idx
       << "_split_" << split_idx;

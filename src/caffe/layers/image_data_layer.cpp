@@ -15,25 +15,28 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   this->JoinPrefetchThread();
 }
 
-template <typename Dtype>
-void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void ImageDataLayer<Dtype>::DataLayerSetUp(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   const int new_height = this->layer_param_.image_data_param().new_height();
-  const int new_width  = this->layer_param_.image_data_param().new_width();
-  const bool is_color  = this->layer_param_.image_data_param().is_color();
+  const int new_width = this->layer_param_.image_data_param().new_width();
+  const bool is_color = this->layer_param_.image_data_param().is_color();
   string root_folder = this->layer_param_.image_data_param().root_folder();
 
-  CHECK((new_height == 0 && new_width == 0) ||
-      (new_height > 0 && new_width > 0)) << "Current implementation requires "
-      "new_height and new_width to be set at the same time.";
+  CHECK(
+      (new_height == 0 && new_width == 0) ||
+      (new_height > 0 && new_width > 0))
+     << "Current implementation requires "
+     << "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
-  DLOG(INFO) << "Opening file " << source;
+  DLOG(INFO)<< "Opening file " << source;
   std::ifstream infile(source.c_str());
   string filename;
   int label;
@@ -43,25 +46,26 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
-    DLOG(INFO) << "Shuffling data";
+    DLOG(INFO)<< "Shuffling data";
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
   }
-  DLOG(INFO) << "A total of " << lines_.size() << " images.";
+  DLOG(INFO)<< "A total of " << lines_.size() << " images.";
 
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-        this->layer_param_.image_data_param().rand_skip();
-    DLOG(INFO) << "Skipping first " << skip << " data points.";
-    CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
+    unsigned int skip = caffe_rng_rand()
+        % this->layer_param_.image_data_param().rand_skip();
+    DLOG(INFO)<< "Skipping first " << skip << " data points.";
+    CHECK_GT(lines_.size(), skip)<< "Not enough points to skip";
     lines_id_ = skip;
   }
   // Read an image, and use it to initialize the top blob.
-  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-                                    new_height, new_width, is_color);
+  cv::Mat cv_img = ReadImageToCVMat(
+      root_folder + lines_[lines_id_].first,
+      new_height, new_width, is_color);
   const int channels = cv_img.channels();
   const int height = cv_img.rows;
   const int width = cv_img.cols;
@@ -77,16 +81,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_data_.Reshape(batch_size, channels, height, width);
     this->transformed_data_.Reshape(1, channels, height, width);
   }
-  DLOG(INFO) << "output data size: " << top[0]->num() << ","
-      << top[0]->channels() << "," << top[0]->height() << ","
-      << top[0]->width();
+  DLOG(INFO)<< "output data size: " << top[0]->num() << ", "
+  << top[0]->channels() << ", " << top[0]->height() << ", "
+  << top[0]->width();
   // label
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
   this->prefetch_label_.Reshape(label_shape);
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
@@ -94,7 +98,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 }
 
 // This function is used to create a thread that prefetches the data.
-template <typename Dtype>
+template<typename Dtype>
 void ImageDataLayer<Dtype>::InternalThreadEntry() {
   CPUTimer batch_timer;
   batch_timer.Start();
@@ -113,8 +117,8 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 
   // Reshape on single input batches for inputs of varying dimension.
   if (batch_size == 1 && crop_size == 0 && new_height == 0 && new_width == 0) {
-    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-        0, 0, is_color);
+    cv::Mat cv_img = ReadImageToCVMat(
+        root_folder + lines_[lines_id_].first, 0, 0, is_color);
     this->prefetch_data_.Reshape(1, cv_img.channels(),
         cv_img.rows, cv_img.cols);
     this->transformed_data_.Reshape(1, cv_img.channels(),
@@ -130,8 +134,8 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     // get a blob
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
-    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-        new_height, new_width, is_color);
+    cv::Mat cv_img = ReadImageToCVMat(
+        root_folder + lines_[lines_id_].first, new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
@@ -146,7 +150,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     lines_id_++;
     if (lines_id_ >= lines_size) {
       // We have reached the end. Restart from the first.
-      DLOG(INFO) << "Restarting data prefetching from start.";
+      DLOG(INFO)<< "Restarting data prefetching from start.";
       lines_id_ = 0;
       if (this->layer_param_.image_data_param().shuffle()) {
         ShuffleImages();
@@ -154,9 +158,9 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     }
   }
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+  DLOG(INFO)<< "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO)<< "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO)<< "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);

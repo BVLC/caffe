@@ -20,57 +20,58 @@ using std::endl;
 #define TEST_IMAGE_WIDTH_MAX 64
 
 #ifdef CMAKE_BUILD
-  #include "caffe_config.h"
+#include "caffe_config.h"
 #else
-  #define CUDA_TEST_DEVICE -1
-  #define CMAKE_SOURCE_DIR "src/"
-  #define EXAMPLES_SOURCE_DIR "examples/"
-  #define CMAKE_EXT ""
+#define CUDA_TEST_DEVICE -1
+#define CMAKE_SOURCE_DIR "src/"
+#define EXAMPLES_SOURCE_DIR "examples/"
+#define CMAKE_EXT ""
 #endif
 
 int main(int argc, char** argv);
 
 namespace caffe {
 
-template <typename TypeParam>
-class MultiDeviceTest : public ::testing::Test {
+template<typename TypeParam>
+class MultiDeviceTest: public ::testing::Test {
  public:
-  typedef typename TypeParam::Dtype Dtype;
+    typedef typename TypeParam::Dtype Dtype;
  protected:
-  MultiDeviceTest() {
-    Caffe::set_mode(TypeParam::device);
-  }
-  virtual ~MultiDeviceTest() {}
+    MultiDeviceTest() {
+      Caffe::set_mode(
+          TypeParam::device);
+    }
+    virtual ~MultiDeviceTest() {
+    }
 };
 
 typedef ::testing::Types<float, double> TestDtypes;
 
 struct FloatCPU {
-  typedef float Dtype;
-  static const Caffe::Brew device = Caffe::CPU;
+    typedef float Dtype;
+    static const Caffe::Brew device = Caffe::CPU;
 };
 
 struct DoubleCPU {
-  typedef double Dtype;
-  static const Caffe::Brew device = Caffe::CPU;
+    typedef double Dtype;
+    static const Caffe::Brew device = Caffe::CPU;
 };
 
-#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#if defined(CPU_ONLY) && !defined(USE_OPENCL)
 typedef ::testing::Types<FloatCPU, DoubleCPU> TestDtypesAndDevices;
 #else
 
 struct FloatGPU {
-  typedef float Dtype;
-  static const Caffe::Brew device = Caffe::GPU;
+    typedef float Dtype;
+    static const Caffe::Brew device = Caffe::GPU;
 };
 
 struct DoubleGPU {
-  typedef double Dtype;
-  static const Caffe::Brew device = Caffe::GPU;
+    typedef double Dtype;
+    static const Caffe::Brew device = Caffe::GPU;
 };
 
-typedef ::testing::Types<FloatCPU, DoubleCPU, FloatGPU, DoubleGPU>
-    TestDtypesAndDevices;
+typedef ::testing::Types<FloatCPU, DoubleCPU, FloatGPU, DoubleGPU> TestDtypesAndDevices;  // NOLINT(*)
 
 #endif
 

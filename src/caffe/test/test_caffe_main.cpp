@@ -42,12 +42,10 @@ int main(int argc, char** argv) {
     device_id = atoi(argv[1]);
   }
   caffe::OpenCLManager::SetDeviceId(device_id);
-  if ( ! caffe::OpenCLManager::Init() ) {
-	  LOG(ERROR) << "failed to initialize OpenCL";
-	  return 1;
+  if ( !caffe::OpenCLManager::Init() ) {
+    LOG(ERROR) << "failed to initialize OpenCL";
+    return 1;
   }
-#endif
-
-  // invoke the test.
+#endif  // invoke the test.
   return RUN_ALL_TESTS();
 }

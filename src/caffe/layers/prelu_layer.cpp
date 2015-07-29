@@ -1,20 +1,22 @@
+#if defined(USE_OPENCL)
+#include <caffe/util/OpenCL/definitions.hpp>
+#include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/prelu_layer.hpp>
+#endif
+
 #include <algorithm>
+#include <string>
 #include <vector>
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-#if defined(USE_OPENCL)
-#include <caffe/util/OpenCL/OpenCLDevice.hpp>
-#include <caffe/util/OpenCL/prelu_layer.hpp>
-#include <caffe/util/OpenCL/definitions.hpp>
-#endif
-
 namespace caffe {
 
-template <typename Dtype>
-void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void PReLULayer<Dtype>::LayerSetUp(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
@@ -43,10 +45,10 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   if (channel_shared_) {
     CHECK_EQ(this->blobs_[0]->count(), 1)
-        << "Negative slope size is inconsistent with prototxt config";
+    << "Negative slope size is inconsistent with prototxt config";
   } else {
     CHECK_EQ(this->blobs_[0]->count(), channels)
-        << "Negative slope size is inconsistent with prototxt config";
+    << "Negative slope size is inconsistent with prototxt config";
   }
 
   // Propagate gradients to the parameters (as directed by backward pass).
@@ -55,8 +57,9 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   caffe_set(multiplier_.count(), Dtype(1), multiplier_.mutable_cpu_data());
 }
 
-template <typename Dtype>
-void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void PReLULayer<Dtype>::Reshape(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
@@ -67,8 +70,9 @@ void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void PReLULayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -92,8 +96,9 @@ void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+template<typename Dtype>
+void PReLULayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -129,8 +134,8 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     for (int i = 0; i < count; ++i) {
       int c = (i / dim) % channels / div_factor;
-      bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-          + slope_data[c] * (bottom_data[i] <= 0));
+      bottom_diff[i] = top_diff[i]
+          * ((bottom_data[i] > 0) + slope_data[c] * (bottom_data[i] <= 0));
     }
   }
 }
@@ -140,24 +145,30 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 namespace OpenCL {
 
 template<typename T>
-bool clPReLUForward(const int n, const int channels, const int dim,
-    const T* in, T* out, const T* slope_data,
+bool clPReLUForward(
+    const int n,
+    const int channels,
+    const int dim,
+    const T* in,
+    T* out,
+    const T* slope_data,
     const int div_factor) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
-	std::string kernel_name = clGetKernelName<T>("PReLUForward");
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
+  std::string kernel_name = clGetKernelName<T>("PReLUForward");
   cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
-    LOG(ERROR) << current_device.name()
-               << "> failed to get OpenCL command queue";
-		return false;
-	}
+    LOG(ERROR)<< current_device.name()
+    << "> failed to get OpenCL command queue";
+    return false;
+  }
 
   cl_kernel* kernel = current_device.getKernel(kernel_name);
   if (kernel == NULL) {
-		return false;
-	}
+    return false;
+  }
 
-	CL_SET_KERNEL_ARG
+  CL_SET_KERNEL_ARG
   CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
   CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
   CL_SET_TYPE_KERNEL_ARG(int, dim, kernel)
@@ -166,50 +177,73 @@ bool clPReLUForward(const int n, const int channels, const int dim,
   CL_SET_ARRAY_KERNEL_ARG(&slope_data, kernel)
   CL_SET_TYPE_KERNEL_ARG(int, div_factor, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t local = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
-                               &local, 0, NULL, NULL);
-	if ( err != CL_SUCCESS ) {
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
+  if (err != CL_SUCCESS) {
     LOG(ERROR) << "Failed to enqueue kernel '"
-               << kernel_name.c_str() << "' on GPU "<< current_device.name()
-               << " : " << caffe::OpenCL::what(err);
-		return false;
-	}
+               << kernel_name.c_str()
+               << "' on GPU "
+               << current_device.name()
+               << " : "
+               << caffe::OpenCL::what(err);
+    return false;
+  }
 
-  DLOG(INFO) << "kernel '" << kernel_name.c_str()
-             << "' executed on GPU " << current_device.name();
+  DLOG(INFO) << "kernel '"
+             << kernel_name.c_str()
+             << "' executed on GPU "
+             << current_device.name();
 
-	CL_SET_KERNEL_ARG_END
+  CL_SET_KERNEL_ARG_END
 
-	return true;
+  return true;
 }
-template bool clPReLUForward<float>(const int n, const int channels, const int dim,
-    const float* in, float* out, const float* slope_data,
+template bool clPReLUForward<float>(
+    const int n,
+    const int channels,
+    const int dim,
+    const float* in,
+    float* out,
+    const float* slope_data,
     const int div_factor);
-template bool clPReLUForward<double>(const int n, const int channels, const int dim,
-    const double* in, double* out, const double* slope_data,
+template bool clPReLUForward<double>(
+    const int n,
+    const int channels,
+    const int dim,
+    const double* in,
+    double* out,
+    const double* slope_data,
     const int div_factor);
 
 template<typename T>
-bool clPReLUBackward(const int n, const int channels, const int dim,
-    const T* in_diff, const T* in_data, T* out_diff,
-    const T* slope_data, const int div_factor) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
-	std::string kernel_name = clGetKernelName<T>("PReLUBackward");
+bool clPReLUBackward(
+    const int n,
+    const int channels,
+    const int dim,
+    const T* in_diff,
+    const T* in_data,
+    T* out_diff,
+    const T* slope_data,
+    const int div_factor) {
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
+  std::string kernel_name = clGetKernelName<T>("PReLUBackward");
   cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
-    LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
-		return false;
-	}
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
+    return false;
+  }
 
   cl_kernel* kernel = current_device.getKernel(kernel_name);
-	if ( kernel == NULL ) {
-		return false;
-	}
+  if (kernel == NULL) {
+    return false;
+  }
 
-	CL_SET_KERNEL_ARG
+  CL_SET_KERNEL_ARG
   CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
   CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
   CL_SET_TYPE_KERNEL_ARG(int, dim, kernel)
@@ -219,80 +253,116 @@ bool clPReLUBackward(const int n, const int channels, const int dim,
   CL_SET_ARRAY_KERNEL_ARG(&slope_data, kernel)
   CL_SET_TYPE_KERNEL_ARG(int, div_factor, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t local = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
   err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
                                &global, &local, 0, NULL, NULL);
-	if ( err != CL_SUCCESS ) {
+  if (err != CL_SUCCESS) {
     LOG(ERROR) << "Failed to enqueue kernel '"
-               << kernel_name << "' on GPU "
-               << current_device.name()<<" : "<<caffe::OpenCL::what(err);
-		return false;
-	}
+               << kernel_name.c_str()
+               << "' on GPU "
+               << current_device.name()
+               << " : "
+               << caffe::OpenCL::what(err);
+    return false;
+  }
 
-  DLOG(INFO) << "kernel '" << kernel_name
-             << "' executed on GPU " << current_device.name();
+  DLOG(INFO) << "kernel '"
+             << kernel_name.c_str()
+             << "' executed on GPU "
+             << current_device.name();
 
-	CL_SET_KERNEL_ARG_END
+  CL_SET_KERNEL_ARG_END
 
-	return true;
+  return true;
 }
-template bool clPReLUBackward<float>(const int n, const int channels, const int dim,
-    const float* in_diff, const float* in_data, float* out_diff,
-    const float* slope_data, const int div_factor);
-template bool clPReLUBackward<double>(const int n, const int channels, const int dim,
-    const double* in_diff, const double* in_data, double* out_diff,
-    const double* slope_data, const int div_factor);
+template bool clPReLUBackward<float>(
+    const int n,
+    const int channels,
+    const int dim,
+    const float* in_diff,
+    const float* in_data,
+    float* out_diff,
+    const float* slope_data,
+    const int div_factor);
+template bool clPReLUBackward<double>(
+    const int n,
+    const int channels,
+    const int dim,
+    const double* in_diff,
+    const double* in_data,
+    double* out_diff,
+    const double* slope_data,
+    const int div_factor);
 
 template<typename T>
-bool clPReLUParamBackward(const int n, const T* in_diff,
-    const T* in_data, T* out_diff) {
-  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform()->CurrentDevice();
-	std::string kernel_name = clGetKernelName<T>("PReLUParamBackward");
+bool clPReLUParamBackward(
+    const int n,
+    const T* in_diff,
+    const T* in_data,
+    T* out_diff) {
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform()->CurrentDevice();
+  std::string kernel_name = clGetKernelName<T>("PReLUParamBackward");
   cl_command_queue* queue = current_device.getCurrentCommandQueue();
   if (!queue) {
-    LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
-		return false;
-	}
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
+    return false;
+  }
 
   cl_kernel* kernel = current_device.getKernel(kernel_name);
   if (kernel == NULL) {
-		return false;
-	}
+    return false;
+  }
 
-	CL_SET_KERNEL_ARG
+  CL_SET_KERNEL_ARG
   CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
   CL_SET_ARRAY_KERNEL_ARG(&in_diff, kernel)
   CL_SET_ARRAY_KERNEL_ARG(&in_data, kernel)
   CL_SET_ARRAY_KERNEL_ARG(&out_diff, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t local = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
-                               &local, 0, NULL, NULL);
-	if ( err != CL_SUCCESS ) {
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
+  if (err != CL_SUCCESS) {
     LOG(ERROR) << "Failed to enqueue kernel '"
-               << kernel_name.c_str() << "' on GPU "
-               << current_device.name()<<" : "<<caffe::OpenCL::what(err);
-		return false;
-	}
+               << kernel_name.c_str()
+               << "' on GPU "
+               << current_device.name()
+               << " : "
+               << caffe::OpenCL::what(err);
+    return false;
+  }
 
-  DLOG(INFO) << "kernel '" << kernel_name.c_str()
-             << "' executed on GPU " << current_device.name();
+  DLOG(INFO) << "kernel '"
+             << kernel_name.c_str()
+             << "' executed on GPU "
+             << current_device.name();
 
-	CL_SET_KERNEL_ARG_END
+  CL_SET_KERNEL_ARG_END
 
-	return true;
+  return true;
 }
-template bool clPReLUParamBackward<float>(const int n, const float* in_diff, const float* in_data, float* out_diff);
-template bool clPReLUParamBackward<double>(const int n, const double* in_diff, const double* in_data, double* out_diff);
+template bool clPReLUParamBackward<float>(
+    const int n,
+    const float* in_diff,
+    const float* in_data,
+    float* out_diff);
+template bool clPReLUParamBackward<double>(
+    const int n,
+    const double* in_diff,
+    const double* in_data,
+    double* out_diff);
 
-} // namespace OpenCL
+}  // namespace OpenCL
 
-template <typename Dtype>
-void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype>
+void PReLULayer<Dtype>::Forward_gpu(
+    const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -308,16 +378,19 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   /*
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  PReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, channels, dim, bottom_data, top_data, slope_data, div_factor);
-  CUDA_POST_KERNEL_CHECK;
-  */
-  BOOL_CHECK(caffe::OpenCL::clPReLUForward(count, channels, dim, bottom_data, top_data, slope_data, div_factor));
+   // NOLINT_NEXT_LINE(whitespace/operators)
+   PReLUForward<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+   count, channels, dim, bottom_data, top_data, slope_data, div_factor);
+   CUDA_POST_KERNEL_CHECK;
+   */
+  BOOL_CHECK(
+      caffe::OpenCL::clPReLUForward(count, channels, dim, bottom_data, top_data,
+                                    slope_data, div_factor));
 }
 
-template <typename Dtype>
-void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+template<typename Dtype>
+void PReLULayer<Dtype>::Backward_gpu(
+    const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -344,24 +417,28 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     for (int n = 0; n < bottom[0]->num(); ++n) {
       /*
        Dtype* temp_buff = multiplier_.mutable_gpu_diff();
-      // compute element-wise diff
-      // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
-          CAFFE_CUDA_NUM_THREADS>>>(
-          cdim, top_diff + top[0]->offset(n),
-          bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
-      CUDA_POST_KERNEL_CHECK;
-      */
-      BOOL_CHECK(caffe::OpenCL::clPReLUParamBackward(cdim, top_diff + top[0]->offset(n), bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff()));
+       // compute element-wise diff
+       // NOLINT_NEXT_LINE(whitespace/operators)
+       PReLUParamBackward<Dtype> << <CAFFE_GET_BLOCKS(count),
+       CAFFE_CUDA_NUM_THREADS>>>(
+       cdim, top_diff + top[0]->offset(n),
+       bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
+       CUDA_POST_KERNEL_CHECK;
+       */
+      BOOL_CHECK(
+          caffe::OpenCL::clPReLUParamBackward(cdim,
+                                              top_diff + top[0]->offset(n),
+                                              bottom_data + bottom[0]->offset(n),  // NOLINT(*)
+                                              multiplier_.mutable_gpu_diff()));
       if (channel_shared_) {
         Dtype d;
         caffe_gpu_dot<Dtype>(channels * dim, multiplier_.gpu_diff(),
-            multiplier_.gpu_data(), &d);
+                             multiplier_.gpu_data(), &d);
         dsum += d;
       } else {
         caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
-            multiplier_.gpu_diff(), multiplier_.gpu_data(), 1.,
-            slope_diff);
+                              multiplier_.gpu_diff(), multiplier_.gpu_data(),
+                              1., slope_diff);
       }
     }
     if (channel_shared_) {
@@ -375,20 +452,23 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     int div_factor = channel_shared_ ? channels : 1;
 
     /*
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    PReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS>>>(
-        count, channels, dim, top_diff, bottom_data, bottom_diff, slope_data,
-        div_factor);
-    CUDA_POST_KERNEL_CHECK;
-    */
-    BOOL_CHECK(caffe::OpenCL::clPReLUBackward(count, channels, dim, top_diff, bottom_data, bottom_diff, slope_data, div_factor));
+     // NOLINT_NEXT_LINE(whitespace/operators)
+     PReLUBackward<Dtype> << <CAFFE_GET_BLOCKS(count),
+     CAFFE_CUDA_NUM_THREADS>>>(
+     count, channels, dim, top_diff, bottom_data, bottom_diff, slope_data,
+     div_factor);
+     CUDA_POST_KERNEL_CHECK;
+     */
+    BOOL_CHECK(
+        caffe::OpenCL::clPReLUBackward(count, channels, dim, top_diff,
+                                       bottom_data, bottom_diff, slope_data,
+                                       div_factor));
   }
 }
 
-#endif // USE_OPENCL
+#endif  // USE_OPENCL
 
-#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#if defined(CPU_ONLY) && !defined(USE_OPENCL)
 STUB_GPU(PReLULayer);
 #endif
 

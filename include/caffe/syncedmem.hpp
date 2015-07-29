@@ -2,6 +2,8 @@
 #define CAFFE_SYNCEDMEM_HPP_
 
 #include <cstdlib>
+#include <map>
+#include <string>
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -23,20 +25,21 @@ namespace caffe {
 // does not seem to create a memory bottleneck here.
 
 inline void CaffeMallocHost(void** ptr, size_t size) {
-  *ptr = malloc(size);
-  if( *ptr == NULL ) {
-    LOG(ERROR)<<"failed to allocate host memory of size = "<<size<<" Byte";
+  *ptr = malloc(
+      size);
+  if (*ptr == NULL) {
+    LOG(ERROR)<< "failed to allocate host memory of size = "
+    << size << " Byte";
   } else {
-    DLOG(INFO)<<"allocate "<<size<<" Byte of host memory @"<<*ptr;
+    DLOG(INFO) << "allocate " << size << " Byte of host memory @" << *ptr;
   }
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
 inline void CaffeFreeHost(void* ptr) {
-  DLOG(INFO)<<"free("<<ptr<<")";
+  DLOG(INFO)<< "free(" << ptr << ")";
   free(ptr);
 }
-
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
@@ -46,34 +49,50 @@ inline void CaffeFreeHost(void* ptr) {
  */
 class SyncedMemory {
  public:
-  SyncedMemory()
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
-  explicit SyncedMemory(size_t size)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
-  ~SyncedMemory();
-  const void* cpu_data();
-  void set_cpu_data(void* data);
-  const void* gpu_data();
-  void* mutable_cpu_data();
-  void* mutable_gpu_data();
-	std::string getMemoryTag(const void* ptr);
+    SyncedMemory()
+        : cpu_ptr_(
+            NULL), gpu_ptr_(
+            NULL), size_(
+            0), head_(
+            UNINITIALIZED), own_cpu_data_(
+            false) {
+    }
+    explicit SyncedMemory(size_t size)
+        : cpu_ptr_(
+            NULL), gpu_ptr_(
+            NULL), size_(
+            size), head_(
+            UNINITIALIZED), own_cpu_data_(
+            false) {
+    }
+    ~SyncedMemory();
+    const void* cpu_data();
+    void set_cpu_data(void* data);
+    const void* gpu_data();
+    void* mutable_cpu_data();
+    void* mutable_gpu_data();
+    std::string getMemoryTag(const void* ptr);
 
-  enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
-  SyncedHead head() { return head_; }
-  size_t size() { return size_; }
+    enum SyncedHead {
+      UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED
+    };
+    SyncedHead head() {
+      return head_;
+    }
+    size_t size() {
+      return size_;
+    }
 
  private:
-  void to_cpu();
-  void to_gpu();
-  void* cpu_ptr_;
-  void* gpu_ptr_;
-  size_t size_;
-  SyncedHead head_;
-  bool own_cpu_data_;
-	int memoryCount;
-	std::map<const void*, std::string> memoryTag;
+    void to_cpu();
+    void to_gpu();
+    void* cpu_ptr_;
+    void* gpu_ptr_;
+    size_t size_;
+    SyncedHead head_;
+    bool own_cpu_data_;
+    int memoryCount;
+    std::map<const void*, std::string> memoryTag;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

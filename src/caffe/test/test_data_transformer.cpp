@@ -106,7 +106,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 
 TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -159,7 +159,7 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
 
 TYPED_TEST(DataTransformTest, TestCropTrain) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -176,7 +176,7 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
 
 TYPED_TEST(DataTransformTest, TestCropTest) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -193,7 +193,7 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
 
 TYPED_TEST(DataTransformTest, TestMirrorTrain) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -209,7 +209,7 @@ TYPED_TEST(DataTransformTest, TestMirrorTrain) {
 
 TYPED_TEST(DataTransformTest, TestMirrorTest) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -225,7 +225,7 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
 
 TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -247,7 +247,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 
 TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;
@@ -316,7 +316,7 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 
 TYPED_TEST(DataTransformTest, TestMeanFile) {
   TransformationParameter transform_param;
-  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const bool unique_pixels = true;  // pixels are consecutive ints [0, size]
   const int label = 0;
   const int channels = 3;
   const int height = 4;

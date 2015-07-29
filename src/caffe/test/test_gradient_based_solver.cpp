@@ -58,7 +58,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   void RunLeastSquaresSolver(const Dtype learning_rate,
       const Dtype weight_decay, const Dtype momentum, const int num_iters) {
     ostringstream proto;
-    proto <<
+    proto  <<
        "max_iter: " << num_iters << " "
        "base_lr: " << learning_rate << " "
        "lr_policy: 'fixed' "

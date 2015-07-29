@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -47,46 +48,45 @@ class LRNLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 
-  void LRNLayerTestSetup(int num_images, int num_channels, int im_width, int im_height) {
+  void LRNLayerTestSetup(int num_images, int num_channels,
+                         int im_width, int im_height) {
+    blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
 
-	  blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+    FillerParameter filler_param;
+    UniformFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
 
-	  FillerParameter filler_param;
-	  UniformFiller<Dtype> filler(filler_param);
-	  filler.Fill(this->blob_bottom_);
-
-	  blob_bottom_vec_.clear();
-	  blob_bottom_vec_.push_back(blob_bottom_);
+    blob_bottom_vec_.clear();
+    blob_bottom_vec_.push_back(blob_bottom_);
   }
 
-  void LRNLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+  void LRNLayerTestForwardPerformance(int num_images, int num_channels,
+                                      int im_width, int im_height) {
+    this->LRNLayerTestSetup(num_images, num_channels, im_width, im_height);
 
-	  this->LRNLayerTestSetup(num_images, num_channels, im_width, im_height);
-
-	  typedef typename TypeParam::Dtype Dtype;
-	  LayerParameter layer_param;
-	  LRNLayer<Dtype> layer(layer_param);
-	  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    typedef typename TypeParam::Dtype Dtype;
+    LayerParameter layer_param;
+    LRNLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
-			blob_bottom_->mutable_gpu_data();
-			blob_bottom_->mutable_gpu_diff();
-			blob_top_->mutable_gpu_data();
-			blob_top_->mutable_gpu_diff();
+      blob_bottom_->mutable_gpu_data();
+      blob_bottom_->mutable_gpu_diff();
+      blob_top_->mutable_gpu_data();
+      blob_top_->mutable_gpu_diff();
 #endif
 
-	  record r;
-	  r.type 					= std::string(typeid(Dtype).name());
-	  r.num_images 		= num_images;
-	  r.num_channels 	= num_channels;
-	  r.img_width			= im_width;
-	  r.img_height		= im_height;
+    record r;
+    r.type           = std::string(typeid(Dtype).name());
+    r.num_images     = num_images;
+    r.num_channels   = num_channels;
+    r.img_width      = im_width;
+    r.img_height    = im_height;
 
-	  BENCH(r, {
-			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-	  });
+    BENCH(r, {
+        layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    });
   }
-
 };
 
 template <typename TypeParam>
@@ -115,7 +115,7 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
               Dtype value = blob_bottom.data_at(n, i, h, w);
               scale += value * value * alpha / size;
             }
-            LOG(INFO)<<"scale = "<<scale;
+            LOG(INFO) << "scale = " << scale;
             *(top_data + blob_top->offset(n, c, h, w)) =
               blob_bottom.data_at(n, c, h, w) / pow(scale, beta);
           }
@@ -292,10 +292,10 @@ TYPED_TEST(LRNLayerTest, TestGradientWithinChannel) {
 }
 
 TYPED_TEST(LRNLayerTest, TestForwardPerformance) {
-
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
-		this->LRNLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
-	}
+  for ( int i = TEST_IMAGE_WIDTH_MIN; i <= TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+    this->LRNLayerTestForwardPerformance(TEST_NUM_IMAGES,
+                                         TEST_NUM_CHANNELS, i, i);
+  }
 }
 
 }  // namespace caffe

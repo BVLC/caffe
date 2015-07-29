@@ -79,15 +79,25 @@ DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.
-inline void cblas_saxpby(const int N, const float alpha, const float* X,
-                         const int incX, const float beta, float* Y,
-                         const int incY) {
+inline void cblas_saxpby(
+    const int N,
+    const float alpha,
+    const float* X,
+    const int incX,
+    const float beta,
+    float* Y,
+    const int incY) {
   cblas_sscal(N, beta, Y, incY);
   cblas_saxpy(N, alpha, X, incX, Y, incY);
 }
-inline void cblas_daxpby(const int N, const double alpha, const double* X,
-                         const int incX, const double beta, double* Y,
-                         const int incY) {
+inline void cblas_daxpby(
+    const int N,
+    const double alpha,
+    const double* X,
+    const int incX,
+    const double beta,
+    double* Y,
+    const int incY) {
   cblas_dscal(N, beta, Y, incY);
   cblas_daxpy(N, alpha, X, incX, Y, incY);
 }

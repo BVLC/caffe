@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstring>
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -17,6 +18,7 @@ namespace caffe {
 template <typename TypeParam>
 class MVNLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
+
  protected:
   MVNLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
@@ -34,47 +36,46 @@ class MVNLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 
-  void MVNLayerTestSetup(int num_images, int num_channels, int im_width, int im_height) {
+  void MVNLayerTestSetup(int num_images, int num_channels,
+                         int im_width, int im_height) {
+    blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
 
-	  blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+    FillerParameter filler_param;
+    UniformFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
 
-	  FillerParameter filler_param;
-	  UniformFiller<Dtype> filler(filler_param);
-	  filler.Fill(this->blob_bottom_);
-
-	  blob_bottom_vec_.clear();
-	  blob_bottom_vec_.push_back(blob_bottom_);
+    blob_bottom_vec_.clear();
+    blob_bottom_vec_.push_back(blob_bottom_);
   }
 
-  void MVNLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+  void MVNLayerTestForwardPerformance(int num_images, int num_channels,
+                                      int im_width, int im_height) {
+    this->MVNLayerTestSetup(num_images, num_channels, im_width, im_height);
 
-	  this->MVNLayerTestSetup(num_images, num_channels, im_width, im_height);
+    typedef typename TypeParam::Dtype Dtype;
 
-	  typedef typename TypeParam::Dtype Dtype;
+    LayerParameter layer_param;
+    MVNLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-	  LayerParameter layer_param;
-	  MVNLayer<Dtype> layer(layer_param);
-	  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-
-	  record r;
-	  r.type 			= std::string(typeid(Dtype).name());
-	  r.num_images 		= num_images;
-	  r.num_channels 	= num_channels;
-	  r.img_width		= im_width;
-	  r.img_height		= im_height;
+    record r;
+    r.type       = std::string(typeid(Dtype).name());
+    r.num_images     = num_images;
+    r.num_channels   = num_channels;
+    r.img_width    = im_width;
+    r.img_height    = im_height;
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
-			blob_bottom_->mutable_gpu_data();
-			blob_bottom_->mutable_gpu_diff();
-			blob_top_->mutable_gpu_data();
-			blob_top_->mutable_gpu_diff();
+      blob_bottom_->mutable_gpu_data();
+      blob_bottom_->mutable_gpu_diff();
+      blob_top_->mutable_gpu_data();
+      blob_top_->mutable_gpu_diff();
 #endif
 
-	  BENCH(r, {
-			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-	  });
+    BENCH(r, {
+        layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    });
   }
-
 };
 
 TYPED_TEST_CASE(MVNLayerTest, TestDtypesAndDevices);
@@ -210,10 +211,10 @@ TYPED_TEST(MVNLayerTest, TestGradientAcrossChannels) {
 }
 
 TYPED_TEST(MVNLayerTest, TestForwardPerformance) {
-
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
-		this->MVNLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
-	}
+  for ( int i = TEST_IMAGE_WIDTH_MIN; i <= TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+    this->MVNLayerTestForwardPerformance(TEST_NUM_IMAGES,
+                                         TEST_NUM_CHANNELS, i, i);
+  }
 }
 
 }  // namespace caffe

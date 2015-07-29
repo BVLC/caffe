@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),
         datum.float_data_size());
-    CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " <<
+    CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size "  <<
         size_in_datum;
     if (data.size() != 0) {
       CHECK_EQ(data.size(), size_in_datum);

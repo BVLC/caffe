@@ -1,11 +1,11 @@
 /*
-TODO:
-- load file in a separate thread ("prefetch")
-- can be smarter about the memcpy call instead of doing it row-by-row
-  :: use util functions caffe_copy, and Blob->offset()
-  :: don't forget to update hdf5_daa_layer.cu accordingly
-- add ability to shuffle filenames if flag is set
-*/
+ TODO:
+ - load file in a separate thread ("prefetch")
+ - can be smarter about the memcpy call instead of doing it row-by-row
+ :: use util functions caffe_copy, and Blob->offset()
+ :: don't forget to update hdf5_daa_layer.cu accordingly
+ - add ability to shuffle filenames if flag is set
+ */
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
@@ -20,13 +20,14 @@ TODO:
 
 namespace caffe {
 
-template <typename Dtype>
-HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
+template<typename Dtype>
+HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() {
+}
 
 // Load data and label from HDF5 filename into the class property blobs.
-template <typename Dtype>
+template<typename Dtype>
 void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
-  DLOG(INFO) << "Loading HDF5 file: " << filename;
+  DLOG(INFO)<< "Loading HDF5 file: " << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
     LOG(FATAL) << "Failed opening HDF5 file: " << filename;
@@ -48,7 +49,8 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   CHECK_GE(status, 0) << "Failed to close HDF5 file: " << filename;
 
   // MinTopBlobs==1 guarantees at least one top blob
-  CHECK_GE(hdf_blobs_[0]->num_axes(), 1) << "Input must have at least 1 axis.";
+  CHECK_GE(hdf_blobs_[0]->num_axes(), 1)
+  << "Input must have at least 1 axis.";
   const int num = hdf_blobs_[0]->shape(0);
   for (int i = 1; i < top_size; ++i) {
     CHECK_EQ(hdf_blobs_[i]->shape(0), num);
@@ -57,27 +59,29 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   data_permutation_.clear();
   data_permutation_.resize(hdf_blobs_[0]->shape(0));
   for (int i = 0; i < hdf_blobs_[0]->shape(0); i++)
-    data_permutation_[i] = i;
+  data_permutation_[i] = i;
 
   // Shuffle if needed.
   if (this->layer_param_.hdf5_data_param().shuffle()) {
     std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->shape(0)
-               << " rows (shuffled)";
+    << " rows (shuffled)";
   } else {
     DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->shape(0) << " rows";
   }
 }
 
-template <typename Dtype>
-void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void HDF5DataLayer<Dtype>::LayerSetUp(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   // Refuse transformation parameters since HDF5 is totally generic.
-  CHECK(!this->layer_param_.has_transform_param()) <<
-      this->type() << " does not transform data.";
+  CHECK(!this->layer_param_.has_transform_param())
+      << this->type()
+      << " does not transform data.";
   // Read the source to parse the filenames.
   const string& source = this->layer_param_.hdf5_data_param().source();
-  DLOG(INFO) << "Loading list of HDF5 filenames from: " << source;
+  DLOG(INFO)<< "Loading list of HDF5 filenames from: " << source;
   hdf_filenames_.clear();
   std::ifstream source_file(source.c_str());
   if (source_file.is_open()) {
@@ -86,14 +90,14 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       hdf_filenames_.push_back(line);
     }
   } else {
-    LOG(FATAL) << "Failed to open source file: " << source;
+    LOG(FATAL)<< "Failed to open source file: " << source;
   }
   source_file.close();
   num_files_ = hdf_filenames_.size();
   current_file_ = 0;
-  DLOG(INFO) << "Number of HDF5 files: " << num_files_;
-  CHECK_GE(num_files_, 1) << "Must have at least 1 HDF5 filename listed in "
-    << source;
+  DLOG(INFO)<< "Number of HDF5 files: " << num_files_;
+  CHECK_GE(num_files_, 1)<< "Must have at least 1 HDF5 filename listed in "
+  << source;
 
   file_permutation_.clear();
   file_permutation_.resize(num_files_);
@@ -125,9 +129,10 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void HDF5DataLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -136,13 +141,13 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         if (current_file_ == num_files_) {
           current_file_ = 0;
           if (this->layer_param_.hdf5_data_param().shuffle()) {
-            std::random_shuffle(file_permutation_.begin(),
-                                file_permutation_.end());
+            std::random_shuffle(
+                file_permutation_.begin(),
+                file_permutation_.end());
           }
-          DLOG(INFO) << "Looping around to first file.";
+          DLOG(INFO)<< "Looping around to first file.";
         }
-        LoadHDF5FileData(
-            hdf_filenames_[file_permutation_[current_file_]].c_str());
+        LoadHDF5FileData(hdf_filenames_[file_permutation_[current_file_]].c_str());   // NOLINT(*)
       }
       current_row_ = 0;
       if (this->layer_param_.hdf5_data_param().shuffle())
@@ -150,18 +155,20 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
-      caffe_copy(data_dim,
-          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
-            * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
+      caffe_copy(
+          data_dim,
+          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_] * data_dim],  // NOLINT(*)
+          &top[j]->mutable_cpu_data()[i * data_dim]);
     }
   }
 }
 
 #if defined(USE_OPENCL)
 
-template <typename Dtype>
-void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype>
+void HDF5DataLayer<Dtype>::Forward_gpu(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -170,13 +177,11 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         if (current_file_ == num_files_) {
           current_file_ = 0;
           if (this->layer_param_.hdf5_data_param().shuffle()) {
-            std::random_shuffle(file_permutation_.begin(),
-                                file_permutation_.end());
+            std::random_shuffle(file_permutation_.begin(), file_permutation_.end());  // NOLINT(*)
           }
-          DLOG(INFO) << "Looping around to first file.";
+          DLOG(INFO)<< "Looping around to first file.";
         }
-        LoadHDF5FileData(
-            hdf_filenames_[file_permutation_[current_file_]].c_str());
+        LoadHDF5FileData(hdf_filenames_[file_permutation_[current_file_]].c_str());  // NOLINT(*)
       }
       current_row_ = 0;
       if (this->layer_param_.hdf5_data_param().shuffle())
@@ -184,16 +189,17 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
-      caffe_copy(data_dim,
-          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
-            * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
+      caffe_copy(
+          data_dim,
+          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_] * data_dim],  // NOLINT(*)
+          &top[j]->mutable_gpu_data()[i * data_dim]);
     }
   }
 }
 
-#endif // USE_OPENCL
+#endif  // USE_OPENCL
 
-#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#if defined(CPU_ONLY) && !defined(USE_OPENCL)
 STUB_GPU_FORWARD(HDF5DataLayer, Forward);
 #endif
 

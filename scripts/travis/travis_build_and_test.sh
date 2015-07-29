@@ -4,7 +4,7 @@
 set -e
 MAKE="make --jobs=$NUM_THREADS --keep-going"
 
-if $WITH_CMAKE; then
+if [ ! -z "$WITH_CMAKE" ]; then
   mkdir build
   cd build
   cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..

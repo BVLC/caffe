@@ -2,17 +2,16 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  
   TIME("ConvolutionLayer->Forward_gpu()", {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {

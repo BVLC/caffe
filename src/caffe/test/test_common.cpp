@@ -44,7 +44,7 @@ TEST_F(CommonTest, TestRandSeedCPU) {
   }
 }
 
-#if defined(USE_CUDA) // GPU Caffe singleton test.
+#if defined(USE_CUDA)  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestRandSeedGPU) {
   SyncedMemory data_a(10 * sizeof(unsigned int));

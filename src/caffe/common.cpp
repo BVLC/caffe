@@ -4,7 +4,10 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
+
+#ifdef USE_OPENCL
 #include "caffe/util/OpenCL/OpenCLManager.hpp"
+#endif
 
 namespace caffe {
 
@@ -49,7 +52,7 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
-#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#if defined(CPU_ONLY) && !defined(USE_OPENCL)
 
 Caffe::Caffe()
     : random_generator_(), mode_(Caffe::CPU) {
@@ -93,7 +96,7 @@ void* Caffe::RNG::generator() {
   return static_cast<void*>(generator_->rng());
 }
 
-#endif // CPU_ONLY
+#endif  // CPU_ONLY
 
 #ifdef USE_CUDA
 
@@ -130,7 +133,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
     CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
   } else {
     if (!g_curand_availability_logged) {
-        LOG(ERROR) <<
+        LOG(ERROR)  <<
             "Curand not available. Skipping setting the curand seed.";
         g_curand_availability_logged = true;
     }
@@ -281,7 +284,7 @@ const char* curandGetErrorString(curandStatus_t error) {
 
 #endif  // USE_CUDA
 
-#ifdef USE_OPENCL // OpenCL Support
+#ifdef USE_OPENCL  // OpenCL Support
 
 Caffe::Caffe() : random_generator_(), mode_(Caffe::CPU) {
   caffe::OpenCLManager::Init();
@@ -291,8 +294,8 @@ Caffe::~Caffe() {
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
-	// RNG seed
-	Get().random_generator_.reset(new RNG(seed));
+  // RNG seed
+  Get().random_generator_.reset(new RNG(seed));
 }
 
 void Caffe::SetDevice(const int device_id) {
@@ -304,37 +307,37 @@ void Caffe::DeviceQuery() {
 }
 
 class Caffe::RNG::Generator {
-public:
-	Generator() :
-			rng_(new caffe::rng_t(cluster_seedgen())) {
-	}
-	explicit Generator(unsigned int seed) :
-			rng_(new caffe::rng_t(seed)) {
-	}
-	caffe::rng_t* rng() {
-		return rng_.get();
-	}
-private:
-	shared_ptr<caffe::rng_t> rng_;
+ public:
+  Generator() :
+      rng_(new caffe::rng_t(cluster_seedgen())) {
+  }
+  explicit Generator(unsigned int seed) :
+      rng_(new caffe::rng_t(seed)) {
+  }
+  caffe::rng_t* rng() {
+    return rng_.get();
+  }
+ private:
+  shared_ptr<caffe::rng_t> rng_;
 };
 
 Caffe::RNG::RNG() :
-		generator_(new Generator()) {
+    generator_(new Generator()) {
 }
 
 Caffe::RNG::RNG(unsigned int seed) :
-		generator_(new Generator(seed)) {
+    generator_(new Generator(seed)) {
 }
 
 Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
-	generator_ = other.generator_;
-	return *this;
+  generator_ = other.generator_;
+  return *this;
 }
 
 void* Caffe::RNG::generator() {
-	return static_cast<void*>(generator_->rng());
+  return static_cast<void*>(generator_->rng());
 }
 
-#endif // USE_OPENCL
+#endif  // USE_OPENCL
 
 }  // namespace caffe
