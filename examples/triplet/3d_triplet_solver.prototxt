@@ -1,7 +1,7 @@
 # The train/test net protocol buffer definition
-net: "examples/triplet/lfw_triplet_train_test.prototxt"
+net: "examples/triplet/3d_triplet_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
-# In the case of lfw, we have test batch size 23 and 23 test iterations,
+# In the case of 3d database, we have test batch size 23 and 23 test iterations,
 # covering the full 276 testing images.
 test_iter: 23
 # Carry out testing every 500 training iterations.
