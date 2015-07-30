@@ -63,8 +63,8 @@ rm -f $LMDB_FILE
 wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
 chmod +x miniconda.sh
 ./miniconda.sh -b
-export PATH=/home/travis/miniconda/bin:$PATH
+export PATH=~/miniconda/bin:$PATH
 conda update --yes conda
 conda install --yes numpy scipy matplotlib scikit-image pip
 pip install protobuf
-rm /home/travis/miniconda/lib/libm.*
+rm ~/miniconda/lib/libm.*
