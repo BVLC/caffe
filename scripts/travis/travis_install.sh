@@ -6,6 +6,11 @@ set -e
 MAKE="make --jobs=$NUM_THREADS"
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
+add-apt-repository ppa:ubuntu-toolchain-r/test -y
+ apt-get update -qq
+if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+
 # This ppa is for gflags and glog
 add-apt-repository -y ppa:tuleu/precise-backports
 apt-get -y update
