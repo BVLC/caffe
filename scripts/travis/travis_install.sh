@@ -108,3 +108,5 @@ if [ "$PYTHON_VERSION" == "3" ]; then
 else
 	pip install protobuf
 fi
+
+conda install -c asmeurer readline
