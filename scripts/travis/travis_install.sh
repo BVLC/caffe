@@ -28,6 +28,7 @@ apt-get install \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
+    libboost-all-dev \
     bc
 
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
