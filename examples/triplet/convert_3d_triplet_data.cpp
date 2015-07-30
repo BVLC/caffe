@@ -1,17 +1,14 @@
-// This script converts the MNIST dataset to the leveldb format used
-// by caffe to train siamese network.
 // Usage:
 //    convert_mnist_data input_image_file input_label_file output_db_file
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
-
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
 #include "leveldb/db.h"
 #include "stdint.h"
-
+#define CPU_ONLY
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -22,11 +19,13 @@ uint32_t swap_endian(uint32_t val) {
 
 void read_image(std::ifstream* image_file, std::ifstream* label_file,
         uint32_t index, uint32_t rows, uint32_t cols,
-        char* pixels, char* label) {
+        char* pixels, char* label_temp, signed char* label) {
   image_file->seekg(index * rows * cols + 16);
   image_file->read(pixels, rows * cols);
-  label_file->seekg(index + 8);
-  label_file->read(label, 1);
+  label_file->seekg(index * 4 + 8);
+  label_file->read(label_temp, 4);
+  for (int i = 0; i < 4; i++)
+    *(label+i) = (signed char)*(label_temp+i);
 }
 
 void convert_dataset(const char* image_filename, const char* label_filename,
@@ -48,7 +47,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   CHECK_EQ(magic, 2051) << "Incorrect image file magic.";
   label_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
-  CHECK_EQ(magic, 2049) << "Incorrect label file magic.";
+  CHECK_EQ(magic, 2050) << "Incorrect label file magic.";
   image_file.read(reinterpret_cast<char*>(&num_items), 4);
   num_items = swap_endian(num_items);
   label_file.read(reinterpret_cast<char*>(&num_labels), 4);
@@ -69,11 +68,12 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   CHECK(status.ok()) << "Failed to open leveldb " << db_filename
       << ". Is it already existing?";
 
-  char label_i;  // label for triplet
-  char label_j;
-  char label_k;
-  char label_l;  // label for pair wise
-  char label_m;
+  char* label_temp = new char[4];  // label for unsigned char*
+  signed char* label_i = new signed char[4];  // label for triplet
+  signed char* label_j = new signed char[4];
+  signed char* label_k = new signed char[4];
+  signed char* label_l = new signed char[4];  // label for pair wise
+  signed char* label_m = new signed char[4];
   char* pixels = new char[5 * rows * cols];
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
@@ -85,29 +85,30 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-  for (int itemid = 0; itemid < num_items; ++itemid) {
-    // pick triplet groups
-    int i = caffe::caffe_rng_rand() % num_items;
+  for (unsigned int itemid = 0; itemid < 10 * num_items; ++itemid) {
+    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
     int j = caffe::caffe_rng_rand() % num_items;
     int k = caffe::caffe_rng_rand() % num_items;
-    // pick pair wise groups
-    int l = caffe::caffe_rng_rand() % num_items;
+    int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
     int m = caffe::caffe_rng_rand() % num_items;
-    // read triplet groups
-    read_image(&image_file, &label_file, i, rows, cols,
-        pixels, &label_i);
+    read_image(&image_file, &label_file, i, rows, cols,  // read triplet groups
+        pixels, label_temp, label_i);
     read_image(&image_file, &label_file, j, rows, cols,
-        pixels + (rows * cols), &label_j);
+        pixels + (rows * cols), label_temp, label_j);
     read_image(&image_file, &label_file, k, rows, cols,
-        pixels + (2 * rows * cols), &label_k);
-    // read pair wise groups
-    read_image(&image_file, &label_file, l, rows, cols,
-        pixels + (3 * rows * cols), &label_l);
+        pixels + (2 * rows * cols), label_temp, label_k);
+    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise groups
+        pixels + (3 * rows * cols), label_temp, label_l);
     read_image(&image_file, &label_file, m, rows, cols,
-        pixels + (4 * rows * cols), &label_m);
+        pixels + (4 * rows * cols), label_temp, label_m);
 
     datum.set_data(pixels, 5*rows*cols);  // set data
-    if ((label_i  == label_j && label_i  != label_k) && (label_l == label_m)) {
+    bool pose_pass;
+    int dist_ij = (int)((*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1)) + (*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2)) + (*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3)));
+    int dist_ik = (int)((*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1)) + (*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2)) + (*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3)));
+    if (dist_ij < dist_ik )
+      pose_pass = true;
+    if (((*label_i  == *label_j && *label_i  != *label_k) || ((*label_i  == *label_j && *label_i  == *label_k) && pose_pass)) && (*label_l == *label_m)) {
       datum.set_label(1);
       datum.SerializeToString(&value);
       snprintf(key, kMaxKeyLength, "%08d", itemid);
@@ -117,24 +118,12 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       datum.set_label(0);
     }
   }
-
   delete db;
   delete pixels;
 }
 
 int main(int argc, char** argv) {
-  if (argc != 4) {
-    printf("This script converts the MNIST dataset to the leveldb format used\n"
-           "by caffe to train a siamese network.\n"
-           "Usage:\n"
-           "    convert_mnist_data input_image_file input_label_file "
-           "output_db_file\n"
-           "The MNIST dataset could be downloaded at\n"
-           "    http://yann.lecun.com/exdb/mnist/\n"
-           "You should gunzip them after downloading.\n");
-  } else {
-    google::InitGoogleLogging(argv[0]);
-    convert_dataset(argv[1], argv[2], argv[3]);
-  }
+  convert_dataset("/home/wangyida/Desktop/caffe/data/linemod/binary_image_train", "/home/wangyida/Desktop/caffe/data/linemod/binary_label_train", "/home/wangyida/Desktop/caffe/data/linemod/leveldb");
   return 0;
 }
+
