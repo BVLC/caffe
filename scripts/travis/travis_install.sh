@@ -7,15 +7,14 @@ MAKE="make --jobs=$NUM_THREADS"
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
 add-apt-repository ppa:ubuntu-toolchain-r/test -y
- apt-get update -qq
-if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
+add-apt-repository ppa:boost-latest/ppa -y
+apt-get update -qq
 
+sudo apt-get install -qq g++-4.9
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 10
 update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
-#update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
-#update-alternatives --set cc /usr/bin/gcc
-#update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
-#update-alternatives --set c++ /usr/bin/g++
+
+
 
 # This ppa is for gflags and glog
 add-apt-repository -y ppa:tuleu/precise-backports
@@ -27,7 +26,7 @@ apt-get install \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
-    libboost-all-dev \
+    libboost1.55-all-dev \
     bc
 
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
