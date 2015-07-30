@@ -6,11 +6,11 @@
 # atlas for ATLAS (default)
 # mkl for MKL
 # open for OpenBlas
-BLAS := atlas
+BLAS := open
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-BLAS_DIR     := /usr
+BLAS_DIR     := /usr/openblas-base
 BLAS_INCLUDE  := ${BLAS_DIR}/include
 BLAS_LIB      := ${BLAS_DIR}/lib
 
