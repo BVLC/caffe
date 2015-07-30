@@ -122,7 +122,19 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 }
 
 int main(int argc, char** argv) {
-  convert_dataset("/home/wangyida/Desktop/caffe/data/linemod/binary_image_train", "/home/wangyida/Desktop/caffe/data/linemod/binary_label_train", "/home/wangyida/Desktop/caffe/data/linemod/leveldb");
+  if (argc != 4) {
+    printf("This script converts the MNIST dataset to the leveldb format used\n"
+           "by caffe to train a siamese network.\n"
+           "Usage:\n"
+           "    convert_mnist_data input_image_file input_label_file "
+           "output_db_file\n"
+           "The MNIST dataset could be downloaded at\n"
+           "    http://yann.lecun.com/exdb/mnist/\n"
+           "You should gunzip them after downloading.\n");
+  } else {
+    google::InitGoogleLogging(argv[0]);
+    convert_dataset(argv[1], argv[2], argv[3]);
+  }
   return 0;
 }
 
