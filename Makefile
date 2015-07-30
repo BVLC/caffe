@@ -102,8 +102,9 @@ EMPTY_LINT_REPORT := $(BUILD_DIR)/.$(LINT_EXT)
 NONEMPTY_LINT_REPORT := $(BUILD_DIR)/$(LINT_EXT)
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/_$(PROJECT).cpp
-PY$(PROJECT)_HXX_SRC := python/$(PROJECT)/_$(PROJECT).hpp
-PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
+#PY$(PROJECT)_HXX_SRC := python/$(PROJECT)/_$(PROJECT).hpp
+#PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
+PY$(PROJECT)_SO := ${BUILD_DIR}/lib/${PROJECT}.so
 # MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
 MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
 ifneq ($(MATLAB_DIR),)
