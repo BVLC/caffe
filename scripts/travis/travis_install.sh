@@ -11,6 +11,13 @@ add-apt-repository ppa:ubuntu-toolchain-r/test -y
 if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
 if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
+update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+update-alternatives --set cc /usr/bin/gcc
+update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+update-alternatives --set c++ /usr/bin/g++
+
 # This ppa is for gflags and glog
 add-apt-repository -y ppa:tuleu/precise-backports
 apt-get -y update
