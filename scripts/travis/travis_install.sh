@@ -76,7 +76,7 @@ if [ ! -d $CONDA_DIR ]; then
 fi
 
 # install protobuf 3 (just use the miniconda3 directory to avoid having to setup the path again)
-if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
+if [ "$PYTHON_VERSION" == "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
 	pushd .
 	wget https://github.com/google/protobuf/archive/v3.0.0-alpha-3.1.tar.gz -O protobuf-3.tar.gz
 	tar -C /tmp -xzvf protobuf-3.tar.gz
@@ -88,7 +88,7 @@ if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
 	popd
 fi
 
-if [ "$PYTHON_VERSION" -eq "3" ]; then
+if [ "$PYTHON_VERSION" == "3" ]; then
 	pip install --pre protobuf
 else
 	pip install protobuf
