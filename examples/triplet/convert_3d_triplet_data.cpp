@@ -8,7 +8,6 @@
 #include "google/protobuf/text_format.h"
 #include "leveldb/db.h"
 #include "stdint.h"
-#define CPU_ONLY
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
