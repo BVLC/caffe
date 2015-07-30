@@ -1,3 +1,4 @@
+# Original version of CaffeNet
 name: "CaffeNet"
 input: "data"
 input_dim: 10
