@@ -20,7 +20,7 @@ if $WITH_CMAKE; then
 	echo "execute 'cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release $CPU_ONLY $PYTHON_ARGS -DCMAKE_INCLUDE_PATH="$CONDA_DIR/include/" -DCMAKE_LIBRARY_PATH="$CONDA_DIR/lib/" ..'";
 	cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release $CPU_ONLY $PYTHON_ARGS -DCMAKE_INCLUDE_PATH="$CONDA_DIR/include/" -DCMAKE_LIBRARY_PATH="$CONDA_DIR/lib/" ..
   $MAKE
-  $MAKE pytest
+#$MAKE pytest
   if ! $WITH_CUDA; then
     $MAKE runtest
     $MAKE lint
@@ -40,7 +40,7 @@ else
   $MAKE all
   $MAKE test
   $MAKE pycaffe
-  $MAKE pytest
+#  $MAKE pytest
   $MAKE warn
   if ! $WITH_CUDA; then
     $MAKE lint
