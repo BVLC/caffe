@@ -109,4 +109,4 @@ else
 	pip install protobuf
 fi
 
-conda install -c asmeurer readline
+conda install --yes -c asmeurer readline
