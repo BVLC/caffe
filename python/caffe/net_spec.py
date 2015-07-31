@@ -99,6 +99,8 @@ class Function(object):
         self.inputs = inputs
         self.params = params
         self.ntop = self.params.get('ntop', 1)
+        if not 'ntop' in self.params and 'top' in self.params:
+            self.ntop = len(self.params['top'])
         # use del to make sure kwargs are not double-processed as layer params
         if 'ntop' in self.params:
             del self.params['ntop']
@@ -106,12 +108,16 @@ class Function(object):
         if 'in_place' in self.params:
             del self.params['in_place']
         self.tops = tuple(Top(self, n) for n in range(self.ntop))
+        # print self.tops
 
-    def _get_name(self, top, names, autonames):
+    def _get_name(self, top, names, autonames,i=0):
         if top not in names:
-            n = autonames.setdefault(top.fn.type_name, 1)
-            autonames[top.fn.type_name] += 1
-            names[top] = top.fn.type_name + str(n)
+            if 'top' in self.params and len(self.params['top']) > i:
+                names[top] = self.params['top'][i]
+            else:
+                n = autonames.setdefault(top.fn.type_name, 1)
+                autonames[top.fn.type_name] += 1
+                names[top] = top.fn.type_name + str(n)
         return names[top]
 
     def _to_proto(self, layers, names, autonames):
@@ -128,8 +134,10 @@ class Function(object):
         if self.in_place:
             layer.top.extend(layer.bottom)
         else:
-            for top in self.tops:
-                layer.top.append(self._get_name(top, names, autonames))
+            for i,top in enumerate(self.tops):
+                layer.top.append(self._get_name(top, names, autonames,i))
+        if 'top' in self.params:
+            del self.params['top']
         layer.name = self._get_name(self.tops[0], names, autonames)
 
         for k, v in six.iteritems(self.params):
