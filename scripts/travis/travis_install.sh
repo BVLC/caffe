@@ -31,7 +31,7 @@ apt-get install \
     libopenblas-dev \
     bc
 
-ls -al /usr/lib
+export LD_LIBRARY_PATH=/usr/lib/openblas-base:$LD_LIBRARY_PATH
 
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
