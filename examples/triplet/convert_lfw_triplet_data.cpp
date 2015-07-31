@@ -4,12 +4,12 @@
 //    http://yann.lecun.com/exdb/mnist/
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/math_functions.hpp"
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
 #include "leveldb/db.h"
 #include "stdint.h"
-#include "caffe/proto/caffe.pb.h"
-#include "caffe/util/math_functions.hpp"
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -84,30 +84,54 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-  for (unsigned int itemid = 0; itemid < 10 * num_items; ++itemid) {
+  for (unsigned int itemid = 0; itemid < 10 * num_items; ++itemid) {\
     int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
     int j = caffe::caffe_rng_rand() % num_items;
     int k = caffe::caffe_rng_rand() % num_items;
     int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
     int m = caffe::caffe_rng_rand() % num_items;
-    read_image(&image_file, &label_file, i, rows, cols,  // read triplet groups
+    read_image(&image_file, &label_file, i, rows, cols,  // read triplet
         pixels, label_temp, label_i);
     read_image(&image_file, &label_file, j, rows, cols,
         pixels + (rows * cols), label_temp, label_j);
     read_image(&image_file, &label_file, k, rows, cols,
         pixels + (2 * rows * cols), label_temp, label_k);
-    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise groups
+    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise
         pixels + (3 * rows * cols), label_temp, label_l);
     read_image(&image_file, &label_file, m, rows, cols,
         pixels + (4 * rows * cols), label_temp, label_m);
 
     datum.set_data(pixels, 5*rows*cols);  // set data
-    bool pose_pass;
-    int dist_ij = (int)((*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1)) + (*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2)) + (*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3)));
-    int dist_ik = (int)((*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1)) + (*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2)) + (*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3)));
-    if (dist_ij < dist_ik )
-      pose_pass = true;
-    if (((*label_i  == *label_j && *label_i  != *label_k) || ((*label_i  == *label_j && *label_i  == *label_k) && pose_pass)) && (*label_l == *label_m)) {
+    bool triplet_class_pass = false;
+    bool triplet_class_same = false;
+    bool triplet_pose_pass = false;
+    bool pair_class_pass = false;
+
+    int ij_diff_x = static_cast<int>(*(label_i+1)-*(label_j+1));
+    int ij_diff_y = static_cast<int>(*(label_i+2)-*(label_j+2));
+    int ij_diff_z = static_cast<int>(*(label_i+3)-*(label_j+3));
+    int ik_diff_x = static_cast<int>(*(label_i+1)-*(label_k+1));
+    int ik_diff_y = static_cast<int>(*(label_i+2)-*(label_k+2));
+    int ik_diff_z = static_cast<int>(*(label_i+3)-*(label_k+3));
+
+    int ij_x = ij_diff_x*ij_diff_x;
+    int ij_y = ij_diff_y*ij_diff_y;
+    int ij_z = ij_diff_z*ij_diff_z;
+    int ik_x = ik_diff_x*ik_diff_x;
+    int ik_y = ik_diff_y*ik_diff_y;
+    int ik_z = ik_diff_z*ik_diff_z;
+
+    int dist_ij = ij_x + ij_y + ij_z;
+    int dist_ik = ik_x + ik_y + ik_z;
+    if ((*label_i  == *label_j) && (*label_i  == *label_k))
+      triplet_class_same = true;
+    if ((dist_ij < dist_ik) && (triplet_class_same))
+      triplet_pose_pass = true;
+    if ((*label_i  == *label_j) && (*label_i  != *label_k))
+      triplet_class_pass = true;
+    if (*label_l == *label_m)
+      pair_class_pass = true;
+    if ((triplet_class_pass || triplet_pose_pass) && pair_class_pass) {
       datum.set_label(1);
       datum.SerializeToString(&value);
       snprintf(key, kMaxKeyLength, "%08d", itemid);
@@ -137,4 +161,3 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
-
