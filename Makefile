@@ -18,9 +18,8 @@ CPU_ONLY ?= 0
 ifeq ($(CPU_ONLY),1) 
 	include Makefile.config.CPU	
 	BUILD_DIR_ROOT := build/$(HOSTNAME)/C++
-	COMMON_FLAGS += -O0
+	COMMON_FLAGS += -O2
 endif
-
 
 USE_CUDA ?= 0
 ifeq ($(USE_CUDA),1) 
@@ -33,7 +32,7 @@ ifeq ($(USE_OPENCL),1)
 	include Makefile.config.OpenCL
 	CAFFE_OPENCL_VERSION ?= 0.0
 	BUILD_DIR_ROOT := build/$(HOSTNAME)/OpenCL
-	COMMON_FLAGS += -O0
+	COMMON_FLAGS += -O2
 endif
 
 RELEASE_BUILD_DIR := $(BUILD_DIR_ROOT)/release
