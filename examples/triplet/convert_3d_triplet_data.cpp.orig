@@ -2,21 +2,13 @@
 // convert_3d_data input_image_file input_label_file output_db_file
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
-<<<<<<< fba1c0e4ee61d053e91d7a142130ae3a6855e182
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
-=======
->>>>>>> add pose information for training data arrangement in triplet training
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
 #include "leveldb/db.h"
 #include "math.h"
 #include "stdint.h"
-<<<<<<< fba1c0e4ee61d053e91d7a142130ae3a6855e182
-=======
-#include "caffe/proto/caffe.pb.h"
-#include "caffe/util/math_functions.hpp"
->>>>>>> add pose information for training data arrangement in triplet training
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -25,7 +17,6 @@ uint32_t swap_endian(uint32_t val) {
 
 void read_image(std::ifstream* image_file, std::ifstream* label_file,
         uint32_t index, uint32_t rows, uint32_t cols,
-<<<<<<< fba1c0e4ee61d053e91d7a142130ae3a6855e182
         char* pixels, char* label_temp, signed char* label, int rgb_use) {
   if (rgb_use == 0) {
     image_file->seekg(index * rows * cols + 16);
@@ -42,15 +33,6 @@ void read_image(std::ifstream* image_file, std::ifstream* label_file,
     for (int i = 0; i < 4; i++)
       *(label+i) = (signed char)*(label_temp+i);
   }
-=======
-        char* pixels, char* label_temp, signed char* label) {
-  image_file->seekg(index * rows * cols + 16);
-  image_file->read(pixels, rows * cols);
-  label_file->seekg(index * 4 + 8);
-  label_file->read(label_temp, 4);
-  for (int i = 0; i < 4; i++)
-    *(label+i) = (signed char)*(label_temp+i);
->>>>>>> add pose information for training data arrangement in triplet training
 }
 
 void convert_dataset(const char* image_filename, const char* label_filename,
@@ -102,7 +84,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   signed char* label_k = new signed char[4];
   signed char* label_l = new signed char[4];  // label for pair wise
   signed char* label_m = new signed char[4];
-<<<<<<< fba1c0e4ee61d053e91d7a142130ae3a6855e182
   int db_size;
   if (rgb_use1 == 0)
     db_size = rows * cols;
@@ -113,9 +94,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char* pixels3 = new char[db_size];
   char* pixels4 = new char[db_size];
   char* pixels5 = new char[db_size];
-=======
-  char* pixels = new char[5 * rows * cols];
->>>>>>> add pose information for training data arrangement in triplet training
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
@@ -125,7 +103,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-<<<<<<< fba1c0e4ee61d053e91d7a142130ae3a6855e182
+<<<<<<< fab928843d2f9ac33ce9468a63ed163247ffdfc8
   int counter = 0;
   for (unsigned int times = 0; times < 5; ++times) {
     // iteration in the samples of all class
@@ -225,24 +203,41 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     int k = caffe::caffe_rng_rand() % num_items;
     int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
     int m = caffe::caffe_rng_rand() % num_items;
-    read_image(&image_file, &label_file, i, rows, cols,  // read triplet groups
+    read_image(&image_file, &label_file, i, rows, cols,  // read triplet
         pixels, label_temp, label_i);
     read_image(&image_file, &label_file, j, rows, cols,
         pixels + (rows * cols), label_temp, label_j);
     read_image(&image_file, &label_file, k, rows, cols,
         pixels + (2 * rows * cols), label_temp, label_k);
-    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise groups
+    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise
         pixels + (3 * rows * cols), label_temp, label_l);
     read_image(&image_file, &label_file, m, rows, cols,
         pixels + (4 * rows * cols), label_temp, label_m);
 
     datum.set_data(pixels, 5*rows*cols);  // set data
-    bool pose_pass;
-    int dist_ij = (int)((*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1)) + (*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2)) + (*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3)));
-    int dist_ik = (int)((*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1)) + (*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2)) + (*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3)));
+    bool triplet_class_pass;
+    bool triplet_class_same;
+    bool triplet_pose_pass;
+    bool pair_class_pass;
+    int ij_x, ij_y, ij_z;
+    int ik_x, ik_y, ik_z;
+    ij_x = static_cast<int>(*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1));
+    ij_y = static_cast<int>(*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2));
+    ij_z = static_cast<int>(*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3));
+    ik_x = static_cast<int>(*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1));
+    ik_y = static_cast<int>(*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2));
+    ik_z = static_cast<int>(*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3));
+    int dist_ij = ij_x + ij_y + ij_z;
+    int dist_ik = ik_x + ik_y + ik_z;
     if (dist_ij < dist_ik )
-      pose_pass = true;
-    if (((*label_i  == *label_j && *label_i  != *label_k) || ((*label_i  == *label_j && *label_i  == *label_k) && pose_pass)) && (*label_l == *label_m)) {
+      triplet_pose_pass = true;
+    if ((*label_i  == *label_j) && (*label_i  != *label_k))
+      triplet_class_pass = true;
+    if ((*label_i  == *label_j) && (*label_i  == *label_k))
+      triplet_class_same = true;
+    if (*label_l == *label_m)
+      pair_class_pass = true;
+    if (( triplet_class_pass || (triplet_class_same && triplet_pose_pass)) && pair_class_pass) {
       datum.set_label(1);
       datum.SerializeToString(&value);
       snprintf(key, kMaxKeyLength, "%08d", itemid);
@@ -252,7 +247,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       datum.set_label(0);
     }
   }
->>>>>>> add pose information for training data arrangement in triplet training
+>>>>>>> rearrange the training samples selection codes
   delete db;
   delete pixels1;
   delete pixels2;
@@ -262,7 +257,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 }
 
 int main(int argc, char** argv) {
-<<<<<<< fba1c0e4ee61d053e91d7a142130ae3a6855e182
   if (argc != 6) {
     printf("This script converts the dataset to the leveldb format used\n"
            "by caffe to train a triplet network.\n"
@@ -273,9 +267,5 @@ int main(int argc, char** argv) {
     google::InitGoogleLogging(argv[0]);
     convert_dataset(argv[1], argv[2], argv[3], argv[4], argv[5]);
   }
-=======
-  convert_dataset("/home/wangyida/Desktop/caffe/data/linemod/binary_image_train", "/home/wangyida/Desktop/caffe/data/linemod/binary_label_train", "/home/wangyida/Desktop/caffe/data/linemod/leveldb");
->>>>>>> add pose information for training data arrangement in triplet training
   return 0;
 }
-
