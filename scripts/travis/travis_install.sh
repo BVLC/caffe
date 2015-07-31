@@ -117,3 +117,6 @@ else
 fi
 
 conda install --yes -c asmeurer readline
+
+sudo modprobe raw1394
+ls -la /dev/raw1394
