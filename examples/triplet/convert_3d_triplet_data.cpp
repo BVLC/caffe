@@ -106,16 +106,16 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     bool triplet_class_same;
     bool triplet_pose_pass;
     bool pair_class_pass;
-    static_cast<int> ij_x, ij_y, ij_z;
-    static_cast<int> ik_x, ik_y, ik_z;
-    ij_x = (*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1));
-    ij_y = (*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2));
-    ij_z = (*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3));
-    ik_x = (*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1));
-    ik_y = (*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2));
-    ik_z = (*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3));
-    static_cast<int> dist_ij = ij_x + ij_y + ij_z;
-    static_cast<int> dist_ik = ik_x + ik_y + ik_z;
+    int ij_x, ij_y, ij_z;
+    int ik_x, ik_y, ik_z;
+    ij_x = static_cast<int>(*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1));
+    ij_y = static_cast<int>(*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2));
+    ij_z = static_cast<int>(*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3));
+    ik_x = static_cast<int>(*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1));
+    ik_y = static_cast<int>(*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2));
+    ik_z = static_cast<int>(*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3));
+    int dist_ij = ij_x + ij_y + ij_z;
+    int dist_ik = ik_x + ik_y + ik_z;
     if (dist_ij < dist_ik )
       triplet_pose_pass = true;
     if ((*label_i  == *label_j) && (*label_i  != *label_k))
