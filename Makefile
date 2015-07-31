@@ -21,6 +21,7 @@ ifeq ($(CPU_ONLY),1)
 	COMMON_FLAGS += -O0
 endif
 
+
 USE_CUDA ?= 0
 ifeq ($(USE_CUDA),1) 
 	include Makefile.config.CUDA
