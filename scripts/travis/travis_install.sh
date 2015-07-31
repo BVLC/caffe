@@ -3,13 +3,6 @@
 
 set -e
 
-sudo apt-get install apt-file;
-sudo apt-file update;
-apt-file search libopenblas
-
-NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`;
-echo "NUM_CPUS = ${NUM_CPUS}";
-
 MAKE="make --jobs=$NUM_THREADS"
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
@@ -35,10 +28,7 @@ apt-get install \
     libopenblas-dev \
     bc
 
-ls -al /usr/lib
-ls -al /usr/lib/openblas-base
-
-file="/usr/lib/openblas-base/libopenblas.la";
+file="/usr/lib/openblas-base/libopenblas.a";
 if [ -e  "$file" ]
 then
 	echo "file exists: $file";
@@ -49,9 +39,6 @@ if [ -e  "$file" ]
 then
 	echo "file exists: $file";
 fi
-
-
-export LD_LIBRARY_PATH=/usr/lib/openblas-base:$LD_LIBRARY_PATH
 
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
@@ -96,7 +83,7 @@ rm -f $LMDB_FILE
 # than using pip for everything).
 export PATH=$CONDA_DIR/bin:$PATH
 if [ ! -d $CONDA_DIR ]; then
-	if [ "$PYTHON_VERSION" -eq "3" ]; then
+	if [ "$PYTHON_VERSION" == "3" ]; then
 		wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 	else
 		wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh

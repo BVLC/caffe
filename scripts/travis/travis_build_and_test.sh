@@ -7,7 +7,6 @@ MAKE="make --jobs=$NUM_THREADS --keep-going"
 
 env
 
-
 if $WITH_CMAKE; then
 	echo "Build using CMAKE";  
 	mkdir build
