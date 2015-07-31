@@ -18,7 +18,7 @@ CPU_ONLY ?= 0
 ifeq ($(CPU_ONLY),1) 
 	include Makefile.config.CPU	
 	BUILD_DIR_ROOT := build/$(HOSTNAME)/C++
-	COMMON_FLAGS += -Ofast -march=native
+	COMMON_FLAGS += -O3
 endif
 
 USE_CUDA ?= 0
@@ -32,7 +32,7 @@ ifeq ($(USE_OPENCL),1)
 	include Makefile.config.OpenCL
 	CAFFE_OPENCL_VERSION ?= 0.0
 	BUILD_DIR_ROOT := build/$(HOSTNAME)/OpenCL
-	COMMON_FLAGS += -Ofast -march=native
+	COMMON_FLAGS += -O3
 endif
 
 RELEASE_BUILD_DIR := $(BUILD_DIR_ROOT)/release
@@ -328,7 +328,7 @@ ifeq ($(CPU_ONLY), 1)
 	TEST_OBJS := $(TEST_CXX_OBJS)
 	TEST_BINS := $(TEST_CXX_BINS)
 	ALL_WARNS := $(ALL_CXX_WARNS)
-	TEST_FILTER := --gtest_filter="-*GPU*"
+	TEST_FILTER := --gtest_filter="-*GPU*:*Performance*:*Validation*"
 	COMMON_FLAGS += -DCPU_ONLY
 endif	
 

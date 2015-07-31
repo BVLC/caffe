@@ -261,6 +261,7 @@ STUB_GPU(ConvolutionLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayer);
-// REGISTER_LAYER_CLASS(Convolution);
+/* CHANGED */
+REGISTER_LAYER_CLASS(Convolution);
 
 }  // namespace caffe

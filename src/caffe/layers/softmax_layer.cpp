@@ -631,7 +631,8 @@ void SoftmaxLayer<Dtype>::Backward_gpu(
 STUB_GPU(SoftmaxLayer);
 #endif
 
+/* CHANGED */
 INSTANTIATE_CLASS(SoftmaxLayer);
-// REGISTER_LAYER_CLASS(Softmax);
+REGISTER_LAYER_CLASS(Softmax);
 
 }  // namespace caffe
