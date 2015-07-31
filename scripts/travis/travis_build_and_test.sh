@@ -4,7 +4,7 @@
 set -e
 
 function w_CUDA() {
-  if [ -n "$WITH_CUDA" ]
+  if [ -n "$WITH_CUDA" ] && $WITH_CUDA -eq true
   then
     echo "CUDA is enabled.";
     return 0;
@@ -15,7 +15,7 @@ function w_CUDA() {
 }
 
 function w_CMAKE() {
-  if [ -n "$WITH_CMAKE" ]
+  if [ -n "$WITH_CMAKE" ] && $WITH_CMAKE -eq true
   then
     echo "CMAKE is enabled.";
     return 0;
