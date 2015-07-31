@@ -2,7 +2,11 @@
 # Script called by Travis to do a CPU-only build of and test Caffe.
 
 set -e
+
 MAKE="make --jobs=$NUM_THREADS --keep-going"
+
+env
+
 
 if $WITH_CMAKE; then
 	echo "Build using CMAKE";  

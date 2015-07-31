@@ -3,11 +3,18 @@
 
 set -e
 
-MAKE="make --jobs=$NUM_THREADS"
-# Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
+sudo apt-get install apt-file;
+sudo apt-file update;
+apt-file search libopenblas
+
+ls -al /usr/lib
+ls -al /usr/lib/openblas-base
 
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`;
 echo "NUM_CPUS = ${NUM_CPUS}";
+
+MAKE="make --jobs=$NUM_THREADS"
+# Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
 add-apt-repository ppa:ubuntu-toolchain-r/test -y
 add-apt-repository ppa:boost-latest/ppa -y
