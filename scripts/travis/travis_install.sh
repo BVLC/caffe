@@ -7,9 +7,6 @@ sudo apt-get install apt-file;
 sudo apt-file update;
 apt-file search libopenblas
 
-ls -al /usr/lib
-ls -al /usr/lib/openblas-base
-
 NUM_CPUS=`cat /proc/cpuinfo | grep processor | wc -l`;
 echo "NUM_CPUS = ${NUM_CPUS}";
 
@@ -37,6 +34,22 @@ apt-get install \
     libboost1.55-all-dev \
     libopenblas-dev \
     bc
+
+ls -al /usr/lib
+ls -al /usr/lib/openblas-base
+
+file="/usr/lib/openblas-base/libopenblas.la";
+if [ -e  "$file" ]
+then
+	echo "file exists: $file";
+fi
+
+file="/usr/lib/openblas-base/libopenblas.so";
+if [ -e  "$file" ]
+then
+	echo "file exists: $file";
+fi
+
 
 export LD_LIBRARY_PATH=/usr/lib/openblas-base:$LD_LIBRARY_PATH
 
