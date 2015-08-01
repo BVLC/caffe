@@ -328,7 +328,14 @@ ifeq ($(CPU_ONLY), 1)
 	TEST_OBJS := $(TEST_CXX_OBJS)
 	TEST_BINS := $(TEST_CXX_BINS)
 	ALL_WARNS := $(ALL_CXX_WARNS)
-	TEST_FILTER := --gtest_filter="-*GPU*:*Performance*:*Validation*:*SoftmaxWithLossLayerTest*:*SoftMaxLayerTest*"
+	TEST_FILTER := --gtest_filter=\
+	"-*GPU*:\
+	*Performance*:\
+	*Validation*:\
+	*SoftmaxWithLossLayerTest:*\
+	*SoftMaxLayerTest*:
+	*NeuronLayerTest/*.TestPReLUInPlace\
+	\"
 	COMMON_FLAGS += -DCPU_ONLY
 endif	
 
