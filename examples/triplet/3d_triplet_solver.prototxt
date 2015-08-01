@@ -2,10 +2,10 @@
 net: "examples/triplet/3d_triplet_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of 3d database, we have test batch size 23 and 23 test iterations,
-# covering the full 276 testing images.
-test_iter: 23
+# covering the full 2760 testing images.
+test_iter: 100
 # Carry out testing every 500 training iterations.
-test_interval: 23
+test_interval: 100
 # The base learning rate, momentum and the weight decay of the network.
 base_lr: 0.01
 momentum: 0.9
@@ -17,9 +17,9 @@ power: 0.75
 # Display every 100 iterations
 display: 100
 # The maximum number of iterations
-max_iter: 1000
+max_iter: 20000
 # snapshot intermediate results
-snapshot: 200
+snapshot: 2000
 snapshot_prefix: "examples/triplet/3d_triplet"
 # solver mode: CPU or GPU
 solver_mode: CPU

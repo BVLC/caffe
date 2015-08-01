@@ -12,7 +12,7 @@ layer {
   }
   data_param {
     source: "examples/triplet/3d_triplet_train_leveldb"
-    batch_size: 23
+    batch_size: 69
   }
 }
 layer {
@@ -28,7 +28,7 @@ layer {
   }
   data_param {
     source: "examples/triplet/3d_triplet_test_leveldb"
-    batch_size: 23
+    batch_size: 69
   }
 }
 layer {
@@ -742,4 +742,3 @@ layer {
     margin: 1
   }
 }
-

@@ -1,6 +1,6 @@
 name: "3d_triplet"
 input: "data"
-input_dim: 276
+input_dim: 2760
 input_dim: 1
 input_dim: 64
 input_dim: 64
