@@ -477,7 +477,8 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ echo
 
 runtest: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
+#	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
+	$(TEST_ALL_BIN) $(TEST_GPUID) $(TEST_FILTER)
 
 warn: $(EMPTY_WARN_REPORT)
 
