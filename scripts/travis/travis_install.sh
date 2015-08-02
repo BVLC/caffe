@@ -26,6 +26,7 @@ apt-get install \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     libboost1.55-all-dev \
     libopenblas-dev \
+    libreadline-dev \
     bc
 
 file="/usr/lib/openblas-base/libopenblas.a";
@@ -121,8 +122,6 @@ if [ -e  "$file" ]
 then
   echo "file exists: $file";
 fi
-
-#conda install --yes -c asmeurer readline
 
 #sudo modprobe raw1394
 #ls -la /dev/raw1394
