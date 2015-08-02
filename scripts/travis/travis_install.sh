@@ -116,7 +116,13 @@ else
 	pip install protobuf
 fi
 
-conda install --yes -c asmeurer readline
+file="/home/travis/miniconda/lib/libreadline.so.6";
+if [ -e  "$file" ]
+then
+  echo "file exists: $file";
+fi
+
+#conda install --yes -c asmeurer readline
 
 #sudo modprobe raw1394
 #ls -la /dev/raw1394
