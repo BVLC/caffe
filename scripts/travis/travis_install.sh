@@ -120,7 +120,9 @@ fi
 file="/home/travis/miniconda/lib/libreadline.so.6";
 if [ -e  "$file" ]
 then
-  echo "file exists: $file";
+  rm -f ${file}
+  echo "deleted: $file";
+  ldconfig;
 fi
 
 #sudo modprobe raw1394
