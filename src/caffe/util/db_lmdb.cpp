@@ -1,7 +1,11 @@
 #include "caffe/util/db_lmdb.hpp"
 
-#include <sys/stat.h>
+#ifdef _MSC_VER
+#include <io.h>
+#include <direct.h>
+#endif
 
+#include <sys/stat.h>
 #include <string>
 
 namespace caffe { namespace db {
@@ -12,7 +16,11 @@ void LMDB::Open(const string& source, Mode mode) {
   MDB_CHECK(mdb_env_create(&mdb_env_));
   MDB_CHECK(mdb_env_set_mapsize(mdb_env_, LMDB_MAP_SIZE));
   if (mode == NEW) {
+#ifdef _MSC_VER	  
+	CHECK_EQ(_mkdir(source.c_str()), 0) << "mkdir " << source << "failed";
+#else
     CHECK_EQ(mkdir(source.c_str(), 0744), 0) << "mkdir " << source << "failed";
+#endif
   }
   int flags = 0;
   if (mode == READ) {

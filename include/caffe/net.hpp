@@ -30,6 +30,10 @@ class Net {
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
 
+  /// @brief set phase
+  ///        enable train and test with one network, for saving memory
+  void SetPhase(Phase phase);
+
   /**
    * @brief Run Forward with the input Blob%s already fed separately.
    *

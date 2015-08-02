@@ -19,6 +19,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _MSC_VER
+#define round cvRound
+#endif
+
 // caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
 //   'crop_size' indicates the desired warped size

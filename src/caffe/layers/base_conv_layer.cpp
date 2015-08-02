@@ -226,7 +226,7 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_bias(Dtype* bias,
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
-    const Dtype* weights, Dtype* output, bool skip_im2col) {
+    const Dtype* weights, Dtype* output, bool skip_im2col/* = false*/) {
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {

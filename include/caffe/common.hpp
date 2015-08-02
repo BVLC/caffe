@@ -77,8 +77,6 @@ using boost::shared_ptr;
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
 using std::ios;
-using std::isnan;
-using std::isinf;
 using std::iterator;
 using std::make_pair;
 using std::map;
@@ -88,6 +86,13 @@ using std::set;
 using std::string;
 using std::stringstream;
 using std::vector;
+
+#ifdef _MSC_VER
+#define snprintf _snprintf 
+#else
+using std::isnan;
+using std::isinf;
+#endif
 
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.

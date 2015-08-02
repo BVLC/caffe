@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include</IncludePath>
+    <_PropertySheetDisplayName>Caffe Common Settings</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>USE_LEVELDB;WIN32;_CRT_SECURE_NO_WARNINGS;_VARIADIC_MAX=10;USE_MKL;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies />
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

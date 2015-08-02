@@ -9,6 +9,8 @@
 // the matcaffe data is stored as (width, height, channels, num)
 // where width is the fastest dimension.
 
+#ifdef BUILD_MEX_INTERFACE
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -45,7 +47,7 @@ void mxCHECK_FILE_EXIST(const char* file) {
 static vector<shared_ptr<Solver<float> > > solvers_;
 static vector<shared_ptr<Net<float> > > nets_;
 // init_key is generated at the beginning and everytime you call reset
-static double init_key = static_cast<double>(caffe_rng_rand());
+static double init_key = 0;// static_cast<double>(caffe_rng_rand());
 
 /** -----------------------------------------------------------------
  ** data conversion functions
@@ -218,6 +220,14 @@ static void solver_get_iter(MEX_ARGS) {
   plhs[0] = mxCreateDoubleScalar(solver->iter());
 }
 
+// Usage: caffe_('solver_get_max_iter', hSolver)
+static void solver_get_max_iter(MEX_ARGS) {
+	mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
+		"Usage: caffe_('solver_get_max_iter', hSolver)");
+	Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
+	plhs[0] = mxCreateDoubleScalar(solver->max_iter());
+}
+
 // Usage: caffe_('solver_restore', hSolver, snapshot_file)
 static void solver_restore(MEX_ARGS) {
   mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsChar(prhs[1]),
@@ -266,6 +276,26 @@ static void get_net(MEX_ARGS) {
   plhs[0] = ptr_to_handle<Net<float> >(net.get());
   mxFree(model_file);
   mxFree(phase_name);
+}
+
+// Usage: caffe_('net_set_phase', hNet, phase_name)
+static void net_set_phase(MEX_ARGS) {
+	mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsChar(prhs[1]),
+		"Usage: caffe_('net_set_phase', hNet, phase_name)");
+	Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+	char* phase_name = mxArrayToString(prhs[1]);
+	Phase phase;
+	if (strcmp(phase_name, "train") == 0) {
+		phase = TRAIN;
+	}
+	else if (strcmp(phase_name, "test") == 0) {
+		phase = TEST;
+	}
+	else {
+		mxERROR("Unknown phase");
+	}
+	net->SetPhase(phase);
+	mxFree(phase_name);
 }
 
 // Usage: caffe_('net_get_attr', hNet)
@@ -318,6 +348,15 @@ static void net_copy_from(MEX_ARGS) {
   mxCHECK_FILE_EXIST(weights_file);
   net->CopyTrainedLayersFrom(weights_file);
   mxFree(weights_file);
+}
+
+// Usage: caffe_('net_shared_with', hNet, hNet_trained)
+static void net_share_trained_layers_with(MEX_ARGS) {
+	mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
+		"Usage: caffe_('net_shared_with', hNet, hNet_trained)");
+	Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
+	Net<float>* net_trained = handle_to_ptr<Net<float> >(prhs[1]);
+	net->ShareTrainedLayersWith(net_trained);
 }
 
 // Usage: caffe_('net_reshape', hNet)
@@ -425,6 +464,45 @@ static void blob_set_diff(MEX_ARGS) {
   mx_mat_to_blob(prhs[1], blob, DIFF);
 }
 
+static void glog_failure_handler(){
+	static bool is_glog_failure = false;
+	if (!is_glog_failure)
+	{
+		is_glog_failure = true;
+		::google::FlushLogFiles(0);
+		mexErrMsgTxt("glog check error, please check log and clear mex");
+	}
+}
+
+static void protobuf_log_handler(::google::protobuf::LogLevel level, const char* filename, int line,
+	const std::string& message)
+{
+	const int max_err_length = 512;
+	char err_message[max_err_length];
+	sprintf_s(err_message, "Protobuf : %s . at %s Line %d", message.c_str(), filename, line);
+	LOG(INFO) << err_message;
+	::google::FlushLogFiles(0);
+	mexErrMsgTxt(err_message);
+}
+
+// Usage: caffe_('init_log', log_base_filename)
+static void init_log(MEX_ARGS) {
+	static bool is_log_inited = false;
+
+	mxCHECK(nrhs == 1 && mxIsChar(prhs[0]),
+		"Usage: caffe_('init_log', log_dir)");
+	if (is_log_inited)
+		::google::ShutdownGoogleLogging();
+	char* log_base_filename = mxArrayToString(prhs[0]);
+	::google::SetLogDestination(0, log_base_filename);
+	mxFree(log_base_filename);
+	::google::protobuf::SetLogHandler(&protobuf_log_handler);
+	::google::InitGoogleLogging("caffe_mex");
+	::google::InstallFailureFunction(&glog_failure_handler);
+
+	is_log_inited = true;
+}
+
 // Usage: caffe_('set_mode_cpu')
 static void set_mode_cpu(MEX_ARGS) {
   mxCHECK(nrhs == 0, "Usage: caffe_('set_mode_cpu')");
@@ -443,6 +521,14 @@ static void set_device(MEX_ARGS) {
       "Usage: caffe_('set_device', device_id)");
   int device_id = static_cast<int>(mxGetScalar(prhs[0]));
   Caffe::SetDevice(device_id);
+}
+
+// Usage: caffe_('set_random_seed', random_seed)
+static void set_random_seed(MEX_ARGS) {
+	mxCHECK(nrhs == 1 && mxIsDouble(prhs[0]),
+		"Usage: caffe_('set_random_seed', random_seed)");
+	int random_seed = static_cast<unsigned int>(mxGetScalar(prhs[0]));
+	Caffe::set_random_seed(random_seed);
 }
 
 // Usage: caffe_('get_init_key')
@@ -488,35 +574,40 @@ struct handler_registry {
 
 static handler_registry handlers[] = {
   // Public API functions
-  { "get_solver",         get_solver      },
-  { "solver_get_attr",    solver_get_attr },
-  { "solver_get_iter",    solver_get_iter },
-  { "solver_restore",     solver_restore  },
-  { "solver_solve",       solver_solve    },
-  { "solver_step",        solver_step     },
-  { "get_net",            get_net         },
-  { "net_get_attr",       net_get_attr    },
-  { "net_forward",        net_forward     },
-  { "net_backward",       net_backward    },
-  { "net_copy_from",      net_copy_from   },
-  { "net_reshape",        net_reshape     },
-  { "net_save",           net_save        },
-  { "layer_get_attr",     layer_get_attr  },
-  { "layer_get_type",     layer_get_type  },
-  { "blob_get_shape",     blob_get_shape  },
-  { "blob_reshape",       blob_reshape    },
-  { "blob_get_data",      blob_get_data   },
-  { "blob_set_data",      blob_set_data   },
-  { "blob_get_diff",      blob_get_diff   },
-  { "blob_set_diff",      blob_set_diff   },
-  { "set_mode_cpu",       set_mode_cpu    },
-  { "set_mode_gpu",       set_mode_gpu    },
-  { "set_device",         set_device      },
-  { "get_init_key",       get_init_key    },
-  { "reset",              reset           },
-  { "read_mean",          read_mean       },
+  { "get_solver",						get_solver						},
+  { "solver_get_attr",					solver_get_attr					},
+  { "solver_get_iter",					solver_get_iter					},
+  { "solver_get_max_iter",				solver_get_max_iter				},
+  { "solver_restore",					solver_restore					},
+  { "solver_solve",						solver_solve					},
+  { "solver_step",						solver_step						},
+  { "get_net",							get_net							},
+  { "net_get_attr",						net_get_attr					},
+  { "net_set_phase",					net_set_phase					},
+  { "net_forward",						net_forward						},
+  { "net_backward",						net_backward					},
+  { "net_copy_from",					net_copy_from					},
+  { "net_share_trained_layers_with",	net_share_trained_layers_with	},
+  { "net_reshape",						net_reshape						},
+  { "net_save",							net_save						},
+  { "layer_get_attr",					layer_get_attr					},
+  { "layer_get_type",					layer_get_type					},
+  { "blob_get_shape",					blob_get_shape					},
+  { "blob_reshape",						blob_reshape					},
+  { "blob_get_data",					blob_get_data					},
+  { "blob_set_data",					blob_set_data					},
+  { "blob_get_diff",					blob_get_diff					},
+  { "blob_set_diff",					blob_set_diff					},
+  { "set_mode_cpu",						set_mode_cpu					},
+  { "set_mode_gpu",						set_mode_gpu					},
+  { "set_device",						set_device						},
+  { "set_random_seed",					set_random_seed					},
+  { "get_init_key",						get_init_key					},
+  { "init_log",							init_log						},
+  { "reset",							reset							},
+  { "read_mean",						read_mean						},
   // The end.
-  { "END",                NULL            },
+  { "END",								NULL							},
 };
 
 /** -----------------------------------------------------------------
@@ -524,7 +615,7 @@ static handler_registry handlers[] = {
  **/
 // Usage: caffe_(api_command, arg1, arg2, ...)
 void mexFunction(MEX_ARGS) {
-  mexLock();  // Avoid clearing the mex file.
+  //mexLock();  // Avoid clearing the mex file.
   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
   // Handle input command
   char* cmd = mxArrayToString(prhs[0]);
@@ -544,3 +635,5 @@ void mexFunction(MEX_ARGS) {
   }
   mxFree(cmd);
 }
+
+#endif

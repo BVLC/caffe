@@ -1,3 +1,5 @@
+#ifndef BUILD_MEX_INTERFACE
+
 #include <glog/logging.h>
 
 #include <cstring>
@@ -309,3 +311,5 @@ int main(int argc, char** argv) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
 }
+
+#endif

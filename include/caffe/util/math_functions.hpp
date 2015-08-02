@@ -4,6 +4,31 @@
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
 
+#ifdef _MSC_VER
+#if _MSC_VER < 1800
+namespace std {
+	inline bool signbit(float num);
+	inline bool signbit(double num);
+} // namespace std
+
+template <typename T>
+inline bool isnan(T val)
+{
+	return val != val;
+}
+template <typename T>
+inline bool isinf(T val)
+{
+	return !isnan(val) && (isnan(val *0 ));
+}
+
+#endif // _MSC_VER < 1800
+#include <intrin.h>
+#define __builtin_popcount __popcnt16
+#define __builtin_popcountl __popcnt64
+
+#endif
+
 #include "glog/logging.h"
 
 #include "caffe/common.hpp"
