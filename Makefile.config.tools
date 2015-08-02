@@ -6,13 +6,13 @@
 # atlas for ATLAS (default)
 # mkl for MKL
 # open for OpenBlas
-BLAS := open
+BLAS := atlas
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-BLAS_DIR     := /usr
-BLAS_INCLUDE  := ${BLAS_DIR}/include
-BLAS_LIB      := ${BLAS_DIR}/lib/openblas-base
+#BLAS_DIR     := /usr
+#BLAS_INCLUDE  := ${BLAS_DIR}/include
+#BLAS_LIB      := ${BLAS_DIR}/lib/openblas-base
 
 # This is required only if you will compile the matlab interface.
 # MATLAB directory should contain the mex binary in /bin.
