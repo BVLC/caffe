@@ -740,5 +740,6 @@ layer {
   top: "loss"
   triplet_loss_param {
     margin: 1
+    losstype: 1
   }
 }
