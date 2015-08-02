@@ -3,8 +3,6 @@
 
 set -e
 
-cat /proc/cpuinfo
-
 MAKE="make --jobs=$NUM_THREADS"
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
@@ -119,6 +117,7 @@ else
 	pip install protobuf
 fi
 
+# libreadline.so.6 installed by miniconda has issues
 file="/home/travis/miniconda/lib/libreadline.so.6";
 if [ -e  "$file" ]
 then
@@ -126,6 +125,3 @@ then
   echo "deleted: $file";
   ldconfig;
 fi
-
-#sudo modprobe raw1394
-#ls -la /dev/raw1394
