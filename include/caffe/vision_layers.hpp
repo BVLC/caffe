@@ -294,6 +294,7 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
+
  protected:
   // Helper functions that abstract away the column buffer and gemm arguments.
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
@@ -434,6 +435,20 @@ class ConvolutionNDLayer : public BaseConvolutionNDLayer<Dtype> {
     return "ConvolutionND";
   }
 
+  virtual size_t ForwardFlops() {
+    size_t group = this->group_;
+    size_t N = 1;
+    size_t M = this->num_output_ / group;
+    size_t K = this->channels_;
+    const int* kshape = this->kernel_shape_.cpu_data();
+    for (int i = 0; i < this->output_shape_.size(); ++i) {
+      N *= this->output_shape_[i];
+      K *= kshape[i];
+    }
+    K /= group;
+    return group* (M * N * (2 * K - 1));
+  }
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
@@ -492,6 +507,14 @@ class ConvolutionSKLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const {
     return "ConvolutionSK";
+  }
+
+  virtual size_t ForwardFlops() {
+    size_t M = this->M_;
+    size_t N = this->N_;
+    size_t K = this->K_;
+    size_t group = this->group_;
+    return group * (M * N * (2 * K - 1));
   }
 
  protected:
@@ -575,6 +598,15 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
 
   virtual inline const char* type() const {
     return "Convolution";
+  }
+
+  virtual size_t ForwardFlops() {
+    size_t group = this->group_;
+    size_t N = this->height_out_ * this->width_out_;
+    size_t M = this->num_output_ / group;
+    size_t K = this->channels_ * this->kernel_h_ * this->kernel_w_;
+    K /= group;
+    return group * (M * N * (2 * K - 1));
   }
 
  protected:

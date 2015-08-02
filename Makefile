@@ -204,7 +204,11 @@ ifeq ($(USE_GREENTEA),1)
 	# Requires valid OpenCL headers and valid ViennaCL
 	INCLUDE_DIRS += $(CLLINC) $(VIENNACL_DIR)
 	# Requires OpenCL compile library flag and librt
-	LIBRARIES += OpenCL rt
+	ifeq ($(OS_X), 1)
+		LDFLAGS += -framework OpenCL
+	else
+		LIBRARIES += OpenCL rt
+	endif
 	# Additional flags
 	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
 	

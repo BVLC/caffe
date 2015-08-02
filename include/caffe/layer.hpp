@@ -320,6 +320,17 @@ class Layer {
     return device_context_;
   }
 
+  /**
+   * @brief Returns the estimated floating point operations of this layer
+   */
+  virtual size_t ForwardFlops() {
+    return 0;
+  }
+
+  virtual size_t BackwardFlops() {
+    return 0;
+  }
+
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
