@@ -29,7 +29,7 @@ install:
   - sudo -E $SCRIPTS/travis_install.sh
 
 before_script:
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/openblas-base:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/atlas-base:/usr/lib/openblas-base:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
   - export PATH=$CONDA_DIR/bin:$PATH
   - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
