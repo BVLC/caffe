@@ -29,18 +29,6 @@ apt-get install \
     libreadline-dev \
     bc
 
-file="/usr/lib/openblas-base/libopenblas.a";
-if [ -e  "$file" ]
-then
-	echo "file exists: $file";
-fi
-
-file="/usr/lib/openblas-base/libopenblas.so";
-if [ -e  "$file" ]
-then
-	echo "file exists: $file";
-fi
-
 # Add a special apt-repository to install CMake 2.8.9 for CMake Caffe build,
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
 # Caffe requires a minimum CMake version of 2.8.8.
