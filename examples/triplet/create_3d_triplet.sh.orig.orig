@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+# This script converts the mnist data into leveldb format.
+
+EXAMPLES=./build/examples/triplet
+DATA=./data/linemod
+
+echo "Creating leveldb..."
+
+rm -rf ./examples/triplet/3d_triplet_train_leveldb
+rm -rf ./examples/triplet/3d_triplet_test_leveldb
+
+$EXAMPLES/convert_3d_triplet_data.bin \
+    $DATA/binary_image_train \
+    $DATA/binary_label_train \
+<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f
+=======
+<<<<<<< 165e1d595232eb2a908f62887bcf2d5e1743ed10
+    ./examples/triplet/3d_triplet_train_leveldb \
+    4 \
+    0
+$EXAMPLES/convert_3d_triplet_data.bin \
+    $DATA/binary_image_test \
+    $DATA/binary_label_test \
+    ./examples/triplet/3d_triplet_test_leveldb \
+    4 \
+    0
+=======
+>>>>>>> add 3d network training param
+    ./examples/triplet/3d_triplet_train_leveldb
+$EXAMPLES/convert_3d_triplet_data.bin \
+    $DATA/binary_image_test \
+    $DATA/binary_label_test \
+    ./examples/triplet/3d_triplet_test_leveldb
+<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f
+=======
+>>>>>>> add 3d network training param
+>>>>>>> add 3d network training param
+
+echo "Done."
