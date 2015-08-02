@@ -323,7 +323,7 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-TESTS_EXCLUDED="*GPU*:*Performance*:*Validation*:*SoftmaxWithLossLayerTest*:*SoftmaxLayerTest*:*NeuronLayerTest/*.TestPReLUInPlace:*SGDSolverTest/*.TestLeastSquaresUpdate:*NetTest/*.TestLossWeight*:*NetTest/*.TestComboLossWeight"
+TESTS_EXCLUDED="*GPU*:*Performance*:*Validation*:*SoftmaxWithLossLayerTest*:*SoftmaxLayerTest*:*NeuronLayerTest/*.TestPReLUInPlace:*SGDSolverTest/*.TestLeastSquaresUpdate:*NetTest*"
 
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
