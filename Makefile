@@ -323,13 +323,7 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-TESTS_EXCLUDED="-\
-*GPU*:\
-*Performance*:\
-*Validation*:\
-*SoftmaxWithLossLayerTest:*\
-*SoftMaxLayerTest*:\
-*NeuronLayerTest/*.TestPReLUInPlace"
+TESTS_EXCLUDED="*GPU*:*Performance*:*Validation*:*SoftmaxWithLossLayerTest*:*SoftMaxLayerTest*:*NeuronLayerTest/*.TestPReLUInPlace"
 
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
@@ -337,7 +331,7 @@ ifeq ($(CPU_ONLY), 1)
 	TEST_OBJS := $(TEST_CXX_OBJS)
 	TEST_BINS := $(TEST_CXX_BINS)
 	ALL_WARNS := $(ALL_CXX_WARNS)
-	TEST_FILTER := --gtest_filter="${TESTS_EXCLUDED}"
+	TEST_FILTER := --gtest_filter="-${TESTS_EXCLUDED}"
 	COMMON_FLAGS += -DCPU_ONLY
 endif	
 
