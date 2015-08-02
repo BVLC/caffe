@@ -3,6 +3,8 @@
 
 set -e
 
+cat /proc/cpuinfo
+
 MAKE="make --jobs=$NUM_THREADS"
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
