@@ -236,6 +236,10 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     Blob<Dtype>& updated_bias = *(*updated_params)[1];
     updated_bias.ReshapeLike(bias);
 
+    const Dtype momentum2 = 0.999;
+    Dtype val_m = 0;
+    Dtype val_v = 0;
+
     for (int i = 0; i <= D; ++i) {
       // Compute the derivative with respect to the ith weight (i.e., the ith
       // element of the gradient).
@@ -289,6 +293,15 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
             + grad * grad * (1 - rms_decay)) + delta_;
         }
         break;
+      case SolverParameter_SolverType_ADAM: {
+        const Dtype m_ = 0.0;
+        const Dtype v_ = 0.0;
+        val_m = (1-momentum)*grad + momentum*m_;
+        val_v = (1-momentum2)*grad*grad + momentum2*v_;
+        Dtype alpha_t = learning_rate*std::sqrt(1-momentum2)/(1-momentum);
+        update_value = alpha_t * val_m / (std::sqrt(val_v) + delta_);
+        break;
+      }
       default:
         LOG(FATAL) << "Unknown solver type: " << solver_type();
       }
@@ -738,6 +751,35 @@ TYPED_TEST(AdaGradSolverTest, TestSnapshotShare) {
   }
 }
 
+
+template <typename TypeParam>
+class AdamSolverTest : public GradientBasedSolverTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
+ protected:
+  virtual void InitSolver(const SolverParameter& param) {
+    SolverParameter new_param = param;
+    const Dtype momentum = 0.9;
+    new_param.set_momentum(momentum);
+    const Dtype momentum2 = 0.999;
+    new_param.set_momentum2(momentum2);
+    this->solver_.reset(new AdamSolver<Dtype>(new_param));
+  }
+  virtual SolverParameter_SolverType solver_type() {
+    return SolverParameter_SolverType_ADAM;
+  }
+};
+
+TYPED_TEST_CASE(AdamSolverTest, TestDtypesAndDevices);
+
+TYPED_TEST(AdamSolverTest, TestAdamLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.001;
+  const Dtype kWeightDecay = 0.0;
+  const Dtype kMomentum = 0.9;
+  const int k = 0;
+  this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, k);
+}
 
 template <typename TypeParam>
 class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
