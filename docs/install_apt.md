@@ -6,7 +6,7 @@ title: Installation: Ubuntu
 
 **General dependencies**
 
-    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev
+    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler
     sudo apt-get install --no-install-recommends libboost-all-dev
 
 **CUDA**: Install via the NVIDIA package instead of `apt-get` to be certain of the library and driver versions.
@@ -21,7 +21,7 @@ This can be skipped for CPU-only installation.
 
 Everything is packaged in 14.04.
 
-    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
+    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 
 **Remaining dependencies, 12.04**
 
@@ -41,8 +41,8 @@ These dependencies need manual installation in 12.04.
     export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1
     make && make install
     # lmdb
-    git clone https://gitorious.org/mdb/mdb.git
-    cd mdb/libraries/liblmdb
+    git clone https://github.com/LMDB/lmdb
+    cd lmdb/libraries/liblmdb
     make && make install
 
 Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.

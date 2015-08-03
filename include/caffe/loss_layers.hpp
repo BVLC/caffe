@@ -128,9 +128,9 @@ class LossLayer : public Layer<Dtype> {
 /**
  * @brief Computes the contrastive loss @f$
  *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
- *              \left(1-y\right) \max \left(margin-d, 0\right)
+ *              \left(1-y\right) \max \left(margin-d, 0\right)^2
  *          @f$ where @f$
- *          d = \left| \left| a_n - b_n \right| \right|_2^2 @f$. This can be
+ *          d = \left| \left| a_n - b_n \right| \right|_2 @f$. This can be
  *          used to train siamese networks.
  *
  * @param bottom input Blob vector (length 3)
@@ -144,9 +144,9 @@ class LossLayer : public Layer<Dtype> {
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed contrastive loss: @f$ E =
  *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
- *          \left(1-y\right) \max \left(margin-d, 0\right)
+ *          \left(1-y\right) \max \left(margin-d, 0\right)^2
  *          @f$ where @f$
- *          d = \left| \left| a_n - b_n \right| \right|_2^2 @f$.
+ *          d = \left| \left| a_n - b_n \right| \right|_2 @f$.
  * This can be used to train siamese networks.
  */
 template <typename Dtype>

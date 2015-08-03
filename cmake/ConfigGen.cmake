@@ -88,7 +88,7 @@ function(caffe_generate_export_configs)
 
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${PROJECT_BINARY_DIR}/cmake/CaffeConfig.cmake" @ONLY)
 
-  # Install the CaffeConfig.cmake and export set to use wuth install-tree
+  # Install the CaffeConfig.cmake and export set to use with install-tree
   install(FILES "${PROJECT_BINARY_DIR}/cmake/CaffeConfig.cmake" DESTINATION ${install_cmake_suffix})
   install(EXPORT CaffeTargets DESTINATION ${install_cmake_suffix})
 

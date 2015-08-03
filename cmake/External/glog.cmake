@@ -29,7 +29,7 @@ if (NOT __GLOG_INCLUDED)
     if (GFLAGS_EXTERNAL)
       set(GLOG_DEPENDS gflags)
     endif()
-    
+
     ExternalProject_Add(glog
       DEPENDS ${GLOG_DEPENDS}
       PREFIX ${glog_PREFIX}

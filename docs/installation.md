@@ -75,7 +75,7 @@ To import the `caffe` Python module after completing the installation, add the m
 
 Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
-*Caffe's MATLAB interface works with versions 2014a/b, 2013a/b, and 2012b.*
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 
 #### Windows
 
