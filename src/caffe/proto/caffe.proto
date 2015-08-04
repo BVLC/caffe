@@ -290,7 +290,7 @@ message LayerParameter {
 
   // The blobs containing the numeric parameters of the layer.
   repeated BlobProto blobs = 7;
-  
+
   // Specifies on which bottoms the backpropagation should be skipped.
   // The size must be either 0 or equal to the number of bottoms.
   repeated bool propagate_down = 11;
@@ -431,7 +431,7 @@ message ContrastiveLossParameter {
   // Hadsell paper. New models should probably use this version.
   // legacy_version = true uses (margin - d^2). This is kept to support /
   // reproduce existing models and results
-  optional bool legacy_version = 2 [default = false]; 
+  optional bool legacy_version = 2 [default = false];
 }
 
 message ConvolutionParameter {
@@ -579,7 +579,7 @@ message ImageDataParameter {
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
-  optional uint32 batch_size = 4;
+  optional uint32 batch_size = 4 [default = 1];
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
