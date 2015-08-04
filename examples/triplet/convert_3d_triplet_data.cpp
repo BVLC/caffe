@@ -3,6 +3,7 @@
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
 #include <fstream>  // NOLINT(readability/streams)
+#include <math.h>
 #include <string>
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
@@ -28,7 +29,8 @@ void read_image(std::ifstream* image_file, std::ifstream* label_file,
 }
 
 void convert_dataset(const char* image_filename, const char* label_filename,
-        const char* db_filename) {
+        const char* db_filename, const char* class_number) {
+  int class_num = atoi(class_number);
   // Open files
   std::ifstream image_file(image_filename, std::ios::in | std::ios::binary);
   std::ifstream label_file(label_filename, std::ios::in | std::ios::binary);
@@ -77,16 +79,19 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
-
   caffe::Datum datum;
   datum.set_channels(5);  // one channel for each image in the triplet and pair
   datum.set_height(rows);
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-  for (unsigned int itemid = 0; itemid < 10 * num_items; ++itemid) {\
-    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
-    int j = caffe::caffe_rng_rand() % num_items;
+  // iteration in the samples of all class
+  for (unsigned int itemid = 0; itemid < 5*num_items/class_num; ++itemid) {
+    // iteration in the samples in one class
+    for (unsigned int class_ind = 0; class_ind < class_num; ++class_ind) {
+    // use reference sample one by one at each iteration
+    int i = itemid % num_items + class_ind*num_items/class_num;
+    int j = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
     int k = caffe::caffe_rng_rand() % num_items;
     int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
     int m = caffe::caffe_rng_rand() % num_items;
@@ -113,6 +118,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     int ik_diff_x = static_cast<int>(*(label_i+1)-*(label_k+1));
     int ik_diff_y = static_cast<int>(*(label_i+2)-*(label_k+2));
     int ik_diff_z = static_cast<int>(*(label_i+3)-*(label_k+3));
+    int lm_diff_x = static_cast<int>(*(label_l+1)-*(label_m+1));
+    int lm_diff_y = static_cast<int>(*(label_l+2)-*(label_m+2));
+    int lm_diff_z = static_cast<int>(*(label_l+3)-*(label_m+3));
 
     int ij_x = ij_diff_x*ij_diff_x;
     int ij_y = ij_diff_y*ij_diff_y;
@@ -120,27 +128,32 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     int ik_x = ik_diff_x*ik_diff_x;
     int ik_y = ik_diff_y*ik_diff_y;
     int ik_z = ik_diff_z*ik_diff_z;
+    int lm_x = lm_diff_x*lm_diff_x;
+    int lm_y = lm_diff_y*lm_diff_y;
+    int lm_z = lm_diff_z*lm_diff_z;
 
-    int dist_ij = ij_x + ij_y + ij_z;
-    int dist_ik = ik_x + ik_y + ik_z;
+    float dist_ij = std::sqrt(ij_x + ij_y + ij_z);
+    float dist_ik = std::sqrt(ik_x + ik_y + ik_z);
+    float dist_lm = std::sqrt(lm_x + lm_y + lm_z);
     if ((*label_i  == *label_j) && (*label_i  == *label_k))
       triplet_class_same = true;
-    if ((dist_ij < dist_ik) && (triplet_class_same))
+    if ((dist_ij < 100 && dist_ik > 100*sqrt(2)) && (triplet_class_same))
       triplet_pose_pass = true;
     if ((*label_i  == *label_j) && (*label_i  != *label_k))
       triplet_class_pass = true;
-    if (*label_l == *label_m)
+    if (*label_l == *label_m && dist_lm < 100/2)
       pair_class_pass = true;
     if ((triplet_class_pass || triplet_pose_pass) && pair_class_pass) {
       datum.set_label(1);
       datum.SerializeToString(&value);
-      snprintf(key, kMaxKeyLength, "%08d", itemid);
+      snprintf(key, kMaxKeyLength, "%08d", itemid*class_num+class_ind);
       db->Put(leveldb::WriteOptions(), std::string(key), value);
     } else {
-      itemid--;
+      class_ind--;
       datum.set_label(0);
     }
-  }
+    } // iteration in the samples of all class
+  } // iteration in the samples in one class
   delete db;
   delete pixels;
 }
@@ -157,7 +170,7 @@ int main(int argc, char** argv) {
            "You should gunzip them after downloading.\n");
   } else {
     google::InitGoogleLogging(argv[0]);
-    convert_dataset(argv[1], argv[2], argv[3]);
+    convert_dataset(argv[1], argv[2], argv[3], argv[4]);
   }
   return 0;
 }

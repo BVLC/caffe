@@ -22,9 +22,11 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   TripletLossLayerTest()
-      : blob_bottom_data_i_(new Blob<Dtype>(512, 2, 1, 1)),
-        blob_bottom_data_j_(new Blob<Dtype>(512, 2, 1, 1)),
-	blob_bottom_data_k_(new Blob<Dtype>(512, 2, 1, 1)),
+      : blob_bottom_data_i_(new Blob<Dtype>(512, 1, 1, 1)),
+        blob_bottom_data_j_(new Blob<Dtype>(512, 1, 1, 1)),
+	blob_bottom_data_k_(new Blob<Dtype>(512, 1, 1, 1)),
+	blob_bottom_data_l_(new Blob<Dtype>(512, 1, 1, 1)),
+	blob_bottom_data_m_(new Blob<Dtype>(512, 1, 1, 1)),	
         blob_bottom_y_(new Blob<Dtype>(512, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
@@ -38,6 +40,10 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_data_j_);
     filler.Fill(this->blob_bottom_data_k_);
     blob_bottom_vec_.push_back(blob_bottom_data_k_);
+    filler.Fill(this->blob_bottom_data_l_);
+    blob_bottom_vec_.push_back(blob_bottom_data_l_);
+    filler.Fill(this->blob_bottom_data_m_);
+    blob_bottom_vec_.push_back(blob_bottom_data_m_);
     for (int i = 0; i < blob_bottom_y_->count(); ++i) {
       blob_bottom_y_->mutable_cpu_data()[i] = caffe_rng_rand() % 2;  // 0 or 1
     }
@@ -48,6 +54,8 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_bottom_data_i_;
     delete blob_bottom_data_j_;
     delete blob_bottom_data_k_;
+    delete blob_bottom_data_l_;
+    delete blob_bottom_data_m_;
     delete blob_bottom_y_;
     delete blob_top_loss_;
   }
@@ -55,6 +63,8 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_data_i_;
   Blob<Dtype>* const blob_bottom_data_j_;
   Blob<Dtype>* const blob_bottom_data_k_;
+  Blob<Dtype>* const blob_bottom_data_l_;
+  Blob<Dtype>* const blob_bottom_data_m_;
   Blob<Dtype>* const blob_bottom_y_;
   Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -71,26 +81,47 @@ TYPED_TEST(TripletLossLayerTest, TestForward) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
   const Dtype margin = layer_param.triplet_loss_param().margin();
+  const Dtype losstype = layer_param.triplet_loss_param().losstype();
   const int num = this->blob_bottom_data_i_->num();
   const int channels = this->blob_bottom_data_i_->channels();
   Dtype loss(0);
+  if (losstype == 0) {
   for (int i = 0; i < num; ++i) {
     Dtype dist_sq(0);
+    Dtype dist_par(0);
     for (int j = 0; j < channels; ++j) {
       Dtype diff_pos = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
           this->blob_bottom_data_j_->cpu_data()[i*channels+j];
       dist_sq += diff_pos*diff_pos;
       Dtype diff_neg = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
-          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+          this->blob_bottom_data_k_->cpu_data()[i*channels+j];
       dist_sq -= diff_neg*diff_neg;
+      Dtype diff_par = this->blob_bottom_data_l_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_m_->cpu_data()[i*channels+j];
+      dist_par = diff_par*diff_par;
     }
-    loss += std::max(margin + dist_sq, 0.0);
-    /*if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
-      loss += dist_sq;
-    } else {
-      Dtype dist = std::max(margin - sqrt(dist_sq), 0.0);
-      loss += dist*dist;
-    }*/
+    loss += std::max(margin + dist_sq, Dtype(0.0));
+    loss += dist_par;
+  }
+  } else {
+  for (int i = 0; i < num; ++i) {
+    Dtype dist_sq(0);
+    Dtype dist_par(0);
+    for (int j = 0; j < channels; ++j) {
+      Dtype diff_pos = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+      dist_sq += diff_pos*diff_pos;
+      dist_sq += margin;
+      Dtype diff_neg = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_k_->cpu_data()[i*channels+j];
+      dist_sq = 1 - diff_neg*diff_neg/dist_sq;
+      Dtype diff_par = this->blob_bottom_data_l_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_m_->cpu_data()[i*channels+j];
+      dist_par = diff_par*diff_par;
+    }
+    loss += std::max(dist_sq, Dtype(0.0));
+    loss += dist_par;
+  }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
   EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
@@ -102,54 +133,16 @@ TYPED_TEST(TripletLossLayerTest, TestGradient) {
   TripletLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-  // check the gradient for the first two bottom layers
+  // check the gradient for the first 5 bottom layers
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 0);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 1);
-}
-
-/*TYPED_TEST(TripletLossLayerTest, TestForwardLegacy) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  layer_param.mutable_triplet_loss_param()->set_legacy_version(true);
-  TripletLossLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // manually compute to compare
-  const Dtype margin = layer_param.triplet_loss_param().margin();
-  const int num = this->blob_bottom_data_i_->num();
-  const int channels = this->blob_bottom_data_i_->channels();
-  Dtype loss(0);
-  for (int i = 0; i < num; ++i) {
-    Dtype dist_sq(0);
-    for (int j = 0; j < channels; ++j) {
-      Dtype diff = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
-          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
-      dist_sq += diff*diff;
-    }
-    if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
-      loss += dist_sq;
-    } else {
-      loss += std::max(margin - dist_sq, Dtype(0.0));
-    }
-  }
-  loss /= static_cast<Dtype>(num) * Dtype(2);
-  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
-}
-
-TYPED_TEST(TripletLossLayerTest, TestGradientLegacy) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  layer_param.mutable_triplet_loss_param()->set_legacy_version(true);
-  TripletLossLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-  // check the gradient for the first two bottom layers
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_, 0);
+      this->blob_top_vec_, 2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_, 1);
-}*/
-
+      this->blob_top_vec_, 3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 4);
+}
 }  // namespace caffe
