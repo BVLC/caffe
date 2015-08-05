@@ -9,6 +9,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/neuron_layers.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -649,6 +650,78 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_bottom_vec_;
   /// top vector holder to call the underlying SigmoidLayer::Forward
   vector<Blob<Dtype>*> sigmoid_top_vec_;
+};
+
+// Forward declare MVNLayer for use in TempSoftmaxCrossEntropyLossLayer.
+template <typename Dtype> class MVNLayer;
+
+/**
+ * @brief Calculates the Softmax Cross Entropy for a Softmax with a high
+ *        temperature, as in 
+ *        Distilling the Knowledge in a Neural Network
+ *        by Hinton et al.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
+template <typename Dtype>
+class TempSoftmaxCrossEntropyLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit TempSoftmaxCrossEntropyLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() 
+      const { return "TempSoftmaxCrossEntropyLoss"; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  float temperature;
+
+  /// The internal MVNLayer used to mean normalise predictions.
+  shared_ptr<Layer<Dtype> > mvn_in_layer_;
+  /// MVN stores the output of the MVNLayer for the input.
+  Blob<Dtype> mvn_in_output_;
+  /// bottom vector holder to call the underlying MVNLayer::Forward
+  vector<Blob<Dtype>*> mvn_in_bottom_vec_;
+  /// top vector holder to call the underlying MVNLayer::Forward
+  vector<Blob<Dtype>*> mvn_in_top_vec_;
+
+  /// The internal MVNLayer used to mean normalise the target.
+  shared_ptr<Layer<Dtype> > mvn_target_layer_;
+  /// MVN stores the output of the MVNLayer for the target.
+  Blob<Dtype> mvn_target_output_;
+  /// bottom vector holder to call the underlying MVNLayer::Forward
+  vector<Blob<Dtype>*> mvn_target_bottom_vec_;
+  /// top vector holder to call the underlying MVNLayer::Forward
+  vector<Blob<Dtype>*> mvn_target_top_vec_;
+
+  /// The internal SoftmaxLayer used to map predictions to a distribution.
+  shared_ptr<Layer<Dtype> > softmax_layer_;
+  /// prob stores the output probability predictions from the SoftmaxLayer.
+  Blob<Dtype> prob_;
+  /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_bottom_vec_;
+  /// top vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_top_vec_;
+
+  /// The internal SoftmaxLayer used to map targets to a distribution.
+  shared_ptr<Layer<Dtype> > softmax_target_layer_;
+  /// prob stores the output probability predictions from the SoftmaxLayer.
+  Blob<Dtype> target_prob_;
+  /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_target_bottom_vec_;
+  /// top vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_target_top_vec_;
 };
 
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
