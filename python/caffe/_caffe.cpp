@@ -3,6 +3,8 @@
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
+#include <google/protobuf/text_format.h>
+
 #include <boost/make_shared.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
@@ -15,6 +17,8 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
+#include "caffe/layer_factory.hpp"
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/python_layer.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -35,6 +39,9 @@ const int NPY_DTYPE = NPY_FLOAT32;
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+// Checking current mode.
+bool check_mode_cpu() { return Caffe::mode() == Caffe::CPU; }
+bool check_mode_gpu() { return Caffe::mode() == Caffe::GPU; }
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -176,6 +183,34 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
   }
 };
 
+// Blob constructor with shape iterable
+shared_ptr<Blob<Dtype> > Blob_Init(bp::object shape_object) {
+  size_t ndim;
+  try {
+    ndim = bp::len(shape_object);
+  } catch(...) {
+    throw std::runtime_error("1st arg must be iterable.");
+  }
+  vector<int> shape(ndim);
+  try {
+    for (int i = 0; i < ndim; ++i) {
+      shape[i] = bp::extract<int>(shape_object[i]);
+    }
+  } catch(...) {
+    throw std::runtime_error("All element in shape iterable must be integer.");
+  }
+  return shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape));
+}
+
+bp::tuple Blob_Shape(const Blob<Dtype>* self) {
+  const vector<int> &shape = self->shape();
+  bp::list shape_list;
+  BOOST_FOREACH(int s, shape) {
+    shape_list.append(s);
+  }
+  return bp::tuple(shape_list);
+}
+
 bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   if (bp::len(kwargs) > 0) {
     throw std::runtime_error("Blob.reshape takes no kwargs");
@@ -190,6 +225,85 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+// Layer
+template <class T>
+vector<T> py_to_vector(bp::object pyiter) {
+  vector<T> vec;
+  for (int i = 0; i < bp::len(pyiter); ++i) {
+    vec.push_back(bp::extract<T>(pyiter[i]));
+  }
+  return vec;
+}
+void Layer_SetUp(Layer<Dtype> *layer, bp::object py_bottom, bp::object py_top) {
+  vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
+  vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
+  layer->SetUp(bottom, top);
+}
+void Layer_Reshape(
+    Layer<Dtype> *layer, bp::object py_bottom, bp::object py_top) {
+  vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
+  vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
+  layer->Reshape(bottom, top);
+}
+Dtype Layer_Forward(
+    Layer<Dtype> *layer, bp::object py_bottom, bp::object py_top) {
+  vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
+  vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
+  Dtype loss;
+  loss = layer->Forward(bottom, top);
+  return loss;
+}
+void Layer_Backward(
+    Layer<Dtype> *layer, bp::object py_top, bp::object py_propagate_down,
+    bp::object py_bottom) {
+  vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
+  vector<bool> propagate_down = py_to_vector<bool>(py_propagate_down);
+  vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
+  layer->Backward(top, propagate_down, bottom);
+}
+
+// LayerParameter
+shared_ptr<LayerParameter> LayerParameter_Init(bp::object py_layer_param) {
+  shared_ptr<LayerParameter> layer_param(new LayerParameter);
+  if (PyObject_HasAttrString(py_layer_param.ptr(), "SerializeToString")) {
+    string dump = bp::extract<string>(
+        py_layer_param.attr("SerializeToString")());
+    layer_param->ParseFromString(dump);
+  } else {
+    try {
+      string dump = bp::extract<string>(py_layer_param);
+      google::protobuf::TextFormat::ParseFromString(dump, layer_param.get());
+    } catch(...) {
+      throw std::runtime_error("1st arg must be LayerPrameter or string.");
+    }
+  }
+  if (!layer_param->IsInitialized()) {
+    throw std::runtime_error(
+      "LayerParameter not initialized: Missing required fields.");
+  }
+  return layer_param;
+}
+void LayerParameter_FromPython(
+    LayerParameter *layer_param, bp::object py_layer_param) {
+  shared_ptr<LayerParameter> copy = \
+      LayerParameter_Init(py_layer_param);
+  layer_param->Clear();
+  layer_param->CopyFrom(*copy);
+}
+bp::object LayerParameter_ToPython(
+    const LayerParameter *layer_param, bp::object py_layer_param) {
+  string dump;
+  layer_param->SerializeToString(&dump);
+  py_layer_param.attr("ParseFromString")(bp::object(dump));
+  return py_layer_param;
+}
+
+// Create layer from caffe_pb2.LayerParameter in Python
+shared_ptr<Layer<Dtype> > create_layer(bp::object py_layer_param) {
+  shared_ptr<LayerParameter> layer_param(LayerParameter_Init(py_layer_param));
+  return LayerRegistry<Dtype>::CreateLayer(*layer_param.get());
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -198,7 +312,11 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
+  bp::def("check_mode_cpu", &check_mode_cpu);
+  bp::def("check_mode_gpu", &check_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
+  bp::def("get_device", &Caffe::GetDevice);
+  bp::def("set_random_seed", &Caffe::set_random_seed);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
@@ -229,13 +347,15 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("save", &Net_Save);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
-    "Blob", bp::no_init)
+      "Blob", bp::no_init)
+    .def("__init__", bp::make_constructor(&Blob_Init))
     .add_property("num",      &Blob<Dtype>::num)
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
     .add_property("width",    &Blob<Dtype>::width)
     .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
         &Blob<Dtype>::count))
+    .add_property("shape", &Blob_Shape)
     .def("reshape",           bp::raw_function(&Blob_Reshape))
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
@@ -243,15 +363,26 @@ BOOST_PYTHON_MODULE(_caffe) {
           NdarrayCallPolicies()));
 
   bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
-    boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
+      boost::noncopyable>(
+      "Layer", bp::init<const LayerParameter&>())
     .add_property("blobs", bp::make_function(&Layer<Dtype>::blobs,
           bp::return_internal_reference<>()))
     .def("setup", &Layer<Dtype>::LayerSetUp)
+    .def("SetUp", &Layer_SetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
+    .def("Reshape", &Layer_Reshape)
+    .def("Forward", &Layer_Forward)
+    .def("Backward", &Layer_Backward)
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
   bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
 
-  bp::class_<LayerParameter>("LayerParameter", bp::no_init);
+  bp::class_<LayerParameter, shared_ptr<LayerParameter> >(
+      "LayerParameter", bp::no_init)
+    .def("__init__", bp::make_constructor(&LayerParameter_Init))
+    .def("from_python", &LayerParameter_FromPython)
+    .def("_to_python", &LayerParameter_ToPython);
+
+  bp::def("create_layer", &create_layer);
 
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
