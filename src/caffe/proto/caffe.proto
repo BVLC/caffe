@@ -351,6 +351,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  optional ROIPoolingParameter roi_pooling_param = 8266711;
 }
 
 // Message that stores parameters used to apply transformation
@@ -703,6 +704,12 @@ message PowerParameter {
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
+  // This value is set to the attribute `param_str_` of your custom
+  // `PythonLayer` object in Python before calling `setup()` method. This could
+  // be a number, a string, a dictionary in Python dict format or JSON etc. You
+  // may parse this string in `setup` method and use them in `forward` and
+  // `backward`.
+  optional string param_str = 3 [default = ''];
 }
 
 // Message that stores parameters used by ReductionLayer
@@ -1106,4 +1113,14 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
+}
+
+message ROIPoolingParameter {
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
+  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
 }
