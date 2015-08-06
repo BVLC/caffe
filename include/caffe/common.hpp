@@ -68,6 +68,9 @@ private:\
 // See PR #1236
 namespace cv { class Mat; }
 
+// Avoid issues with including boost/thread in NVCC source (#1009).
+namespace boost { template <typename T> class thread_specific_ptr; }
+
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
@@ -98,12 +101,7 @@ void GlobalInit(int* pargc, char*** pargv);
 class Caffe {
  public:
   ~Caffe();
-  inline static Caffe& Get() {
-    if (!singleton_.get()) {
-      singleton_.reset(new Caffe());
-    }
-    return *singleton_;
-  }
+  static Caffe& Get();
   enum Brew { CPU, GPU };
 
   // This random number generator facade hides boost and CUDA rng
@@ -158,7 +156,7 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
-  static shared_ptr<Caffe> singleton_;
+  static boost::thread_specific_ptr<Caffe> singleton_;
 
  private:
   // The private constructor to avoid duplicate instantiation.
