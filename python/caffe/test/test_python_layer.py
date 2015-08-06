@@ -43,7 +43,7 @@ def python_net_file():
 
 
 def exception_net_file():
-    with tempfile.NamedTemporaryFile(delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as f:
         f.write("""name: 'pythonnet' force_backward: true
         input: 'data' input_shape { dim: 10 dim: 9 dim: 8 }
         layer { type: 'Python' name: 'layer' bottom: 'data' top: 'top'
