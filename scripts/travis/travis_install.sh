@@ -10,9 +10,9 @@ add-apt-repository ppa:ubuntu-toolchain-r/test -y
 add-apt-repository ppa:boost-latest/ppa -y
 apt-get update -qq
 
-sudo apt-get install -qq g++-4.8
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
+sudo apt-get install -qq g++-4.9
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 10
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
 
 # This ppa is for gflags and glog
 add-apt-repository -y ppa:tuleu/precise-backports
@@ -25,7 +25,6 @@ apt-get install \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
     libboost1.55-all-dev \
-    libopenblas-dev \
     libreadline-dev \
     bc
 
