@@ -14,7 +14,7 @@ include(cmake/ConfigGen.cmake)
 
 # ---[ Options
 caffe_option(CPU_ONLY   "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
-caffe_option(USE_OPENCL "Build Caffe with OpenCL support" ON)
+caffe_option(USE_OPENCL "Build Caffe with OpenCL support" OFF)
 caffe_option(USE_CLGEMM "Use custom clgemm() instead of clBLASgemm()" OFF)
 caffe_option(USE_OPENMP "Build Caffe with OpenMP support" OFF)
 caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" OFF) # IF NOT CPU_ONLY OR USE_OPENCL)
@@ -52,7 +52,10 @@ endif()
 
 
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
-add_definitions(-DOPENCL_OPT_LEVEL=1)
+
+if(USE_OPENCL)
+    add_definitions(-DOPENCL_OPT_LEVEL=1)
+endif()
 
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)

@@ -32,7 +32,7 @@ function call_make() {
     export CPU_ONLY=1
   fi
   TARGETS=(all test pycaffe warn lint);
-  for target in ${TARGETS[@]}; do
+    for target in ${TARGETS[@]}; do
     echo "$MAKE $target ...";
     $MAKE $target;
     if [ $? != 0 ]; then
@@ -52,7 +52,7 @@ function call_cmake() {
   mkdir -p build
   cd build
   CPU_ONLY=" -DCPU_ONLY=ON"
-  if ! w_CUDA
+  if w_CUDA
   then
     CPU_ONLY=" -DCPU_ONLY=OFF"
   fi

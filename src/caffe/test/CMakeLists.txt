@@ -24,7 +24,7 @@ if(HAVE_CUDA)
   caffe_cuda_compile(test_cuda_objs ${test_cuda})
   list(APPEND test_srcs ${test_cuda_objs} ${test_cuda})
 else()
-  list(APPEND test_args --gtest_filter="-*GPU*:*Performance:*Validation")
+  list(APPEND test_args --gtest_filter="-*GPU*:*Performance*:*Validation*")
 endif()
 
 # ---[ Adding test target
