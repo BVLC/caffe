@@ -190,6 +190,10 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+string Layer_arguments(const Layer<Dtype>& layer) {
+  return layer.layer_param().python_param().arguments();
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -248,6 +252,7 @@ BOOST_PYTHON_MODULE(_caffe) {
           bp::return_internal_reference<>()))
     .def("setup", &Layer<Dtype>::LayerSetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
+    .add_property("arguments", &Layer_arguments)
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
   bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
 
