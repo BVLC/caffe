@@ -10,9 +10,16 @@ add-apt-repository ppa:ubuntu-toolchain-r/test -y
 add-apt-repository ppa:boost-latest/ppa -y
 apt-get update -qq
 
-sudo apt-get install -qq g++-4.9
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 10
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
+if $WITH_CUDA
+then
+	sudo apt-get install -qq g++-4.8
+	update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 10
+	update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 10
+else
+	sudo apt-get install -qq g++-4.9
+	update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 10
+	update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
+fi
 
 # This ppa is for gflags and glog
 add-apt-repository -y ppa:tuleu/precise-backports

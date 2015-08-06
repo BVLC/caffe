@@ -31,8 +31,9 @@ function call_make() {
   then
     export CPU_ONLY=1
   fi
-  TARGETS=(all test pycaffe warn lint);
-    for target in ${TARGETS[@]}; do
+  #TARGETS=(all test pycaffe warn lint);
+  TARGETS=(all test warn lint);
+  for target in ${TARGETS[@]}; do
     echo "$MAKE $target ...";
     $MAKE $target;
     if [ $? != 0 ]; then
