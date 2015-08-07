@@ -116,6 +116,16 @@ static mxArray* int_vec_to_mx_vec(const vector<int>& int_vec) {
   return mx_vec;
 }
 
+
+// Convert vector<vector<int> > to matlab cell of (row vector)s
+static mxArray* int_vec_vec_to_mx_cell_vec(const vector<vector<int> >& int_vec_vec) {
+	mxArray* mx_cell_vec = mxCreateCellMatrix(int_vec_vec.size(), 1);
+	for (int i = 0; i < int_vec_vec.size(); i++){
+		mxSetCell(mx_cell_vec, i, int_vec_to_mx_vec(int_vec_vec[i]));
+	}
+	return mx_cell_vec;
+}
+
 // Convert vector<string> to matlab cell vector of strings
 static mxArray* str_vec_to_mx_strcell(const vector<std::string>& str_vec) {
   mxArray* mx_strcell = mxCreateCellMatrix(str_vec.size(), 1);
@@ -273,9 +283,9 @@ static void net_get_attr(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
       "Usage: caffe_('net_get_attr', hNet)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
-  const int net_attr_num = 6;
+  const int net_attr_num = 8;
   const char* net_attrs[net_attr_num] = { "hLayer_layers", "hBlob_blobs",
-      "input_blob_indices", "output_blob_indices", "layer_names", "blob_names"};
+	  "input_blob_indices", "output_blob_indices", "layer_names", "blob_names", "bottom_id_vecs", "top_id_vecs" };
   mxArray* mx_net_attr = mxCreateStructMatrix(1, 1, net_attr_num,
       net_attrs);
   mxSetField(mx_net_attr, 0, "hLayer_layers",
@@ -290,6 +300,10 @@ static void net_get_attr(MEX_ARGS) {
       str_vec_to_mx_strcell(net->layer_names()));
   mxSetField(mx_net_attr, 0, "blob_names",
       str_vec_to_mx_strcell(net->blob_names()));
+  mxSetField(mx_net_attr, 0, "bottom_id_vecs",
+	  int_vec_vec_to_mx_cell_vec(net->bottom_id_vecs()));
+  mxSetField(mx_net_attr, 0, "top_id_vecs",
+	  int_vec_vec_to_mx_cell_vec(net->top_id_vecs()));
   plhs[0] = mx_net_attr;
 }
 
