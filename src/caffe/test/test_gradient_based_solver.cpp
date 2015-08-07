@@ -24,12 +24,14 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   GradientBasedSolverTest() :
-      seed_(1701), num_(4), channels_(3), height_(10), width_(10) {}
+      seed_(1701), num_(4), channels_(3), height_(10), width_(10),
+      constant_data_(false) {}
 
   string snapshot_prefix_;
   shared_ptr<SGDSolver<Dtype> > solver_;
   int seed_;
   int num_, channels_, height_, width_;
+  bool constant_data_;
   Dtype delta_;  // Stability constant for AdaGrad.
 
   virtual SolverParameter_SolverType solver_type() = 0;
@@ -79,7 +81,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "      height: 1 "
        "      width: 1 "
        "      data_filler { "
-       "        type: 'constant' "
+       "        type: '" << string(constant_data_ ? "constant" : "gaussian")
+                         << "' "
+       "        std: 1.0 "
        "        value: 1.0 "
        "      } "
        "      data_filler { "
@@ -302,6 +306,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       const Dtype kMomentum, const int kNumIters, const int kIterSize) {
     const double kPrecision = 1e-2;
     const double kMinPrecision = 1e-7;
+    constant_data_ = true;
     // Solve without accumulation and save parameters.
     this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
         kNumIters);
