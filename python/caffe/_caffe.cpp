@@ -230,6 +230,11 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
+    .add_property("shape",
+        bp::make_function(
+            static_cast<const vector<int>& (Blob<Dtype>::*)() const>(
+                &Blob<Dtype>::shape),
+            bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("num",      &Blob<Dtype>::num)
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
