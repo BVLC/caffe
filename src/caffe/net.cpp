@@ -244,7 +244,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
-  GetLearningRateAndWeightDecay();
+  ShareWeights();
   debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
@@ -441,6 +441,9 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   params_.push_back(layers_[layer_id]->blobs()[param_id]);
   param_id_vecs_[layer_id].push_back(net_param_id);
   param_layer_indices_.push_back(make_pair(layer_id, param_id));
+  ParamSpec default_param_spec;
+  const ParamSpec* param_spec = (layer_param.param_size() > param_id) ?
+      &layer_param.param(param_id) : &default_param_spec;
   if (!param_size || !param_name.size() || (param_name.size() &&
       param_names_index_.find(param_name) == param_names_index_.end())) {
     // This layer "owns" this parameter blob -- it is either anonymous
@@ -450,6 +453,13 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     if (param_name.size()) {
       param_names_index_[param_name] = net_param_id;
     }
+    const int learnable_param_id = learnable_params_.size();
+    learnable_params_.push_back(params_[net_param_id].get());
+    learnable_param_ids_.push_back(learnable_param_id);
+    has_params_lr_.push_back(param_spec->has_lr_mult());
+    has_params_decay_.push_back(param_spec->has_decay_mult());
+    params_lr_.push_back(param_spec->lr_mult());
+    params_weight_decay_.push_back(param_spec->decay_mult());
   } else {
     // Named param blob with name we've seen before: share params
     const int owner_net_param_id = param_names_index_[param_name];
@@ -474,23 +484,25 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
       // Strict dimension checking -- all dims must be the same.
       CHECK(this_blob->shape() == owner_blob->shape());
     }
-    layers_[layer_id]->blobs()[param_id]->ShareData(
-        *layers_[owner_layer_id]->blobs()[owner_param_id]);
-  }
-}
-
-template <typename Dtype>
-void Net<Dtype>::GetLearningRateAndWeightDecay() {
-  LOG(INFO) << "Collecting Learning Rate and Weight Decay.";
-  ParamSpec default_param_spec;
-  for (int i = 0; i < layers_.size(); ++i) {
-    vector<shared_ptr<Blob<Dtype> > >& layer_blobs = layers_[i]->blobs();
-    for (int j = 0; j < layer_blobs.size(); ++j) {
-      const ParamSpec* param_spec =
-          (layers_[i]->layer_param().param_size() > j) ?
-          &layers_[i]->layer_param().param(j) : &default_param_spec;
-      params_lr_.push_back(param_spec->lr_mult());
-      params_weight_decay_.push_back(param_spec->decay_mult());
+    const int learnable_param_id = learnable_param_ids_[owner_net_param_id];
+    if (param_spec->has_lr_mult()) {
+      if (has_params_lr_[learnable_param_id]) {
+        CHECK_EQ(param_spec->lr_mult(), params_lr_[learnable_param_id])
+            << "Shared param '" << param_name << "' has mismatched lr_mult.";
+      } else {
+        has_params_lr_[learnable_param_id] = true;
+        params_lr_[learnable_param_id] = param_spec->lr_mult();
+      }
+    }
+    if (param_spec->has_decay_mult()) {
+      if (has_params_decay_[learnable_param_id]) {
+        CHECK_EQ(param_spec->decay_mult(),
+                 params_weight_decay_[learnable_param_id])
+            << "Shared param '" << param_name << "' has mismatched decay_mult.";
+      } else {
+        has_params_decay_[learnable_param_id] = true;
+        params_weight_decay_[learnable_param_id] = param_spec->decay_mult();
+      }
     }
   }
 }
@@ -895,39 +907,38 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 
 template <typename Dtype>
 void Net<Dtype>::Update() {
-  // First, accumulate the diffs of any shared parameters into their owner's
-  // diff. (Assumes that the learning rate, weight decay, etc. have already been
-  // accounted for in the current diff.)
-  for (int i = 0; i < params_.size(); ++i) {
-    if (param_owners_[i] < 0) { continue; }
-    if (debug_info_) { UpdateDebugInfo(i); }
-    const int count = params_[i]->count();
-    const Dtype* this_diff;
-    Dtype* owner_diff;
+  for (int i = 0; i < learnable_params_.size(); ++i) {
+    learnable_params_[i]->Update();
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ClearParamDiffs() {
+  for (int i = 0; i < learnable_params_.size(); ++i) {
+    Blob<Dtype>* blob = learnable_params_[i];
     switch (Caffe::mode()) {
     case Caffe::CPU:
-      this_diff = params_[i]->cpu_diff();
-      owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
-      caffe_add(count, this_diff, owner_diff, owner_diff);
+      caffe_set(blob->count(), static_cast<Dtype>(0),
+                blob->mutable_cpu_diff());
       break;
     case Caffe::GPU:
 #ifndef CPU_ONLY
-      this_diff = params_[i]->gpu_diff();
-      owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
-      caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
+      caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
+                    blob->mutable_gpu_diff());
 #else
       NO_GPU;
 #endif
       break;
-    default:
-      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
     }
   }
-  // Now, update the owned parameters.
+}
+
+template <typename Dtype>
+void Net<Dtype>::ShareWeights() {
   for (int i = 0; i < params_.size(); ++i) {
-    if (param_owners_[i] >= 0) { continue; }
-    if (debug_info_) { UpdateDebugInfo(i); }
-    params_[i]->Update();
+    if (param_owners_[i] < 0) { continue; }
+    params_[i]->ShareData(*params_[param_owners_[i]]);
+    params_[i]->ShareDiff(*params_[param_owners_[i]]);
   }
 }
 
