@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 
 #include "caffe/common.hpp"
+#include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
 
@@ -22,12 +23,12 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  GradientBasedSolverTest() :
-      seed_(1701), num_(4), channels_(3), height_(10), width_(10) {}
+  GradientBasedSolverTest() {}
 
   shared_ptr<SGDSolver<Dtype> > solver_;
-  int seed_;
-  int num_, channels_, height_, width_;
+  shared_ptr<P2PSync<Dtype> > sync_;
+  static const int seed_ = 1701;
+  static const int num_ = 4, channels_ = 3, height_ = 10, width_ = 10;
   Dtype delta_;  // Stability constant for AdaGrad.
 
   virtual SolverParameter_SolverType solver_type() = 0;
@@ -55,22 +56,35 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
          param.delta() : 0;
   }
 
+  // Passed as method argument, explicit field names improve readability
+  class Run {
+   public:
+    Run() : num(num_), num_iters(1), iter_size(1), devices(1),
+            const_data(false) {
+    }
+
+    int num;
+    int num_iters;
+    int iter_size;
+    int devices;
+    int const_data;  // Required for multi-GPU solvers to have same sequences
+  };
+
   void RunLeastSquaresSolver(const Dtype learning_rate,
-      const Dtype weight_decay, const Dtype momentum, const int num_iters,
-      const int iter_size = 1) {
+      const Dtype weight_decay, const Dtype momentum, const Run& run) {
     ostringstream proto;
     proto <<
-       "max_iter: " << num_iters << " "
+       "max_iter: " << run.num_iters << " "
        "base_lr: " << learning_rate << " "
        "lr_policy: 'fixed' "
-       "iter_size: " << iter_size << " "
+       "iter_size: " << run.iter_size << " "
        "net_param { "
        "  name: 'TestNetwork' "
        "  layer { "
        "    name: 'data' "
        "    type: 'DummyData' "
        "    dummy_data_param { "
-       "      num: " << num_ / iter_size << " "
+       "      num: " << run.num << " "
        "      channels: " << channels_ << " "
        "      height: " << height_ << " "
        "      width: " << width_ << " "
@@ -82,7 +96,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "        value: 1.0 "
        "      } "
        "      data_filler { "
-       "        type: 'gaussian' "
+       "        type: '" << (run.const_data ? "constant" : "gaussian") << "' "
        "        std: 1.0 "
        "      } "
        "    } "
@@ -121,7 +135,20 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     }
     Caffe::set_random_seed(this->seed_);
     this->InitSolverFromProtoString(proto.str());
-    this->solver_->Solve();
+    if (run.devices == 1) {
+      this->solver_->Solve();
+    } else {
+      LOG(INFO) << "Multi-GPU test on " << run.devices << " devices";
+      vector<int> gpus;
+      for (int i = 0; i < run.devices; ++i) {
+        gpus.push_back(i);
+      }
+      Caffe::set_solver_count(gpus.size());
+      this->sync_.reset(new P2PSync<Dtype>(
+          this->solver_, NULL, this->solver_->param()));
+      this->sync_->run(gpus);
+      Caffe::set_solver_count(1);
+    }
   }
 
   // Compute an update value given the current state of the train net,
@@ -129,9 +156,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   // updated_params will store the updated weight and bias results,
   // using the blobs' diffs to hold the update values themselves.
   void ComputeLeastSquaresUpdate(const Dtype learning_rate,
-      const Dtype weight_decay, const Dtype momentum,
+      const Dtype weight_decay, const Dtype momentum, const int num,
       vector<shared_ptr<Blob<Dtype> > >* updated_params) {
-    const int N = num_;
+    const int N = num;
     const int D = channels_ * height_ * width_;
 
     // Run a forward pass, and manually compute the update values from the
@@ -281,8 +308,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     const double kPrecision = 1e-2;
     const double kMinPrecision = 1e-7;
     // Solve without accumulation and save parameters.
-    this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
-        kNumIters);
+    Run run1;
+    run1.num_iters = kNumIters;
+    this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum, run1);
     // Save parameters for comparison.
     Net<Dtype>& net = *this->solver_->net();
     const vector<shared_ptr<Blob<Dtype> > >& param_blobs =
@@ -293,8 +321,11 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       noaccum_params[i]->CopyFrom(*param_blobs[i], false, true);
     }
     // Solve by equivalent accumulation of gradients over divided batches.
-    this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
-        kNumIters, kIterSize);
+    Run run2;
+    run2.num = num_ / kIterSize;
+    run2.num_iters = kNumIters;
+    run2.iter_size = kIterSize;
+    this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum, run2);
     Net<Dtype>& net_accum = *this->solver_->net();
     const vector<shared_ptr<Blob<Dtype> > >& accum_params =
         net_accum.layer_by_name("innerprod")->blobs();
@@ -333,20 +364,37 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   void TestLeastSquaresUpdate(const Dtype learning_rate = 1.0,
       const Dtype weight_decay = 0.0, const Dtype momentum = 0.0,
       const int iter_to_check = 0) {
-    // Initialize the solver and run K (= iter_to_check) solver iterations.
-    RunLeastSquaresSolver(learning_rate, weight_decay, momentum, iter_to_check);
+    // Loop for each possible set of devices
+    int available_devices = 1;
+#ifndef CPU_ONLY
+    if (Caffe::mode() == Caffe::GPU) {
+      CUDA_CHECK(cudaGetDeviceCount(&available_devices));
+    }
+#endif
+    for (int devices = 1; devices <= available_devices; ++devices) {
+      // Initialize the solver and run K (= iter_to_check) solver iterations.
+      Run ref;
+      // Run on one device, but increase batch to get equivalent run
+      ref.num = num_ * devices;
+      ref.num_iters = iter_to_check;
+      ref.const_data = devices > 1;
+      RunLeastSquaresSolver(learning_rate, weight_decay, momentum, ref);
 
-    // Compute the (K+1)th update using the analytic least squares gradient.
-    vector<shared_ptr<Blob<Dtype> > > updated_params;
-    ComputeLeastSquaresUpdate(learning_rate, weight_decay, momentum,
-                              &updated_params);
+      // Compute the (K+1)th update using the analytic least squares gradient.
+      vector<shared_ptr<Blob<Dtype> > > updated_params;
+      ComputeLeastSquaresUpdate(learning_rate, weight_decay, momentum, ref.num,
+                                &updated_params);
 
-    // Reinitialize the solver and run K+1 solver iterations.
-    RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
-                          iter_to_check + 1);
+      // Reinitialize the solver and run K+1 solver iterations.
+      Run run;
+      run.num_iters = iter_to_check + 1;
+      run.devices = devices;
+      run.const_data = devices > 1;
+      RunLeastSquaresSolver(learning_rate, weight_decay, momentum, run);
 
-    // Check that the solver's solution matches ours.
-    CheckLeastSquaresUpdate(updated_params);
+      // Check that the solver's solution matches ours.
+      CheckLeastSquaresUpdate(updated_params);
+    }
   }
 };
 
