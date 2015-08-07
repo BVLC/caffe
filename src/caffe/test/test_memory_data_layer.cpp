@@ -140,6 +140,10 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
       pixels[j] = pixel_index++ % 256;
     }
     datum_vector[i].set_data(&(pixels[0]), count);
+
+    CHECK_EQ(this->channels_, datum_vector[i].channels());
+    CHECK_EQ(this->height_, datum_vector[i].height());
+    CHECK_EQ(this->width_, datum_vector[i].width());
   }
   layer.AddDatumVector(datum_vector);
 

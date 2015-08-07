@@ -386,11 +386,13 @@ endif
 ##############################
 # Define build targets
 ##############################
-.PHONY: all test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
+.PHONY: all libs test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
+all: libs tools examples
+
+libs: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
 

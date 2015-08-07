@@ -25,6 +25,22 @@ message BlobProtoVector {
   repeated BlobProto blobs = 1;
 }
 
+// Specifies the shape (dimensions) of a Tensor.
+message TensorShape {
+  repeated int64 dim = 1 [packed = true];
+}
+
+message TensorProto {
+  optional TensorShape shape = 7;
+  repeated float data = 5 [packed = true];
+}
+
+// The TensorProtoVector is simply a way to pass multiple TensorProto instances
+// around.
+message TensorProtoVector {
+  repeated TensorProto tensors = 1;
+}
+
 message Datum {
   optional int32 channels = 1;
   optional int32 height = 2;
