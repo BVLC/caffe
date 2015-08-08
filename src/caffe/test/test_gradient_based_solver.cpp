@@ -192,7 +192,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     if (snapshot) {
       ostringstream resume_file;
       resume_file << snapshot_prefix_ << "/_iter_" << num_iters
-                  << ".solverstate.h5";
+                  << ".solverstate";
       string resume_filename = resume_file.str();
       return resume_filename;
     }
