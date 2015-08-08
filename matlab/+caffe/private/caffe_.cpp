@@ -629,7 +629,7 @@ static handler_registry handlers[] = {
  **/
 // Usage: caffe_(api_command, arg1, arg2, ...)
 void mexFunction(MEX_ARGS) {
-  mexLock();  // Avoid clearing the mex file.
+  //mexLock();  // Avoid clearing the mex file.
   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
   // Handle input command
   char* cmd = mxArrayToString(prhs[0]);
