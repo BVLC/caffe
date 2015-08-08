@@ -179,7 +179,7 @@ message SolverParameter {
     HDF5 = 0;
     BINARYPROTO = 1;
   }
-  optional SnapshotFormat snapshot_format = 37 [default = HDF5];
+  optional SnapshotFormat snapshot_format = 37 [default = BINARYPROTO];
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
   enum SolverMode {
     CPU = 0;
