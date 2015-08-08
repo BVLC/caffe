@@ -17,7 +17,7 @@
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
-const int kMaxBlobAxes = INT_MAX;
+const int kMaxBlobAxes = 32;
 
 namespace caffe {
 
