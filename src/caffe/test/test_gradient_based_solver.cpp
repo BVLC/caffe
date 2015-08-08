@@ -180,7 +180,6 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     }
     Caffe::set_random_seed(this->seed_);
     this->InitSolverFromProtoString(proto.str());
-    Caffe::set_random_seed(this->seed_);
     if (from_snapshot != NULL) {
       this->solver_->Restore(from_snapshot);
       vector<Blob<Dtype>*> empty_bottom_vec;
