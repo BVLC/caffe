@@ -41,6 +41,14 @@ def anon_lenet(batch_size):
     loss = L.SoftmaxWithLoss(ip2, label)
     return loss.to_proto()
 
+def silent_net():
+    n = caffe.NetSpec()
+    n.data, n.data2 = L.DummyData(shape=[dict(dim=[3]), dict(dim=[4, 2])],
+                                  ntop=2)
+    n.silence_data = L.Silence(n.data, ntop=0)
+    n.silence_data2 = L.Silence(n.data2, ntop=0)
+    return n.to_proto()
+
 class TestNetSpec(unittest.TestCase):
     def load_net(self, net_proto):
         f = tempfile.NamedTemporaryFile(mode='w+', delete=False)
@@ -65,3 +73,10 @@ class TestNetSpec(unittest.TestCase):
                 net_proto.layer[6].top)
         net = self.load_net(net_proto)
         self.assertEqual(len(net.layers), 9)
+
+    def test_zero_tops(self):
+        """Test net construction for top-less layers."""
+
+        net_proto = silent_net()
+        net = self.load_net(net_proto)
+        self.assertEqual(len(net.forward()), 0)
