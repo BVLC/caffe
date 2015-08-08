@@ -25,14 +25,25 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
  protected:
   GradientBasedSolverTest() :
       seed_(1701), num_(4), channels_(3), height_(10), width_(10),
-      constant_data_(false), share_(false) {}
+      share_(false) {
+        input_file_ = new string(
+        CMAKE_SOURCE_DIR "caffe/test/test_data/solver_data_list.txt" CMAKE_EXT);
+      }
+  ~GradientBasedSolverTest() {
+    delete input_file_;
+  }
 
   string snapshot_prefix_;
   shared_ptr<SGDSolver<Dtype> > solver_;
   int seed_;
+  // Dimensions are determined by generate_sample_data.py
+  // TODO this is brittle and the hdf5 file should be checked instead.
   int num_, channels_, height_, width_;
-  bool constant_data_, share_;
+  bool share_;
   Dtype delta_;  // Stability constant for AdaGrad.
+
+  // Test data: check out generate_sample_data.py in the same directory.
+  string* input_file_;
 
   virtual SolverParameter_SolverType solver_type() = 0;
   virtual void InitSolver(const SolverParameter& param) = 0;
@@ -71,25 +82,10 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "  name: 'TestNetwork' "
        "  layer { "
        "    name: 'data' "
-       "    type: 'DummyData' "
-       "    dummy_data_param { "
-       "      num: " << num_ / iter_size << " "
-       "      channels: " << channels_ << " "
-       "      height: " << height_ << " "
-       "      width: " << width_ << " "
-       "      channels: 1 "
-       "      height: 1 "
-       "      width: 1 "
-       "      data_filler { "
-       "        type: '" << string(constant_data_ ? "constant" : "gaussian")
-                         << "' "
-       "        std: 1.0 "
-       "        value: 1.0 "
-       "      } "
-       "      data_filler { "
-       "        type: 'gaussian' "
-       "        std: 1.0 "
-       "      } "
+       "    type: 'HDF5Data' "
+       "    hdf5_data_param { "
+       "      source: '" << *(this->input_file_) << "' "
+       "      batch_size: " << num_ / iter_size << " "
        "    } "
        "    top: 'data' "
        "    top: 'targets' "
@@ -354,7 +350,6 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       const Dtype kMomentum, const int kNumIters, const int kIterSize) {
     const double kPrecision = 1e-2;
     const double kMinPrecision = 1e-7;
-    constant_data_ = true;
     // Solve without accumulation and save parameters.
     this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
         kNumIters);
