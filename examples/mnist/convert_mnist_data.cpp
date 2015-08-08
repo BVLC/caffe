@@ -166,7 +166,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     }
     LOG(ERROR) << "Processed " << count << " files.";
   }
-  delete pixels;
+  delete[] pixels;
 }
 
 int main(int argc, char** argv) {

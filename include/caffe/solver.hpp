@@ -30,11 +30,12 @@ class Solver {
     Solve(resume_file.c_str());
   }
   void Step(int iters);
-  virtual ~Solver() {
-  }
-  inline shared_ptr<Net<Dtype> > net() {
-    return net_;
-  }
+  // The Restore method simply dispatches to one of the
+  // RestoreSolverStateFrom___ protected methods. You should implement these
+  // methods to restore the state from the appropriate snapshot type.
+  void Restore(const char* resume_file);
+  virtual ~Solver() {}
+  inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
@@ -42,8 +43,8 @@ class Solver {
   int iter() {
     return iter_;
   }
-  void Snapshot();
-  void Restore(const char* resume_file);
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -52,14 +53,15 @@ class Solver {
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk together with the learned net.
+  void Snapshot();
+  string SnapshotFilename(const string extension);
+  string SnapshotToBinaryProto();
+  string SnapshotToHDF5();
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
-  virtual void SnapshotSolverState(SolverState* state) = 0;
-  // The Restore function implements how one should restore the solver to a
-  // previously snapshotted state. You should implement the RestoreSolverState()
-  // function that restores the state from a SolverState protocol buffer.
-  virtual void RestoreSolverState(const SolverState& state) = 0;
+  virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
@@ -100,8 +102,11 @@ class SGDSolver : public Solver<Dtype> {
   virtual void Regularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual void ClipGradients();
-  virtual void SnapshotSolverState(SolverState * state);
-  virtual void RestoreSolverState(const SolverState& state);
+  virtual void SnapshotSolverState(const string& model_filename);
+  virtual void SnapshotSolverStateToBinaryProto(const string& model_filename);
+  virtual void SnapshotSolverStateToHDF5(const string& model_filename);
+  virtual void RestoreSolverStateFromHDF5(const string& state_file);
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file);
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
