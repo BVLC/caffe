@@ -1,6 +1,6 @@
+from __future__ import print_function
 from caffe import layers as L, params as P, to_proto
 from caffe.proto import caffe_pb2
-from __future__ import print_function
 
 # helper function for common structures
 
