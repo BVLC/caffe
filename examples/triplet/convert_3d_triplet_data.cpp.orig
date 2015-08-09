@@ -84,6 +84,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   signed char* label_k = new signed char[4];
   signed char* label_l = new signed char[4];  // label for pair wise
   signed char* label_m = new signed char[4];
+<<<<<<< d189d0a9af2a0b5e5baf61f9ab66ee9cbf75c6ac
   int db_size;
   if (rgb_use1 == 0)
     db_size = rows * cols;
@@ -94,6 +95,13 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char* pixels3 = new char[db_size];
   char* pixels4 = new char[db_size];
   char* pixels5 = new char[db_size];
+=======
+  char* pixels1 = new char[rows * cols];
+  char* pixels2 = new char[rows * cols];
+  char* pixels3 = new char[rows * cols];
+  char* pixels4 = new char[rows * cols];
+  char* pixels5 = new char[rows * cols];
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
@@ -103,7 +111,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-<<<<<<< fab928843d2f9ac33ce9468a63ed163247ffdfc8
   int counter = 0;
   for (unsigned int times = 0; times < 5; ++times) {
     // iteration in the samples of all class
@@ -117,6 +124,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
       int m = caffe::caffe_rng_rand() % num_items;
       read_image(&image_file, &label_file, i, rows, cols,  // read triplet
+<<<<<<< d189d0a9af2a0b5e5baf61f9ab66ee9cbf75c6ac
         pixels1, label_temp, label_i, rgb_use1);
       read_image(&image_file, &label_file, j, rows, cols,
         pixels2, label_temp, label_j, rgb_use1);
@@ -126,6 +134,17 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         pixels4, label_temp, label_l, rgb_use1);
       read_image(&image_file, &label_file, m, rows, cols,
         pixels5, label_temp, label_m, rgb_use1);
+=======
+        pixels1, label_temp, label_i);
+      read_image(&image_file, &label_file, j, rows, cols,
+        pixels2, label_temp, label_j);
+      read_image(&image_file, &label_file, k, rows, cols,
+        pixels3, label_temp, label_k);
+      read_image(&image_file, &label_file, l, rows, cols,  // read pair wise
+        pixels4, label_temp, label_l);
+      read_image(&image_file, &label_file, m, rows, cols,
+        pixels5, label_temp, label_m);
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
 
       bool pair_pass = false;
       bool triplet1_pass = false;
@@ -149,7 +168,11 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
       float dist_ij = std::sqrt(ij_x + ij_y + ij_z);
       float dist_im = std::sqrt(im_x + im_y + im_z);
+<<<<<<< d189d0a9af2a0b5e5baf61f9ab66ee9cbf75c6ac
       if (*label_i == *label_j && dist_ij < 100/2 && dist_ij != 0)
+=======
+      if (*label_i == *label_j && dist_ij < 100/2)
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
         pair_pass = true;
       if (pair_pass && (*label_i  != *label_k))
         triplet1_pass = true;
@@ -196,58 +219,6 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       }  // iteration in the samples of all class
     }  // iteration in the samples in one class
   }  // iteration in times
-=======
-  for (unsigned int itemid = 0; itemid < 10 * num_items; ++itemid) {
-    int i = caffe::caffe_rng_rand() % num_items;  // pick triplet groups
-    int j = caffe::caffe_rng_rand() % num_items;
-    int k = caffe::caffe_rng_rand() % num_items;
-    int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
-    int m = caffe::caffe_rng_rand() % num_items;
-    read_image(&image_file, &label_file, i, rows, cols,  // read triplet
-        pixels, label_temp, label_i);
-    read_image(&image_file, &label_file, j, rows, cols,
-        pixels + (rows * cols), label_temp, label_j);
-    read_image(&image_file, &label_file, k, rows, cols,
-        pixels + (2 * rows * cols), label_temp, label_k);
-    read_image(&image_file, &label_file, l, rows, cols,  // read pair wise
-        pixels + (3 * rows * cols), label_temp, label_l);
-    read_image(&image_file, &label_file, m, rows, cols,
-        pixels + (4 * rows * cols), label_temp, label_m);
-
-    datum.set_data(pixels, 5*rows*cols);  // set data
-    bool triplet_class_pass;
-    bool triplet_class_same;
-    bool triplet_pose_pass;
-    bool pair_class_pass;
-    int ij_x, ij_y, ij_z;
-    int ik_x, ik_y, ik_z;
-    ij_x = static_cast<int>(*(label_i+1)-*(label_j+1))*(*(label_i+1)-*(label_j+1));
-    ij_y = static_cast<int>(*(label_i+2)-*(label_j+2))*(*(label_i+2)-*(label_j+2));
-    ij_z = static_cast<int>(*(label_i+3)-*(label_j+3))*(*(label_i+3)-*(label_j+3));
-    ik_x = static_cast<int>(*(label_i+1)-*(label_k+1))*(*(label_i+1)-*(label_k+1));
-    ik_y = static_cast<int>(*(label_i+2)-*(label_k+2))*(*(label_i+2)-*(label_k+2));
-    ik_z = static_cast<int>(*(label_i+3)-*(label_k+3))*(*(label_i+3)-*(label_k+3));
-    int dist_ij = ij_x + ij_y + ij_z;
-    int dist_ik = ik_x + ik_y + ik_z;
-    if (dist_ij < dist_ik )
-      triplet_pose_pass = true;
-    if ((*label_i  == *label_j) && (*label_i  != *label_k))
-      triplet_class_pass = true;
-    if ((*label_i  == *label_j) && (*label_i  == *label_k))
-      triplet_class_same = true;
-    if (*label_l == *label_m)
-      pair_class_pass = true;
-    if (( triplet_class_pass || (triplet_class_same && triplet_pose_pass)) && pair_class_pass) {
-      datum.set_label(1);
-      datum.SerializeToString(&value);
-      snprintf(key, kMaxKeyLength, "%08d", itemid);
-      db->Put(leveldb::WriteOptions(), std::string(key), value);
-    } else {
-      itemid--;
-      datum.set_label(0);
-    }
-  }
->>>>>>> rearrange the training samples selection codes
   delete db;
   delete pixels1;
   delete pixels2;
@@ -257,12 +228,20 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 }
 
 int main(int argc, char** argv) {
+<<<<<<< d189d0a9af2a0b5e5baf61f9ab66ee9cbf75c6ac
   if (argc != 6) {
+=======
+  if (argc != 5) {
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
     printf("This script converts the dataset to the leveldb format used\n"
            "by caffe to train a triplet network.\n"
            "Usage:\n"
            "    convert_3d_data input_image_file input_label_file "
+<<<<<<< d189d0a9af2a0b5e5baf61f9ab66ee9cbf75c6ac
            "output_db_file class_number rgb_use \n");
+=======
+           "output_db_file class_number\n");
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
   } else {
     google::InitGoogleLogging(argv[0]);
     convert_dataset(argv[1], argv[2], argv[3], argv[4], argv[5]);

@@ -175,7 +175,10 @@ layer {
   top: "loss"
   triplet_loss_param {
     margin: 1
+<<<<<<< 8bea48cb77e890cda255da58b142f3a402196328
+=======
     losstype: 0
     num_triplets: 3
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
   }
 }

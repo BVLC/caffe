@@ -443,6 +443,8 @@ message ContrastiveLossParameter {
 message TripletLossParameter {
   //margin for negative triplet
   optional float margin = 1 [default = 1.0];
+  optional uint32 losstype = 2 [default = 1];
+  optional uint32 num_triplets = 3 [default = 3];
 }
 
 >>>>>>> triplet data generation and network update
