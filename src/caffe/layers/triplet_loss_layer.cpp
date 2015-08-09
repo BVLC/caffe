@@ -12,33 +12,25 @@ template <typename Dtype>
 void TripletLossLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
-  CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
-  CHECK_EQ(bottom[0]->channels(), bottom[2]->channels());
-  CHECK_EQ(bottom[0]->channels(), bottom[3]->channels());
-  CHECK_EQ(bottom[0]->channels(), bottom[4]->channels());
+  // number of triplet in a batch
+  int num_triplets = this->layer_param_.triplet_loss_param().num_triplets();
+  // dimension of each descriptor
+  int dim = bottom[0]->count()/bottom[0]->num();
+  CHECK_EQ(bottom[0]->channels(), dim);
   CHECK_EQ(bottom[0]->height(), 1);
   CHECK_EQ(bottom[0]->width(), 1);
+  CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  CHECK_EQ(bottom[2]->height(), 1);
-  CHECK_EQ(bottom[2]->width(), 1);
-  CHECK_EQ(bottom[3]->height(), 1);
-  CHECK_EQ(bottom[3]->width(), 1);
-  CHECK_EQ(bottom[4]->height(), 1);
-  CHECK_EQ(bottom[4]->width(), 1);
-  CHECK_EQ(bottom[5]->channels(), 1);
-  CHECK_EQ(bottom[5]->height(), 1);
-  CHECK_EQ(bottom[5]->width(), 1);
-  diff_pos.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
-  diff_neg.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
-  diff_par.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
-  diff_sq_pos.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
-  diff_sq_neg.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
-  diff_sq_par.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
-  dist_sq_.Reshape(bottom[0]->num(), 1, 1, 1);
-  dist_sq_pos.Reshape(bottom[0]->num(), 1, 1, 1);
-  dist_sq_neg.Reshape(bottom[0]->num(), 1, 1, 1);
-  dist_sq_par.Reshape(bottom[0]->num(), 1, 1, 1);
+  // In each set, we have:
+  // the descriptor of reference sample, closest sample, and negative samples
+  // number of sets in the whole batch
+  int num_set = bottom[0]->num()/(2 + num_triplets);
+  dist_sq_.Reshape(num_set, 1, 1, 1);
+  diff_pos.Reshape(num_set, dim, 1, 1);
+  dist_sq_pos.Reshape(num_set, 1, 1, 1);
+  diff_neg.Reshape(num_set, dim, 1, 1);
+  dist_sq_neg.Reshape(num_set, 1, 1, 1);
   // vector of ones used to sum along channels
   summer_vec_.Reshape(bottom[0]->channels(), 1, 1, 1);
   for (int i = 0; i < bottom[0]->channels(); ++i)
@@ -49,77 +41,78 @@ template <typename Dtype>
 void TripletLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  int count = bottom[0]->count();
-  caffe_sub(
-      count,
-      bottom[0]->cpu_data(),  // a
-      bottom[1]->cpu_data(),  // b
-      diff_pos.mutable_cpu_data());  // a_i-b_i: positive
-  caffe_sub(
-      count,
-      bottom[0]->cpu_data(),  // a
-      bottom[2]->cpu_data(),  // c
-      diff_neg.mutable_cpu_data());  // a_i-c_i: negative
-  caffe_sub(
-      count,
-      bottom[3]->cpu_data(),  // d
-      bottom[4]->cpu_data(),  // e
-      diff_par.mutable_cpu_data());  // d_i-e_i: pair wise
-  const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.triplet_loss_param().margin();
   Dtype losstype = this->layer_param_.triplet_loss_param().losstype();
+  int num_triplets = this->layer_param_.triplet_loss_param().num_triplets();
+  CHECK_EQ(bottom[0]->num()%(2 + num_triplets), 0);
   Dtype loss(0.0);
+  int dim = bottom[0]->count()/bottom[0]->num();
+  int num_set = bottom[0]->num()/(2 + num_triplets);
   if (losstype == 0) {
-  for (int i = 0; i < bottom[0]->num(); ++i) {
-    // Triplet loss accumulation
-    // Loss component calculated from a and b
-    dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
-        diff_pos.cpu_data() + (i*channels), diff_pos.cpu_data() + (i*channels));
-    // a b is a similar pair for triplet
-    dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.cpu_data()[i];
-    // Loss component calculated from a and c
-    dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
-        diff_neg.cpu_data() + (i*channels), diff_neg.cpu_data() + (i*channels));
-    // a c is a dissimilar pair for triplet
-    dist_sq_.mutable_cpu_data()[i] -= dist_sq_neg.cpu_data()[i];
-    // loss accumulated accumulated by the triplet part
-    loss += std::max(margin + dist_sq_.cpu_data()[i], Dtype(0.0));
-    // Pair wise loss accumulation
-    // Loss component calculated from d and e
-    dist_sq_par.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
-        diff_par.cpu_data() + (i*channels), diff_par.cpu_data() + (i*channels));
-    // d e is a similar pair for pair wise
+  for (int i = 0; i < num_set; ++i) {
+    caffe_sub(
+        dim,
+        bottom[0]->cpu_data() + (2 + num_triplets)*i*dim,  // reference
+        bottom[0]->cpu_data() + ((2 + num_triplets)*i + 1)*dim,  // positive
+        diff_pos.mutable_cpu_data() + i*dim);  // reference-pose_close
+    // Loss component calculated from reference and close one
+    dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(dim,
+        diff_pos.cpu_data() + i*dim, diff_pos.cpu_data() + i*dim);
+    // a b is a similar pair for pair wise
     // loss accumulated by the pair wise part
-    loss += dist_sq_par.cpu_data()[i];
+    loss += dist_sq_pos.cpu_data()[i];
+    for (int triplet = 0; triplet < num_triplets; ++triplet) {
+      // Triplet loss accumulation
+      // a and negative[triplet] is a similar pair for triplet
+      dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.cpu_data()[i];
+      // Loss component calculated from negative part
+      caffe_sub(
+          dim,
+          bottom[0]->cpu_data() + (2 + num_triplets)*i*dim,  // reference
+          bottom[0]->cpu_data() + ((2 + num_triplets)*i + 2 + triplet)*dim,
+          diff_neg.mutable_cpu_data() + i*dim);  // reference-negative
+      dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(dim,
+          diff_neg.cpu_data() + i*dim, diff_neg.cpu_data() + i*dim);
+      // a and negative[triplet] is a dissimilar pair for triplet
+      dist_sq_.mutable_cpu_data()[i] -= dist_sq_neg.cpu_data()[i];
+      // loss accumulated accumulated by the triplet part
+      loss += std::max(margin + dist_sq_.cpu_data()[i], Dtype(0.0));
+    }
   }
-  loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
+  loss = loss / static_cast<Dtype>(num_set) / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
   } else {
-  for (int i = 0; i < bottom[0]->num(); ++i) {
-    // softTriplet loss accumulation
-    // Loss component calculated from a and b
-    dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
-        diff_pos.cpu_data() + (i*channels), diff_pos.cpu_data() + (i*channels));
-    // a b is a similar pair for triplet
-    dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.cpu_data()[i];
-    dist_sq_.mutable_cpu_data()[i] += margin;
-    // Loss component calculated from a and c
-    dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
-        diff_neg.cpu_data() + (i*channels), diff_neg.cpu_data() + (i*channels));
-    // a c is a dissimilar pair for triplet
-    dist_sq_.mutable_cpu_data()[i] = 1 - \
-dist_sq_neg.cpu_data()[i] / dist_sq_.mutable_cpu_data()[i];
-    // loss accumulated accumulated by the triplet part
-    loss += std::max(dist_sq_.cpu_data()[i], Dtype(0.0));
-    // Pair wise loss accumulation
-    // Loss component calculated from d and e
-    dist_sq_par.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
-        diff_par.cpu_data() + (i*channels), diff_par.cpu_data() + (i*channels));
-    // d e is a similar pair for pair wise
+  for (int i = 0; i < num_set; ++i) {
+    caffe_sub(
+        dim,
+        bottom[0]->cpu_data() + (2 + num_triplets)*i*dim,  // reference
+        bottom[0]->cpu_data() + ((2 + num_triplets)*i + 1)*dim,  // positive
+        diff_pos.mutable_cpu_data() + i*dim);  // reference-pose_close
+    // Loss component calculated from reference and close one
+    dist_sq_pos.mutable_cpu_data()[i] = caffe_cpu_dot(dim,
+        diff_pos.cpu_data() + i*dim, diff_pos.cpu_data() + i*dim);
+    // a b is a similar pair for pair wise
     // loss accumulated by the pair wise part
-    loss += dist_sq_par.cpu_data()[i];
+    loss += dist_sq_pos.cpu_data()[i];
+    dist_sq_.mutable_cpu_data()[i] = dist_sq_pos.mutable_cpu_data()[i];
+    dist_sq_.mutable_cpu_data()[i] += margin;
+    for (int triplet = 0; triplet < num_triplets; ++triplet) {
+      // Loss component calculated from negative part
+      caffe_sub(
+          dim,
+          bottom[0]->cpu_data() + (2 + num_triplets)*i*dim,  // reference
+          bottom[0]->cpu_data() + ((2 + num_triplets)*i + 2 + triplet)*dim,
+          diff_neg.mutable_cpu_data() + i*dim);  // reference-negative
+      dist_sq_neg.mutable_cpu_data()[i] = caffe_cpu_dot(dim,
+          diff_neg.cpu_data() + i*dim, diff_neg.cpu_data() + i*dim);
+      // a and negative[triplet] is a dissimilar pair for triplet
+      dist_sq_.mutable_cpu_data()[i] = 1 - \
+        dist_sq_neg.cpu_data()[i] / dist_sq_.mutable_cpu_data()[i];
+      // loss accumulated accumulated by the triplet part
+      loss += std::max(dist_sq_.cpu_data()[i], Dtype(0.0));
+    }
   }
-  loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
+  loss = loss / static_cast<Dtype>(num_set) / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
   }
 }
@@ -129,162 +122,268 @@ void TripletLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.triplet_loss_param().margin();
   Dtype losstype = this->layer_param_.triplet_loss_param().losstype();
+  int num_triplets = this->layer_param_.triplet_loss_param().num_triplets();
+  int dim = bottom[0]->count()/bottom[0]->num();
+  int num_set = bottom[0]->num()/(2 + num_triplets);
   if (losstype == 0) {
-    // BP for feat1
+  // BP for feat1(extracted from reference)
+  for (int i = 0; i < 1; ++i) {
     if (propagate_down[0]) {
       const Dtype sign = 1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[0]->num());
-      int num = bottom[0]->num();
-      int channels = bottom[0]->channels();
-      for (int j = 0; j < num; ++j) {
+          static_cast<Dtype>(num_set);
+      for (int j = 0; j < num_set; ++j) {
         Dtype* bout = bottom[0]->mutable_cpu_diff();
-        if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
-        // similar pairs
-          caffe_cpu_axpby(
-              channels,
-              alpha,
-              diff_pos.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
-        // dissimilar pairs
-          caffe_cpu_axpby(
-              channels,
-              -alpha,
-              diff_neg.cpu_data() + (j*channels),
-              Dtype(1.0),
-              bout + (j*channels));
-        } else {
-            caffe_set(channels, Dtype(0), bout + (j*channels));
+        // the pair part
+        caffe_cpu_axpby(
+            dim,
+            alpha,
+            diff_pos.cpu_data() + (j*dim),
+            Dtype(0.0),
+            bout + ((2 + num_triplets)*j + i)*dim);
+        // the num_triplets triplet part
+        for (int triplet = 0; triplet < num_triplets; ++triplet) {
+          caffe_sub(
+              dim,
+              bottom[0]->cpu_data() + (2 + num_triplets)*j*dim,  // reference
+              bottom[0]->cpu_data() + ((2 + num_triplets)*j + 2 + triplet)*dim,
+              diff_neg.mutable_cpu_data() + j*dim);  // reference-negative
+          // Triplet loss accumulation
+          // a and negative[triplet] is a similar pair for triplet
+          dist_sq_.mutable_cpu_data()[j] = dist_sq_pos.cpu_data()[j];
+          dist_sq_neg.mutable_cpu_data()[j] = caffe_cpu_dot(dim,
+              diff_neg.cpu_data() + j*dim, diff_neg.cpu_data() + j*dim);
+          // a and negative[triplet] is a dissimilar pair for triplet
+          dist_sq_.mutable_cpu_data()[j] -= dist_sq_neg.cpu_data()[j];
+          // Loss component calculated from negative part
+          if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+            // similar pair in triplet
+            caffe_cpu_axpby(
+                dim,
+                alpha,
+                diff_pos.cpu_data() + (j*dim),
+                Dtype(1.0),
+                bout + (2 + num_triplets)*j*dim);
+            // dissimilar pair in triplet
+            caffe_cpu_axpby(
+                dim,
+                -alpha,
+                diff_neg.cpu_data() + (j*dim),
+                Dtype(1.0),
+                bout + ((2 + num_triplets)*j + i)*dim);
+          }
         }
       }
     }
-  // BP for feat2 and feat3
-  for (int i = 1; i < 3; ++i) {
-    if (propagate_down[i]) {
-      const Dtype sign = (i == 1) ? -1 : 1;
+  }
+  // BP for feat2(extracted from the closest sample)
+  for (int i = 1; i < 2; ++i) {
+    if (propagate_down[0]) {
+      const Dtype sign = -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[i]->num());
-      int num = bottom[i]->num();
-      int channels = bottom[i]->channels();
-      for (int j = 0; j < num; ++j) {
-        Dtype* bout = bottom[i]->mutable_cpu_diff();
-        if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
-          if (i == 1) {
-        // similar pairs
-          caffe_cpu_axpby(
-              channels,
-              alpha,
-              diff_pos.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
-          } else {
-        // dissimilar pairs
-          caffe_cpu_axpby(
-              channels,
-              alpha,
-              diff_neg.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
+          static_cast<Dtype>(num_set);
+      for (int j = 0; j < num_set; ++j) {
+        Dtype* bout = bottom[0]->mutable_cpu_diff();
+        // the pair part
+        caffe_cpu_axpby(
+            dim,
+            alpha,
+            diff_pos.cpu_data() + (j*dim),
+            Dtype(0.0),
+            bout + ((2 + num_triplets)*j + i)*dim);
+        // the num_triplets triplet part
+        for (int triplet = 0; triplet < num_triplets; ++triplet) {
+          caffe_sub(
+              dim,
+              bottom[0]->cpu_data() + (2 + num_triplets)*j*dim,  // reference
+              bottom[0]->cpu_data() + ((2 + num_triplets)*j + 2 + triplet)*dim,
+              diff_neg.mutable_cpu_data() + j*dim);  // reference-negative
+          // Triplet loss accumulation
+          // a and negative[triplet] is a similar pair for triplet
+          dist_sq_.mutable_cpu_data()[j] = dist_sq_pos.cpu_data()[j];
+          dist_sq_neg.mutable_cpu_data()[j] = caffe_cpu_dot(dim,
+              diff_neg.cpu_data() + j*dim, diff_neg.cpu_data() + j*dim);
+          // a and negative[triplet] is a dissimilar pair for triplet
+          dist_sq_.mutable_cpu_data()[j] -= dist_sq_neg.cpu_data()[j];
+          if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+            // similar pair in triplet
+            caffe_cpu_axpby(
+                dim,
+                alpha,
+                diff_pos.cpu_data() + (j*dim),
+                Dtype(1.0),
+                bout + ((2 + num_triplets)*j + i)*dim);
           }
+        }
+      }
+    }
+  }
+  // BP for negative feature used in the num_triplets triplet part
+  for (int i = 2; i < 2 + num_triplets; ++i) {
+    if (propagate_down[0]) {
+      const Dtype sign = 1;
+      const Dtype alpha = sign * top[0]->cpu_diff()[0] /
+          static_cast<Dtype>(num_set);
+      for (int j = 0; j < num_set; ++j) {
+        Dtype* bout = bottom[0]->mutable_cpu_diff();
+        caffe_sub(
+            dim,
+            bottom[0]->cpu_data() + (2 + num_triplets)*j*dim,  // reference
+            bottom[0]->cpu_data() + ((2 + num_triplets)*j + i)*dim,
+            diff_neg.mutable_cpu_data() + j*dim);  // reference-negative
+        // Triplet loss accumulation
+        // a and negative[triplet] is a similar pair for triplet
+        dist_sq_.mutable_cpu_data()[j] = dist_sq_pos.cpu_data()[j];
+        dist_sq_neg.mutable_cpu_data()[j] = caffe_cpu_dot(dim,
+            diff_neg.cpu_data() + j*dim, diff_neg.cpu_data() + j*dim);
+        // a and negative[triplet] is a dissimilar pair for triplet
+        dist_sq_.mutable_cpu_data()[j] -= dist_sq_neg.cpu_data()[j];
+        if ((margin + dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+          // dissimilar pairs
+          caffe_cpu_axpby(
+              dim,
+              alpha,
+              diff_neg.cpu_data() + (j*dim),
+              Dtype(0.0),
+              bout + ((2 + num_triplets)*j + i)*dim);
         } else {
-            caffe_set(channels, Dtype(0), bout + (j*channels));
+            caffe_set(dim, Dtype(0), bout + ((2 + num_triplets)*j + i)*dim);
         }
       }
     }
   }
   } else {
+  for (int i = 0; i < 1; ++i) {
     // BP for data1(feat1)
     if (propagate_down[0]) {
-      const Dtype alpha = top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[0]->num());
-      int num = bottom[0]->num();
-      int channels = bottom[0]->channels();
-      for (int j = 0; j < num; ++j) {
+      const Dtype sign = 1;
+      const Dtype alpha = sign * top[0]->cpu_diff()[0] /
+          static_cast<Dtype>(num_set);
+      for (int j = 0; j < num_set; ++j) {
         Dtype* bout = bottom[0]->mutable_cpu_diff();
-        if ((dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
-          caffe_cpu_axpby(
-              channels,
-              alpha*dist_sq_neg.mutable_cpu_data()[j]\
-/((dist_sq_pos.mutable_cpu_data()[j]+margin)\
-*(dist_sq_pos.mutable_cpu_data()[j]+margin)),
-              diff_pos.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
-          caffe_cpu_axpby(
-              channels,
-              -alpha*(dist_sq_pos.mutable_cpu_data()[j] + margin)\
-/((dist_sq_pos.mutable_cpu_data()[j] + margin)\
-*(dist_sq_pos.mutable_cpu_data()[j] + margin)),
-              diff_neg.cpu_data() + (j*channels),
-              Dtype(1.0),
-              bout + (j*channels));
-        } else {
-            caffe_set(channels, Dtype(0), bout + (j*channels));
-        }
-      }
-    }
-    // BP for positive data(feat2)
-    if (propagate_down[1]) {
-      const Dtype alpha = top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[1]->num());
-      int num = bottom[1]->num();
-      int channels = bottom[1]->channels();
-      for (int j = 0; j < num; ++j) {
-        Dtype* bout = bottom[1]->mutable_cpu_diff();
-        if ((dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
-          caffe_cpu_axpby(
-              channels,
-              -alpha*dist_sq_neg.mutable_cpu_data()[j]\
-/((dist_sq_pos.mutable_cpu_data()[j] + margin)\
-*(dist_sq_pos.mutable_cpu_data()[j] + margin)),
-              diff_pos.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
-        } else {
-            caffe_set(channels, Dtype(0), bout + (j*channels));
-        }
-      }
-    }
-    // BP for negative data(feat3)
-    if (propagate_down[2]) {
-      const Dtype alpha = top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[2]->num());
-      int num = bottom[2]->num();
-      int channels = bottom[2]->channels();
-      for (int j = 0; j < num; ++j) {
-        Dtype* bout = bottom[2]->mutable_cpu_diff();
-        if ((dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
-          caffe_cpu_axpby(
-              channels,
-              alpha/(dist_sq_pos.mutable_cpu_data()[j] + margin),
-              diff_neg.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
-        } else {
-            caffe_set(channels, Dtype(0), bout + (j*channels));
+        // the pair part
+        caffe_cpu_axpby(
+            dim,
+            alpha,
+            diff_pos.cpu_data() + (j*dim),
+            Dtype(0.0),
+            bout + ((2 + num_triplets)*j + i)*dim);
+        dist_sq_.mutable_cpu_data()[j] = dist_sq_pos.mutable_cpu_data()[j];
+        dist_sq_.mutable_cpu_data()[j] += margin;
+        // the num_triplets triplet part
+        for (int triplet = 0; triplet < num_triplets; ++triplet) {
+          // Loss component calculated from negative part
+          caffe_sub(
+              dim,
+              bottom[0]->cpu_data() + (2 + num_triplets)*j*dim,  // reference
+              bottom[0]->cpu_data() + ((2 + num_triplets)*j + 2 + triplet)*dim,
+              diff_neg.mutable_cpu_data() + j*dim);  // reference-negative
+          dist_sq_neg.mutable_cpu_data()[j] = caffe_cpu_dot(dim,
+              diff_neg.cpu_data() + j*dim, diff_neg.cpu_data() + j*dim);
+          // a and negative[triplet] is a dissimilar pair for triplet
+          dist_sq_.mutable_cpu_data()[j] = 1 - \
+            dist_sq_neg.cpu_data()[j] / dist_sq_.mutable_cpu_data()[j];
+          // loss accumulated accumulated by the triplet part
+          if ((dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+            caffe_cpu_axpby(
+                dim,
+                alpha*dist_sq_neg.mutable_cpu_data()[j]\
+  /((dist_sq_pos.mutable_cpu_data()[j]+margin)\
+  *(dist_sq_pos.mutable_cpu_data()[j]+margin)),
+                diff_pos.cpu_data() + (j*dim),
+                Dtype(1.0),
+                bout + ((2 + num_triplets)*j + i)*dim);
+            caffe_cpu_axpby(
+                dim,
+                -alpha/(dist_sq_pos.mutable_cpu_data()[j] + margin),
+                diff_neg.cpu_data() + (j*dim),
+                Dtype(1.0),
+                bout + ((2 + num_triplets)*j + i)*dim);
+          }
         }
       }
     }
   }
-  // pair wise back
-  for (int i = 3; i < 5; ++i) {
-    if (propagate_down[i]) {
-      const Dtype sign = (i == 3) ? 1 : -1;
+  for (int i = 1; i < 2; ++i) {
+    // BP for positive data(feat2)
+    if (propagate_down[0]) {
+      const Dtype sign = -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
-          static_cast<Dtype>(bottom[i]->num());
-      int num = bottom[i]->num();
-      int channels = bottom[i]->channels();
-      for (int j = 0; j < num; ++j) {
-        Dtype* bout = bottom[i]->mutable_cpu_diff();  // similar pairs
-          caffe_cpu_axpby(
-              channels,
-              alpha,
-              diff_par.cpu_data() + (j*channels),
-              Dtype(0.0),
-              bout + (j*channels));
+          static_cast<Dtype>(num_set);
+      for (int j = 0; j < num_set; ++j) {
+        Dtype* bout = bottom[0]->mutable_cpu_diff();
+        // the pair part
+        caffe_cpu_axpby(
+            dim,
+            alpha,
+            diff_pos.cpu_data() + (j*dim),
+            Dtype(0.0),
+            bout + ((2 + num_triplets)*j + i)*dim);
+        dist_sq_.mutable_cpu_data()[j] = dist_sq_pos.mutable_cpu_data()[j];
+        dist_sq_.mutable_cpu_data()[j] += margin;
+        // the num_triplets triplet part
+        for (int triplet = 0; triplet < num_triplets; ++triplet) {
+          // Loss component calculated from negative part
+          caffe_sub(
+              dim,
+              bottom[0]->cpu_data() + (2 + num_triplets)*j*dim,  // reference
+              bottom[0]->cpu_data() + ((2 + num_triplets)*j + 2 + triplet)*dim,
+              diff_neg.mutable_cpu_data() + j*dim);  // reference-negative
+          dist_sq_neg.mutable_cpu_data()[j] = caffe_cpu_dot(dim,
+              diff_neg.cpu_data() + j*dim, diff_neg.cpu_data() + j*dim);
+          // a and negative[triplet] is a dissimilar pair for triplet
+          dist_sq_.mutable_cpu_data()[j] = 1 - \
+            dist_sq_neg.cpu_data()[j] / dist_sq_.mutable_cpu_data()[j];
+          // loss accumulated accumulated by the triplet part
+          if ((dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+            caffe_cpu_axpby(
+                dim,
+                alpha*dist_sq_neg.mutable_cpu_data()[j]\
+  /((dist_sq_pos.mutable_cpu_data()[j]+margin)\
+  *(dist_sq_pos.mutable_cpu_data()[j]+margin)),
+                diff_pos.cpu_data() + (j*dim),
+                Dtype(1.0),
+                bout + ((2 + num_triplets)*j + i)*dim);
+          }
+        }
       }
     }
+  }
+  for (int i = 2; i < 2 + num_triplets; ++i) {
+    // BP for negative data(feat3)
+    if (propagate_down[0]) {
+      const Dtype sign = 1;
+      const Dtype alpha = sign * top[0]->cpu_diff()[0] /
+          static_cast<Dtype>(num_set);
+      for (int j = 0; j < num_set; ++j) {
+        Dtype* bout = bottom[0]->mutable_cpu_diff();
+        dist_sq_.mutable_cpu_data()[j] = dist_sq_pos.mutable_cpu_data()[j];
+        dist_sq_.mutable_cpu_data()[j] += margin;
+        // Loss component calculated from negative part
+        caffe_sub(
+            dim,
+            bottom[0]->cpu_data() + (2 + num_triplets)*j*dim,  // reference
+            bottom[0]->cpu_data() + ((2 + num_triplets)*j + i)*dim,
+            diff_neg.mutable_cpu_data() + j*dim);  // reference-negative
+        dist_sq_neg.mutable_cpu_data()[j] = caffe_cpu_dot(dim,
+            diff_neg.cpu_data() + j*dim, diff_neg.cpu_data() + j*dim);
+        // a and negative[triplet] is a dissimilar pair for triplet
+        dist_sq_.mutable_cpu_data()[j] = 1 - \
+          dist_sq_neg.cpu_data()[j] / dist_sq_.mutable_cpu_data()[j];
+        // loss accumulated accumulated by the triplet part
+        if ((dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+          caffe_cpu_axpby(
+              dim,
+              alpha/(dist_sq_pos.mutable_cpu_data()[j] + margin),
+              diff_neg.cpu_data() + (j*dim),
+              Dtype(0.0),
+              bout + ((2 + num_triplets)*j + i)*dim);
+        } else {
+            caffe_set(dim, Dtype(0), bout + ((2 + num_triplets)*j + i)*dim);
+        }
+      }
+    }
+  }
   }
 }
 
