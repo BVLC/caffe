@@ -8,8 +8,6 @@ TODO:
 #include <string>
 #include <vector>
 
-#include "hdf5.h"
-#include "hdf5_hl.h"
 #include "stdint.h"
 
 #include "caffe/data_layers.hpp"
@@ -77,7 +75,7 @@ void HDF5DataLayer<Dtype>::FillHDF5FileData() {
 
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top) {
   // Refuse transformation parameters since HDF5 is totally generic.
   CHECK(!this->layer_param_.has_transform_param()) <<
       this->type() << " does not transform data.";
@@ -151,14 +149,12 @@ void HDF5DataLayer<Dtype>::InternalThreadEntry() {
 
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top) {
   this->JoinPrefetchThread();
-
   for (int i = 0; i < top.size(); ++i) {
     const int count = top[i]->count();
     caffe_copy(count, hdf_blobs_[i]->cpu_data(), top[i]->mutable_cpu_data());
   }
-
   this->CreatePrefetchThread();
 }
 
