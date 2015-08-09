@@ -861,7 +861,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
 template <typename Dtype>
 void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
-  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
 
   // get the learning rate
