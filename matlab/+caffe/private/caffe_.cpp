@@ -539,7 +539,8 @@ static void protobuf_log_handler(::google::protobuf::LogLevel level, const char*
 {
 	const int max_err_length = 512;
 	char err_message[max_err_length];
-	sprintf_s(err_message, "Protobuf : %s . at %s Line %d", message.c_str(), filename, line);
+	snprintf(err_message, max_err_length, "Protobuf : %s . at %s Line %d",
+           message.c_str(), filename, line);
 	LOG(INFO) << err_message;
 	::google::FlushLogFiles(0);
 	mexErrMsgTxt(err_message);
@@ -588,40 +589,40 @@ struct handler_registry {
 
 static handler_registry handlers[] = {
   // Public API functions
-	{ "get_solver",						get_solver						},
-	{ "solver_get_attr",				solver_get_attr					},
-	{ "solver_get_iter",				solver_get_iter					},
-	{ "solver_get_max_iter",			solver_get_max_iter				},
-	{ "solver_restore",					solver_restore					},
-	{ "solver_solve",					solver_solve					},
-	{ "solver_step",					solver_step						},
-	{ "get_net",						get_net							},
-	{ "net_get_attr",					net_get_attr					},
-	{ "net_set_phase",					net_set_phase					},
-	{ "net_forward",					net_forward						},
-	{ "net_backward",					net_backward					},
-	{ "net_copy_from",					net_copy_from					},
-	{ "net_share_trained_layers_with",	net_share_trained_layers_with	},
-	{ "net_reshape",					net_reshape						},
-	{ "net_save",						net_save						},
-	{ "layer_get_attr",					layer_get_attr					},
-	{ "layer_get_type",					layer_get_type					},
-	{ "blob_get_shape",					blob_get_shape					},
-	{ "blob_reshape",					blob_reshape					},
-	{ "blob_get_data",					blob_get_data					},
-	{ "blob_set_data",					blob_set_data					},
-	{ "blob_get_diff",					blob_get_diff					},
-	{ "blob_set_diff",					blob_set_diff					},
-	{ "set_mode_cpu",					set_mode_cpu					},
-	{ "set_mode_gpu",					set_mode_gpu					},
-	{ "set_device",						set_device						},
-	{ "set_random_seed",				set_random_seed					},
-	{ "get_init_key",					get_init_key					},
-	{ "init_log",						init_log						},
-	{ "reset",							reset							},
-	{ "read_mean",						read_mean						},
+  { "get_solver",                    get_solver                     },
+  { "solver_get_attr",               solver_get_attr                },
+  { "solver_get_iter",               solver_get_iter                },
+  { "solver_get_max_iter",           solver_get_max_iter            },
+  { "solver_restore",                solver_restore                 },
+  { "solver_solve",                  solver_solve                   },
+  { "solver_step",                   solver_step                    },
+  { "get_net",                       get_net                        },
+  { "net_get_attr",                  net_get_attr                   },
+  { "net_set_phase",                 net_set_phase                  },
+  { "net_forward",                   net_forward                    },
+  { "net_backward",                  net_backward                   },
+  { "net_copy_from",                 net_copy_from                  },
+  { "net_share_trained_layers_with", net_share_trained_layers_with  },
+  { "net_reshape",                   net_reshape                    },
+  { "net_save",                      net_save                       },
+  { "layer_get_attr",                layer_get_attr                 },
+  { "layer_get_type",                layer_get_type                 },
+  { "blob_get_shape",                blob_get_shape                 },
+  { "blob_reshape",                  blob_reshape                   },
+  { "blob_get_data",                 blob_get_data                  },
+  { "blob_set_data",                 blob_set_data                  },
+  { "blob_get_diff",                 blob_get_diff                  },
+  { "blob_set_diff",                 blob_set_diff                  },
+  { "set_mode_cpu",                  set_mode_cpu                   },
+  { "set_mode_gpu",                  set_mode_gpu                   },
+  { "set_device",                    set_device                     },
+  { "set_random_seed",               set_random_seed                },
+  { "get_init_key",                  get_init_key                   },
+  { "init_log",                      init_log                       },
+  { "reset",                         reset                          },
+  { "read_mean",                     read_mean                      },
   // The end.
-  { "END",                NULL            },
+  { "END",                           NULL                           },
 };
 
 /** -----------------------------------------------------------------
@@ -649,6 +650,5 @@ void mexFunction(MEX_ARGS) {
   }
   mxFree(cmd);
 }
-
 
 #endif

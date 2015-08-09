@@ -51,9 +51,10 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       if (legacy_version) {
-        loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
+        loss += std::max(Dtype(margin - dist_sq_.cpu_data()[i]), Dtype(0.0));
       } else {
-        Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]), Dtype(0.0));
+        Dtype dist = std::max(Dtype(margin - sqrt(dist_sq_.cpu_data()[i])),
+                              Dtype(0.0));
         loss += dist*dist;
       }
     }
