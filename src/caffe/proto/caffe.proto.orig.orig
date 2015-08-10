@@ -11,11 +11,6 @@ message BlobProto {
   optional BlobShape shape = 7;
   repeated float data = 5 [packed = true];
   repeated float diff = 6 [packed = true];
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-  repeated double double_data = 8 [packed = true];
-  repeated double double_diff = 9 [packed = true];
->>>>>>> triplet data generation and network update
 
   // 4D dimensions -- deprecated.  Use "shape" instead.
   optional int32 num = 1 [default = 0];
@@ -54,10 +49,6 @@ message FillerParameter {
   // The expected number of non-zero output weights for a given input in
   // Gaussian filler -- the default -1 means don't perform sparsification.
   optional int32 sparse = 7 [default = -1];
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   // Normalize the filler variance by fan_in, fan_out, or their average.
   // Applies to 'xavier' and 'msra' fillers.
   enum VarianceNorm {
@@ -66,11 +57,6 @@ message FillerParameter {
     AVERAGE = 2;
   }
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 }
 
 message NetParameter {
@@ -110,19 +96,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-// SolverParameter next available ID: 40 (last added: momentum2)
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
 // SolverParameter next available ID: 37 (last added: iter_size)
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
-// SolverParameter next available ID: 40 (last added: momentum2)
-=======
-// SolverParameter next available ID: 36 (last added: clip_gradients)
->>>>>>> triplet data generation and network update
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -175,41 +149,9 @@ message SolverParameter {
   // Display the loss averaged over the last average_loss iterations
   optional int32 average_loss = 33 [default = 1];
   optional int32 max_iter = 7; // the maximum number of iterations
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
   // accumulate gradients over `iter_size` x `batch_size` instances
   optional int32 iter_size = 36 [default = 1];
   optional string lr_policy = 8; // The learning rate decay policy.
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
-  // accumulate gradients over `iter_size` x `batch_size` instances
-  optional int32 iter_size = 36 [default = 1];
-
-  // The learning rate decay policy. The currently implemented learning rate
-  // policies are as follows:
-  //    - fixed: always return base_lr.
-  //    - step: return base_lr * gamma ^ (floor(iter / step))
-  //    - exp: return base_lr * gamma ^ iter
-  //    - inv: return base_lr * (1 + gamma * iter) ^ (- power)
-  //    - multistep: similar to step but it allows non uniform steps defined by
-  //      stepvalue
-  //    - poly: the effective learning rate follows a polynomial decay, to be
-  //      zero by the max_iter. return base_lr (1 - iter/max_iter) ^ (power)
-  //    - sigmoid: the effective learning rate follows a sigmod decay
-  //      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
-  //
-  // where base_lr, max_iter, gamma, step, stepvalue and power are defined
-  // in the solver parameter protocol buffer, and iter is the current iteration.
-  optional string lr_policy = 8;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
-  optional string lr_policy = 8; // The learning rate decay policy.
->>>>>>> triplet data generation and network update
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   optional float gamma = 9; // The parameter to compute the learning rate.
   optional float power = 10; // The parameter to compute the learning rate.
   optional float momentum = 11; // The momentum value.
@@ -231,14 +173,6 @@ message SolverParameter {
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
   optional bool snapshot_diff = 16 [default = false];
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-  enum SnapshotFormat {
-    HDF5 = 0;
-    BINARYPROTO = 1;
-  }
-  optional SnapshotFormat snapshot_format = 37 [default = BINARYPROTO];
->>>>>>> triplet data generation and network update
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
   enum SolverMode {
     CPU = 0;
@@ -257,26 +191,10 @@ message SolverParameter {
     SGD = 0;
     NESTEROV = 1;
     ADAGRAD = 2;
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
   }
   optional SolverType solver_type = 30 [default = SGD];
   // numerical stability for AdaGrad
   optional float delta = 31 [default = 1e-8];
-=======
-    RMSPROP = 3;
-    ADADELTA = 4;
-    ADAM = 5;
-  }
-  optional SolverType solver_type = 30 [default = SGD];
-  // numerical stability for RMSProp, AdaGrad and AdaDelta and Adam
-  optional float delta = 31 [default = 1e-8];
-  // parameters for the Adam solver
-  optional float momentum2 = 39 [default = 0.999];
-
-  // RMSProp decay value
-  // MeanSquare(t) = rms_decay*MeanSquare(t-1) + (1-rms_decay)*SquareGradient(t)
-  optional float rms_decay = 38;
->>>>>>> triplet data generation and network update
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
@@ -351,18 +269,15 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
+<<<<<<< b30868495fbae44b9556c621a319178d919bf562
+// LayerParameter next available layer-specific ID: 137 (last added: reduction_param)
 =======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-<<<<<<< 90c50a1b3e5527cfa0d92174b79cb05438c5302e
+<<<<<<< 7a85de9cf8ac6f0416eca95c1b991f127b8b7917
 // LayerParameter next available layer-specific ID: 137 (last added: reduction_param)
 =======
 // LayerParameter next available layer-specific ID: 139 (last added: tile_param)
 >>>>>>> Add TileLayer
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
-// LayerParameter next available layer-specific ID: 139 (last added: tile_param)
+>>>>>>> add initiate class name of triplet loss layer
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -383,25 +298,14 @@ message LayerParameter {
 
   // The blobs containing the numeric parameters of the layer.
   repeated BlobProto blobs = 7;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
+<<<<<<< b30868495fbae44b9556c621a319178d919bf562
+  
 =======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 
+>>>>>>> add initiate class name of triplet loss layer
   // Specifies on which bottoms the backpropagation should be skipped.
   // The size must be either 0 or equal to the number of bottoms.
   repeated bool propagate_down = 11;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 
   // Rules controlling whether and when a layer is included in the network,
   // based on the current NetState.  You may specify a non-zero number of rules
@@ -433,31 +337,15 @@ message LayerParameter {
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
-=======
-  optional EmbedParameter embed_param = 137;
-  optional ExpParameter exp_param = 111;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-  optional FlattenParameter flatten_param = 135;
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   optional HDF5DataParameter hdf5_data_param = 112;
   optional HDF5OutputParameter hdf5_output_param = 113;
   optional HingeLossParameter hinge_loss_param = 114;
   optional ImageDataParameter image_data_param = 115;
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
   optional LogParameter log_param = 134;
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-  optional LogParameter log_param = 134;
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
@@ -465,45 +353,24 @@ message LayerParameter {
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
-  optional ReLUParameter relu_param = 123;
-  optional SigmoidParameter sigmoid_param = 124;
-  optional SoftmaxParameter softmax_param = 125;
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
-  optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-<<<<<<< 9a40f059e6e96f739ad502aae165c4bfdbf1f369
-  optional TripletLossParameter triplet_loss_param = 139;
+<<<<<<< b30868495fbae44b9556c621a319178d919bf562
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
 =======
   optional TripletLossParameter triplet_loss_param = 137;
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-  optional TripletLossParameter triplet_loss_param = 139;
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
-  optional TripletLossParameter triplet_loss_param = 139;
-=======
-  optional TripletLossParameter triplet_loss_param = 132;
 >>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
->>>>>>> triplet data generation and network update
+=======
+  optional TripletLossParameter triplet_loss_param = 137;
+>>>>>>> add initiate class name of triplet loss layer
 }
 
 // Message that stores parameters used to apply transformation
@@ -523,19 +390,10 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   // Force the decoded image to have 3 color channels.
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 }
 
 // Message that stores parameters shared by loss layers
@@ -547,19 +405,9 @@ message LossParameter {
   optional bool normalize = 2 [default = true];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
 // Messages that store parameters used by individual layer types follow, in
 // alphabetical order.
 
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-// Messages that store parameters used by individual layer types follow, in
-// alphabetical order.
-
-=======
-// Message that stores parameters used by AccuracyLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message AccuracyParameter {
   // When computing accuracy, count as correct by comparing the true label to
   // the top k scoring classes.  By default, only compare to the top scoring
@@ -577,26 +425,12 @@ message AccuracyParameter {
   optional int32 ignore_label = 3;
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by ArgMaxLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
   optional uint32 top_k = 2 [default = 1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by ConcatLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message ConcatParameter {
   // The axis along which to concatenate -- may be negative to index from the
   // end (e.g., -1 for the last axis).  Other axes must have the
@@ -608,58 +442,36 @@ message ConcatParameter {
   optional uint32 concat_dim = 1 [default = 1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
 message ContrastiveLossParameter {
   // margin for dissimilar pair
   optional float margin = 1 [default = 1.0];
-=======
-// Message that stores parameters used by ContrastiveLossLayer
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
-message ContrastiveLossParameter {
-  // margin for dissimilar pair
-  optional float margin = 1 [default = 1.0];
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
   // The first implementation of this cost did not exactly match the cost of
   // Hadsell et al 2006 -- using (margin - d^2) instead of (margin - d)^2.
   // legacy_version = false (the default) uses (margin - d)^2 as proposed in the
   // Hadsell paper. New models should probably use this version.
   // legacy_version = true uses (margin - d^2). This is kept to support /
   // reproduce existing models and results
-  optional bool legacy_version = 2 [default = false];
+  optional bool legacy_version = 2 [default = false]; 
 }
 
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
+=======
 message TripletLossParameter {
   //margin for negative triplet
   optional float margin = 1 [default = 1.0];
+<<<<<<< 8bea48cb77e890cda255da58b142f3a402196328
+=======
   optional uint32 losstype = 2 [default = 1];
   optional uint32 num_triplets = 3 [default = 3];
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
+<<<<<<< b30868495fbae44b9556c621a319178d919bf562
+>>>>>>> No sclice layer version which could forward a set of triplets together with 1 pair wise
 }
 
-=======
-=======
 >>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
-}
-
-message TripletLossParameter {
-  //margin for negative triplet
-  optional float margin = 1 [default = 1.0];
-}
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-
 =======
-// Message that stores parameters used by ConvolutionLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
+}
+
+>>>>>>> add initiate class name of triplet loss layer
 message ConvolutionParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
@@ -685,13 +497,6 @@ message ConvolutionParameter {
   optional Engine engine = 15 [default = DEFAULT];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by DataLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message DataParameter {
   enum DB {
     LEVELDB = 0;
@@ -700,15 +505,11 @@ message DataParameter {
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
-  optional uint32 batch_size = 4;
+  optional uint32 batch_size = 4 [default = 1];
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the database.
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-  // DEPRECATED. Each solver accesses a different subset of the database.
->>>>>>> triplet data generation and network update
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
@@ -724,31 +525,12 @@ message DataParameter {
   optional bool mirror = 6 [default = false];
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
 }
 
-=======
-  // Prefetch queue (Number of batches to prefetch to host memory, increase if
-  // data access bandwidth varies).
-  optional uint32 prefetch = 10 [default = 4];
-}
-
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-// Message that stores parameters used by DropoutLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by DummyDataLayer.
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // DummyDataLayer fills any number of arbitrarily shaped blobs with random
 // (or constant) data generated by "Fillers" (see "message FillerParameter").
 message DummyDataParameter {
@@ -768,13 +550,6 @@ message DummyDataParameter {
   repeated uint32 width = 5;
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by EltwiseLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message EltwiseParameter {
   enum EltwiseOp {
     PROD = 0;
@@ -789,28 +564,6 @@ message EltwiseParameter {
   optional bool stable_prod_grad = 3 [default = true];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
-// Message that stores parameters used by EmbedLayer
-message EmbedParameter {
-  optional uint32 num_output = 1; // The number of outputs for the layer
-  // The input is given as integers to be interpreted as one-hot
-  // vector indices with dimension num_input.  Hence num_input should be
-  // 1 greater than the maximum possible input value.
-  optional uint32 input_dim = 2;
-
-  optional bool bias_term = 3 [default = true]; // Whether to use a bias term
-  optional FillerParameter weight_filler = 4; // The filler for the weight
-  optional FillerParameter bias_filler = 5; // The filler for the bias
-
-}
-
-// Message that stores parameters used by ExpLayer
->>>>>>> triplet data generation and network update
 message ExpParameter {
   // ExpLayer computes outputs y = base ^ (shift + scale * x), for base > 0.
   // Or if base is set to the default (-1), base is set to e,
@@ -820,10 +573,6 @@ message ExpParameter {
   optional float shift = 3 [default = 0.0];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 /// Message that stores parameters used by FlattenLayer
 message FlattenParameter {
   // The first axis to flatten: all preceding axes are retained in the output.
@@ -836,11 +585,6 @@ message FlattenParameter {
   optional int32 end_axis = 2 [default = -1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // Message that stores parameters used by HDF5DataLayer
 message HDF5DataParameter {
   // Specify the data source.
@@ -856,13 +600,6 @@ message HDF5DataParameter {
   optional bool shuffle = 3 [default = false];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by HDF5OutputLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message HDF5OutputParameter {
   optional string file_name = 1;
 }
@@ -876,13 +613,6 @@ message HingeLossParameter {
   optional Norm norm = 1 [default = L1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by ImageDataLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message ImageDataParameter {
   // Specify the data source.
   optional string source = 1;
@@ -914,25 +644,11 @@ message ImageDataParameter {
   optional string root_folder = 12 [default = ""];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters InfogainLossLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message InfogainLossParameter {
   // Specify the infogain matrix source.
   optional string source = 1;
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by InnerProductLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message InnerProductParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
@@ -945,10 +661,6 @@ message InnerProductParameter {
   optional int32 axis = 5 [default = 1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // Message that stores parameters used by LogLayer
 message LogParameter {
   // LogLayer computes outputs y = log_base(shift + scale * x), for base > 0.
@@ -959,11 +671,6 @@ message LogParameter {
   optional float shift = 3 [default = 0.0];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // Message that stores parameters used by LRNLayer
 message LRNParameter {
   optional uint32 local_size = 1 [default = 5];
@@ -977,13 +684,6 @@ message LRNParameter {
   optional float k = 5 [default = 1.];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by MemoryDataLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message MemoryDataParameter {
   optional uint32 batch_size = 1;
   optional uint32 channels = 2;
@@ -991,38 +691,17 @@ message MemoryDataParameter {
   optional uint32 width = 4;
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by MVNLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message MVNParameter {
   // This parameter can be set to false to normalize mean only
   optional bool normalize_variance = 1 [default = true];
 
   // This parameter can be set to true to perform DNN-like MVN
   optional bool across_channels = 2 [default = false];
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
 
   // Epsilon for not dividing by zero while normalizing variance
   optional float eps = 3 [default = 1e-9];
 }
 
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-
-  // Epsilon for not dividing by zero while normalizing variance
-  optional float eps = 3 [default = 1e-9];
-}
-
-=======
-}
-
-// Message that stores parameters used by PoolingLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message PoolingParameter {
   enum PoolMethod {
     MAX = 0;
@@ -1052,13 +731,6 @@ message PoolingParameter {
   optional bool global_pooling = 12 [default = false];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by PowerLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message PowerParameter {
   // PowerLayer computes outputs y = (shift + scale * x) ^ power.
   optional float power = 1 [default = 1.0];
@@ -1066,9 +738,6 @@ message PowerParameter {
   optional float shift = 3 [default = 0.0];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
@@ -1101,22 +770,6 @@ message ReductionParameter {
   optional int32 axis = 2 [default = 0];
 
   optional float coeff = 3 [default = 1.0]; // coefficient for output
-=======
-// Message that stores parameters used by PythonLayer
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
-message PythonParameter {
-  optional string module = 1;
-  optional string layer = 2;
-  // This value is set to the attribute `param_str` of the `PythonLayer` object
-  // in Python before calling the `setup()` method. This could be a number,
-  // string, dictionary in Python dict format, JSON, etc. You may parse this
-  // string in `setup` method and use it in `forward` and `backward`.
-  optional string param_str = 3 [default = ''];
-  // Whether this PythonLayer is shared among worker solvers during data parallelism.
-  // If true, each worker solver sequentially run forward from this layer.
-  // This value should be set true if you are using it as a data layer.
-  optional bool share_in_parallel = 4 [default = false];
->>>>>>> triplet data generation and network update
 }
 
 // Message that stores parameters used by ReductionLayer
@@ -1164,10 +817,6 @@ message ReLUParameter {
   optional Engine engine = 2 [default = DEFAULT];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message ReshapeParameter {
   // Specify the output dimensions. If some of the dimensions are set to 0,
   // the corresponding dimension from the bottom layer is used (unchanged).
@@ -1232,12 +881,6 @@ message ReshapeParameter {
   optional int32 num_axes = 3 [default = -1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
-// Message that stores parameters used by SigmoidLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message SigmoidParameter {
   enum Engine {
     DEFAULT = 0;
@@ -1247,13 +890,6 @@ message SigmoidParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by SliceLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message SliceParameter {
   // The axis along which to slice -- may be negative to index from the end
   // (e.g., -1 for the last axis).
@@ -1280,13 +916,6 @@ message SoftmaxParameter {
   optional int32 axis = 2 [default = 1];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by TanHLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message TanHParameter {
   enum Engine {
     DEFAULT = 0;
@@ -1296,13 +925,8 @@ message TanHParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
+<<<<<<< b30868495fbae44b9556c621a319178d919bf562
 =======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // Message that stores parameters used by TileLayer
 message TileParameter {
   // The index of the axis to tile.
@@ -1312,26 +936,12 @@ message TileParameter {
   optional int32 tiles = 2;
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // Message that stores parameters used by ThresholdLayer
+>>>>>>> add initiate class name of triplet loss layer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by WindowDataLayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message WindowDataParameter {
   // Specify the data source.
   optional string source = 1;
@@ -1365,10 +975,6 @@ message WindowDataParameter {
   optional string root_folder = 13 [default = ""];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message SPPParameter {
   enum PoolMethod {
     MAX = 0;
@@ -1385,11 +991,6 @@ message SPPParameter {
   optional Engine engine = 6 [default = DEFAULT];
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-=======
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 // DEPRECATED: use LayerParameter.
 message V1LayerParameter {
   repeated string bottom = 2;
@@ -1436,7 +1037,6 @@ message V1LayerParameter {
     SPLIT = 22;
     SLICE = 33;
     TANH = 23;
-    TRIPLET_LOSS = 40;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
     
@@ -1483,7 +1083,6 @@ message V1LayerParameter {
   optional TransformationParameter transform_param = 36;
   optional LossParameter loss_param = 42;
   optional V0LayerParameter layer = 1;
-  optional TripletLossParameter triplet_loss_param = 43;
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters
@@ -1580,13 +1179,6 @@ message V0LayerParameter {
   optional HDF5OutputParameter hdf5_output_param = 1001;
 }
 
-<<<<<<< 06f83b731104b760e3b1dea0618d6fbddedb817f:src/caffe/proto/caffe.proto.orig
-=======
-<<<<<<< 5546b4830f2232a8d56abfe594140c1462a420f5
-=======
-// Message that stores parameters used by PReLULayer
->>>>>>> triplet data generation and network update
->>>>>>> add 3d network training param:src/caffe/proto/caffe.proto.orig.orig
 message PReLUParameter {
   // Parametric ReLU described in K. He et al, Delving Deep into Rectifiers:
   // Surpassing Human-Level Performance on ImageNet Classification, 2015.

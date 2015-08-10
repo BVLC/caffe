@@ -618,10 +618,20 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 011aef0... restore
 =======
 >>>>>>> 80a07dd... macro define in upgrade_proto
+=======
+<<<<<<< 5308d9998ae0b1f97b7b99b33fac968421447f3a
+<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
+=======
+>>>>>>> restore
+>>>>>>> 0a85215... triplet data generation and network update
+=======
+>>>>>>> 03cac8c... fixed two bugs with prototext format
   virtual void InitSkipPropNet(bool test_skip_true) {
     string proto =
       "name: 'SkipPropTestNetwork' "
@@ -713,12 +723,24 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 00341b2... triplet data generation and network update
 =======
 >>>>>>> 1882ac9... add initiate class name of triplet loss layer
 =======
 >>>>>>> 08d5d6d... macro define in upgrade_proto
+=======
+>>>>>>> 1f7ef32... add RGB data training as an option in triplet training
+=======
+=======
+>>>>>>> 8f22aea... add initiate class name of triplet loss layer
+=======
+<<<<<<< 5308d9998ae0b1f97b7b99b33fac968421447f3a
+>>>>>>> 0a85215... triplet data generation and network update
+>>>>>>> 0dbadac... triplet data generation and network update
       proto += "  propagate_down: true "
                "  propagate_down: false ";
     else
@@ -728,17 +750,21 @@ class NetTest : public MultiDeviceTest<TypeParam> {
       proto += "  propagate_down: [true, false] ";
     else
       proto += "  propagate_down: [true, true] ";
+<<<<<<< HEAD
 >>>>>>> 011aef0... restore
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> 1882ac9... add initiate class name of triplet loss layer
 =======
+=======
+>>>>>>> 03cac8c... fixed two bugs with prototext format
       proto += "  propagate_down: true "
                "  propagate_down: false ";
     else
       proto += "  propagate_down: true "
                "  propagate_down: true ";
+<<<<<<< HEAD
 >>>>>>> 98fb438... fixed two bugs with prototext format
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -752,7 +778,28 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     else
       proto += "  propagate_down: [true, true] ";
 >>>>>>> 80a07dd... macro define in upgrade_proto
+<<<<<<< HEAD
 >>>>>>> 08d5d6d... macro define in upgrade_proto
+=======
+=======
+      proto += "  propagate_down: true "
+               "  propagate_down: false ";
+    else
+      proto += "  propagate_down: true "
+               "  propagate_down: true ";
+>>>>>>> b266250... fixed two bugs with prototext format
+<<<<<<< HEAD
+>>>>>>> 1f7ef32... add RGB data training as an option in triplet training
+=======
+=======
+>>>>>>> restore
+>>>>>>> 0a85215... triplet data generation and network update
+<<<<<<< HEAD
+>>>>>>> 0dbadac... triplet data generation and network update
+=======
+=======
+>>>>>>> 03cac8c... fixed two bugs with prototext format
+>>>>>>> 8f22aea... add initiate class name of triplet loss layer
     proto +=
       "  top: 'cross_entropy_loss' "
       "  type: 'SigmoidCrossEntropyLoss' "
@@ -763,6 +810,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
 =======
@@ -771,6 +820,15 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
 =======
 >>>>>>> 80a07dd... macro define in upgrade_proto
+=======
+<<<<<<< 5308d9998ae0b1f97b7b99b33fac968421447f3a
+=======
+>>>>>>> triplet data generation and network update
+=======
+>>>>>>> restore
+>>>>>>> 0a85215... triplet data generation and network update
+=======
+>>>>>>> 03cac8c... fixed two bugs with prototext format
   int seed_;
   shared_ptr<Net<Dtype> > net_;
 };
@@ -1165,10 +1223,11 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   EXPECT_EQ(this->net_->layer_names()[2], "innerproduct2");
   Blob<Dtype>* ip1_weights = this->net_->layers()[1]->blobs()[0].get();
   Blob<Dtype>* ip2_weights = this->net_->layers()[2]->blobs()[0].get();
-  // Check that data and diff blobs of shared weights share the same memory
-  // locations.
+  // Check that data blobs of shared weights share the same location in memory.
   EXPECT_EQ(ip1_weights->cpu_data(), ip2_weights->cpu_data());
-  EXPECT_EQ(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
+  // Check that diff blobs of shared weights are at different locations in
+  // memory.  (The diffs should be accumulated at update time.)
+  EXPECT_NE(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
   this->net_->Forward(bottom);
   this->net_->Backward();
   // Compute the expected update as the data minus the two diffs.
@@ -1181,7 +1240,11 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   // Make sure the diffs are non-trivial.
   for (int i = 0; i < count; ++i) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
+    EXPECT_NE(0, ip2_weights->cpu_diff()[i]);
+    EXPECT_NE(ip1_weights->cpu_diff()[i], ip2_weights->cpu_diff()[i]);
   }
+  caffe_axpy(count, Dtype(1), ip2_weights->cpu_diff(),
+             shared_params.mutable_cpu_diff());
   caffe_axpy(count, Dtype(-1), shared_params.cpu_diff(),
              shared_params.mutable_cpu_data());
   const Dtype* expected_updated_params = shared_params.cpu_data();
@@ -1218,8 +1281,8 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
     EXPECT_NE(0, ip2_weights->cpu_diff()[i]);
     EXPECT_NE(ip1_weights->cpu_diff()[i], ip2_weights->cpu_diff()[i]);
-    EXPECT_FLOAT_EQ(ip1_weights->cpu_diff()[i] + ip2_weights->cpu_diff()[i],
-                    shared_params.cpu_diff()[i]);
+    EXPECT_EQ(ip1_weights->cpu_diff()[i] + ip2_weights->cpu_diff()[i],
+              shared_params.cpu_diff()[i]);
   }
   caffe_axpy(count, Dtype(-1), ip1_weights->cpu_diff(),
              unshared_params1.mutable_cpu_data());

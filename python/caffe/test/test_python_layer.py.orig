@@ -28,7 +28,7 @@ class ExceptionLayer(caffe.Layer):
     def setup(self, bottom, top):
         raise RuntimeError
 
-<<<<<<< bdae411e81e13783dc650836abdcf1e9a2cd5178
+<<<<<<< 0edd44bede38fe9ded0a0f91ed29fbdab54557a5
 class ParameterLayer(caffe.Layer):
     """A layer that just multiplies by ten"""
 
@@ -61,7 +61,7 @@ def python_net_file():
 
 
 def exception_net_file():
-<<<<<<< bdae411e81e13783dc650836abdcf1e9a2cd5178
+<<<<<<< 0edd44bede38fe9ded0a0f91ed29fbdab54557a5
     with tempfile.NamedTemporaryFile(mode='w+', delete=False) as f:
 =======
     with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -74,7 +74,7 @@ def exception_net_file():
         return f.name
 
 
-<<<<<<< bdae411e81e13783dc650836abdcf1e9a2cd5178
+<<<<<<< 0edd44bede38fe9ded0a0f91ed29fbdab54557a5
 def parameter_net_file():
     with tempfile.NamedTemporaryFile(mode='w+', delete=False) as f:
         f.write("""name: 'pythonnet' force_backward: true
@@ -119,7 +119,7 @@ class TestPythonLayer(unittest.TestCase):
         net_file = exception_net_file()
         self.assertRaises(RuntimeError, caffe.Net, net_file, caffe.TEST)
         os.remove(net_file)
-<<<<<<< bdae411e81e13783dc650836abdcf1e9a2cd5178
+<<<<<<< 0edd44bede38fe9ded0a0f91ed29fbdab54557a5
 
     def test_parameter(self):
         net_file = parameter_net_file()
