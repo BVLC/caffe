@@ -1,7 +1,7 @@
 """Python net specification.
 
 This module provides a way to write nets directly in Python, using a natural,
-functional style. See examples/python_nets/caffenet.py for an example.
+functional style. See examples/pycaffe/caffenet.py for an example.
 
 Currently this works as a thin wrapper around the Python protobuf interface,
 with layers and parameters automatically generated for the "layers" and
