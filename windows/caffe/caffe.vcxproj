@@ -293,53 +293,47 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\settings\CommonSettings.props" />
-    <Import Project="..\settings\LibDebug.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Mex|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\settings\CommonSettings.props" />
-    <Import Project="..\settings\LibDebug.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\settings\CommonSettings.props" />
-    <Import Project="..\settings\LibRelease.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Mex|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\settings\CommonSettings.props" />
-    <Import Project="..\settings\LibRelease.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(SolutionDir)Temp\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\code\Library\boost\boost_1_57_0\lib64-msvc-12.0;D:\code\Library\mkl\mkl_11.1.2.176\lib\intel64;D:\code\Library\mkl\mkl_11.1.2.176\compiler\lib\intel64;D:\code\Library\opencv\opencv_2_49\build\x64\vc12\lib;$(OutDir);$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSDK_LibraryPath_x64);$(CUDA_PATH)\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Mex|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(SolutionDir)Temp\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>C:\Program Files\MATLAB\R2014a\extern\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\MATLAB\R2014a\extern\include;D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
     <TargetExt>.mexw64</TargetExt>
     <TargetName>caffe_</TargetName>
-    <LibraryPath>C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft;D:\code\Library\boost\boost_1_57_0\lib64-msvc-12.0;D:\code\Library\mkl\mkl_11.1.2.176\lib\intel64;D:\code\Library\mkl\mkl_11.1.2.176\compiler\lib\intel64;D:\code\Library\opencv\opencv_2_49\build\x64\vc12\lib;$(OutDir);$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSDK_LibraryPath_x64);$(CUDA_PATH)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft;D:\code\Library\boost\boost_1_57_0\lib64-msvc-12.0;D:\code\Library\mkl\mkl_11.1.2.176\lib\intel64;D:\code\Library\mkl\mkl_11.1.2.176\compiler\lib\intel64;D:\code\Library\opencv\opencv_2_49\build\x64\vc12\lib;$(OutDir);$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSDK_LibraryPath_x64);$(CUDA_PATH)\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)Temp\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Mex|x64'">
     <IntDir>$(SolutionDir)Temp\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.mexw64</TargetExt>
     <TargetName>caffe_</TargetName>
-    <LibraryPath>C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft;D:\code\Library\boost\boost_1_57_0\lib64-msvc-12.0;D:\code\Library\mkl\mkl_11.1.2.176\lib\intel64;D:\code\Library\mkl\mkl_11.1.2.176\compiler\lib\intel64;D:\code\Library\opencv\opencv_2_49\build\x64\vc12\lib;$(OutDir);$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSDK_LibraryPath_x64);$(CUDA_PATH)\lib\$(Platform);</LibraryPath>
-    <IncludePath>C:\Program Files\MATLAB\R2014a\extern\include;D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include</IncludePath>
+    <LibraryPath>C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft;D:\code\Library\boost\boost_1_57_0\lib64-msvc-12.0;D:\code\Library\mkl\mkl_11.1.2.176\lib\intel64;D:\code\Library\mkl\mkl_11.1.2.176\compiler\lib\intel64;D:\code\Library\opencv\opencv_2_49\build\x64\vc12\lib;$(OutDir);$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSDK_LibraryPath_x64);$(CUDA_PATH)\lib\$(Platform)</LibraryPath>
+    <IncludePath>C:\Program Files\MATLAB\R2014a\extern\include;D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>USE_LEVELDB;WIN32;_DEBUG;_CONSOLE;D_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_LEVELDB;WIN32;_CRT_SECURE_NO_WARNINGS;_VARIADIC_MAX=10;USE_MKL;_WINDLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <OpenMPSupport>false</OpenMPSupport>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
@@ -348,7 +342,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;cublas.lib;cuda.lib;curand.lib;cudart.lib;gflags.lib;libglog.lib;mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;pthreadVC2_x64.lib;opencv_imgproc249d.lib;opencv_core249d.lib;opencv_highgui249d.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
@@ -372,7 +366,7 @@ copy /y $(SolutionDir)\dll\Debug\*.*  $(OutDir)</Command>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>BUILD_MEX_INTERFACE;USE_LEVELDB;WIN32;_DEBUG;_CONSOLE;D_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BUILD_MEX_INTERFACE;USE_LEVELDB;WIN32;_CRT_SECURE_NO_WARNINGS;_VARIADIC_MAX=10;USE_MKL;_WINDLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <OpenMPSupport>false</OpenMPSupport>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
@@ -381,7 +375,7 @@ copy /y $(SolutionDir)\dll\Debug\*.*  $(OutDir)</Command>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libmx.lib;libmex.lib;libmat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libmx.lib;libmex.lib;libmat.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;cublas.lib;cuda.lib;curand.lib;cudart.lib;gflags.lib;libglog.lib;mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;pthreadVC2_x64.lib;opencv_imgproc249d.lib;opencv_core249d.lib;opencv_highgui249d.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib</AdditionalDependencies>
       <AdditionalOptions>/export:mexFunction %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
@@ -408,7 +402,7 @@ copy /y $(SolutionDir)\dll\Debug\*.*  $(OutDir)</Command>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>USE_LEVELDB;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_LEVELDB;WIN32;_CRT_SECURE_NO_WARNINGS;_VARIADIC_MAX=10;USE_MKL;_WINDLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OpenMPSupport>true</OpenMPSupport>
@@ -420,7 +414,7 @@ copy /y $(SolutionDir)\dll\Debug\*.*  $(OutDir)</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;cublas.lib;cuda.lib;curand.lib;cudart.lib;gflags.lib;libglog.lib;mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;pthreadVC2_x64.lib;opencv_imgproc249.lib;opencv_core249.lib;opencv_highgui249.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
@@ -445,7 +439,7 @@ copy /y $(SolutionDir)\dll\Release\*.*  $(OutDir)</Command>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>BUILD_MEX_INTERFACE;USE_LEVELDB;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BUILD_MEX_INTERFACE;USE_LEVELDB;WIN32;_CRT_SECURE_NO_WARNINGS;_VARIADIC_MAX=10;USE_MKL;_WINDLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OpenMPSupport>true</OpenMPSupport>
@@ -457,7 +451,7 @@ copy /y $(SolutionDir)\dll\Release\*.*  $(OutDir)</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libmx.lib;libmex.lib;libmat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libmx.lib;libmex.lib;libmat.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;cublas.lib;cuda.lib;curand.lib;cudart.lib;gflags.lib;libglog.lib;mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;pthreadVC2_x64.lib;opencv_imgproc249.lib;opencv_core249.lib;opencv_highgui249.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/export:mexFunction %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
