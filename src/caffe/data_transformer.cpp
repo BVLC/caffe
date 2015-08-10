@@ -151,10 +151,20 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 =======
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
+<<<<<<< HEAD
     CHECK(!param_.force_color() && !param_.force_gray())
 >>>>>>> 011aef0... restore
+<<<<<<< HEAD
 >>>>>>> 00341b2... triplet data generation and network update
+<<<<<<< bd900fc47efb4f9fe6c0698d66ca08f7a5c1ed58
 >>>>>>> triplet data generation and network update
+=======
+=======
+=======
+    CHECK(!(param_.force_color() && param_.force_gray()))
+>>>>>>> d2acfed... fixed _force_color check, fixes #2635
+>>>>>>> 1882ac9... add initiate class name of triplet loss layer
+>>>>>>> add initiate class name of triplet loss layer
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {
@@ -485,10 +495,20 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
+<<<<<<< HEAD
     CHECK(!param_.force_color() && !param_.force_gray())
 >>>>>>> 011aef0... restore
+<<<<<<< HEAD
 >>>>>>> 00341b2... triplet data generation and network update
+<<<<<<< bd900fc47efb4f9fe6c0698d66ca08f7a5c1ed58
 >>>>>>> triplet data generation and network update
+=======
+=======
+=======
+    CHECK(!(param_.force_color() && param_.force_gray()))
+>>>>>>> d2acfed... fixed _force_color check, fixes #2635
+>>>>>>> 1882ac9... add initiate class name of triplet loss layer
+>>>>>>> add initiate class name of triplet loss layer
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {

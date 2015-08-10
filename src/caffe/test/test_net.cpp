@@ -707,8 +707,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 00341b2... triplet data generation and network update
+=======
+>>>>>>> 1882ac9... add initiate class name of triplet loss layer
       proto += "  propagate_down: true "
                "  propagate_down: false ";
     else
@@ -720,6 +723,9 @@ class NetTest : public MultiDeviceTest<TypeParam> {
       proto += "  propagate_down: [true, true] ";
 >>>>>>> 011aef0... restore
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 1882ac9... add initiate class name of triplet loss layer
 =======
       proto += "  propagate_down: true "
                "  propagate_down: false ";
@@ -727,8 +733,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
       proto += "  propagate_down: true "
                "  propagate_down: true ";
 >>>>>>> 98fb438... fixed two bugs with prototext format
+<<<<<<< HEAD
 =======
 >>>>>>> 00341b2... triplet data generation and network update
+=======
+>>>>>>> 1882ac9... add initiate class name of triplet loss layer
     proto +=
       "  top: 'cross_entropy_loss' "
       "  type: 'SigmoidCrossEntropyLoss' "
