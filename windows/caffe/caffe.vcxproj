@@ -321,6 +321,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)Temp\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>D:\code\Library\boost\boost_1_57_0;D:\code\Library\opencv\opencv_2_49\build\include;D:\code\Library\mkl\mkl_11.1.2.176\include;$(SolutionDir)\caffe;$(SolutionDir)\caffe\include;$(SolutionDir)\caffe\include\caffe\proto;$(SolutionDir)\Library\glog-0.3.3\src\windows;$(SolutionDir)\Library\protobuf-2.6.0\src;$(SolutionDir)\Library\protobuf-2.6.0\gtest\include;$(SolutionDir)\Library\gflags\include;$(SolutionDir)\Library\HDF5\1.8.13\include;$(SolutionDir)\Library\snappy-windows-1.1.1.8\include;$(SolutionDir)\Library\leveldb\include;$(SolutionDir)\Library\lmdb-0.9.15;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\code\Library\boost\boost_1_57_0\lib64-msvc-12.0;D:\code\Library\mkl\mkl_11.1.2.176\lib\intel64;D:\code\Library\mkl\mkl_11.1.2.176\compiler\lib\intel64;D:\code\Library\opencv\opencv_2_49\build\x64\vc12\lib;$(OutDir);$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSDK_LibraryPath_x64);$(CUDA_PATH)\lib\$(Platform)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Mex|x64'">
     <IntDir>$(SolutionDir)Temp\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
