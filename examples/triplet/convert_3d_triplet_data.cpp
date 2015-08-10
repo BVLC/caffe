@@ -1,13 +1,13 @@
 // Usage:
 // convert_3d_data input_image_file input_label_file output_db_file
 #include <fstream>  // NOLINT(readability/streams)
-#include <math.h>
 #include <string>
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
 #include "leveldb/db.h"
+#include "math.h"
 #include "stdint.h"
 
 uint32_t swap_endian(uint32_t val) {
@@ -144,31 +144,31 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         triplet3_pass = true;
       if (pair_pass && triplet1_pass && triplet2_pass && triplet3_pass) {
         datum.set_data(pixels1, rows*cols);  // set data
-        datum.set_label(int(*label_i));
+        datum.set_label(static_cast<int>(*label_i));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
         datum.set_data(pixels2, rows*cols);  // set data
-        datum.set_label(int(*label_j));
+        datum.set_label(static_cast<int>(*label_j));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
         datum.set_data(pixels3, rows*cols);  // set data
-        datum.set_label(int(*label_k));
+        datum.set_label(static_cast<int>(*label_k));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
         datum.set_data(pixels4, rows*cols);  // set data
-        datum.set_label(int(*label_l));
+        datum.set_label(static_cast<int>(*label_l));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
         datum.set_data(pixels5, rows*cols);  // set data
-        datum.set_label(int(*label_m));
+        datum.set_label(static_cast<int>(*label_m));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
@@ -176,9 +176,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       } else {
         class_ind--;
       }
-      } // iteration in the samples of all class
-    } // iteration in the samples in one class
-  } // iteration in times
+      }  // iteration in the samples of all class
+    }  // iteration in the samples in one class
+  }  // iteration in times
   delete db;
   delete pixels1;
   delete pixels2;
@@ -189,7 +189,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
 int main(int argc, char** argv) {
   if (argc != 5) {
-    printf("This script converts the images dataset to the leveldb format used\n"
+    printf("This script converts the dataset to the leveldb format used\n"
            "by caffe to train a triplet network.\n"
            "Usage:\n"
            "    convert_3d_data input_image_file input_label_file "
