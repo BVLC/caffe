@@ -22,8 +22,8 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   TripletLossLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(250, 1, 1, 1)),
-        blob_bottom_y_(new Blob<Dtype>(250, 1, 1, 1)),
+      : blob_bottom_data_(new Blob<Dtype>(50, 1, 1, 1)),
+        blob_bottom_y_(new Blob<Dtype>(50, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -61,7 +61,7 @@ TYPED_TEST(TripletLossLayerTest, TestForward) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
   const Dtype margin = layer_param.triplet_loss_param().margin();
-  const Dtype losstype = layer_param.triplet_loss_param().losstype();
+  const Dtype losstype = 0;//layer_param.triplet_loss_param().losstype();
   const int num_triplets = 3;
   const int num_set = this->blob_bottom_data_->num()/(2 + num_triplets);
   const int channels = this->blob_bottom_data_->channels();
@@ -69,13 +69,17 @@ TYPED_TEST(TripletLossLayerTest, TestForward) {
   if (losstype == 0) {
   for (int i = 0; i < num_set; ++i) {
     Dtype dist_par(0);
+    for (int j = 0; j < channels; ++j) {
+      Dtype diff_pos = this->blob_bottom_data_->cpu_data()[(2+num_triplets)*i*channels+j] -
+        this->blob_bottom_data_->cpu_data()[((2+num_triplets)*i+1)*channels+j];
+      dist_par = diff_pos*diff_pos;
+      loss += dist_par;
+    }
     for (int triplet = 0; triplet < num_triplets; ++triplet) {
       Dtype dist_sq(0);
       for (int j = 0; j < channels; ++j) {
         Dtype diff_pos = this->blob_bottom_data_->cpu_data()[(2+num_triplets)*i*channels+j] -
           this->blob_bottom_data_->cpu_data()[((2+num_triplets)*i+1)*channels+j];
-        dist_par = diff_pos*diff_pos;
-        loss += dist_par;
         dist_sq += diff_pos*diff_pos;
         Dtype diff_neg = this->blob_bottom_data_->cpu_data()[(2+num_triplets)*i*channels+j] -
           this->blob_bottom_data_->cpu_data()[((2+num_triplets)*i+2+triplet)*channels+j];
