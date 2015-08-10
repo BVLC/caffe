@@ -68,7 +68,7 @@ void TripletLossLayer<Dtype>::Forward_gpu(
           diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
           summer_vec_.gpu_data(),
           Dtype(0.0),
-          dist_sq_neg.mutable_gpu_data() + i);  // \Sum (reference-pose_close)^2
+          dist_sq_neg.mutable_gpu_data() + i);  // \Sum(reference-pose_close)^2
       // a and negative[triplet] is a dissimilar pair for triplet
       dist_sq_.mutable_gpu_data()[i] -= dist_sq_neg.gpu_data()[i];
       // loss accumulated accumulated by the triplet part
@@ -126,7 +126,7 @@ void TripletLossLayer<Dtype>::Forward_gpu(
           diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
           summer_vec_.gpu_data(),
           Dtype(0.0),
-          dist_sq_neg.mutable_gpu_data() + i);  // \Sum (reference-pose_close)^2
+          dist_sq_neg.mutable_gpu_data() + i);  // \Sum(reference-pose_close)^2
       // a and negative[triplet] is a dissimilar pair for triplet
       dist_sq_.mutable_gpu_data()[i] = 1 - \
         dist_sq_neg.gpu_data()[i] / dist_sq_.mutable_gpu_data()[i];
@@ -184,7 +184,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
               summer_vec_.gpu_data(),
               Dtype(0.0),
-              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (reference-pose_close)^2
+              dist_sq_neg.mutable_gpu_data() + j);  // \Sum(ref-close)^2
           // Triplet loss accumulation
           // a and negative[triplet] is a similar pair for triplet
           dist_sq_.mutable_gpu_data()[j] = dist_sq_pos.gpu_data()[j];
@@ -250,7 +250,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
               summer_vec_.gpu_data(),
               Dtype(0.0),
-              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (reference-pose_close)^2
+              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (ref-close)^2
           // a and negative[triplet] is a dissimilar pair for triplet
           dist_sq_.mutable_gpu_data()[j] -= dist_sq_neg.gpu_data()[j];
           if ((margin + dist_sq_.gpu_data()[j]) > Dtype(0.0)) {
@@ -296,7 +296,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
             summer_vec_.gpu_data(),
             Dtype(0.0),
-            dist_sq_neg.mutable_gpu_data() + j);  // \Sum (reference-pose_close)^2
+            dist_sq_neg.mutable_gpu_data() + j);  // \Sum (ref-close)^2
         // a and negative[triplet] is a dissimilar pair for triplet
         dist_sq_.mutable_gpu_data()[j] -= dist_sq_neg.gpu_data()[j];
         if ((margin + dist_sq_.gpu_data()[j]) > Dtype(0.0)) {
@@ -353,7 +353,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
               summer_vec_.gpu_data(),
               Dtype(0.0),
-              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (reference-pose_close)^2
+              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (ref-close)^2
           // a and negative[triplet] is a dissimilar pair for triplet
           dist_sq_.mutable_gpu_data()[j] = 1 - \
             dist_sq_neg.gpu_data()[j] / dist_sq_.mutable_gpu_data()[j];
@@ -417,7 +417,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
               summer_vec_.gpu_data(),
               Dtype(0.0),
-              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (reference-pose_close)^2
+              dist_sq_neg.mutable_gpu_data() + j);  // \Sum (ref-close)^2
           // a and negative[triplet] is a dissimilar pair for triplet
           dist_sq_.mutable_gpu_data()[j] = 1 - \
             dist_sq_neg.gpu_data()[j] / dist_sq_.mutable_gpu_data()[j];
@@ -466,7 +466,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             diff_sq_neg.gpu_data(),  // (reference-pose_close)^2
             summer_vec_.gpu_data(),
             Dtype(0.0),
-            dist_sq_neg.mutable_gpu_data() + j);  // \Sum (reference-pose_close)^2
+            dist_sq_neg.mutable_gpu_data() + j);  // \Sum (ref-close)^2
         // a and negative[triplet] is a dissimilar pair for triplet
         dist_sq_.mutable_gpu_data()[j] = 1 - \
           dist_sq_neg.gpu_data()[j] / dist_sq_.mutable_gpu_data()[j];
