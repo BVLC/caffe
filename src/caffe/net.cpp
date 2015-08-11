@@ -485,6 +485,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
       CHECK(this_blob->shape() == owner_blob->shape());
     }
     const int learnable_param_id = learnable_param_ids_[owner_net_param_id];
+    learnable_param_ids_.push_back(learnable_param_id);
     if (param_spec->has_lr_mult()) {
       if (has_params_lr_[learnable_param_id]) {
         CHECK_EQ(param_spec->lr_mult(), params_lr_[learnable_param_id])
