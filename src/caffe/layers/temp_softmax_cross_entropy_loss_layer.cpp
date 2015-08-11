@@ -116,8 +116,8 @@ void TempSoftmaxCrossEntropyLossLayer<Dtype>::Backward_cpu(
     const Dtype* target = mvn_target_output_.cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     caffe_copy(count, input_data, bottom_diff);
-    // Multiply by temperature because we scaled inplace in forward pass
-    caffe_cpu_axpby(count, Dtype(-1)*temperature, target, temperature, 
+    // Multiply by temperature because we scaled down in forward pass
+    caffe_cpu_axpby(count, Dtype(-1)*temperature, target, temperature,
             bottom_diff);
     const int N = bottom[0]->channels();
     caffe_scal(count, Dtype(1) / (N * temperature * temperature), bottom_diff);

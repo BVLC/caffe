@@ -7,9 +7,9 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/neuron_layers.hpp"
-#include "caffe/common_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -657,11 +657,34 @@ template <typename Dtype> class MVNLayer;
 
 /**
  * @brief Calculates the Softmax Cross Entropy for a Softmax with a high
- *        temperature, as in 
+ *        temperature, as in
  *        Distilling the Knowledge in a Neural Network
- *        by Hinton et al.
+ *        by Geoffrey Hinton, Oriol Vinyals, and Jeff Dean
+ *        at NIPS 2014.
  *
- * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ * @param bottom input Blob vector (length 2)
+ *   -# @f$ (N \times C \times H \times W) @f$
+ *      the predictions @f$ z @f$, a Blob with values in
+ *      @f$ [-\infty, +\infty] @f$ indicating the predicted distilled logit
+ *      for each of the @f$ K = CHW @f$ classes. This layer zero-means
+ *      and maps these logits to a probability distribution over classes
+ *      using the temperature softmax function
+ *      @f$ \hat{q}_{nk} = \exp(z_{nk}/T) /
+ *      \left[\sum_{k'} \exp(z_{nk'}/T)\right] @f$.
+ *   -# @f$ (N \times C \times H \times W) @f$
+ *      the cumbersome models logits @f$ v @f$, a Blob with values in
+ *      @f$ [-\infty, +\infty] @f$ indicating the target logit for each of
+ *      the @f$ K = CHW @f$ classes. This layer zero-means
+ *      and maps these logits to a probability distribution over classes
+ *      using the temperature softmax function
+ *      @f$ \hat{p}_{nk} = \exp(v_{nk}/T) /
+ *      \left[\sum_{k'} \exp(v_{nk'}/T)\right] @f$.
+ * @param top output Blob vector (length 1)
+ *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
+ *      the computed cross-entropy loss: @f$
+ *          E = \frac{-1}{n} \sum\limits_{n=1}^N \left[
+ *                  p_n \log q_n) \right]
+ *      @f$
  */
 template <typename Dtype>
 class TempSoftmaxCrossEntropyLossLayer : public LossLayer<Dtype> {
@@ -673,18 +696,50 @@ class TempSoftmaxCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() 
+  virtual inline const char* type()
       const { return "TempSoftmaxCrossEntropyLoss"; }
 
  protected:
+  /// @copydoc TempSoftmaxCrossEntropyLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+   /**
+   * @brief Computes the softmax cross-entropy loss error gradient w.r.t. the
+   *        predictions for a softmax with high temperature (T > 1).
+   *
+   * Gradients computation with respect to the target inputs (bottom[1]) is
+   * disabled, so this method ignores bottom[1] and requires !propagate_down[1],
+   * crashing if propagate_down[1] is set.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
+   *      This Blob's diff will simply contain the loss_weight* @f$ \lambda @f$,
+   *      as @f$ \lambda @f$ is the coefficient of this layer's output
+   *      @f$\ell_i@f$ in the overall Net loss
+   *      @f$ E = \lambda_i \ell_i + \mbox{other loss terms}@f$; hence
+   *      @f$ \frac{\partial E}{\partial \ell_i} = \lambda_i @f$.
+   *      (*Assuming that this top Blob is not used as a bottom (input) by any
+   *      other layer of the Net.)
+   * @param propagate_down see Layer::Backward.
+   *      propagate_down[1] must be false as gradient computation with respect
+   *      to the targets is not implemented.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the predictions @f$z@f$; Backward computes diff
+   *      @f$ @f$ \frac{\partial C}{\partial z_i} =
+   *                         \frac{1}{NT^2} (z_i -v_i) @f$
+   *      @f$
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the targets -- ignored as we don't compute their error gradients
+   */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  // The temperature used for the Softmax, needs to be > 1.
   Dtype temperature;
 
   /// The internal MVNLayer used to mean normalise predictions.
