@@ -98,7 +98,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 39 (last added: rms_decay)
+// SolverParameter next available ID: 40 (last added: momentum2)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -215,10 +215,13 @@ message SolverParameter {
     NESTEROV = 1;
     ADAGRAD = 2;
     RMSPROP = 3;
+    ADAM = 4;
   }
   optional SolverType solver_type = 30 [default = SGD];
-  // numerical stability for AdaGrad
+  // numerical stability for AdaGrad and Adam
   optional float delta = 31 [default = 1e-8];
+  // parameters for the Adam solver
+  optional float momentum2 = 39 [default = 0.999];
 
   // RMSProp decay value
   // MeanSquare(t) = rms_decay*MeanSquare(t-1) + (1-rms_decay)*SquareGradient(t)
