@@ -290,6 +290,12 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
+# CNMeM configuration
+ifeq ($(USE_CNMEM), 1)
+	LIBRARIES += cnmem
+	COMMON_FLAGS += -DUSE_CNMEM
+endif
+
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)

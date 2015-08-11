@@ -8,6 +8,7 @@
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
+shared_ptr<MemoryHandler> mem_handler;
 
 // random seeding
 int64_t cluster_seedgen(void) {
@@ -85,7 +86,11 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
+    : cublas_handle_(NULL), curand_generator_(NULL),
+#ifdef USE_CUDNN
+    cudnn_handle_(NULL),
+#endif
+    random_generator_(),
     mode_(Caffe::CPU) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
@@ -99,6 +104,11 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+#ifdef USE_CUDNN
+  if (cudnnCreate(&cudnn_handle_) != CUDNN_STATUS_SUCCESS) {
+    LOG(ERROR) << "Cannot create cuDNN handle. cuDNN won't be available.";
+  }
+#endif
 }
 
 Caffe::~Caffe() {
@@ -106,6 +116,9 @@ Caffe::~Caffe() {
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
+#ifdef USE_CUDNN
+  if (cudnn_handle_) CUDNN_CHECK(cudnnDestroy(cudnn_handle_));
+#endif
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -180,8 +193,6 @@ void Caffe::DeviceQuery() {
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
   return;
 }
-
-
 class Caffe::RNG::Generator {
  public:
   Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
@@ -202,6 +213,111 @@ Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
 
 void* Caffe::RNG::generator() {
   return static_cast<void*>(generator_->rng());
+}
+
+MemoryHandler& MemoryHandler::Get() {
+  if (!mem_handler.get()) {
+    mem_handler.reset(new MemoryHandler());
+  }
+  return *(mem_handler.get());
+}
+
+void MemoryHandler::mallocGPU(void **ptr, size_t size, cudaStream_t stream) {
+  if (!Get().initialized_) {
+    Init();
+  }
+  Get().allocate_memory(ptr, size, stream);
+}
+
+void MemoryHandler::freeGPU(void *ptr, cudaStream_t stream) {
+  Get().free_memory(ptr, stream);
+}
+
+void MemoryHandler::allocate_memory(void **ptr, size_t size,
+                                    cudaStream_t stream) {
+  int initial_device;
+  cudaGetDevice(&initial_device);
+  if (size == 0) return;
+  if (using_pool_) {
+#ifdef USE_CNMEM
+    CNMEM_CHECK(cnmemMalloc(ptr, size, stream));
+#endif
+  } else {
+    CUDA_CHECK(cudaMalloc(ptr, size));
+  }
+  cudaSetDevice(initial_device);
+}
+
+void MemoryHandler::free_memory(void *ptr, cudaStream_t stream) {
+  int initial_device;
+  cudaGetDevice(&initial_device);
+  if (using_pool_) {
+#ifdef USE_CNMEM
+    CNMEM_CHECK(cnmemFree(ptr, stream));
+#endif
+  } else {
+    CUDA_CHECK(cudaFree(ptr));
+  }
+  ptr = NULL;
+  cudaSetDevice(initial_device);
+}
+
+void MemoryHandler::registerStream(cudaStream_t stream) {
+  if (!Get().initialized_) {
+    Init();
+  }
+  if (Get().using_pool_) {
+#ifdef USE_CNMEM
+    CNMEM_CHECK(cnmemRegisterStream(stream));
+#endif
+  }
+}
+
+void MemoryHandler::destroy() {
+#ifdef USE_CNMEM
+  CNMEM_CHECK(cnmemFinalize());
+#endif
+}
+
+void MemoryHandler::Init() {
+  if (Get().using_pool_) {
+#ifdef USE_CNMEM
+    cnmemDevice_t *devs = new cnmemDevice_t[Get().gpus_.size()];
+
+    int initial_device;
+    CUDA_CHECK(cudaGetDevice(&initial_device));
+
+    for (int i = 0; i < Get().gpus_.size(); i++) {
+      CUDA_CHECK(cudaSetDevice(Get().gpus_[i]));
+
+      devs[i].device = Get().gpus_[i];
+
+      size_t free_mem, used_mem;
+      CUDA_CHECK(cudaMemGetInfo(&free_mem, &used_mem));
+
+      devs[i].size = size_t(0.8*free_mem);
+      devs[i].numStreams = 0;
+      devs[i].streams = NULL;
+    }
+    CNMEM_CHECK(cnmemInit(Get().gpus_.size(), devs, CNMEM_FLAGS_DEFAULT));
+    Get().initialized_ = true;
+
+    CUDA_CHECK(cudaSetDevice(initial_device));
+
+    delete [] devs;
+#endif
+  }
+  Get().initialized_ = true;
+}
+
+void MemoryHandler::getInfo(size_t *free_mem, size_t *total_mem) {
+  if (Get().using_pool_) {
+#ifdef USE_CNMEM
+    CNMEM_CHECK(cnmemMemGetInfo(free_mem, total_mem, cudaStreamDefault));
+#endif
+  } else {
+    CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));
+  }
 }
 
 const char* cublasGetErrorString(cublasStatus_t error) {
