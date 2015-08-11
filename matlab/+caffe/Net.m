@@ -134,6 +134,9 @@ classdef Net < handle
         'input data cell length must match input blob number');
       % copy data to input blobs
       for n = 1:length(self.inputs)
+        if isempty(input_data{n})
+            continue;
+        end
         self.blobs(self.inputs{n}).set_data(input_data{n});
       end
       self.forward_prefilled();
@@ -173,6 +176,9 @@ classdef Net < handle
         'input data cell length must match input blob number');
       % reshape input blobs
       for n = 1:length(self.inputs)
+        if isempty(input_data{n})
+            continue;
+        end
         input_data_size = size(input_data{n});
         input_data_size_extended = [input_data_size, ones(1, 4 - length(input_data_size))];
         self.blobs(self.inputs{n}).reshape(input_data_size_extended);

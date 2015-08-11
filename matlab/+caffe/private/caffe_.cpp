@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "mex.h"
+#include "gpu/mxGPUArray.h"
 
 #include "caffe/caffe.hpp"
 
@@ -58,9 +59,21 @@ enum WhichMemory { DATA, DIFF };
 // Copy matlab array to Blob data or diff
 static void mx_mat_to_blob(const mxArray* mx_mat, Blob<float>* blob,
     WhichMemory data_or_diff) {
-  mxCHECK(blob->count() == mxGetNumberOfElements(mx_mat),
-      "number of elements in target blob doesn't match that in input mxArray");
-  const float* mat_mem_ptr = reinterpret_cast<const float*>(mxGetData(mx_mat));
+
+  const float* mat_mem_ptr = NULL;
+  mxGPUArray const *mx_mat_gpu;
+  if (mxIsGPUArray(mx_mat)){
+	  mxInitGPU();
+	  mx_mat_gpu = mxGPUCreateFromMxArray(mx_mat);
+	  mat_mem_ptr = reinterpret_cast<const float*>(mxGPUGetDataReadOnly(mx_mat_gpu));
+	  mxCHECK(blob->count() == mxGPUGetNumberOfElements(mx_mat_gpu),
+		  "number of elements in target blob doesn't match that in input mxArray");
+  }
+  else{
+	  mxCHECK(blob->count() == mxGetNumberOfElements(mx_mat),
+		  "number of elements in target blob doesn't match that in input mxArray");
+	  mat_mem_ptr = reinterpret_cast<const float*>(mxGetData(mx_mat));
+  }
   float* blob_mem_ptr = NULL;
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -75,6 +88,10 @@ static void mx_mat_to_blob(const mxArray* mx_mat, Blob<float>* blob,
     mxERROR("Unknown Caffe mode");
   }
   caffe_copy(blob->count(), mat_mem_ptr, blob_mem_ptr);
+
+  if (mxIsGPUArray(mx_mat)){
+	  mxGPUDestroyGPUArray(mx_mat_gpu);
+  }
 }
 
 // Copy Blob data or diff to matlab array
@@ -456,10 +473,22 @@ static void blob_get_data(MEX_ARGS) {
 
 // Usage: caffe_('blob_set_data', hBlob, new_data)
 static void blob_set_data(MEX_ARGS) {
-  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsSingle(prhs[1]),
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && (mxIsSingle(prhs[1]) || mxIsGPUArray(prhs[1])),
       "Usage: caffe_('blob_set_data', hBlob, new_data)");
   Blob<float>* blob = handle_to_ptr<Blob<float> >(prhs[0]);
   mx_mat_to_blob(prhs[1], blob, DATA);
+}
+
+// Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)
+static void blob_copy_data(MEX_ARGS) {
+	mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
+		"Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)");
+	Blob<float>* blob_to = handle_to_ptr<Blob<float> >(prhs[0]);
+	Blob<float>* blob_from = handle_to_ptr<Blob<float> >(prhs[1]);
+	//mxCHECK(blob_from->count() == blob_to->count(),
+	//	"number of elements in target blob doesn't match that in source blob");
+	
+	blob_to->CopyFrom(*blob_from, false, true); 
 }
 
 // Usage: caffe_('blob_get_diff', hBlob)
@@ -611,6 +640,7 @@ static handler_registry handlers[] = {
   { "blob_reshape",                  blob_reshape                   },
   { "blob_get_data",                 blob_get_data                  },
   { "blob_set_data",                 blob_set_data                  },
+  { "blob_copy_data",				 blob_copy_data					},
   { "blob_get_diff",                 blob_get_diff                  },
   { "blob_set_diff",                 blob_set_diff                  },
   { "set_mode_cpu",                  set_mode_cpu                   },
