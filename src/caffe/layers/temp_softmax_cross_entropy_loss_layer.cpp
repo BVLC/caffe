@@ -83,7 +83,7 @@ void TempSoftmaxCrossEntropyLossLayer<Dtype>::Forward_cpu(
   softmax_target_bottom_vec_[0] = &mvn_target_output_;
   caffe_scal(count, Dtype(1) / temperature,
                     softmax_target_bottom_vec_[0]->mutable_cpu_data());
-  // The forward pass computes the softmax values.
+  // The forward pass computes the softmax values for the loss
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
   softmax_target_layer_->Forward(softmax_target_bottom_vec_,
                     softmax_target_top_vec_);
@@ -112,10 +112,13 @@ void TempSoftmaxCrossEntropyLossLayer<Dtype>::Backward_cpu(
     // First, compute the diff
     const int count = bottom[0]->count();
     const int num = bottom[0]->num();
-    const Dtype* input_data = prob_.cpu_data();
-    const Dtype* target = target_prob_.cpu_data();
+    const Dtype* input_data = mvn_in_output_.cpu_data();
+    const Dtype* target = mvn_target_output_.cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    caffe_sub(count, input_data, target, bottom_diff);
+    caffe_copy(count, input_data, bottom_diff);
+    // Multiply by temperature because we scaled inplace in forward pass
+    caffe_cpu_axpby(count, Dtype(-1)*temperature, target, temperature, 
+            bottom_diff);
     const int N = bottom[0]->channels();
     caffe_scal(count, Dtype(1) / (N * temperature * temperature), bottom_diff);
 

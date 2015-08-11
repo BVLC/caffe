@@ -685,7 +685,7 @@ class TempSoftmaxCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  float temperature;
+  Dtype temperature;
 
   /// The internal MVNLayer used to mean normalise predictions.
   shared_ptr<Layer<Dtype> > mvn_in_layer_;

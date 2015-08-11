@@ -20,11 +20,12 @@ void TempSoftmaxCrossEntropyLossLayer<Dtype>::Backward_gpu(
     // First, compute the diff
     const int count = bottom[0]->count();
     const int num = bottom[0]->num();
-    const Dtype* input_data = prob_.gpu_data();
-    const Dtype* target = target_prob_.gpu_data();
+    const Dtype* input_data = mvn_in_output_.gpu_data();
+    const Dtype* target = mvn_target_output_.gpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
     caffe_copy(count, input_data, bottom_diff);
-    caffe_gpu_axpy(count, Dtype(-1), target, bottom_diff);
+    caffe_gpu_axpby(count, Dtype(-1)*temperature, target, temperature, 
+            bottom_diff);
     const int N = bottom[0]->channels();
     caffe_gpu_scal(count, Dtype(1) / (N * temperature * temperature), 
                         bottom_diff);
