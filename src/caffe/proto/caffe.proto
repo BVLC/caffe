@@ -215,6 +215,7 @@ message SolverParameter {
     NESTEROV = 1;
     ADAGRAD = 2;
     RMSPROP = 3;
+    ADADELTA = 4;
   }
   optional SolverType solver_type = 30 [default = SGD];
   // numerical stability for AdaGrad
