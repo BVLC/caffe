@@ -73,10 +73,6 @@ void CrossEntropyLossLayer<Dtype>::Backward_cpu(
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(CrossEntropyLossLayer);
-#endif
-
 INSTANTIATE_CLASS(CrossEntropyLossLayer);
 REGISTER_LAYER_CLASS(CrossEntropyLoss);
 
