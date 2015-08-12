@@ -17,8 +17,9 @@ namespace caffe {
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param);
-  explicit Solver(const string& param_file);
+  explicit Solver(const SolverParameter& param,
+      const Solver* root_solver = NULL);
+  explicit Solver(const string& param_file, const Solver* root_solver = NULL);
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
@@ -79,6 +80,10 @@ class Solver {
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
 
+  // The root solver that holds root nets (actually containing shared layers)
+  // in data parallelism
+  const Solver* const root_solver_;
+
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
@@ -89,8 +94,9 @@ class Solver {
 template <typename Dtype>
 class WorkerSolver : public Solver<Dtype> {
  public:
-  explicit WorkerSolver(const SolverParameter& param)
-      : Solver<Dtype>(param) {}
+  explicit WorkerSolver(const SolverParameter& param,
+      const Solver<Dtype>* root_solver = NULL)
+      : Solver<Dtype>(param, root_solver) {}
 
  protected:
   void ApplyUpdate() {}
