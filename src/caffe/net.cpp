@@ -84,7 +84,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   bottom_need_backward_.resize(param.layer_size());
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // For non-root solvers, whether this layer is shared from root_net_.
-    bool is_shared_layer = !Caffe::root_solver()
+    bool share_from_root = !Caffe::root_solver()
         && root_net_->layers_[layer_id]->ShareInParallel();
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
@@ -98,9 +98,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << "propagate_down param must be specified "
           << "either 0 or bottom_size times ";
     }
-    if (is_shared_layer) {
+    if (share_from_root) {
       LOG(INFO) << "Sharing layer " << layer_param.name() << " from root net";
       layers_.push_back(root_net_->layers_[layer_id]);
+      layers_[layer_id]->SetShared(true);
     } else {
       layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     }
@@ -137,7 +138,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
     // After this layer is connected, set it up.
-    if (is_shared_layer) {
+    if (share_from_root) {
       // Set up size of top blobs using root_net_
       const vector<Blob<Dtype>*>& base_top = root_net_->top_vecs_[layer_id];
       const vector<Blob<Dtype>*>& this_top = this->top_vecs_[layer_id];
