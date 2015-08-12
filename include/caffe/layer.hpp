@@ -146,11 +146,42 @@ class Layer {
       const vector<Blob<Dtype>*>& bottom);
 
   /**
+   * @brief Exposes a vector of internal class buffers.
+   */
+  vector<shared_ptr<Blob<Dtype> > >& buffers() {
+    return buffers_;
+  }
+
+  /**
    * @brief Returns the vector of learnable parameter blobs.
    */
   vector<shared_ptr<Blob<Dtype> > >& blobs() {
     return blobs_;
   }
+
+  inline void set_param_names(const vector<string>& param_names) {
+    param_names_ = param_names;
+  }
+  const vector<string>& param_names() const {
+    return param_names_;
+  }
+
+  /**
+   * @brief Returns the runtime parameter.
+   */
+  void set_runtime_param(const RuntimeParameter& param) {
+    runtime_param_ = param;
+  }
+
+  /**
+   * @brief Returns the runtime parameter.
+   */
+  const RuntimeParameter& runtime_param() const { return runtime_param_; }
+
+  /**
+   * @brief Returns the layer parameter.
+   */
+  void set_layer_param(const LayerParameter& param) { layer_param_ = param; }
 
   /**
    * @brief Returns the layer parameter.
@@ -178,6 +209,34 @@ class Layer {
     }
     loss_[top_index] = value;
   }
+
+  virtual inline bool is_loss() const {
+    return false;
+  }
+
+  inline bool in_place_layer() {
+    const bool is_in_place = (layer_param_.top_size() == 1
+            && layer_param_.bottom_size() == 1
+            && layer_param_.top(0) == layer_param_.bottom(0));
+    if (is_in_place) {
+      ASSERT(overwrites_bottom_diffs(),
+        "in place layers must overwrite their bottoms");
+    }
+    return is_in_place;
+  }
+  /**
+   * @brief Flag allowing layers that accumulate gradients rather
+   *        than overwriting them to be more memory efficient
+   *        by sharing their bottom_diffs with the layer below.
+   */
+  virtual inline bool overwrites_bottom_diffs() { return true; }
+
+  /**
+   * @brief Flag allowing layers that accumulate gradients rather
+   *        than overwriting them to be more memory efficient
+   *        by sharing their bottom_diffs with the layer below.
+   */
+  virtual inline bool overwrites_param_diffs() { return false; }
 
   /**
    * @brief Returns the layer type.
@@ -285,14 +344,31 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
+  inline void set_phase(Phase phase) {
+    phase_ = phase;
+  }
+
+  inline void reset_bottoms(const vector<string>& new_bottoms) {
+    layer_param_.clear_bottom();
+    for (int i = 0; i < new_bottoms.size(); ++i) {
+      layer_param_.add_bottom(new_bottoms[i]);
+    }
+  }
+
 
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
+  /** Protobuf parameter that is updated on every forward pass */
+  RuntimeParameter runtime_param_;
   /** The phase: TRAIN or TEST */
   Phase phase_;
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
+  /** Vector exposing any buffer member variables */
+  vector<shared_ptr<Blob<Dtype> > > buffers_;
+  /** The vector that stores the names of learnable parameters. */
+  vector<string> param_names_;
   /** Vector indicating whether to compute the diff of each param blob. */
   vector<bool> param_propagate_down_;
 
@@ -340,39 +416,39 @@ class Layer {
   virtual void CheckBlobCounts(const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top) {
     if (ExactNumBottomBlobs() >= 0) {
-      CHECK_EQ(ExactNumBottomBlobs(), bottom.size())
-          << type() << " Layer takes " << ExactNumBottomBlobs()
-          << " bottom blob(s) as input.";
+      ASSERT(ExactNumBottomBlobs() == bottom.size(),
+          type() << " Layer takes " << ExactNumBottomBlobs()
+          << " bottom blob(s) as input.");
     }
     if (MinBottomBlobs() >= 0) {
-      CHECK_LE(MinBottomBlobs(), bottom.size())
-          << type() << " Layer takes at least " << MinBottomBlobs()
-          << " bottom blob(s) as input.";
+      ASSERT(MinBottomBlobs() <= bottom.size(),
+          type() << " Layer takes at least " << MinBottomBlobs()
+          << " bottom blob(s) as input.");
     }
     if (MaxBottomBlobs() >= 0) {
-      CHECK_GE(MaxBottomBlobs(), bottom.size())
-          << type() << " Layer takes at most " << MaxBottomBlobs()
-          << " bottom blob(s) as input.";
+      ASSERT(MaxBottomBlobs() >= bottom.size(),
+          type() << " Layer takes at most " << MaxBottomBlobs()
+          << " bottom blob(s) as input.");
     }
     if (ExactNumTopBlobs() >= 0) {
-      CHECK_EQ(ExactNumTopBlobs(), top.size())
-          << type() << " Layer produces " << ExactNumTopBlobs()
-          << " top blob(s) as output.";
+      ASSERT(ExactNumTopBlobs() == top.size(),
+          type() << " Layer produces " << ExactNumTopBlobs()
+          << " top blob(s) as output.");
     }
     if (MinTopBlobs() >= 0) {
-      CHECK_LE(MinTopBlobs(), top.size())
-          << type() << " Layer produces at least " << MinTopBlobs()
-          << " top blob(s) as output.";
+      ASSERT(MinTopBlobs() <= top.size(),
+          type() << " Layer produces at least " << MinTopBlobs()
+          << " top blob(s) as output.");
     }
     if (MaxTopBlobs() >= 0) {
-      CHECK_GE(MaxTopBlobs(), top.size())
-          << type() << " Layer produces at most " << MaxTopBlobs()
-          << " top blob(s) as output.";
+      ASSERT(MaxTopBlobs() >= top.size(),
+          type() << " Layer produces at most " << MaxTopBlobs()
+          << " top blob(s) as output.");
     }
     if (EqualNumBottomTopBlobs()) {
-      CHECK_EQ(bottom.size(), top.size())
-          << type() << " Layer produces one top blob as output for each "
-          << "bottom blob input.";
+      ASSERT(bottom.size() == top.size(),
+          type() << " Layer produces one top blob as output for each "
+          << "bottom blob input.");
     }
   }
 
@@ -383,8 +459,8 @@ class Layer {
   inline void SetLossWeights(const vector<Blob<Dtype>*>& top) {
     const int num_loss_weights = layer_param_.loss_weight_size();
     if (num_loss_weights) {
-      CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
-          "unspecified or specified once per top blob.";
+      ASSERT(top.size() == num_loss_weights, "loss_weight must be "
+          "unspecified or specified once per top blob.");
       for (int top_id = 0; top_id < top.size(); ++top_id) {
         const Dtype loss_weight = layer_param_.loss_weight(top_id);
         if (loss_weight == Dtype(0)) { continue; }

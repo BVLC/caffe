@@ -8,6 +8,7 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
+#include "caffe/tensor.hpp"
 #include "caffe/util/math_functions.hpp"
 
 const int kMaxBlobAxes = 32;
@@ -24,13 +25,14 @@ namespace caffe {
 template <typename Dtype>
 class Blob {
  public:
-  Blob()
-       : data_(), diff_(), count_(0), capacity_(0) {}
+  Blob() { Init(); }
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
       const int width);
   explicit Blob(const vector<int>& shape);
+
+  void Init();
 
   /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
   void Reshape(const int num, const int channels, const int height,
@@ -53,14 +55,14 @@ class Blob {
   void Reshape(const BlobShape& shape);
   void ReshapeLike(const Blob& other);
   inline string shape_string() const {
-    ostringstream stream;
-    for (int i = 0; i < shape_.size(); ++i) {
-      stream << shape_[i] << " ";
-    }
-    stream << "(" << count_ << ")";
-    return stream.str();
+    ASSERT(data_->shape() == diff_->shape(),
+        "FATAL WARNING: data and diff counts do not match.");
+    return data_->shape_string();
   }
-  inline const vector<int>& shape() const { return shape_; }
+  inline const vector<int>& shape() const {
+    ASSERT(data_->shape() == diff_->shape(), "");
+    return data_->shape();
+  }
   /**
    * @brief Returns the dimension of the index-th axis (or the negative index-th
    *        axis from the end, if index is negative).
@@ -70,10 +72,14 @@ class Blob {
    *        Dies on out of range index.
    */
   inline int shape(int index) const {
-    return shape_[CanonicalAxisIndex(index)];
+    return shape()[CanonicalAxisIndex(index)];
   }
-  inline int num_axes() const { return shape_.size(); }
-  inline int count() const { return count_; }
+  inline int num_axes() const { return shape().size(); }
+  inline int count() const {
+    ASSERT(data_->count() == diff_->count(),
+        "FATAL WARNING: data and diff counts do not match.");
+    return data_->count();
+  }
 
   /**
    * @brief Compute the volume of a slice; i.e., the product of dimensions
@@ -84,11 +90,11 @@ class Blob {
    * @param end_axis The first axis to exclude from the slice.
    */
   inline int count(int start_axis, int end_axis) const {
-    CHECK_LE(start_axis, end_axis);
-    CHECK_GE(start_axis, 0);
-    CHECK_GE(end_axis, 0);
-    CHECK_LE(start_axis, num_axes());
-    CHECK_LE(end_axis, num_axes());
+    ASSERT(start_axis <= end_axis, "");
+    ASSERT(start_axis >= 0, "");
+    ASSERT(end_axis >= 0, "");
+    ASSERT(start_axis <= num_axes(), "");
+    ASSERT(end_axis <= num_axes(), "");
     int count = 1;
     for (int i = start_axis; i < end_axis; ++i) {
       count *= shape(i);
@@ -117,12 +123,12 @@ class Blob {
    *        Dies on out of range index.
    */
   inline int CanonicalAxisIndex(int axis_index) const {
-    CHECK_GE(axis_index, -num_axes())
-        << "axis " << axis_index << " out of range for " << num_axes()
-        << "-D Blob with shape " << shape_string();
-    CHECK_LT(axis_index, num_axes())
-        << "axis " << axis_index << " out of range for " << num_axes()
-        << "-D Blob with shape " << shape_string();
+    ASSERT(axis_index >= -num_axes(),
+        "axis " << axis_index << " out of range for " << num_axes()
+        << "-D Blob with shape " << shape_string());
+    ASSERT(axis_index < num_axes(),
+        "axis " << axis_index << " out of range for " << num_axes()
+        << "-D Blob with shape " << shape_string());
     if (axis_index < 0) {
       return axis_index + num_axes();
     }
@@ -138,10 +144,10 @@ class Blob {
   /// @brief Deprecated legacy shape accessor width: use shape(3) instead.
   inline int width() const { return LegacyShape(3); }
   inline int LegacyShape(int index) const {
-    CHECK_LE(num_axes(), 4)
-        << "Cannot use legacy accessors on Blobs with > 4 axes.";
-    CHECK_LT(index, 4);
-    CHECK_GE(index, -4);
+    ASSERT(num_axes() <= 4,
+        "Cannot use legacy accessors on Blobs with > 4 axes.");
+    ASSERT(index < 4, "");
+    ASSERT(index >= -4, "");
     if (index >= num_axes() || index < -num_axes()) {
       // Axis is out of range, but still in [0, 3] (or [-4, -1] for reverse
       // indexing) -- this special case simulates the one-padding used to fill
@@ -153,25 +159,25 @@ class Blob {
 
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
-    CHECK_GE(n, 0);
-    CHECK_LE(n, num());
-    CHECK_GE(channels(), 0);
-    CHECK_LE(c, channels());
-    CHECK_GE(height(), 0);
-    CHECK_LE(h, height());
-    CHECK_GE(width(), 0);
-    CHECK_LE(w, width());
+    ASSERT(n >= 0, "");
+    ASSERT(n <= num(), "");
+    ASSERT(channels() >= 0, "");
+    ASSERT(c <= channels(), "");
+    ASSERT(height() >= 0, "");
+    ASSERT(h <= height(), "");
+    ASSERT(width() >= 0, "");
+    ASSERT(w <= width(), "");
     return ((n * channels() + c) * height() + h) * width() + w;
   }
 
   inline int offset(const vector<int>& indices) const {
-    CHECK_LE(indices.size(), num_axes());
+    ASSERT(indices.size() <= num_axes(), "");
     int offset = 0;
     for (int i = 0; i < num_axes(); ++i) {
       offset *= shape(i);
       if (indices.size() > i) {
-        CHECK_GE(indices[i], 0);
-        CHECK_LT(indices[i], shape(i));
+        ASSERT(indices[i] >= 0, "");
+        ASSERT(indices[i] < shape(i), "");
         offset += indices[i];
       }
     }
@@ -185,9 +191,18 @@ class Blob {
    * @param reshape if false, require this Blob to be pre-shaped to the shape
    *        of other (and die otherwise); if true, Reshape this Blob to other's
    *        shape if necessary
+   * Deprecated in favor of CopyDataFrom, CopyDiffFrom
    */
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
+
+  void CopyDataFrom(const Blob<Dtype>& source) {
+    CopyFrom(source, false, false);
+  }
+
+  void CopyDiffFrom(const Blob<Dtype>& source) {
+    CopyFrom(source, true, false);
+  }
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {
@@ -207,16 +222,6 @@ class Blob {
     return cpu_diff()[offset(index)];
   }
 
-  inline const shared_ptr<SyncedMemory>& data() const {
-    CHECK(data_);
-    return data_;
-  }
-
-  inline const shared_ptr<SyncedMemory>& diff() const {
-    CHECK(diff_);
-    return diff_;
-  }
-
   const Dtype* cpu_data() const;
   void set_cpu_data(Dtype* data);
   const Dtype* gpu_data() const;
@@ -227,9 +232,18 @@ class Blob {
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
   void Update();
+  void Update(Dtype lr);
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
+  inline const shared_ptr<Tensor<Dtype> >& data() const {
+    ASSERT(data_, "");
+    return data_;
+  }
 
+  inline const shared_ptr<Tensor<Dtype> >& diff() const {
+    ASSERT(diff_, "");
+    return diff_;
+  }
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
   /// @brief Compute the sum of absolute values (L1 norm) of the diff.
@@ -264,13 +278,17 @@ class Blob {
   void ShareDiff(const Blob& other);
 
   bool ShapeEquals(const BlobProto& other);
+  bool DiffInitialized() { return diff_->Initialized(); }
+  enum ComputeMode { UNDEFINED, CPU, GPU };
+  void SetDataValues(const Dtype value);
+  void SetDiffValues(const Dtype value);
+  void AddDataFrom(const Blob& source);
+  void AddDiffFrom(const Blob& source);
 
  protected:
-  shared_ptr<SyncedMemory> data_;
-  shared_ptr<SyncedMemory> diff_;
-  vector<int> shape_;
-  int count_;
-  int capacity_;
+  ComputeMode compute_mode_;
+  shared_ptr<Tensor<Dtype> > data_;
+  shared_ptr<Tensor<Dtype> > diff_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

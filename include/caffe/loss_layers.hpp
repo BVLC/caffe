@@ -107,6 +107,7 @@ class LossLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
   virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline bool is_loss() const { return true; }
 
   /**
    * @brief For convenience and backwards compatibility, instruct the Net to

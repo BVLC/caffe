@@ -12,6 +12,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>  // pair
 #include <vector>
@@ -63,7 +64,7 @@ private:\
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
-#define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
+#define NOT_IMPLEMENTED ASSERT(false, "Not Implemented Yet")
 
 // See PR #1236
 namespace cv { class Mat; }
@@ -149,6 +150,15 @@ class Caffe {
   static void SetDevice(const int device_id);
   // Prints the current GPU status.
   static void DeviceQuery();
+  inline static void set_cpp_loglevel(int loglevel) {
+    static bool called_before = false;
+    if (!called_before) {
+      const char* argv[] = {"neonet"};
+      google::InitGoogleLogging(argv[0]);
+      called_before = true;
+    }
+    google::SetStderrLogging(loglevel);
+  }
 
  protected:
 #ifndef CPU_ONLY
@@ -165,6 +175,39 @@ class Caffe {
   Caffe();
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
+};
+
+#ifdef NDEBUG
+#define ASSERT(condition, stream) if (!(condition)) { \
+  throw std::runtime_error(Formatter() << __FILE__ << "(@" \
+  << __LINE__ << "): " << stream); }
+#else
+#define ASSERT(condition, stream) CHECK(condition) << stream
+#endif
+class Formatter {
+ public:
+    Formatter() {}
+    ~Formatter() {}
+
+    template <typename Type>
+    Formatter & operator << (const Type & value) {
+      stream_ << value;
+      return *this;
+    }
+
+    std::string str() const         { return stream_.str(); }
+    operator std::string () const   { return stream_.str(); }
+
+    enum ConvertToString {
+      to_str
+    };
+    std::string operator >> (ConvertToString) { return stream_.str(); }
+
+ private:
+    std::stringstream stream_;
+
+    Formatter(const Formatter &);
+    Formatter & operator = (Formatter &);
 };
 
 }  // namespace caffe

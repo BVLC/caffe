@@ -380,6 +380,13 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+
+  optional RuntimeParameter rp = 200;
+}
+
+// Like LayerParameter, but is updated every forward and backward call,
+// rather than only being set upon Layer<Dtype> class construction.
+message RuntimeParameter {
 }
 
 // Message that stores parameters used to apply transformation
