@@ -1,6 +1,7 @@
 #ifndef CAFFE_LAYER_H_
 #define CAFFE_LAYER_H_
 
+#include <boost/thread.hpp>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -84,6 +85,14 @@ class Layer {
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+
+  /**
+   * @brief Whether a layer should be shared by multiple nets during data
+   *        parallelism. By default, all layers except for data layers should
+   *        not be shared. data layers should be shared to ensure each worker
+   *        solver access data sequentially during data parallelism.
+   */
+  virtual inline bool ShareInParallel() const { return false; }
 
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
@@ -396,6 +405,10 @@ class Layer {
     }
   }
 
+ private:
+  // mutex to lock layer to ensure sequential forward
+  boost::mutex forward_mutex_;
+
   DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
 
@@ -405,6 +418,8 @@ class Layer {
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  // Lock during forward to ensure sequential forward
+  boost::mutex::scoped_lock lock(forward_mutex_);
   Dtype loss = 0;
   Reshape(bottom, top);
   switch (Caffe::mode()) {

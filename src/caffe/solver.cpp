@@ -18,14 +18,14 @@
 namespace caffe {
 
 template <typename Dtype>
-Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_(), callbacks_() {
+Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
+    : net_(), callbacks_(), root_solver_(root_solver) {
   Init(param);
 }
 
 template <typename Dtype>
-Solver<Dtype>::Solver(const string& param_file)
-    : net_(), callbacks_() {
+Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
+    : net_(), callbacks_(), root_solver_(root_solver) {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -33,6 +33,8 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
+  CHECK(Caffe::root_solver() || root_solver_)
+      << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param.DebugString();
   param_ = param;
@@ -88,7 +90,11 @@ void Solver<Dtype>::InitTrainNet() {
   net_state.MergeFrom(net_param.state());
   net_state.MergeFrom(param_.train_state());
   net_param.mutable_state()->CopyFrom(net_state);
-  net_.reset(new Net<Dtype>(net_param));
+  if (Caffe::root_solver()) {
+    net_.reset(new Net<Dtype>(net_param));
+  } else {
+    net_.reset(new Net<Dtype>(net_param, root_solver_->net_.get()));
+  }
 }
 
 template <typename Dtype>
@@ -163,7 +169,12 @@ void Solver<Dtype>::InitTestNets() {
     net_params[i].mutable_state()->CopyFrom(net_state);
     LOG(INFO)
         << "Creating test net (#" << i << ") specified by " << sources[i];
-    test_nets_[i].reset(new Net<Dtype>(net_params[i]));
+    if (Caffe::root_solver()) {
+      test_nets_[i].reset(new Net<Dtype>(net_params[i]));
+    } else {
+      test_nets_[i].reset(new Net<Dtype>(net_params[i],
+          root_solver_->test_nets_[i].get()));
+    }
     test_nets_[i]->set_debug_info(param_.debug_info());
   }
 }

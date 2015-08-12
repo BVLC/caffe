@@ -34,6 +34,8 @@ class BaseDataLayer : public Layer<Dtype> {
   // This method may not be overridden except by the BasePrefetchingDataLayer.
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Data layers should be shared by multiple solvers in parallel
+  virtual inline bool ShareInParallel() const { return true; }
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
   // Data layers have no bottoms, so reshaping is trivial.
@@ -94,7 +96,8 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~DataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
+  // DataLayer uses DataReader instead for sharing for parallelism
+  virtual inline bool ShareInParallel() const { return false; }
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
@@ -118,6 +121,8 @@ class DummyDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Data layers should be shared by multiple solvers in parallel
+  virtual inline bool ShareInParallel() const { return true; }
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -151,6 +156,8 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual ~HDF5DataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Data layers should be shared by multiple solvers in parallel
+  virtual inline bool ShareInParallel() const { return true; }
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -192,6 +199,8 @@ class HDF5OutputLayer : public Layer<Dtype> {
   virtual ~HDF5OutputLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Data layers should be shared by multiple solvers in parallel
+  virtual inline bool ShareInParallel() const { return true; }
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
