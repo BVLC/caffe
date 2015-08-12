@@ -132,7 +132,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
       float dist_ij = std::sqrt(ij_x + ij_y + ij_z);
       float dist_im = std::sqrt(im_x + im_y + im_z);
-      if (*label_i == *label_j && dist_ij < 100/2)
+      if (*label_i == *label_j && dist_ij < 100/2 && dist_ij != 0)
         pair_pass = true;
       if (pair_pass && (*label_i  != *label_k))
         triplet1_pass = true;
