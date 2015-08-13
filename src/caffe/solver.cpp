@@ -18,14 +18,14 @@
 namespace caffe {
 
 template <typename Dtype>
-Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_() {
+Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
+    : net_(), callbacks_(), root_solver_(root_solver) {
   Init(param);
 }
 
 template <typename Dtype>
-Solver<Dtype>::Solver(const string& param_file)
-    : net_() {
+Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
+    : net_(), callbacks_(), root_solver_(root_solver) {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -33,17 +33,21 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
-  LOG(INFO) << "Initializing solver from parameters: " << std::endl
-            << param.DebugString();
+  CHECK(Caffe::root_solver() || root_solver_)
+      << "root_solver_ needs to be set for all non-root solvers";
+  LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
+    << std::endl << param.DebugString();
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
-  if (param_.random_seed() >= 0) {
+  if (Caffe::root_solver() && param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
   InitTrainNet();
-  InitTestNets();
-  LOG(INFO) << "Solver scaffolding done.";
+  if (Caffe::root_solver()) {
+    InitTestNets();
+    LOG(INFO) << "Solver scaffolding done.";
+  }
   iter_ = 0;
   current_step_ = 0;
 }
@@ -59,19 +63,22 @@ void Solver<Dtype>::InitTrainNet() {
       << "one of these fields specifying a train_net: " << field_names;
   NetParameter net_param;
   if (param_.has_train_net_param()) {
-    LOG(INFO) << "Creating training net specified in train_net_param.";
+    LOG_IF(INFO, Caffe::root_solver())
+        << "Creating training net specified in train_net_param.";
     net_param.CopyFrom(param_.train_net_param());
   } else if (param_.has_train_net()) {
-    LOG(INFO) << "Creating training net from train_net file: "
-              << param_.train_net();
+    LOG_IF(INFO, Caffe::root_solver())
+        << "Creating training net from train_net file: " << param_.train_net();
     ReadNetParamsFromTextFileOrDie(param_.train_net(), &net_param);
   }
   if (param_.has_net_param()) {
-    LOG(INFO) << "Creating training net specified in net_param.";
+    LOG_IF(INFO, Caffe::root_solver())
+        << "Creating training net specified in net_param.";
     net_param.CopyFrom(param_.net_param());
   }
   if (param_.has_net()) {
-    LOG(INFO) << "Creating training net from net file: " << param_.net();
+    LOG_IF(INFO, Caffe::root_solver())
+        << "Creating training net from net file: " << param_.net();
     ReadNetParamsFromTextFileOrDie(param_.net(), &net_param);
   }
   // Set the correct NetState.  We start with the solver defaults (lowest
@@ -83,11 +90,16 @@ void Solver<Dtype>::InitTrainNet() {
   net_state.MergeFrom(net_param.state());
   net_state.MergeFrom(param_.train_state());
   net_param.mutable_state()->CopyFrom(net_state);
-  net_.reset(new Net<Dtype>(net_param));
+  if (Caffe::root_solver()) {
+    net_.reset(new Net<Dtype>(net_param));
+  } else {
+    net_.reset(new Net<Dtype>(net_param, root_solver_->net_.get()));
+  }
 }
 
 template <typename Dtype>
 void Solver<Dtype>::InitTestNets() {
+  CHECK(Caffe::root_solver());
   const bool has_net_param = param_.has_net_param();
   const bool has_net_file = param_.has_net();
   const int num_generic_nets = has_net_param + has_net_file;
@@ -157,7 +169,12 @@ void Solver<Dtype>::InitTestNets() {
     net_params[i].mutable_state()->CopyFrom(net_state);
     LOG(INFO)
         << "Creating test net (#" << i << ") specified by " << sources[i];
-    test_nets_[i].reset(new Net<Dtype>(net_params[i]));
+    if (Caffe::root_solver()) {
+      test_nets_[i].reset(new Net<Dtype>(net_params[i]));
+    } else {
+      test_nets_[i].reset(new Net<Dtype>(net_params[i],
+          root_solver_->test_nets_[i].get()));
+    }
     test_nets_[i]->set_debug_info(param_.debug_info());
   }
 }
@@ -175,10 +192,14 @@ void Solver<Dtype>::Step(int iters) {
     // zero-init the params
     net_->ClearParamDiffs();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
-        && (iter_ > 0 || param_.test_initialization())) {
+        && (iter_ > 0 || param_.test_initialization())
+        && Caffe::root_solver()) {
       TestAll();
     }
 
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_start();
+    }
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
     // accumulate the loss and gradient
@@ -198,7 +219,8 @@ void Solver<Dtype>::Step(int iters) {
       losses[idx] = loss;
     }
     if (display) {
-      LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -213,11 +235,14 @@ void Solver<Dtype>::Step(int iters) {
             loss_msg_stream << " (* " << loss_weight
                             << " = " << loss_weight * result_vec[k] << " loss)";
           }
-          LOG(INFO) << "    Train net output #"
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
               << score_index++ << ": " << output_name << " = "
               << result_vec[k] << loss_msg_stream.str();
         }
       }
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
     }
     ApplyUpdate();
 
@@ -226,7 +251,9 @@ void Solver<Dtype>::Step(int iters) {
     ++iter_;
 
     // Save a snapshot if needed.
-    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
+    if (param_.snapshot()
+        && iter_ % param_.snapshot() == 0
+        && Caffe::root_solver()) {
       Snapshot();
     }
   }
@@ -234,6 +261,7 @@ void Solver<Dtype>::Step(int iters) {
 
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
 
@@ -278,6 +306,7 @@ void Solver<Dtype>::TestAll() {
 
 template <typename Dtype>
 void Solver<Dtype>::Test(const int test_net_id) {
+  CHECK(Caffe::root_solver());
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
@@ -328,13 +357,14 @@ void Solver<Dtype>::Test(const int test_net_id) {
                       << " = " << loss_weight * mean_score << " loss)";
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
-        << mean_score << loss_msg_stream.str();
+              << mean_score << loss_msg_stream.str();
   }
 }
 
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
+  CHECK(Caffe::root_solver());
   string model_filename;
   switch (param_.snapshot_format()) {
     case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
@@ -379,6 +409,7 @@ string Solver<Dtype>::SnapshotToHDF5() {
 
 template <typename Dtype>
 void Solver<Dtype>::Restore(const char* state_file) {
+  CHECK(Caffe::root_solver());
   string state_filename(state_file);
   if (state_filename.size() >= 3 &&
       state_filename.compare(state_filename.size() - 3, 3, ".h5") == 0) {
@@ -480,6 +511,7 @@ void SGDSolver<Dtype>::ClipGradients() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
+  CHECK(Caffe::root_solver());
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
@@ -723,6 +755,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
 
 template <typename Dtype>
 void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
+  CHECK(Caffe::root_solver());
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
@@ -783,6 +816,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
 template <typename Dtype>
 void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
+  CHECK(Caffe::root_solver());
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype delta = this->param_.delta();

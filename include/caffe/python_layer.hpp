@@ -27,6 +27,10 @@ class PythonLayer : public Layer<Dtype> {
     self_.attr("reshape")(bottom, top);
   }
 
+  virtual inline bool ShareInParallel() const {
+    return this->layer_param_.python_param().share_in_parallel();
+  }
+
   virtual inline const char* type() const { return "Python"; }
 
  protected:
