@@ -364,11 +364,13 @@ message LayerParameter {
   optional InnerProductParameter inner_product_param = 117;
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
+  optional LstmUnitParameter lstm_unit_param = 201;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
+  optional PyParameter py_param = 203;
   optional PythonParameter python_param = 130;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
@@ -380,6 +382,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  optional WordvecParameter wordvec_param = 202;
 
   optional RuntimeParameter rp = 200;
 }
@@ -387,6 +390,8 @@ message LayerParameter {
 // Like LayerParameter, but is updated every forward and backward call,
 // rather than only being set upon Layer<Dtype> class construction.
 message RuntimeParameter {
+  optional NumpyDataParameter numpy_data_param = 1;
+  optional CapSequenceParameter cap_sequence_param = 2;
 }
 
 // Message that stores parameters used to apply transformation
@@ -680,6 +685,39 @@ message LRNParameter {
   }
   optional NormRegion norm_region = 4 [default = ACROSS_CHANNELS];
   optional float k = 5 [default = 1.];
+}
+
+message LstmUnitParameter {
+  optional uint32 num_cells = 1;
+  optional FillerParameter input_weight_filler = 2; // The filler for the weight
+  optional FillerParameter input_gate_weight_filler = 3; // The filler for the weight
+  optional FillerParameter forget_gate_weight_filler = 4; // The filler for the weight
+  optional FillerParameter output_gate_weight_filler = 5; // The filler for the weight
+}
+
+message NumpyDataParameter {
+  repeated uint32 shape = 1;
+  repeated float data = 2;
+}
+
+message CapSequenceParameter {
+  repeated uint32 sequence_lengths = 1;
+}
+
+message ParamShapeParameter {
+  repeated int32 dimension = 1;
+}
+
+// Apollo python parameter allowing param size specification
+message PyParameter {
+  repeated ParamShapeParameter param_shapes = 1;
+  repeated FillerParameter param_fillers = 2;
+}
+
+message WordvecParameter {
+  optional uint32 dimension = 1;
+  optional uint32 vocab_size = 2;
+  optional FillerParameter weight_filler = 3; // The filler for the weight
 }
 
 message MemoryDataParameter {

@@ -373,6 +373,94 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
+template <typename Dtype>
+class LstmUnitLayer : public Layer<Dtype> {
+ public:
+  explicit LstmUnitLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline bool overwrites_param_diffs() { return true; }
+  virtual inline const char* type() const { return "LstmUnit"; }
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int channels_;  // num memory cells;
+  int num_;  // batch size;
+  int input_data_size_;
+  int M_;
+  int N_;
+  int K_;
+  shared_ptr<Blob<Dtype> > input_gates_data_buffer_;
+  shared_ptr<Blob<Dtype> > forget_gates_data_buffer_;
+  shared_ptr<Blob<Dtype> > output_gates_data_buffer_;
+  shared_ptr<Blob<Dtype> > input_values_data_buffer_;
+  shared_ptr<Blob<Dtype> > gates_diff_buffer_;
+  shared_ptr<Blob<Dtype> > next_state_tot_diff_buffer_;
+  shared_ptr<Blob<Dtype> > dldg_buffer_;
+};
+
+template <typename Dtype>
+class TransposeLayer : public Layer<Dtype> {
+ public:
+  explicit TransposeLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Transpose"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
+template <typename Dtype>
+class WordvecLayer : public Layer<Dtype> {
+ public:
+  explicit WordvecLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline bool overwrites_param_diffs() { return true; }
+  virtual inline const char* type() const { return "Wordvec"; }
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int num_;  // batch size;
+  int vocab_size_;
+  int dimension_;
+  int sentence_length_;
+};
 
 /**
  * @brief Pools the input image by taking the max, average, etc. within regions.

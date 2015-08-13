@@ -13,7 +13,7 @@ void Tensor<Dtype>::Reshape(const vector<int>& shape) {
   count_ = 1;
   shape_.resize(shape.size());
   for (int i = 0; i < shape.size(); ++i) {
-    ASSERT(shape[i] >= 0, "");
+    ASSERT(shape[i] > 0, "");
     ASSERT(shape[i] <= INT_MAX / count_, "blob size exceeds INT_MAX");
     count_ *= shape[i];
     shape_[i] = shape[i];

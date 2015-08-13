@@ -13,6 +13,36 @@
 namespace caffe {
 
 template <>
+void caffe_gpu_transpose<float>(const int M, const int N, const float* A, float* C) {
+  // C is MxN
+  // Takes as input a M x N matrix A stored in row major order and returns
+  // the same M x N matrix C stored in column major order
+  CHECK_NE(A, C);
+  int lda = N;
+  int ldb = M;
+  int ldc = M;
+  const float alpha = 1.0f;
+  const float beta = 0.0f;
+  CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N,
+      M, N, &alpha, A, lda, &beta, NULL, ldb, C, ldc));
+}
+
+template <>
+void caffe_gpu_transpose<double>(const int M, const int N, const double* A, double* C) {
+  // C is MxN
+  // Takes as input a M x N matrix A stored in row major order and returns
+  // the same M x N matrix C stored in column major order
+  CHECK_NE(A, C);
+  int lda = N;
+  int ldb = M;
+  int ldc = M;
+  const double alpha = 1.0f;
+  const double beta = 0.0f;
+  CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N,
+      M, N, &alpha, A, lda, &beta, NULL, ldb, C, ldc));
+}
+
+template <>
 void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const float alpha, const float* A, const float* B, const float beta,
