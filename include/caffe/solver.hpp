@@ -17,8 +17,9 @@ namespace caffe {
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param);
-  explicit Solver(const string& param_file);
+  explicit Solver(const SolverParameter& param,
+      const Solver* root_solver = NULL);
+  explicit Solver(const string& param_file, const Solver* root_solver = NULL);
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
@@ -32,11 +33,26 @@ class Solver {
   // methods to restore the state from the appropriate snapshot type.
   void Restore(const char* resume_file);
   virtual ~Solver() {}
+  inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
   int iter() { return iter_; }
+
+  // Invoked at specific points during an iteration
+  class Callback {
+   protected:
+    virtual void on_start() = 0;
+    virtual void on_gradients_ready() = 0;
+
+    template <typename T>
+    friend class Solver;
+  };
+  const vector<Callback*>& callbacks() const { return callbacks_; }
+  void add_callback(Callback* value) {
+    callbacks_.push_back(value);
+  }
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -62,10 +78,38 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
+  vector<Callback*> callbacks_;
+
+  // The root solver that holds root nets (actually containing shared layers)
+  // in data parallelism
+  const Solver* const root_solver_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
+/**
+ * @brief Solver that only computes gradients, used as worker
+ *        for multi-GPU training.
+ */
+template <typename Dtype>
+class WorkerSolver : public Solver<Dtype> {
+ public:
+  explicit WorkerSolver(const SolverParameter& param,
+      const Solver<Dtype>* root_solver = NULL)
+      : Solver<Dtype>(param, root_solver) {}
+
+ protected:
+  void ApplyUpdate() {}
+  void SnapshotSolverState(const string& model_filename) {
+    LOG(FATAL) << "Should not be called on worker solver.";
+  }
+  void RestoreSolverStateFromBinaryProto(const string& state_file) {
+    LOG(FATAL) << "Should not be called on worker solver.";
+  }
+  void RestoreSolverStateFromHDF5(const string& state_file) {
+    LOG(FATAL) << "Should not be called on worker solver.";
+  }
+};
 
 /**
  * @brief Optimizes the parameters of a Net using
