@@ -19,7 +19,11 @@ Data Preparation
 
 *By "ImageNet" we here mean the ILSVRC12 challenge, but you can easily train on the whole of ImageNet as well, just with more disk space, and a little longer training time.*
 
-We assume that you already have downloaded the ImageNet training data and validation data, and they are stored on your disk like:
+After you download the proper [ImageNet](http://www.image-net.org/index) archived files (the service needs registration) you will need to extract the images from the `.tar` files. You can use the `data/ilsvrc12/extract_ilsvrc.sh` script by specifing the path of the `.tar` files on the system at the `DATAPATH` variable and then executing:
+
+    ./data/ilsvrc12/extract_ilsvrc.sh
+
+We assume that you already have downloaded the ImageNet training data and validation data, and they are stored on your disk like (they should be if you used the `/data/ilsvrc12/extract_ilsvrc.sh` script):
 
     /path/to/imagenet/train/n01440764/n01440764_10026.JPEG
     /path/to/imagenet/val/ILSVRC2012_val_00000001.JPEG
