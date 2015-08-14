@@ -6,7 +6,14 @@ title: Solver / Model Optimization
 The solver orchestrates model optimization by coordinating the network's forward inference and backward gradients to form parameter updates that attempt to improve the loss.
 The responsibilities of learning are divided between the Solver for overseeing the optimization and generating parameter updates and the Net for yielding loss and gradients.
 
-The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov's Accelerated Gradient (NESTEROV).
+The Caffe solvers are:
+
+- Stochastic Gradient Descent (`SGD`), 
+- AdaDelta (`ADADELTA`),
+- Adaptive Gradient (`ADAGRAD`),
+- Adam (`ADAM`),
+- Nesterov's Accelerated Gradient (`NESTEROV`) and
+- RMSprop (`RMSPROP`)
 
 The solver
 
@@ -104,6 +111,32 @@ If learning diverges (e.g., you start to see very large or `NaN` or `inf` loss v
     [ImageNet Classification with Deep Convolutional Neural Networks](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf).
     *Advances in Neural Information Processing Systems*, 2012.
 
+### AdaDelta
+
+The **AdaDelta** (`solver_type: ADADELTA`) method (M. Zeiler [1]) is a "robust learning rate method". It is a gradient-based optimization method (like SGD). The update formulas are
+
+$$
+\begin{align}
+(v_t)_i &= \frac{\operatorname{RMS}((v_{t-1})_i)}{\operatorname{RMS}\left( \nabla L(W_t) \right)_{i}} \left( \nabla L(W_{t'}) \right)_i
+\\
+\operatorname{RMS}\left( \nabla L(W_t) \right)_{i} &= \sqrt{E[g^2] + \varepsilon}
+\\
+E[g^2]_t &= \delta{E[g^2]_{t-1} } + (1-\delta)g_{t}^2
+\end{align}
+$$
+
+and 
+
+$$
+(W_{t+1})_i =
+(W_t)_i - \alpha
+(v_t)_i.
+$$
+
+[1] M. Zeiler
+    [ADADELTA: AN ADAPTIVE LEARNING RATE METHOD](http://arxiv.org/pdf/1212.5701.pdf).
+    *arXiv preprint*, 2012.
+
 ### AdaGrad
 
 The **adaptive gradient** (`solver_type: ADAGRAD`) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to "find needles in haystacks in the form of very predictive but rarely seen features," in Duchi et al.'s words.
@@ -123,6 +156,28 @@ Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementa
 [1] J. Duchi, E. Hazan, and Y. Singer.
     [Adaptive Subgradient Methods for Online Learning and Stochastic Optimization](http://www.magicbroom.info/Papers/DuchiHaSi10.pdf).
     *The Journal of Machine Learning Research*, 2011.
+
+### Adam
+
+The **Adam** (`solver_type: ADAM`), proposed in Kingma et al. [1], is a gradient-based optimization method (like SGD). This includes an "adaptive moment estimation" ($$m_t, v_t$$) and can be regarded as a generalization of AdaGrad. The update formulas are
+
+$$
+(m_t)_i = \beta_1 (m_{t-1})_i + (1-\beta_1)(\nabla L(W_t))_i,\\
+(v_t)_i = \beta_2 (v_{t-1})_i + (1-\beta_2)(\nabla L(W_t))_i^2
+$$
+
+and
+
+$$
+(W_{t+1})_i =
+(W_t)_i - \alpha \frac{\sqrt{1-(\beta_2)_i^t}}{1-(\beta_1)_i^t}\frac{(m_t)_i}{\sqrt{(v_t)_i}+\varepsilon}.
+$$
+
+Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon = 10^{-8}$$ as default values. Caffe uses the values of `momemtum, momentum2, delta` for $$\beta_1, \beta_2, \varepsilon$$, respectively.
+
+[1] D. Kingma, J. Ba.
+    [Adam: A Method for Stochastic Optimization](http://arxiv.org/abs/1412.6980).
+    *International Conference for Learning Representations*, 2015.
 
 ### NAG
 
@@ -148,6 +203,28 @@ What distinguishes the method from SGD is the weight setting $$ W $$ on which we
 [2] I. Sutskever, J. Martens, G. Dahl, and G. Hinton.
     [On the Importance of Initialization and Momentum in Deep Learning](http://www.cs.toronto.edu/~fritz/absps/momentum.pdf).
     *Proceedings of the 30th International Conference on Machine Learning*, 2013.
+
+### RMSprop
+
+The **RMSprop** (`solver_type: RMSPROP`), suggested by Tieleman in a Coursera course lecture, is a gradient-based optimization method (like SGD). The update formulas are
+
+$$
+(v_t)_i = 
+\begin{cases}
+(v_{t-1})_i + \delta, &(\nabla L(W_t))_i(\nabla L(W_{t-1}))_i > 0\\
+(v_{t-1})_i \cdot (1-\delta), & \text{else}
+\end{cases}
+$$
+
+$$
+(W_{t+1})_i =(W_t)_i - \alpha (v_t)_i,
+$$
+
+If the gradient updates results in oscillations the gradient is reduced by times $$1-\delta$$. Otherwise it will be increased by $$\delta$$. The default value of $$\delta$$ (`rms_decay`) is set to $$\delta = 0.02$$.
+
+[1] T. Tieleman, and G. Hinton.
+    [RMSProp: Divide the gradient by a running average of its recent magnitude](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf).
+    *COURSERA: Neural Networks for Machine Learning.Technical report*, 2012.
 
 ## Scaffolding
 
