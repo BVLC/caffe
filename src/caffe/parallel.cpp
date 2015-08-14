@@ -64,7 +64,9 @@ static size_t total_size(const vector<Blob<Dtype>*>& params) {
   size_t size = 0;
   for (int i = 0; i < params.size(); ++i)
     size += params[i]->count();
-  return size;
+  // Size have at least one byte, otherwise cudaMalloc fails if net has no
+  // learnable parameters.
+  return (size > 0) ? size : 1;
 }
 
 template<typename Dtype>
