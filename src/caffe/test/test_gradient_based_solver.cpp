@@ -73,12 +73,19 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       const int iter_size = 1, const int devices = 1,
       const bool snapshot = false, const char* from_snapshot = NULL) {
     ostringstream proto;
+    int device_id = 0;
+#ifndef CPU_ONLY
+    if (Caffe::mode() == Caffe::GPU) {
+      CUDA_CHECK(cudaGetDevice(&device_id));
+    }
+#endif
     proto <<
        "snapshot_after_train: " << snapshot << " "
        "max_iter: " << num_iters << " "
        "base_lr: " << learning_rate << " "
        "lr_policy: 'fixed' "
        "iter_size: " << iter_size << " "
+       "device_id: " << device_id << " "
        "net_param { "
        "  name: 'TestNetwork' "
        "  layer { "
@@ -189,8 +196,12 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     } else {
       LOG(INFO) << "Multi-GPU test on " << devices << " devices";
       vector<int> gpus;
-      for (int i = 0; i < devices; ++i) {
-        gpus.push_back(i);
+      // put current device at the beginning
+      int device_id = solver_->param().device_id();
+      gpus.push_back(device_id);
+      for (int i = 0; gpus.size() < devices; ++i) {
+        if (i != device_id)
+          gpus.push_back(i);
       }
       Caffe::set_solver_count(gpus.size());
       this->sync_.reset(new P2PSync<Dtype>(
