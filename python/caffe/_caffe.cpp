@@ -200,6 +200,8 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
 
+  bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
+
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
     .def("__init__", bp::make_constructor(&Net_Init))
