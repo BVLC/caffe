@@ -217,6 +217,14 @@ class AdaDeltaSolver : public SGDSolver<Dtype> {
   DISABLE_COPY_AND_ASSIGN(AdaDeltaSolver);
 };
 
+/**
+ * @brief AdamSolver, an algorithm for first-order gradient-based optimization
+ *        of stochastic objective functions, based on adaptive estimates of
+ *        lower-order moments. Described in [1].
+ *
+ * [1] D. P. Kingma and J. L. Ba, "ADAM: A Method for Stochastic Optimization."
+ *     arXiv preprint arXiv:1412.6980v8 (2014).
+ */
 template <typename Dtype>
 class AdamSolver : public SGDSolver<Dtype> {
  public:
