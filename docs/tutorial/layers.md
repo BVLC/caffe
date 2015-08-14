@@ -213,7 +213,7 @@ Given an input value x, The `ReLU` layer computes the output as x if x > 0 and n
 * Layer type: `Sigmoid`
 * CPU implementation: `./src/caffe/layers/sigmoid_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/sigmoid_layer.cu`
-* Sample (as seen in `./examples/imagenet/mnist_autoencoder.prototxt`)
+* Sample (as seen in `./examples/mnist/mnist_autoencoder.prototxt`)
 
       layer {
         name: "encode1neuron"

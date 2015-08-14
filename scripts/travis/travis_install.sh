@@ -4,7 +4,6 @@
 set -e
 
 MAKE="make --jobs=$NUM_THREADS"
-
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
 # This ppa is for gflags and glog
@@ -12,9 +11,8 @@ add-apt-repository -y ppa:tuleu/precise-backports
 apt-get -y update
 apt-get install \
     wget git curl \
-    python-dev python-numpy \
+    python-dev python-numpy python3-dev\
     libleveldb-dev libsnappy-dev libopencv-dev \
-    libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
@@ -24,9 +22,10 @@ apt-get install \
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
 # Caffe requires a minimum CMake version of 2.8.8.
 if $WITH_CMAKE; then
-  add-apt-repository -y ppa:ubuntu-sdk-team/ppa
-  apt-get -y update
-  apt-get -y install cmake
+  # cmake 3 will make sure that the python interpreter and libraries match
+  wget http://www.cmake.org/files/v3.2/cmake-3.2.3-Linux-x86_64.sh -O cmake3.sh
+  chmod +x cmake3.sh
+  ./cmake3.sh --prefix=/usr/ --skip-license --exclude-subdir
 fi
 
 # Install CUDA, if needed
@@ -60,10 +59,37 @@ rm -f $LMDB_FILE
 
 # Install the Python runtime dependencies via miniconda (this is much faster
 # than using pip for everything).
-wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-chmod +x miniconda.sh
-./miniconda.sh -b
-export PATH=/home/travis/miniconda/bin:$PATH
-conda update --yes conda
-conda install --yes numpy scipy matplotlib scikit-image pip
-pip install protobuf
+export PATH=$CONDA_DIR/bin:$PATH
+if [ ! -d $CONDA_DIR ]; then
+	if [ "$PYTHON_VERSION" -eq "3" ]; then
+		wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+	else
+		wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+	fi
+	chmod +x miniconda.sh
+	./miniconda.sh -b -p $CONDA_DIR
+	
+	conda update --yes conda
+	conda install --yes numpy scipy matplotlib scikit-image pip
+	# Let conda install boost (so that boost_python matches)
+	conda install --yes -c https://conda.binstar.org/menpo boost=1.56.0
+fi
+
+# install protobuf 3 (just use the miniconda3 directory to avoid having to setup the path again)
+if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
+	pushd .
+	wget https://github.com/google/protobuf/archive/v3.0.0-alpha-3.1.tar.gz -O protobuf-3.tar.gz
+	tar -C /tmp -xzvf protobuf-3.tar.gz
+	cd /tmp/protobuf-3*/
+	./autogen.sh
+	./configure --prefix=$CONDA_DIR
+	$MAKE
+	$MAKE install
+	popd
+fi
+
+if [ "$PYTHON_VERSION" -eq "3" ]; then
+	pip install --pre protobuf
+else
+	pip install protobuf
+fi

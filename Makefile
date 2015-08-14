@@ -228,7 +228,7 @@ ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
 	# older versions of gcc are too dumb to build boost with -Wuninitalized
-	ifeq ($(shell echo $(GCCVERSION) \< 4.6 | bc), 1)
+	ifeq ($(shell echo | awk '{exit $(GCCVERSION) < 4.6;}'), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
 	# boost::thread is reasonably called boost_thread (compare OS X)
@@ -243,7 +243,7 @@ ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
 	ifneq ($(CPU_ONLY), 1)
 		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release \d' | grep -o '\d')
-		ifeq ($(shell echo $(CUDA_VERSION) \< 7.0 | bc), 1)
+		ifeq ($(shell echo | awk '{exit $(CUDA_VERSION) < 7.0;}'), 1)
 			CXXFLAGS += -stdlib=libstdc++
 			LINKFLAGS += -stdlib=libstdc++
 		endif

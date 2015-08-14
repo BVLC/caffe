@@ -17,8 +17,9 @@ namespace caffe {
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param);
-  explicit Solver(const string& param_file);
+  explicit Solver(const SolverParameter& param,
+      const Solver* root_solver = NULL);
+  explicit Solver(const string& param_file, const Solver* root_solver = NULL);
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
@@ -27,16 +28,31 @@ class Solver {
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   void Step(int iters);
-  // The Restore function implements how one should restore the solver to a
-  // previously snapshotted state. You should implement the RestoreSolverState()
-  // function that restores the state from a SolverState protocol buffer.
+  // The Restore method simply dispatches to one of the
+  // RestoreSolverStateFrom___ protected methods. You should implement these
+  // methods to restore the state from the appropriate snapshot type.
   void Restore(const char* resume_file);
   virtual ~Solver() {}
+  inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
   int iter() { return iter_; }
+
+  // Invoked at specific points during an iteration
+  class Callback {
+   protected:
+    virtual void on_start() = 0;
+    virtual void on_gradients_ready() = 0;
+
+    template <typename T>
+    friend class Solver;
+  };
+  const vector<Callback*>& callbacks() const { return callbacks_; }
+  void add_callback(Callback* value) {
+    callbacks_.push_back(value);
+  }
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -46,11 +62,15 @@ class Solver {
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk together with the learned net.
   void Snapshot();
+  string SnapshotFilename(const string extension);
+  string SnapshotToBinaryProto();
+  string SnapshotToHDF5();
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
-  virtual void SnapshotSolverState(SolverState* state) = 0;
-  virtual void RestoreSolverState(const SolverState& state) = 0;
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+  virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
@@ -58,10 +78,38 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
+  vector<Callback*> callbacks_;
+
+  // The root solver that holds root nets (actually containing shared layers)
+  // in data parallelism
+  const Solver* const root_solver_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
+/**
+ * @brief Solver that only computes gradients, used as worker
+ *        for multi-GPU training.
+ */
+template <typename Dtype>
+class WorkerSolver : public Solver<Dtype> {
+ public:
+  explicit WorkerSolver(const SolverParameter& param,
+      const Solver<Dtype>* root_solver = NULL)
+      : Solver<Dtype>(param, root_solver) {}
+
+ protected:
+  void ApplyUpdate() {}
+  void SnapshotSolverState(const string& model_filename) {
+    LOG(FATAL) << "Should not be called on worker solver.";
+  }
+  void RestoreSolverStateFromBinaryProto(const string& state_file) {
+    LOG(FATAL) << "Should not be called on worker solver.";
+  }
+  void RestoreSolverStateFromHDF5(const string& state_file) {
+    LOG(FATAL) << "Should not be called on worker solver.";
+  }
+};
 
 /**
  * @brief Optimizes the parameters of a Net using
@@ -85,8 +133,11 @@ class SGDSolver : public Solver<Dtype> {
   virtual void Regularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual void ClipGradients();
-  virtual void SnapshotSolverState(SolverState * state);
-  virtual void RestoreSolverState(const SolverState& state);
+  virtual void SnapshotSolverState(const string& model_filename);
+  virtual void SnapshotSolverStateToBinaryProto(const string& model_filename);
+  virtual void SnapshotSolverStateToHDF5(const string& model_filename);
+  virtual void RestoreSolverStateFromHDF5(const string& state_file);
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file);
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
@@ -128,6 +179,67 @@ class AdaGradSolver : public SGDSolver<Dtype> {
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
 };
 
+
+template <typename Dtype>
+class RMSPropSolver : public SGDSolver<Dtype> {
+ public:
+  explicit RMSPropSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
+  explicit RMSPropSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+
+ protected:
+  virtual void ComputeUpdateValue(int param_id, Dtype rate);
+  void constructor_sanity_check() {
+    CHECK_EQ(0, this->param_.momentum())
+        << "Momentum cannot be used with RMSProp.";
+    CHECK_GE(this->param_.rms_decay(), 0)
+        << "rms_decay should lie between 0 and 1.";
+    CHECK_LT(this->param_.rms_decay(), 1)
+        << "rms_decay should lie between 0 and 1.";
+  }
+
+  DISABLE_COPY_AND_ASSIGN(RMSPropSolver);
+};
+
+template <typename Dtype>
+class AdaDeltaSolver : public SGDSolver<Dtype> {
+ public:
+  explicit AdaDeltaSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) { AdaDeltaPreSolve(); }
+  explicit AdaDeltaSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) { AdaDeltaPreSolve(); }
+
+ protected:
+  void AdaDeltaPreSolve();
+  virtual void ComputeUpdateValue(int param_id, Dtype rate);
+
+  DISABLE_COPY_AND_ASSIGN(AdaDeltaSolver);
+};
+
+/**
+ * @brief AdamSolver, an algorithm for first-order gradient-based optimization
+ *        of stochastic objective functions, based on adaptive estimates of
+ *        lower-order moments. Described in [1].
+ *
+ * [1] D. P. Kingma and J. L. Ba, "ADAM: A Method for Stochastic Optimization."
+ *     arXiv preprint arXiv:1412.6980v8 (2014).
+ */
+template <typename Dtype>
+class AdamSolver : public SGDSolver<Dtype> {
+ public:
+  explicit AdamSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) { AdamPreSolve();}
+  explicit AdamSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) { AdamPreSolve(); }
+
+ protected:
+  void AdamPreSolve();
+  virtual void ComputeUpdateValue(int param_id, Dtype rate);
+
+  DISABLE_COPY_AND_ASSIGN(AdamSolver);
+};
+
 template <typename Dtype>
 Solver<Dtype>* GetSolver(const SolverParameter& param) {
   SolverParameter_SolverType type = param.solver_type();
@@ -139,6 +251,12 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
       return new NesterovSolver<Dtype>(param);
   case SolverParameter_SolverType_ADAGRAD:
       return new AdaGradSolver<Dtype>(param);
+  case SolverParameter_SolverType_RMSPROP:
+      return new RMSPropSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADADELTA:
+      return new AdaDeltaSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADAM:
+      return new AdamSolver<Dtype>(param);
   default:
       LOG(FATAL) << "Unknown SolverType: " << type;
   }
