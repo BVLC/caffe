@@ -165,4 +165,8 @@ float CPUTimer::MicroSeconds() {
   return this->elapsed_microseconds_;
 }
 
+float CPUTimer::Seconds() {
+  return MilliSeconds() / 1000.;
+}
+
 }  // namespace caffe
