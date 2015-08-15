@@ -135,7 +135,8 @@ void Caffe::DeviceQuery() {
 void Caffe::Synchronize(int device_id) {
 }
 
-void Caffe::EnumerateDevices() {
+int Caffe::EnumerateDevices(bool silent) {
+  return 0;
 }
 
 class Caffe::RNG::Generator {
