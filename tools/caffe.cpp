@@ -12,6 +12,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/device_context.hpp"
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -22,6 +23,7 @@ using caffe::shared_ptr;
 using caffe::string;
 using caffe::Timer;
 using caffe::vector;
+using caffe::DeviceContext;
 using std::ostringstream;
 
 DEFINE_string(gpu, "",
@@ -187,7 +189,11 @@ int train() {
 
   if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
-    sync.run(gpus);
+    std::vector<DeviceContext*> devices;
+    for (int i = 0; i < gpus.size(); ++i) {
+      devices.push_back(Caffe::Get().GetDeviceContext(i));
+    }
+    sync.run(devices);
   } else {
     LOG(INFO) << "Starting Optimization";
     solver->Solve();
