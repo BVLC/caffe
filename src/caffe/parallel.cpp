@@ -1,6 +1,8 @@
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
-#endif
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 #include <glog/logging.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
