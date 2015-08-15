@@ -75,10 +75,13 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     ostringstream proto;
     int device_id = 0;
 #ifndef CPU_ONLY
-    if (Caffe::mode() == Caffe::GPU) {
+#ifdef USE_CUDA
+    if (Caffe::mode() == Caffe::GPU
+        && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
       CUDA_CHECK(cudaGetDevice(&device_id));
     }
-#endif
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
     proto <<
        "snapshot_after_train: " << snapshot << " "
        "max_iter: " << num_iters << " "
@@ -473,10 +476,13 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     // Test over all numbers of devices.
     int available_devices = 1;
 #ifndef CPU_ONLY
-    if (Caffe::mode() == Caffe::GPU) {
+#ifdef USE_CUDA
+    if (Caffe::mode() == Caffe::GPU &&
+        Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
       CUDA_CHECK(cudaGetDeviceCount(&available_devices));
     }
-#endif
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
     for (int devices = 1; devices <= available_devices; ++devices) {
       // Configure batch size for single / multi device equivalence.
       // Constant data is needed for multi device as for accumulation.
