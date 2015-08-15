@@ -81,6 +81,7 @@ template<typename Dtype>
 GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
     : Params<Dtype>(root_solver) {
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
 
@@ -96,6 +97,7 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   caffe_gpu_set(size_, Dtype(0), diff_);
 
   CUDA_CHECK(cudaSetDevice(initial_device));
+#endif  // USE_CUDA
 #else
   NO_GPU;
 #endif
@@ -104,9 +106,11 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 template<typename Dtype>
 GPUParams<Dtype>::~GPUParams() {
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   CUDA_CHECK(cudaFree(data_));
   CUDA_CHECK(cudaFree(diff_));
-#endif
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 }
 
 template<typename Dtype>
@@ -221,6 +225,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
     : GPUParams<Dtype>(root_solver, param.device_id()), parent_(parent),
       children_(), queue_(), initial_iter_(root_solver->iter()), solver_() {
 #ifndef CPU_ONLY
+#ifdef  USE_CUDA
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
   const int self = param.device_id();
@@ -253,6 +258,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
   }
 
   CUDA_CHECK(cudaSetDevice(initial_device));
+#endif  // USE_CUDA
 #else
   NO_GPU;
 #endif
@@ -261,6 +267,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
 template<typename Dtype>
 P2PSync<Dtype>::~P2PSync() {
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
   const int self = solver_->param().device_id();
@@ -277,7 +284,8 @@ P2PSync<Dtype>::~P2PSync() {
   }
 
   CUDA_CHECK(cudaSetDevice(initial_device));
-#endif
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 }
 
 template<typename Dtype>
