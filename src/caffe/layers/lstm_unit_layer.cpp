@@ -18,7 +18,8 @@ inline Dtype sigmoid_diff(Dtype x) {
 template <typename Dtype>
 inline Dtype tanh(Dtype x) {
   Dtype exp2x = exp(2 * x);
-  return fabs(x) < Dtype(5) ? ((exp2x - Dtype(1)) / (exp2x + Dtype(1))) : (x > 0 ? Dtype(1) : Dtype(-1));
+  return fabs(x) < Dtype(5) ? ((exp2x - Dtype(1)) / (exp2x + Dtype(1)))
+    : (x > 0 ? Dtype(1) : Dtype(-1));
 }
 
 template <typename Dtype>
@@ -89,9 +90,11 @@ void LstmUnitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void LstmUnitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK((this->layer_param_.bottom_size() == 2 || this->layer_param_.bottom_size() == 0))
+  CHECK((this->layer_param_.bottom_size() == 2
+      || this->layer_param_.bottom_size() == 0))
       << "LstmUnit must have a data and cell bottom";
-  CHECK((this->layer_param_.top_size() == 2 || this->layer_param_.top_size() == 0))
+  CHECK((this->layer_param_.top_size() == 2
+      || this->layer_param_.top_size() == 0))
       << "LstmUnit must have a data and cell top";
   input_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
   forget_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
@@ -158,10 +161,12 @@ template <typename Dtype>
 void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   for (int i = 0; i < 2; ++i) {
-    caffe_set(bottom[i]->count(), Dtype(0), bottom[i]->mutable_cpu_diff());
+    caffe_set(bottom[i]->count(), Dtype(0),
+      bottom[i]->mutable_cpu_diff());
   }
   for (int i = 0; i < 4; ++i) {
-    caffe_set(this->blobs_[i]->count(), Dtype(0), this->blobs_[i]->mutable_cpu_diff());
+    caffe_set(this->blobs_[i]->count(), Dtype(0),
+      this->blobs_[i]->mutable_cpu_diff());
   }
 
   const Dtype* input_data = bottom[0]->cpu_data();
@@ -207,46 +212,57 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* next_memory_state_diff = top[1]->cpu_diff();
 
   Dtype* next_state_tot_diff = next_state_tot_diff_buffer_->mutable_cpu_data();
-  caffe_mul(num_ * channels_, output_gates, next_hidden_state_diff, next_state_tot_diff);
-  caffe_add(num_ * channels_, next_memory_state_diff, next_state_tot_diff, next_state_tot_diff);
+  caffe_mul(num_ * channels_, output_gates,
+    next_hidden_state_diff, next_state_tot_diff);
+  caffe_add(num_ * channels_, next_memory_state_diff,
+    next_state_tot_diff, next_state_tot_diff);
 
-  caffe_mul(num_ * channels_, next_state_tot_diff, forget_gates, prev_state_diff);
+  caffe_mul(num_ * channels_, next_state_tot_diff,
+    forget_gates, prev_state_diff);
 
   Dtype* dldg_data = dldg_buffer_->mutable_cpu_data();
 
   caffe_mul(num_ * channels_, input_gates, input_values_diff, dldg_data);
   caffe_mul(num_ * channels_, next_state_tot_diff, dldg_data, dldg_data);
-  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, channels_, input_data_size_, num_,
+  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
+    channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
     (Dtype)0., input_weight_diff);
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_, input_data_size_, channels_,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, input_weight,
     (Dtype)1., input_diff);
 
   caffe_mul(num_ * channels_, input_gates_diff, input_values, dldg_data);
   caffe_mul(num_ * channels_, next_state_tot_diff, dldg_data, dldg_data);
-  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, channels_, input_data_size_, num_,
+  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
+    channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
     (Dtype)0., input_gate_weight_diff);
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_, input_data_size_, channels_,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, input_gate_weight,
     (Dtype)1., input_diff);
 
   caffe_mul(num_ * channels_, forget_gates_diff, prev_state_data, dldg_data);
   caffe_mul(num_ * channels_, next_state_tot_diff, dldg_data, dldg_data);
-  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, channels_, input_data_size_, num_,
+  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
+    channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
     (Dtype)0., forget_gate_weight_diff);
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_, input_data_size_, channels_,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, forget_gate_weight,
     (Dtype)1., input_diff);
 
   caffe_mul(num_ * channels_, output_gates_diff, next_memory_state, dldg_data);
   caffe_mul(num_ * channels_, next_hidden_state_diff, dldg_data, dldg_data);
-  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, channels_, input_data_size_, num_,
+  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
+    channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
     (Dtype)0., output_gate_weight_diff);
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_, input_data_size_, channels_,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, output_gate_weight,
     (Dtype)1., input_diff);
 }

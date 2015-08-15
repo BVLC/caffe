@@ -33,7 +33,7 @@ class ApolloNet {
     active_layers_vec_.clear();
     active_layers_set_.clear();
     active_params_set_.clear();
-    active_tops_set_.clear();
+    active_blobs_set_.clear();
   }
 
   void AddLayerParams(shared_ptr<Layer<Dtype> > layer);
@@ -66,8 +66,8 @@ class ApolloNet {
   inline map<string, Dtype>& param_lr_mults() {
     return param_lr_mults_;
   }
-  inline map<string, shared_ptr<Blob<Dtype> > >& tops() {
-    return tops_;
+  inline map<string, shared_ptr<Blob<Dtype> > >& blobs() {
+    return blobs_;
   }
   inline map<string, shared_ptr<Layer<Dtype> > >& layers() {
     return layers_map_;
@@ -85,7 +85,7 @@ class ApolloNet {
   /// @brief Individual layers in the net
   map<string, shared_ptr<Layer<Dtype> > > layers_map_;
   /// @brief the blobs storing top results after each layer.
-  map<string, shared_ptr<Blob<Dtype> > > tops_;
+  map<string, shared_ptr<Blob<Dtype> > > blobs_;
   map<string, shared_ptr<Blob<Dtype> > > params_;
   map<string, shared_ptr<Blob<Dtype> > > local_params_;
   map<string, Dtype> param_decay_mults_;
@@ -95,7 +95,7 @@ class ApolloNet {
   vector<string> active_layers_vec_;
   set<string> active_layers_set_;
   set<string> active_params_set_;
-  set<string> active_tops_set_;
+  set<string> active_blobs_set_;
 
   DISABLE_COPY_AND_ASSIGN(ApolloNet);
 };

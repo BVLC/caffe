@@ -18,7 +18,7 @@ using std::max;
 #define BATCH_SIZE 2
 #define VOCAB_SIZE 10
 #define DIMENSION 15
-#define SENTENCE_LENGTH 3
+#define SENTENCE_LENGTH 1
 
 namespace caffe {
 

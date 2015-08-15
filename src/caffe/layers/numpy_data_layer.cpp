@@ -1,8 +1,9 @@
+#include <algorithm>
 #include <vector>
 
+#include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/data_layers.hpp"
 
 namespace caffe {
 
@@ -15,7 +16,8 @@ template <typename Dtype>
 void NumpyDataLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   vector<int> shape;
-  for (int i = 0; i < this->runtime_param().numpy_data_param().shape_size(); ++i) {
+  const int shape_size = this->runtime_param().numpy_data_param().shape_size();
+  for (int i = 0; i < shape_size; ++i) {
     shape.push_back(this->runtime_param().numpy_data_param().shape(i));
     ASSERT(shape[i] > 0, "All numpy data dimensions must be non-zero");
   }

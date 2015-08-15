@@ -385,6 +385,7 @@ class LstmUnitLayer : public Layer<Dtype> {
 
   virtual inline bool overwrites_param_diffs() { return true; }
   virtual inline const char* type() const { return "LstmUnit"; }
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -446,6 +447,7 @@ class WordvecLayer : public Layer<Dtype> {
 
   virtual inline bool overwrites_param_diffs() { return true; }
   virtual inline const char* type() const { return "Wordvec"; }
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);

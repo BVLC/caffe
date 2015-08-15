@@ -30,7 +30,8 @@ void TransposeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const int offset = bottom[0]->count() / bottom[0]->num() * n;
     for (int c = 0; c < channels; ++c) {
       for (int i = 0; i < spatial_dim; ++i) {
-        top_data[offset + i * channels + c] = bottom_data[offset + c * spatial_dim + i];
+        top_data[offset + i * channels + c]
+            = bottom_data[offset + c * spatial_dim + i];
       }
     }
   }
@@ -48,7 +49,8 @@ void TransposeLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const int offset = bottom[0]->count() / bottom[0]->num() * n;
     for (int c = 0; c < channels; ++c) {
       for (int i = 0; i < spatial_dim; ++i) {
-        bottom_diff[offset + c * spatial_dim + i] = top_diff[offset + i * channels + c];
+        bottom_diff[offset + c * spatial_dim + i] =
+            top_diff[offset + i * channels + c];
       }
     }
   }

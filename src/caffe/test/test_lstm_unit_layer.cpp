@@ -53,7 +53,12 @@ class LstmUnitLayerTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_);
     blob_top_vec_.push_back(blob_top2_);
   }
-  virtual ~LstmUnitLayerTest() { delete blob_bottom_; delete blob_bottom2_; delete blob_top_; delete blob_top2_; }
+  virtual ~LstmUnitLayerTest() {
+    delete blob_bottom_;
+    delete blob_bottom2_;
+    delete blob_top_;
+    delete blob_top2_;
+  }
   void ReferenceLstmUnitForward(const Blob<Dtype>& blob_bottom,
       const LayerParameter& layer_param, Blob<Dtype>* blob_top);
 

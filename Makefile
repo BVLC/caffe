@@ -390,7 +390,7 @@ endif
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
+all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples apollo
 
 everything: $(EVERYTHING_TARGETS)
 
@@ -629,3 +629,6 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	cp -r python $(DISTRIBUTE_DIR)/python
 
 -include $(DEPS)
+
+apollo: pycaffe
+	makecython++ python/apollocaffe/cpp/_apollocaffe.pyx '' "$(CXXFLAGS) $(PYTHON_LDFLAGS) -lcaffe" && rm python/apollocaffe/cpp/_apollocaffe.h

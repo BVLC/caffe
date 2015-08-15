@@ -14,10 +14,10 @@ void WordvecLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK((wordvec_param.has_vocab_size()))
       << "wordvec_param.has_vocab_size()";
 
-  num_ = bottom[0]->num();
+  num_ = bottom[0]->shape(0);
   dimension_ = wordvec_param.dimension();
   vocab_size_ = wordvec_param.vocab_size();
-  sentence_length_ = bottom[0]->channels();
+  sentence_length_ = 1;
 
   this->blobs_.resize(1);
     this->blobs_[0].reset(new Blob<Dtype>(
@@ -34,9 +34,11 @@ void WordvecLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void WordvecLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK((this->layer_param_.bottom_size() == 1 || this->layer_param_.bottom_size() == 0))
+  CHECK((this->layer_param_.bottom_size() == 1
+      || this->layer_param_.bottom_size() == 0))
       << "Wordvec must have no more than one bottom";
-  CHECK((this->layer_param_.top_size() == 1 || this->layer_param_.top_size() == 0))
+  CHECK((this->layer_param_.top_size() == 1
+      || this->layer_param_.top_size() == 0))
       << "Wordvec must have no more than one top";
   ASSERT(sentence_length_ == 1, "sentence length is no longer supported");
   vector<int> shape;
@@ -57,7 +59,8 @@ void WordvecLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int i = 0; i < sentence_length_; ++i) {
         const int word = static_cast<int>(bottom_data[i + n * sentence_length_]
             + Dtype(0.5));
-        top_data[i + (d + (n * dimension_)) * sentence_length_] = weights[d + word * dimension_];
+        top_data[i + (d + (n * dimension_)) * sentence_length_]
+            = weights[d + word * dimension_];
       }
     }
   }

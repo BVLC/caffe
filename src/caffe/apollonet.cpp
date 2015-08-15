@@ -62,7 +62,7 @@ Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
       != bottom_names.size());
   for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
     const string& blob_name = active_layer_param.bottom(i);
-    ASSERT(tops_.find(blob_name) != tops_.end(),
+    ASSERT(blobs_.find(blob_name) != blobs_.end(),
       "Could not find bottom: '" << blob_name <<
       "' for layer: " << layer_name);
     if (bottom_names.size() > i &&
@@ -77,7 +77,7 @@ Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
     bottom_blob_names_[layer_name].clear();
     for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
       const string& blob_name = active_layer_param.bottom(i);
-      shared_ptr<Blob<Dtype> > top_blob = tops_[blob_name];
+      shared_ptr<Blob<Dtype> > top_blob = blobs_[blob_name];
       bottom_blob_names_[layer_name].push_back(blob_name);
       shared_ptr<Blob<Dtype> > bottom_blob(
         new Blob<Dtype>(top_blob->shape()));
@@ -89,7 +89,7 @@ Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
   for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
     // Reshape bottom_blobs to match their respective top blobs
     const string& blob_name = active_layer_param.bottom(i);
-    shared_ptr<Blob<Dtype> > top_blob = tops_[blob_name];
+    shared_ptr<Blob<Dtype> > top_blob = blobs_[blob_name];
     shared_ptr<Blob<Dtype> > bottom_blob = bottom_blobs_[layer_name][i];
 
     bottom_blob->ReshapeLike(*top_blob);
@@ -113,14 +113,14 @@ Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
 
   for (int top_id = 0; top_id < active_layer_param.top_size(); ++top_id) {
     const string& blob_name = active_layer_param.top(top_id);
-    if (tops_.find(blob_name) == tops_.end()) {
+    if (blobs_.find(blob_name) == blobs_.end()) {
       shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
-      tops_[blob_name] = blob_pointer;
+      blobs_[blob_name] = blob_pointer;
     }
-    Blob<Dtype>* top_blob = tops_[blob_name].get();
+    Blob<Dtype>* top_blob = blobs_[blob_name].get();
     if (!layer->in_place_layer()) {
       std::pair<set<string>::iterator, bool> ret;
-      ret = active_tops_set_.insert(blob_name);
+      ret = active_blobs_set_.insert(blob_name);
       ASSERT(ret.second, "Top with name '"
           << blob_name << "' is already used");
     }
@@ -213,7 +213,7 @@ void ApolloNet<Dtype>::BackwardLayer(const string& layer_name) {
   vector<Blob<Dtype>*> top_vec;
   for (int top_id = 0; top_id < layer_param.top_size(); ++top_id) {
     const string& blob_name = layer_param.top(top_id);
-    top_vec.push_back(tops_[blob_name].get());
+    top_vec.push_back(blobs_[blob_name].get());
   }
   vector<shared_ptr<Blob<Dtype> > > bottom_blobs = bottom_blobs_[layer_name];
   vector<bool> propagate_down;
@@ -228,7 +228,7 @@ void ApolloNet<Dtype>::BackwardLayer(const string& layer_name) {
     for (int i = 0; i < layer_param.bottom_size(); ++i) {
       const string& bottom_name = layer_param.bottom(i);
       // add layer's bottom diff buffer to previous layer's top diffs
-      tops_[bottom_name]->AddDiffFrom(*bottom_vec[i]);
+      blobs_[bottom_name]->AddDiffFrom(*bottom_vec[i]);
     }
   }
   if (layer->overwrites_param_diffs()) {

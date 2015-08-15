@@ -93,3 +93,4 @@ if [ "$PYTHON_VERSION" -eq "3" ]; then
 else
 	pip install protobuf
 fi
+pip install runcython
