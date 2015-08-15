@@ -41,8 +41,6 @@ void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
 
     if (top.size() == 1) {
       greentea_copy<Dtype>(count_, (cl_mem) (top[0]->gpu_diff()), 0,
