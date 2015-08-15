@@ -108,6 +108,7 @@ int device_query() {
     // If no gpu is specified, enumerate all the devices.
     caffe::Caffe::EnumerateDevices();
   } else {
+#ifndef CPU_ONLY
     LOG(INFO) << "Querying GPUs " << FLAGS_gpu;
     vector<int> gpus;
     get_gpus(&gpus);
@@ -116,6 +117,7 @@ int device_query() {
       caffe::Caffe::SetDevice(i);
       caffe::Caffe::DeviceQuery();
     }
+#endif  // !CPU_ONLY
   }
   return 0;
 }
@@ -162,6 +164,7 @@ int train() {
   if (gpus.size() == 0) {
     Caffe::set_mode(Caffe::CPU);
   } else {
+#ifndef CPU_ONLY
     // Load all devices that will be used
     Caffe::SetDevices(gpus);
 
@@ -176,6 +179,7 @@ int train() {
     Caffe::SetDevice(0);
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_solver_count(gpus.size());
+#endif  // !CPU_ONLY
   }
 
   shared_ptr<Solver<float> > solver(caffe::GetSolver<float>(solver_param));
@@ -213,10 +217,12 @@ int test() {
   vector<int> gpus;
   get_gpus(&gpus);
   if (gpus.size() != 0) {
+#ifndef CPU_ONLY
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
     Caffe::SetDevices(gpus);
     Caffe::set_mode(Caffe::GPU);
     Caffe::SetDevice(0);
+#endif  // !CPU_ONLY
   } else {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
@@ -281,10 +287,12 @@ int time() {
   vector<int> gpus;
   get_gpus(&gpus);
   if (gpus.size() != 0) {
+#ifndef CPU_ONLY
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
     Caffe::SetDevices(gpus);
     Caffe::set_mode(Caffe::GPU);
     Caffe::SetDevice(0);
+#endif  // !CPU_ONLY
   } else {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
