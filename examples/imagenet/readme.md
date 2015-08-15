@@ -19,6 +19,9 @@ Data Preparation
 
 *By "ImageNet" we here mean the ILSVRC12 challenge, but you can easily train on the whole of ImageNet as well, just with more disk space, and a little longer training time.*
 
+
+### Data Extraction
+
 After you download the proper [ImageNet](http://www.image-net.org/index) archived files (the service needs registration) you will need to extract the images from the `.tar` files. You can use the `data/ilsvrc12/extract_ilsvrc.sh` script by specifing the path of the `.tar` files on the system at the `DATAPATH` variable and then executing:
 
     ./data/ilsvrc12/extract_ilsvrc.sh
@@ -28,7 +31,12 @@ We assume that you already have downloaded the ImageNet training data and valida
     /path/to/imagenet/train/n01440764/n01440764_10026.JPEG
     /path/to/imagenet/val/ILSVRC2012_val_00000001.JPEG
 
-You will first need to prepare some auxiliary data for training. This data can be downloaded by:
+At this stage, the size of the data on your disk should be `140GB` for the (extracted) `train` images and `6.4GB` for the (extracted) `val` images.
+
+
+### Data Preprocessing
+
+You will then need to prepare some auxiliary data for training. This data can be downloaded by:
 
     ./data/ilsvrc12/get_ilsvrc_aux.sh
 
@@ -40,8 +48,29 @@ You may want to resize the images to 256x256 in advance. By default, we do not e
         convert -resize 256x256\! $name $name
     done
 
-Take a look at `examples/imagenet/create_imagenet.sh`. Set the paths to the train and val dirs as needed, and set "RESIZE=true" to resize all images to 256x256 if you haven't resized the images in advance.
-Now simply create the leveldbs with `examples/imagenet/create_imagenet.sh`. Note that `examples/imagenet/ilsvrc12_train_leveldb` and `examples/imagenet/ilsvrc12_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
+Take a look at `examples/imagenet/create_imagenet.sh` where you will see something like: 
+
+    #!/usr/bin/env sh
+    
+    EXAMPLE=examples/imagenet
+    DATA=data/ilsvrc12
+    TOOLS=build/tools
+
+    TRAIN_DATA_ROOT=/path/to/imagenet/train/
+    VAL_DATA_ROOT=/path/to/imagenet/val/
+    
+    RESIZE=false
+
+    # Other commands that do the actual work 
+
+* Set the calue of the `TRAIN_DATA_ROOT` and `VAL_DATA_ROOT` to the paths of your train and val directories as needed. 
+* Set "RESIZE=true" to resize all images to 256x256 if you haven't resized the images in advance.
+* You might want to change the value of the `DATA` variable to store the lmdb files on another path. You can do that if you do not have enough space on the same disk drive. CAUTION: If you change that path you will also need to change the path of the networks input in the `/models/train_val.prototxt` file. More on that later.
+* `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
+
+Now simply create the leveldbs with `examples/imagenet/create_imagenet.sh`. Note that `examples/imagenet/ilsvrc12_train_lmdb` and `examples/imagenet/ilsvrc12_val_lmdb` should not exist before this execution. It will be created by the script. 
+
+At this stage, the size of the files in your disk should be `240GB` for the `ilsvrc12_train_lmdb` file and `9.4GB` for the `ilsvrc12_val_lmdb` file (if you resized the images to 256x256). If you find out that the size that is required for the `examples/imagenet/ilsvrc12_train_lmdb`
 
 Compute Image Mean
 ------------------
@@ -75,7 +104,7 @@ We will also lay out a protocol buffer for running the solver. Let's make a few 
 * The network will be trained with momentum 0.9 and a weight decay of 0.0005.
 * For every 10,000 iterations, we will take a snapshot of the current status.
 
-Sound good? This is implemented in `models/bvlc_reference_caffenet/solver.prototxt`.
+Sound good? This is implemented in `models/bvlc_reference_caffenet/solver.prototxt`. If you need more information on how to define a network and a solver, please reference to the [LeNet MNIST Tutorial](/gathered/examples/mnist.html).
 
 Training ImageNet
 -----------------
