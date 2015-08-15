@@ -107,6 +107,21 @@ Caffe::Caffe(const Caffe &obj) {
 #endif  // USE_CUDA
 }
 
+void Caffe::SelectDevice(DeviceContext* device_context) {
+#ifndef CPU_ONLY
+  Get().default_device_context_ = device_context;
+  if (device_context->backend() == Backend::BACKEND_CUDA) {
+#ifdef USE_CUDA
+    CUDA_CHECK(cudaSetDevice(device_context->id()));
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+
+#endif  // USE_GREENTEA
+  }
+#endif  // !CPU_ONLY
+}
+
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
@@ -462,19 +477,6 @@ void Caffe::SetDevice(const int device_id) {
 #ifdef USE_CLBLAS
     clblasSetup();
 #endif  // USE_CLBLAS
-#endif  // USE_GREENTEA
-  }
-}
-
-void Caffe::SelectDevice(DeviceContext* device_context) {
-  Get().default_device_context_ = device_context;
-  if (device_context->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-    CUDA_CHECK(cudaSetDevice(device_context->id()));
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-
 #endif  // USE_GREENTEA
   }
 }
