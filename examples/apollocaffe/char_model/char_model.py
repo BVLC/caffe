@@ -12,7 +12,7 @@ vocab_size = 256
 zero_symbol = vocab_size - 1
 dimension = 250
 base_lr = 0.15
-clip_gradients = 100
+clip_gradients = 10
 i_temperature = 1.5
 
 parser = apollocaffe.base_parser()
