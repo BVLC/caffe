@@ -14,13 +14,13 @@ namespace caffe {
 
 DeviceContext::DeviceContext()
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0),
-      backend_(Backend::BACKEND_CUDA),
+      list_id_(0), backend_(Backend::BACKEND_CUDA),
       memory_usage_(0), peak_memory_usage_(0) {
 }
 
-DeviceContext::DeviceContext(int id, Backend backend)
+DeviceContext::DeviceContext(int id, int list_id, Backend backend)
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id),
-      backend_(backend),
+      list_id_(list_id), backend_(backend),
       memory_usage_(0), peak_memory_usage_(0) {
 }
 
@@ -50,6 +50,10 @@ Backend DeviceContext::backend() const {
 
 int DeviceContext::id() const {
   return id_;
+}
+
+int DeviceContext::list_id() const {
+  return list_id_;
 }
 
 int DeviceContext::WorkgroupSize(int id) {

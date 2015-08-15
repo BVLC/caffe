@@ -106,13 +106,14 @@ void GlobalInit(int* pargc, char*** pargv);
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
  public:
+  Caffe(const Caffe &obj);
   ~Caffe();
-  inline static Caffe& Get() {
-    if (!singleton_.get()) {
-      singleton_.reset(new Caffe());
-    }
-    return *singleton_;
-  }
+
+  // Thread local context for Caffe. Moved to common.cpp instead of
+  // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
+  // on OSX. Also fails on Linux with CUDA 7.0.18.
+  static Caffe& Get();
+
   enum Brew { CPU, GPU };
 
   // This random number generator facade hides boost and CUDA rng
@@ -158,14 +159,22 @@ class Caffe {
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
+  // Switch the current device
+  static void SelectDevice(DeviceContext* device_context);
   // Prints the current GPU status.
   static void DeviceQuery();
+  // Parallel training info
+  inline static int solver_count() { return Get().solver_count_; }
+  inline static void set_solver_count(int val) { Get().solver_count_ = val; }
+  inline static bool root_solver() { return Get().root_solver_; }
+  inline static void set_root_solver(bool val) { Get().root_solver_ = val; }
 
   // Get the default device
   static DeviceContext *GetDefaultDeviceContext();
+  static DeviceContext *GetCPUDeviceContext();
 
   // Prints info about all devices
-  static void EnumerateDevices();
+  static int EnumerateDevices(bool silent = false);
   // Prepares contexts for devices to use
   static void SetDevices(std::vector<int> device_ids);
   // Finish executing gpu kernels on the specified-device.
@@ -189,11 +198,15 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
-  static shared_ptr<Caffe> singleton_;
 
-  vector<DeviceContext> device_contexts_;
+  // The shared ptrs are being referenced on every thread,
+  // while the default device will be handled thread local
+  vector<shared_ptr< DeviceContext> > device_contexts_;
+  DeviceContext* default_device_context_;
+  shared_ptr<DeviceContext> cpu_device_context_;
 
-  DeviceContext *default_device_context_;
+  int solver_count_;
+  bool root_solver_;
 
 #ifdef USE_GREENTEA
   vector<viennacl::ocl::program> ocl_programs_;
@@ -203,8 +216,6 @@ class Caffe {
  private:
   // The private constructor to avoid duplicate instantiation.
   Caffe();
-
-  DISABLE_COPY_AND_ASSIGN(Caffe);
 };
 
 }  // namespace caffe

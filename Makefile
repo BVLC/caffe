@@ -652,6 +652,7 @@ $(EXAMPLE_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 
 # Copy the OpenCL kernels into C++ char strings
 $(CL_KERNELS_CPP) : $(CL_HEADERS) $(CL_KERNELS)
+	chmod +x $(CL_KERNELS_SH)
 	$(CL_KERNELS_SH)
 
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
