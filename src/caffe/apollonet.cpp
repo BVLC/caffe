@@ -17,6 +17,119 @@ template <typename Dtype>
 ApolloNet<Dtype>::ApolloNet() {
   Init();
 }
+template <typename Dtype>
+Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
+  /* This function will
+   * 1) Add the layer to the cache if it's new
+   * 2) Set up the top blobs
+   * 3) Set up the bottom blobs
+   * 4) Set up the parameters
+   * 5) Call the Forward function */
+
+  const LayerParameter& active_layer_param = layer->layer_param();
+  string layer_name = active_layer_param.name();
+  active_layers_vec_.push_back(layer_name);
+  vector<Blob<Dtype>*> bottom_vec;
+  vector<Blob<Dtype>*> top_vec;
+
+  //const LayerParameter& active_layer_param = layer->layer_param();
+  const bool new_layer = layers_map_.find(layer_name) == layers_map_.end();
+  if (new_layer) {
+    layers_map_[layer_name] = layer;
+    active_layers_set_.insert(layer_name);
+    LOG(INFO) << "Adding Layer " << layer_name;
+    LOG(INFO) << active_layer_param.DebugString();
+  }
+
+  const vector<string>& bottom_names = bottom_blob_names_[layer_name];
+  bool reset_bottoms = (active_layer_param.bottom_size()
+      != bottom_names.size());
+  for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
+    const string& blob_name = active_layer_param.bottom(i);
+    ASSERT(blobs_.find(blob_name) != blobs_.end(),
+      "Could not find bottom: '" << blob_name <<
+      "' for layer: " << layer_name);
+    if (bottom_names.size() > i &&
+        bottom_names[i] != blob_name) {
+      reset_bottoms = true;
+    }
+  }
+
+  if (new_layer || reset_bottoms) {
+    // Reset the bottom blobs
+    bottom_blobs_[layer_name].clear();
+    bottom_blob_names_[layer_name].clear();
+    for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
+      const string& blob_name = active_layer_param.bottom(i);
+      shared_ptr<Blob<Dtype> > top_blob = blobs_[blob_name];
+      bottom_blob_names_[layer_name].push_back(blob_name);
+      shared_ptr<Blob<Dtype> > bottom_blob(
+        new Blob<Dtype>(top_blob->shape()));
+      bottom_blobs_[layer_name].push_back(bottom_blob);
+    }
+    layer->reset_bottoms(bottom_blob_names_[layer_name]);
+  }
+
+  for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
+    // Reshape bottom_blobs to match their respective top blobs
+    const string& blob_name = active_layer_param.bottom(i);
+    shared_ptr<Blob<Dtype> > top_blob = blobs_[blob_name];
+    shared_ptr<Blob<Dtype> > bottom_blob = bottom_blobs_[layer_name][i];
+
+    bottom_blob->ReshapeLike(*top_blob);
+    bottom_blob->ShareData(*top_blob);
+    if (layer->in_place_layer() || !layer->overwrites_bottom_diffs()) {
+      // save memory when layer accumulates delta rather than overwriting
+      bottom_blob->ShareDiff(*top_blob);
+    }
+  }
+
+  for (int i = 0; i < active_layer_param.bottom_size(); ++i) {
+    bottom_vec.push_back(bottom_blobs_[layer_name][i].get());
+  }
+
+  ASSERT(layer->layer_param().top_size()
+      == active_layer_param.top_size(), "top vec cannot change");
+  for (int top_id = 0; top_id < active_layer_param.top_size(); ++top_id) {
+    ASSERT(layer->layer_param().top(top_id)
+      == active_layer_param.top(top_id), "top vec cannot change");
+  }
+
+  for (int top_id = 0; top_id < active_layer_param.top_size(); ++top_id) {
+    const string& blob_name = active_layer_param.top(top_id);
+    if (blobs_.find(blob_name) == blobs_.end()) {
+      shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+      blobs_[blob_name] = blob_pointer;
+    }
+    Blob<Dtype>* top_blob = blobs_[blob_name].get();
+    if (!layer->in_place_layer()) {
+      std::pair<set<string>::iterator, bool> ret;
+      ret = active_blobs_set_.insert(blob_name);
+      ASSERT(ret.second, "Top with name '"
+          << blob_name << "' is already used");
+    }
+    top_vec.push_back(top_blob);
+    if (top_blob->DiffInitialized() && !layer->is_loss()) {
+      // Zero out top_diffs, except for loss blobs, which never change
+      top_blob->SetDiffValues(0.);
+    }
+  }
+
+  if (new_layer) {
+    layer->SetUp(bottom_vec, top_vec);
+    AddLayerParams(layer);
+  }
+
+  for (int param_id = 0; param_id < layer->param_names().size(); ++param_id) {
+    const string& param_name = layer->param_names()[param_id];
+    active_params_set_.insert(param_name);
+  }
+
+  Dtype loss = 0;
+  layer->set_phase(phase_);
+  loss = layer->Forward(bottom_vec, top_vec);
+  return loss;
+}
 
 template <typename Dtype>
 Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
