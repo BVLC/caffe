@@ -174,8 +174,8 @@ layer {
   bottom: "sim"
   top: "loss"
   triplet_loss_param {
-    margin: 1
-    losstype: 0
+    margin: 0.02
+    losstype: 1
     num_triplets: 3
   }
 }
