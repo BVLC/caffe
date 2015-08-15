@@ -7,21 +7,21 @@ namespace caffe {
 template<typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  // First, join the thread
-  JoinPrefetchThread();
+
+  Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
 
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Reshape to loaded data.
-    top[0]->ReshapeLike(this->prefetch_data_);
+    top[0]->ReshapeLike(batch->data_);
     // Copy the data
-    caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+    caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
                top[0]->mutable_gpu_data());
     if (this->output_labels_) {
       // Reshape to loaded labels.
-      top[1]->ReshapeLike(prefetch_label_);
+      top[1]->ReshapeLike(batch->label_);
       // Copy the labels.
-      caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+      caffe_copy(batch->label_.count(), batch->label_.gpu_data(),
                  top[1]->mutable_gpu_data());
     }
 #endif  // USE_CUDA
@@ -31,23 +31,22 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
         this->device_context_->id());
 
     // Reshape to loaded data.
-    top[0]->ReshapeLike(this->prefetch_data_);
+    top[0]->ReshapeLike(batch->data_);
     // Copy the data
-    greentea_copy<Dtype>(prefetch_data_.count(),
-                         prefetch_data_.cpu_data(),
+    greentea_copy<Dtype>(batch->data_.count(),
+                         (cl_mem) (batch->data_.gpu_data()), 0,
                          (cl_mem) (top[0]->mutable_gpu_data()), 0, &ctx);
     if (this->output_labels_) {
       // Reshape to loaded labels.
-      top[1]->ReshapeLike(prefetch_label_);
+      top[1]->ReshapeLike(batch->label_);
       // Copy the labels.
-      greentea_copy<Dtype>(prefetch_label_.count(),
-                           prefetch_label_.cpu_data(),
+      greentea_copy<Dtype>(batch->label_.count(),
+                           (cl_mem) (batch->label_.gpu_data()), 0,
                            (cl_mem) (top[1]->mutable_gpu_data()), 0, &ctx);
     }
 #endif  // USE_GREENTEA
   }
-  // Start a new prefetch thread
-  CreatePrefetchThread();
+  prefetch_free_.push(batch);
 }
 
 INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer);

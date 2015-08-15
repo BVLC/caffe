@@ -25,9 +25,10 @@ namespace caffe {
 class DeviceContext {
  public:
   explicit DeviceContext();
-  explicit DeviceContext(int id, Backend backend);
+  explicit DeviceContext(int id, int list_id, Backend backend);
   Backend backend() const;
   int id() const;
+  int list_id() const;
   int current_queue_id();
   int WorkgroupSize(int id);
 
@@ -50,6 +51,7 @@ class DeviceContext {
   int current_queue_id_;
   std::vector<int> workgroup_sizes_;
   int id_;
+  int list_id_;
   Backend backend_;
   size_t memory_usage_;
   size_t peak_memory_usage_;

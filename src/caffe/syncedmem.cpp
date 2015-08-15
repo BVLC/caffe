@@ -2,10 +2,9 @@
 
 #include "caffe/common.hpp"
 #include "caffe/device_context.hpp"
+#include "caffe/greentea/greentea.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
-
-#include "caffe/greentea/greentea.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
@@ -14,13 +13,62 @@
 
 namespace caffe {
 
+// If CUDA is available and in GPU mode, host memory will be allocated pinned,
+// using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
+// The improvement in performance seems negligible in the single GPU case,
+// but might be more significant for parallel training. Most importantly,
+// it improved stability for large models on many GPUs.
+
+void CaffeMallocHost(void** ptr, size_t size) {
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+      CUDA_CHECK(cudaMallocHost(ptr, size));
+      return;
+#endif  // USE_CUDA
+    } else {
+      // Make sure the memory is zero-copy usable in OpenCL
+      CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
+              ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
+                  << "Host memory allocation error";
+      return;
+    }
+  }
+#endif
+  *ptr = malloc(size);
+  CHECK(*ptr) << "host allocation of size " << size << " failed";
+}
+
+void CaffeFreeHost(void* ptr) {
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+      cudaFreeHost(ptr);
+      return;
+#endif  // USE_CUDA
+    }
+  }
+#endif
+  free(ptr);
+}
+
+
 SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
-  if (gpu_ptr_) {
+  if (gpu_ptr_ && own_gpu_data_) {
     if (device_context_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
       // Free device memory
+      // Get current device active during call of destructor
+      int initial_device;
+      cudaGetDevice(&initial_device);
+      // We know that this memory blob belongs to the device_context_
+      cudaSetDevice(device_context_->id());
       cudaFree(gpu_ptr_);
+      // Restore current device
+      cudaSetDevice(initial_device);
       gpu_ptr_ = nullptr;
       device_context_->DecreaseMemoryUsage(size_);
 #endif  // USE_CUDA
@@ -95,6 +143,7 @@ inline void SyncedMemory::to_gpu() {
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
         device_context_->IncreaseMemoryUsage(size_);
         caffe_gpu_memset(size_, 0, gpu_ptr_);
+        own_gpu_data_ = true;
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
@@ -117,6 +166,7 @@ inline void SyncedMemory::to_gpu() {
         greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
+        own_gpu_data_ = true;
 #endif  // USE_GREENTEA
       }
       head_ = HEAD_AT_GPU;
@@ -130,6 +180,7 @@ inline void SyncedMemory::to_gpu() {
           device_context_->IncreaseMemoryUsage(size_);
         }
         caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
+        own_gpu_data_ = true;
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
@@ -154,6 +205,7 @@ inline void SyncedMemory::to_gpu() {
         }
         greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
         ctx.get_queue().finish();
+        own_gpu_data_ = true;
 #endif  // USE_GREENTEA
       }
       head_ = SYNCED;
@@ -192,6 +244,32 @@ const void* SyncedMemory::gpu_data() {
 #endif
 }
 
+void SyncedMemory::set_gpu_data(void* data) {
+#ifndef CPU_ONLY
+  if (this->device_context_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+  CHECK(data);
+  if (own_gpu_data_) {
+    int initial_device;
+    cudaGetDevice(&initial_device);
+    CUDA_CHECK(cudaSetDevice(device_context_->id()));
+    CUDA_CHECK(cudaFree(gpu_ptr_));
+    cudaSetDevice(initial_device);
+  }
+  gpu_ptr_ = data;
+  head_ = HEAD_AT_GPU;
+  own_gpu_data_ = false;
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    // TODO: Implement OpenCL - OpenCL and OpenCL - CUDA data sharing
+#endif  // USE_GREENTEA
+  }
+#else
+  NO_GPU;
+#endif
+}
+
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
@@ -207,6 +285,23 @@ void* SyncedMemory::mutable_gpu_data() {
   NO_GPU;
 #endif
 }
+
+// TODO: Implement this function device abstracted
+#ifndef CPU_ONLY
+#ifdef USE_CUDA
+void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
+  CHECK(head_ == HEAD_AT_CPU);
+  if (gpu_ptr_ == NULL) {
+    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    own_gpu_data_ = true;
+  }
+  const cudaMemcpyKind put = cudaMemcpyHostToDevice;
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+  // Assume caller will synchronize on the stream before use
+  head_ = SYNCED;
+}
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 
 }  // namespace caffe
 

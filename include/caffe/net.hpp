@@ -25,10 +25,10 @@ namespace caffe {
 template<typename Dtype>
 class Net {
  public:
-  explicit Net(const NetParameter& param);
-  explicit Net(const string& param_file, Phase phase);
-  virtual ~Net() {
-  }
+  explicit Net(const NetParameter& param, const Net* root_net = NULL);
+  explicit Net(const string& param_file, Phase phase,
+      const Net* root_net = NULL);
+  virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
@@ -311,7 +311,9 @@ class Net {
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
 
-DISABLE_COPY_AND_ASSIGN(Net);
+  /// The root net that actually holds the shared layers in data parallelism
+  const Net* const root_net_;
+  DISABLE_COPY_AND_ASSIGN(Net);
 };
 
 }  // namespace caffe
