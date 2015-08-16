@@ -80,13 +80,13 @@ class LayerRegistry {
         << " (known types: " << LayerTypeList() << ")";
     return registry[type](param);
   }
-  
+
   // Get a layer using a prototxt which will be parsed into LayerParameter
   static shared_ptr<Layer<Dtype> > CreateLayer(const string& prototxt) {
-    LayerParameter param;
-    bool success = google::protobuf::TextFormat::ParseFromString(prototxt, &param);
+    LayerParameter p;
+    bool success = google::protobuf::TextFormat::ParseFromString(prototxt, &p);
     ASSERT(success, "Invalid prototxt string");
-    return CreateLayer(param);
+    return CreateLayer(p);
   }
 
  private:

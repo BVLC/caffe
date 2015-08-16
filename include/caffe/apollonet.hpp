@@ -52,7 +52,8 @@ class ApolloNet {
     CopyTrainedLayersFrom(param);
   }
 
-  void Update(Dtype lr, Dtype momentum, Dtype clip_gradients, Dtype weight_decay);
+  void Update(Dtype lr, Dtype momentum, Dtype clip_gradients,
+    Dtype weight_decay);
 
   /// @brief returns the phase: TRAIN or TEST
   inline Phase phase() const { return phase_; }

@@ -318,9 +318,9 @@ class MatDataLayer : public BaseDataLayer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  
-  shared_ptr<DataTransformer<Dtype> > data_transformer(){
-    if (!this->data_transformer_){
+
+  shared_ptr<DataTransformer<Dtype> > data_transformer() {
+    if (!this->data_transformer_) {
         this->data_transformer_.reset(
             new DataTransformer<Dtype>(this->transform_param_, this->phase_));
     }

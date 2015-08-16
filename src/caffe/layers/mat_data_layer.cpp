@@ -14,19 +14,18 @@ void MatDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void MatDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector) {
-  // reshape layers 
+  // reshape layers
   batch_size_ = mat_vector.size();
   channels_ = mat_vector[0].channels();
   height_ = mat_vector[0].rows;
   width_ = mat_vector[0].cols;
   size_ = channels_ * height_ * width_;
   CHECK_GT(batch_size_ * size_, 0) <<
-      "batch_size, channels, height, and width must be specified and"
-      " positive in memory_data_param";
+      "batch_size, channels, height, and width must be positive";
   added_data_.Reshape(batch_size_, channels_, height_, width_);
-  //TODO: is this necessary
+  // TODO: is this necessary
   added_data_.cpu_data();
-  
+
   // Apply data transformations (mirror, scale, crop...)
   data_transformer()->Transform(mat_vector, &added_data_);
   Dtype* top_data = added_data_.mutable_cpu_data();
