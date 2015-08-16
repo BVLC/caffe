@@ -8,7 +8,7 @@
 
 namespace std {
 // Print function for ArrayShape
-ostream &operator<<(ostream &os, const vector<size_t> &shape);
+ostream &operator<<(ostream &os, const vector<int> &shape);
 }
 namespace caffe {
 
@@ -39,8 +39,7 @@ class ArrayMemory {
 };
 
 // Shape functions
-typedef std::vector<size_t> ArrayShape;
-ArrayShape make_shape(const std::vector<int> & s);
+typedef std::vector<int> ArrayShape;
 ArrayShape make_shape(size_t d0);
 ArrayShape make_shape(size_t d0, size_t d1);
 ArrayShape make_shape(size_t d0, size_t d1, size_t d2);

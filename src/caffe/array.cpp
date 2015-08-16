@@ -101,32 +101,26 @@ ArrayMode globalArrayMode() {
 }
 
 ///// Array Shape /////
-ArrayShape make_shape(const std::vector<int> & s) {
-  std::vector<size_t> r(s.size());
-  for (int i = 0; i < s.size(); i++)
-    r[i] = s[i];
-  return r;
-}
 ArrayShape make_shape(int d0) {
-  std::vector<size_t> r;
+  ArrayShape r;
   r.push_back(d0);
   return r;
 }
 ArrayShape make_shape(size_t d0, size_t d1) {
-  std::vector<size_t> r;
+  ArrayShape r;
   r.push_back(d0);
   r.push_back(d1);
   return r;
 }
 ArrayShape make_shape(size_t d0, size_t d1, size_t d2) {
-  std::vector<size_t> r;
+  ArrayShape r;
   r.push_back(d0);
   r.push_back(d1);
   r.push_back(d2);
   return r;
 }
 ArrayShape make_shape(size_t d0, size_t d1, size_t d2, size_t d3) {
-  std::vector<size_t> r;
+  ArrayShape r;
   r.push_back(d0);
   r.push_back(d1);
   r.push_back(d2);
@@ -134,7 +128,7 @@ ArrayShape make_shape(size_t d0, size_t d1, size_t d2, size_t d3) {
   return r;
 }
 ArrayShape make_shape(size_t d0, size_t d1, size_t d2, size_t d3, size_t d4) {
-  std::vector<size_t> r;
+  ArrayShape r;
   r.push_back(d0);
   r.push_back(d1);
   r.push_back(d2);
@@ -144,7 +138,7 @@ ArrayShape make_shape(size_t d0, size_t d1, size_t d2, size_t d3, size_t d4) {
 }
 ArrayShape make_shape(size_t d0, size_t d1, size_t d2, size_t d3, size_t d4,
                       size_t d5) {
-  std::vector<size_t> r;
+  ArrayShape r;
   r.push_back(d0);
   r.push_back(d1);
   r.push_back(d2);
@@ -166,13 +160,6 @@ string shapeToString(const ArrayShape &shape) {
   for (size_t i = 0; i < shape.size(); i++)
     oss << shape[i] << (i + 1 < shape.size() ? ", " : "]");
   return oss.str();
-}
-bool operator==(const std::vector<size_t> &a, const std::vector<size_t> &b) {
-  if (a.size() != b.size()) return false;
-  for (int i = 0; i < a.size(); i++)
-    if (a[i] != b[i])
-      return false;
-  return true;
 }
 
 template<typename T>

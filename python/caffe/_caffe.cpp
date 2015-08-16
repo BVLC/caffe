@@ -419,10 +419,10 @@ struct ArrayShape_from_tuple {
 };
 /**** Python array interface ****/
 template<typename T> Array<T> Blob_data_array( Blob<T> & b ) { // NOLINT[runtime/references]
-  return Array<T>(b.data(), make_shape(b.shape()));
+  return Array<T>(b.data(), b.shape());
 }
 template<typename T> Array<T> Blob_diff_array( Blob<T> & b ) { // NOLINT[runtime/references]
-  return Array<T>(b.diff(), make_shape(b.shape()));
+  return Array<T>(b.diff(), b.shape());
 }
 template<typename T> struct TS {};
 template<> struct TS<float> { static const char * value(){ return "f4"; } };
