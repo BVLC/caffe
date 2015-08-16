@@ -28,18 +28,19 @@ Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
 
   const LayerParameter& active_layer_param = layer->layer_param();
   string layer_name = active_layer_param.name();
-  active_layers_vec_.push_back(layer_name);
-  vector<Blob<Dtype>*> bottom_vec;
-  vector<Blob<Dtype>*> top_vec;
 
   //const LayerParameter& active_layer_param = layer->layer_param();
   const bool new_layer = layers_map_.find(layer_name) == layers_map_.end();
   if (new_layer) {
-    layers_map_[layer_name] = layer;
-    active_layers_set_.insert(layer_name);
     LOG(INFO) << "Adding Layer " << layer_name;
     LOG(INFO) << active_layer_param.DebugString();
+    layers_map_[layer_name] = layer;
+    active_layers_set_.insert(layer_name);
   }
+
+  active_layers_vec_.push_back(layer_name);
+  vector<Blob<Dtype>*> bottom_vec;
+  vector<Blob<Dtype>*> top_vec;
 
   const vector<string>& bottom_names = bottom_blob_names_[layer_name];
   bool reset_bottoms = (active_layer_param.bottom_size()
@@ -315,6 +316,13 @@ void ApolloNet<Dtype>::AddLayerParams(shared_ptr<Layer<Dtype> > layer) {
     }
     param_decay_mults_[param_name] = param_decay_mults[i];
     param_lr_mults_[param_name] = param_lr_mults[i];
+  }
+}
+
+template <typename Dtype> 
+void ApolloNet<Dtype>::Backward() {
+  for (int i = active_layers_vec_.size() - 1; i >= 0; --i){ 
+    BackwardLayer(active_layers_vec_[i]);
   }
 }
 

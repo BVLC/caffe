@@ -31,6 +31,8 @@ class ApolloNet {
 
   void BackwardLayer(const string& layer_name);
 
+  void Backward();
+
   void ResetForward() {
     active_layers_vec_.clear();
     active_layers_set_.clear();
