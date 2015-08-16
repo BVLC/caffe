@@ -63,6 +63,7 @@ void greentea_memset(const int ctx_id, const size_t N, const int alpha,
                      cl_mem X, const int offX) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+
   // OpenCL Version >= 1.2 approach
   // clEnqueueFillBuffer(ctx.get_queue().handle().get(), X, &alpha, sizeof(int),
   //                     offX, N, 0, NULL, NULL);

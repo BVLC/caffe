@@ -32,6 +32,11 @@ class DeviceContext {
   int current_queue_id();
   int WorkgroupSize(int id);
 
+#ifdef USE_GREENTEA
+  viennacl::ocl::program &program();
+  void SetProgram();
+#endif  // USE_GREENTEA
+
   template<typename Dtype>
   shared_ptr< Blob<Dtype> > Buffer(int id);
 
@@ -57,6 +62,9 @@ class DeviceContext {
   size_t peak_memory_usage_;
   std::vector< shared_ptr< Blob<float> > > buff_f_;
   std::vector< shared_ptr< Blob<double> > > buff_d_;
+#ifdef USE_GREENTEA
+  viennacl::ocl::program ocl_program_;
+#endif  // USE_GREENTEA
 };
 }  // namespace caffe
 

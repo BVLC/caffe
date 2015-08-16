@@ -1,5 +1,6 @@
 #include <boost/thread.hpp>
 #include <glog/logging.h>
+#include <atomic>
 #include <cstdio>
 #include <ctime>
 #include <tuple>
@@ -21,24 +22,27 @@ namespace caffe {
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
-static shared_ptr<Caffe> global_instance_;
+// Pointer to the global instance of Caffe
+static Caffe* global_instance_;
+static std::atomic<bool> first(true);
 
-Caffe& Caffe::Get(bool get_global) {
-  if (!global_instance_.get()) {
+// Device contexts are initialized once and shared on all threads
+std::vector< shared_ptr<DeviceContext> > Caffe::device_contexts_;
+
+Caffe& Caffe::Get() {
+  if (first.exchange(false)) {
     // The first call must be single threaded
-    global_instance_.reset(new Caffe());
+    // and defines the global instance
+    thread_instance_.reset(new Caffe());
+    global_instance_ = thread_instance_.get();
   }
-
-  if (get_global) {
-    return *(global_instance_.get());
-  } else {
-    if (!thread_instance_.get()) {
-      // Every thread initially gets a copy of the global initialization
-      // Later, every thread can switch to a different default device
-      thread_instance_.reset(new Caffe(*(global_instance_.get())));
-    }
-    return *(thread_instance_.get());
+  if (!thread_instance_.get()) {
+    // Every thread initially gets a copy of the global initialization.
+    // Later, every thread can switch to a different default device
+    // or change other aspects of the Caffe object
+    thread_instance_.reset(new Caffe(*global_instance_));
   }
+  return *(thread_instance_.get());
 }
 
 // random seeding
@@ -71,8 +75,11 @@ void GlobalInit(int* pargc, char*** pargv) {
 }
 
 DeviceContext *Caffe::GetDeviceContext(int id) {
-  return id == -1 ? Get().default_device_context_:
-      Get().device_contexts_[id].get();
+  // The default device context is thread-local
+  // The list of device contexts is global
+  return
+      id == -1 ?
+          Get().default_device_context_ : Get().device_contexts_[id].get();
 }
 
 DeviceContext *Caffe::GetDefaultDeviceContext() {
@@ -86,11 +93,11 @@ DeviceContext *Caffe::GetCPUDeviceContext() {
 // Copy constructor for thread-local copy
 Caffe::Caffe(const Caffe &obj) {
   mode_ = obj.mode_;
-  device_contexts_ = obj.device_contexts_;
   default_device_context_ = obj.default_device_context_;
   cpu_device_context_ = obj.cpu_device_context_;
   root_solver_ = obj.root_solver_;
   solver_count_ = obj.solver_count_;
+
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
 #ifdef USE_CUDA
@@ -99,10 +106,11 @@ Caffe::Caffe(const Caffe &obj) {
   }
   // Try to create a curand handler.
   if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
-      != CURAND_STATUS_SUCCESS ||
-      curandSetPseudoRandomGeneratorSeed(curand_generator_, cluster_seedgen())
-      != CURAND_STATUS_SUCCESS) {
-    LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
+      != CURAND_STATUS_SUCCESS
+      || curandSetPseudoRandomGeneratorSeed(curand_generator_,
+                                            cluster_seedgen())
+          != CURAND_STATUS_SUCCESS) {
+    LOG(ERROR)<< "Cannot create Curand generator. Curand won't be available.";
   }
 #endif  // USE_CUDA
 }
@@ -110,6 +118,7 @@ Caffe::Caffe(const Caffe &obj) {
 void Caffe::SelectDevice(DeviceContext* device_context) {
 #ifndef CPU_ONLY
   Get().default_device_context_ = device_context;
+
   if (device_context->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
     CUDA_CHECK(cudaSetDevice(device_context->id()));
@@ -122,15 +131,14 @@ void Caffe::SelectDevice(DeviceContext* device_context) {
 #endif  // !CPU_ONLY
 }
 
-
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
 : random_generator_(),
-  mode_(Caffe::CPU),
-  default_device_context_(nullptr),
-  solver_count_(1),
-  root_solver_(true) {}
+mode_(Caffe::CPU),
+default_device_context_(nullptr),
+solver_count_(1),
+root_solver_(true) {}
 
 Caffe::~Caffe() {}
 
@@ -185,11 +193,9 @@ Caffe::Caffe()
       curand_generator_(NULL),
 #endif  // USE_CUDA
       random_generator_(),
-      mode_(Caffe::CPU),
-      default_device_context_(nullptr),
+      mode_(Caffe::CPU), default_device_context_(nullptr),
       cpu_device_context_(new DeviceContext(-1, -1, Backend::BACKEND_CPU)),
-      solver_count_(1),
-      root_solver_(true) {
+      solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
 #ifdef USE_CUDA
@@ -209,7 +215,9 @@ Caffe::Caffe()
 Caffe::~Caffe() {
   // Make sure all device contexts and
   // dependent memory blocks are freed properly
-  device_contexts_.clear();
+  if (this == global_instance_) {
+      device_contexts_.clear();
+  }
 #ifdef USE_CUDA
   if (cublas_handle_)
     CUBLAS_CHECK(cublasDestroy(cublas_handle_));
@@ -277,7 +285,7 @@ int Caffe::EnumerateDevices(bool silent) {
   platforms_type platforms = viennacl::ocl::get_platforms();
 
   std::vector<std::tuple<viennacl::ocl::platform,
-      viennacl::ocl::device>> platform_devices;
+    viennacl::ocl::device>> platform_devices;
 
   // Loop through devices
   for (std::size_t platform_id = 0; platform_id < platforms.size();
@@ -348,10 +356,7 @@ int Caffe::EnumerateDevices(bool silent) {
 
 void Caffe::SetDevices(std::vector<int> device_ids) {
   int initcount = 0;
-  Get(true).device_contexts_.clear();
-#ifdef USE_GREENTEA
-  Get(true).ocl_programs_.clear();
-#endif
+  Get().device_contexts_.clear();
   int cuda_device_count = 0;
 #ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
@@ -361,16 +366,16 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
       if (device_ids[j] == i) {
         shared_ptr<DeviceContext> device(
             new DeviceContext(i, initcount, Backend::BACKEND_CUDA));
-        Get(true).device_contexts_.emplace_back(device);
-        Caffe::GetDeviceContext(initcount)->Init();
+        Get().device_contexts_.emplace_back(device);
+        device->Init();
+        ++initcount;
+      } else {
+        // Temporary until device abstraction is done
+        shared_ptr<DeviceContext> device(new DeviceContext());
+        Get().device_contexts_.emplace_back(device);
         ++initcount;
       }
     }
-#ifdef USE_GREENTEA
-    // Dummy to have same vector size as device contexts
-    viennacl::ocl::program program;
-    Get(true).ocl_programs_.push_back(program);
-#endif  // USE_GREENTEA
   }
 
   // Initialize GreenTea devices
@@ -380,8 +385,8 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   typedef std::vector<viennacl::ocl::platform> platforms_type;
   platforms_type platforms = viennacl::ocl::get_platforms();
 
-  std::vector<std::tuple<viennacl::ocl::platform,
-    viennacl::ocl::device>> platform_devices;
+  std::vector< std::tuple<viennacl::ocl::platform,
+      viennacl::ocl::device> > platform_devices;
 
   // Loop through devices
   for (std::size_t platform_id = 0; platform_id < platforms.size();
@@ -389,45 +394,31 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
     typedef std::vector<viennacl::ocl::device> devices_type;
     try {
       devices_type devices = platforms[platform_id].devices(
-                                                  CL_DEVICE_TYPE_ALL);
-      for (std::size_t device_id = 0; device_id < devices.size();
-                                          ++device_id) {
+      CL_DEVICE_TYPE_ALL);
+      for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
         platform_devices.push_back(
             std::make_tuple(platforms[platform_id], devices[device_id]));
         // Check if this device is really used and initialize
-        bool is_used = false;
         for (int i = 0; i < device_ids.size(); ++i) {
           int device_id = device_ids[i];
           if (device_id == cuda_device_count + greentea_device_count) {
             // Setup actual context and compile kernels for this device
             viennacl::ocl::setup_context(
-                device_id, std::get<1>(
-                    platform_devices[greentea_device_count]));
-            viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-                static_cast<uint64_t>(device_id));
-            viennacl::ocl::program & program = RegisterKernels(&ctx);
-            Get(true).ocl_programs_.push_back(program);
-            // viennacl::ocl::switch_context(device_id);
-            // viennacl::ocl::switch_device(std::get<1>
-            // (platform_devices[device_id - cuda_device_count]));
+                device_id,
+                std::get<1>(platform_devices[greentea_device_count]));
 
-            // Add defined number of queues
-            for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
-              ctx.add_queue(ctx.current_device());
-            }
             shared_ptr<DeviceContext> device(
-                new DeviceContext(cuda_device_count + greentea_device_count,
-                              initcount, Backend::BACKEND_OpenCL));
-            Get(true).device_contexts_.emplace_back(device);
-            Caffe::GetDeviceContext(initcount)->Init();
+                new DeviceContext(device_id,
+                                  initcount, Backend::BACKEND_OpenCL));
+            Get().device_contexts_.emplace_back(device);
+            device->Init();
             ++initcount;
-            is_used = true;
+          } else {
+            // Temporary until device abstraction is done
+            shared_ptr<DeviceContext> device(new DeviceContext());
+            Get().device_contexts_.emplace_back(device);
+            ++initcount;
           }
-        }
-        // Device not used, dummy
-        if (!is_used) {
-          viennacl::ocl::program program;
-          Get(true).ocl_programs_.push_back(program);
         }
         greentea_device_count++;
       }
@@ -442,7 +433,10 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
 
 #ifdef USE_GREENTEA
 viennacl::ocl::program & Caffe::GetDeviceProgram(int id) {
-  return id == -1 ? Get().default_ocl_program_ : Get().ocl_programs_[id];
+  return
+      id == -1 ?
+          Get().default_device_context_->program() :
+          Get().GetDeviceContext(id)->program();
 }
 #endif  // USE_GREENTEA
 
