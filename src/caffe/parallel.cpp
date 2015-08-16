@@ -55,7 +55,8 @@ static void apply_buffers(const vector<Blob<Dtype>*>& blobs,
     }
     ptr += size;
   }
-  CHECK_EQ(total_size, ptr - buffer);
+  // total_size is at least one byte
+  CHECK_EQ(total_size, (ptr == buffer ? 1 : ptr - buffer));
 }
 
 // Buffer size necessary to store given blobs
