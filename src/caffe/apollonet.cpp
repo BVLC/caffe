@@ -29,7 +29,6 @@ Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
   const LayerParameter& active_layer_param = layer->layer_param();
   string layer_name = active_layer_param.name();
 
-  //const LayerParameter& active_layer_param = layer->layer_param();
   const bool new_layer = layers_map_.find(layer_name) == layers_map_.end();
   if (new_layer) {
     LOG(INFO) << "Adding Layer " << layer_name;
@@ -319,32 +318,33 @@ void ApolloNet<Dtype>::AddLayerParams(shared_ptr<Layer<Dtype> > layer) {
   }
 }
 
-template <typename Dtype> 
+template <typename Dtype>
 void ApolloNet<Dtype>::Backward() {
-  for (int i = active_layers_vec_.size() - 1; i >= 0; --i){ 
+  for (int i = active_layers_vec_.size() - 1; i >= 0; --i) {
     BackwardLayer(active_layers_vec_[i]);
   }
 }
 
-template <typename Dtype> 
-void ApolloNet<Dtype>::Update(Dtype lr, Dtype momentum, Dtype clip_gradients, Dtype weight_decay) {
+template <typename Dtype>
+void ApolloNet<Dtype>::Update(Dtype lr, Dtype momentum,
+  Dtype clip_gradients, Dtype weight_decay) {
   Dtype diffnorm = DiffL2Norm();
   Dtype clip_scale = 1;
-  if (clip_gradients > 0){
-    if (diffnorm > clip_gradients){
+  if (clip_gradients > 0) {
+    if (diffnorm > clip_gradients) {
       clip_scale = clip_gradients / diffnorm;
     }
   }
-    
   // iterate over active params
   for (set<string>::iterator it = active_params_set_.begin();
       it != active_params_set_.end(); ++it) {
     const string& param_name = *it;
     shared_ptr<Blob<Dtype> > curParam = params_[param_name];
+    Dtype lrNew = lr * clip_scale * param_lr_mults()[param_name];
     const shared_ptr<Tensor<Dtype> > &curData = curParam->data();
     const shared_ptr<Tensor<Dtype> > &curDiff = curParam->diff();
     curDiff->AddMulFrom(*curData, weight_decay);
-    curData->AddMulFrom(*curDiff, -lr);
+    curData->AddMulFrom(*curDiff, -lrNew);
     curParam->scale_diff(momentum);
   }
 }
