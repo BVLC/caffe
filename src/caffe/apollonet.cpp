@@ -339,13 +339,14 @@ void ApolloNet<Dtype>::Update(Dtype lr, Dtype momentum,
   for (set<string>::iterator it = active_params_set_.begin();
       it != active_params_set_.end(); ++it) {
     const string& param_name = *it;
-    shared_ptr<Blob<Dtype> > curParam = params_[param_name];
-    Dtype lrNew = lr * clip_scale * param_lr_mults()[param_name];
-    const shared_ptr<Tensor<Dtype> > &curData = curParam->data();
-    const shared_ptr<Tensor<Dtype> > &curDiff = curParam->diff();
-    curDiff->AddMulFrom(*curData, weight_decay);
-    curData->AddMulFrom(*curDiff, -lrNew);
-    curParam->scale_diff(momentum);
+    shared_ptr<Blob<Dtype> > cur_param = params_[param_name];
+    Dtype lr_new = lr * clip_scale * param_lr_mults()[param_name];
+    Dtype decay_new = weight_decay * param_decay_mults()[param_name];
+    const shared_ptr<Tensor<Dtype> > &cur_data = cur_param->data();
+    const shared_ptr<Tensor<Dtype> > &cur_diff = cur_param->diff();
+    cur_diff->AddMulFrom(*cur_data, decay_new);
+    cur_data->AddMulFrom(*cur_diff, -lr_new);
+    cur_param->scale_diff(momentum);
   }
 }
 
