@@ -114,7 +114,7 @@ int device_query() {
     get_gpus(&gpus);
     Caffe::SetDevices(gpus);
     for (int i = 0; i < gpus.size(); ++i) {
-      caffe::Caffe::SetDevice(i);
+      caffe::Caffe::SetDevice(gpus[i]);
       caffe::Caffe::DeviceQuery();
     }
 #endif  // !CPU_ONLY
@@ -176,7 +176,7 @@ int train() {
 
     solver_param.set_device_id(gpus[0]);
     // Initialize the first device
-    Caffe::SetDevice(0);
+    Caffe::SetDevice(gpus[0]);
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_solver_count(gpus.size());
 #endif  // !CPU_ONLY
@@ -195,7 +195,7 @@ int train() {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     std::vector<DeviceContext*> devices;
     for (int i = 0; i < gpus.size(); ++i) {
-      devices.push_back(Caffe::Get(true).GetDeviceContext(i));
+      devices.push_back(Caffe::Get().GetDeviceContext(i));
     }
     sync.run(devices);
   } else {
@@ -221,7 +221,7 @@ int test() {
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
     Caffe::SetDevices(gpus);
     Caffe::set_mode(Caffe::GPU);
-    Caffe::SetDevice(0);
+    Caffe::SetDevice(gpus[0]);
 #endif  // !CPU_ONLY
   } else {
     LOG(INFO) << "Use CPU.";
@@ -291,7 +291,7 @@ int time() {
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
     Caffe::SetDevices(gpus);
     Caffe::set_mode(Caffe::GPU);
-    Caffe::SetDevice(0);
+    Caffe::SetDevice(gpus[0]);
 #endif  // !CPU_ONLY
   } else {
     LOG(INFO) << "Use CPU.";

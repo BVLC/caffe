@@ -106,13 +106,14 @@ void GlobalInit(int* pargc, char*** pargv);
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
  public:
+  Caffe();
   Caffe(const Caffe &obj);
   ~Caffe();
 
   // Thread local context for Caffe. Moved to common.cpp instead of
   // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
   // on OSX. Also fails on Linux with CUDA 7.0.18.
-  static Caffe& Get(bool get_global = false);
+  static Caffe& Get();
 
   enum Brew { CPU, GPU };
 
@@ -201,21 +202,12 @@ class Caffe {
 
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
-  vector<shared_ptr< DeviceContext> > device_contexts_;
+  static vector<shared_ptr< DeviceContext> > device_contexts_;
   DeviceContext* default_device_context_;
   shared_ptr<DeviceContext> cpu_device_context_;
 
   int solver_count_;
   bool root_solver_;
-
-#ifdef USE_GREENTEA
-  vector<viennacl::ocl::program> ocl_programs_;
-  viennacl::ocl::program default_ocl_program_;
-#endif  // USE_GREENTEA
-
- private:
-  // The private constructor to avoid duplicate instantiation.
-  Caffe();
 };
 
 }  // namespace caffe

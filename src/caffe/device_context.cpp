@@ -10,6 +10,10 @@
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
+#ifdef USE_GREENTEA
+#include "caffe/greentea/cl_kernels.hpp"
+#endif  // USE_GREENTEA
+
 namespace caffe {
 
 DeviceContext::DeviceContext()
@@ -32,13 +36,21 @@ void DeviceContext::Init() {
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+
     std::vector<size_t> temp(3);
-    clGetDeviceInfo(viennacl::ocl::get_context(id_).devices()[0].id(),
+    clGetDeviceInfo(ctx.devices()[0].id(),
     CL_DEVICE_MAX_WORK_ITEM_SIZES,
                     sizeof(size_t), &temp[0], NULL);
     workgroup_sizes_[0] = temp[0];
     workgroup_sizes_[1] = temp[1];
     workgroup_sizes_[2] = temp[2];
+
+    SetProgram();
+
+    for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
+      ctx.add_queue(ctx.devices()[0]);
+    }
 #endif  // USE_GREENTEA
   }
 #endif  // !CPU_ONLY
@@ -116,16 +128,15 @@ void DeviceContext::FinishQueues() {
 #ifdef USE_CUDA
 #endif  // USE_CUDA
   } else {
-  #ifdef USE_GREENTEA
-    viennacl::ocl::context &ctx =
-        viennacl::ocl::get_context(id_);
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
     for (int i = 0; i < num_queues(); ++i) {
-      ctx.switch_queue(i);
+      ctx.switch_queue(0);
       ctx.get_queue().finish();
     }
     ctx.switch_queue(0);
     current_queue_id_ = 0;
-  #endif  // USE_GREENTEA
+#endif  // USE_GREENTEA
   }
 }
 
@@ -151,5 +162,16 @@ void DeviceContext::DecreaseMemoryUsage(size_t bytes) {
 void DeviceContext::ResetPeakMemoryUsage() {
   peak_memory_usage_ = memory_usage_;
 }
+
+#ifdef USE_GREENTEA
+viennacl::ocl::program &DeviceContext::program() {
+    return ocl_program_;
+  }
+
+void DeviceContext::SetProgram() {
+  ocl_program_ = RegisterKernels(&(viennacl::ocl::get_context(
+      static_cast<uint64_t>(id_))));
+}
+#endif  // USE_GREENTEA
 
 }  // namespace caffe
