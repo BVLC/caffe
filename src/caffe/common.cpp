@@ -441,6 +441,13 @@ viennacl::ocl::program & Caffe::GetDeviceProgram(int id) {
 #endif  // USE_GREENTEA
 
 void Caffe::SetDevice(const int device_id) {
+  // Fix for compability to python and other interfaces that do not
+  // know or call SetDevices directly
+  if (Get().device_contexts_.size() == 0) {
+    // No device has been initialized so far
+    Caffe::SetDevices(std::vector<int> { device_id });
+  }
+
   Get().default_device_context_ = GetDeviceContext(device_id);
 
   if (Get().default_device_context_->backend() == Backend::BACKEND_CUDA) {
