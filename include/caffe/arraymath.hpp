@@ -30,8 +30,19 @@ struct ARMath {
   DECLARE_BINARY_OP(mul);
   DECLARE_BINARY_OP(pow);
   DECLARE_BINARY_OP(sub);
+#undef DECLARE_BINARY_OP
 
-  // TODO: Reductions and partial reductions
+  // Reductions and partial reductions
+#define DECLARE_REDUCTION(name)\
+  static T name(const ArrayBase<T> &a)
+//   static PE name(const ArrayBase<T> &a, int axis);
+  
+  DECLARE_REDUCTION(max);
+  DECLARE_REDUCTION(min);
+//   DECLARE_REDUCTION(soft_max);
+//   DECLARE_REDUCTION(soft_min);
+  DECLARE_REDUCTION(sum);
+#undef DECLARE_REDUCTION
 
   // Matrix operations
   // gemm: compute alpha*op( A )*op( B ) + beta*C (A, B and C are in row major)

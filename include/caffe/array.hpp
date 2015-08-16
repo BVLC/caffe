@@ -98,8 +98,28 @@ class ArrayBase {
   Expression<Dtype> operator-() const;
   Expression<Dtype> sign() const;
   Expression<Dtype> sqrt() const;
+  
+//   // Complete reductions
+  Dtype max() const;
+  Dtype mean() const;
+  Dtype min() const;
+  // log sum_i exp x_i
+//   Dtype soft_max() const;
+  // - log sum_i exp -x_i
+//   Dtype soft_min() const;
+  Dtype sum() const;
 
-  // TODO: Implement reductions
+  // Partial reductions
+  //  partial reductions do not change the number of dimensions of the array,
+  //  but reduce a single dimension(axis) to 1
+//   Expression<Dtype> max(int axis) const;
+//   Expression<Dtype> mean(int axis) const;
+//   Expression<Dtype> min(int axis) const;
+//   // log sum_i exp x_i
+//   Expression<Dtype> soft_max(int axis) const;
+//   // - log sum_i exp -x_i
+//   Expression<Dtype> soft_min(int axis) const;
+//   Expression<Dtype> sum(int axis) const;
 };
 template<typename Dtype>
 class Expression: public ArrayBase<Dtype> {

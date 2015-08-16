@@ -299,6 +299,71 @@ IMPLEMENT_BINARY(pow);
 #undef BINARY_CPU_DEFINE
 #undef BINARY_GPU_DECLARE
 
+
+/****** Unary array operations ******/
+namespace arraymath_detail {
+template<typename T>
+class PartialReductionAE: public Expression<T>::Implementation {
+ public:
+  typedef void(*Func)(int, const T *, T *, const ArrayShape &, int);
+ protected:
+  ArrayBasePointer<T> a_;
+  int axis_;
+  Func f_;
+  static ArrayShape newShape(ArrayShape s, int axis) {
+    CHECK_GE(axis, 0) << "Positive axis required";
+    CHECK_LT(axis, s.size()) << "Axis out of bounds";
+    s[axis] = 1;
+    return s;
+  }
+ public:
+  PartialReductionAE(Func f, const ArrayBase<T> &a, int axis, const ArrayMode &m)
+    : Expression<T>::Implementation(newShape(a.shape(), axis), m), a_(a),
+      axis_(axis), f_(f) {
+    CHECK_NE(m, AR_DEFAULT) << "Array mode cannot be default!";
+  }
+  virtual void evaluate(Array<T> *target) const {
+    int N = count(this->shape_);
+    Array<T> a = a_.eval();
+    f_(N, getData(&a, this->mode()), getMutableData(target, this->mode()),
+       a.shape(), axis_);
+  }
+};
+}  // namespace arraymath_detail
+
+// Define a CPU function
+#define REDUCTION_CPU_DEFINE(name) namespace arraymath_detail {\
+template<typename T> T name##_cpu(int N, const T *a) {\
+  T r = a[0];\
+  for (int i = 1; i < N; i++)\
+    r = name(a[i], r);\
+  return r;\
+}\
+}  // namespace arraymath_detail
+
+// Implement unary expressions
+#define IMPLEMENT_REDUCTION(name) REDUCTION_CPU_DEFINE(name)\
+template<typename T>\
+T ARMath<T>::name(const ArrayBase<T> & ab) {\
+  using namespace arraymath_detail; /* NOLINT */\
+  Array<T> a = ab.eval();\
+  return name##_cpu<T>(count(a.shape()), a.cpu_data());\
+}
+
+namespace arraymath_detail {
+  template<typename T> T max(const T &a, const T &b) { return a > b ? a : b; }
+  template<typename T> T min(const T &a, const T &b) { return a < b ? a : b; }
+  template<typename T> T sum(const T &a, const T &b) { return a + b; }
+};
+
+IMPLEMENT_REDUCTION(max);
+IMPLEMENT_REDUCTION(min);
+// IMPLEMENT_REDUCTION(soft_max);
+// IMPLEMENT_REDUCTION(soft_min);
+IMPLEMENT_REDUCTION(sum);
+#undef IMPLEMENT_REDUCTION
+#undef REDUCTION_CPU_DEFINE
+
 /**** gemm ****/
 namespace arraymath_detail {
 void gemm_cpu(bool tA, bool tB, const int M, const int N, const int K,

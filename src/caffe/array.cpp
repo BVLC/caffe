@@ -483,7 +483,32 @@ DEFINE_BINARY2(mul, *, *=);
 DEFINE_BINARY2(div, / , /=);
 DEFINE_BINARY(pow);
 
-#undef DEFINE_UNARY
+#undef DEFINE_BINARY2
+#undef DEFINE_BINARY
+
+
+// Define the unary operators
+#define DEFINE_REDUCTION(N) \
+  template<typename T>\
+  T ArrayBase<T>::N() const {\
+    return ARMath<T>::N(*this);\
+  }
+//   template<typename T>\
+//   Expression<T> ArrayBase<T>::N(int axis) const {\
+//     return ARMath<T>::N(*this, axis);\
+//   }
+
+DEFINE_REDUCTION(max);
+DEFINE_REDUCTION(min);
+// DEFINE_REDUCTION(soft_max);
+// DEFINE_REDUCTION(soft_min);
+DEFINE_REDUCTION(sum);
+
+template<typename T>
+T ArrayBase<T>::mean() const {
+  return ARMath<T>::sum(*this) / count(this->shape());
+}
+#undef DEFINE_REDUCTION
 
 
 INSTANTIATE_CLASS(ArrayBase);
