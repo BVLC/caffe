@@ -326,6 +326,29 @@ void ApolloNet<Dtype>::Backward() {
   }
 }
 
+template <typename Dtype> 
+void ApolloNet<Dtype>::Update(Dtype lr, Dtype momentum, Dtype clip_gradients, Dtype weight_decay) {
+  Dtype diffnorm = DiffL2Norm();
+  Dtype clip_scale = 1;
+  if (clip_gradients > 0){
+    if (diffnorm > clip_gradients){
+      clip_scale = clip_gradients / diffnorm;
+    }
+  }
+    
+  // iterate over active params
+  for (set<string>::iterator it = active_params_set_.begin();
+      it != active_params_set_.end(); ++it) {
+    const string& param_name = *it;
+    shared_ptr<Blob<Dtype> > curParam = params_[param_name];
+    const shared_ptr<Tensor<Dtype> > &curData = curParam->data();
+    const shared_ptr<Tensor<Dtype> > &curDiff = curParam->diff();
+    curDiff->AddMulFrom(*curData, weight_decay);
+    curData->AddMulFrom(*curDiff, -lr);
+    curParam->scale_diff(momentum);
+  }
+}
+
 template <typename Dtype>
 void ApolloNet<Dtype>::BackwardLayer(const string& layer_name) {
   shared_ptr<Layer<Dtype> > layer = layers_map_[layer_name];
