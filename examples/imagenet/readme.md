@@ -55,9 +55,14 @@ Take a look at `examples/imagenet/create_imagenet.sh` where you will see somethi
     EXAMPLE=examples/imagenet
     DATA=data/ilsvrc12
     TOOLS=build/tools
-
+    
+    # Path to the imagenet train and val folders
     TRAIN_DATA_ROOT=/path/to/imagenet/train/
     VAL_DATA_ROOT=/path/to/imagenet/val/
+
+    # Encoding of the images in the database
+    TRAIN_ENCODING=""
+    VAL_ENCODING=""
     
     RESIZE=false
 
@@ -65,8 +70,10 @@ Take a look at `examples/imagenet/create_imagenet.sh` where you will see somethi
 
 * Set the calue of the `TRAIN_DATA_ROOT` and `VAL_DATA_ROOT` to the paths of your train and val directories as needed. 
 * Set "RESIZE=true" to resize all images to 256x256 if you haven't resized the images in advance.
-* You might want to change the value of the `DATA` variable to store the lmdb files on another path. You can do that if you do not have enough space on the same disk drive. CAUTION: If you change that path you will also need to change the path of the networks input in the `/models/train_val.prototxt` file. More on that later.
+* You might want to change the value of the `DATA` variable to store the lmdb files on another path. You can do that if you do not have enough space on the same disk drive. CAUTION: If you change that path you will also need to change the `source`'s path of the network's input layers in the `/models/train_val.prototxt` file.
+* The `TRAIN_ENCODING` and the `VAL_ENCODING` variable as used to set any encoding options for the images that will be stored in the `lmdb` database. You can use other options such as jpg or png and the dabase will need less space in the disk. However, the CPU should decompres the images before they are fed to the network and this might slow the network's training.
 * `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
+* You can execute `./build/tools/convert_images --help` to find more info about the option that ypu have to convert your images to a database that can be used by Caffe.
 
 Now simply create the leveldbs with `examples/imagenet/create_imagenet.sh`. Note that `examples/imagenet/ilsvrc12_train_lmdb` and `examples/imagenet/ilsvrc12_val_lmdb` should not exist before this execution. It will be created by the script. 
 
