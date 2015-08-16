@@ -27,7 +27,11 @@ class ApolloNet {
 
   Dtype ForwardLayer(const string& layer_param_string);
 
+  Dtype ForwardLayer(shared_ptr<Layer<Dtype> > layer);
+
   void BackwardLayer(const string& layer_name);
+
+  void Backward();
 
   void ResetForward() {
     active_layers_vec_.clear();
@@ -47,6 +51,9 @@ class ApolloNet {
     ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
     CopyTrainedLayersFrom(param);
   }
+
+  void Update(Dtype lr, Dtype momentum, Dtype clip_gradients,
+    Dtype weight_decay);
 
   /// @brief returns the phase: TRAIN or TEST
   inline Phase phase() const { return phase_; }

@@ -39,6 +39,8 @@
 #ifndef CAFFE_LAYER_FACTORY_H_
 #define CAFFE_LAYER_FACTORY_H_
 
+#include <google/protobuf/text_format.h>
+
 #include <map>
 #include <string>
 
@@ -77,6 +79,14 @@ class LayerRegistry {
     CHECK_EQ(registry.count(type), 1) << "Unknown layer type: " << type
         << " (known types: " << LayerTypeList() << ")";
     return registry[type](param);
+  }
+
+  // Get a layer using a prototxt which will be parsed into LayerParameter
+  static shared_ptr<Layer<Dtype> > CreateLayer(const string& prototxt) {
+    LayerParameter p;
+    bool success = google::protobuf::TextFormat::ParseFromString(prototxt, &p);
+    ASSERT(success, "Invalid prototxt string");
+    return CreateLayer(p);
   }
 
  private:

@@ -286,6 +286,53 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   bool has_new_data_;
 };
 
+/**
+ * @brief Provides data to the network from vector<cv::Mat> 
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class MatDataLayer : public BaseDataLayer<Dtype> {
+ public:
+  explicit MatDataLayer(const LayerParameter& param)
+      : BaseDataLayer<Dtype>(param), data_(NULL) { }
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "MatData"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+  virtual void AddMatVector(const vector<cv::Mat>& mat_vector);
+
+  // Reset should accept const pointers, but can't, because the memory
+  //  will be given to Blob, which is mutable
+  void Reset(Dtype* data);
+  void set_batch_size(int new_size);
+
+  int batch_size() { return batch_size_; }
+  int channels() { return channels_; }
+  int height() { return height_; }
+  int width() { return width_; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  shared_ptr<DataTransformer<Dtype> > data_transformer() {
+    if (!this->data_transformer_) {
+        this->data_transformer_.reset(
+            new DataTransformer<Dtype>(this->transform_param_, this->phase_));
+    }
+    return this->data_transformer_;
+  }
+
+  int batch_size_, channels_, height_, width_, size_;
+  Dtype* data_;
+  Blob<Dtype> added_data_;
+};
+
+
 template <typename Dtype>
 class NumpyDataLayer : public Layer<Dtype> {
  public:
