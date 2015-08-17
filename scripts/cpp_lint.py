@@ -4850,6 +4850,9 @@ def ParseArguments(args):
 
 def main():
   filenames = ParseArguments(sys.argv[1:])
+  if len(filenames) == 1 and (filenames[0] in
+      ['include/caffe/util/hungarian.hpp', 'src/caffe/util/hungarian.cpp']):
+      sys.exit(0)
 
   # Change stderr to write with replacement characters so we don't die
   # if we try to print something containing non-ASCII characters.

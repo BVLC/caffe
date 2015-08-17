@@ -359,6 +359,7 @@ message LayerParameter {
   optional HDF5DataParameter hdf5_data_param = 112;
   optional HDF5OutputParameter hdf5_output_param = 113;
   optional HingeLossParameter hinge_loss_param = 114;
+  optional HungarianLossParameter hungarian_loss_param = 204;
   optional ImageDataParameter image_data_param = 115;
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
@@ -662,6 +663,7 @@ message InnerProductParameter {
   // all preceding axes are retained in the output.
   // May be negative to index from the end (e.g., -1 for the last axis).
   optional int32 axis = 5 [default = 1];
+  optional bool output_4d = 6 [default = false];
 }
 
 // Message that stores parameters used by LogLayer
@@ -702,6 +704,13 @@ message NumpyDataParameter {
 
 message CapSequenceParameter {
   repeated uint32 sequence_lengths = 1;
+}
+
+message HungarianLossParameter {
+  // This parameter sets the strictness of the overlap criterion
+  optional float match_ratio = 1 [default = 0.5];
+  // This parameter disallows permutations when set to false
+  optional bool permute_matches = 2 [default = true];
 }
 
 message ParamShapeParameter {
