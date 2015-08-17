@@ -35,8 +35,13 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 
 inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #ifndef CPU_ONLY
-  if (use_cuda) {
-    CUDA_CHECK(cudaFreeHost(ptr));
+  // Try to free ptr as a cuda pointer, if that fails try free. This way
+  // any pointer allocated while Caffe::mode() == Caffe::CPU is freed properly
+  cudaError e = cudaFreeHost(ptr);
+  if (e == cudaErrorInvalidValue) {
+    cudaGetLastError();
+  } else {
+    CUDA_CHECK(e);
     return;
   }
 #endif

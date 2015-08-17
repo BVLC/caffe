@@ -11,12 +11,12 @@
 #include <numpy/arrayobject.h>
 
 // these need to be included after boost on OS X
+#include <algorithm> // NOLINT
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
 #include <fstream>  // NOLINT
 
-#include "caffe/array.hpp"
-#include "caffe/arraymath.hpp"
+#include "caffe/array/array.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
@@ -55,10 +55,21 @@ namespace boost { namespace python {
 struct ellipsis : public object {
   BOOST_PYTHON_FORWARD_OBJECT_CONSTRUCTORS(ellipsis, object)
 };
+// bp::numeric::array leads to unexplained segfaults at program exit, instead
+// we wrap the numpy array in ndarray
+struct ndarray : public object {
+  BOOST_PYTHON_FORWARD_OBJECT_CONSTRUCTORS(ndarray, object)
+};
 namespace converter {
 template<> struct object_manager_traits<ellipsis>
   : pytype_object_manager_traits<&PyEllipsis_Type, slice> {};
-} } };
+template <> struct object_manager_traits<ndarray> {
+  BOOST_STATIC_CONSTANT(bool, is_specialized = true);
+  static bool check(PyObject* x) { return PyArray_Check(x); }
+};
+}  // namespace converter
+}  // namespace python
+}  // namespace boost
 
 namespace caffe {
 
@@ -441,6 +452,39 @@ template<typename T, typename V>
 void Array_setitem(Array<T> &a, const bp::ellipsis &, const V &v) { // NOLINT[runtime/references]
   a = v;
 }
+template<typename T> struct TPE {};
+template<> struct TPE<float>{ static int T() { return NPY_FLOAT32; } };
+template<> struct TPE<double>{ static int T() { return NPY_FLOAT64; } };
+template<typename T>
+void Array_setnumpy(Array<T> *a, const bp::ndarray &v, bool resize) {
+  // Get the numpy array
+  CHECK(PyArray_Check(v.ptr())) << "Wrong type: python array expected";
+  PyArrayObject * na = reinterpret_cast<PyArrayObject*>(v.ptr());
+  // Resize if needed
+  const int D = PyArray_NDIM(na);
+  ArrayShape new_shape(D);
+  std::copy(PyArray_DIMS(na), PyArray_DIMS(na)+D, new_shape.begin());
+  // Create the array
+  if (resize && (!a || new_shape != a->shape()))
+    *a = Array<T>(new_shape, a->mode());
+  else
+    CHECK_EQ(new_shape, a->shape()) << "Shape cannot change";
+  // Copy the data (create a numpy array and let numpy deal with the convertion)
+  PyObject * tmp = PyArray_SimpleNewFromData(D, PyArray_DIMS(na), TPE<T>::T(),
+                                             a->mutable_cpu_data());
+  PyArray_CopyInto(reinterpret_cast<PyArrayObject*>(tmp), na);
+  Py_DECREF(tmp);
+}
+template<typename T>
+void Array_setnumeric(Array<T> &a, const bp::ellipsis &, const bp::ndarray &v) { // NOLINT[runtime/references]
+  Array_setnumpy(&a, v, false);
+}
+template<typename T>
+shared_ptr<Array<T> > Array_from_numpy(const bp::ndarray &v) {
+  shared_ptr<Array<T> > a(new Array<T>());
+  Array_setnumpy(a.get(), v, true);
+  return a;
+}
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
@@ -600,8 +644,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype> > >, true>());
   bp::class_<vector<string> >("StringVec")
     .def(bp::vector_indexing_suite<vector<string> >());
-  bp::class_<vector<int> >("IntVec")
-    .def(bp::vector_indexing_suite<vector<int> >());
+//   bp::class_<vector<int> >("IntVec")
+//     .def(bp::vector_indexing_suite<vector<int> >());
   bp::class_<vector<Dtype> >("DtypeVec")
     .def(bp::vector_indexing_suite<vector<Dtype> >());
   bp::class_<vector<shared_ptr<Net<Dtype> > > >("NetVec")
@@ -636,11 +680,11 @@ BOOST_PYTHON_MODULE(_caffe) {
   .value("CPU", AR_CPU)
   .value("GPU", AR_GPU);
 
-  typedef Expression<Dtype>(*Binary1)(const ArrayBase<Dtype> &, Dtype);
-  typedef Expression<Dtype>(*Binary2)(const ArrayBase<Dtype> &,
-                                      const ArrayBase<Dtype> &);
+  typedef Expression<Dtype>(ArrayBase<Dtype>::*Binary1)(Dtype) const;
+  typedef Expression<Dtype>(ArrayBase<Dtype>::*Binary2)(const ArrayBase<Dtype>&)
+    const;
   bp::class_<ArrayBase<Dtype>, boost::noncopyable>("ArrayBase", bp::no_init)
-  // Binary functions
+  // Binary operators
   .def(bp::self + bp::self)
   .def(bp::self - bp::self)
   .def(bp::self * bp::self)
@@ -653,19 +697,20 @@ BOOST_PYTHON_MODULE(_caffe) {
   .def(float() - bp::self)
   .def(float() * bp::self)
   .def(float() / bp::self)
-  .def("maximum", static_cast<Binary1>(&ARMath<Dtype>::maximum))
-  .def("maximum", static_cast<Binary2>(&ARMath<Dtype>::maximum))
-  .def("minimum", static_cast<Binary1>(&ARMath<Dtype>::minimum))
-  .def("minimum", static_cast<Binary2>(&ARMath<Dtype>::minimum))
-  .def("pow", static_cast<Binary1>(&ARMath<Dtype>::pow))
-  .def("pow", static_cast<Binary2>(&ARMath<Dtype>::pow))
-  // Unary functions
+  // Unary operators
   .def(- bp::self)
-  .def("abs", &ArrayBase<Dtype>::abs)
-  .def("exp", &ArrayBase<Dtype>::exp)
-  .def("log", &ArrayBase<Dtype>::log)
-  .def("sign", &ArrayBase<Dtype>::sign)
-  .def("sqrt", &ArrayBase<Dtype>::sqrt)
+  // Define all unary and reduction functions
+#define DEF_UNARY(F, f) .def(#f, &ArrayBase<Dtype>::f)
+  LIST_UNARY(DEF_UNARY)
+  LIST_REDUCTION(DEF_UNARY)
+  .def("mean", &ArrayBase<Dtype>::mean)
+#undef DEF_UNARY
+  // Define all binary functions
+#define DEF_BINARY(F, f) \
+  .def(#f, static_cast<Binary1>(&ArrayBase<Dtype>::f))\
+  .def(#f, static_cast<Binary2>(&ArrayBase<Dtype>::f))
+  LIST_BINARY(DEF_BINARY)
+#undef DEF_BINARY
   // Other functions
   .def("eval", &ArrayBase<Dtype>::eval)
   .add_property("mode", &Array<Dtype>::mode)
@@ -677,6 +722,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   .def(bp::init<ArrayMode>())
   .def(bp::init<ArrayShape>())
   .def(bp::init<ArrayShape, ArrayMode>())
+  .def("__init__", bp::make_constructor(&Array_from_numpy<Dtype>))
   .def("reshape", &Array<Dtype>::reshape)
   .def(bp::self += bp::self)
   .def(bp::self -= bp::self)
@@ -689,14 +735,14 @@ BOOST_PYTHON_MODULE(_caffe) {
   .def("__setitem__", &Array_setitem<Dtype, Dtype>)
   .def("__setitem__", &Array_setitem<Dtype, Expression<Dtype> >)
   .def("__setitem__", &Array_setitem<Dtype, Array<Dtype> >)
+  .def("__setitem__", &Array_setnumeric<Dtype>)
+  .def("__getitem__", static_cast<Array<Dtype> (Array<Dtype>::*)(size_t)>(
+    &Array<Dtype>::operator[]))
   .add_property("mode", &Array<Dtype>::mode, &Array<Dtype>::setMode)
   .add_property("__array_interface__", &Array_interface<Dtype>);
 
   bp::class_ < Expression<Dtype>, bp::bases<ArrayBase<Dtype> > > ("Expression",
                                                                   bp::no_init);
-
-  bp::def("gemm", &ARMath<Dtype>::gemm);
-  bp::def("conv", &ARMath<Dtype>::conv);
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
