@@ -50,7 +50,6 @@ ArrayShape make_shape(size_t d0, size_t d1, size_t d2, size_t d3, size_t d4,
                       size_t d5);
 size_t count(const ArrayShape &shape);
 std::string shapeToString(const ArrayShape &shape);
-bool operator==(const ArrayShape &a, const ArrayShape &b);
 
 enum ArrayMode {
   AR_DEFAULT = 0,

@@ -10,11 +10,14 @@ namespace caffe {
 
 template<typename T>
 Array<T>::Array(const Array & o) : ArrayMemory(o), ArrayBase<T>(o) { }
+
 template<typename T>
 Array<T>::Array(ArrayMode mode) : ArrayMemory(), ArrayBase<T>(mode) { }
+
 template<typename T>
 Array<T>::Array(const ArrayShape &shape, ArrayMode mode):
   ArrayMemory(count(shape)*sizeof(T)), ArrayBase<T>(shape, mode) { }
+
 template<typename T>
 Array<T>::Array(SyncedMemory *memory, const ArrayShape &shape,
   ArrayMode mode):ArrayMemory(memory, count(shape)), ArrayBase<T>(shape, mode) {
@@ -22,6 +25,7 @@ Array<T>::Array(SyncedMemory *memory, const ArrayShape &shape,
       << memory->size() << "' is smaller than shape " << shapeToString(shape)
       << " with element size " << sizeof(T);
 }
+
 template<typename T>
 Array<T>::Array(shared_ptr<SyncedMemory> memory, const ArrayShape &shape,
   ArrayMode mode):ArrayMemory(memory, count(shape)), ArrayBase<T>(shape, mode) {
@@ -29,6 +33,7 @@ Array<T>::Array(shared_ptr<SyncedMemory> memory, const ArrayShape &shape,
       << memory->size() << "' is smaller than shape " << shapeToString(shape)
       << " with element size " << sizeof(T);
 }
+
 template<typename T>
 Array<T>::Array(shared_ptr<SyncedMemory> m, size_t o, const ArrayShape &s,
   ArrayMode mode):ArrayMemory(m, o*sizeof(T), count(s)*sizeof(T)),
@@ -37,14 +42,17 @@ Array<T>::Array(shared_ptr<SyncedMemory> m, size_t o, const ArrayShape &s,
       << m->size() << "' is smaller than shape " << shapeToString(s)
       << " with element size " << sizeof(T) << " and offset " << o;
 }
+
 template<typename T>
 Array<T>::~Array() {}
+
 template<typename T>
 void Array<T>::initialize(const ArrayShape &shape) {
   CHECK_EQ(count(this->shape_), 0) << "Array already initialized!";
   this->shape_ = shape;
   ArrayMemory::initializeMemory(count(shape) * sizeof(T));
 }
+
 template<typename T>
 void Array<T>::setMode(ArrayMode mode) {
   this->mode_ = mode;

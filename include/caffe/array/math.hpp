@@ -30,14 +30,7 @@ struct Unary {
 #endif
 
  public:
-  static void eval(const Array<T> & a, Array<T> * c, ArrayMode m = AR_DEFAULT) {
-    if (m == AR_DEFAULT) m = a.effectiveMode();
-#ifndef CPU_ONLY
-    if (m == AR_GPU)
-      return eval_gpu(a, c);
-#endif
-    return eval_cpu(a, c);
-  }
+  static void eval(const Array<T> & a, Array<T> * c, ArrayMode m = AR_DEFAULT);
 };
 template<typename T, typename F>
 class Binary {
@@ -52,33 +45,11 @@ class Binary {
 
  public:
   static void eval(const Array<T> & a, const Array<T> & b, Array<T> * c,
-                   ArrayMode m = AR_DEFAULT) {
-    if (m == AR_DEFAULT) m = a.effectiveMode();
-    if (m != b.effectiveMode()) LOG(WARNING) << "Mixing CPU and GPU mode";
-#ifndef CPU_ONLY
-    if (m == AR_GPU)
-      return eval_gpu(a, b, c);
-#endif
-    return eval_cpu(a, b, c);
-  }
+                   ArrayMode m = AR_DEFAULT);
   static void eval(T a, const Array<T> & b, Array<T> * c,
-                   ArrayMode m = AR_DEFAULT) {
-    if (m == AR_DEFAULT) m = b.effectiveMode();
-#ifndef CPU_ONLY
-    if (m == AR_GPU)
-      return eval_gpu(a, b, c);
-#endif
-    return eval_cpu(a, b, c);
-  }
+                   ArrayMode m = AR_DEFAULT);
   static void eval(const Array<T> & a, T b, Array<T> * c,
-                   ArrayMode m = AR_DEFAULT) {
-    if (m == AR_DEFAULT) m = a.effectiveMode();
-#ifndef CPU_ONLY
-    if (m == AR_GPU)
-      return eval_gpu(a, b, c);
-#endif
-    return eval_cpu(a, b, c);
-  }
+                   ArrayMode m = AR_DEFAULT);
 };
 template<typename T, typename F>
 class Reduction {
@@ -86,15 +57,9 @@ class Reduction {
 #ifndef CPU_ONLY
   static T eval_gpu(const Array<T> & a);
 #endif
+
  public:
-  static T eval(const Array<T> & a, ArrayMode m = AR_DEFAULT) {
-    if (m == AR_DEFAULT) m = a.effectiveMode();
-#ifndef CPU_ONLY
-    if (m == AR_GPU)
-      return eval_gpu(a);
-#endif
-    return eval_cpu(a);
-  }
+  static T eval(const Array<T> & a, ArrayMode m = AR_DEFAULT);
 };
 
 }  // namespace caffe

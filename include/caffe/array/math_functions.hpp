@@ -1,7 +1,7 @@
 #ifndef CAFFE_ARRAY_MATH_FUNCTIONS_HPP_
 #define CAFFE_ARRAY_MATH_FUNCTIONS_HPP_
 
-#include "caffe/caffe.hpp"
+#include "caffe/common.hpp"
 
 // This file contains the definition of all mathematical functions used.
 // To add a new function simply add a struct corresponding to the function

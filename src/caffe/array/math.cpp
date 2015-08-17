@@ -19,6 +19,16 @@ void Unary<T, F>::eval_cpu(const Array<T> & a, Array<T> * c) {
     pc[i] = F::eval(pa[i]);
 }
 template<typename T, typename F>
+void Unary<T, F>::eval(const Array<T> & a, Array<T> * c, ArrayMode m) {
+  if (m == AR_DEFAULT) m = a.effectiveMode();
+#ifndef CPU_ONLY
+  if (m == AR_GPU)
+    return eval_gpu(a, c);
+#endif
+  return eval_cpu(a, c);
+}
+
+template<typename T, typename F>
 void Binary<T, F>::eval_cpu(const Array<T> &a, const Array<T> &b, Array<T> *c) {
   CHECK(!!c) << "Output array does not exist!";
   CHECK_EQ(a.shape(), c->shape()) << "Shape does not match!";
@@ -59,6 +69,36 @@ void Binary<T, F>::eval_cpu(const Array<T> & a, T b, Array<T> * c) {
     pc[i] = F::eval(pa[i], b);
 }
 template<typename T, typename F>
+void Binary<T, F>::eval(const Array<T> & a, const Array<T> & b, Array<T> * c,
+                        ArrayMode m) {
+  if (m == AR_DEFAULT) m = a.effectiveMode();
+  if (m != b.effectiveMode()) LOG(WARNING) << "Mixing CPU and GPU mode";
+#ifndef CPU_ONLY
+  if (m == AR_GPU)
+    return eval_gpu(a, b, c);
+#endif
+  return eval_cpu(a, b, c);
+}
+template<typename T, typename F>
+void Binary<T, F>::eval(T a, const Array<T> & b, Array<T> * c, ArrayMode m) {
+  if (m == AR_DEFAULT) m = b.effectiveMode();
+#ifndef CPU_ONLY
+  if (m == AR_GPU)
+    return eval_gpu(a, b, c);
+#endif
+  return eval_cpu(a, b, c);
+}
+template<typename T, typename F>
+void Binary<T, F>::eval(const Array<T> & a, T b, Array<T> * c, ArrayMode m) {
+  if (m == AR_DEFAULT) m = a.effectiveMode();
+#ifndef CPU_ONLY
+  if (m == AR_GPU)
+    return eval_gpu(a, b, c);
+#endif
+  return eval_cpu(a, b, c);
+}
+
+template<typename T, typename F>
 T Reduction<T, F>::eval_cpu(const Array<T> & a) {
   const int N = count(a.shape());
   CHECK_GT(N, 0) << "At least one element required for reduction";
@@ -70,6 +110,15 @@ T Reduction<T, F>::eval_cpu(const Array<T> & a) {
   for (int i = 1; i < N; i++)
     r = F::eval(pa[i], r);
   return r;
+}
+template<typename T, typename F>
+T Reduction<T, F>::eval(const Array<T> & a, ArrayMode m) {
+  if (m == AR_DEFAULT) m = a.effectiveMode();
+#ifndef CPU_ONLY
+  if (m == AR_GPU)
+    return eval_gpu(a);
+#endif
+  return eval_cpu(a);
 }
 
 INSTANTIATE_ALL;
