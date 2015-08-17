@@ -63,10 +63,10 @@ void HungarianLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         for (int c = 0; c < channels; ++c) {
           const Dtype pred_value = box_pred_data[offset + c * height + i];
           const Dtype label_value = boxes_data[offset + c * height + j];
-          match_cost[idx] += fabs(pred_value - label_value) / 1000.;
+          match_cost[idx] += fabs(pred_value - label_value) / 2000.;
           loss_mat[idx] += fabs(pred_value - label_value);
         }
-        CHECK_LT(match_cost[idx], 0.5);
+        CHECK_LT(match_cost[idx], 0.9);
         match_cost[idx] += i;
         const int c_x = 0;
         const int c_y = 1;
