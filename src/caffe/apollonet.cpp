@@ -10,6 +10,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "caffe/util/io.hpp"
 
 namespace caffe {
 
@@ -419,6 +420,20 @@ void ApolloNet<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
     }
   }
+}
+
+template <typename Dtype>
+void ApolloNet<Dtype>::SaveTrainedLayersTo(const string trained_filename) const {
+  NetParameter param;
+  DLOG(INFO) << "Serializing " << layers_map_.size() << " layers";
+  typename map<string, shared_ptr<Layer<Dtype> > >::const_iterator it = layers_map_.begin();
+  while (it != layers_map_.end()) {
+    shared_ptr<Layer<Dtype> > layer = it->second;
+    LayerParameter* layer_param = param.add_layer();
+    layer->ToProto(layer_param);
+    ++it;
+  }
+  WriteProtoToBinaryFile(param, trained_filename);
 }
 
 INSTANTIATE_CLASS(ApolloNet);
