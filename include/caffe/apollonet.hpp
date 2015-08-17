@@ -52,8 +52,9 @@ class ApolloNet {
     CopyTrainedLayersFrom(param);
   }
 
+  void CopyLayerFrom(const LayerParameter& source_layer);
+
   void SaveTrainedLayersTo(const string trained_filename) const;
-  //Ovoid ToProto(NetParameter* param, bool write_diff);
 
   void Update(Dtype lr, Dtype momentum, Dtype clip_gradients,
     Dtype weight_decay);
@@ -102,6 +103,7 @@ class ApolloNet {
   map<string, Dtype> param_lr_mults_;
   map<string, vector<shared_ptr<Blob<Dtype> > > > bottom_blobs_;
   map<string, vector<string> > bottom_blob_names_;
+  map<string, LayerParameter> param_cache_;
   vector<string> active_layers_vec_;
   set<string> active_layers_set_;
   set<string> active_params_set_;
