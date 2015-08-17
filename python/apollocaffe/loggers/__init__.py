@@ -52,7 +52,7 @@ class TrainLogger(object):
                 print e
             print log_line
 
-class ValLogger(object):
+class TestLogger(object):
     def __init__(self, display_interval, log_file="/tmp/apollocaffe_log.txt"):
         self.display_interval = display_interval
         self.log_file = log_file
@@ -60,19 +60,21 @@ class ValLogger(object):
     def log(self, idx, meta_data):
         if idx % self.display_interval == 0:
             try:
-                log_line = "%s - Iteration %4d - Validation Loss: %g" % \
-                    (strftime("%Y-%m-%d %H:%M:%S"), idx, meta_data['val_loss'][-1])
+                loss = np.mean(meta_data['test_loss'][-self.display_interval:])
+                log_line = "%s - Iteration %4d - Test Loss: %g" % \
+                    (strftime("%Y-%m-%d %H:%M:%S"), idx, loss)
             except IndexError:
-                log_line = "Skipping validation log: \
-You have not provided a Validation Set"
-            else:
-                log_line =  "Skipping validation log: Unknown Error"
+                log_line = "Skipping Test log: \
+No test_loss provided"
+            except Exception as e:
+                log_line =  "Skipping test log: Unknown Error"
+                print e
 
             try:
                 with open(self.log_file, 'ab+') as lfile:
                     lfile.write("%s\n" % log_line)
             except IOError:
-                print "Validation Logger Error: %s does not exist." % self.log_file
+                print "TestLogger Error: %s does not exist." % self.log_file
             except Exception as e:
                 print e
             print log_line
