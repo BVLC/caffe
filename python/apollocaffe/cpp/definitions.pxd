@@ -12,9 +12,19 @@ cdef extern from "boost/shared_ptr.hpp" namespace "boost":
         void reset(T*)
 
 cdef extern from "caffe/proto/caffe.pb.h" namespace "caffe":
+    cdef cppclass RuntimeParameter:
+        NumpyDataParameter* mutable_numpy_data_param()
+        NumpyDataParameter numpy_data_param()
+        bool SerializeToString(string*)
+        string DebugString()
+    cdef cppclass NumpyDataParameter:
+        void add_data(float data)
+        void add_shape(unsigned int shape)
+        string DebugString()
     cdef cppclass LayerParameter:
         bool ParseFromString(string& data)
         bool SerializeToString(string*)
+        RuntimeParameter* mutable_rp()
         string name()
         string& bottom(int)
         int bottom_size()

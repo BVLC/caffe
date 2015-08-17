@@ -5,7 +5,7 @@ from libcpp cimport bool
 from libcpp.set cimport set
 from libcpp.map cimport map
 from cython.operator cimport postincrement, dereference
-from definitions cimport Tensor as CTensor, Blob as CBlob, Layer as CLayer, shared_ptr, LayerParameter, ApolloNet as CApolloNet, TRAIN, TEST
+from definitions cimport Tensor as CTensor, Blob as CBlob, Layer as CLayer, shared_ptr, NumpyDataParameter, LayerParameter, RuntimeParameter, ApolloNet as CApolloNet, TRAIN, TEST
 
 import numpy as pynp
 import h5py
@@ -416,34 +416,29 @@ cdef class ApolloNet:
                 self_params[name].data[:] = pynp.copy(value.data)
 
 
-cdef extern from "caffe/proto/caffe.pb.h" namespace "caffe":
-    cdef cppclass NumpyDataParameter:
-        void add_data(float data)
-        void add_shape(unsigned int shape)
-        string DebugString()
-    cdef cppclass RuntimeParameter:
-        NumpyDataParameter* mutable_numpy_data_param()
-        NumpyDataParameter numpy_data_param()
-        bool SerializeToString(string*)
-        string DebugString()
-
 class PyRuntimeParameter(object):
-    def __init__(self, result):
+    def __init__(self, result, p):
         self.result = result
+        self.p = p
     def SerializeToString(self):
         return self.result
+    @property
+    def type(self):
+        return self.p.type
 
-def make_numpy_data_param(numpy_array):
+def make_numpy_data_param(layer_param, numpy_array):
     """Serialize numpy array to prototxt"""
     assert numpy_array.dtype == pynp.float32
     cdef vector[int] v
     for x in numpy_array.shape:
         v.push_back(x)
-    cdef string s = make_numpy_data_param_fast(pynp.ascontiguousarray(numpy_array.flatten()), v)
-    return PyRuntimeParameter(str(s)) #s.encode('utf-8'))
+    cdef string s = make_numpy_data_param_fast(layer_param.SerializeToString(), pynp.ascontiguousarray(numpy_array.flatten()), v)
+    return PyRuntimeParameter(str(s), layer_param) #s.encode('utf-8'))
 
-cdef string make_numpy_data_param_fast(cnp.ndarray[cnp.float32_t, ndim=1] numpy_array, vector[int] v):
-    cdef RuntimeParameter runtime_param
+cdef string make_numpy_data_param_fast(string layer_param_str, cnp.ndarray[cnp.float32_t, ndim=1] numpy_array, vector[int] v):
+    cdef LayerParameter layer_param
+    layer_param.ParseFromString(layer_param_str)
+    cdef RuntimeParameter* runtime_param = layer_param.mutable_rp()
     cdef NumpyDataParameter* numpy_param
     numpy_param = runtime_param.mutable_numpy_data_param()
     cdef int length = len(numpy_array)
@@ -453,7 +448,7 @@ cdef string make_numpy_data_param_fast(cnp.ndarray[cnp.float32_t, ndim=1] numpy_
     for i in range(length):
         numpy_param[0].add_data(numpy_array[i])
     cdef string s
-    runtime_param.SerializeToString(&s)
+    layer_param.SerializeToString(&s)
     return s
 
 cnp.import_array()
