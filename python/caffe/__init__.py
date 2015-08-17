@@ -1,4 +1,4 @@
-from .pycaffe import Net, SGDSolver
+from .pycaffe import Net, SGDSolver, NesterovSolver, AdaGradSolver
 from ._caffe import set_mode_cpu, set_mode_gpu, set_device, Layer, get_solver
 from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
