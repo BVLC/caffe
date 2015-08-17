@@ -227,9 +227,9 @@ cdef class ApolloNet:
             from apollocaffe.proto import caffe_pb2
             p = caffe_pb2.LayerParameter()
             Merge(layer, p)
-            self.loss += self.thisptr.ForwardLayer(p.SerializeToString())
+            loss = self.thisptr.ForwardLayer(p.SerializeToString())
         elif layer.p.type != 'Py':
-            self.loss += self.thisptr.ForwardLayer(layer.p.SerializeToString())
+            loss = self.thisptr.ForwardLayer(layer.p.SerializeToString())
         else:
             new_layer = (layer.p.name not in self.layers)
             self.thisptr.ForwardLayer(layer.p.SerializeToString())
@@ -249,7 +249,9 @@ cdef class ApolloNet:
                 for bottom_name in layer.p.bottom:
                     cached_layer.p.bottom.append(bottom_name)
                 cached_layer.p.rp.CopyFrom(layer.p.rp)
-            self.loss += cached_layer.forward(bottom_vec, top_vec)
+            loss = cached_layer.forward(bottom_vec, top_vec)
+        self.loss += loss
+        return loss
     def backward_layer(self, layer_name):
         if layer_name in self.python_layers:
             cached_layer = self.python_layers[layer_name]
