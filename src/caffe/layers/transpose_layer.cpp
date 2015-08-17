@@ -9,11 +9,9 @@ namespace caffe {
 template <typename Dtype>
 void TransposeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  vector<int> top_shape(4);
+  vector<int> top_shape(2);
   top_shape[0] = bottom[0]->num() * bottom[0]->height() * bottom[0]->width();
   top_shape[1] = bottom[0]->channels();
-  top_shape[2] = 1;
-  top_shape[3] = 1;
   top[0]->Reshape(top_shape);
   CHECK_EQ(top[0]->count(), bottom[0]->count());
 }
