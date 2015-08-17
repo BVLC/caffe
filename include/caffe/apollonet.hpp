@@ -52,6 +52,9 @@ class ApolloNet {
     CopyTrainedLayersFrom(param);
   }
 
+  void SaveTrainedLayersTo(const string trained_filename) const;
+  //Ovoid ToProto(NetParameter* param, bool write_diff);
+
   void Update(Dtype lr, Dtype momentum, Dtype clip_gradients,
     Dtype weight_decay);
 
