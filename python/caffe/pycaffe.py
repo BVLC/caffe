@@ -28,6 +28,15 @@ def _Net_blobs(self):
 
 
 @property
+def _Net_blob_loss_weights(self):
+    """
+    An OrderedDict (bottom to top, i.e., input to output) of network
+    blob loss weights indexed by name
+    """
+    return OrderedDict(zip(self._blob_names, self._blob_loss_weights))
+
+
+@property
 def _Net_params(self):
     """
     An OrderedDict (bottom to top, i.e., input to output) of network
@@ -270,6 +279,7 @@ def _Net_batch(self, blobs):
 
 # Attach methods to Net.
 Net.blobs = _Net_blobs
+Net.blob_loss_weights = _Net_blob_loss_weights
 Net.params = _Net_params
 Net.forward = _Net_forward
 Net.backward = _Net_backward
