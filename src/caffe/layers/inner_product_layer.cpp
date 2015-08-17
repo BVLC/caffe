@@ -68,6 +68,10 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   vector<int> top_shape = bottom[0]->shape();
   top_shape.resize(axis + 1);
   top_shape[axis] = N_;
+  if (this->layer_param_.inner_product_param().output_4d()) {
+    top_shape.push_back(1);
+    top_shape.push_back(1);
+  }
   top[0]->Reshape(top_shape);
   // Set up the bias multiplier
   if (bias_term_) {
