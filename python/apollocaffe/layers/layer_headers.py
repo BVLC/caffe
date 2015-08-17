@@ -84,12 +84,16 @@ class LossLayer(Layer):
         if 'ignore_label' in kwargs:
             ignore_label = kwargs['ignore_label']
             del kwargs['ignore_label']
+        loss_weight = None
+        if 'loss_weight' in kwargs:
+            loss_weight = kwargs['loss_weight']
+            del kwargs['loss_weight']
         super(LossLayer, self).__init__(sublayer, name, kwargs)
-        loss_weight = kwargs.get('loss_weight', 1.)
         if ignore_label is not None:
             self.p.loss_param.ignore_label = ignore_label
-        self.p.loss_weight.append(loss_weight)
-        assert 'tops' not in kwargs or kwargs['tops'] == 1
+        if loss_weight is not None:
+            self.p.loss_weight.append(loss_weight)
+        assert 'tops' not in kwargs or len(kwargs['tops']) == 1
 
 class DataLayer(Layer):
     def __init__(self, sublayer, name, kwargs):

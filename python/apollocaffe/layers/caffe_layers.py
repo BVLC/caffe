@@ -91,10 +91,10 @@ class InnerProduct(Layer):
         super(InnerProduct, self).__init__(self, name, kwargs)
         if weight_filler is None:
             weight_filler = Filler('xavier')
-        self.p.convolution_param.weight_filler.CopyFrom(weight_filler.filler_param)
+        self.p.inner_product_param.weight_filler.CopyFrom(weight_filler.filler_param)
         if bias_filler is None:
             bias_filler = Filler('constant', 0.)
-        self.p.convolution_param.bias_filler.CopyFrom(bias_filler.filler_param)
+        self.p.inner_product_param.bias_filler.CopyFrom(bias_filler.filler_param)
 
 class LRN(Layer):
     def __init__(self, name, **kwargs):
@@ -124,7 +124,8 @@ class NumpyData(DataLayer):
         super(NumpyData, self).__init__(self, name, kwargs)
         from apollocaffe import make_numpy_data_param
         import numpy as np
-        self.p.rp.ParseFromString(make_numpy_data_param(np.array(data, dtype=np.float32)).SerializeToString())
+        #self.p.rp.ParseFromString(make_numpy_data_param(np.array(data, dtype=np.float32)).SerializeToString())
+        self.p = make_numpy_data_param(self.p, np.array(data, dtype=np.float32))
 
 class Pooling(Layer):
     def __init__(self, name, pool='MAX', **kwargs):
