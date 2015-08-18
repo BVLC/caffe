@@ -8,6 +8,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
@@ -118,6 +119,9 @@ Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
   if (new_layer) {
     layer->SetUp(bottom_vec, top_vec);
     AddLayerParams(layer);
+    if (param_cache_.find(layer_name) != param_cache_.end()) {
+      CopyLayerFrom(param_cache_[layer_name]);
+    }
   }
 
   for (int param_id = 0; param_id < layer->param_names().size(); ++param_id) {
@@ -247,6 +251,9 @@ Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
   if (new_layer) {
     layer->SetUp(bottom_vec, top_vec);
     AddLayerParams(layer);
+    if (param_cache_.find(layer_name) != param_cache_.end()) {
+      CopyLayerFrom(param_cache_[layer_name]);
+    }
   }
 
   for (int param_id = 0; param_id < layer->param_names().size(); ++param_id) {
@@ -404,21 +411,43 @@ void ApolloNet<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     const string& source_layer_name = source_layer.name();
 
     if (layers_map_.find(source_layer_name) == layers_map_.end()) {
-      LOG(INFO) << "Ignoring source layer " << source_layer_name;
+      param_cache_[source_layer_name] = source_layer;
+      LOG(INFO) << "Caching source layer blobs " << source_layer_name;
       continue;
     }
-
-    LOG(INFO) << "Copying source layer " << source_layer_name;
-    vector<shared_ptr<Blob<Dtype> > >& target_blobs =
-        layers_map_[source_layer_name]->blobs();
-
-    ASSERT(target_blobs.size() == source_layer.blobs_size(),
-        "Incompatible number of blobs for layer " << source_layer_name);
-    for (int j = 0; j < target_blobs.size(); ++j) {
-      const bool kReshape = false;
-      target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
-    }
+    CopyLayerFrom(source_layer);
   }
+}
+
+template <typename Dtype>
+void ApolloNet<Dtype>::CopyLayerFrom(const LayerParameter& source_layer) {
+  const string& source_layer_name = source_layer.name();
+  LOG(INFO) << "Copying source layer blobs " << source_layer_name;
+  vector<shared_ptr<Blob<Dtype> > >& target_blobs =
+      layers_map_[source_layer_name]->blobs();
+
+  ASSERT(target_blobs.size() == source_layer.blobs_size(),
+      "Incompatible number of blobs for layer " << source_layer_name);
+  for (int j = 0; j < target_blobs.size(); ++j) {
+    const bool kReshape = false;
+    target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
+  }
+}
+
+template <typename Dtype>
+void ApolloNet<Dtype>::SaveTrainedLayersTo(const string trained_filename)
+  const {
+  NetParameter param;
+  DLOG(INFO) << "Serializing " << layers_map_.size() << " layers";
+  typename map<string, shared_ptr<Layer<Dtype> > >::const_iterator it =
+    layers_map_.begin();
+  while (it != layers_map_.end()) {
+    shared_ptr<Layer<Dtype> > layer = it->second;
+    LayerParameter* layer_param = param.add_layer();
+    layer->ToProto(layer_param);
+    ++it;
+  }
+  WriteProtoToBinaryFile(param, trained_filename);
 }
 
 INSTANTIATE_CLASS(ApolloNet);
