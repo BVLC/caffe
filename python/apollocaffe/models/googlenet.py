@@ -3,12 +3,15 @@ import os
 from apollocaffe import layers
 
 def weights_file():
-    filename = '%s/../../../models/bvlc_googlenet/bvlc_googlenet.caffemodel' % os.path.dirname(os.path.realpath(__file__))
+    filename = os.path.normpath('%s/../../../models/bvlc_googlenet/bvlc_googlenet.caffemodel' % os.path.dirname(os.path.realpath(__file__)))
+    print filename
     if not os.path.exists(filename):
 
         print filename
-        raise OSError('Please download the GoogLeNet model first with \
-./scripts/download_model_binary.py models/bvlc_googlenet')
+        download_script = os.path.normpath('%s/../../../scripts/download_model_binary.py' % os.path.dirname(os.path.realpath(__file__)))
+        model_file = os.path.normpath('%s/../../../models/bvlc_googlenet' % os.path.dirname(os.path.realpath(__file__)))
+        raise OSError('Please download the GoogLeNet model first with: \n' +
+            '$ %s %s' % (download_script, model_file))
     return filename
 
 def googlenet_layers():
