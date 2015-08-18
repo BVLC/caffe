@@ -386,16 +386,21 @@ cdef class ApolloNet:
             return blobs
 
     def save(self, filename):
-        assert filename.endswith('.h5'), "saving only supports h5 files"
-        with h5py.File(filename, 'w') as f:
-            for name, value in self.params.items():
-                f[name] = pynp.copy(value.data)
-
-    def load(self, filename):
-        if len(self.params) == 0:
-            raise ValueError('WARNING, loading into empty net.')
         _, extension = os.path.splitext(filename)
         if extension == '.h5':
+            with h5py.File(filename, 'w') as f:
+                for name, value in self.params.items():
+                    f[name] = pynp.copy(value.data)
+        elif extension == '.caffemodel':
+            self.thisptr.SaveTrainedLayersTo(filename)
+        else:
+            assert False, "Error, filename is neither h5 nor caffemodel: %s, %s" % (filename, extension)
+
+    def load(self, filename):
+        _, extension = os.path.splitext(filename)
+        if extension == '.h5':
+            if len(self.params) == 0:
+                raise ValueError('WARNING, loading into empty net.')
             with h5py.File(filename, 'r') as f:
                 params = self.params
                 names = []
