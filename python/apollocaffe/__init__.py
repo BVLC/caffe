@@ -1,11 +1,18 @@
 from cpp._apollocaffe import Tensor, ApolloNet, CppConfig, make_numpy_data_param, Blob
 import loggers
 import utils
+from time import strftime
 
 def set_cpp_loglevel(loglevel):
     CppConfig.set_cpp_loglevel(loglevel)
 
 def set_device(device_id=-1):
+    if device_id == -1:
+        device_string = "CPU device"
+    else:
+        device_string = "GPU device %d" % device_id
+    print("%s - %s" % \
+        (strftime("%Y-%m-%d %H:%M:%S"), device_string))
     CppConfig.set_device(device_id)
 
 def set_random_seed(value):
