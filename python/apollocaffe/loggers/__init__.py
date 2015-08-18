@@ -10,29 +10,6 @@ class TrainLogger(object):
         os.system("touch %s" % self.log_file)
     def log(self, idx, meta_data):
         meta_data['start_iter'] = meta_data.get('start_iter', 0)
-        if idx == meta_data['start_iter']:
-            #TODO: move to separate DeviceLogger
-            current_device = apollocaffe.CppConfig.get_device()
-            if current_device == -1:
-                device_info = "CPU device"
-            else:
-                device_info = "GPU device %d" % current_device
-            log_line = ""
-            try:
-                log_line = "%s - Training on %s" % \
-                    (strftime("%Y-%m-%d %H:%M:%S"), device_info)
-            except:
-                log_line = "Skipping training log: Unknown Error"
-
-            try:
-                with open(self.log_file, 'ab+') as lfile:
-                    lfile.write("%s\n" % log_line)
-            except IOError:
-                print "Trainer Logger Error: %s does not exist." % self.log_file
-            except Exception as e:
-                print e
-            print log_line
-
         if idx % self.display_interval == 0:
             log_line = ""
             try:
