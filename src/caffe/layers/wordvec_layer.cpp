@@ -59,6 +59,7 @@ void WordvecLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int i = 0; i < sentence_length_; ++i) {
         const int word = static_cast<int>(bottom_data[i + n * sentence_length_]
             + Dtype(0.5));
+        CHECK_LT(word, vocab_size_);
         top_data[i + (d + (n * dimension_)) * sentence_length_]
             = weights[d + word * dimension_];
       }
