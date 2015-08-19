@@ -18,8 +18,16 @@ template <typename Dtype>
 ApolloNet<Dtype>::ApolloNet() {
   Init();
 }
+
 template <typename Dtype>
-Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
+Dtype ApolloNet<Dtype>::f(const string layer_prototxt) {
+  shared_ptr<Layer<Dtype> > layer = 
+    LayerRegistry<Dtype>::CreateLayer(layer_prototxt);
+  return f(layer);
+}
+
+template <typename Dtype>
+Dtype ApolloNet<Dtype>::f(shared_ptr<Layer<Dtype> > layer) {
   /* This function will
    * 1) Add the layer to the cache if it's new
    * 2) Set up the top blobs
