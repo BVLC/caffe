@@ -1,18 +1,38 @@
-name: "mnist_siamese"
-input: "data"
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21:examples/siamese/mnist_siamese.prototxt
-input_shape {
-  dim: 10000
-  dim: 1
-  dim: 28
-  dim: 28
+name: "LeNet"
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 64
+    backend: LMDB
+  }
 }
-=======
-input_dim: 6480
-input_dim: 1
-input_dim: 64
-input_dim: 64
->>>>>>> new data and new feature dimension:examples/triplet/3d_triplet.prototxt
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+}
 layer {
   name: "conv1"
   type: "Convolution"
@@ -28,6 +48,12 @@ layer {
     num_output: 20
     kernel_size: 5
     stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -56,6 +82,12 @@ layer {
     num_output: 50
     kernel_size: 5
     stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -82,6 +114,12 @@ layer {
   }
   inner_product_param {
     num_output: 500
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
@@ -103,24 +141,28 @@ layer {
   }
   inner_product_param {
     num_output: 10
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
-  name: "feat"
-  type: "InnerProduct"
+  name: "accuracy"
+  type: "Accuracy"
   bottom: "ip2"
-  top: "feat"
-  param {
-    lr_mult: 1
+  bottom: "label"
+  top: "accuracy"
+  include {
+    phase: TEST
   }
-  param {
-    lr_mult: 2
-  }
-  inner_product_param {
-<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21:examples/siamese/mnist_siamese.prototxt
-    num_output: 2
-=======
-    num_output: 16
->>>>>>> new data and new feature dimension:examples/triplet/3d_triplet.prototxt
-  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "ip2"
+  bottom: "label"
+  top: "loss"
 }

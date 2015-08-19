@@ -88,7 +88,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
   int counter = 0;
-  for (unsigned int times = 0; times < 5; ++times) {
+  for (unsigned int times = 0; times < 10; ++times) {
     // iteration in the samples of all class
     for (unsigned int itemid = 0; itemid < num_items/class_num; ++itemid) {
       // iteration in the samples in one class
@@ -132,7 +132,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
       float dist_ij = std::sqrt(ij_x + ij_y + ij_z);
       float dist_im = std::sqrt(im_x + im_y + im_z);
-      if (*label_i == *label_j && dist_ij < 100/2 && dist_ij != 0)
+      if (*label_i == *label_j && dist_ij < 100/3 && dist_ij != 0)
         pair_pass = true;
       if (pair_pass && (*label_i  != *label_k))
         triplet1_pass = true;
@@ -140,7 +140,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         triplet2_pass = true;
       if (pair_pass && (*label_i  == *label_m))
         triplet3_class_same = true;
-      if (triplet3_class_same && dist_im > 100*sqrt(2))
+      if (triplet3_class_same && dist_im > 100/3 && dist_im < 100)
         triplet3_pass = true;
       if (pair_pass && triplet1_pass && triplet2_pass && triplet3_pass) {
         datum.set_data(pixels1, rows*cols);  // set data

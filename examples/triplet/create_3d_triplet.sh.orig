@@ -12,22 +12,22 @@ rm -rf ./examples/triplet/3d_triplet_test_leveldb
 $EXAMPLES/convert_3d_triplet_data.bin \
     $DATA/binary_image_train \
     $DATA/binary_label_train \
-<<<<<<< 165e1d595232eb2a908f62887bcf2d5e1743ed10
     ./examples/triplet/3d_triplet_train_leveldb \
+<<<<<<< 3aaa859dba8ca4f7a962d285da0d762656b6d444
+    4
+=======
     4 \
     0
+>>>>>>> new data and new feature dimension
 $EXAMPLES/convert_3d_triplet_data.bin \
     $DATA/binary_image_test \
     $DATA/binary_label_test \
     ./examples/triplet/3d_triplet_test_leveldb \
+<<<<<<< 3aaa859dba8ca4f7a962d285da0d762656b6d444
+    4
+
+=======
     4 \
     0
-=======
-    ./examples/triplet/3d_triplet_train_leveldb
-$EXAMPLES/convert_3d_triplet_data.bin \
-    $DATA/binary_image_test \
-    $DATA/binary_label_test \
-    ./examples/triplet/3d_triplet_test_leveldb
->>>>>>> add 3d network training param
-
+>>>>>>> new data and new feature dimension
 echo "Done."
