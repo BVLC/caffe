@@ -1,6 +1,10 @@
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <vector>
