@@ -930,7 +930,13 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
     for (int j = 0; j < top_id_vecs_[i].size(); ++j) {
       layer_param->add_top(blob_names_[top_id_vecs_[i][j]]);
     }
-    layers_[i]->ToProto(layer_param, write_diff);
+    vector<bool> is_owner;
+    int num_params = layers_[i]->blobs().size();
+    for (int param_id = 0; param_id < num_params; ++param_id) {
+      const int net_param_id = param_id_vecs_[i][param_id];
+      is_owner.push_back(param_owners_[net_param_id] == -1);
+    }
+    layers_[i]->ToProto(layer_param, write_diff, is_owner);
   }
 }
 
