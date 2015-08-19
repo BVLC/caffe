@@ -1,6 +1,7 @@
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -18,6 +19,22 @@ class DataTransformer {
  public:
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
   virtual ~DataTransformer() {}
+
+  /**
+   * @brief Compute the mean and standard deviation for each channel in a Datum
+   */
+  void GetMeanStddev(std::vector<float>* per_datum_means,
+                     std::vector<float>* per_datum_stddevs,
+                     int channels, int height, int width, int h_off, int w_off,
+                     const string& data);
+
+  /**
+   * @brief Compute the mean and standard deviation for each channel in a cv::Mat
+   */
+  void GetMeanStddev(std::vector<float>* per_datum_means,
+                     std::vector<float>* per_datum_stddevs,
+                     int channels, int height, int width, int h_off, int w_off,
+                     const cv::Mat& data);
 
   /**
    * @brief Initialize the Random number generations if needed by the
