@@ -85,6 +85,7 @@ cdef extern from "caffe/apollonet.hpp" namespace "caffe":
         void set_phase_train()
         Phase phase()
         void CopyTrainedLayersFrom(string trained_filename) except +
+        void SaveTrainedLayersTo(string trained_filename) except + 
         vector[string]& active_layer_names()
         set[string]& active_param_names()
 
