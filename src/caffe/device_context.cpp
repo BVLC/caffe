@@ -131,7 +131,7 @@ void DeviceContext::FinishQueues() {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
     for (int i = 0; i < num_queues(); ++i) {
-      ctx.switch_queue(0);
+      ctx.switch_queue(i);
       ctx.get_queue().finish();
     }
     ctx.switch_queue(0);
