@@ -229,7 +229,7 @@ class Blob {
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false,
-          bool is_owner = true) const;
+          bool write_data = true) const;
 
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
