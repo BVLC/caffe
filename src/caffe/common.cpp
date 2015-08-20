@@ -123,7 +123,7 @@ void Caffe::SelectDevice(DeviceContext* device_context) {
 #ifdef USE_CUDA
     CUDA_CHECK(cudaSetDevice(device_context->id()));
 #endif  // USE_CUDA
-  } else {
+  } else if (device_context->backend() == Backend::BACKEND_OpenCL) {
 #ifdef USE_GREENTEA
 
 #endif  // USE_GREENTEA
@@ -193,8 +193,9 @@ Caffe::Caffe()
       curand_generator_(NULL),
 #endif  // USE_CUDA
       random_generator_(),
-      mode_(Caffe::CPU), default_device_context_(nullptr),
+      mode_(Caffe::CPU),
       cpu_device_context_(new DeviceContext(-1, -1, Backend::BACKEND_CPU)),
+      default_device_context_(cpu_device_context_.get()),
       solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
