@@ -2,6 +2,9 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
+if(MSVC)
+    add_definitions(-DBOOST_ALL_NO_LIB)    
+endif()
 find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
@@ -10,15 +13,15 @@ list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
-# ---[ Google-glog
-include("cmake/External/glog.cmake")
-include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
-
 # ---[ Google-gflags
 include("cmake/External/gflags.cmake")
 include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
+
+# ---[ Google-glog
+include("cmake/External/glog.cmake")
+include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
+list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
 
 # ---[ Google-protobuf
 include(cmake/ProtoBuf.cmake)
@@ -129,11 +132,14 @@ if(BUILD_python)
   if(PYTHONLIBS_FOUND AND NUMPY_FOUND AND Boost_PYTHON_FOUND)
     set(HAVE_PYTHON TRUE)
     if(BUILD_python_layer)
+      if(Boost_USE_STATIC_LIBS AND MSVC)
+        add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+      endif()
       add_definitions(-DWITH_PYTHON_LAYER)
       include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
       list(APPEND Caffe_LINKER_LIBS ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
     endif()
-  endif()
+  endif()  
 endif()
 
 # ---[ Matlab

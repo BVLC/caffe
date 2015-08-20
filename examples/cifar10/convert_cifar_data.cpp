@@ -16,6 +16,8 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
+#include "caffe/util/msvc.hpp"
+
 
 using caffe::Datum;
 using boost::scoped_ptr;

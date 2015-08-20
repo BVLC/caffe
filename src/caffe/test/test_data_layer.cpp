@@ -386,6 +386,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->TestReadCrop(TEST);
 }
 
+#ifndef _MSC_VER
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
@@ -423,5 +424,6 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
   this->TestReadCrop(TEST);
 }
+#endif  // _MSC_VER
 
 }  // namespace caffe
