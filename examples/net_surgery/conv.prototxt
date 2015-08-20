@@ -1,10 +1,12 @@
 # Simple single-layer network to showcase editing model parameters.
 name: "convolution"
 input: "data"
-input_dim: 1
-input_dim: 1
-input_dim: 100
-input_dim: 100
+input_shape {
+  dim: 1
+  dim: 1
+  dim: 100
+  dim: 100
+}
 layer {
   name: "conv"
   type: "Convolution"
