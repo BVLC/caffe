@@ -203,8 +203,8 @@ class Caffe {
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
   static vector<shared_ptr< DeviceContext> > device_contexts_;
-  DeviceContext* default_device_context_;
   shared_ptr<DeviceContext> cpu_device_context_;
+  DeviceContext* default_device_context_;
 
   int solver_count_;
   bool root_solver_;
