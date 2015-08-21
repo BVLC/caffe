@@ -394,15 +394,15 @@ cdef class ApolloNet:
                 for name, value in self.params.items():
                     f[name] = pynp.copy(value.data)
         elif extension == '.caffemodel':
-            self.thisptr.CopyTrainedLayersFrom(filename)
+            self.thisptr.SaveTrainedLayersTo(filename)
         else:
             assert False, "Error, filename is neither h5 nor caffemodel: %s, %s" % (filename, extension)
 
     def load(self, filename):
-        if len(self.params) == 0:
-            raise ValueError('WARNING, loading into empty net.')
         _, extension = os.path.splitext(filename)
         if extension == '.h5':
+            if len(self.params) == 0:
+                raise ValueError('WARNING, loading into empty net.')
             with h5py.File(filename, 'r') as f:
                 params = self.params
                 names = []
