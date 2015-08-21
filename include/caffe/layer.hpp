@@ -194,6 +194,12 @@ class Layer {
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
 
   /**
+   * @brief Writes the layer parameter to a protocol buffer
+   */
+  virtual void ToProto(LayerParameter* param, bool write_diff,
+          vector<bool>& is_owner);
+
+  /**
    * @brief Returns the scalar loss associated with a top blob at a given index.
    */
   inline Dtype loss(const int top_index) const {
@@ -499,6 +505,18 @@ inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
+  }
+}
+
+// Serialize LayerParameter to protocol buffer
+template <typename Dtype>
+void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff,
+        vector<bool>& is_owner) {
+  param->Clear();
+  param->CopyFrom(layer_param_);
+  param->clear_blobs();
+  for (int i = 0; i < blobs_.size(); ++i) {
+    blobs_[i]->ToProto(param->add_blobs(), write_diff, is_owner[i]);
   }
 }
 
