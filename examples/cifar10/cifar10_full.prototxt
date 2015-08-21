@@ -2,10 +2,12 @@ name: "CIFAR10_full_deploy"
 # N.B. input image must be in CIFAR-10 format
 # as described at http://www.cs.toronto.edu/~kriz/cifar.html
 input: "data"
-input_dim: 1
-input_dim: 3
-input_dim: 32
-input_dim: 32
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 32
+  dim: 32
+}
 layer {
   name: "conv1"
   type: "Convolution"
