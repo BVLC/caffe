@@ -305,6 +305,40 @@ Data enters Caffe through data layers: they lie at the bottom of nets. Data can 
 
 Common input preprocessing (mean subtraction, scaling, random cropping, and mirroring) is available by specifying `TransformationParameter`s.
 
+#### Big Data Layer
+
+Reads CSV files by `chunks` rather than `batch sizes`. The parameter `chunk_size` controls how many
+MB of data is loaded into memory and sent to a computational unit. It is more comprehensive for
+gives better control over how much data is actually used for one iteration.
+
+For performance reasons, the layer transforms textual CSV into a binary file meanwhile reading it.
+The binary file saved next to the source csv file with an extension `.csvbin`).
+
+A cache control parameter was introduced to address problems with read-only 
+folders with data source. The available options are
+
+- `DISABLED`: disable creating binary files
+- `RENEW`: delete a staled binary file every start
+- `ENABLE`: create or reuse binary file
+
+* LayerType: `BigData`
+* `top: "data"`          # first layer will be used for data
+* `top: "label"`         # second layer can be for labels or IDs
+* `top: "ids"`           # third layer can be only for IDs (row numbers, zero based)
+
+* Parameters
+  - Required
+    - `source`: path to a CSV file
+    - `chunk_size`: size of a chunk of data in MB. Good values is between 0 and 20.
+    - `data_start`: (zero-based, inclusive) column index of data start
+    - `data_end`: (zero-based, inclusive) column index of data end
+  - Optional
+    - `separator`: column separator in CSV, by default ","
+    - `newline`: row seoarator, by default "\n" (can be changed to "\r" for Windows)
+    - `header`: skips # lines, by default 1
+    - `label`: (zero based) column index of a label
+
+
 #### Database
 
 * Layer type: `Data`
@@ -504,6 +538,8 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
           slice_point: 2
         }
       }
+
+`slice_dim` indicates the target dimension and can assume only two values: 0 for num or 1 for channel; `slice_point` indicates indexes in the selected dimension (the number of indexes must be equal to the number of top blobs minus one).
 
 `axis` indicates the target axis; `slice_point` indicates indexes in the selected dimension (the number of indices must be equal to the number of top blobs minus one).
 

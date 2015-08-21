@@ -1,0 +1,3 @@
+id, v1, v2, v3,v4,v5,label,grabage,garbage,garbage
+idx01, -1,-2,1, 2, 0 ,1,some,thing
+idx02,1.5, 2.5 ,-1.5, -2.5, 1212.125,2,someother,thing

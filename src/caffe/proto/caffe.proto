@@ -354,6 +354,7 @@ message LayerParameter {
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
   optional DataParameter data_param = 107;
+  optional BigDataParameter big_data_param = 137;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -525,6 +526,41 @@ message DataParameter {
   optional uint32 prefetch = 10 [default = 4];
 }
 
+// Message that stores parameters used by DataLayer
+message BigDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // Describe data in sence of (0-based, <include, exclude)) indices
+  optional uint32 data_start = 2;
+  optional uint32 data_end = 3;
+  optional uint32 label = 4;
+  // The maximal size of one chunk loaded into memory. This in fact controls how
+  // much GPU memory is used.
+  optional float chunk_size = 5 [default = 20];
+  // We expect the data to be given in CSV-like format so we need a separator and newline
+  optional uint32 header = 6 [default = 1];
+  optional string separator = 7 [default = ","];
+  optional string newline = 8 [default = "\n"];
+  // Specify the dimensions of input data. If there is no specification then we
+  // suppose 1 dimensional data
+  optional BlobShape shape = 9;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  optional uint32 rand_skip = 10 [default = 0];
+  // Controls cache usage. Useful on systems when you can not create files in
+  // the data location or the source file is always changing. Otherwise the
+  // binary cache speeds up reading of CSV up to the speed of the others data layers
+  enum CacheControl {
+    ENABLED = 0;
+    RENEW = 1;
+    DISABLED = 2;
+  }
+  optional CacheControl cache = 12 [default = ENABLED];
+}
+
+// Message that stores parameters used by DropoutLayer
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
 }
