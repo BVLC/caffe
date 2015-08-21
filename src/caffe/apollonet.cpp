@@ -20,7 +20,7 @@ ApolloNet<Dtype>::ApolloNet() {
 }
 
 template <typename Dtype>
-Dtype ApolloNet<Dtype>::f(const string layer_prototxt) {
+Dtype ApolloNet<Dtype>::f(const string& layer_prototxt) {
   shared_ptr<Layer<Dtype> > layer =
     LayerRegistry<Dtype>::CreateLayer(layer_prototxt);
   return f(layer);
