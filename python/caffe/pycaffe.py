@@ -10,8 +10,9 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver
+from ._caffe import Net, SGDSolver, IntVec, SolverPool
 import caffe.io
+
 
 # We directly update methods from Net here (rather than using composition or
 # inheritance) so that nets created by caffe (e.g., by SGDSolver) will
@@ -289,3 +290,10 @@ Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
 Net.inputs = _Net_inputs
 Net.outputs = _Net_outputs
+
+def get_solver_pool(solver_definition, gpus):
+  vec=caffe.IntVec()
+  vec.extend(gpus)
+  pool=caffe.SolverPool(solver_definition, gpus)
+  return pool
+  

@@ -293,7 +293,7 @@ void P2PSync<Dtype>::on_start() {
 #ifdef DEBUG
   int device;
   CUDA_CHECK(cudaGetDevice(&device));
-  CHECK(device == solver_->param().device_id());
+  CHECK_EQ(device, solver_->param().device_id());
 #else
 //  CHECK(false);
 #endif
@@ -385,7 +385,15 @@ void P2PSync<Dtype>::on_gradients_ready() {
 
 template<typename Dtype>
 void P2PSync<Dtype>::run(const vector<int>& gpus) {
+  set_up_gpus(gpus);
+  solve();
+  tear_down();
+}
+
+template<typename Dtype>
+void P2PSync<Dtype>::set_up_gpus(const vector<int>& gpus) {
   // Pair devices for map-reduce synchronization
+  Caffe::SetDevice(gpus[0]);
   vector<DevicePair> pairs;
   DevicePair::compute(gpus, &pairs);
   ostringstream s;
@@ -394,16 +402,18 @@ void P2PSync<Dtype>::run(const vector<int>& gpus) {
   }
   LOG(INFO)<< "GPUs pairs " << s.str();
 
+  solver_->set_device_id(gpus[0]);
+
   SolverParameter param(solver_->param());
-  vector<shared_ptr<P2PSync<Dtype> > > syncs(gpus.size());
+  syncs_.resize(gpus.size());
 
   // Build the GPU tree by finding the parent for each solver
   for (int attempts = 0; attempts < pairs.size(); ++attempts) {
     for (int i = 1; i < pairs.size(); ++i) {
-      if (!syncs[i].get()) {
+      if (!syncs_[i].get()) {
         P2PSync<Dtype>* parent = NULL;
-        for (int j = 0; j < syncs.size(); ++j) {
-          P2PSync<Dtype>* sync = j == 0 ? this : syncs[j].get();
+        for (int j = 0; j < syncs_.size(); ++j) {
+          P2PSync<Dtype>* sync = j == 0 ? this : syncs_[j].get();
           if (sync) {
             const SolverParameter& p = sync->solver()->param();
             if (p.device_id() == pairs[i].parent()) {
@@ -413,8 +423,8 @@ void P2PSync<Dtype>::run(const vector<int>& gpus) {
         }
         if (parent) {
           param.set_device_id(pairs[i].device());
-          syncs[i].reset(new P2PSync<Dtype>(solver_, parent, param));
-          parent->children_.push_back((P2PSync<Dtype>*) syncs[i].get());
+          syncs_[i].reset(new P2PSync<Dtype>(solver_, parent, param));
+          parent->children_.push_back((P2PSync<Dtype>*) syncs_[i].get());
         }
       }
     }
@@ -422,20 +432,80 @@ void P2PSync<Dtype>::run(const vector<int>& gpus) {
 
   LOG(INFO)<< "Starting Optimization";
 
-  for (int i = 1; i < syncs.size(); ++i) {
-    syncs[i]->StartInternalThread();
+  for (int i = 1; i < syncs_.size(); ++i) {
+    syncs_[i]->StartInternalThread();
   }
+}
+
+template<typename Dtype>
+void P2PSync<Dtype>::solve() {
+  LOG(INFO)<< "Starting Optimization";
 
   // Run root solver on current thread
   solver_->Solve();
+}
 
-  for (int i = 1; i < syncs.size(); ++i) {
-    syncs[i]->StopInternalThread();
+template<typename Dtype>
+void P2PSync<Dtype>::tear_down() {
+  for (int i = 1; i < syncs_.size(); ++i) {
+    syncs_[i]->StopInternalThread();
   }
+}
+
+template<typename Dtype>
+void P2PSync<Dtype>::step(int iters) {
+  // Run root solver on current thread
+  solver_->Step(iters);
+}
+
+
+template<typename Dtype>
+SolverPool<Dtype>::SolverPool(string protofile,
+                        const vector<int>& gpus) {
+  Caffe::set_solver_count(gpus.size());
+  SolverParameter param;
+  ReadProtoFromTextFileOrDie(protofile, &param);
+  root_solver_.reset(GetSolver<Dtype>(param));
+
+  root_sync_.reset(
+      new caffe::P2PSync<Dtype>(root_solver_, NULL, root_solver_->param()));
+  root_sync_->set_up_gpus(gpus);
+}
+
+template<typename Dtype>
+void SolverPool<Dtype>::Step(int iters) {
+  root_sync_->step(iters);
+}
+
+template<typename Dtype>
+void SolverPool<Dtype>::Solve() {
+  root_sync_->solve();
+}
+
+template<typename Dtype>
+SolverPool<Dtype>::~SolverPool() {
+  root_sync_->tear_down();
+}
+
+template<typename Dtype>
+vector<shared_ptr<Solver<Dtype> > > SolverPool<Dtype>::solvers() {
+  return root_sync_->get_all_solvers();
+}
+
+template<typename Dtype>
+vector<shared_ptr<Solver<Dtype> > > P2PSync<Dtype>::get_all_solvers() {
+  vector<shared_ptr<Solver<Dtype> > > solver_list;
+  solver_list.push_back(solver_);
+  for (int i = 1; i < syncs_.size(); ++i) {
+    solver_list.push_back(shared_ptr<Solver<Dtype> >(syncs_[i]->solver()));
+  }
+  return solver_list;
 }
 
 INSTANTIATE_CLASS(Params);
 INSTANTIATE_CLASS(GPUParams);
 INSTANTIATE_CLASS(P2PSync);
+INSTANTIATE_CLASS(SolverPool);
 
 }  // namespace caffe
+
