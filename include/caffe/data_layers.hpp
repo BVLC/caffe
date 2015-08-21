@@ -136,7 +136,7 @@ class BigDataLayer : public BasePrefetchingDataLayer<Dtype> {
   Blob<Dtype> prefetch_ids_;
   vector<int> label_shape_;
   vector<int> shape_;
-  std::fstream *textstream_ = NULL, *binstream_ = NULL;
+  std::fstream *textstream_, *binstream_;
 
   size_t data_start_, data_end_, label_, cur_id_;
   bool has_label_, has_ids_;
