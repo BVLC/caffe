@@ -56,8 +56,14 @@ def to_proto(*tops):
 def assign_proto(proto, name, val):
     """Assign a Python object to a protobuf message, based on the Python
     type (in recursive fashion). Lists become repeated fields/messages, dicts
-    become messages, and other types are assigned directly."""
+    become messages, and other types are assigned directly. For convenience,
+    repeated fields whose values are not lists are converted to single-element
+    lists; e.g., `my_repeated_int_field=3` is converted to
+    `my_repeated_int_field=[3]`."""
 
+    is_repeated_field = hasattr(getattr(proto, name), 'extend')
+    if is_repeated_field and not isinstance(val, list):
+        val = [val]
     if isinstance(val, list):
         if isinstance(val[0], dict):
             for item in val:

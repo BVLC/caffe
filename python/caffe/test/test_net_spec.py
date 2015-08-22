@@ -43,8 +43,7 @@ def anon_lenet(batch_size):
 
 def silent_net():
     n = caffe.NetSpec()
-    n.data, n.data2 = L.DummyData(shape=[dict(dim=[3]), dict(dim=[4, 2])],
-                                  ntop=2)
+    n.data, n.data2 = L.DummyData(shape=dict(dim=3), ntop=2)
     n.silence_data = L.Silence(n.data, ntop=0)
     n.silence_data2 = L.Silence(n.data2, ntop=0)
     return n.to_proto()
