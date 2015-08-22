@@ -39,7 +39,11 @@ class AccuracyLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "Accuracy"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+  // If there are two top blobs, then the second blob will contain
+  // accuracies per class.
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlos() const { return 2; }
 
  protected:
   /**
@@ -86,6 +90,8 @@ class AccuracyLayer : public Layer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
+  /// Keeps counts of the number of samples per class.
+  Blob<Dtype> nums_buffer_;
 };
 
 /**
