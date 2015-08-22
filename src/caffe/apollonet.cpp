@@ -24,7 +24,8 @@ ApolloNet<Dtype>::ApolloNet() {
 template <typename Dtype>
 Dtype ApolloNet<Dtype>::f(const string& layer_prototxt) {
   LayerParameter p;
-  bool success = google::protobuf::TextFormat::ParseFromString(layer_prototxt, &p);
+  bool success =
+    google::protobuf::TextFormat::ParseFromString(layer_prototxt, &p);
   ASSERT(success, "Invalid prototxt string");
   return ForwardLayer(p);
 }
