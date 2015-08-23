@@ -10,9 +10,6 @@
 namespace caffe {
 
 /**
-<<<<<<< HEAD
- * @brief An interface for classes that perform optimization on Nets.
-=======
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
   * a client may optionally provide in order to request early termination
@@ -36,7 +33,6 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 
 /**
  * @brief An interface for classes that perform optimization on Net%s.
->>>>>>> 0dfc5dac3d8bf17f833e21ae6ce7bc3ea19a03fa
  *
  * Requires implementation of ApplyUpdate to compute a parameter update
  * given the current state of the Net parameters.
@@ -124,9 +120,6 @@ class Solver {
   // in data parallelism
   const Solver* const root_solver_;
 
-<<<<<<< HEAD
-DISABLE_COPY_AND_ASSIGN(Solver);
-=======
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
   ActionCallback action_request_function_;
@@ -135,7 +128,6 @@ DISABLE_COPY_AND_ASSIGN(Solver);
   bool requested_early_exit_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
->>>>>>> 0dfc5dac3d8bf17f833e21ae6ce7bc3ea19a03fa
 };
 
 
