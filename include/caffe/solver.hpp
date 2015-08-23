@@ -83,7 +83,7 @@ class Solver {
     callbacks_.push_back(value);
   }
 
- protected:
+ public:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   
