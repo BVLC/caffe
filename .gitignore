@@ -5,6 +5,7 @@
 *.lo
 *.o
 *.cuo
+*.pdb
 
 # Compiled Dynamic libraries
 *.so
