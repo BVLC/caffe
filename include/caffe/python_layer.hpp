@@ -18,11 +18,17 @@ class PythonLayer : public Layer<Dtype> {
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+    self_.attr("param_str") = bp::str(
+        this->layer_param_.python_param().param_str());
     self_.attr("setup")(bottom, top);
   }
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     self_.attr("reshape")(bottom, top);
+  }
+
+  virtual inline bool ShareInParallel() const {
+    return this->layer_param_.python_param().share_in_parallel();
   }
 
   virtual inline const char* type() const { return "Python"; }
