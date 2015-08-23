@@ -228,6 +228,8 @@ cdef class ApolloNet:
             p = caffe_pb2.LayerParameter()
             Merge(layer, p)
             loss = self.thisptr.ForwardLayer(p.SerializeToString())
+        elif not hasattr(layer, 'p'):
+            loss = self.thisptr.ForwardLayer(layer.SerializeToString())
         elif layer.p.type != 'Py':
             loss = self.thisptr.ForwardLayer(layer.p.SerializeToString())
         else:
