@@ -1,6 +1,6 @@
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
-
+#include <boost/function.hpp>
 #include <string>
 #include <vector>
 
@@ -10,7 +10,33 @@
 namespace caffe {
 
 /**
+<<<<<<< HEAD
  * @brief An interface for classes that perform optimization on Nets.
+=======
+  * @brief Enumeration of actions that a client of the Solver may request by
+  * implementing the Solver's action request function, which a
+  * a client may optionally provide in order to request early termination
+  * or saving a snapshot without exiting. In the executable caffe, this
+  * mechanism is used to allow the snapshot to be saved when stopping
+  * execution with a SIGINT (Ctrl-C).
+  */
+  namespace SolverAction {
+    enum Enum {
+      NONE = 0,  // Take no special action.
+      STOP = 1,  // Stop training. snapshot_after_train controls whether a
+                 // snapshot is created.
+      SNAPSHOT = 2  // Take a snapshot, and keep training.
+    };
+  }
+
+/**
+ * @brief Type of a function that returns a Solver Action enumeration.
+ */
+typedef boost::function<SolverAction::Enum()> ActionCallback;
+
+/**
+ * @brief An interface for classes that perform optimization on Net%s.
+>>>>>>> 0dfc5dac3d8bf17f833e21ae6ce7bc3ea19a03fa
  *
  * Requires implementation of ApplyUpdate to compute a parameter update
  * given the current state of the Net parameters.
@@ -24,6 +50,12 @@ class Solver {
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
+
+  // Client of the Solver optionally may call this in order to set the function
+  // that the solver uses to see what action it should take (e.g. snapshot or
+  // exit training early).
+  void SetActionFunction(ActionCallback func);
+  SolverAction::Enum GetRequestedAction();
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
@@ -92,7 +124,18 @@ class Solver {
   // in data parallelism
   const Solver* const root_solver_;
 
+<<<<<<< HEAD
 DISABLE_COPY_AND_ASSIGN(Solver);
+=======
+  // A function that can be set by a client of the Solver to provide indication
+  // that it wants a snapshot saved and/or to exit early.
+  ActionCallback action_request_function_;
+
+  // True iff a request to stop early was received.
+  bool requested_early_exit_;
+
+  DISABLE_COPY_AND_ASSIGN(Solver);
+>>>>>>> 0dfc5dac3d8bf17f833e21ae6ce7bc3ea19a03fa
 };
 
 
