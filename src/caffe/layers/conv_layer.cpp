@@ -92,7 +92,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   DLOG(INFO)<< "in call ConvolutionLayer<Dtype>::Forward_gpu()";
-  // TIME("ConvolutionLayer->Forward_gpu()", {
+  TIME("ConvolutionLayer->Forward_gpu()", {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data;
@@ -101,11 +101,14 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
     bottom_data = bottom[i]->gpu_data();
     top_data = top[i]->mutable_gpu_data();
 
-    if ( this->group_ == 1 ) {
+    bool use_groups = true;
+    if ( this->group_ == 1 && use_groups ) {
       const Dtype* cb_ptr = bottom_data;
 
       if (!this->is_1x1_) {
         // all images at once using im2col_perf kernel
+
+        TIME("ConvolutionLayer->Forward_gpu()->im2col_group_gpu()", {
         im2col_group_gpu(
             bottom_data,
             this->getImageNumPixels(),
@@ -114,7 +117,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
             this->stride_h_, this->stride_w_,
             this->col_buffer_.mutable_gpu_data(),
             this->getImageColLength());
-
+        });
         // all images at once using mask
         // im2col_group_gpu(bottom_data, this->im2col_mask_.gpu_data(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->height_out_, this->width_out_, this->col_buffer_.mutable_gpu_data()); // NOLINT(*)
         cb_ptr = this->col_buffer_.gpu_data();
@@ -128,6 +131,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
 
       DLOG(INFO) << "BIG M x N x K = " << M << " x " << N << " x " << K;
 
+      TIME("ConvolutionLayer->Forward_gpu()->caffe_gpu_group_gemm()", {
       caffe_gpu_group_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
           M, N, K,
           1, this->num_, 1,
@@ -136,6 +140,9 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
           cb_ptr,
           (Dtype)0.,
           top_data);
+      });
+
+      TIME("ConvolutionLayer->Forward_gpu()->bias_term", {
 
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
@@ -151,7 +158,68 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
             this->bias_multiplier_.gpu_data(),
             (Dtype)1., top_data);
       }
+      });
+
     } else {
+      //TIMENOSYNC("CONVLAYER::Forward[ALL]", {
+
+      const Dtype* cb_ptr = bottom_data;
+
+      if (!this->is_1x1_) {
+        // all images at once using im2col_perf kernel
+
+        TIME("ConvolutionLayer->Forward_gpu()->im2col_group_gpu()", {
+        im2col_group_gpu(
+            bottom_data,
+            this->getImageNumPixels(),
+            this->num_, this->channels_, this->height_, this->width_,
+            this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
+            this->stride_h_, this->stride_w_,
+            this->col_buffer_.mutable_gpu_data(),
+            this->getImageColLength());
+        });
+        // all images at once using mask
+        // im2col_group_gpu(bottom_data, this->im2col_mask_.gpu_data(), this->num_, this->channels_, this->height_, this->width_, this->kernel_h_, this->kernel_w_, this->height_out_, this->width_out_, this->col_buffer_.mutable_gpu_data()); // NOLINT(*)
+        cb_ptr = this->col_buffer_.gpu_data();
+      } else {
+        cb_ptr = bottom_data;
+      }
+
+      size_t M = this->conv_out_channels_ / this->group_;
+      size_t N = this->num_*this->conv_out_spatial_dim_;
+      size_t K = this->kernel_dim_ / this->group_;
+      size_t G = this->group_;
+
+      TIME("ConvolutionLayer->Forward_gpu()->caffe_gpu_group_gemm_3D()", {
+      caffe_gpu_group_gemm_3D<Dtype>(CblasNoTrans, CblasNoTrans,
+          M, N, K, G,
+          1, this->num_, 1,
+          (Dtype)1.,
+          (Dtype*) weight,
+          cb_ptr,
+          (Dtype)0.,
+          top_data);
+      });
+
+      TIME("ConvolutionLayer->Forward_gpu()->bias_term", {
+
+      if (this->bias_term_) {
+        const Dtype* bias = this->blobs_[1]->cpu_data();
+        bias = this->blobs_[1]->gpu_data();
+
+        M = this->num_output_;
+        N = this->height_out_ * this->width_out_ * this->num_;
+        K = 1;
+        caffe_gpu_group_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+            M, N, K,
+            1, this->num_, 1,
+            (Dtype)1., bias,
+            this->bias_multiplier_.gpu_data(),
+            (Dtype)1., top_data);
+      }
+      });
+      /*
+
       for (int n = 0; n < this->num_; ++n) {
         DLOG(INFO) << "bottom["
                    << i
@@ -168,14 +236,15 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
                    << top[i]->offset(n);
 
         // this->forward_gpu_gemm(bottom_data + bottom[i]->offset(n), weight, top_data + top[i]->offset(n)); // NOLINT(*)
+        TIME("CONVLAYER::Forward["<<n<<"]", {
         this->forward_gpu_gemm(
-            bottom_data,
-            bottom[i]->offset(n),
+            cb_ptr,//bottom_data,
+            n*this->getImageColLength(),//bottom[i]->offset(n),
             weight,
             0,
             top_data,
             top[i]->offset(n));
-
+        });
         if (this->bias_term_) {
           const Dtype* bias = this->blobs_[1]->gpu_data();
           // this->forward_gpu_bias(top_data + top[i]->offset(n), bias);
@@ -184,10 +253,13 @@ void ConvolutionLayer<Dtype>::Forward_gpu(
         OpenCLManager::CurrentPlatform()->CurrentDevice().getNextCommandQueue();
       }
 
+     // });
       OpenCLManager::CurrentPlatform()->CurrentDevice().setCommandQueueIDX(0);
       OpenCLManager::CurrentPlatform()->CurrentDevice().waitForCommandQueues();
+      */
     }
   }
+  });
 }
 
 /// @brief refer to CPU backward -- the BLAS implementation is the same.

@@ -762,6 +762,89 @@ namespace caffe {
       double* C);
 
   template<typename T>
+  void caffe_gpu_group_gemm_3D(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const int G,
+      const int GM,
+      const int GN,
+      const int GK,
+      const T alpha,
+      const T* A,
+      const T* B,
+      const T beta,
+      T* C) {
+    clblasTranspose clTransA;
+    switch (TransA) {
+      case CblasNoTrans:
+        clTransA = clblasNoTrans;
+        break;
+      case CblasTrans:
+        clTransA = clblasTrans;
+        break;
+      case CblasConjTrans:
+        clTransA = clblasConjTrans;
+        break;
+      default:
+        LOG(ERROR)<< "unknown transpose mode.";
+        return;
+      }
+
+    clblasTranspose clTransB;
+    switch (TransB) {
+      case CblasNoTrans:
+        clTransB = clblasNoTrans;
+        break;
+      case CblasTrans:
+        clTransB = clblasTrans;
+        break;
+      case CblasConjTrans:
+        clTransB = clblasConjTrans;
+        break;
+      default:
+        LOG(ERROR)<< "unknown transpose mode.";
+        return;
+      }
+
+    BOOL_CHECK(caffe::OpenCL::cl_group_gemm_3D<T>(clTransA, clTransB, M, N, K,
+        G, GM, GN, GK, alpha, A, 0, B, 0, beta, C, 0, NULL));
+  }
+  template void caffe_gpu_group_gemm_3D<float>(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const int G,
+      const int GM,
+      const int GN,
+      const int GK,
+      const float alpha,
+      const float* A,
+      const float* B,
+      const float beta,
+      float* C);
+  template void caffe_gpu_group_gemm_3D<double>(
+      const CBLAS_TRANSPOSE TransA,
+      const CBLAS_TRANSPOSE TransB,
+      const int M,
+      const int N,
+      const int K,
+      const int G,
+      const int GM,
+      const int GN,
+      const int GK,
+      const double alpha,
+      const double* A,
+      const double* B,
+      const double beta,
+      double* C);
+
+
+  template<typename T>
   void caffe_gpu_axpy(const int N, const T alpha, const T* X, T* Y) {
     TIME("clBLASaxpy()", {
         BOOL_CHECK(caffe::OpenCL::clBLASaxpy<T>(N, alpha, X, 1, Y, 1));

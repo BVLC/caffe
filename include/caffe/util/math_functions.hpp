@@ -493,6 +493,23 @@ void caffe_gpu_group_gemm(
     T* C);
 
 template<typename T>
+void caffe_gpu_group_gemm_3D(
+    const CBLAS_TRANSPOSE TransA,
+    const CBLAS_TRANSPOSE TransB,
+    const int M,
+    const int N,
+    const int K,
+    const int G,
+    const int GM,
+    const int GN,
+    const int GK,
+    const T alpha,
+    const T* A,
+    const T* B,
+    const T beta,
+    T* C);
+
+template<typename T>
 void caffe_gpu_axpy(const int N, const T alpha, const T* X, T* Y);
 
 template<typename T>

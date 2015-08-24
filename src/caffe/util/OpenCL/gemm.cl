@@ -10,7 +10,14 @@
     if ( d_ < get_work_dim() - 1 ) {\
       printf("%d x ", get_global_size(d_));\
     } else {\
-      printf("%d) GID", get_global_size(d_));\
+      printf("%d) GR", get_global_size(d_));\
+    }\
+  }\
+  for ( int d_ = 0; d_ < get_work_dim(); d_++ ) {\
+    if ( d_ < get_work_dim() - 1 ) {\
+      printf("[%d]", get_group_id(d_));\
+    } else {\
+      printf("[%d] GID", get_group_id(d_));\
     }\
   }\
   for ( int d_ = 0; d_ < get_work_dim(); d_++ ) {\
@@ -126,7 +133,7 @@ template <class T> __kernel void mmul_NA_NB(const int M, const int N, const int 
     }
 
     // each thread in workgroup reads one element of matrix B from global to local memory
-    if ( thread_y + global_y < K ) {
+    if ( thread_y + global_y < K && get_global_id(0) < N ) {
       localMemB[thread_y][thread_x] = B_ptr[b + N * thread_y + thread_x];
     } else { // needed on AMD
       localMemB[thread_y][thread_x] = 0.0;
@@ -455,7 +462,7 @@ template <class T> __kernel void mmul_TA_TB(const int M, const int N, const int 
     }
 
     // each thread in workgroup reads one element of matrix B from global to local memory
-    if ( thread_y + global_y < K ) {
+    if ( thread_y + global_y < K && get_global_id(0) < N ) {
       localMemB[thread_y][thread_x] = B_ptr[b + K * thread_x + thread_y];
     } else { // needed on AMD
       localMemB[thread_y][thread_x] = 0.0;
@@ -552,18 +559,18 @@ template <class T> __kernel void mmul_TA_NB(const int M, const int N, const int 
     __local T localMemB[OPENCL_BLOCK_SIZE][OPENCL_BLOCK_SIZE];
 
     // each thread in workgroup reads one element of matrix A from global to local memory
-    if ( thread_x + global_x < K ) {
-      localMemA[thread_y][thread_x] = alpha*A_ptr[a + M * thread_x + thread_y];
-    } else { // needed on AMD
-      localMemA[thread_y][thread_x] = 0.0;
-    }
+     if ( thread_x + global_x < K ) {
+       localMemA[thread_y][thread_x] = alpha*A_ptr[a + M * thread_x + thread_y];
+     } else { // needed on AMD
+       localMemA[thread_y][thread_x] = 0.0;
+     }
 
-    // each thread in workgroup reads one element of matrix B from global to local memory
-    if ( thread_y + global_y < K ) {
-      localMemB[thread_y][thread_x] = B_ptr[b + N * thread_y + thread_x];
-    } else { // needed on AMD
-      localMemB[thread_y][thread_x] = 0.0;
-    }
+     // each thread in workgroup reads one element of matrix B from global to local memory
+     if ( thread_y + global_y < K && get_global_id(0) < N ) {
+       localMemB[thread_y][thread_x] = B_ptr[b + N * thread_y + thread_x];
+     } else { // needed on AMD
+       localMemB[thread_y][thread_x] = 0.0;
+     }
 
     // Synchronize the reads of A and B
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -609,6 +616,7 @@ template __attribute__((mangled_name(mmul_TA_NBDouble))) kernel void mmul_TA_NB(
  *   localThreadCount := OPENCL_BLOCK_SIZE*OPENCL_BLOCK_SIZE
  */
 template <class T> __kernel void mmul_NA_TB(const int M, const int N, const int K, const T alpha, global T* A, const unsigned long idx_offset_A, global T* B, const unsigned long idx_offset_B, const T beta, global T* C, const unsigned long idx_offset_C) {
+
   // coordinates for each tile of [OPENCL_BLOCK_SIZE x OPENCL_BLOCK_SIZE]
   int tile_x = get_group_id(0);
   int tile_y = get_group_id(1);
@@ -655,24 +663,24 @@ template <class T> __kernel void mmul_NA_TB(const int M, const int N, const int 
     __local T localMemB[OPENCL_BLOCK_SIZE][OPENCL_BLOCK_SIZE];
 
     // each thread in workgroup reads one element of matrix A from global to local memory
-    if ( thread_x + global_x < K ) {
-      localMemA[thread_y][thread_x] = alpha*A_ptr[a + K * thread_y + thread_x];
-    } else { // needed on AMD
-      localMemA[thread_y][thread_x] = 0.0;
-    }
+     if ( thread_x + global_x < K ) {
+       localMemA[thread_y][thread_x] = alpha*A_ptr[a + K * thread_y + thread_x];
+     } else { // needed on AMD
+       localMemA[thread_y][thread_x] = 0.0;
+     }
 
-    // each thread in workgroup reads one element of matrix B from global to local memory
-    if ( thread_y + global_y < K ) {
-      localMemB[thread_y][thread_x] = B_ptr[b + K * thread_x + thread_y];
-    } else { // needed on AMD
-      localMemB[thread_y][thread_x] = 0.0;
-    }
+     // each thread in workgroup reads one element of matrix B from global to local memory
+     if ( thread_y + global_y < K && get_global_id(0) < N ) {
+       localMemB[thread_y][thread_x] = B_ptr[b + K * thread_x + thread_y];
+     } else { // needed on AMD
+       localMemB[thread_y][thread_x] = 0.0;
+     }
 
     // Synchronize the reads of A and B
     barrier(CLK_LOCAL_MEM_FENCE);
 
      // multiply matrix A and B using local memory
-     for (int k = 0; k < OPENCL_BLOCK_SIZE; k++) {
+     for (int k = 0; k < OPENCL_BLOCK_SIZE; k++) { 
        sum += localMemA[thread_y][k] * localMemB[k][thread_x];
      }
 
@@ -1476,4 +1484,113 @@ template <class T> __kernel void group_mmul_TA_TB(const int M, const int N, cons
 template __attribute__((mangled_name(group_mmul_TA_TBFloat))) kernel void group_mmul_TA_TB(const int M, const int N, const int K, const int GM, const int GN, const int GK, const float alpha, global float* A, const unsigned long idx_offset_A, global float* B, const unsigned long idx_offset_B, const float beta, global float* C, const unsigned long idx_offset_C);
 template __attribute__((mangled_name(group_mmul_TA_TBDouble))) kernel void group_mmul_TA_TB(const int M, const int N, const int K, const int GM, const int GN, const int GK, const double alpha, global double* A, const unsigned long idx_offset_A, global double* B, const unsigned long idx_offset_B, const double beta, global double* C, const unsigned long idx_offset_C);
 
+/*
+ * Group_3D Matrix-Matrix-Multiplication using local memory as a buffer
+ * that has [OPENCL_BLOCK_SIZE x OPENCL_BLOCK_SIZE] elements
+ *
+ * Dimensions:
+ *   Matrix A is [MxKxG] and A is not transposed
+ *   Matrix B is [KxNxG] and B is not transposed and partitions dimension N into GN parts
+ *   Matrix C is [MxNxG]
+ *
+ * Global Index Space
+ *   global_size[0] := global_size[0] % OPENCL_BLOCK_SIZE == 0 && global_size[0] >= N
+ *   global_size[1] := global_size[1] % OPENCL_BLOCK_SIZE == 0 && global_size[1] >= M
+ *   global_size[2] := G
+ *
+ * Local Index Space
+ *   local_size[0] := OPENCL_BLOCK_SIZE
+ *   local_size[1] := OPENCL_BLOCK_SIZE
+ *   local_size[2] := 1
+ *
+ * Number of Threads in each local workgroup
+ *   localThreadCount := OPENCL_BLOCK_SIZE*OPENCL_BLOCK_SIZE
+ */
+template <class T> __kernel void group_3D_mmul_NA_NB(const int M, const int N, const int K, const int G, const int GM, const int GN, const int GK, const T alpha, global T* A, const unsigned long idx_offset_A, global T* B, const unsigned long idx_offset_B, const T beta, global T* C, const unsigned long idx_offset_C) {
+  // coordinates for each tile of [OPENCL_BLOCK_SIZE x OPENCL_BLOCK_SIZE]
+  int tile_x = get_group_id(0);
+  int tile_y = get_group_id(1);
+
+  // local index of each thread inside tile
+  int thread_x = get_local_id(0);
+  int thread_y = get_local_id(1);
+
+  // global coordinates for each elemnt in C
+  int x = get_global_id(0);
+  int y = get_global_id(1);
+  int g = get_global_id(2);
+
+  // offset pointers in global memory
+  global T* A_ptr = A + idx_offset_A;
+  global T* B_ptr = B + idx_offset_B;
+  global T* C_ptr = C + idx_offset_C;
+
+  int group_size_n  = N / GN;
+  int group_n       = x / group_size_n;
+  int group_x       = ( x % group_size_n );
+  int group_y       = y;
+
+  // first index of first thread reading A in local workgroup
+  int a_bgn = K * OPENCL_BLOCK_SIZE * tile_y;
+
+  // last index to first thread reading A in local workgroup
+  int a_end   = a_bgn + K - 1;
+
+  // step taken by each thread reading A
+  int a_stp  = OPENCL_BLOCK_SIZE;
+
+  // accumulates the result
+  __private T sum = 0.0;
+
+  int global_x = 0;
+  int global_y = 0;
+  int addr;
+  // local memory for matrix A
+  __local T localMemA[OPENCL_BLOCK_SIZE][OPENCL_BLOCK_SIZE];
+
+  // local memory for matrix B
+  __local T localMemB[OPENCL_BLOCK_SIZE][OPENCL_BLOCK_SIZE];
+
+  for (int a = a_bgn; a <= a_end; a += a_stp, global_x += OPENCL_BLOCK_SIZE, global_y += OPENCL_BLOCK_SIZE)  {
+    // each thread in workgroup reads one element of matrix A from global to local memory
+    addr = a + M*K*g + K * thread_y + thread_x;
+
+    if ( (thread_x + global_x) < K && addr < M*K*G ) {
+      localMemA[thread_y][thread_x] = alpha*A_ptr[addr];
+    } else { // needed on AMD
+      localMemA[thread_y][thread_x] = 0.0;
+    }
+
+    // each thread in workgroup reads one element of matrix B from global to local memory
+    //addr = group_n*(group_size_n*K) + ( x % group_size_n ) + (thread_y+global_y)*group_size_n;
+    addr = group_n*(group_size_n*K)*G + (group_size_n*K)*g + ( x % group_size_n ) + (thread_y+global_y)*group_size_n;
+    if ( thread_y + global_y < K  && addr < K*N*G ) {
+      localMemB[thread_y][thread_x] = B_ptr[addr];
+    } else { // needed on AMD
+      localMemB[thread_y][thread_x] = 0.0;
+    }
+
+    // Synchronize the reads of A and B
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    // multiply matrix A and B using local memory
+    for (int k = 0; k < OPENCL_BLOCK_SIZE; k++) {
+      sum += localMemA[thread_y][k] * localMemB[k][thread_x];
+    }
+
+    // Synchronize all sub-results
+    barrier(CLK_LOCAL_MEM_FENCE);
+  }
+
+  // write all results back to global memory
+  if ( x < N && y < M ) {
+    //addr = group_n*group_size_n*M + y*group_size_n + ( x % group_size_n );
+    addr = (group_n*group_size_n*M)*G + (group_size_n*M)*g + y*group_size_n + ( x % group_size_n );
+    if (addr < M*N*G ) {
+      C_ptr[addr] = sum + beta*C_ptr[addr];
+    }
+  }
+}
+template __attribute__((mangled_name(group_3D_mmul_NA_NBFloat))) kernel void group_3D_mmul_NA_NB(const int M, const int N, const int K, const int G, const int GM, const int GN, const int GK, const float alpha, global float* A, const unsigned long idx_offset_A, global float* B, const unsigned long idx_offset_B, const float beta, global float* C, const unsigned long idx_offset_C);
+template __attribute__((mangled_name(group_3D_mmul_NA_NBDouble))) kernel void group_3D_mmul_NA_NB(const int M, const int N, const int K, const int G, const int GM, const int GN, const int GK, const double alpha, global double* A, const unsigned long idx_offset_A, global double* B, const unsigned long idx_offset_B, const double beta, global double* C, const unsigned long idx_offset_C);
 

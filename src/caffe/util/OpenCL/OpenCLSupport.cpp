@@ -374,8 +374,10 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
   size_t global = CAFFE_GET_GLOBAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
   size_t local = CAFFE_GET_LOCAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 
-  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
-      &global, &local, 0, NULL, &bufferEvent);
+  TIMENOSYNC("clMemSet::clEnqueuNDRangeKernel("<<Bytes<<")", {
+      err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+          &global, &local, 0, NULL, &bufferEvent);
+  });
 
   if ( err != CL_SUCCESS ) {
     std::ostringstream oss;
@@ -2005,8 +2007,8 @@ bool clgemm(
       kernel_name = clGetKernelName<T>("mmul_NA_NB_MN1_v2");
       global[0] = getAlignedSize<T>(n, 1);
       local[0] = 1;
-      global[1] = getAlignedSize<T>(m, m);
-      local[1] = m;
+      global[1] = getAlignedSize<T>(m, OPENCL_BLOCK_SIZE);
+      local[1] = OPENCL_BLOCK_SIZE;
       continue;
     }
 
@@ -2358,6 +2360,211 @@ template bool cl_group_gemm<double>(
     double* C,
     const size_t idx_offset_C,
     cl_event* event);
+
+template<typename T>
+bool cl_group_gemm_3D(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m,
+    const int n,
+    const int k,
+    const int g,
+    const int gm,
+    const int gn,
+    const int gk,
+    const T alpha,
+    const T* A,
+    const size_t idx_offset_A,
+    const T* B,
+    const size_t idx_offset_B,
+    const T beta,
+    T* C,
+    const size_t idx_offset_C,
+    cl_event* event) {
+  if (gm != 1) {
+    LOG(ERROR) << "partition of M = "
+               << m
+               << " into GM = "
+               << gm
+               << " currently not supported";
+
+    return false;
+  }
+  if ( gk != 1 ) {
+    LOG(ERROR) << "partition of K = "
+               << m
+               << " into GK = "
+               << gk
+               << " currently not supported";
+
+    return false;
+  }
+  if ( n % gn != 0 ) {
+    LOG(ERROR) << "partition of N = "
+               << n
+               << " into GN = "
+               << gn
+               << " must be even such that N % GN = 0 ";
+
+    return false;
+  }
+
+  if (TransA != clblasNoTrans && TransB != clblasNoTrans) {
+    LOG(WARNING) << "TransA != clblasNoTrans and "
+                    "TransB != clblasNoTrans not fully tested";
+  }
+
+  std::tr1::shared_ptr<OpenCLPlatform> pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf->CurrentDevice();
+  cl_command_queue* queue = device.getCurrentCommandQueue();
+
+  if ( !queue ) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
+    return false;
+  }
+
+  int block_size_x;
+  int block_size_y;
+  int block_size_z;
+
+  std::string kernel_name;
+  int numKernelDims = 3;
+
+  if (TransA == clblasNoTrans && TransB == clblasNoTrans) {
+    kernel_name = clGetKernelName<T>("group_3D_mmul_NA_NB");
+  }
+  if (TransA == clblasTrans && TransB == clblasTrans) {
+    kernel_name = clGetKernelName<T>("group_3D_mmul_TA_TB");
+  }
+  if (TransA == clblasTrans && TransB == clblasNoTrans) {
+    kernel_name = clGetKernelName<T>("group_3D_mmul_TA_NB");
+  }
+  if (TransA == clblasNoTrans && TransB == clblasTrans) {
+    kernel_name = clGetKernelName<T>("group_3D_mmul_NA_TB");
+  }
+
+  DLOG(INFO) << "kernel = " << kernel_name;
+
+  block_size_x = OPENCL_BLOCK_SIZE;
+  block_size_y = OPENCL_BLOCK_SIZE;
+
+  cl_kernel* kernel = device.getKernel(kernel_name);
+  if (kernel == NULL) {
+    return false;
+  }
+
+  CL_SET_KERNEL_ARG
+  CL_SET_TYPE_KERNEL_ARG(int, m, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, k, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, g, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, gm, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, gn, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, gk, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A, kernel)
+  CL_SET_TYPE_KERNEL_ARG(size_t, idx_offset_A, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&B, kernel)
+  CL_SET_TYPE_KERNEL_ARG(size_t, idx_offset_B, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, beta, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&C, kernel)
+  CL_SET_TYPE_KERNEL_ARG(size_t, idx_offset_C, kernel)
+
+  size_t* global  = reinterpret_cast<size_t*>(
+                      malloc(numKernelDims*sizeof(size_t)));
+  size_t* local   = reinterpret_cast<size_t*>(
+                      malloc(numKernelDims*sizeof(size_t)));
+
+  int global_x = 0;
+  int global_y = 0;
+  int global_z = g;
+
+  if ( n % block_size_x == 0 ) {
+    global_x = n;
+  } else {
+    global_x = (n/block_size_x + 1)*block_size_x;
+  }
+
+  if ( m % block_size_y == 0 ) {
+    global_y = m;
+  } else {
+    global_y = (m/block_size_y + 1)*block_size_y;
+  }
+
+  global[0] = global_x;
+  global[1] = global_y;
+  global[2] = g;
+
+  local[0] = block_size_x;
+  local[1] = block_size_y;
+  local[2] = 1;
+
+  DLOG(INFO) << "MNKG  = ( " << m << " | " << n << " | " << k << " | " << g << " )";
+  DLOG(INFO) << "GSIZE = ( " << global[0] << " | " << global[1] << " | " << global[2] << " )";
+  DLOG(INFO) << "LSIZE = ( " << local[0] << " | " << local[1] << " | " << local[2] << " )";
+
+  err = clEnqueueNDRangeKernel(*queue, *kernel, numKernelDims, NULL,
+                                global, local, 0, NULL, event);
+  if ( err != CL_SUCCESS ) {
+    std::ostringstream oss;
+    oss << "Failed to enqueue kernel '"
+        << kernel_name.c_str()
+        << "' on GPU "
+        << device.name()
+        << " : "
+        << what(err);
+
+    LOG(ERROR) << oss.str();
+    throw OpenCLSupportException(oss.str());
+    return false;
+  }
+  DLOG(INFO) << "kernel '"
+             << kernel_name.c_str()
+             << "' executed on GPU "
+             << device.name();
+
+  CL_SET_KERNEL_ARG_END
+  return true;
+}
+template bool cl_group_gemm_3D<float>(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m,
+    const int n,
+    const int k,
+    const int g,
+    const int gm,
+    const int gn,
+    const int gk,
+    const float alpha,
+    const float* A,
+    const size_t idx_offset_A,
+    const float* B,
+    const size_t idx_offset_B,
+    const float beta,
+    float* C,
+    const size_t idx_offset_C,
+    cl_event* event);
+template bool cl_group_gemm_3D<double>(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m,
+    const int n,
+    const int k,
+    const int g,
+    const int gm,
+    const int gn,
+    const int gk,
+    const double alpha,
+    const double* A,
+    const size_t idx_offset_A,
+    const double* B,
+    const size_t idx_offset_B,
+    const double beta,
+    double* C,
+    const size_t idx_offset_C,
+    cl_event* event);
+
 
 template<typename T>
 bool clBLASgemm(

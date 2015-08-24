@@ -317,6 +317,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
+  //convolution_param->set_bias_term(false);
   shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -328,6 +329,10 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
+
+  // SNAPSHOT("TOP(CPU)", ref_top_data, this->blob_top_->count());
+  // SNAPSHOT("TOP(GPU)", top_data, this->blob_top_->count());
+  // DIFFSHOT("DIFF", top_data, ref_top_data, this->blob_top_->count() );
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }

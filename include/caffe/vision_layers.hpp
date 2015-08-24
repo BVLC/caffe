@@ -13,6 +13,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -221,6 +222,7 @@ class BaseConvolutionLayer: public Layer<Dtype> {
         const size_t data_offset,
         Dtype* col_buff,
         const size_t col_buff_offset) {
+
       im2col_gpu(
           data,
           data_offset,

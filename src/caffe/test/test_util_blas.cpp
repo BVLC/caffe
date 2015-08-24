@@ -102,13 +102,14 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
 
         caffe::Caffe::DeviceSync();
 
-        cl_event event;
+        //cl_event event;
         // BENCH(r, {
         caffe_gpu_gemm<Dtype>(TransA, TransB, m, n, k, 1.0, A->gpu_data(),
                               B->gpu_data(), 0.0,
-                              C->mutable_gpu_data(), &event);
+                              C->mutable_gpu_data());
         // });
 
+        /*
         clProfileResult res;
         res.kernel.io.Byte = k * (uint64_t) n + m * (uint64_t) k
             + m * (uint64_t) n;
@@ -118,6 +119,7 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
         caffe::OpenCL::clLogProfile(res, "profile.csv", std::string(__FILE__),
                                     std::string("clGEMM(migrate)"),
                                     std::string(typeid(Dtype).name()));
+                                    */
       }
 
       if (TypeParam::device == Caffe::CPU) {
@@ -194,6 +196,8 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
       filler.Fill(this->C);
 
       for (int i = 0; i < scale * m * scale * k; i++) {
+        A->mutable_cpu_data()[i] = 0.0;
+
         if (i < idx_offset_A) {
           A->mutable_cpu_data()[i] = 0.0;
           continue;
@@ -205,6 +209,7 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
       }
 
       for (int i = 0; i < scale * k * scale * n; i++) {
+        B->mutable_cpu_data()[i] = 0.0;
         if (i < idx_offset_B) {
           B->mutable_cpu_data()[i] = 0.0;
           continue;
@@ -216,6 +221,8 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
       }
 
       for (int i = 0; i < scale * m * scale * n; i++) {
+        C->mutable_cpu_data()[i] = 0.0;
+        C_->mutable_cpu_data()[i] = 0.0;
         if (i < idx_offset_C) {
           C->mutable_cpu_data()[i] = 0.0;
           continue;
@@ -263,10 +270,10 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
       // SNAPSHOT2D("C(GPU)", C->cpu_data() + idx_offset_C , m, n);
 
       for (int i = 0; i < scale * m * scale * n; ++i) {
-        // EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
+        EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-3);
       }
-      DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data()
-          + idx_offset_C, m, n);
+      // DIFFSHOT2D("delta", C->cpu_data() + idx_offset_C, C_->cpu_data()
+      //    + idx_offset_C, m, n);
       return;
 #endif  // re-initialize matrices
       filler.Fill(this->A);
@@ -779,10 +786,7 @@ for (int size = 4096; size >= 16; size/=2) {
 #if defined(USE_CUDA) || defined(USE_OPENCL)
 
 TYPED_TEST(BLASTest, BLASTestValidationGEMM) {
-this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, 32, 32, 32,
-                             0, 0, 0, 1.0, 0.0);
 
-/*
  srand(time(NULL));  // NOLINT(*)
  int min = 1;
  int max = 128;
@@ -826,7 +830,6 @@ this->BLASTestValidationGEMM(CblasNoTrans, CblasNoTrans, 32, 32, 32,
  this->BLASTestValidationGEMM(CblasNoTrans, CblasTrans,   m, n, k, 0, 0, 0, 1.0, 1.0);
  this->BLASTestValidationGEMM(CblasTrans,   CblasTrans,   m, n, k, 0, 0, 0, 1.0, 1.0);
  }
- */
 }
 
 TYPED_TEST(BLASTest, BLASTestValidationGroupGEMM) {

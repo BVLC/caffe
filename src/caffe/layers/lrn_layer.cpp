@@ -541,10 +541,14 @@ void LRNLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& top) {
   switch (this->layer_param_.lrn_param().norm_region()) {
     case LRNParameter_NormRegion_ACROSS_CHANNELS:
+      TIME("LRNLayer->Forward_gpu()->CrossChannelFormard_gpu()", {
       CrossChannelForward_gpu(bottom, top);
+      });
       break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
+      TIME("LRNLayer->Forward_gpu()->WithinChannelFormard_gpu()", {
       WithinChannelForward(bottom, top);
+      });
       break;
     default:
       LOG(FATAL)<< "Unknown normalization region.";
@@ -556,8 +560,15 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = top[0]->mutable_gpu_data();
-  Dtype* scale_data = scale_.mutable_gpu_data();
+  Dtype* top_data;
+  TIME("LRNLayer->CrossChannelForward_gpu()->top[0]->mutable_gpu_data()", {
+  top_data = top[0]->mutable_gpu_data();
+  });
+  Dtype* scale_data;
+  TIME("LRNLayer->CrossChannelForward_gpu()->scale_->mutable_gpu_data()", {
+  scale_data = scale_.mutable_gpu_data();
+  });
+
   // We will launch one kernel for each pixel location, and have the kernel
   // go through all the channels.
   int n_threads = num_ * height_ * width_;
@@ -600,10 +611,14 @@ void LRNLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& bottom) {
   switch (this->layer_param_.lrn_param().norm_region()) {
     case LRNParameter_NormRegion_ACROSS_CHANNELS:
+      TIME("LRNLayer->Backward_gpu()->CrossChannelBackward_gpu()", {
       CrossChannelBackward_gpu(top, propagate_down, bottom);
+      });
       break;
     case LRNParameter_NormRegion_WITHIN_CHANNEL:
+      TIME("LRNLayer->Backward_gpu()->WithinChannelBackward_gpu()", {
       WithinChannelBackward(top, propagate_down, bottom);
+      });
       break;
     default:
       LOG(FATAL)<< "Unknown normalization region.";

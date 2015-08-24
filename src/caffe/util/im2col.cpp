@@ -5,6 +5,7 @@
 #include <cstring>
 #include <string>
 
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 

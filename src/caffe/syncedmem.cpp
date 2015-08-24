@@ -115,10 +115,10 @@ inline void SyncedMemory::to_gpu() {
 #elif defined(USE_OPENCL)
   switch (head_) {
   case UNINITIALIZED:
-    TIME("clMalloc", {
+    TIMENOSYNC("clMalloc", {
     BOOL_CHECK(caffe::OpenCL::clMalloc(&gpu_ptr_, size_));
     });
-    TIME("caffe_gpu_memset", {
+    TIMENOSYNC("caffe_gpu_memset", {
     caffe_gpu_memset(size_, static_cast<char>(0), gpu_ptr_);
     })
     head_ = HEAD_AT_GPU;

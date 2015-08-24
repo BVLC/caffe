@@ -35,7 +35,7 @@ TYPED_TEST(OpenCLSimpleTest, TestMalloc) {
   EXPECT_TRUE(caffe::OpenCL::clFree(vPtr));
 }
 
-TYPED_TEST(OpenCLSimpleTest, TestMaxMemory) {
+TYPED_TEST(OpenCLSimpleTest, TestMaxMemoryPerformance) {
   size_t MB       = 1024*1024;
   int max_cnt      = 100000;
   int suc_cnt      = 0;
@@ -68,7 +68,7 @@ TYPED_TEST(OpenCLSimpleTest, TestMaxMemory) {
   printf("OpenCL successfully released %d buffers of 1MB\n", suc_cnt);
 }
 
-TYPED_TEST(OpenCLSimpleTest, TestMaxBuffer) {
+TYPED_TEST(OpenCLSimpleTest, TestMaxBufferPerformance) {
   size_t MB       = 1024*1024;
   int64_t alloc_increment
                   = 100 * MB;

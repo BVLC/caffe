@@ -99,9 +99,11 @@ using kernelMapType = map<pair<string, type_index>, string>;
   std::map<const void*, std::pair<void*, size_t> > bm;
 
 #define CL_SET_TYPE_KERNEL_ARG(type, variable, kernel) \
+  DLOG(INFO)<<"CL_SET_TYPE_KERNEL_ARG["<<idx<<"] = " <<variable;\
   if ( !clSetKernelTypeArg(variable, idx, kernel) ) return false;
 
 #define CL_SET_ARRAY_KERNEL_ARG(variable, kernel) \
+  DLOG(INFO)<<"CL_SET_ARRAY_KERNEL_ARG["<<idx<<"] = "<<*variable;\
   if ( !clSetKernelArrayArg(*variable, idx, sb, bm, kernel) ) return false;
 
 #define CL_SET_KERNEL_ARG_END\
@@ -296,6 +298,25 @@ template<typename T> bool cl_group_gemm(
     const int m,
     const int n,
     const int k,
+    const int gm,
+    const int gn,
+    const int gk,
+    const T alpha,
+    const T* A,
+    const size_t idx_offset_A,
+    const T* B,
+    const size_t idx_offset_B,
+    const T beta,
+    T* C,
+    const size_t idx_offset_C,
+    cl_event* event);
+template<typename T> bool cl_group_gemm_3D(
+    const clblasTranspose TransA,
+    const clblasTranspose TransB,
+    const int m,
+    const int n,
+    const int k,
+    const int g,
     const int gm,
     const int gn,
     const int gk,

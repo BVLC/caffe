@@ -526,20 +526,52 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(
   const Dtype* col_buff = input;
   size_t col_buffer_offset = input_offset;
 
+  // TIMENOSYNC("forward_gpu_gemm()->im2col", {
+
   if (!is_1x1_) {
     if (!skip_im2col) {
-      // conv_im2col_gpu((const Dtype*) input + input_offset, col_buffer_.mutable_gpu_data()); // NOLINT(*)
-      conv_im2col_gpu(input, input_offset, col_buffer_.mutable_gpu_data(), 0);
-      col_buffer_offset = 0;
-    }
-    TIME("forward_gpu_gemm()->col_buffer_.gpu_data()", {
-      col_buff = col_buffer_.gpu_data();
-    });
-  }
 
-  TIME("2nd step()", {
+      Dtype* buf;
+      TIME("forward_gpu_gemm()->col_buffer_.mutable_gpu_data()", {
+          buf = col_buffer_.mutable_gpu_data();
+      });
+
+      //TIMENOSYNC("forward_gpu_gemm()->conv_im2col_gpu()", {
+      // conv_im2col_gpu((const Dtype*) input + input_offset, col_buffer_.mutable_gpu_data()); // NOLINT(*)
+      //conv_im2col_gpu(input, input_offset, col_buffer_.mutable_gpu_data(), 0);
+
+
+      TIME("forward_gpu_gemm()->im2col_gpu()", {
+
+      im2col_gpu(
+          input,
+          input_offset,
+          conv_in_channels_,
+          conv_in_height_,
+          conv_in_width_,
+          kernel_h_,
+          kernel_w_,
+          pad_h_,
+          pad_w_,
+          stride_h_,
+          stride_w_,
+          buf,
+          0);
+
+      });
+
+      col_buffer_offset = 0;
+      //});
+    }
+      TIME("forward_gpu_gemm()->col_buffer_.gpu_data()", {
+      col_buff = col_buffer_.gpu_data();
+      });
+  }
+  // });
+
+  //TIME("2nd step()", {
       for (int g = 0; g < group_; ++g) {
-        TIME("forward_gpu_gemm()->caffe_gpu_gemm()", {
+        TIME("forward_gpu_gemm()->caffe_gpu_gemm("<<g<<")", {
           /* call with offsets
            caffe_gpu_gemm<Dtype>(
            CblasNoTrans,
@@ -567,7 +599,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(
               output, output_offset + output_offset_ * g);
         });
       }
-  });
+  //});
 }
 
 template<typename Dtype>
@@ -624,7 +656,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_bias(
     Dtype* output,
     const size_t output_offset,
     const Dtype* bias) {
-  TIME("BIAS2 caffe_gpu_gemm()", {
+  // TIME("BIAS2 caffe_gpu_gemm()", {
     caffe_gpu_gemm<Dtype>(
         CblasNoTrans, CblasNoTrans,
         num_output_, height_out_ * width_out_, 1,
@@ -633,7 +665,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_bias(
         bias_multiplier_.gpu_data(), 0.0,
         (Dtype)1.,
         output, output_offset);
-  });
+  // });
 }
 
 template<typename Dtype>
@@ -701,7 +733,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(
     col_buff_offset = 0;
   }
   for (int g = 0; g < group_; ++g) {
-    TIME("weight_gpu_gemm()->caffe_gpu_gemm()", {
+    TIME("weight_gpu_gemm()->caffe_gpu_gemm("<<g<<")", {
       /* old code commented out
        if ( !is_1x1_ ) {
        caffe_gpu_gemm<Dtype>(

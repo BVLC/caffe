@@ -104,7 +104,7 @@ class LayerRegisterer {
     LayerRegisterer(
         const string& type,
         shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
-      LOG(INFO)  <<  "Registering layer type in function: "  <<  type;
+      // LOG(INFO)  <<  "Registering layer type in function: "  <<  type;
       LayerRegistry<Dtype>::AddCreator(
           type,
           creator);

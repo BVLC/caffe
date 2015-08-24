@@ -112,6 +112,21 @@ LOG(INFO) << "TIME(" << name << ") = "\
 \
 }
 
+#define TIMENOSYNC(name, this) {\
+struct timeval s;\
+double bgn = 0.0;\
+if (gettimeofday(&s, 0) == 0) {\
+  bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+(this); \
+double end = 0.0;\
+if (gettimeofday(&s, 0) == 0) {\
+  end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+LOG(INFO) << "TIMENOSYNC(" << name << ") = "\
+           << (static_cast<float>(floor(1000*(1000*(end-bgn)))))/1000 << "ms";\
+}
+
 #define FLOPS(name, ops, bytes, this) {\
 \
 struct timeval s;\
@@ -153,6 +168,11 @@ if (gettimeofday(&s, 0) == 0) {\
 #define TIME_INIT()
 #define TIME_BGN()
 #define TIME_END(name)
+
+#define TIMENOSYNC(name, this) {\
+(this); \
+}
+
 
 #endif
 
