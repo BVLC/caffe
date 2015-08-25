@@ -65,6 +65,8 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       // gradient w.r.t. bottom data, if necessary.
       if (propagate_down[i]) {
+        // Multi queue execution, all previous work needs to be done first
+        this->device_context_->FinishQueues();
         for (int n = 0; n < this->num_; ++n) {
           // Multi queue execution, go through work queues
           this->device_context_->SwitchQueue(n);
