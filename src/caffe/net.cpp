@@ -924,12 +924,6 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
     LayerParameter* layer_param = param->add_layer();
-    for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
-      layer_param->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
-    }
-    for (int j = 0; j < top_id_vecs_[i].size(); ++j) {
-      layer_param->add_top(blob_names_[top_id_vecs_[i][j]]);
-    }
     layers_[i]->ToProto(layer_param, write_diff);
   }
 }
