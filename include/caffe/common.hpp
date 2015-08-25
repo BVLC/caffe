@@ -74,6 +74,7 @@ namespace caffe {
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
+using boost::dynamic_pointer_cast;
 
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
