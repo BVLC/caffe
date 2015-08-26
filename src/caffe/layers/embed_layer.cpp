@@ -76,7 +76,7 @@ void EmbedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DCHECK_GE(index, 0);
     DCHECK_LT(index, K_);
     DCHECK_EQ(static_cast<Dtype>(index), bottom_data[n]) << "non-integer input";
-    caffe_copy(N_, weight + index * N_, top_data + n * N_);
+    caffe_cpu_copy(N_, weight + index * N_, top_data + n * N_);
   }
   if (bias_term_) {
     const Dtype* bias = this->blobs_[1]->cpu_data();
