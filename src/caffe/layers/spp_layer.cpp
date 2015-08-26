@@ -66,8 +66,11 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   SPPParameter spp_param = this->layer_param_.spp_param();
 
+  num_ = bottom[0]->num();
+  channels_ = bottom[0]->channels();
   bottom_h_ = bottom[0]->height();
   bottom_w_ = bottom[0]->width();
+  reshaped_first_time_ = false;
   CHECK_GT(bottom_h_, 0) << "Input dimensions cannot be zero.";
   CHECK_GT(bottom_w_, 0) << "Input dimensions cannot be zero.";
 
@@ -82,6 +85,15 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   flatten_outputs_.clear();
   concat_bottom_vec_.clear();
 
+  if (pyramid_height_ == 1) {
+    // pooling layer setup
+    LayerParameter pooling_param = GetPoolingParam(0, bottom_h_, bottom_w_,
+        spp_param);
+    pooling_layers_.push_back(shared_ptr<PoolingLayer<Dtype> > (
+        new PoolingLayer<Dtype>(pooling_param)));
+    pooling_layers_[0]->SetUp(bottom, top);
+    return;
+  }
   // split layer output holders setup
   for (int i = 0; i < pyramid_height_; i++) {
     split_top_vec_.push_back(new Blob<Dtype>());
@@ -135,10 +147,26 @@ void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
+  // Do nothing if bottom shape is unchanged since last Reshape
+  if (num_ == bottom[0]->num() && channels_ == bottom[0]->channels() &&
+      bottom_h_ == bottom[0]->height() && bottom_w_ == bottom[0]->width() &&
+      reshaped_first_time_) {
+    return;
+  }
+  num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   bottom_h_ = bottom[0]->height();
   bottom_w_ = bottom[0]->width();
+  reshaped_first_time_ = true;
   SPPParameter spp_param = this->layer_param_.spp_param();
+  if (pyramid_height_ == 1) {
+    LayerParameter pooling_param = GetPoolingParam(0, bottom_h_, bottom_w_,
+        spp_param);
+    pooling_layers_[0].reset(new PoolingLayer<Dtype>(pooling_param));
+    pooling_layers_[0]->SetUp(bottom, top);
+    pooling_layers_[0]->Reshape(bottom, top);
+    return;
+  }
   split_layer_->Reshape(bottom, split_top_vec_);
   for (int i = 0; i < pyramid_height_; i++) {
     LayerParameter pooling_param = GetPoolingParam(
@@ -159,6 +187,10 @@ void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  if (pyramid_height_ == 1) {
+    pooling_layers_[0]->Forward(bottom, top);
+    return;
+  }
   split_layer_->Forward(bottom, split_top_vec_);
   for (int i = 0; i < pyramid_height_; i++) {
     pooling_layers_[i]->Forward(
@@ -173,6 +205,10 @@ template <typename Dtype>
 void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
+    return;
+  }
+  if (pyramid_height_ == 1) {
+    pooling_layers_[0]->Backward(top, propagate_down, bottom);
     return;
   }
   vector<bool> concat_propagate_down(pyramid_height_, true);
