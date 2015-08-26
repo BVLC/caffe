@@ -35,11 +35,6 @@ __global__ void EmbedForward(const int nthreads, const Dtype* bottom_data,
 template <typename Dtype>
 __global__ void EmbedBackward(const int nthreads, const Dtype* bottom_data,
     const Dtype* top_diff, const int M, const int N, const int K,
-    Dtype* weight_diff);
-
-template <typename Dtype>
-__global__ void EmbedBackward(const int nthreads, const Dtype* bottom_data,
-    const Dtype* top_diff, const int M, const int N, const int K,
     Dtype* weight_diff) {
   CUDA_KERNEL_LOOP(top_index, nthreads) {
     const int n = top_index / N;
