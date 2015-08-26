@@ -301,7 +301,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 138 (last added: embed_param)
+// LayerParameter next available layer-specific ID: 139 (last added: tile_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -383,6 +383,7 @@ message LayerParameter {
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
+  optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
 }
 
@@ -919,6 +920,16 @@ message TanHParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
+// Message that stores parameters used by TileLayer
+message TileParameter {
+  // The index of the axis to tile.
+  optional int32 axis = 1 [default = 1];
+
+  // The number of copies (tiles) of the blob to output.
+  optional int32 tiles = 2;
+}
+
+// Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
 }
