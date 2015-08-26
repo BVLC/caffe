@@ -19,7 +19,7 @@ __kernel void TEMPLATE(embed_forward,Dtype)(const int nthreads,
   }
 
 // atomic_add from: http://suhorukov.blogspot.com/2011/12/opencl-11-atomic-operations-on-floating.html
-#if (Dtype == float)
+#if (TYPE == TYPE_FLOAT)
 inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {
     union {
         unsigned int intVal;
@@ -34,7 +34,23 @@ inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dt
         newVal.floatVal = prevVal.floatVal + operand;
     } while (atomic_cmpxchg((volatile __global unsigned int *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);
 }
-#else
+
+__kernel void TEMPLATE(embed_backward,Dtype)(const int nthreads, __global const Dtype* bottom_data,
+    __global const Dtype* top_diff, const int M, const int N, const int K,
+    __global Dtype* weight_diff) {
+  for (int top_index = get_global_id(0); top_index < nthreads;
+      top_index += get_global_size(0)) {
+    const int n = top_index / N;
+    const int d = top_index % N;
+    const int index = (int)(bottom_data[n]);
+    const int weight_index = index * N + d;
+
+    TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));
+  }
+}
+#endif
+
+#if (TYPE == TYPE_DOUBLE)
 #ifdef ATOMICS_64_AVAILABLE
 inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dtype operand) {
     union {
@@ -50,8 +66,6 @@ inline void TEMPLATE(atomic_add,Dtype)(volatile __global Dtype *source, const Dt
         newVal.floatVal = prevVal.floatVal + operand;
     } while (atom_cmpxchg((volatile __global unsigned long *)source, prevVal.intVal, newVal.intVal) != prevVal.intVal);
 }
-#endif
-#endif
 
 __kernel void TEMPLATE(embed_backward,Dtype)(const int nthreads, __global const Dtype* bottom_data,
     __global const Dtype* top_diff, const int M, const int N, const int K,
@@ -66,3 +80,5 @@ __kernel void TEMPLATE(embed_backward,Dtype)(const int nthreads, __global const 
     TEMPLATE(atomic_add,Dtype)((weight_diff + weight_index), *(top_diff + top_index));
   }
 }
+#endif
+#endif

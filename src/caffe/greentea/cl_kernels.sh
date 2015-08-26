@@ -86,6 +86,7 @@ done
 
 shopt -s nullglob
 echo "  ss << \"#define Dtype float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define TYPE TYPE_FLOAT\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 for CL_KERNEL in $CL_KERNELDIR
 do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
@@ -98,6 +99,8 @@ shopt -s nullglob
 echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#undef Dtype\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  ss << \"#define Dtype double\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#undef TYPE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 for CL_KERNEL in $CL_KERNELDIR
 do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`

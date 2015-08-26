@@ -13,6 +13,7 @@
 #endif
 
 #include <boost/shared_ptr.hpp>
+#include <string>
 #include <vector>
 #include "caffe/blob.hpp"
 #include "caffe/greentea/greentea.hpp"
@@ -51,6 +52,7 @@ class DeviceContext {
   void IncreaseMemoryUsage(size_t bytes);
   void DecreaseMemoryUsage(size_t bytes);
   void ResetPeakMemoryUsage();
+  bool CheckCapability(std::string cap);
 
  private:
   int current_queue_id_;
