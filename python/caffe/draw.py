@@ -40,7 +40,7 @@ def get_edge_label(layer):
 
     if layer.type == 'Data':
         edge_label = 'Batch ' + str(layer.data_param.batch_size)
-    elif layer.type == 'Convolution':
+    elif layer.type == 'Convolution' or layer.type == 'Deconvolution':
         edge_label = str(layer.convolution_param.num_output)
     elif layer.type == 'InnerProduct':
         edge_label = str(layer.inner_product_param.num_output)
@@ -74,7 +74,7 @@ def get_layer_label(layer, rankdir):
         # horizontal space is not; separate words with newlines
         separator = '\\n'
 
-    if layer.type == 'Convolution':
+    if layer.type == 'Convolution' or layer.type == 'Deconvolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
         node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
@@ -109,7 +109,7 @@ def choose_color_by_layertype(layertype):
     """Define colors for nodes based on the layer type.
     """
     color = '#6495ED'  # Default
-    if layertype == 'Convolution':
+    if layertype == 'Convolution' or layertype == 'Deconvolution':
         color = '#FF5050'
     elif layertype == 'Pooling':
         color = '#FF9900'
