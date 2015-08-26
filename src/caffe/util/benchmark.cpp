@@ -45,6 +45,7 @@ void Timer::Stop() {
       CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
     } else {
 #endif
+
       Caffe::DeviceSync();
     stop_cpu_ = boost::posix_time::microsec_clock::local_time();
 #if defined(USE_CUDA)
