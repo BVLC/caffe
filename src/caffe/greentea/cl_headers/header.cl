@@ -21,6 +21,8 @@
 #define CONCAT(A,B) A##_##B
 #define TEMPLATE(name,type) CONCAT(name,type)
 
+#define TYPE_FLOAT 1
+#define TYPE_DOUBLE 2
 
 #if defined(cl_khr_fp64)
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
