@@ -68,7 +68,18 @@ void EmbedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      // TODO: Implement OpenCL kernel
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          this->device_context_->id());
+      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+          this->device_context_->id());
+
+      viennacl::ocl::kernel &oclk_embed = program.get_kernel(
+          CL_KERNEL_SELECT("embed_forward"));
+      viennacl::ocl::enqueue(
+          oclk_embed(count, WrapHandle((cl_mem) bottom_data, &ctx),
+                    WrapHandle((cl_mem) weight, &ctx), M_, N_, K_,
+                    WrapHandle((cl_mem) top_data, &ctx)),
+          ctx.get_queue());
 
     if (bias_term_) {
       greentea_gpu_gemm<Dtype>(this->device_context()->id(), CblasNoTrans,
@@ -101,7 +112,18 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      // TODO: Implement OpenCL kernel
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          this->device_context_->id());
+      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+          this->device_context_->id());
+
+      viennacl::ocl::kernel &oclk_embed = program.get_kernel(
+          CL_KERNEL_SELECT("embed_backward"));
+      viennacl::ocl::enqueue(
+          oclk_embed(top_count, WrapHandle((cl_mem) bottom_data, &ctx),
+                     WrapHandle((cl_mem) top_diff, &ctx), M_, N_, K_,
+                     WrapHandle((cl_mem) weight_diff, &ctx)),
+          ctx.get_queue());
 #endif  // USE_GREENTEA
     }
 
