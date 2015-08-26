@@ -388,8 +388,8 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
-  optional AffinityParameter affinity_param = 137;
   optional MergeCropParameter mergecrop_param = 138;
+  optional AffinityParameter affinity_param = 139;
 }
 
 // Message that stores parameters used to apply transformation
