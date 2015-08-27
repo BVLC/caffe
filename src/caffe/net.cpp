@@ -627,6 +627,7 @@ template <typename Dtype>
 const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
     const vector<Blob<Dtype>*> & bottom, Dtype* loss) {
   // Copy bottom to internal bottom
+  CHECK_LE(bottom.size(), net_input_blobs_.size());
   for (int i = 0; i < bottom.size(); ++i) {
     net_input_blobs_[i]->CopyFrom(*bottom[i]);
   }
