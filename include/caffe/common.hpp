@@ -229,6 +229,11 @@ class MemoryHandlerActivator {
       using_pool_ = true;
       MemoryHandler::usePool();
       MemoryHandler::setGPUs(gpus);
+#ifndef CPU_ONLY
+      void* temp;
+      MemoryHandler::mallocGPU(&temp, 4);
+      MemoryHandler::freeGPU(temp);
+#endif
     }
   }
   ~MemoryHandlerActivator() {
