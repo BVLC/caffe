@@ -1,13 +1,13 @@
 // Usage:
 // convert_3d_data input_image_file input_label_file output_db_file
 #include <fstream>  // NOLINT(readability/streams)
-#include <math.h>
 #include <string>
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
 #include "leveldb/db.h"
+#include "math.h"
 #include "stdint.h"
 
 uint32_t swap_endian(uint32_t val) {
@@ -17,17 +17,28 @@ uint32_t swap_endian(uint32_t val) {
 
 void read_image(std::ifstream* image_file, std::ifstream* label_file,
         uint32_t index, uint32_t rows, uint32_t cols,
-        char* pixels, char* label_temp, signed char* label) {
-  image_file->seekg(index * rows * cols + 16);
-  image_file->read(pixels, rows * cols);
-  label_file->seekg(index * 4 + 8);
-  label_file->read(label_temp, 4);
-  for (int i = 0; i < 4; i++)
-    *(label+i) = (signed char)*(label_temp+i);
+        char* pixels, char* label_temp, signed char* label, int rgb_use) {
+  if (rgb_use == 0)
+  {
+    image_file->seekg(index * rows * cols + 16);
+    image_file->read(pixels, rows * cols);
+    label_file->seekg(index * 4 + 8);
+    label_file->read(label_temp, 4);
+    for (int i = 0; i < 4; i++)
+      *(label+i) = (signed char)*(label_temp+i);
+  } else {
+    image_file->seekg(3 * index * rows * cols + 16);
+    image_file->read(pixels, 3 * rows * cols);
+    label_file->seekg(index * 4 + 8);
+    label_file->read(label_temp, 4);
+    for (int i = 0; i < 4; i++)
+      *(label+i) = (signed char)*(label_temp+i);
+  }
 }
 
 void convert_dataset(const char* image_filename, const char* label_filename,
-        const char* db_filename, const char* class_number) {
+        const char* db_filename, const char* class_number, const char* rgb_use) {
+  int rgb_use1 = atoi(rgb_use);
   int class_num = atoi(class_number);
   // Open files
   std::ifstream image_file(image_filename, std::ios::in | std::ios::binary);
@@ -73,16 +84,24 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   signed char* label_k = new signed char[4];
   signed char* label_l = new signed char[4];  // label for pair wise
   signed char* label_m = new signed char[4];
-  char* pixels1 = new char[rows * cols];
-  char* pixels2 = new char[rows * cols];
-  char* pixels3 = new char[rows * cols];
-  char* pixels4 = new char[rows * cols];
-  char* pixels5 = new char[rows * cols];
+  int db_size;
+  if (rgb_use1 == 0)
+    db_size = rows * cols;
+  else
+    db_size = 3 * rows * cols;
+  char* pixels1 = new char[db_size];
+  char* pixels2 = new char[db_size];
+  char* pixels3 = new char[db_size];
+  char* pixels4 = new char[db_size];
+  char* pixels5 = new char[db_size];
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
   caffe::Datum datum;
-  datum.set_channels(1);
+  if (rgb_use1 == 0)
+    datum.set_channels(1);
+  else
+    datum.set_channels(3);
   datum.set_height(rows);
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
@@ -100,15 +119,15 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       int l = caffe::caffe_rng_rand() % num_items;  // pick pair wise groups
       int m = caffe::caffe_rng_rand() % num_items;
       read_image(&image_file, &label_file, i, rows, cols,  // read triplet
-        pixels1, label_temp, label_i);
+        pixels1, label_temp, label_i, rgb_use1);
       read_image(&image_file, &label_file, j, rows, cols,
-        pixels2, label_temp, label_j);
+        pixels2, label_temp, label_j, rgb_use1);
       read_image(&image_file, &label_file, k, rows, cols,
-        pixels3, label_temp, label_k);
+        pixels3, label_temp, label_k, rgb_use1);
       read_image(&image_file, &label_file, l, rows, cols,  // read pair wise
-        pixels4, label_temp, label_l);
+        pixels4, label_temp, label_l, rgb_use1);
       read_image(&image_file, &label_file, m, rows, cols,
-        pixels5, label_temp, label_m);
+        pixels5, label_temp, label_m, rgb_use1);
 
       bool pair_pass = false;
       bool triplet1_pass = false;
@@ -140,35 +159,35 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         triplet2_pass = true;
       if (pair_pass && (*label_i  == *label_m))
         triplet3_class_same = true;
-      if (triplet3_class_same && dist_im > 100/3 && dist_im < 100)
+      if (triplet3_class_same && dist_im > 100/3)
         triplet3_pass = true;
       if (pair_pass && triplet1_pass && triplet2_pass && triplet3_pass) {
-        datum.set_data(pixels1, rows*cols);  // set data
-        datum.set_label(int(*label_i));
+        datum.set_data(pixels1, db_size);  // set data
+        datum.set_label(static_cast<int>(*label_i));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
-        datum.set_data(pixels2, rows*cols);  // set data
-        datum.set_label(int(*label_j));
+        datum.set_data(pixels2, db_size);  // set data
+        datum.set_label(static_cast<int>(*label_j));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
-        datum.set_data(pixels3, rows*cols);  // set data
-        datum.set_label(int(*label_k));
+        datum.set_data(pixels3, db_size);  // set data
+        datum.set_label(static_cast<int>(*label_k));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
-        datum.set_data(pixels4, rows*cols);  // set data
-        datum.set_label(int(*label_l));
+        datum.set_data(pixels4, db_size);  // set data
+        datum.set_label(static_cast<int>(*label_l));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
         counter++;
-        datum.set_data(pixels5, rows*cols);  // set data
-        datum.set_label(int(*label_m));
+        datum.set_data(pixels5, db_size);  // set data
+        datum.set_label(static_cast<int>(*label_m));
         datum.SerializeToString(&value);
         snprintf(key, kMaxKeyLength, "%08d", counter);
         db->Put(leveldb::WriteOptions(), std::string(key), value);
@@ -176,9 +195,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       } else {
         class_ind--;
       }
-      } // iteration in the samples of all class
-    } // iteration in the samples in one class
-  } // iteration in times
+      }  // iteration in the samples of all class
+    }  // iteration in the samples in one class
+  }  // iteration in times
   delete db;
   delete pixels1;
   delete pixels2;
@@ -188,15 +207,15 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 }
 
 int main(int argc, char** argv) {
-  if (argc != 5) {
-    printf("This script converts the images dataset to the leveldb format used\n"
+  if (argc != 6) {
+    printf("This script converts the dataset to the leveldb format used\n"
            "by caffe to train a triplet network.\n"
            "Usage:\n"
            "    convert_3d_data input_image_file input_label_file "
-           "output_db_file class_number\n");
+           "output_db_file class_number rgb_use \n");
   } else {
     google::InitGoogleLogging(argv[0]);
-    convert_dataset(argv[1], argv[2], argv[3], argv[4]);
+    convert_dataset(argv[1], argv[2], argv[3], argv[4], argv[5]);
   }
   return 0;
 }
