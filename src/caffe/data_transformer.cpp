@@ -1,6 +1,4 @@
-#ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
-#endif  // USE_OPENCV
 
 #include <string>
 #include <vector>
@@ -126,46 +124,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 }
 
-
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
-<<<<<<< fa941056111876e03082cdc5695d75339ed24ed9
-#ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-    CHECK(!(param_.force_color() && param_.force_gray()))
-=======
-<<<<<<< HEAD
-    CHECK(!param_.force_color() && !param_.force_gray())
->>>>>>> 011aef0... restore
-=======
-    CHECK(!(param_.force_color() && param_.force_gray()))
->>>>>>> d2acfed... fixed _force_color check, fixes #2635
-=======
-  // If datum is encoded, decoded and transform the cv::image.
-  if (datum.encoded()) {
-<<<<<<< HEAD
-    CHECK(!param_.force_color() && !param_.force_gray())
->>>>>>> 011aef0... restore
-<<<<<<< HEAD
->>>>>>> 00341b2... triplet data generation and network update
-<<<<<<< bd900fc47efb4f9fe6c0698d66ca08f7a5c1ed58
->>>>>>> triplet data generation and network update
-=======
-=======
-=======
-    CHECK(!(param_.force_color() && param_.force_gray()))
->>>>>>> d2acfed... fixed _force_color check, fixes #2635
->>>>>>> 1882ac9... add initiate class name of triplet loss layer
->>>>>>> add initiate class name of triplet loss layer
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {
@@ -176,9 +140,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
     // Transform the cv::image into blob.
     return Transform(cv_img, transformed_blob);
-#else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
-#endif  // USE_OPENCV
   } else {
     if (param_.force_color() || param_.force_gray()) {
       LOG(ERROR) << "force_color and force_gray only for encoded datum";
@@ -186,17 +147,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   const int crop_size = param_.crop_size();
-<<<<<<< HEAD
-=======
->>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
-=======
->>>>>>> 011aef0... restore
-=======
->>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
 
+  // Check dimensions.
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -206,8 +161,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   CHECK_LE(height, datum_height);
   CHECK_LE(width, datum_width);
   CHECK_GE(num, 1);
-
-  const int crop_size = param_.crop_size();
 
   if (crop_size) {
     CHECK_EQ(crop_size, height);
@@ -241,7 +194,6 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   }
 }
 
-#ifdef USE_OPENCV
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
                                        Blob<Dtype>* transformed_blob) {
@@ -265,10 +217,12 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
+  const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
   const int img_width = cv_img.cols;
 
+  // Check dimensions.
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -281,7 +235,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
-  const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
@@ -362,15 +315,26 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     }
   }
 }
-#endif  // USE_OPENCV
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
                                        Blob<Dtype>* transformed_blob) {
+  const int crop_size = param_.crop_size();
   const int input_num = input_blob->num();
   const int input_channels = input_blob->channels();
   const int input_height = input_blob->height();
   const int input_width = input_blob->width();
+
+  if (transformed_blob->count() == 0) {
+    // Initialize transformed_blob with the right shape.
+    if (crop_size) {
+      transformed_blob->Reshape(input_num, input_channels,
+                                crop_size, crop_size);
+    } else {
+      transformed_blob->Reshape(input_num, input_channels,
+                                input_height, input_width);
+    }
+  }
 
   const int num = transformed_blob->num();
   const int channels = transformed_blob->channels();
@@ -383,7 +347,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   CHECK_GE(input_height, height);
   CHECK_GE(input_width, width);
 
-  const int crop_size = param_.crop_size();
+
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
@@ -465,44 +429,10 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
-#ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
-<<<<<<< fa941056111876e03082cdc5695d75339ed24ed9
-=======
-=======
-    CHECK(!param_.force_color() && !param_.force_gray())
->>>>>>> 011aef0... restore
-=======
-    CHECK(!(param_.force_color() && param_.force_gray()))
-<<<<<<< HEAD
->>>>>>> d2acfed... fixed _force_color check, fixes #2635
-=======
-=======
-template<typename Dtype>
-vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
-  if (datum.encoded()) {
-<<<<<<< HEAD
-    CHECK(!param_.force_color() && !param_.force_gray())
->>>>>>> 011aef0... restore
-<<<<<<< HEAD
->>>>>>> 00341b2... triplet data generation and network update
-<<<<<<< bd900fc47efb4f9fe6c0698d66ca08f7a5c1ed58
->>>>>>> triplet data generation and network update
-=======
-=======
-=======
-    CHECK(!(param_.force_color() && param_.force_gray()))
->>>>>>> d2acfed... fixed _force_color check, fixes #2635
->>>>>>> 1882ac9... add initiate class name of triplet loss layer
->>>>>>> add initiate class name of triplet loss layer
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {
@@ -513,10 +443,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
     }
     // InferBlobShape using the cv::image.
     return InferBlobShape(cv_img);
-#else
-    LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
-#endif  // USE_OPENCV
   }
+
   const int crop_size = param_.crop_size();
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
@@ -546,7 +474,6 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
   return shape;
 }
 
-#ifdef USE_OPENCV
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   const int crop_size = param_.crop_size();
@@ -577,15 +504,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
   shape[0] = num;
   return shape;
 }
-#endif  // USE_OPENCV
 
-<<<<<<< HEAD
-=======
->>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
-=======
->>>>>>> 011aef0... restore
-=======
->>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||

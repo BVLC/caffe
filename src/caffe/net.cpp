@@ -98,8 +98,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << "propagate_down param must be specified "
           << "either 0 or bottom_size times ";
     }
-    layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
->>>>>>> triplet data generation and network update
+    if (share_from_root) {
+      LOG(INFO) << "Sharing layer " << layer_param.name() << " from root net";
+      layers_.push_back(root_net_->layers_[layer_id]);
+      layers_[layer_id]->SetShared(true);
+    } else {
+      layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
+    }
     layer_names_.push_back(layer_param.name());
     if (Caffe::root_solver()) {
       LOG(INFO) << "Creating Layer " << layer_param.name();
@@ -805,11 +810,12 @@ void Net<Dtype>::Backward() {
   BackwardFromTo(layers_.size() - 1, 0);
   if (debug_info_) {
     Dtype asum_data = 0, asum_diff = 0, sumsq_data = 0, sumsq_diff = 0;
-    for (int i = 0; i < learnable_params_.size(); ++i) {
-      asum_data += learnable_params_[i]->asum_data();
-      asum_diff += learnable_params_[i]->asum_diff();
-      sumsq_data += learnable_params_[i]->sumsq_data();
-      sumsq_diff += learnable_params_[i]->sumsq_diff();
+    for (int i = 0; i < params_.size(); ++i) {
+      if (param_owners_[i] >= 0) { continue; }
+      asum_data += params_[i]->asum_data();
+      asum_diff += params_[i]->asum_diff();
+      sumsq_data += params_[i]->sumsq_data();
+      sumsq_diff += params_[i]->sumsq_diff();
     }
     const Dtype l2norm_data = std::sqrt(sumsq_data);
     const Dtype l2norm_diff = std::sqrt(sumsq_diff);

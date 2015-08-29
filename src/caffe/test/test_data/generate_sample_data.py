@@ -1,11 +1,13 @@
 """
-Generate data used in the HDF5DataLayer test.
+Generate data used in the HDF5DataLayer and GradientBasedSolver tests.
 """
 import os
 import numpy as np
 import h5py
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Generate HDF5DataLayer sample_data.h5
 
 num_cols = 8
 num_rows = 10
@@ -75,13 +77,3 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 
 with open(script_dir + '/solver_data_list.txt', 'w') as f:
     f.write(script_dir + '/solver_data.h5\n')
-=======
-with open(os.path.dirname(__file__) + '/sample_data_list.txt', 'w') as f:
-    f.write(os.path.dirname(__file__) + '/sample_data.h5\n')
-    f.write(os.path.dirname(__file__) + '/sample_data_2_gzip.h5\n')
->>>>>>> triplet data generation and network update
-=======
-with open(script_dir + '/sample_data_list.txt', 'w') as f:
-    f.write(script_dir + '/sample_data.h5\n')
-    f.write(script_dir + '/sample_data_2_gzip.h5\n')
->>>>>>> restore

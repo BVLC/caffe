@@ -13,12 +13,12 @@ $EXAMPLES/convert_3d_triplet_data.bin \
     $DATA/binary_image_train \
     $DATA/binary_label_train \
     ./examples/triplet/3d_triplet_train_leveldb \
-    4 \
+    6 \
     0
 $EXAMPLES/convert_3d_triplet_data.bin \
     $DATA/binary_image_test \
     $DATA/binary_label_test \
     ./examples/triplet/3d_triplet_test_leveldb \
-    4 \
+    6 \
     0
 echo "Done."

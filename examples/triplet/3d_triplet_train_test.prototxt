@@ -158,7 +158,7 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 4
+    num_output: 3
     weight_filler {
       type: "xavier"
     }

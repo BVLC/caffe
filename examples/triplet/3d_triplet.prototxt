@@ -1,6 +1,6 @@
 name: "3d_triplet"
 input: "data"
-input_dim: 276
+input_dim: 9720
 input_dim: 1
 input_dim: 64
 input_dim: 64
@@ -105,6 +105,6 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 4
+    num_output: 3
   }
 }

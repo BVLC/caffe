@@ -169,23 +169,9 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-
-LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5
-
-# handle IO dependencies
-USE_LEVELDB ?= 1
-USE_LMDB ?= 1
-USE_OPENCV ?= 1
-
-ifeq ($(USE_LEVELDB), 1)
-	LIBRARIES += leveldb snappy
-endif
-ifeq ($(USE_LMDB), 1)
-	LIBRARIES += lmdb
-endif
-ifeq ($(USE_OPENCV), 1)
-	LIBRARIES += opencv_core opencv_highgui opencv_imgproc
-endif
+LIBRARIES += glog gflags protobuf leveldb snappy \
+	lmdb boost_system hdf5_hl hdf5 m \
+	opencv_core opencv_highgui opencv_imgproc #opencv_imgcodecs
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -242,7 +228,7 @@ ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
 	# older versions of gcc are too dumb to build boost with -Wuninitalized
-	ifeq ($(shell echo $(GCCVERSION) \< 4.6 | bc), 1)
+	ifeq ($(shell echo | awk '{exit $(GCCVERSION) < 4.6;}'), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
 	# boost::thread is reasonably called boost_thread (compare OS X)
@@ -257,7 +243,7 @@ ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
 	ifneq ($(CPU_ONLY), 1)
 		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release \d' | grep -o '\d')
-		ifeq ($(shell echo $(CUDA_VERSION) \< 7.0 | bc), 1)
+		ifeq ($(shell echo | awk '{exit $(CUDA_VERSION) < 7.0;}'), 1)
 			CXXFLAGS += -stdlib=libstdc++
 			LINKFLAGS += -stdlib=libstdc++
 		endif
@@ -302,17 +288,6 @@ endif
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
 	COMMON_FLAGS += -DUSE_CUDNN
-endif
-
-# configure IO libraries
-ifeq ($(USE_OPENCV), 1)
-	COMMON_FLAGS += -DUSE_OPENCV
-endif
-ifeq ($(USE_LEVELDB), 1)
-	COMMON_FLAGS += -DUSE_LEVELDB
-endif
-ifeq ($(USE_LMDB), 1)
-	COMMON_FLAGS += -DUSE_LMDB
 endif
 
 # CPU-only configuration
@@ -412,11 +387,13 @@ endif
 ##############################
 # Define build targets
 ##############################
-.PHONY: all test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
+.PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
+all: lib tools examples
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
 
@@ -496,7 +473,7 @@ runtest: $(TEST_ALL_BIN)
 
 pytest: py
 	cd python; python -m unittest discover -s caffe/test
-
+	
 mattest: mat
 	cd matlab; $(MATLAB_DIR)/bin/matlab -nodisplay -r 'caffe.run_tests(), exit()'
 

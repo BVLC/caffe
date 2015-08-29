@@ -216,8 +216,6 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
 };
 
-<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
-=======
 template <typename Dtype>
 class TripletLossLayer : public LossLayer<Dtype> {
  public:
@@ -285,7 +283,6 @@ class TripletLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
 };
 
->>>>>>> triplet data generation and network update
 /**
  * @brief Computes the Euclidean (L2) loss @f$
  *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n

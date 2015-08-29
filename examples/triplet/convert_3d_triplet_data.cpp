@@ -18,8 +18,7 @@ uint32_t swap_endian(uint32_t val) {
 void read_image(std::ifstream* image_file, std::ifstream* label_file,
         uint32_t index, uint32_t rows, uint32_t cols,
         char* pixels, char* label_temp, signed char* label, int rgb_use) {
-  if (rgb_use == 0)
-  {
+  if (rgb_use == 0) {
     image_file->seekg(index * rows * cols + 16);
     image_file->read(pixels, rows * cols);
     label_file->seekg(index * 4 + 8);
@@ -37,7 +36,8 @@ void read_image(std::ifstream* image_file, std::ifstream* label_file,
 }
 
 void convert_dataset(const char* image_filename, const char* label_filename,
-        const char* db_filename, const char* class_number, const char* rgb_use) {
+        const char* db_filename,
+                     const char* class_number, const char* rgb_use) {
   int rgb_use1 = atoi(rgb_use);
   int class_num = atoi(class_number);
   // Open files

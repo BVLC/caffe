@@ -816,6 +816,10 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
     layer_param->mutable_threshold_param()->CopyFrom(
         v1_layer_param.threshold_param());
   }
+  if (v1_layer_param.has_triplet_loss_param()) {
+    layer_param->mutable_triplet_loss_param()->CopyFrom(
+        v1_layer_param.triplet_loss_param());
+  }
   if (v1_layer_param.has_window_data_param()) {
     layer_param->mutable_window_data_param()->CopyFrom(
         v1_layer_param.window_data_param());
@@ -913,6 +917,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "Slice";
   case V1LayerParameter_LayerType_TANH:
     return "TanH";
+  case V1LayerParameter_LayerType_TRIPLET_LOSS:
+    return "TripletLoss";
   case V1LayerParameter_LayerType_WINDOW_DATA:
     return "WindowData";
   case V1LayerParameter_LayerType_THRESHOLD:

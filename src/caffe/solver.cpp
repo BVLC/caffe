@@ -55,7 +55,6 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     << std::endl << param.DebugString();
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
-  CheckSnapshotWritePermissions();
   if (Caffe::root_solver() && param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
@@ -207,27 +206,19 @@ void Solver<Dtype>::Step(int iters) {
 
   while (iter_ < stop_iter) {
     // zero-init the params
-    for (int i = 0; i < net_->params().size(); ++i) {
-      shared_ptr<Blob<Dtype> > blob = net_->params()[i];
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        caffe_set(blob->count(), static_cast<Dtype>(0),
-            blob->mutable_cpu_diff());
-        break;
-      case Caffe::GPU:
-#ifndef CPU_ONLY
-        caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
-            blob->mutable_gpu_diff());
-#else
-        NO_GPU;
-#endif
+    net_->ClearParamDiffs();
+    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+        && (iter_ > 0 || param_.test_initialization())
+        && Caffe::root_solver()) {
+      TestAll();
+      if (requested_early_exit_) {
+        // Break out of the while loop because stop was requested while testing.
         break;
       }
     }
 
-    if (param_.test_interval() && iter_ % param_.test_interval() == 0
-        && (iter_ > 0 || param_.test_initialization())) {
-      TestAll();
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_start();
     }
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
@@ -270,14 +261,22 @@ void Solver<Dtype>::Step(int iters) {
         }
       }
     }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
     ApplyUpdate();
 
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
     ++iter_;
 
+    SolverAction::Enum request = GetRequestedAction();
+
     // Save a snapshot if needed.
-    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
       Snapshot();
     }
     if (SolverAction::STOP == request) {
@@ -436,41 +435,12 @@ void Solver<Dtype>::Snapshot() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::CheckSnapshotWritePermissions() {
-  if (Caffe::root_solver() && param_.snapshot()) {
-    CHECK(param_.has_snapshot_prefix())
-        << "In solver params, snapshot is specified but snapshot_prefix is not";
-    string probe_filename = SnapshotFilename(".tempfile");
-    std::ofstream probe_ofs(probe_filename.c_str());
-    if (probe_ofs.good()) {
-      probe_ofs.close();
-      std::remove(probe_filename.c_str());
-    } else {
-      LOG(FATAL) << "Cannot write to snapshot prefix '"
-          << param_.snapshot_prefix() << "'.  Make sure "
-          << "that the directory exists and is writeable.";
-    }
-  }
-}
-
-template <typename Dtype>
 string Solver<Dtype>::SnapshotFilename(const string extension) {
   string filename(param_.snapshot_prefix());
   const int kBufferSize = 20;
   char iter_str_buffer[kBufferSize];
   snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
-  filename += iter_str_buffer;
-  model_filename = filename + ".caffemodel";
-  LOG(INFO) << "Snapshotting to " << model_filename;
-  WriteProtoToBinaryFile(net_param, model_filename.c_str());
-  SolverState state;
-  SnapshotSolverState(&state);
-  state.set_iter(iter_);
-  state.set_learned_net(model_filename);
-  state.set_current_step(current_step_);
-  snapshot_filename = filename + ".solverstate";
-  LOG(INFO) << "Snapshotting solver state to " << snapshot_filename;
-  WriteProtoToBinaryFile(state, snapshot_filename.c_str());
+  return filename + iter_str_buffer + extension;
 }
 
 template <typename Dtype>
@@ -595,12 +565,14 @@ void SGDSolver<Dtype>::ClipGradients() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
+  CHECK(Caffe::root_solver());
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
   }
   ClipGradients();
-  for (int param_id = 0; param_id < this->net_->params().size(); ++param_id) {
+  for (int param_id = 0; param_id < this->net_->learnable_params().size();
+       ++param_id) {
     Normalize(param_id);
     Regularize(param_id);
     ComputeUpdateValue(param_id, rate);
@@ -612,7 +584,7 @@ template <typename Dtype>
 void SGDSolver<Dtype>::Normalize(int param_id) {
   if (this->param_.iter_size() == 1) { return; }
   // Scale gradient to counterbalance accumulation.
-  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
   switch (Caffe::mode()) {
   case Caffe::CPU: {
@@ -636,7 +608,7 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::Regularize(int param_id) {
-  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_weight_decay =
       this->net_->params_weight_decay();
   Dtype weight_decay = this->param_.weight_decay();
@@ -698,7 +670,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
-  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * net_params_lr[param_id];
@@ -732,8 +704,27 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 }
 
 template <typename Dtype>
-void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
-  state->clear_history();
+void SGDSolver<Dtype>::SnapshotSolverState(const string& model_filename) {
+  switch (this->param_.snapshot_format()) {
+    case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
+      SnapshotSolverStateToBinaryProto(model_filename);
+      break;
+    case caffe::SolverParameter_SnapshotFormat_HDF5:
+      SnapshotSolverStateToHDF5(model_filename);
+      break;
+    default:
+      LOG(FATAL) << "Unsupported snapshot format.";
+  }
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
+    const string& model_filename) {
+  SolverState state;
+  state.set_iter(this->iter_);
+  state.set_learned_net(model_filename);
+  state.set_current_step(this->current_step_);
+  state.clear_history();
   for (int i = 0; i < history_.size(); ++i) {
     // Add history
     BlobProto* history_blob = state.add_history();
@@ -741,7 +732,7 @@ void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
   }
   string snapshot_filename = Solver<Dtype>::SnapshotFilename(".solverstate");
   LOG(INFO)
-    << "Snapshotting solver state to binary proto file " << snapshot_filename;
+    << "Snapshotting solver state to binary proto file" << snapshot_filename;
   WriteProtoToBinaryFile(state, snapshot_filename.c_str());
 }
 
@@ -792,8 +783,34 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
 }
 
 template <typename Dtype>
+void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
+  hid_t file_hid = H5Fopen(state_file.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  CHECK_GE(file_hid, 0) << "Couldn't open solver state file " << state_file;
+  this->iter_ = hdf5_load_int(file_hid, "iter");
+  if (H5LTfind_dataset(file_hid, "learned_net")) {
+    string learned_net = hdf5_load_string(file_hid, "learned_net");
+    this->net_->CopyTrainedLayersFrom(learned_net);
+  }
+  this->current_step_ = hdf5_load_int(file_hid, "current_step");
+  hid_t history_hid = H5Gopen2(file_hid, "history", H5P_DEFAULT);
+  CHECK_GE(history_hid, 0) << "Error reading history from " << state_file;
+  int state_history_size = hdf5_get_num_links(history_hid);
+  CHECK_EQ(state_history_size, history_.size())
+      << "Incorrect length of history blobs.";
+  for (int i = 0; i < history_.size(); ++i) {
+    ostringstream oss;
+    oss << i;
+    hdf5_load_nd_dataset<Dtype>(history_hid, oss.str().c_str(), 0,
+                                kMaxBlobAxes, history_[i].get());
+  }
+  H5Gclose(history_hid);
+  H5Fclose(file_hid);
+}
+
+template <typename Dtype>
 void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
-  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  CHECK(Caffe::root_solver());
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * net_params_lr[param_id];
@@ -853,7 +870,8 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
 template <typename Dtype>
 void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
-  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  CHECK(Caffe::root_solver());
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype delta = this->param_.delta();
   Dtype local_rate = rate * net_params_lr[param_id];
