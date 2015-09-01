@@ -39,6 +39,7 @@ cdef extern from "caffe/tensor.hpp" namespace "caffe":
         vector[int] shape()
         int count()
         float* mutable_cpu_mem() except +
+        float* mutable_gpu_mem() except +
         void Reshape(vector[int]& shape) except +
         void AddFrom(Tensor& other) except +
         void MulFrom(Tensor& other) except +

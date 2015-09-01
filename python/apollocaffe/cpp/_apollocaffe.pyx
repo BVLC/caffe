@@ -6,6 +6,7 @@ from libcpp.set cimport set
 from libcpp.map cimport map
 from cython.operator cimport postincrement, dereference
 from definitions cimport Tensor as CTensor, Blob as CBlob, Layer as CLayer, shared_ptr, NumpyDataParameter, LayerParameter, RuntimeParameter, ApolloNet as CApolloNet, TRAIN, TEST
+from libc.stdint cimport uintptr_t
 
 import numpy as pynp
 import h5py
@@ -103,6 +104,18 @@ cdef class Tensor:
         else:
             self.thisptr.get().scale(other)
         return self
+    def to_cudandarray(self):
+        """ take a pycuda.gpuarray.GPUArray and make a CudaNdarray that point to its memory
+        :note: CudaNdarray support only float32, so only float32 GPUArray are accepted
+        """
+        strides = [1]
+        for i in self.shape[::-1][:-1]:
+            strides.append(strides[-1] * i)
+        strides = tuple(strides[::-1])
+        ptr = long(<uintptr_t><void *>(self.thisptr.get().mutable_gpu_mem()))
+        from theano.sandbox import cuda
+        z = cuda.from_gpu_pointer(ptr, self.shape, strides, ptr)
+        return z
     def get_mem(self):
         result = tonumpyarray(self.thisptr.get().mutable_cpu_mem(),
                     self.thisptr.get().count())
