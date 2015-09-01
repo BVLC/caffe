@@ -16,14 +16,17 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     top[0]->ReshapeLike(batch->data_);
     // Copy the data
     caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
-               top[0]->mutable_gpu_data());
+        top[0]->mutable_gpu_data());
     if (this->output_labels_) {
       // Reshape to loaded labels.
       top[1]->ReshapeLike(batch->label_);
       // Copy the labels.
       caffe_copy(batch->label_.count(), batch->label_.gpu_data(),
-                 top[1]->mutable_gpu_data());
+          top[1]->mutable_gpu_data());
     }
+    // Ensure the copy is synchronous wrt the host, so that the next batch isn't
+    // copied in meanwhile.
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -46,6 +49,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     }
 #endif  // USE_GREENTEA
   }
+
   prefetch_free_.push(batch);
 }
 
