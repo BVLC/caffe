@@ -57,8 +57,8 @@ class Layer(object):
                     raise AttributeError('Layer %s has no keyword argument %s=%s' % (param_type, k, v))
 
 class PyLayer(Layer):
-    def __init__(self, **kwargs):
-        super(PyLayer ,self).__init__(kwargs)
+    def __init__(self, name, **kwargs):
+        super(PyLayer, self).__init__(self, name, kwargs)
         self.kwargs = kwargs
         self.p.type = 'Py'
         if 'param_shapes' in kwargs:
