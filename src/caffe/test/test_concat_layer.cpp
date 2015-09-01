@@ -173,4 +173,13 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannels) {
     this->blob_top_vec_);
 }
 
+TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConcatLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
+    this->blob_top_vec_, 1);
+}
+
 }  // namespace caffe
