@@ -106,8 +106,6 @@ endfunction()
 #   caffe_default_properties(<target>)
 function(caffe_default_properties target)
   set_target_properties(${target} PROPERTIES
-    OUTPUT_NAME caffe-nv
-    SOVERSION 0.13.2
     DEBUG_POSTFIX ${Caffe_DEBUG_POSTFIX}
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
