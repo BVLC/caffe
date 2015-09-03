@@ -6,24 +6,31 @@ env:
     - WITH_CUDA=false WITH_CMAKE=true
     - WITH_CUDA=true WITH_CMAKE=false
     - WITH_CUDA=true WITH_CMAKE=true
+    - WITH_CUDA=false WITH_CMAKE=true PYTHON_VERSION=3
 
 language: cpp
 
 # Cache Ubuntu apt packages.
-cache: apt
+cache:
+  apt: true
+  directories:
+  - /home/travis/miniconda
+  - /home/travis/miniconda2
+  - /home/travis/miniconda3
 
 compiler: gcc
 
 before_install:
   - export NUM_THREADS=4
   - export SCRIPTS=./scripts/travis
+  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
 
 install:
   - sudo -E $SCRIPTS/travis_install.sh
 
 before_script:
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64
-  - export PATH=/home/travis/miniconda/bin:$PATH
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export PATH=$CONDA_DIR/bin:$PATH
   - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
 script: $SCRIPTS/travis_build_and_test.sh

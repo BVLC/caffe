@@ -374,6 +374,7 @@ layer {
   type: "SoftmaxWithLoss"
   bottom: "fc8_flickr"
   bottom: "label"
+  top: "loss"
 }
 layer {
   name: "accuracy"

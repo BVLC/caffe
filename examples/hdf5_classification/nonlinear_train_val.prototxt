@@ -8,7 +8,7 @@ layer {
     phase: TRAIN
   }
   hdf5_data_param {
-    source: "hdf5_classification/data/train.txt"
+    source: "examples/hdf5_classification/data/train.txt"
     batch_size: 10
   }
 }
@@ -21,7 +21,7 @@ layer {
     phase: TEST
   }
   hdf5_data_param {
-    source: "hdf5_classification/data/test.txt"
+    source: "examples/hdf5_classification/data/test.txt"
     batch_size: 10
   }
 }
@@ -41,8 +41,7 @@ layer {
   inner_product_param {
     num_output: 40
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -72,8 +71,7 @@ layer {
   inner_product_param {
     num_output: 2
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
     bias_filler {
       type: "constant"

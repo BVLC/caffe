@@ -190,6 +190,21 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
+  if (bp::len(kwargs) > 0) {
+    throw std::runtime_error("BlobVec.add_blob takes no kwargs");
+  }
+  typedef vector<shared_ptr<Blob<Dtype> > > BlobVec;
+  BlobVec* self = bp::extract<BlobVec*>(args[0]);
+  vector<int> shape(bp::len(args) - 1);
+  for (int i = 1; i < bp::len(args); ++i) {
+    shape[i - 1] = bp::extract<int>(args[i]);
+  }
+  self->push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+  // We need to explicitly return None to use bp::raw_function.
+  return bp::object();
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -199,6 +214,8 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
+
+  bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
@@ -211,6 +228,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
         &Net<Dtype>::CopyTrainedLayersFrom))
     .def("share_with", &Net<Dtype>::ShareTrainedLayersWith)
+    .add_property("_blob_loss_weights", bp::make_function(
+        &Net<Dtype>::blob_loss_weights, bp::return_internal_reference<>()))
     .add_property("_blobs", bp::make_function(&Net<Dtype>::blobs,
         bp::return_internal_reference<>()))
     .add_property("layers", bp::make_function(&Net<Dtype>::layers,
@@ -230,6 +249,11 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
+    .add_property("shape",
+        bp::make_function(
+            static_cast<const vector<int>& (Blob<Dtype>::*)() const>(
+                &Blob<Dtype>::shape),
+            bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("num",      &Blob<Dtype>::num)
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
@@ -279,7 +303,8 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   // vector wrappers for all the vector types we use
   bp::class_<vector<shared_ptr<Blob<Dtype> > > >("BlobVec")
-    .def(bp::vector_indexing_suite<vector<shared_ptr<Blob<Dtype> > >, true>());
+    .def(bp::vector_indexing_suite<vector<shared_ptr<Blob<Dtype> > >, true>())
+    .def("add_blob", bp::raw_function(&BlobVec_add_blob));
   bp::class_<vector<Blob<Dtype>*> >("RawBlobVec")
     .def(bp::vector_indexing_suite<vector<Blob<Dtype>*>, true>());
   bp::class_<vector<shared_ptr<Layer<Dtype> > > >("LayerVec")
@@ -288,6 +313,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<string> >());
   bp::class_<vector<int> >("IntVec")
     .def(bp::vector_indexing_suite<vector<int> >());
+  bp::class_<vector<Dtype> >("DtypeVec")
+    .def(bp::vector_indexing_suite<vector<Dtype> >());
   bp::class_<vector<shared_ptr<Net<Dtype> > > >("NetVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<Net<Dtype> > >, true>());
   bp::class_<vector<bool> >("BoolVec")
