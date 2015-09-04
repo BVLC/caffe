@@ -151,6 +151,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
             layer_style['fillcolor'] = choose_color_by_layertype(layer.type)
             pydot_nodes[node_name] = pydot.Node(node_label, **layer_style)
         for bottom_blob in layer.bottom:
+            bottom_blob = bottom_blob.replace(':', '_')
             pydot_nodes[bottom_blob + '_blob'] = pydot.Node('%s' % bottom_blob,
                                                             **BLOB_STYLE)
             edge_label = '""'
@@ -158,6 +159,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
                                 'dst': node_name,
                                 'label': edge_label})
         for top_blob in layer.top:
+            top_blob = top_blob.replace(':', '_')
             pydot_nodes[top_blob + '_blob'] = pydot.Node('%s' % (top_blob))
             if label_edges:
                 edge_label = get_edge_label(layer)
