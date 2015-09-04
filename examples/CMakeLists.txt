@@ -24,7 +24,7 @@ foreach(source_file ${examples_srcs})
   if(UNIX OR APPLE)
     # Funny command to make tutorials work
     # TODO: remove in future as soon as naming is standartaized everywhere
-    set(__outname ${PROJECT_BINARY_DIR}/examples/${folder}/${name}${CAffe_POSTFIX})
+    set(__outname ${PROJECT_BINARY_DIR}/examples/${folder}/${name}${Caffe_POSTFIX})
     add_custom_command(TARGET ${name} POST_BUILD
                        COMMAND ln -sf "${__outname}" "${__outname}.bin")
   endif()

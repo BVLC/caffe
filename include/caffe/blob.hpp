@@ -109,7 +109,7 @@ class Blob {
    * @brief Returns the 'canonical' version of a (usually) user-specified axis,
    *        allowing for negative indexing (e.g., -1 for the last axis).
    *
-   * @param index the axis index.
+   * @param axis_index the axis index.
    *        If 0 <= index < num_axes(), return index.
    *        If -num_axes <= index <= -1, return (num_axes() - (-index)),
    *        e.g., the last axis index (num_axes() - 1) if index == -1,
