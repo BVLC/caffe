@@ -288,6 +288,14 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("step", &Solver<Dtype>::Step)
     .def("restore", &Solver<Dtype>::Restore);
 
+  bp::class_<SolverPool<Dtype>,
+             shared_ptr<SolverPool<Dtype> >,
+             boost::noncopyable> (
+    "SolverPool", bp::init<string, vector<int> >())
+    .add_property("solvers", bp::make_function(&SolverPool<Dtype>::solvers,
+          bp::return_value_policy<bp::return_by_value>()))
+    .def("step", &SolverPool<Dtype>::Step);
+
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
         "SGDSolver", bp::init<string>());
@@ -319,6 +327,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<shared_ptr<Net<Dtype> > >, true>());
   bp::class_<vector<bool> >("BoolVec")
     .def(bp::vector_indexing_suite<vector<bool> >());
+  bp::class_<vector<shared_ptr<Solver<Dtype> > > >("SolverVec")
+    .def(bp::vector_indexing_suite<vector<shared_ptr<Solver<Dtype> > >
+                                   , true>());
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.

@@ -67,6 +67,7 @@ class Solver {
     return test_nets_;
   }
   int iter() { return iter_; }
+  void set_device_id(int device) { param_.set_device_id(device); }
 
   // Invoked at specific points during an iteration
   class Callback {

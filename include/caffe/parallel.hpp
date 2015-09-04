@@ -3,6 +3,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -95,6 +96,12 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 
   void run(const vector<int>& gpus);
 
+  void set_up_gpus(const vector<int>& gpus);
+  void solve();
+  void step(int iters);
+  void tear_down();
+  vector<shared_ptr<Solver<Dtype> > > get_all_solvers();
+
  protected:
   void on_start();
   void on_gradients_ready();
@@ -106,12 +113,32 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   BlockingQueue<P2PSync<Dtype>*> queue_;
   const int initial_iter_;
   Dtype* parent_grads_;
-  shared_ptr<Solver<Dtype> > solver_;
+  boost::shared_ptr<Solver<Dtype> > solver_;
+  vector<shared_ptr<P2PSync<Dtype> > > syncs_;
 
   using Params<Dtype>::size_;
   using Params<Dtype>::data_;
   using Params<Dtype>::diff_;
 };
+
+// Synchronous data parallelism using map-reduce between local GPUs.
+template<typename Dtype>
+class SolverPool {
+ public:
+  SolverPool(string protofile, const vector<int>& gpus);
+  virtual ~SolverPool();
+
+  void Solve();
+
+  void Step(int iters);
+
+  vector<shared_ptr<Solver<Dtype> > > solvers();
+
+ protected:
+  shared_ptr<P2PSync<Dtype> > root_sync_;
+  shared_ptr<Solver<Dtype> > root_solver_;
+};
+
 
 }  // namespace caffe
 
