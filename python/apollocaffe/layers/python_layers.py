@@ -50,3 +50,56 @@ class TheanoExample(PyLayer):
         bottom[0].reshape((1,))
         bottom[0].diff[:] += self.b(bottom[0].data, top[0].diff)
 
+class TheanoGPU(PyLayer):
+    def setup(self, bottom, top):
+        import theano.tensor as T
+        import theano
+        from theano.sandbox.cuda.basic_ops import gpu_from_host
+        x = []
+        for i in range(len(bottom)):
+            if len(bottom[i].shape) == 1:
+                x.append(T.vector('x%d' % i))
+            if len(bottom[i].shape) == 2:
+                x.append(T.matrix('x%d' % i))
+            if len(bottom[i].shape) == 3:
+                x.append(T.tensor3('x%d' % i))
+            if len(bottom[i].shape) == 4:
+                x.append(T.tensor4('x%d' % i))
+        y = eval(self.pythonargs['function'])
+        self.f = theano.function(x, gpu_from_host(y), on_unused_input='ignore')
+
+        if len(self.pythonargs['top_shape']) == 1:
+            v = T.vector('v')
+        elif len(self.pythonargs['top_shape']) == 2:
+            v = T.matrix('v')
+        elif len(self.pythonargs['top_shape']) == 3:
+            v = T.tensor3('v')
+        elif len(self.pythonargs['top_shape']) == 4:
+            v = T.tensor4('v')
+        self.b = []
+        for i in range(len(bottom)):
+            yg = T.Lop(y, x[i], v)
+            self.b = theano.function(x + [v], gpu_from_host(yg), on_unused_input='ignore')
+    def forward(self, bottom, top):
+        from theano.misc.pycuda_utils import to_gpuarray
+        top[0].reshape(self.pythonargs['top_shape'])
+        t = top[0].data_tensor.to_gpuarray()
+        t -= t
+        tbottoms = []
+        for b in bottom:
+            tbottoms.append(b.data_tensor.to_cudandarray())
+        output = self.f(*tbottoms)
+        result = to_gpuarray(output)
+        if t.shape != result.shape:
+            raise ValueError('shape mismatch: %s != %s' % (t.shape, result.shape))
+        t += result
+    def backward(self, top, bottom):
+        from theano.misc.pycuda_utils import to_gpuarray
+        tdiff = top[0].diff_tensor.to_cudandarray()
+        bottom_data = []
+        for b in bottom:
+            bottom_data.append(b.data_tensor.to_cudandarray())
+        for b in bottom:
+            output = self.b(*(bottom_data + [tdiff]))
+            a = b.diff_tensor.to_gpuarray()
+            a += to_gpuarray(output)

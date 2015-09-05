@@ -116,6 +116,10 @@ cdef class Tensor:
         from theano.sandbox import cuda
         z = cuda.from_gpu_pointer(ptr, self.shape, strides, ptr)
         return z
+    def to_gpuarray(self):
+        import theano.misc.pycuda_utils
+        import pycuda.autoinit
+        return theano.misc.pycuda_utils.to_gpuarray(self.to_cudandarray())
     def get_mem(self):
         result = tonumpyarray(self.thisptr.get().mutable_cpu_mem(),
                     self.thisptr.get().count())
@@ -256,7 +260,7 @@ cdef class ApolloNet:
                 layer.net = self
                 self.python_layers[layer.p.name] = layer
             cached_layer = self.python_layers[layer.p.name]
-            cached_layer.kwargs = layer.kwargs
+            cached_layer.pythonargs = layer.pythonargs
             if new_layer:
                 cached_layer.setup(bottom_vec, top_vec)
             else:
@@ -265,7 +269,8 @@ cdef class ApolloNet:
                     cached_layer.p.bottom.append(bottom_name)
                 cached_layer.p.rp.CopyFrom(layer.p.rp)
             loss = cached_layer.forward(bottom_vec, top_vec)
-        self.loss += loss
+        if loss is not None:
+            self.loss += loss
         return loss
     def backward_layer(self, layer_name):
         if layer_name in self.python_layers:
