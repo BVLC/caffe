@@ -73,7 +73,7 @@ cdef class Tensor:
         self.thisptr.get().Reshape(shape)
     property shape:
         def __get__(self):
-            return self.thisptr.get().shape()
+            return tuple(self.thisptr.get().shape())
     def count(self):
         return self.thisptr.get().count()
     def dot(self, other):
@@ -104,6 +104,32 @@ cdef class Tensor:
         else:
             self.thisptr.get().scale(other)
         return self
+    cdef AddFromCudaNdArray(self, x):
+        from theano.sandbox import cuda
+        cdef float* ptr
+        cdef long long size
+        if not isinstance(x, cuda.CudaNdarray):
+            raise ValueError("We can only add from CudaNdarray")
+        else:
+            # Check if it is c contiguous
+            size = 1
+            c_contiguous = True
+            for i in range(x.ndim - 1, -1, -1):
+                if x.shape[i] == 1:
+                    continue
+                if x._strides[i] != size:
+                    c_contiguous = False
+                    break
+                size *= x.shape[i]
+            if not c_contiguous:
+                x = x.copy()
+
+            # Now x is always c contiguous
+            ptr = <float *><void *><uintptr_t>(x.gpudata)
+            size = 1
+            for dim in x.shape:
+                size *= dim
+            self.thisptr.get().AddFromGPUPointer(ptr, size)
     def to_cudandarray(self):
         """ take a pycuda.gpuarray.GPUArray and make a CudaNdarray that point to its memory
         :note: CudaNdarray support only float32, so only float32 GPUArray are accepted
@@ -116,10 +142,10 @@ cdef class Tensor:
         from theano.sandbox import cuda
         z = cuda.from_gpu_pointer(ptr, self.shape, strides, ptr)
         return z
-    def to_gpuarray(self):
-        import theano.misc.pycuda_utils
-        import pycuda.autoinit
-        return theano.misc.pycuda_utils.to_gpuarray(self.to_cudandarray())
+    def add_from_cudandarray(self, x):
+        if self.shape != x.shape:
+            raise ValueError('shape mismatch: %s != %s' % (self.shape, x.shape))
+        self.AddFromCudaNdArray(x)
     def get_mem(self):
         result = tonumpyarray(self.thisptr.get().mutable_cpu_mem(),
                     self.thisptr.get().count())
@@ -146,9 +172,17 @@ cdef class Blob(object):
         for x in pytuple:
             shape.push_back(x)
         self.thisptr.get().Reshape(shape)
+    cdef ShareData(Blob self, Blob other):
+        self.thisptr.get().ShareData(other.thisptr.get()[0])
+    cdef ShareDiff(Blob self, Blob other):
+        self.thisptr.get().ShareDiff(other.thisptr.get()[0])
+    def share_data(self, other):
+        self.ShareData(other)
+    def share_diff(self, other):
+        self.ShareDiff(other)
     property shape:
         def __get__(self):
-            return self.thisptr.get().shape()
+            return tuple(self.thisptr.get().shape())
     property data:
         def __get__(self):
             result = tonumpyarray(self.thisptr.get().mutable_cpu_data(),

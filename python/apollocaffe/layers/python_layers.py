@@ -65,41 +65,43 @@ class TheanoGPU(PyLayer):
                 x.append(T.tensor3('x%d' % i))
             if len(bottom[i].shape) == 4:
                 x.append(T.tensor4('x%d' % i))
-        y = eval(self.pythonargs['function'])
+        function_str = self.pythonargs[0]
+        self.top_shape = self.pythonargs[1]
+        y = eval(function_str)
         self.f = theano.function(x, gpu_from_host(y), on_unused_input='ignore')
 
-        if len(self.pythonargs['top_shape']) == 1:
+        if len(self.top_shape) == 1:
             v = T.vector('v')
-        elif len(self.pythonargs['top_shape']) == 2:
+        elif len(self.top_shape) == 2:
             v = T.matrix('v')
-        elif len(self.pythonargs['top_shape']) == 3:
+        elif len(self.top_shape) == 3:
             v = T.tensor3('v')
-        elif len(self.pythonargs['top_shape']) == 4:
+        elif len(self.top_shape) == 4:
             v = T.tensor4('v')
         self.b = []
         for i in range(len(bottom)):
             yg = T.Lop(y, x[i], v)
-            self.b = theano.function(x + [v], gpu_from_host(yg), on_unused_input='ignore')
+            self.b.append(theano.function(x + [v], gpu_from_host(yg), on_unused_input='ignore'))
     def forward(self, bottom, top):
-        from theano.misc.pycuda_utils import to_gpuarray
-        top[0].reshape(self.pythonargs['top_shape'])
-        t = top[0].data_tensor.to_gpuarray()
-        t -= t
+        top[0].reshape(self.top_shape)
         tbottoms = []
         for b in bottom:
             tbottoms.append(b.data_tensor.to_cudandarray())
         output = self.f(*tbottoms)
-        result = to_gpuarray(output)
-        if t.shape != result.shape:
-            raise ValueError('shape mismatch: %s != %s' % (t.shape, result.shape))
-        t += result
+        top[0].data_tensor.set_values(0.)
+        top[0].data_tensor.add_from_cudandarray(output)
     def backward(self, top, bottom):
-        from theano.misc.pycuda_utils import to_gpuarray
         tdiff = top[0].diff_tensor.to_cudandarray()
         bottom_data = []
-        for b in bottom:
-            bottom_data.append(b.data_tensor.to_cudandarray())
-        for b in bottom:
-            output = self.b(*(bottom_data + [tdiff]))
-            a = b.diff_tensor.to_gpuarray()
-            a += to_gpuarray(output)
+        for i in range(len(bottom)):
+            bottom_data.append(bottom[i].data_tensor.to_cudandarray())
+        for i in range(len(bottom)):
+            output = self.b[i](*(bottom_data + [tdiff]))
+            bottom[i].diff_tensor.add_from_cudandarray(output)
+
+class Reshape(PyLayer):
+    def forward(self, bottom, top):
+        shape = self.pythonargs
+        top[0].reshape(shape)
+        top[0].share_data(bottom[0])
+        top[0].share_diff(bottom[0])
