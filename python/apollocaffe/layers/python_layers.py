@@ -52,37 +52,48 @@ class TheanoExample(PyLayer):
 
 class TheanoGPU(PyLayer):
     def setup(self, bottom, top):
-        import theano.tensor as T
-        import theano
-        from theano.sandbox.cuda.basic_ops import gpu_from_host
-        x = []
-        for i in range(len(bottom)):
-            if len(bottom[i].shape) == 1:
-                x.append(T.vector('x%d' % i))
-            if len(bottom[i].shape) == 2:
-                x.append(T.matrix('x%d' % i))
-            if len(bottom[i].shape) == 3:
-                x.append(T.tensor3('x%d' % i))
-            if len(bottom[i].shape) == 4:
-                x.append(T.tensor4('x%d' % i))
+        self.top_shape = (1,)
+        self.function_str = ''
+    def parse_args(self, bottom, top):
         function_str = self.pythonargs[0]
-        self.top_shape = self.pythonargs[1]
-        y = eval(function_str)
-        self.f = theano.function(x, gpu_from_host(y), on_unused_input='ignore')
+        top_shape = self.pythonargs[1]
 
-        if len(self.top_shape) == 1:
-            v = T.vector('v')
-        elif len(self.top_shape) == 2:
-            v = T.matrix('v')
-        elif len(self.top_shape) == 3:
-            v = T.tensor3('v')
-        elif len(self.top_shape) == 4:
-            v = T.tensor4('v')
-        self.b = []
-        for i in range(len(bottom)):
-            yg = T.Lop(y, x[i], v)
-            self.b.append(theano.function(x + [v], gpu_from_host(yg), on_unused_input='ignore'))
+        if self.function_str != function_str or self.top_shape != top_shape:
+            self.function_str = function_str
+            self.top_shape = top_shape
+
+            import theano.tensor as T
+            import theano
+            from theano.sandbox.cuda.basic_ops import gpu_from_host
+            x = []
+            for i in range(len(bottom)):
+                if len(bottom[i].shape) == 1:
+                    x.append(T.vector('x%d' % i))
+                if len(bottom[i].shape) == 2:
+                    x.append(T.matrix('x%d' % i))
+                if len(bottom[i].shape) == 3:
+                    x.append(T.tensor3('x%d' % i))
+                if len(bottom[i].shape) == 4:
+                    x.append(T.tensor4('x%d' % i))
+
+            y = eval(function_str)
+            self.f = theano.function(x, gpu_from_host(y), on_unused_input='ignore')
+
+            if len(self.top_shape) == 1:
+                v = T.vector('v')
+            elif len(self.top_shape) == 2:
+                v = T.matrix('v')
+            elif len(self.top_shape) == 3:
+                v = T.tensor3('v')
+            elif len(self.top_shape) == 4:
+                v = T.tensor4('v')
+            self.b = []
+            for i in range(len(bottom)):
+                yg = T.Lop(y, x[i], v)
+                self.b.append(theano.function(x + [v], gpu_from_host(yg), on_unused_input='ignore'))
+
     def forward(self, bottom, top):
+        self.parse_args(bottom, top)
         top[0].reshape(self.top_shape)
         tbottoms = []
         for b in bottom:
