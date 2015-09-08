@@ -1,5 +1,6 @@
 #!/bin/bash
 # Script called by Travis to build and test Caffe.
+# Travis CI tests are CPU-only for lack of compatible hardware.
 
 set -e
 MAKE="make --jobs=$NUM_THREADS --keep-going"
