@@ -53,6 +53,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  CheckLabels(bottom[1]->cpu_data());
   // The forward pass computes the softmax prob values.
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
   const Dtype* prob_data = prob_.cpu_data();
@@ -66,8 +67,6 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
       if (has_ignore_label_ && label_value == ignore_label_) {
         continue;
       }
-      DCHECK_GE(label_value, 0);
-      DCHECK_LT(label_value, prob_.shape(softmax_axis_));
       loss -= log(std::max(prob_data[i * dim + label_value * inner_num_ + j],
                            Dtype(FLT_MIN)));
       ++count;
@@ -116,6 +115,25 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_scal(prob_.count(), loss_weight / count, bottom_diff);
     } else {
       caffe_scal(prob_.count(), loss_weight / outer_num_, bottom_diff);
+    }
+  }
+}
+
+template <typename Dtype>
+void SoftmaxWithLossLayer<Dtype>::CheckLabels(const Dtype* label) {
+  const int nlabels = prob_.shape(softmax_axis_);
+  for (int i = 0; i < outer_num_; ++i) {
+    for (int j = 0; j < inner_num_; j++) {
+      const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+      if (has_ignore_label_ && label_value == ignore_label_) {
+        continue;
+      }
+      CHECK_GE(label_value, 0);
+      CHECK_LT(label_value, nlabels) << "Invalid label value: the ground "
+          << "truth labels contain the value " << label_value << ", but "
+          << "the prediction has only " << nlabels << " channels (axis "
+          << softmax_axis_ << ").  Either your labels are incorrect, "
+          << "or you have too many channels in your prediction.";
     }
   }
 }
