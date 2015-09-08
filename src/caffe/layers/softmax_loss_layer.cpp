@@ -33,6 +33,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  softmax_bottom_vec_.clear();
+  softmax_bottom_vec_.push_back(bottom[0]);
   LossLayer<Dtype>::Reshape(bottom, top);
   softmax_layer_->Reshape(softmax_bottom_vec_, softmax_top_vec_);
   softmax_axis_ =

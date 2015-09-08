@@ -322,6 +322,35 @@ void Tensor<Dtype>::AddFrom(const Tensor& source) {
   }
 }
 
+// NOLINT_NEXT_LINE(runtime/int)
+template <> void Tensor<int>::AddFromGPUPointer(int* ptr, long long size) {
+  NOT_IMPLEMENTED;
+  return;
+}
+
+template <> void Tensor<unsigned int>::AddFromGPUPointer(unsigned int* ptr,
+// NOLINT_NEXT_LINE(runtime/int)
+    long long size) {
+  NOT_IMPLEMENTED;
+  return;
+}
+
+template <typename Dtype>
+// NOLINT_NEXT_LINE(runtime/int)
+void Tensor<Dtype>::AddFromGPUPointer(Dtype* ptr, long long size) {
+  if (size != count_) {
+    ASSERT(false, "Trying to add blobs of different sizes: "
+      << size << " != " << count_);
+  }
+#ifndef CPU_ONLY
+  caffe_gpu_add(count_, ptr,
+      this->gpu_mem(),
+      this->mutable_gpu_mem());
+#else
+  ASSERT(false, "Operation not supported in CPU Only mode");
+#endif
+}
+
 template <> void Tensor<int>::AddMulFrom(
     const Tensor& source, int alpha) {
   NOT_IMPLEMENTED;

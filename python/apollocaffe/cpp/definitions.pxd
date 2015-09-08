@@ -39,8 +39,10 @@ cdef extern from "caffe/tensor.hpp" namespace "caffe":
         vector[int] shape()
         int count()
         float* mutable_cpu_mem() except +
+        float* mutable_gpu_mem() except +
         void Reshape(vector[int]& shape) except +
         void AddFrom(Tensor& other) except +
+        void AddFromGPUPointer(float* px, long long size) except +
         void MulFrom(Tensor& other) except +
         void AddMulFrom(Tensor& other, float alpha) except +
         float DotPFrom(Tensor& other) except +
@@ -58,6 +60,8 @@ cdef extern from "caffe/blob.hpp" namespace "caffe":
         void Reshape(vector[int]& shape) except +
         float* mutable_cpu_data() except +
         float* mutable_cpu_diff() except +
+        void ShareData(Blob& other)
+        void ShareDiff(Blob& other)
         shared_ptr[Tensor] data()
         shared_ptr[Tensor] diff()
 

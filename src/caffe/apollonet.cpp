@@ -1,3 +1,5 @@
+#include <google/protobuf/text_format.h>
+
 #include <map>
 #include <set>
 #include <string>
@@ -18,8 +20,33 @@ template <typename Dtype>
 ApolloNet<Dtype>::ApolloNet() {
   Init();
 }
+
 template <typename Dtype>
-Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
+Dtype ApolloNet<Dtype>::f(const string& layer_prototxt) {
+  LayerParameter p;
+  bool success =
+    google::protobuf::TextFormat::ParseFromString(layer_prototxt, &p);
+  ASSERT(success, "Invalid prototxt string");
+  return ForwardLayer(p);
+}
+
+template <typename Dtype>
+Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
+  /* This function will
+   * 1) Check if the layer name is in the cache
+   * 2) Create the layer if it is new
+   * 3) Set up the top blobs
+   * 4) Set up the bottom blobs
+   * 5) Set up the parameters
+   * 6) Call the Forward function */
+
+  LayerParameter active_layer_param;
+  ASSERT(active_layer_param.ParseFromString(layer_param_string), "");
+  return ForwardLayer(active_layer_param);
+}
+
+template <typename Dtype>
+Dtype ApolloNet<Dtype>::f(shared_ptr<Layer<Dtype> > layer) {
   /* This function will
    * 1) Add the layer to the cache if it's new
    * 2) Set up the top blobs
@@ -136,7 +163,7 @@ Dtype ApolloNet<Dtype>::ForwardLayer(shared_ptr<Layer<Dtype> > layer) {
 }
 
 template <typename Dtype>
-Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
+Dtype ApolloNet<Dtype>::ForwardLayer(const LayerParameter& active_layer_param) {
   /* This function will
    * 1) Check if the layer name is in the cache
    * 2) Create the layer if it is new
@@ -145,8 +172,6 @@ Dtype ApolloNet<Dtype>::ForwardLayer(const string& layer_param_string) {
    * 5) Set up the parameters
    * 6) Call the Forward function */
 
-  LayerParameter active_layer_param;
-  ASSERT(active_layer_param.ParseFromString(layer_param_string), "");
   RuntimeParameter runtime_param = active_layer_param.rp();
   ASSERT(active_layer_param.has_name(), "");
   const string& layer_name = active_layer_param.name();

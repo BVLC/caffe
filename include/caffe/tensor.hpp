@@ -112,6 +112,8 @@ class Tensor {
   void SetValues(const Dtype value);
   void MulFrom(const Tensor& source);
   void AddFrom(const Tensor& source);
+  // NOLINT_NEXT_LINE(runtime/int)
+  void AddFromGPUPointer(Dtype* ptr, long long size);
   void AddMulFrom(const Tensor& source, Dtype alpha);
   void AddMulFromDynamicMode(const Tensor& source, Dtype alpha);
   Dtype DotPFrom(const Tensor& source);
