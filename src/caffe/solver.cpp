@@ -55,6 +55,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     << std::endl << param.DebugString();
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
+  CheckSnapshotWritePermissions();
   if (Caffe::root_solver() && param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
@@ -432,6 +433,24 @@ void Solver<Dtype>::Snapshot() {
   }
 
   SnapshotSolverState(model_filename);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::CheckSnapshotWritePermissions() {
+  if (Caffe::root_solver() && param_.snapshot()) {
+    CHECK(param_.has_snapshot_prefix())
+        << "In solver params, snapshot is specified but snapshot_prefix is not";
+    string probe_filename = SnapshotFilename(".tempfile");
+    std::ofstream probe_ofs(probe_filename.c_str());
+    if (probe_ofs.good()) {
+      probe_ofs.close();
+      std::remove(probe_filename.c_str());
+    } else {
+      LOG(FATAL) << "Cannot write to snapshot prefix '"
+          << param_.snapshot_prefix() << "'.  Make sure "
+          << "that the directory exists and is writeable.";
+    }
+  }
 }
 
 template <typename Dtype>
