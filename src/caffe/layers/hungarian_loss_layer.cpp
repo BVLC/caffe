@@ -130,6 +130,9 @@ void HungarianLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
       CHECK_EQ(assignment.size(), num_pred);
       hungarian_free(&p);
+      for (int i = 0; i < num_pred; ++i) {
+        free(m[i]);
+      }
       free(m);
     } else {
       for (int i = 0; i < height; ++i) {
