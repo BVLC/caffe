@@ -88,6 +88,21 @@ TYPED_TEST(SliceLayerTest, TestSetupChannels) {
   EXPECT_EQ(this->blob_bottom_->width(), this->blob_top_0_->width());
 }
 
+TYPED_TEST(SliceLayerTest, TestTrivialSlice) {
+  // Test the trivial (single output) "slice" operation --
+  // should be the identity.
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  SliceLayer<Dtype> layer(layer_param);
+  this->blob_top_vec_0_.resize(1);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_0_);
+  ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_0_->shape());
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_EQ(this->blob_bottom_->cpu_data()[i],
+              this->blob_top_0_->cpu_data()[i]);
+  }
+}
+
 TYPED_TEST(SliceLayerTest, TestSliceAcrossNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -159,6 +174,18 @@ TYPED_TEST(SliceLayerTest, TestSliceAcrossChannels) {
       }
     }
   }
+}
+
+TYPED_TEST(SliceLayerTest, TestGradientTrivial) {
+  // Test the trivial (single output) "slice" operation --
+  // should be the identity.
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  SliceLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  this->blob_top_vec_0_.resize(1);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_0_);
 }
 
 TYPED_TEST(SliceLayerTest, TestGradientAcrossNum) {

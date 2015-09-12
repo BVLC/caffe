@@ -42,7 +42,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type"
     "  [CPU/GPU] [DEVICE_ID=0]\n"
     "Note: you can extract multiple features in one pass by specifying"
-    " multiple feature blob names and dataset names seperated by ','."
+    " multiple feature blob names and dataset names separated by ','."
     " The names cannot contain white space characters and the number of blobs"
     " and datasets must be equal.";
     return 1;
