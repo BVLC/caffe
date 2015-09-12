@@ -30,7 +30,7 @@ void TripletLossLayer<Dtype>::Forward_gpu(
         dim,
         diff_pos.gpu_data() + i*dim,
         diff_pos.gpu_data() + i*dim,
-        dist_sq_pos.mutable_gpu_data() + i);
+        dist_sq_pos.mutable_cpu_data() + i);
     // a b is a similar pair for pair wise
     // loss accumulated by the pair wise part
     loss += dist_sq_pos.gpu_data()[i];
@@ -48,7 +48,7 @@ void TripletLossLayer<Dtype>::Forward_gpu(
           dim,
           diff_neg.gpu_data() + i*dim,
           diff_neg.gpu_data() + i*dim,
-          dist_sq_neg.mutable_gpu_data() + i);
+          dist_sq_neg.mutable_cpu_data() + i);
       // a and negative[triplet] is a dissimilar pair for triplet
       dist_sq_.mutable_gpu_data()[i] -= dist_sq_neg.gpu_data()[i];
       // loss accumulated accumulated by the triplet part
@@ -69,7 +69,7 @@ void TripletLossLayer<Dtype>::Forward_gpu(
         dim,
         diff_pos.gpu_data() + i*dim,
         diff_pos.gpu_data() + i*dim,
-        dist_sq_pos.mutable_gpu_data() + i);
+        dist_sq_pos.mutable_cpu_data() + i);
     // a b is a similar pair for pair wise
     // loss accumulated by the pair wise part
     loss += dist_sq_pos.gpu_data()[i];
@@ -86,7 +86,7 @@ void TripletLossLayer<Dtype>::Forward_gpu(
           dim,
           diff_neg.gpu_data() + i*dim,
           diff_neg.gpu_data() + i*dim,
-          dist_sq_neg.mutable_gpu_data() + i);
+          dist_sq_neg.mutable_cpu_data() + i);
       // a and negative[triplet] is a dissimilar pair for triplet
       dist_sq_.mutable_gpu_data()[i] = 1 - \
         dist_sq_neg.gpu_data()[i] / dist_sq_.mutable_gpu_data()[i];
@@ -134,7 +134,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               dim,
               diff_neg.gpu_data() + j*dim,
               diff_neg.gpu_data() + j*dim,
-              dist_sq_neg.mutable_gpu_data() + j);
+              dist_sq_neg.mutable_cpu_data() + j);
           // Triplet loss accumulation
           // a and negative[triplet] is a similar pair for triplet
           dist_sq_.mutable_gpu_data()[j] = dist_sq_pos.gpu_data()[j];
@@ -190,7 +190,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               dim,
               diff_neg.gpu_data() + j*dim,
               diff_neg.gpu_data() + j*dim,
-              dist_sq_neg.mutable_gpu_data() + j);
+              dist_sq_neg.mutable_cpu_data() + j);
           // a and negative[triplet] is a dissimilar pair for triplet
           dist_sq_.mutable_gpu_data()[j] -= dist_sq_neg.gpu_data()[j];
           if ((margin + dist_sq_.gpu_data()[j]) > Dtype(0.0)) {
@@ -226,7 +226,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             dim,
             diff_neg.gpu_data() + j*dim,
             diff_neg.gpu_data() + j*dim,
-            dist_sq_neg.mutable_gpu_data() + j);
+            dist_sq_neg.mutable_cpu_data() + j);
         // a and negative[triplet] is a dissimilar pair for triplet
         dist_sq_.mutable_gpu_data()[j] -= dist_sq_neg.gpu_data()[j];
         if ((margin + dist_sq_.gpu_data()[j]) > Dtype(0.0)) {
@@ -238,7 +238,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               Dtype(0.0),
               bout + ((2 + num_triplets)*j + i)*dim);
         } else {
-            caffe_set(dim, Dtype(0), bout + ((2 + num_triplets)*j + i)*dim);
+            caffe_gpu_set(dim, Dtype(0), bout + ((2 + num_triplets)*j + i)*dim);
         }
       }
     }
@@ -273,7 +273,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               dim,
               diff_neg.gpu_data() + j*dim,
               diff_neg.gpu_data() + j*dim,
-              dist_sq_neg.mutable_gpu_data() + j);
+              dist_sq_neg.mutable_cpu_data() + j);
           // a and negative[triplet] is a dissimilar pair for triplet
           dist_sq_.mutable_gpu_data()[j] = 1 - \
             dist_sq_neg.gpu_data()[j] / dist_sq_.mutable_gpu_data()[j];
@@ -327,7 +327,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               dim,
               diff_neg.gpu_data() + j*dim,
               diff_neg.gpu_data() + j*dim,
-              dist_sq_neg.mutable_gpu_data() + j);
+              dist_sq_neg.mutable_cpu_data() + j);
           // a and negative[triplet] is a dissimilar pair for triplet
           dist_sq_.mutable_gpu_data()[j] = 1 - \
             dist_sq_neg.gpu_data()[j] / dist_sq_.mutable_gpu_data()[j];
@@ -366,7 +366,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             dim,
             diff_neg.gpu_data() + j*dim,
             diff_neg.gpu_data() + j*dim,
-            dist_sq_neg.mutable_gpu_data() + j);
+            dist_sq_neg.mutable_cpu_data() + j);
         // a and negative[triplet] is a dissimilar pair for triplet
         dist_sq_.mutable_gpu_data()[j] = 1 - \
           dist_sq_neg.gpu_data()[j] / dist_sq_.mutable_gpu_data()[j];
@@ -379,7 +379,7 @@ void TripletLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               Dtype(0.0),
               bout + ((2 + num_triplets)*j + i)*dim);
         } else {
-            caffe_set(dim, Dtype(0), bout + ((2 + num_triplets)*j + i)*dim);
+            caffe_gpu_set(dim, Dtype(0), bout + ((2 + num_triplets)*j + i)*dim);
         }
       }
     }
