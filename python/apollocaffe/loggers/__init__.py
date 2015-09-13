@@ -1,7 +1,9 @@
 from time import strftime
-import apollocaffe
+import traceback
 import numpy as np
 import os
+
+import apollocaffe
 
 class TrainLogger(object):
     def __init__(self, display_interval, log_file="/tmp/apollocaffe_log.txt"):
@@ -14,19 +16,19 @@ class TrainLogger(object):
             log_line = ""
             try:
                 loss = np.mean(meta_data['train_loss'][-self.display_interval:])
-                log_line = "%s - Iteration %4d - Train Loss: %g" % \
-                    (strftime("%Y-%m-%d %H:%M:%S"), idx, loss)
-            except Exception as ex:
+                log_line = "%s - iteration %4d - train loss: %g" % \
+                    (strftime("%y-%m-%d %h:%m:%s"), idx, loss)
+            except exception as ex:
                 log_line += str(ex)
-                log_line = "Skipping training log: Unknown Error"
+                log_line = "skipping training log: unknown error"
 
             try:
                 with open(self.log_file, 'ab+') as lfile:
                     lfile.write("%s\n" % log_line)
-            except IOError:
-                print "Trainer Logger Error: %s does not exist." % self.log_file
-            except Exception as e:
-                print e
+            except ioerror:
+                print "trainer logger error: %s does not exist." % self.log_file
+            except exception as e:
+                print traceback.format_exc()
             print log_line
 
 class TestLogger(object):
@@ -45,7 +47,7 @@ class TestLogger(object):
 No test_loss provided"
             except Exception as e:
                 log_line =  "Skipping test log: Unknown Error"
-                print e
+                print traceback.format_exc()
 
             try:
                 with open(self.log_file, 'ab+') as lfile:
@@ -53,7 +55,7 @@ No test_loss provided"
             except IOError:
                 print "TestLogger Error: %s does not exist." % self.log_file
             except Exception as e:
-                print e
+                print traceback.format_exc()
             print log_line
 
 class SnapshotLogger(object):
@@ -73,5 +75,36 @@ class SnapshotLogger(object):
                 print(log_line)
                 meta_data['apollo_net'].save(filename)
             except Exception as e:
-                print e
+                print traceback.format_exc()
                 print('Saving failed')
+
+class PlotLogger(object):
+    def __init__(self, display_interval, plot_prefix='/tmp/apollo', boxcar_width=100):
+        self.display_interval = display_interval
+        self.plot_prefix = plot_prefix
+        self.boxcar_width = boxcar_width
+    def log(self, idx, meta_data):
+        import matplotlib; matplotlib.use('Agg', warn=False); import matplotlib.pyplot as plt
+        meta_data['start_iter'] = meta_data.get('start_iter', 0)
+        if idx % self.display_interval == 0:
+            try:
+                for loss_type in ['train_loss', 'test_loss']:
+                    history = meta_data[loss_type]
+                    if len(history) < 2 * self.boxcar_width:
+                        return
+                    smoothed_loss = []
+                    xaxis = []
+                    for i in range(1 + len(history) // self.boxcar_width):
+                        smoothed_loss.append(np.mean(
+                            history[i*self.boxcar_width:(i+1)*self.boxcar_width]))
+                        step = int(self.boxcar_width * (idx - meta_data['start_iter']) / len(history))
+                        xaxis.append(meta_data['start_iter'] + i * step)
+                    plt.plot(xaxis, smoothed_loss)
+                    plot_file = '%s_%s.jpg' % (self.plot_prefix, loss_type)
+                    plt.savefig(plot_file)
+                    plt.close()
+                    print "%s - iteration %4d - Saving %s plot to %s" % \
+                        (strftime("%y-%m-%d %h:%m:%s"), idx, loss_type, plot_file)
+            except Exception as e:
+                log_line = "skipping train loss plot:"
+                print traceback.format_exc()
