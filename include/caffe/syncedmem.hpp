@@ -8,30 +8,28 @@
 
 namespace caffe {
 
-// If CUDA is available and in GPU mode, host memory will be allocated pinned,
+// If CUDA is available, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
 // The improvement in performance seems negligible in the single GPU case,
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
 inline void CaffeMallocHost(void** ptr, size_t size) {
 #ifndef CPU_ONLY
-  if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaMallocHost(ptr, size));
-    return;
-  }
-#endif
+  // Always use cudaMallocHost to allocate cpu memory (unless in CPU_ONLY build)
+  // so that memory allocation and free do not depend on Caffe::mode()
+  CUDA_CHECK(cudaMallocHost(ptr, size));
+#else
   *ptr = malloc(size);
   CHECK(*ptr) << "host allocation of size " << size << " failed";
+#endif
 }
 
 inline void CaffeFreeHost(void* ptr) {
 #ifndef CPU_ONLY
-  if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaFreeHost(ptr));
-    return;
-  }
-#endif
+  CUDA_CHECK(cudaFreeHost(ptr));
+#else
   free(ptr);
+#endif
 }
 
 
