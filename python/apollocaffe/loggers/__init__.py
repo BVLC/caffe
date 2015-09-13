@@ -16,18 +16,18 @@ class TrainLogger(object):
             log_line = ""
             try:
                 loss = np.mean(meta_data['train_loss'][-self.display_interval:])
-                log_line = "%s - iteration %4d - train loss: %g" % \
-                    (strftime("%y-%m-%d %h:%m:%s"), idx, loss)
-            except exception as ex:
-                log_line += str(ex)
-                log_line = "skipping training log: unknown error"
+                log_line = "%s - Iteration %4d - Train Loss: %g" % \
+                    (strftime("%Y-%m-%d %H:%M:%S"), idx, loss)
+            except Exception as e:
+                log_line += str(e)
+                log_line = "Skipping training log: Unknown Error"
 
             try:
                 with open(self.log_file, 'ab+') as lfile:
                     lfile.write("%s\n" % log_line)
-            except ioerror:
-                print "trainer logger error: %s does not exist." % self.log_file
-            except exception as e:
+            except IOError:
+                print "Trainer Logger Error: %s does not exist." % self.log_file
+            except Exception as e:
                 print traceback.format_exc()
             print log_line
 
@@ -94,7 +94,7 @@ class PlotLogger(object):
                         return
                     smoothed_loss = []
                     xaxis = []
-                    for i in range(1 + len(history) // self.boxcar_width):
+                    for i in range(len(history) // self.boxcar_width):
                         smoothed_loss.append(np.mean(
                             history[i*self.boxcar_width:(i+1)*self.boxcar_width]))
                         step = int(self.boxcar_width * (idx - meta_data['start_iter']) / len(history))
