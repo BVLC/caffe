@@ -6,6 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
