@@ -10,6 +10,7 @@ if $WITH_CMAKE; then
   cd build
   CPU_ONLY=" -DCPU_ONLY=ON"
   if ! $WITH_CUDA; then
+    echo "********* CPU ONLY **********"
     CPU_ONLY=" -DCPU_ONLY=OFF"
   fi
   PYTHON_ARGS=""
@@ -21,7 +22,10 @@ if $WITH_CMAKE; then
   else
     IO_ARGS="-DUSE_OPENCV=OFF -DUSE_LMDB=OFF -DUSE_LEVELDB=OFF"
   fi
-  cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release $CPU_ONLY $PYTHON_ARGS -DCMAKE_INCLUDE_PATH="$CONDA_DIR/include/" -DCMAKE_LIBRARY_PATH="$CONDA_DIR/lib/" $IO_ARGS ..
+  if $WITH_AUDIO; then
+    AUDIO_ARGS="-DUSE_AUDIO=1"
+  fi
+  cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release $CPU_ONLY $PYTHON_ARGS -DCMAKE_INCLUDE_PATH="$CONDA_DIR/include/" -DCMAKE_LIBRARY_PATH="$CONDA_DIR/lib/" $IO_ARGS $AUDIO_ARGS ..
   $MAKE
   $MAKE pytest
   if ! $WITH_CUDA; then
@@ -38,6 +42,9 @@ else
     export USE_LMDB=1
     export USE_LEVELDB=1
     export USE_OPENCV=1
+  fi
+  if $WITH_AUDIO; then
+    export USE_AUDIO=1
   fi
   $MAKE all test pycaffe warn lint || true
   if ! $WITH_CUDA; then

@@ -16,6 +16,7 @@ fi
 sed -i -e '/USE_LMDB/d' Makefile.config
 sed -i -e '/USE_LEVELDB/d' Makefile.config
 sed -i -e '/USE_OPENCV/d' Makefile.config
+sed -i -e '/USE_AUDIO/d' Makefile.config
 
 cat << 'EOF' >> Makefile.config
 # Travis' nvcc doesn't like newer boost versions
