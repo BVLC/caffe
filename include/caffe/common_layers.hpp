@@ -68,6 +68,8 @@ class ArgMaxLayer : public Layer<Dtype> {
   }
   bool out_max_val_;
   size_t top_k_;
+  bool has_axis_;
+  int axis_;
 };
 
 /**
