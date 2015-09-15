@@ -33,17 +33,19 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  std::vector<int> shape(4, 1);
-  shape[0] = bottom[0]->shape(0);
-  // Produces max_ind
-  shape[2] = top_k_;
+  std::vector<int> shape(bottom[0]->num_axes(), 1);
   if (has_axis_) {
     // Produces max_ind or max_val per axis
     shape = bottom[0]->shape();
     shape[axis_] = top_k_;
-  } else if (out_max_val_) {
-    // Produces max_ind and max_val
-    shape[1] = 2;
+  } else {
+    shape[0] = bottom[0]->shape(0);
+    // Produces max_ind
+    shape[2] = top_k_;
+    if (out_max_val_) {
+      // Produces max_ind and max_val
+      shape[1] = 2;
+    }
   }
   top[0]->Reshape(shape);
 }
@@ -76,17 +78,17 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       if (out_max_val_) {
         if (has_axis_) {
           // Produces max_val per axis
-          top_data[(i / axis_dist * top_k_ + j) * axis_dist + i % axis_dist] =
-            bottom_data_vector[j].first;
+          top_data[(i / axis_dist * top_k_ + j) * axis_dist + i % axis_dist]
+            = bottom_data_vector[j].first;
         } else {
           // Produces max_ind and max_val
-          top_data[top[0]->offset(i, 0, j)] = bottom_data_vector[j].second;
-          top_data[top[0]->offset(i, 1, j)] = bottom_data_vector[j].first;
+          top_data[2 * i * top_k_ + j] = bottom_data_vector[j].second;
+          top_data[2 * i * top_k_ + top_k_ + j] = bottom_data_vector[j].first;
         }
       } else {
         // Produces max_ind per axis
-        top_data[(i / axis_dist * top_k_ + j) * axis_dist + i % axis_dist] =
-          bottom_data_vector[j].second;
+        top_data[(i / axis_dist * top_k_ + j) * axis_dist + i % axis_dist]
+          = bottom_data_vector[j].second;
       }
     }
   }
