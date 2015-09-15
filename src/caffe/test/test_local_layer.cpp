@@ -17,7 +17,7 @@ template <typename TypeParam>
 class LocalLayerTest: public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
-	LocalLayerTest()
+  LocalLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
@@ -74,7 +74,7 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
   filler.Fill(this->blob_bottom_);
   LayerParameter layer_param;
   LocalParameter* convolution_param =
-      layer_param.mutable_local_param();
+    layer_param.mutable_local_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(1);
   convolution_param->set_num_output(1);
@@ -88,12 +88,13 @@ TYPED_TEST(LocalLayerTest, TestSimpleConvolution) {
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // After the convolution, the output should all have output values 27.1
   const Dtype* top_data = this->blob_top_->cpu_data();
-  for (int n=0; n<this->blob_top_->num(); n++) {
-    for (int k=0; k<this->blob_top_->channels(); k++) {
-      for (int j=0; j<this->blob_top_->height(); j++) {
-        for (int i=0; i<this->blob_top_->width(); i++) {
-          int idx = j*this->blob_top_->width()+i;
-          EXPECT_NEAR(*(top_data+this->blob_top_->offset(n, k, j, i)), idx*27+0.1, 1e-4);
+  for (int n = 0; n < this->blob_top_->num(); n++) {
+    for (int k = 0; k < this->blob_top_->channels(); k++) {
+      for (int j = 0; j < this->blob_top_->height(); j++) {
+        for (int i = 0; i < this->blob_top_->width(); i++) {
+          int idx = j * this->blob_top_->width() + i;
+          EXPECT_NEAR(*(top_data + this->blob_top_->offset(n, k, j, i)),
+              idx * 27 + 0.1, 1e-4);
         }
       }
     }
@@ -104,7 +105,7 @@ TYPED_TEST(LocalLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   LocalParameter* convolution_param =
-      layer_param.mutable_local_param();
+    layer_param.mutable_local_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(2);
@@ -112,7 +113,8 @@ TYPED_TEST(LocalLayerTest, TestGradient) {
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   LocalLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+  checker.CheckGradientExhaustive(&layer,
+      this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 

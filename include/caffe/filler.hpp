@@ -178,9 +178,9 @@ class TestLocalFiller : public Filler<Dtype> {
     LOG(INFO) << "Done Doing mutable cpu";
     CHECK_EQ(blob->channels(), 1);
 
-    for (int n=0; n<blob->num(); n++) {
-      for (int j=0; j<blob->height(); j++) {
-        for (int i=0; i<blob->width(); i++) {
+    for (int n = 0; n < blob->num(); n++) {
+      for (int j = 0; j < blob->height(); j++) {
+        for (int i = 0; i < blob->width(); i++) {
           *(data+blob->offset(n, 0, j, i)) = i;
         }
       }
