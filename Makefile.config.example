@@ -68,6 +68,10 @@ PYTHON_LIB := /usr/lib
 # Uncomment to support layers written in Python (will link against Python libs)
 # WITH_PYTHON_LAYER := 1
 
+# Uncomment to use Python 3 (default is Python 2)
+# PYTHON_LIBRARIES := boost_python3 python3.4m
+# Also, you'll need to edit PYTHON_INCLUDE above.
+
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
