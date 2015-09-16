@@ -329,7 +329,7 @@ def resize_image(im, new_dims, interp_order=1):
             return ret
     else:
         # ndimage interpolates anything but more slowly.
-        scale = tuple(np.array(new_dims) / np.array(im.shape[:2]))
+        scale = tuple(np.array(new_dims, dtype=float) / np.array(im.shape[:2]))
         resized_im = zoom(im, scale + (1,), order=interp_order)
     return resized_im.astype(np.float32)
 
