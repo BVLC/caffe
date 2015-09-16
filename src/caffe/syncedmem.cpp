@@ -8,7 +8,7 @@ namespace caffe {
 
 SyncedMemory::~SyncedMemory() {
   if (cpu_ptr_ && own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
+    CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
   }
 
 #ifndef CPU_ONLY
@@ -27,7 +27,7 @@ SyncedMemory::~SyncedMemory() {
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
-    CaffeMallocHost(&cpu_ptr_, size_);
+    CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, cpu_ptr_);
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
@@ -35,7 +35,7 @@ inline void SyncedMemory::to_cpu() {
   case HEAD_AT_GPU:
 #ifndef CPU_ONLY
     if (cpu_ptr_ == NULL) {
-      CaffeMallocHost(&cpu_ptr_, size_);
+      CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
       own_cpu_data_ = true;
     }
     caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
@@ -86,7 +86,7 @@ const void* SyncedMemory::cpu_data() {
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
   if (own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
+    CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
   }
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
