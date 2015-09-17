@@ -301,7 +301,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 139 (last added: tile_param)
+// LayerParameter next available layer-specific ID: 140 (last added: noise_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -385,6 +385,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional NoiseParameter noise_param = 139;
 }
 
 // Message that stores parameters used to apply transformation
@@ -715,6 +716,12 @@ message MVNParameter {
 
   // Epsilon for not dividing by zero while normalizing variance
   optional float eps = 3 [default = 1e-9];
+}
+
+message NoiseParameter {
+  // This parameter must be set to specify the kind of noise to be generated.
+  // Gaussian and Uniform noise are the only supported types.
+  optional FillerParameter filler_param = 1;
 }
 
 message PoolingParameter {
