@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #include <map>
 #include <string>
 #include <vector>
@@ -177,3 +178,4 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
 }
 
 }  // namespace caffe
+#endif  // USE_OPENCV
