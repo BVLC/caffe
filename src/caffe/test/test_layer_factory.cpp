@@ -31,12 +31,16 @@ TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
     LayerParameter layer_param;
     // Data layers expect a DB
     if (iter->first == "Data") {
+#ifdef USE_LEVELDB
       string tmp;
       MakeTempDir(&tmp);
       boost::scoped_ptr<db::DB> db(db::GetDB(DataParameter_DB_LEVELDB));
       db->Open(tmp, db::NEW);
       db->Close();
       layer_param.mutable_data_param()->set_source(tmp);
+#else
+      continue;
+#endif  // USE_LEVELDB
     }
     layer_param.set_type(iter->first);
     layer = LayerRegistry<Dtype>::CreateLayer(layer_param);
