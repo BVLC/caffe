@@ -277,6 +277,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
       const vector<int>& labels);
+  virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
+      const vector<vector<int> >& labels);
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
@@ -287,12 +289,13 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int channels() { return channels_; }
   int height() { return height_; }
   int width() { return width_; }
+  int label_channels() { return label_channels_; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int batch_size_, channels_, height_, width_, size_;
+  int batch_size_, channels_, height_, width_, size_, label_channels_;
   Dtype* data_;
   Dtype* labels_;
   int n_;
