@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #include <string>
 #include <vector>
 
@@ -353,3 +354,4 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 }
 
 }  // namespace caffe
+#endif  // USE_OPENCV

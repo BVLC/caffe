@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #include <string>
 #include <vector>
 
@@ -348,6 +349,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(DataLayerTest, TestDtypesAndDevices);
 
+#ifdef USE_LEVELDB
 TYPED_TEST(DataLayerTest, TestReadLevelDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
@@ -385,7 +387,9 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
   this->TestReadCrop(TEST);
 }
+#endif  // USE_LEVELDB
 
+#ifdef USE_LMDB
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
@@ -424,4 +428,6 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   this->TestReadCrop(TEST);
 }
 
+#endif  // USE_LMDB
 }  // namespace caffe
+#endif  // USE_OPENCV
