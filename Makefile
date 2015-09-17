@@ -172,6 +172,11 @@ endif
 
 LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5
 
+# handle IO dependencies
+USE_LEVELDB ?= 1
+USE_LMDB ?= 1
+USE_OPENCV ?= 1
+
 ifeq ($(USE_LEVELDB), 1)
 	LIBRARIES += leveldb snappy
 endif
@@ -299,7 +304,7 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-# i/o libraries configuration
+# configure IO libraries
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV
 endif
