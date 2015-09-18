@@ -93,7 +93,7 @@ void AudioDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   AudioDataParameter audio_data_param = this->layer_param_.audio_data_param();
   const int batch_size = audio_data_param.batch_size();
   string root_folder = audio_data_param.root_folder();
-  auto width = static_cast<int>(this->layer_param_.audio_data_param().width());
+  int width = static_cast<int>(this->layer_param_.audio_data_param().width());
 
   Datum datum;
   datum.set_channels(1);
@@ -119,7 +119,7 @@ void AudioDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
 
     Blob<Dtype> blob(1, 1, 1, width);
-    auto data = blob.mutable_cpu_data();
+    Dtype* data = blob.mutable_cpu_data();
 
     ReadAudioFile(root_folder + lines_[lines_id_].first, data, width);
 
