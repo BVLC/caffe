@@ -810,12 +810,11 @@ void Net<Dtype>::Backward() {
   BackwardFromTo(layers_.size() - 1, 0);
   if (debug_info_) {
     Dtype asum_data = 0, asum_diff = 0, sumsq_data = 0, sumsq_diff = 0;
-    for (int i = 0; i < params_.size(); ++i) {
-      if (param_owners_[i] >= 0) { continue; }
-      asum_data += params_[i]->asum_data();
-      asum_diff += params_[i]->asum_diff();
-      sumsq_data += params_[i]->sumsq_data();
-      sumsq_diff += params_[i]->sumsq_diff();
+    for (int i = 0; i < learnable_params_.size(); ++i) {
+      asum_data += learnable_params_[i]->asum_data();
+      asum_diff += learnable_params_[i]->asum_diff();
+      sumsq_data += learnable_params_[i]->sumsq_data();
+      sumsq_diff += learnable_params_[i]->sumsq_diff();
     }
     const Dtype l2norm_data = std::sqrt(sumsq_data);
     const Dtype l2norm_diff = std::sqrt(sumsq_diff);

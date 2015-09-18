@@ -174,6 +174,7 @@ int train() {
   vector<int> gpus;
   get_gpus(&gpus);
   if (gpus.size() == 0) {
+    LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   } else {
     ostringstream s;

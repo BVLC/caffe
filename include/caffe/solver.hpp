@@ -82,6 +82,8 @@ class Solver {
     callbacks_.push_back(value);
   }
 
+  void CheckSnapshotWritePermissions();
+
  protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
