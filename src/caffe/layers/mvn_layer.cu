@@ -200,7 +200,14 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       caffe_gpu_div(temp_.count(), bottom_diff, temp_.gpu_data(), bottom_diff);
     } else {
-      caffe_copy(temp_.count(), top_diff, bottom_diff);
+      caffe_gpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
+                            sum_multiplier_.gpu_data(), 0.,
+                            mean_.mutable_gpu_data());
+      caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
+                            mean_.gpu_data(), sum_multiplier_.gpu_data(), 0.,
+                            temp_.mutable_gpu_data());
+      caffe_gpu_add<Dtype>(temp_.count(), top_diff, temp_.gpu_data(),
+                           bottom_diff);
     }
 #endif  // USE_CUDA
   } else {
@@ -255,8 +262,18 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                               (cl_mem) (temp_.gpu_data()), 0,
                               (cl_mem) bottom_diff, 0);
     } else {
-      greentea_copy<Dtype>(temp_.count(), (cl_mem) top_diff, 0,
-                           (cl_mem) bottom_diff, 0, &ctx);
+      greentea_gpu_gemv<Dtype>(this->device_context_->id(), CblasNoTrans, num,
+                               dim, 1. / dim, (cl_mem) top_diff, 0,
+                               (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
+                               (cl_mem) (mean_.mutable_gpu_data()), 0);
+      greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
+                               CblasNoTrans, num, dim, 1, -1.,
+                               (cl_mem) (mean_.gpu_data()), 0,
+                               (cl_mem) (sum_multiplier_.gpu_data()), 0, 0.,
+                               (cl_mem) (temp_.mutable_gpu_data()), 0);
+      greentea_gpu_add<Dtype>(this->device_context_->id(), temp_.count(),
+                              (cl_mem) top_diff, 0, (cl_mem) (temp_.gpu_data()),
+                              0, (cl_mem) (bottom_diff), 0);
     }
 #endif  // USE_GREENTEA
   }

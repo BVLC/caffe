@@ -2,12 +2,15 @@
 #include <string>
 #include <vector>
 
+#include "boost/scoped_ptr.hpp"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/db.hpp"
+#include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -2889,6 +2892,7 @@ TEST_F(NetUpgradeTest, TestImageNet) {
   this->RunV1UpgradeTest(expected_v1_proto, expected_v2_proto);
 }  // NOLINT(readability/fn_size)
 
+#ifdef USE_OPENCV
 TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
   LayerParameter layer_param;
   shared_ptr<Layer<float> > layer;
@@ -2901,9 +2905,27 @@ TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
       continue;  // Empty string isn't actually a valid layer type.
     }
     layer_param.set_type(v2_layer_type);
+    // Data layers expect a DB
+    if (v2_layer_type == "Data") {
+      #ifdef USE_LEVELDB
+      string tmp;
+      MakeTempDir(&tmp);
+      boost::scoped_ptr<db::DB> db(db::GetDB(DataParameter_DB_LEVELDB));
+      db->Open(tmp, db::NEW);
+      db->Close();
+      layer_param.mutable_data_param()->set_source(tmp);
+      #else
+      continue;
+      #endif  // USE_LEVELDB
+    }
+    #ifndef USE_OPENCV
+    if (v2_layer_type == "ImageData" || v2_layer_type == "WindowData") {
+     continue;
+    }
+    #endif  // !USE_OPENCV
     layer = LayerRegistry<float>::CreateLayer(layer_param);
     EXPECT_EQ(v2_layer_type, layer->type());
   }
 }
-
+#endif  // USE_OPENCV
 }  // NOLINT(readability/fn_size)  // namespace caffe

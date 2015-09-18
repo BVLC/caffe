@@ -13,6 +13,7 @@
 #endif
 
 #include <boost/shared_ptr.hpp>
+#include <string>
 #include <vector>
 #include "caffe/blob.hpp"
 #include "caffe/greentea/greentea.hpp"
@@ -25,11 +26,17 @@ namespace caffe {
 class DeviceContext {
  public:
   explicit DeviceContext();
-  explicit DeviceContext(int id, Backend backend);
+  explicit DeviceContext(int id, int list_id, Backend backend);
   Backend backend() const;
   int id() const;
+  int list_id() const;
   int current_queue_id();
   int WorkgroupSize(int id);
+
+#ifdef USE_GREENTEA
+  viennacl::ocl::program &program();
+  void SetProgram();
+#endif  // USE_GREENTEA
 
   template<typename Dtype>
   shared_ptr< Blob<Dtype> > Buffer(int id);
@@ -45,16 +52,21 @@ class DeviceContext {
   void IncreaseMemoryUsage(size_t bytes);
   void DecreaseMemoryUsage(size_t bytes);
   void ResetPeakMemoryUsage();
+  bool CheckCapability(std::string cap);
 
  private:
   int current_queue_id_;
   std::vector<int> workgroup_sizes_;
   int id_;
+  int list_id_;
   Backend backend_;
   size_t memory_usage_;
   size_t peak_memory_usage_;
   std::vector< shared_ptr< Blob<float> > > buff_f_;
   std::vector< shared_ptr< Blob<double> > > buff_d_;
+#ifdef USE_GREENTEA
+  viennacl::ocl::program ocl_program_;
+#endif  // USE_GREENTEA
 };
 }  // namespace caffe
 

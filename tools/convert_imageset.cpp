@@ -43,7 +43,10 @@ DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 
 int main(int argc, char** argv) {
+#ifdef USE_OPENCV
   ::google::InitGoogleLogging(argv[0]);
+  // Print output to stderr (while still logging)
+  FLAGS_alsologtostderr = 1;
 
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
@@ -140,13 +143,16 @@ int main(int argc, char** argv) {
       // Commit db
       txn->Commit();
       txn.reset(db->NewTransaction());
-      LOG(ERROR) << "Processed " << count << " files.";
+      LOG(INFO) << "Processed " << count << " files.";
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
     txn->Commit();
-    LOG(ERROR) << "Processed " << count << " files.";
+    LOG(INFO) << "Processed " << count << " files.";
   }
+#else
+  LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
+#endif  // USE_OPENCV
   return 0;
 }

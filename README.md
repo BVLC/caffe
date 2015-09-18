@@ -50,3 +50,7 @@ The backend is supposed to work with all vendors. Note however there may be prob
 It is therefore recommended to install another OpenCL implementation after installing nVidia drivers. Possibilities are:
 - Intel OpenCL, recommended if you have an Intel CPU along the nVidia GPU.
 - AMD APP SDK (OpenCL), recommended if you have an AMD GPU or CPU.
+
+## Technical Report
+Available on arXiv:
+http://arxiv.org/abs/1509.03371

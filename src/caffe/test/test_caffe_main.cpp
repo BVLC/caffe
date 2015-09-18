@@ -1,8 +1,14 @@
 // The main caffe test code. Your test cpp code should include this hpp
 // to allow a main function to be compiled into the binary.
 
+#include <vector>
+
 #include "caffe/caffe.hpp"
 #include "caffe/test/test_caffe_main.hpp"
+
+#ifndef TEST_DEVICE
+#define TEST_DEVICE 0
+#endif
 
 namespace caffe {
 #ifndef CPU_ONLY
@@ -33,8 +39,8 @@ int main(int argc, char** argv) {
     device = TEST_DEVICE;
   }
   cout << "Setting to use device " << device << endl;
+  Caffe::SetDevices(std::vector<int>{device});
   Caffe::SetDevice(device);
-  // cudaSetDevice(device);
 #endif
   // invoke the test.
   return RUN_ALL_TESTS();

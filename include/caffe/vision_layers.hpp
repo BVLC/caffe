@@ -128,6 +128,10 @@ class MergeCropLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
+
+ private:
+  Blob<int> forward;
+  Blob<int> backward;
 };
 
 /**
@@ -290,20 +294,26 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
+
  protected:
   // Helper functions that abstract away the column buffer and gemm arguments.
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
   // we just called weight_cpu_gemm with the same input.
 
 #ifndef CPU_ONLY
-  void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
-      Dtype* output, bool skip_im2col = false);
-  void forward_gpu_bias(Dtype* output, const Dtype* bias);
-  void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
-      Dtype* col_output);
-  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
-      weights);
-  void backward_gpu_bias(Dtype* bias, const Dtype* input);
+  void forward_gpu_gemm(const Dtype* col_input, const int col_input_off,
+                        const Dtype* weights, Dtype* output,
+                        const int output_off, bool skip_im2col = false);
+  void forward_gpu_bias(Dtype* output, const int output_off, const Dtype* bias);
+  void backward_gpu_gemm(const Dtype* input, const int input_off,
+                         const Dtype* weights, Dtype* col_output,
+                         const int col_output_off);
+  void weight_gpu_gemm(const Dtype* col_input, const int col_input_off,
+                       const Dtype* output, const int output_off,
+                       Dtype* weights);
+  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int input_off);
+
+  shared_ptr< Blob<Dtype> > col_buffer();
 #endif  // !CPU_ONLY
 
   // reverse_dimensions should return true iff we are implementing deconv, so
@@ -359,6 +369,43 @@ class BaseConvolutionNDLayer : public Layer<Dtype> {
   }
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
+  inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
+                                       Dtype* col_buff,
+                                       const int col_buff_off) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_->id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_->id());
+    greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem)data, data_off,
+                                  num_spatial_axes_,
+                                  num_kernels_im2col_,
+                                  (cl_mem)(conv_input_shape_.gpu_data()),
+                                  (cl_mem)(col_buffer_.gpu_shape()),
+                                  (cl_mem)(kernel_shape_.gpu_data()),
+                                  (cl_mem)(pad_.gpu_data()),
+                                  (cl_mem)(stride_.gpu_data()),
+                                  (cl_mem)(kstride_.gpu_data()),
+                                  (cl_mem) col_buff, col_buff_off);
+  }
+  inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
+                                       const int col_buff_off, Dtype* data,
+                                       const int data_off) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_->id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_->id());
+    greentea_col2im_nd_gpu<Dtype>(&program, &ctx,
+                                  (cl_mem) col_buff, col_buff_off,
+                                  num_spatial_axes_,
+                                  num_kernels_col2im_,
+                                  (cl_mem)(conv_input_shape_.gpu_data()),
+                                  (cl_mem)(col_buffer_.gpu_shape()),
+                                  (cl_mem)(kernel_shape_.gpu_data()),
+                                  (cl_mem)(pad_.gpu_data()),
+                                  (cl_mem)(stride_.gpu_data()),
+                                  (cl_mem)(kstride_.gpu_data()),
+                                  (cl_mem) data, data_off);
+  }
 #endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
 
@@ -386,6 +433,20 @@ class ConvolutionNDLayer : public BaseConvolutionNDLayer<Dtype> {
 
   virtual inline const char* type() const {
     return "ConvolutionND";
+  }
+
+  virtual size_t ForwardFlops() {
+    size_t group = this->group_;
+    size_t N = 1;
+    size_t M = this->num_output_ / group;
+    size_t K = this->channels_;
+    const int* kshape = this->kernel_shape_.cpu_data();
+    for (int i = 0; i < this->output_shape_.size(); ++i) {
+      N *= this->output_shape_[i];
+      K *= kshape[i];
+    }
+    K /= group;
+    return group* (M * N * (2 * K - 1));
   }
 
  protected:
@@ -448,54 +509,12 @@ class ConvolutionSKLayer : public Layer<Dtype> {
     return "ConvolutionSK";
   }
 
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-
-  shared_ptr< Blob<Dtype> > col_buffer();
-
-  int kernel_h_, kernel_w_;
-  int stride_h_, stride_w_;
-  int channels_;
-  int group_;
-  int height_, width_;
-  int pad_h_, pad_w_;
-  int kstride_h_, kstride_w_;
-  int num_, num_output_;
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
-  bool bias_term_;
-  int M_, K_, N_;
-};
-
-
-/**
- * @brief Convolves the input image for pixelwise classification.
- *
- *   Layer introduced by Hongsheng et al.
- */
-template<typename Dtype>
-class ConvolutionNDSKLayer : public Layer<Dtype> {
- public:
-  explicit ConvolutionNDSKLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {
-  }
-
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-                          const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-                       const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const {
-    return "ConvolutionNDSK";
+  virtual size_t ForwardFlops() {
+    size_t M = this->M_;
+    size_t N = this->N_;
+    size_t K = this->K_;
+    size_t group = this->group_;
+    return group * (M * N * (2 * K - 1));
   }
 
  protected:
@@ -525,7 +544,6 @@ class ConvolutionNDSKLayer : public Layer<Dtype> {
   bool bias_term_;
   int M_, K_, N_;
 };
-
 
 /**
  * @brief Convolves the input image with a bank of learned filters,
@@ -580,6 +598,15 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
 
   virtual inline const char* type() const {
     return "Convolution";
+  }
+
+  virtual size_t ForwardFlops() {
+    size_t group = this->group_;
+    size_t N = this->height_out_ * this->width_out_;
+    size_t M = this->num_output_ / group;
+    size_t K = this->channels_ * this->kernel_h_ * this->kernel_w_;
+    K /= group;
+    return group * (M * N * (2 * K - 1));
   }
 
  protected:
@@ -883,6 +910,68 @@ class PoolingSKLayer : public Layer<Dtype> {
   Blob<int> max_idx_;
 };
 
+
+/**
+ * @brief Pools the input image by taking the max, average, etc. within regions.
+ *
+ * For whole image processing, reducing redundancy.
+ */
+template<typename Dtype>
+class PoolingNDLayer : public Layer<Dtype> {
+ public:
+  explicit PoolingNDLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {
+  }
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+  virtual inline const char* type() const {
+    return "PoolingND";
+  }
+  virtual inline int ExactNumBottomBlobs() const {
+    return 1;
+  }
+  virtual inline int MinTopBlobs() const {
+    return 1;
+  }
+  // MAX POOL layers can output an extra top blob for the mask;
+  // others can only output the pooled inputs.
+  virtual inline int MaxTopBlobs() const {
+    return
+        (this->layer_param_.pooling_param().pool()
+            == PoolingParameter_PoolMethod_MAX) ? 2 : 1;
+  }
+
+  Blob<int> kernel_shape_;
+  Blob<int> ext_kernel_shape_;
+  Blob<int> stride_;
+  Blob<int> pad_;
+  Blob<int> kstride_;
+  Blob<int> size_;
+  Blob<int> pooled_size_;
+
+  int channel_axis_;
+  int num_spatial_axes_;
+  int channels_;
+
+  int max_top_blobs_;
+  Blob<int> max_idx_;
+};
+
 /**
  * @brief Pools the input image by taking the max, average, etc. within regions.
  *
@@ -989,22 +1078,9 @@ class SPPLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const {
-    return "SPP";
-  }
-  virtual inline int ExactNumBottomBlobs() const {
-    return 1;
-  }
-  virtual inline int MinTopBlobs() const {
-    return 1;
-  }
-  // MAX POOL layers can output an extra top blob for the mask;
-  // others can only output the pooled inputs.
-  virtual inline int MaxTopBlobs() const {
-    return
-        (this->layer_param_.pooling_param().pool()
-            == PoolingParameter_PoolMethod_MAX) ? 2 : 1;
-  }
+  virtual inline const char* type() const { return "SPP"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -1020,9 +1096,11 @@ class SPPLayer : public Layer<Dtype> {
 
   int pyramid_height_;
   int bottom_h_, bottom_w_;
+  int num_;
   int channels_;
   int kernel_h_, kernel_w_;
   int pad_h_, pad_w_;
+  bool reshaped_first_time_;
 
   /// the internal Split layer that feeds the pooling layers
   shared_ptr<SplitLayer<Dtype> > split_layer_;

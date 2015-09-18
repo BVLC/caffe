@@ -26,22 +26,22 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     max_top_blobs_ = 1;
   }
   PoolingParameter pool_param = this->layer_param_.pooling_param();
-  CHECK(!pool_param.has_kernel_size() !=
+  CHECK(!(pool_param.kernel_size_size() > 0) !=
       !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-  CHECK(pool_param.has_kernel_size() ||
+  CHECK((pool_param.kernel_size_size() > 0) ||
       (pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "For non-square filters both kernel_h and kernel_w are required.";
-  CHECK((!pool_param.has_pad() && pool_param.has_pad_h()
+  CHECK((!(pool_param.pad_size() > 0) && pool_param.has_pad_h()
           && pool_param.has_pad_w())
       || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
       << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!pool_param.has_stride() && pool_param.has_stride_h()
+  CHECK((!(pool_param.stride_size() > 0) && pool_param.has_stride_h()
           && pool_param.has_stride_w())
       || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
       << "Stride is stride OR stride_h and stride_w are required.";
-  if (pool_param.has_kernel_size()) {
-    kernel_h_ = kernel_w_ = pool_param.kernel_size();
+  if (pool_param.kernel_size_size() > 0) {
+    kernel_h_ = kernel_w_ = pool_param.kernel_size(0);
   } else {
     kernel_h_ = pool_param.kernel_h();
     kernel_w_ = pool_param.kernel_w();
@@ -49,7 +49,8 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(kernel_h_, 0)<< "Filter dimensions cannot be zero.";
   CHECK_GT(kernel_w_, 0)<< "Filter dimensions cannot be zero.";
   if (!pool_param.has_pad_h()) {
-    pad_h_ = pad_w_ = pool_param.pad();
+    pad_h_ = pad_w_ = pool_param.pad_size() > 0 ?
+        pool_param.pad(0) : 0;
   } else {
     pad_h_ = pool_param.pad_h();
     pad_w_ = pool_param.pad_w();
@@ -57,7 +58,8 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(pad_h_, 0);
   CHECK_EQ(pad_w_, 0);
   if (!pool_param.has_stride_h()) {
-    stride_h_ = stride_w_ = pool_param.stride();
+    stride_h_ = stride_w_ = pool_param.stride_size() > 0 ?
+        pool_param.stride(0) : 1;
   } else {
     stride_h_ = pool_param.stride_h();
     stride_w_ = pool_param.stride_w();
@@ -72,7 +74,8 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT(pad_w_, kernel_w_);
   }
   if (!pool_param.has_kstride_h()) {
-    kstride_h_ = kstride_w_ = pool_param.kstride();
+    kstride_h_ = kstride_w_ = pool_param.kstride_size() > 0 ?
+        pool_param.kstride(0) : 1;
   } else {
     kstride_h_ = pool_param.kstride_h();
     kstride_w_ = pool_param.kstride_w();

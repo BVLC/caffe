@@ -18,11 +18,15 @@ caffe_leave_only_selected_tests(test_cuda ${BUILD_only_tests})
 set(the_target test.testbin)
 set(test_args --gtest_shuffle)
 
-if(HAVE_CUDA)
+if(HAVE_CUDA AND USE_CUDA)
   caffe_cuda_compile(test_cuda_objs ${test_cuda})
   list(APPEND test_srcs ${test_cuda_objs} ${test_cuda})
 else()
-  list(APPEND test_args --gtest_filter="-*GPU*")
+  if(USE_GREENTEA)
+    list(APPEND test_srcs ${test_cuda_objs} ${test_cuda})
+  else()
+    list(APPEND test_args --gtest_filter="-*GPU*")
+  endif()
 endif()
 
 # ---[ Adding test target

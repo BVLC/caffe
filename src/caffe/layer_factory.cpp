@@ -1,3 +1,8 @@
+// Make sure we include Python.h before any system header
+// to avoid _POSIX_C_SOURCE redefinition
+#ifdef WITH_PYTHON_LAYER
+#include <boost/python.hpp>
+#endif
 #include <string>
 
 #include "caffe/layer.hpp"
@@ -61,7 +66,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     PoolingParameter p_param = param.pooling_param();
-    if (p_param.pad() || p_param.pad_h() || p_param.pad_w() ||
+    if (p_param.pad(0) || p_param.pad_h() || p_param.pad_w() ||
         param.top_size() > 1) {
       LOG(INFO) << "CUDNN does not support padding or multiple tops. "
       << "Using Caffe's own pooling layer.";

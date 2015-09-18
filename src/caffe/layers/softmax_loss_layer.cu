@@ -68,7 +68,11 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     if (normalize_) {
       Dtype count;
       caffe_gpu_asum(nthreads, counts, &count);
-      loss /= count;
+      if (count == 0) {
+        loss = 0;
+      } else {
+        loss /= count;
+      }
     } else {
       loss /= num;
     }
@@ -111,7 +115,11 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
       Dtype count;
       greentea_gpu_asum(this->device_context_->id(), nthreads, counts, 0,
                         &count);
-      loss /= count;
+      if (count == 0) {
+        loss = 0;
+      } else {
+        loss /= count;
+      }
     } else {
       loss /= num;
     }
@@ -182,7 +190,11 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       if (normalize_) {
         Dtype count;
         caffe_gpu_asum(nthreads, counts, &count);
-        caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
+        if (count == 0) {
+          caffe_gpu_set<Dtype>(prob_.count(), 0.0, bottom_diff);
+        } else {
+          caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
+        }
       } else {
         caffe_gpu_scal(prob_.count(), loss_weight / num, bottom_diff);
       }
@@ -225,12 +237,17 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       if (normalize_) {
         Dtype count;
         greentea_gpu_asum<Dtype>(this->device_context_->id(),
-                          nthreads, counts, 0, &count);
-        greentea_gpu_scal<Dtype>(this->device_context_->id(),
-                          prob_.count(), loss_weight / count, bottom_diff, 0);
+            nthreads, counts, 0, &count);
+        if (count == 0) {
+          greentea_gpu_set<Dtype>(this->device_context_->id(),
+                           prob_.count(), 0.0, bottom_diff, 0);
+        } else {
+          greentea_gpu_scal<Dtype>(this->device_context_->id(),
+            prob_.count(), loss_weight / count, bottom_diff, 0);
+        }
       } else {
         greentea_gpu_scal<Dtype>(this->device_context_->id(),
-                          prob_.count(), loss_weight / num, bottom_diff, 0);
+            prob_.count(), loss_weight / num, bottom_diff, 0);
       }
       if (bottom.size() == 3) {
         // TODO: Correct this for easy diff scaling

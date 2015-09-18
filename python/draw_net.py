@@ -28,6 +28,18 @@ def parse_args():
                               'http://www.graphviz.org/doc/info/'
                               'attrs.html#k:rankdir'),
                         default='LR')
+    parser.add_argument('--margin',
+                        help=('Margin parameter'),
+                        default='')
+    parser.add_argument('--page',
+                        help=('Page parameter'),
+                        default='')
+    parser.add_argument('--pagesize',
+                        help=('Pagesize parameter'),
+                        default='')
+    parser.add_argument('--size',
+                        help=('Size parameter'),
+                        default='')
 
     args = parser.parse_args()
     return args
@@ -38,7 +50,8 @@ def main():
     net = caffe_pb2.NetParameter()
     text_format.Merge(open(args.input_net_proto_file).read(), net)
     print('Drawing net to %s' % args.output_image_file)
-    caffe.draw.draw_net_to_file(net, args.output_image_file, args.rankdir)
+    caffe.draw.draw_net_to_file(net, args.output_image_file, args.rankdir,
+             args.margin, args.page, args.pagesize, args.size)
 
 
 if __name__ == '__main__':
