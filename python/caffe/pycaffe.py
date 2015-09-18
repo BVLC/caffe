@@ -10,7 +10,8 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver
+from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
+        RMSPropSolver, AdaDeltaSolver, AdamSolver
 import caffe.io
 
 # We directly update methods from Net here (rather than using composition or
@@ -25,6 +26,15 @@ def _Net_blobs(self):
     blobs indexed by name
     """
     return OrderedDict(zip(self._blob_names, self._blobs))
+
+
+@property
+def _Net_blob_loss_weights(self):
+    """
+    An OrderedDict (bottom to top, i.e., input to output) of network
+    blob loss weights indexed by name
+    """
+    return OrderedDict(zip(self._blob_names, self._blob_loss_weights))
 
 
 @property
@@ -270,6 +280,7 @@ def _Net_batch(self, blobs):
 
 # Attach methods to Net.
 Net.blobs = _Net_blobs
+Net.blob_loss_weights = _Net_blob_loss_weights
 Net.params = _Net_params
 Net.forward = _Net_forward
 Net.backward = _Net_backward

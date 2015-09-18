@@ -14,9 +14,10 @@ namespace caffe {
 #ifdef USE_CUDA
 template<typename Dtype>
 __global__ void CopyForward(const int nthreads, const Dtype* bottom_a,
-                            const Dtype* bottom_b, Dtype* top, int num,
-                            int channels_a, int channels_b, int height_a,
-                            int width_a, int height_b, int width_b) {
+                            bool forward_a, const Dtype* bottom_b,
+                            bool forward_b, Dtype* top, int num, int channels_a,
+                            int channels_b, int height_a, int width_a,
+                            int height_b, int width_b) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pad_h = (height_b - height_a) / 2;
     int pad_w = (width_b - width_a) / 2;
@@ -34,22 +35,26 @@ __global__ void CopyForward(const int nthreads, const Dtype* bottom_a,
       int channel_id = (index / ((width_a * height_a)) % channels_a);
       int aidx = ((((batch_id) * channels_a + channel_id) * height_a + h)
           * width_a + w);
-      top[index] = bottom_a[aidx];
+      top[index] = forward_a ? bottom_a[aidx] : 0;
     } else {
       int channel_id = (index / ((width_a * height_a)) % channels_b);
       int bidx = (((batch_id) * channels_b + channel_id) * height_b * width_b)
           + width_b * (h + pad_h) + pad_w + w;
-      top[index] = bottom_b[bidx];
+      top[index] = forward_b ? bottom_b[bidx] : 0;
     }
   }
 }
 
 template<typename Dtype>
 __global__ void CopyBackward(const int nthreads, Dtype* bottom_a,
+                             bool backward_a, Dtype* bottom_b, bool backward_b,
                              const Dtype* top, int num, int channels_a,
                              int channels_b, int height_a, int width_a,
                              int height_b, int width_b) {
   CUDA_KERNEL_LOOP(index, nthreads) {
+    int pad_h = (height_b - height_a) / 2;
+    int pad_w = (width_b - width_a) / 2;
+
     int batch_id = index / ((channels_a + channels_b) * height_a * width_a);
 
     int bottom_id = ((index
@@ -63,7 +68,12 @@ __global__ void CopyBackward(const int nthreads, Dtype* bottom_a,
       int channel_id = (index / ((width_a * height_a)) % channels_a);
       int aidx = ((((batch_id) * channels_a + channel_id) * height_a + h)
           * width_a + w);
-      bottom_a[aidx] = top[index];
+      bottom_a[aidx] = backward_a ? top[index] : 0;
+    } else {
+      int channel_id = (index / ((width_a * height_a)) % channels_b);
+      int bidx = (((batch_id) * channels_b + channel_id) * height_b * width_b)
+          + width_b * (h + pad_h) + pad_w + w;
+      bottom_b[bidx] = backward_b ? top[index] : 0;
     }
   }
 }
@@ -72,6 +82,8 @@ __global__ void CopyBackward(const int nthreads, Dtype* bottom_a,
 template<typename Dtype>
 void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
+  int* forward_data = forward.mutable_cpu_data();
+
   int count = top[0]->count();
 
   const Dtype* bottom_data_a = bottom[0]->gpu_data();
@@ -94,8 +106,9 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     CopyForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-                                   CAFFE_CUDA_NUM_THREADS) (
-        count, bottom_data_a, bottom_data_b, top_data, num, channels_a,
+        CAFFE_CUDA_NUM_THREADS) (
+        count, bottom_data_a, forward_data[0], bottom_data_b,
+        forward_data[1], top_data, num, channels_a,
         channels_b, height_a, width_a, height_b, width_b);
 #endif  // USE_CUDA
   } else {
@@ -109,9 +122,11 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CL_KERNEL_SELECT("merge_copy_forward"));
     viennacl::ocl::enqueue(
         oclk_copy_forward(count, WrapHandle((cl_mem) bottom_data_a, &ctx),
+                          forward_data[0],
                           WrapHandle((cl_mem) bottom_data_b, &ctx),
-                          WrapHandle((cl_mem) top_data, &ctx), num, channels_a,
-                          channels_b, height_a, width_a, height_b, width_b),
+                          forward_data[1], WrapHandle((cl_mem) top_data, &ctx),
+                          num, channels_a, channels_b, height_a, width_a,
+                          height_b, width_b),
         ctx.get_queue());
     ctx.get_queue().finish();
 #endif  // USE_GREENTEA
@@ -125,9 +140,13 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (!propagate_down[0]) {
     return;
   }
+
+  int* backward_data = backward.mutable_cpu_data();
+
   int count = top[0]->count();
 
   Dtype* bottom_diff_a = bottom[0]->mutable_gpu_diff();
+  Dtype* bottom_diff_b = bottom[1]->mutable_gpu_diff();
   const Dtype* top_diff = top[0]->gpu_diff();
 
   int num = bottom[0]->num();
@@ -146,8 +165,10 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     CopyBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-                                    CAFFE_CUDA_NUM_THREADS) (
-        count, bottom_diff_a, top_diff, num, channels_a, channels_b, height_a,
+        CAFFE_CUDA_NUM_THREADS) (
+        count, bottom_diff_a, backward_data[0],
+        bottom_diff_b, backward_data[1], top_diff, num,
+        channels_a, channels_b, height_a,
         width_a, height_b, width_b);
 #endif  // USE_CUDA
   } else {
@@ -161,6 +182,9 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         CL_KERNEL_SELECT("merge_copy_backward"));
     viennacl::ocl::enqueue(
         oclk_copy_backward(count, WrapHandle((cl_mem) bottom_diff_a, &ctx),
+                           backward_data[0],
+                           WrapHandle((cl_mem) bottom_diff_b, &ctx),
+                           backward_data[1],
                            WrapHandle((cl_mem) top_diff, &ctx), num, channels_a,
                            channels_b, height_a, width_a, height_b, width_b),
         ctx.get_queue());

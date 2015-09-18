@@ -55,6 +55,18 @@ function(caffe_generate_export_configs)
     set(HAVE_CUDA FALSE)
   endif()
 
+  if(USE_OPENCV)
+    list(APPEND Caffe_DEFINITIONS -DUSE_OPENCV)
+  endif()
+
+  if(USE_LMDB)
+    list(APPEND Caffe_DEFINITIONS -DUSE_LMDB)
+  endif()
+
+  if(USE_LEVELDB)
+    list(APPEND Caffe_DEFINITIONS -DUSE_LEVELDB)
+  endif()
+
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
   endif()

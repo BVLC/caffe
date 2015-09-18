@@ -61,12 +61,15 @@ Makefile.config
 data/*
 models/*
 *.caffemodel
+*.caffemodel.h5
 *.solverstate
+*.solverstate.h5
 *.binaryproto
 *leveldb
 *lmdb
 
 # build, distribute, and bins (+ python proto bindings)
+cmake_build
 build
 .build_debug/*
 .build_release/*
@@ -76,6 +79,7 @@ distribute/*
 python/caffe/proto/
 cmake_build
 .cmake_build
+*.gen.cmake
 
 # Generated documentation
 docs/_site

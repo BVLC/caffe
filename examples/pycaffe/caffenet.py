@@ -1,3 +1,4 @@
+from __future__ import print_function
 from caffe import layers as L, params as P, to_proto
 from caffe.proto import caffe_pb2
 
@@ -45,10 +46,10 @@ def caffenet(lmdb, batch_size=256, include_acc=False):
 
 def make_net():
     with open('train.prototxt', 'w') as f:
-        print >>f, caffenet('/path/to/caffe-train-lmdb')
+        print(caffenet('/path/to/caffe-train-lmdb'), file=f)
 
     with open('test.prototxt', 'w') as f:
-        print >>f, caffenet('/path/to/caffe-val-lmdb', batch_size=50, include_acc=True)
+        print(caffenet('/path/to/caffe-val-lmdb', batch_size=50, include_acc=True), file=f)
 
 if __name__ == '__main__':
     make_net()

@@ -17,16 +17,19 @@ When updating Caffe, it's best to `make clean` before re-compiling.
 
 ## Prerequisites
 
-Caffe has several dependencies.
+Caffe has several dependencies:
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) is required for GPU mode.
     * library version 7.0 and the latest driver version are recommended, but 6.* is fine too
     * 5.5, and 5.0 are compatible but considered legacy
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
 * [Boost](http://www.boost.org/) >= 1.55
+* `protobuf`, `glog`, `gflags`, `hdf5`
+
+Optional dependencies:
+
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
-* `protobuf`, `glog`, `gflags`
-* IO libraries `hdf5`, `leveldb`, `snappy`, `lmdb`
+* IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
@@ -75,7 +78,7 @@ To import the `caffe` Python module after completing the installation, add the m
 
 Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
-*Caffe's MATLAB interface works with versions 2014a/b, 2013a/b, and 2012b.*
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 
 #### Windows
 

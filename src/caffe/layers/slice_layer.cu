@@ -30,7 +30,8 @@ __global__ void Slice(const int nthreads, const Dtype* in_data,
 
 template<typename Dtype>
 void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                                    const vector<Blob<Dtype>*>& top) {
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
   int offset_slice_axis = 0;
   const Dtype* bottom_data = bottom[0]->gpu_data();
   const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
@@ -72,11 +73,8 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template<typename Dtype>
 void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-                                     const vector<bool>& propagate_down,
-                                     const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0]) {
-    return;
-  }
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0] || top.size() == 1) { return; }
   int offset_slice_axis = 0;
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   const int bottom_slice_axis = bottom[0]->shape(slice_axis_);

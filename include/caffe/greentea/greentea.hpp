@@ -51,7 +51,8 @@ viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
 
 enum Backend {
   BACKEND_CUDA,
-  BACKEND_OpenCL
+  BACKEND_OpenCL,
+  BACKEND_CPU
 };
 
 

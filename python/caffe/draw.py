@@ -40,7 +40,7 @@ def get_edge_label(layer):
 
     if layer.type == 'Data':
         edge_label = 'Batch ' + str(layer.data_param.batch_size)
-    elif layer.type == 'Convolution':
+    elif layer.type == 'Convolution' or layer.type == 'ConvolutionND' or layer.type == 'ConvolutionSK' or layer.type == 'Deconvolution':
         edge_label = str(layer.convolution_param.num_output)
     elif layer.type == 'InnerProduct':
         edge_label = str(layer.inner_product_param.num_output)
@@ -74,32 +74,36 @@ def get_layer_label(layer, rankdir):
         # horizontal space is not; separate words with newlines
         separator = '\\n'
 
-    if layer.type == 'Convolution':
+    if layer.type == 'Convolution' or layer.type == 'ConvolutionND' or layer.type == 'ConvolutionSK' or layer.type == 'Deconvolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
-        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
+        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
                      (layer.name,
                       separator,
                       layer.type,
                       separator,
-                      layer.convolution_param.kernel_size,
+                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size) > 0 else 1,
                       separator,
-                      layer.convolution_param.stride,
+                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride) > 0 else 1,
                       separator,
-                      layer.convolution_param.pad)
-    elif layer.type == 'Pooling':
+                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad) > 0 else 0,
+                      separator,
+                      layer.convolution_param.kstride[0] if len(layer.convolution_param.kstride) > 0 else 1)
+    elif layer.type == 'Pooling' or layer.type == 'PoolingND' or layer.type == 'PoolingSK':
         pooling_types_dict = get_pooling_types_dict()
-        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
+        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
                      (layer.name,
                       separator,
                       pooling_types_dict[layer.pooling_param.pool],
                       layer.type,
                       separator,
-                      layer.pooling_param.kernel_size,
+                      layer.pooling_param.kernel_size[0] if len(layer.pooling_param.kernel_size) > 0 else 1,
                       separator,
-                      layer.pooling_param.stride,
+                      layer.pooling_param.stride[0] if len(layer.pooling_param.stride) > 0 else 1,
                       separator,
-                      layer.pooling_param.pad)
+                      layer.pooling_param.pad[0] if len(layer.pooling_param.pad) > 0 else 0,
+                      separator,
+                      layer.pooling_param.kstride[0] if len(layer.pooling_param.kstride) > 0 else 1)
     else:
         node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
     return node_label
@@ -109,16 +113,16 @@ def choose_color_by_layertype(layertype):
     """Define colors for nodes based on the layer type.
     """
     color = '#6495ED'  # Default
-    if layertype == 'Convolution':
+    if layertype == 'Convolution' or layertype == 'ConvolutionND' or layertype == 'ConvolutionSK' or layertype == 'Deconvolution':
         color = '#FF5050'
-    elif layertype == 'Pooling':
+    elif layertype == 'Pooling' or layertype == 'PoolingND' or layertype == 'PoolingSK':
         color = '#FF9900'
     elif layertype == 'InnerProduct':
         color = '#CC33FF'
     return color
 
 
-def get_pydot_graph(caffe_net, rankdir, label_edges=True):
+def get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size, label_edges=True):
     """Create a data structure which represents the `caffe_net`.
 
     Parameters
@@ -133,9 +137,17 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
     -------
     pydot graph object
     """
+
     pydot_graph = pydot.Dot(caffe_net.name,
                             graph_type='digraph',
                             rankdir=rankdir)
+
+    if margin != '': pydot_graph.set('margin',margin)
+    if page != '': pydot_graph.set('page', page)
+    if pagesize != '': pydot_graph.set('pagesize', pagesize)
+    if size != '': pydot_graph.set('size', size)
+
+
     pydot_nodes = {}
     pydot_edges = []
     for layer in caffe_net.layer:
@@ -177,7 +189,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
     return pydot_graph
 
 
-def draw_net(caffe_net, rankdir, ext='png'):
+def draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext='png'):
     """Draws a caffe net and returns the image string encoded using the given
     extension.
 
@@ -192,10 +204,10 @@ def draw_net(caffe_net, rankdir, ext='png'):
     string :
         Postscript representation of the graph.
     """
-    return get_pydot_graph(caffe_net, rankdir).create(format=ext)
+    return get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size).create(format=ext)
 
 
-def draw_net_to_file(caffe_net, filename, rankdir='LR'):
+def draw_net_to_file(caffe_net, filename, rankdir='LR', margin='', page='', pagesize='', size=''):
     """Draws a caffe net, and saves it to file using the format given as the
     file extension. Use '.raw' to output raw text that you can manually feed
     to graphviz to draw graphs.
@@ -210,4 +222,4 @@ def draw_net_to_file(caffe_net, filename, rankdir='LR'):
     """
     ext = filename[filename.rfind('.')+1:]
     with open(filename, 'wb') as fid:
-        fid.write(draw_net(caffe_net, rankdir, ext))
+        fid.write(draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext))
