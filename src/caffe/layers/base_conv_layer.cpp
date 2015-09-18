@@ -142,9 +142,9 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage. In the special case of 1x1 convolution
   // it goes lazily unused to save memory.
   if (reverse_dimensions()) {
-    col_buffer_.Reshape(1, kernel_dim_, height_, width_);
+    col_buffer_.resize(kernel_dim_*height_*width_);
   } else {
-    col_buffer_.Reshape(1, kernel_dim_, height_out_, width_out_);
+    col_buffer_.resize(kernel_dim_*height_out_*width_out_);
   }
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
@@ -159,6 +159,7 @@ template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
   const Dtype* col_buff = input;
+  col_buffer_.acquire_cpu();
   if (!is_1x1_) {
     if (!skip_im2col) {
       conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
@@ -171,6 +172,7 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)0., output + output_offset_ * g);
   }
+  col_buffer_.release_cpu();
 }
 
 template <typename Dtype>
@@ -184,6 +186,7 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_bias(Dtype* output,
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
     const Dtype* weights, Dtype* input) {
+  col_buffer_.acquire_cpu();
   Dtype* col_buff = col_buffer_.mutable_cpu_data();
   if (is_1x1_) {
     col_buff = input;
@@ -197,11 +200,13 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
   if (!is_1x1_) {
     conv_col2im_cpu(col_buff, input);
   }
+  col_buffer_.release_cpu();
 }
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {
+  col_buffer_.acquire_cpu();
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
@@ -213,6 +218,7 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
         (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)1., weights + weight_offset_ * g);
   }
+  col_buffer_.release_cpu();
 }
 
 template <typename Dtype>
@@ -227,6 +233,7 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_bias(Dtype* bias,
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
+  col_buffer_.acquire_gpu();
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {
@@ -240,6 +247,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)0., output + output_offset_ * g);
   }
+  col_buffer_.release_gpu();
 }
 
 template <typename Dtype>
@@ -253,6 +261,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
     const Dtype* weights, Dtype* input) {
+  col_buffer_.acquire_gpu();
   Dtype* col_buff = col_buffer_.mutable_gpu_data();
   if (is_1x1_) {
     col_buff = input;
@@ -266,11 +275,13 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
   if (!is_1x1_) {
     conv_col2im_gpu(col_buff, input);
   }
+  col_buffer_.release_gpu();
 }
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {
+  col_buffer_.acquire_gpu();
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
@@ -282,6 +293,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
         (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)1., weights + weight_offset_ * g);
   }
+  col_buffer_.release_gpu();
 }
 
 template <typename Dtype>
