@@ -29,19 +29,27 @@ include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
 
 # ---[ LMDB
-find_package(LMDB REQUIRED)
-include_directories(SYSTEM ${LMDB_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
+if(USE_LMDB)
+  find_package(LMDB REQUIRED)
+  include_directories(SYSTEM ${LMDB_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
+  add_definitions(-DUSE_LMDB)
+endif()
 
 # ---[ LevelDB
-find_package(LevelDB REQUIRED)
-include_directories(SYSTEM ${LevelDB_INCLUDE})
-list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
+if(USE_LEVELDB)
+  find_package(LevelDB REQUIRED)
+  include_directories(SYSTEM ${LevelDB_INCLUDE})
+  list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
+  add_definitions(-DUSE_LEVELDB)
+endif()
 
 # ---[ Snappy
-find_package(Snappy REQUIRED)
-include_directories(SYSTEM ${Snappy_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
+if(USE_LEVELDB)
+  find_package(Snappy REQUIRED)
+  include_directories(SYSTEM ${Snappy_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
+endif()
 
 # ---[ CUDA
 include(cmake/Cuda.cmake)
@@ -57,13 +65,16 @@ if(NOT HAVE_CUDA)
 endif()
 
 # ---[ OpenCV
-find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
-if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found
-  find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
+if(USE_OPENCV)
+  find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
+  if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found
+    find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
+  endif()
+  include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})
+  message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
+  add_definitions(-DUSE_OPENCV)
 endif()
-include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})
-message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
 
 # ---[ BLAS
 if(NOT APPLE)

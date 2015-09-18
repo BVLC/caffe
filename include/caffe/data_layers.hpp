@@ -4,7 +4,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include "hdf5.h"
 
 #include "caffe/blob.hpp"
@@ -275,8 +274,10 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
+#ifdef USE_OPENCV
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
       const vector<int>& labels);
+#endif  // USE_OPENCV
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
