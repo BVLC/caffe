@@ -1,4 +1,4 @@
-#ifndef BUILD_MEX_INTERFACE
+#if !defined(_MSC_VER) || !defined(BUILD_MEX_INTERFACE)
 
 #include <glog/logging.h>
 

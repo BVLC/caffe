@@ -9,7 +9,7 @@
 // the matcaffe data is stored as (width, height, channels, num)
 // where width is the fastest dimension.
 
-#ifdef BUILD_MEX_INTERFACE
+#if !defined(_MSC_VER) || defined(BUILD_MEX_INTERFACE)
 
 #include <sstream>
 #include <string>
