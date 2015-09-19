@@ -25,11 +25,9 @@ void im2col_cpu(const Dtype* data_im, const int channels,
       for (int w_col = 0; w_col < width_col; ++w_col) {
         int h_im = h_col * stride_h - pad_h + h_offset;
         int w_im = w_col * stride_w - pad_w + w_offset;
-        if (h_im >= 0 && h_im < height && w_im >= 0 && w_im < width)
-          data_col[(c_col * height_col + h_col) * width_col + w_col] =
-            data_im[(c_im * height + h_im) * width + w_im];
-        else
-          data_col[(c_col * height_col + h_im) * width_col + w_im] = 0;
+        data_col[(c_col * height_col + h_col) * width_col + w_col] =
+            (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?
+            data_im[(c_im * height + h_im) * width + w_im] : 0;
       }
     }
   }
