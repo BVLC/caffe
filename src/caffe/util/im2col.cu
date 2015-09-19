@@ -16,13 +16,13 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
     const int height_col, const int width_col,
     Dtype* data_col) {
   CUDA_KERNEL_LOOP(index, n) {
-    int h_index = index / width_col;
-    int h_col = h_index % height_col;
-    int w_col = index % width_col;
-    int c_im = h_index / height_col;
-    int c_col = c_im * kernel_h * kernel_w;
-    int h_offset = h_col * stride_h - pad_h;
-    int w_offset = w_col * stride_w - pad_w;
+    const int h_index = index / width_col;
+    const int h_col = h_index % height_col;
+    const int w_col = index % width_col;
+    const int c_im = h_index / height_col;
+    const int c_col = c_im * kernel_h * kernel_w;
+    const int h_offset = h_col * stride_h - pad_h;
+    const int w_offset = w_col * stride_w - pad_w;
     Dtype* data_col_ptr = data_col;
     data_col_ptr += (c_col * height_col + h_col) * width_col + w_col;
     const Dtype* data_im_ptr = data_im;
@@ -230,14 +230,18 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
     Dtype* data_im) {
   CUDA_KERNEL_LOOP(index, n) {
     Dtype val = 0;
-    int w_im = index % width + pad_w;
-    int h_im = (index / width) % height + pad_h;
-    int c_im = index / (width * height);
+    const int w_im = index % width + pad_w;
+    const int h_im = (index / width) % height + pad_h;
+    const int c_im = index / (width * height);
     // compute the start and end of the output
-    int w_col_start = (w_im < kernel_w) ? 0 : (w_im - kernel_w) / stride_w + 1;
-    int w_col_end = min(w_im / stride_w + 1, width_col);
-    int h_col_start = (h_im < kernel_h) ? 0 : (h_im - kernel_h) / stride_h + 1;
-    int h_col_end = min(h_im / stride_h + 1, height_col);
+    const int w_col_start =
+        (w_im < kernel_w) ? 0 : (w_im - kernel_w) / stride_w + 1;
+    const int w_col_end =
+        min(w_im / stride_w + 1, width_col);
+    const int h_col_start =
+        (h_im < kernel_h) ? 0 : (h_im - kernel_h) / stride_h + 1;
+    const int h_col_end =
+        min(h_im / stride_h + 1, height_col);
     /*
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
       for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {

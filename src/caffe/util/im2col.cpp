@@ -14,9 +14,9 @@ void im2col_cpu(const Dtype* data_im, const int channels,
     const int pad_h, const int pad_w,
     const int stride_h, const int stride_w,
     Dtype* data_col) {
-  int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
-  int channels_col = channels * kernel_h * kernel_w;
+  const int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
+  const int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+  const int channels_col = channels * kernel_h * kernel_w;
   for (int c_col = 0; c_col < channels_col; ++c_col) {
     int w_offset = c_col % kernel_w;
     int h_offset = (c_col / kernel_w) % kernel_h;
@@ -142,9 +142,9 @@ void col2im_cpu(const Dtype* data_col, const int channels,
     const int stride_h, const int stride_w,
     Dtype* data_im) {
   caffe_set(height * width * channels, Dtype(0), data_im);
-  int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
-  int channels_col = channels * kernel_h * kernel_w;
+  const int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
+  const int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+  const int channels_col = channels * kernel_h * kernel_w;
   for (int c_col = 0; c_col < channels_col; ++c_col) {
     int w_offset = c_col % kernel_w;
     int h_offset = (c_col / kernel_w) % kernel_h;
