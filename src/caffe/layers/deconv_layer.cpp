@@ -10,14 +10,13 @@ namespace caffe {
 
 template <typename Dtype>
 void DeconvolutionLayer<Dtype>::compute_output_shape() {
-  // input_shape_ + 1 to skip channel axis
-  const int* input_shape_data = this->input_shape_.cpu_data() + 1;
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
   this->output_shape_.clear();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
-    const int input_dim = input_shape_data[i];
+    // i + 1 to skip channel axis
+    const int input_dim = this->input_shape(i + 1);
     const int output_dim = stride_data[i] * (input_dim - 1)
         + kernel_shape_data[i] - 2 * pad_data[i];
     this->output_shape_.push_back(output_dim);

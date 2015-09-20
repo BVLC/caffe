@@ -58,6 +58,10 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void backward_gpu_bias(Dtype* bias, const Dtype* input);
 #endif
 
+  /// @brief The spatial dimensions of the input.
+  inline int input_shape(int i) {
+    return (*bottom_shape_)[channel_axis_ + i];
+  }
   // reverse_dimensions should return true iff we are implementing deconv, so
   // that conv helpers know which dimensions are which.
   virtual bool reverse_dimensions() = 0;
@@ -72,12 +76,11 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   Blob<int> pad_;
   /// @brief The spatial dimensions of the convolution input.
   Blob<int> conv_input_shape_;
-  /// @brief The spatial dimensions of the input.
-  Blob<int> input_shape_;
   /// @brief The spatial dimensions of the col_buffer.
   vector<int> col_buffer_shape_;
   /// @brief The spatial dimensions of the output.
   vector<int> output_shape_;
+  const vector<int>* bottom_shape_;
 
   int num_spatial_axes_;
   int bottom_dim_;
