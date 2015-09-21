@@ -21,6 +21,7 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
+    Caffe::set_random_seed(1701);
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
@@ -81,6 +82,19 @@ TYPED_TEST(Im2colLayerTest, TestGradient) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(Im2colLayerTest, TestGradientForceND) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_force_nd_im2col(true);
+  Im2colLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
 
 TYPED_TEST(Im2colLayerTest, TestRect) {
   typedef typename TypeParam::Dtype Dtype;
