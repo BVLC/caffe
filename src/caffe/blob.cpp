@@ -30,10 +30,11 @@ bool Blob<Dtype>::Reshape(const vector<int>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
-  shape_data_.reset(new SyncedMemory(shape.size()
-                                * sizeof(int), device_context_));
+  if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int)) {
+    shape_data_.reset(
+        new SyncedMemory(shape.size() * sizeof(int), device_context_));
+  }
   int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
-
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     CHECK_LE(shape[i], INT_MAX / count_)<< "blob size exceeds INT_MAX";
@@ -86,7 +87,7 @@ const int* Blob<Dtype>::gpu_shape() const {
   return (const int*)shape_data_->gpu_data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
   return (const Dtype*) data_->cpu_data();

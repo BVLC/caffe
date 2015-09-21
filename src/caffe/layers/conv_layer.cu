@@ -26,11 +26,11 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < this->num_; ++n) {
       // Multi queue execution, go through work queues
       this->device_context_->SwitchQueue(n);
-      this->forward_gpu_gemm(bottom_data, bottom[i]->offset(n), weight,
-          top_data, top[i]->offset(n));
+      this->forward_gpu_gemm(bottom_data, n * this->bottom_dim_, weight,
+          top_data,  n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->gpu_data();
-        this->forward_gpu_bias(top_data, top[i]->offset(n), bias);
+        this->forward_gpu_bias(top_data, n * this->top_dim_, bias);
       }
     }
     // Multi queue execution, finish all queues
@@ -49,7 +49,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {
-        this->backward_gpu_bias(bias_diff, top_diff, top[i]->offset(n));
+        this->backward_gpu_bias(bias_diff, top_diff, n * this->top_dim_);
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
@@ -58,11 +58,10 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_gpu_gemm(bottom_data, bottom[i]->offset(n),
-              top_diff, top[i]->offset(n), weight_diff);
+          this->weight_gpu_gemm(bottom_data, n * this->bottom_dim_,
+              top_diff, n * this->top_dim_, weight_diff);
         }
       }
-
       // gradient w.r.t. bottom data, if necessary.
       if (propagate_down[i]) {
         // Multi queue execution, all previous work needs to be done first
@@ -70,8 +69,8 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         for (int n = 0; n < this->num_; ++n) {
           // Multi queue execution, go through work queues
           this->device_context_->SwitchQueue(n);
-          this->backward_gpu_gemm(top_diff, top[i]->offset(n), weight,
-                                  bottom_diff, bottom[i]->offset(n));
+          this->backward_gpu_gemm(top_diff, n * this->top_dim_, weight,
+                                  bottom_diff, n * this->bottom_dim_);
         }
         // Multi queue execution, finish all queues
         this->device_context_->FinishQueues();
