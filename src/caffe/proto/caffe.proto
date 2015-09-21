@@ -408,6 +408,14 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  // For relighting augmentation we need both the eigenvectors and eigenvalues.
+  // Unless both are defined, relighting augmentation will be disabled.
+  // the eigen values of the components, same as number of channels.
+  repeated float eigen_value = 8;
+  // the eigen vectors of the components, there should be channels*channels elements.
+  repeated float eigen_vector_component = 9;
+  // filler for re-lighting random variable
+  optional FillerParameter relight_filler = 10;
 }
 
 // Message that stores parameters shared by loss layers
