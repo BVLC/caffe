@@ -118,7 +118,7 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
 
   if ( this->layer_param_.has_transform_param()
-      && ! is_transformation_applied_ ) {
+      && !is_transformation_applied_ ) {
     transform_data_.Reshape(batch_size_, channels_, height_, width_);
     transform_data_.set_cpu_data(data_ + pos_ * size_);
     this->data_transformer_->Transform(&transform_data_, top[0]);

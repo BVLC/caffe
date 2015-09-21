@@ -115,7 +115,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   }
 }
 
-TYPED_TEST(MemoryDataLayerTest, TestForwardTransform){
+TYPED_TEST(MemoryDataLayerTest, TestForwardTransform) {
   typedef typename TypeParam::Dtype Dtype;
 
   LayerParameter layer_param;
