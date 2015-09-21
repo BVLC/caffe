@@ -24,10 +24,10 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   vector<int> label_shape(1, batch_size_);
 
   if (this->layer_param_.has_transform_param()) {
-	transform_data_.Reshape(batch_size_, channels_, height_, width_);
+    transform_data_.Reshape(batch_size_, channels_, height_, width_);
     this->data_transformer_->Transform(&transform_data_, top[0]);
   } else {
-	top[0]->Reshape(batch_size_, channels_, height_, width_);
+    top[0]->Reshape(batch_size_, channels_, height_, width_);
   }
 
   top[1]->Reshape(label_shape);
@@ -117,13 +117,14 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
 
-  if ( this->layer_param_.has_transform_param() && ! is_transformation_applied_ ) {
-	  transform_data_.Reshape(batch_size_, channels_, height_, width_);
-	  transform_data_.set_cpu_data(data_ + pos_ * size_);
-	  this->data_transformer_->Transform(&transform_data_, top[0]);
+  if ( this->layer_param_.has_transform_param()
+      && ! is_transformation_applied_ ) {
+    transform_data_.Reshape(batch_size_, channels_, height_, width_);
+    transform_data_.set_cpu_data(data_ + pos_ * size_);
+    this->data_transformer_->Transform(&transform_data_, top[0]);
   } else {
-	  top[0]->Reshape(batch_size_, channels_, height_, width_);
-	  top[0]->set_cpu_data(data_ + pos_ * size_);
+    top[0]->Reshape(batch_size_, channels_, height_, width_);
+    top[0]->set_cpu_data(data_ + pos_ * size_);
   }
 
   top[1]->Reshape(batch_size_, 1, 1, 1);

@@ -115,7 +115,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   }
 }
 
-TYPED_TEST(MemoryDataLayerTest, TestForwardTransform) {
+TYPED_TEST(MemoryDataLayerTest, TestForwardTransform){
   typedef typename TypeParam::Dtype Dtype;
 
   LayerParameter layer_param;
@@ -134,7 +134,8 @@ TYPED_TEST(MemoryDataLayerTest, TestForwardTransform) {
       this->labels_->mutable_cpu_data(), this->data_->num());
   for (int i = 0; i < this->batches_ * 6; ++i) {
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    EXPECT_EQ(this->batch_size_*this->channels_, this->blob_top_vec_[0]->count());
+    EXPECT_EQ(this->batch_size_*this->channels_,
+        this->blob_top_vec_[0]->count());
   }
 }
 
