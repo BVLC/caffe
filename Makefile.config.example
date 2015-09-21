@@ -77,6 +77,9 @@ PYTHON_LIB := /usr/lib
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
+# Add additional libraries you need here.
+# ADDTIONAL_LIBS :=
+
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
 # INCLUDE_DIRS += $(shell brew --prefix)/include
 # LIBRARY_DIRS += $(shell brew --prefix)/lib

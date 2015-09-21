@@ -170,7 +170,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5
+LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5 $(ADDTIONAL_LIBS)
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
