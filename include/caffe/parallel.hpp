@@ -65,14 +65,16 @@ class GPUParams : public Params<Dtype> {
 
 class DevicePair {
  public:
-  DevicePair(device* parent, device* device)
+  DevicePair(device* parent, device* dev)
       : parent_(parent),
-        device_(device) {
+        device_(dev) {
   }
-  inline device* parent() {
+
+  inline device* getParent() {
     return parent_;
   }
-  inline device* device() {
+
+  inline device* getDevice() {
     return device_;
   }
 

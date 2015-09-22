@@ -89,7 +89,7 @@ device *Caffe::GetDefaultDevice() {
   return Get().default_device_context_;
 }
 
-device *Caffe::GetCPUDeviceContext() {
+device *Caffe::GetCPUDevice() {
   return Get().cpu_device_context_.get();
 }
 

@@ -92,18 +92,18 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     for (int n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
         col2im_gpu(top_diff + n * top_dim_, channels_,
-            bottom[0]->shape(channel_axis_ + 1),
-            bottom[0]->shape(channel_axis_ + 2),
-            kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-            pad_.cpu_data()[0], pad_.cpu_data()[1],
-            stride_.cpu_data()[0], stride_.cpu_data()[1],
-            bottom_diff + n * bottom_dim_);
+                   bottom[0]->shape(channel_axis_ + 1),
+                   bottom[0]->shape(channel_axis_ + 2),
+                   kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+                   pad_.cpu_data()[0], pad_.cpu_data()[1],
+                   stride_.cpu_data()[0], stride_.cpu_data()[1],
+                   bottom_diff + n * bottom_dim_);
       } else {
         col2im_nd_gpu(top_diff + n * top_dim_, num_spatial_axes_, bottom_dim_,
-            bottom[0]->gpu_shape() + channel_axis_,
-            top[0]->gpu_shape() + channel_axis_,
-            kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-            bottom_diff + n * bottom_dim_);
+                      bottom[0]->gpu_shape() + channel_axis_,
+                      top[0]->gpu_shape() + channel_axis_,
+                      kernel_shape_.gpu_data(), pad_.gpu_data(),
+                      stride_.gpu_data(), bottom_diff + n * bottom_dim_);
       }
     }
 #endif  // USE_CUDA
@@ -115,11 +115,26 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_context_->id());
 
     for (int n = 0; n < top[0]->num(); ++n) {
-      greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) top_diff,
-                                 top[0]->offset(n), channels_, height_, width_,
-                                 kernel_h_, kernel_w_, pad_h_, pad_w_,
-                                 stride_h_, stride_w_, (cl_mem) bottom_diff,
-                                 bottom[0]->offset(n));
+      if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+        greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) top_diff,
+                                   n * top_dim_, channels_,
+                                   bottom[0]->shape(channel_axis_ + 1),
+                                   bottom[0]->shape(channel_axis_ + 2),
+                                   kernel_shape_.cpu_data()[0],
+                                   kernel_shape_.cpu_data()[1],
+                                   pad_.cpu_data()[0], pad_.cpu_data()[1],
+                                   stride_.cpu_data()[0], stride_.cpu_data()[1],
+                                   (cl_mem) bottom_diff, n * bottom_dim_);
+      } else {
+        greentea_col2im_nd_gpu(&program, &ctx, (cl_mem) top_diff, n * top_dim_,
+                               num_spatial_axes_, channel_axis_, bottom_dim_,
+                               (cl_mem)(bottom[0]->gpu_shape()),
+                               (cl_mem)(top[0]->gpu_shape()),
+                               (cl_mem)(kernel_shape_.gpu_data()),
+                               (cl_mem)(pad_.gpu_data()),
+                               stride_.gpu_data(), (cl_mem) bottom_diff,
+                               n * bottom_dim_);
+      }
     }
 #endif  // USE_GREENTEA
   }

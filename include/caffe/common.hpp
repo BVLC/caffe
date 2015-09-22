@@ -172,7 +172,7 @@ class Caffe {
 
   // Get the default device
   static device *GetDefaultDevice();
-  static device *GetCPUDeviceContext();
+  static device *GetCPUDevice();
 
   // Prints info about all devices
   static int EnumerateDevices(bool silent = false);
