@@ -58,7 +58,7 @@ void DeconvolutionLayer<Dtype>::Backward_gpu(
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
-          this->forward_gpu_gemm(top_diff, this->top_dim_, weight,
+          this->forward_gpu_gemm(top_diff, n * this->top_dim_, weight,
                                  bottom_diff, n * this->bottom_dim_,
                                  this->param_propagate_down_[0]);
         }
