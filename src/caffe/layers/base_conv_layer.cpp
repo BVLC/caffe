@@ -20,13 +20,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int num_axes = bottom[0]->num_axes();
   num_spatial_axes_ = num_axes - first_spatial_axis;
   CHECK_GE(num_spatial_axes_, 0);
-  // Setup input dimensions (input_shape_).
   vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-  input_shape_.Reshape(bottom_dim_blob_shape);
-  int* input_shape_data = input_shape_.mutable_cpu_data();
-  for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
-    input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
-  }
   vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
   // Setup filter kernel dimensions (kernel_shape_).
   kernel_shape_.Reshape(spatial_dim_blob_shape);
@@ -190,6 +184,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         << "All inputs must have the same shape.";
   }
   // Shape the tops.
+  bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();
   vector<int> top_shape(bottom[0]->shape().begin(),
       bottom[0]->shape().begin() + channel_axis_);
@@ -223,10 +218,9 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // it goes lazily unused to save memory.
   col_buffer_shape_.clear();
   col_buffer_shape_.push_back(kernel_dim_ * group_);
-  const int* input_shape_data = input_shape_.cpu_data() + 1;
   for (int i = 0; i < num_spatial_axes_; ++i) {
     if (reverse_dimensions()) {
-      col_buffer_shape_.push_back(input_shape_data[i]);
+      col_buffer_shape_.push_back(input_shape(i + 1));
     } else {
       col_buffer_shape_.push_back(output_shape_[i]);
     }
