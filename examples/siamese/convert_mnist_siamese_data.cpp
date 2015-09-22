@@ -10,11 +10,13 @@
 
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
-#include "leveldb/db.h"
 #include "stdint.h"
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
+
+#ifdef USE_LEVELDB
+#include "leveldb/db.h"
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -121,3 +123,8 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
+#else
+int main(int argc, char** argv) {
+  LOG(FATAL) << "This example requires LevelDB; compile with USE_LEVELDB.";
+}
+#endif  // USE_LEVELDB

@@ -84,6 +84,8 @@ class Solver {
   }
 
  public:
+  void CheckSnapshotWritePermissions();
+
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   
