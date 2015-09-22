@@ -125,10 +125,10 @@ void GPUParams<Dtype>::configure(Solver<Dtype>* solver) const {
   apply_buffers(net, diff_, size_, replace_gpu_diff);
 }
 
-void DevicePair::compute(const vector<DeviceContext*> devices,
+void DevicePair::compute(const vector<device*> devices,
                          vector<DevicePair>* pairs) {
 #ifndef CPU_ONLY
-  vector<DeviceContext*> remaining(devices);
+  vector<device*> remaining(devices);
 
   // Depth for reduction tree
   int remaining_depth = static_cast<int>(ceil(log2(remaining.size())));
@@ -412,7 +412,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::run(const vector<DeviceContext*>& gpus) {
+void P2PSync<Dtype>::run(const vector<device*>& gpus) {
   // Pair devices for map-reduce synchronization
   vector<DevicePair> pairs;
   DevicePair::compute(gpus, &pairs);
@@ -451,7 +451,7 @@ void P2PSync<Dtype>::run(const vector<DeviceContext*>& gpus) {
   LOG(INFO)<< "Starting Optimization";
 
   for (int i = 1; i < syncs.size(); ++i) {
-    syncs[i]->StartInternalThread(Caffe::GetDefaultDeviceContext());
+    syncs[i]->StartInternalThread(Caffe::GetDefaultDevice());
   }
 
   // Run root solver on current thread

@@ -24,13 +24,13 @@ class RandomNumberGeneratorTest : public ::testing::Test {
        sample_size_(10000),
        seed_(1701),
        data_(new SyncedMemory(sample_size_ * sizeof(Dtype),
-                              Caffe::GetDefaultDeviceContext())),
+                              Caffe::GetDefaultDevice())),
        data_2_(new SyncedMemory(sample_size_ * sizeof(Dtype),
-                              Caffe::GetDefaultDeviceContext())),
+                              Caffe::GetDefaultDevice())),
        int_data_(new SyncedMemory(sample_size_ * sizeof(int),
-                              Caffe::GetDefaultDeviceContext())),
+                              Caffe::GetDefaultDevice())),
        int_data_2_(new SyncedMemory(sample_size_ * sizeof(int),
-                              Caffe::GetDefaultDeviceContext())) {}
+                              Caffe::GetDefaultDevice())) {}
 
   virtual void SetUp() {
     Caffe::set_random_seed(this->seed_);
@@ -183,7 +183,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   void RngGaussianFillGPU(const Dtype mu, const Dtype sigma, void* gpu_data) {
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
 
-    DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+    device *dc = Caffe::GetDefaultDevice();
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -201,7 +201,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
 
-    DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+    device *dc = Caffe::GetDefaultDevice();
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -219,7 +219,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   // caffe_gpu_rng_uniform.
   void RngUniformIntFillGPU(void* gpu_data) {
     unsigned int* rng_data = static_cast<unsigned int*>(gpu_data);
-    DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+    device *dc = Caffe::GetDefaultDevice();
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

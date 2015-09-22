@@ -9,11 +9,11 @@
 #include "caffe/common.hpp"
 #include "caffe/common_layers.hpp"
 #include "caffe/data_layers.hpp"
-#include "caffe/device_context.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "device.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
@@ -199,6 +199,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   Blob<int> stride_;
   /// @brief The spatial dimensions of the padding.
   Blob<int> pad_;
+  /// @brief The spatial dimension of the kernel stride.
+  Blob<int> kstride_;
   /// @brief The spatial dimensions of the convolution input.
   Blob<int> conv_input_shape_;
   /// @brief The spatial dimensions of the input.
@@ -256,16 +258,25 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 #ifdef USE_CUDA
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      im2col_gpu(data, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1], col_buff);
+      if(this->use_skernel_) {
+        im2col_sk_gpu(data, conv_in_channels_, conv_input_shape_.cpu_data()[1],
+                      conv_input_shape_.cpu_data()[2],
+                      kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+                      pad_.cpu_data()[0], pad_.cpu_data()[1],
+                      stride_.cpu_data()[0], stride_.cpu_data()[1],
+                      kstride_.cpu_data()[0], kstride_.cpu_data()[1], col_buff);
+      } else {
+        im2col_gpu(data, conv_in_channels_, conv_input_shape_.cpu_data()[1],
+                   conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
+                   kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
+                   pad_.cpu_data()[1], stride_.cpu_data()[0],
+                   stride_.cpu_data()[1], col_buff);
+      }
     } else {
       im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
           conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
           kernel_shape_.gpu_data(), pad_.gpu_data(),
-          stride_.gpu_data(), kstride_.gpu_data(), col_buff);
+          stride_.gpu_data(), col_buff);
     }
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
@@ -279,7 +290,6 @@ class BaseConvolutionLayer : public Layer<Dtype> {
       col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
           conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
           kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-          kstride_.gpu_data(),
           data);
     }
   }
@@ -293,9 +303,13 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_context_->id());
     greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                               conv_in_channels_, conv_in_height_,
-                               conv_in_width_, kernel_h_, kernel_w_, pad_h_,
-                               pad_w_, stride_h_, stride_w_, (cl_mem) col_buff,
+                               conv_in_channels_,
+                               conv_input_shape_.cpu_data()[1],
+                               conv_input_shape_.cpu_data()[2],
+                               kernel_shape_.cpu_data()[0],
+                               kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
+                               pad_.cpu_data()[1], stride_.cpu_data()[0],
+                               stride_.cpu_data()[1], (cl_mem) col_buff,
                                col_buff_off);
   }
   inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
@@ -306,10 +320,13 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_context_->id());
     greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff, col_buff_off,
-                               conv_in_channels_, conv_in_height_,
-                               conv_in_width_, kernel_h_, kernel_w_, pad_h_,
-                               pad_w_, stride_h_, stride_w_, (cl_mem) data,
-                               data_off);
+                               conv_in_channels_,
+                               conv_input_shape_.cpu_data()[1],
+                               conv_input_shape_.cpu_data()[2],
+                               kernel_shape_.cpu_data()[0],
+                               kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
+                               pad_.cpu_data()[1], stride_.cpu_data()[0],
+                               stride_.cpu_data()[1], (cl_mem) data, data_off);
   }
 #endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
@@ -323,168 +340,24 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int col_offset_;
   int output_offset_;
 
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
-};
-
-
-/**
- * @brief Abstract base class that factors out the BLAS code common to
- *        ConvolutionLayer and DeconvolutionLayer for N dimensions.
- */
-template<typename Dtype>
-class BaseConvolutionNDLayer : public Layer<Dtype> {
- public:
-  explicit BaseConvolutionNDLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline bool EqualNumBottomTopBlobs() const { return true; }
-
-
- protected:
-  // Helper functions that abstract away the column buffer and gemm arguments.
-  // The last argument in forward_cpu_gemm is so that we can skip the im2col if
-  // we just called weight_cpu_gemm with the same input.
-
-#ifndef CPU_ONLY
-  void forward_gpu_gemm(const Dtype* col_input, const int col_input_off,
-                        const Dtype* weights, Dtype* output,
-                        const int output_off, bool skip_im2col = false);
-  void forward_gpu_bias(Dtype* output, const int output_off, const Dtype* bias);
-  void backward_gpu_gemm(const Dtype* input, const int input_off,
-                         const Dtype* weights, Dtype* col_output,
-                         const int col_output_off);
-  void weight_gpu_gemm(const Dtype* col_input, const int col_input_off,
-                       const Dtype* output, const int output_off,
-                       Dtype* weights);
-  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int input_off);
-
-  shared_ptr< Blob<Dtype> > col_buffer();
-#endif  // !CPU_ONLY
-
-  // reverse_dimensions should return true iff we are implementing deconv, so
-  // that conv helpers know which dimensions are which.
-  virtual bool reverse_dimensions() = 0;
-  // Compute height_out_ and width_out_ from other parameters.
-  virtual void compute_output_shape() = 0;
-
-  /// @brief The spatial dimensions of a filter kernel.
-  Blob<int> kernel_shape_;
-  /// @brief The spatial dimensions of the stride.
-  Blob<int> stride_;
-  /// @brief The spatial dimensions of the padding.
-  Blob<int> pad_;
-  /// @brief The spatial dimension of the kernel stride.
-  Blob<int> kstride_;
-  /// @brief The spatial dimensions of the convolution input.
-  Blob<int> conv_input_shape_;
-  /// @brief The spatial dimensions of the input.
-  Blob<int> input_shape_;
-  /// @brief The spatial dimensions of the col_buffer.
-  vector<int> col_buffer_shape_;
-  /// @brief The spatial dimensions of the output.
-  vector<int> output_shape_;
-
-  int num_spatial_axes_;
-  int bottom_dim_;
-  int top_dim_;
-
-  int channel_axis_;
-  int num_;
-  int channels_;
-  int group_;
-  int num_output_;
-  bool bias_term_;
-  bool is_1x1_;
-
- private:
-  // wrap im2col/col2im so we don't have to remember the (long) argument lists
-#ifndef CPU_ONLY
-#ifdef USE_CUDA
-  inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
-    im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
-        conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-        kernel_shape_.gpu_data(), pad_.gpu_data(),
-        stride_.gpu_data(), kstride_.gpu_data(), col_buff);
-  }
-  inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
-    col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
-        conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-        kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-        kstride_.gpu_data(), data);
-  }
-#endif  // USE_CUDA
-#ifdef USE_GREENTEA
-  inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
-                                       Dtype* col_buff,
-                                       const int col_buff_off) {
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
-    greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem)data, data_off,
-                                  num_spatial_axes_,
-                                  num_kernels_im2col_,
-                                  (cl_mem)(conv_input_shape_.gpu_data()),
-                                  (cl_mem)(col_buffer_.gpu_shape()),
-                                  (cl_mem)(kernel_shape_.gpu_data()),
-                                  (cl_mem)(pad_.gpu_data()),
-                                  (cl_mem)(stride_.gpu_data()),
-                                  (cl_mem)(kstride_.gpu_data()),
-                                  (cl_mem) col_buff, col_buff_off);
-  }
-  inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
-                                       const int col_buff_off, Dtype* data,
-                                       const int data_off) {
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
-    greentea_col2im_nd_gpu<Dtype>(&program, &ctx,
-                                  (cl_mem) col_buff, col_buff_off,
-                                  num_spatial_axes_,
-                                  num_kernels_col2im_,
-                                  (cl_mem)(conv_input_shape_.gpu_data()),
-                                  (cl_mem)(col_buffer_.gpu_shape()),
-                                  (cl_mem)(kernel_shape_.gpu_data()),
-                                  (cl_mem)(pad_.gpu_data()),
-                                  (cl_mem)(stride_.gpu_data()),
-                                  (cl_mem)(kstride_.gpu_data()),
-                                  (cl_mem) data, data_off);
-  }
-#endif  // USE_GREENTEA
-#endif  // !CPU_ONLY
-
-  int num_kernels_im2col_;
-  int num_kernels_col2im_;
-  int conv_out_channels_;
-  int conv_in_channels_;
-  int conv_out_spatial_dim_;
-  int out_spatial_dim_;
-  int kernel_dim_;
-  int weight_offset_;
-  int col_offset_;
-  int output_offset_;
+  bool use_skernel_;
 
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
 };
 
+
+
+
 template<typename Dtype>
-class ConvolutionNDLayer : public BaseConvolutionNDLayer<Dtype> {
+class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
  public:
-  explicit ConvolutionNDLayer(const LayerParameter& param)
-      : BaseConvolutionNDLayer<Dtype>(param) {
+  explicit ConvolutionLayer(const LayerParameter& param)
+      : BaseConvolutionLayer<Dtype>(param) {
   }
 
   virtual inline const char* type() const {
-    return "ConvolutionND";
+    return "Convolution";
   }
 
   virtual size_t ForwardFlops() {
@@ -519,12 +392,12 @@ class ConvolutionNDLayer : public BaseConvolutionNDLayer<Dtype> {
 };
 
 template <typename Dtype>
-class DeconvolutionNDLayer : public BaseConvolutionNDLayer<Dtype> {
+class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
  public:
-  explicit DeconvolutionNDLayer(const LayerParameter& param)
-      : BaseConvolutionNDLayer<Dtype>(param) {}
+  explicit DeconvolutionLayer(const LayerParameter& param)
+      : BaseConvolutionLayer<Dtype>(param) {}
 
-  virtual inline const char* type() const { return "DeconvolutionND"; }
+  virtual inline const char* type() const { return "Deconvolution"; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -536,189 +409,6 @@ class DeconvolutionNDLayer : public BaseConvolutionNDLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual inline bool reverse_dimensions() { return true; }
-  virtual void compute_output_shape();
-};
-
-
-/**
- * @brief Convolves the input image for pixelwise classification.
- *
- *   Layer introduced by Li, Hongsheng et al.
- */
-template<typename Dtype>
-class ConvolutionSKLayer : public Layer<Dtype> {
- public:
-  explicit ConvolutionSKLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {
-  }
-
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-                          const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-                       const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const {
-    return "ConvolutionSK";
-  }
-
-  virtual size_t ForwardFlops() {
-    size_t M = this->M_;
-    size_t N = this->N_;
-    size_t K = this->K_;
-    size_t group = this->group_;
-    return group * (M * N * (2 * K - 1));
-  }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-
-  shared_ptr< Blob<Dtype> > col_buffer();
-
-  int kernel_h_, kernel_w_;
-  int stride_h_, stride_w_;
-  int channels_;
-  int group_;
-  int height_, width_;
-  int pad_h_, pad_w_;
-  int kstride_h_, kstride_w_;
-  int num_, num_output_;
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
-  bool bias_term_;
-  int M_, K_, N_;
-};
-
-/**
- * @brief Convolves the input image with a bank of learned filters,
- *        and (optionally) adds biases.
- *
- *   Caffe convolves by reduction to matrix multiplication. This achieves
- *   high-throughput and generality of input and filter dimensions but comes at
- *   the cost of memory for matrices. This makes use of efficiency in BLAS.
- *
- *   The input is "im2col" transformed to a channel K' x H x W data matrix
- *   for multiplication with the N x K' x H x W filter matrix to yield a
- *   N' x H x W output matrix that is then "col2im" restored. K' is the
- *   input channel * kernel height * kernel width dimension of the unrolled
- *   inputs so that the im2col matrix has a column for each input region to
- *   be filtered. col2im restores the output spatial structure by rolling up
- *   the output channel N' columns of the output matrix.
- */
-template<typename Dtype>
-class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
- public:
-  /**
-   * @param param provides ConvolutionParameter convolution_param,
-   *    with ConvolutionLayer options:
-   *  - num_output. The number of filters.
-   *  - kernel_size / kernel_h / kernel_w. The filter dimensions, given by
-   *  kernel_size for square filters or kernel_h and kernel_w for rectangular
-   *  filters.
-   *  - stride / stride_h / stride_w (\b optional, default 1). The filter
-   *  stride, given by stride_size for equal dimensions or stride_h and stride_w
-   *  for different strides. By default the convolution is dense with stride 1.
-   *  - pad / pad_h / pad_w (\b optional, default 0). The zero-padding for
-   *  convolution, given by pad for equal dimensions or pad_h and pad_w for
-   *  different padding. Input padding is computed implicitly instead of
-   *  actually padding.
-   *  - group (\b optional, default 1). The number of filter groups. Group
-   *  convolution is a method for reducing parameterization by selectively
-   *  connecting input and output channels. The input and output channel dimensions must be divisible
-   *  by the number of groups. For group @f$ \geq 1 @f$, the
-   *  convolutional filters' input and output channels are separated s.t. each
-   *  group takes 1 / group of the input channels and makes 1 / group of the
-   *  output channels. Concretely 4 input channels, 8 output channels, and
-   *  2 groups separate input channels 1-2 and output channels 1-4 into the
-   *  first group and input channels 3-4 and output channels 5-8 into the second
-   *  group.
-   *  - bias_term (\b optional, default true). Whether to have a bias.
-   *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
-   *    kernels + stream parallelism) engines.
-   */
-  explicit ConvolutionLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype>(param) {
-  }
-
-  virtual inline const char* type() const {
-    return "Convolution";
-  }
-
-  virtual size_t ForwardFlops() {
-    size_t group = this->group_;
-    size_t N = this->height_out_ * this->width_out_;
-    size_t M = this->num_output_ / group;
-    size_t K = this->channels_ * this->kernel_h_ * this->kernel_w_;
-    K /= group;
-    return group * (M * N * (2 * K - 1));
-  }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-  virtual inline bool reverse_dimensions() {
-    return false;
-  }
-  virtual void compute_output_shape();
-};
-
-
-
-/**
- * @brief Convolve the input with a bank of learned filters, and (optionally)
- *        add biases, treating filters and convolution parameters in the
- *        opposite sense as ConvolutionLayer.
- *
- *   ConvolutionLayer computes each output value by dotting an input window with
- *   a filter; DeconvolutionLayer multiplies each input value by a filter
- *   elementwise, and sums over the resulting output windows. In other words,
- *   DeconvolutionLayer is ConvolutionLayer with the forward and backward passes
- *   reversed. DeconvolutionLayer reuses ConvolutionParameter for its
- *   parameters, but they take the opposite sense as in ConvolutionLayer (so
- *   padding is removed from the output rather than added to the input, and
- *   stride results in upsampling rather than downsampling).
- */
-template<typename Dtype>
-class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
- public:
-  explicit DeconvolutionLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype>(param) {
-  }
-
-  virtual inline const char* type() const {
-    return "Deconvolution";
-  }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-  virtual inline bool reverse_dimensions() {
-    return true;
-  }
   virtual void compute_output_shape();
 };
 

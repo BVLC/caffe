@@ -1,9 +1,10 @@
 #include <cstring>
 
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/syncedmem.hpp"
+
+#include "../../include/caffe/device.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #ifdef USE_GREENTEA
@@ -22,7 +23,7 @@ namespace caffe {
 void CaffeMallocHost(void** ptr, size_t size) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       CUDA_CHECK(cudaMallocHost(ptr, size));
       return;
@@ -43,7 +44,7 @@ void CaffeMallocHost(void** ptr, size_t size) {
 void CaffeFreeHost(void* ptr) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       cudaFreeHost(ptr);
       return;

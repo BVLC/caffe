@@ -6,7 +6,6 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/layer.hpp"
@@ -18,6 +17,7 @@
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
+#include "device.hpp"
 
 
 

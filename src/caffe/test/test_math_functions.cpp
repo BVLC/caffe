@@ -186,7 +186,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   }
   TypeParam gpu_asum;
 
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -204,7 +204,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
 TYPED_TEST(GPUMathFunctionsTest, TestSign) {
   int n = this->blob_bottom_->count();
 
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -229,7 +229,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestSign) {
 TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
   int n = this->blob_bottom_->count();
 
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -254,7 +254,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
 TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   int n = this->blob_bottom_->count();
 
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -281,7 +281,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
 
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
@@ -307,7 +307,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
   TypeParam* top_data = this->blob_top_->mutable_gpu_data();
 
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
   if (dc->backend() == BACKEND_CUDA) {
   #ifdef USE_CUDA
     caffe_copy(n, bottom_data, top_data);

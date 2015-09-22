@@ -9,7 +9,8 @@
 #include <vector>
 
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
+
+#include "caffe/device.hpp"
 #include "caffe/util/rng.hpp"
 
 #ifdef USE_GREENTEA
@@ -29,7 +30,7 @@ static Caffe* global_instance_;
 static std::atomic<bool> first(true);
 
 // Device contexts are initialized once and shared on all threads
-std::vector< shared_ptr<DeviceContext> > Caffe::device_contexts_;
+std::vector< shared_ptr<device> > Caffe::device_contexts_;
 
 Caffe& Caffe::Get() {
   if (first.exchange(false)) {
@@ -76,7 +77,7 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
-DeviceContext *Caffe::GetDeviceContext(int id) {
+device *Caffe::GetDeviceContext(int id) {
   // The default device context is thread-local
   // The list of device contexts is global
   return
@@ -84,11 +85,11 @@ DeviceContext *Caffe::GetDeviceContext(int id) {
           Get().default_device_context_ : Get().device_contexts_[id].get();
 }
 
-DeviceContext *Caffe::GetDefaultDeviceContext() {
+device *Caffe::GetDefaultDevice() {
   return Get().default_device_context_;
 }
 
-DeviceContext *Caffe::GetCPUDeviceContext() {
+device *Caffe::GetCPUDeviceContext() {
   return Get().cpu_device_context_.get();
 }
 
@@ -117,7 +118,7 @@ Caffe::Caffe(const Caffe &obj) {
 #endif  // USE_CUDA
 }
 
-void Caffe::SelectDevice(DeviceContext* device_context) {
+void Caffe::SelectDevice(device* device_context) {
 #ifndef CPU_ONLY
   Get().default_device_context_ = device_context;
 
@@ -196,7 +197,7 @@ Caffe::Caffe()
 #endif  // USE_CUDA
       random_generator_(),
       mode_(Caffe::CPU),
-      cpu_device_context_(new DeviceContext(-1, -1, Backend::BACKEND_CPU)),
+      cpu_device_context_(new device(-1, -1, Backend::BACKEND_CPU)),
       default_device_context_(cpu_device_context_.get()),
       solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
@@ -233,7 +234,7 @@ Caffe::~Caffe() {
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
-  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Curand seed
     static bool g_curand_availability_logged = false;
@@ -260,7 +261,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
 
 void Caffe::Synchronize(int device_id) {
   if (Caffe::mode() == Brew::GPU) {
-    DeviceContext * device_context = Caffe::GetDeviceContext(device_id);
+    device * device_context = Caffe::GetDeviceContext(device_id);
     if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       cudaDeviceSynchronize();
@@ -367,15 +368,15 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   for (int i = 0; i < cuda_device_count; ++i) {
     for (int j = 0; j < device_ids.size(); ++j) {
       if (device_ids[j] == i) {
-        shared_ptr<DeviceContext> device(
-            new DeviceContext(i, initcount, Backend::BACKEND_CUDA));
-        Get().device_contexts_.emplace_back(device);
-        device->Init();
+        shared_ptr<device> dev(
+            new device(i, initcount, Backend::BACKEND_CUDA));
+        Get().device_contexts_.emplace_back(dev);
+        dev->Init();
         ++initcount;
       } else {
         // Temporary until device abstraction is done
-        shared_ptr<DeviceContext> device(new DeviceContext());
-        Get().device_contexts_.emplace_back(device);
+        shared_ptr<device> dev(new device());
+        Get().device_contexts_.emplace_back(dev);
         ++initcount;
       }
     }
@@ -410,16 +411,16 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
                 device_id,
                 std::get<1>(platform_devices[greentea_device_count]));
 
-            shared_ptr<DeviceContext> device(
-                new DeviceContext(device_id,
+            shared_ptr<device> dev(
+                new device(device_id,
                                   initcount, Backend::BACKEND_OpenCL));
-            Get().device_contexts_.emplace_back(device);
-            device->Init();
+            Get().device_contexts_.emplace_back(dev);
+            dev->Init();
             ++initcount;
           } else {
             // Temporary until device abstraction is done
-            shared_ptr<DeviceContext> device(new DeviceContext());
-            Get().device_contexts_.emplace_back(device);
+            shared_ptr<device> dev(new device());
+            Get().device_contexts_.emplace_back(dev);
             ++initcount;
           }
         }

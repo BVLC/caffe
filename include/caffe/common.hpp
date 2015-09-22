@@ -77,7 +77,7 @@ namespace cv {class Mat;}
 
 namespace caffe {
 
-class DeviceContext;
+class device;
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
@@ -161,7 +161,7 @@ class Caffe {
   // requires us to reset those values.
   static void SetDevice(const int device_id);
   // Switch the current device
-  static void SelectDevice(DeviceContext* device_context);
+  static void SelectDevice(device* device_context);
   // Prints the current GPU status.
   static void DeviceQuery();
   // Parallel training info
@@ -171,8 +171,8 @@ class Caffe {
   inline static void set_root_solver(bool val) { Get().root_solver_ = val; }
 
   // Get the default device
-  static DeviceContext *GetDefaultDeviceContext();
-  static DeviceContext *GetCPUDeviceContext();
+  static device *GetDefaultDevice();
+  static device *GetCPUDeviceContext();
 
   // Prints info about all devices
   static int EnumerateDevices(bool silent = false);
@@ -182,7 +182,7 @@ class Caffe {
   static void Synchronize(int device_id);
 
   // Get a device context
-  static DeviceContext *GetDeviceContext(int id);
+  static device *GetDeviceContext(int id);
 
   // Get a device OpenCL program
 #ifdef USE_GREENTEA
@@ -202,9 +202,9 @@ class Caffe {
 
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
-  static vector<shared_ptr< DeviceContext> > device_contexts_;
-  shared_ptr<DeviceContext> cpu_device_context_;
-  DeviceContext* default_device_context_;
+  static vector<shared_ptr< device> > device_contexts_;
+  shared_ptr<device> cpu_device_context_;
+  device* default_device_context_;
 
   int solver_count_;
   bool root_solver_;

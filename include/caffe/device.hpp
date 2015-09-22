@@ -23,10 +23,10 @@ using std::vector;
 
 namespace caffe {
 
-class DeviceContext {
+class device {
  public:
-  explicit DeviceContext();
-  explicit DeviceContext(int id, int list_id, Backend backend);
+  explicit device();
+  explicit device(int id, int list_id, Backend backend);
   Backend backend() const;
   int id() const;
   int list_id() const;

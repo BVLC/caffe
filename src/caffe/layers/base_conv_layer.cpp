@@ -419,7 +419,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
 #ifdef USE_GREENTEA
     greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                              CblasNoTrans, num_output_,
-                             height_out_ * width_out_, 1, (Dtype) 1.,
+                             out_spatial_dim_, 1, (Dtype) 1.,
                              (cl_mem) bias, 0,
                              (cl_mem) (bias_multiplier_.gpu_data()), 0,
                              (Dtype) 1., (cl_mem) output, output_off);
