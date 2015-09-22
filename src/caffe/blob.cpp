@@ -2,8 +2,9 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+
+#include "../../include/caffe/device.hpp"
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -68,14 +69,14 @@ bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
 
 template<typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
-                  const int width, DeviceContext *device_context)
+                  const int width, device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_context_(device_context) {
   Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>
-Blob<Dtype>::Blob(const vector<int>& shape, DeviceContext *device_context)
+Blob<Dtype>::Blob(const vector<int>& shape, device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_context_(device_context) {
   Reshape(shape);
@@ -208,7 +209,7 @@ template<> unsigned int Blob<unsigned int>::asum_data() const {
 }
 
 template<typename Dtype>
-DeviceContext *Blob<Dtype>::device_context() {
+device *Blob<Dtype>::device_context() {
   return device_context_;
 }
 

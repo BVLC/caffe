@@ -16,17 +16,35 @@ void col2im_cpu(const Dtype* data_col, const int channels, const int height,
                 const int stride_w, Dtype* data_im);
 
 template<typename Dtype>
-void im2col_sk_gpu(const Dtype* data_im, const int channels, const int height,
-                   const int width, const int kernel_h, const int kernel_w,
-                   const int pad_h, const int pad_w, const int stride_h,
-                   const int stride_w, const int kstride_h, const int kstride_w,
+void im2col_nd_cpu(const Dtype* data_im, const int num_spatial_axes,
+                   const int* im_shape, const int* col_shape,
+                   const int* kernel_shape, const int* pad, const int* stride,
                    Dtype* data_col);
+
+template<typename Dtype>
+void col2im_nd_cpu(const Dtype* data_col, const int num_spatial_axes,
+                   const int* im_shape, const int* col_shape,
+                   const int* kernel_shape, const int* pad, const int* stride,
+                   Dtype* data_im);
 
 template<typename Dtype>
 void im2col_gpu(const Dtype* data_im, const int channels, const int height,
                 const int width, const int kernel_h, const int kernel_w,
                 const int pad_h, const int pad_w, const int stride_h,
                 const int stride_w, Dtype* data_col);
+
+template<typename Dtype>
+void col2im_gpu(const Dtype* data_col, const int channels, const int height,
+                const int width, const int patch_h, const int patch_w,
+                const int pad_h, const int pad_w, const int stride_h,
+                const int stride_w, Dtype* data_im);
+
+template<typename Dtype>
+void im2col_sk_gpu(const Dtype* data_im, const int channels, const int height,
+                   const int width, const int kernel_h, const int kernel_w,
+                   const int pad_h, const int pad_w, const int stride_h,
+                   const int stride_w, const int kstride_h, const int kstride_w,
+                   Dtype* data_col);
 
 template<typename Dtype>
 void col2im_sk_gpu(const Dtype* data_col, const int channels, const int height,
@@ -36,29 +54,30 @@ void col2im_sk_gpu(const Dtype* data_col, const int channels, const int height,
                    Dtype* data_im);
 
 template<typename Dtype>
-void col2im_gpu(const Dtype* data_col, const int channels, const int height,
-                const int width, const int patch_h, const int patch_w,
-                const int pad_h, const int pad_w, const int stride_h,
-                const int stride_w, Dtype* data_im);
-
-template<typename Dtype>
 void im2col_nd_gpu(const Dtype* data_im, const int num_spatial_axes,
                    const int num_kernels, const int* im_shape,
                    const int* col_shape, const int* kernel_shape,
-                   const int* pad, const int* stride, const int* kstride,
-                   Dtype* data_col);
+                   const int* pad, const int* stride, Dtype* data_col);
 
 template<typename Dtype>
 void col2im_nd_gpu(const Dtype* data_col, const int num_spatial_axes,
                    const int im_size, const int* im_shape, const int* col_shape,
                    const int* kernel_shape, const int* pad, const int* stride,
-                   const int* kstride, Dtype* data_im);
+                   Dtype* data_im);
 
 template<typename Dtype>
-void col2im_gpu(const Dtype* data_col, const int channels, const int height,
-                const int width, const int patch_h, const int patch_w,
-                const int pad_h, const int pad_w, const int stride_h,
-                const int stride_w, Dtype* data_im);
+void im2col_ndsk_gpu(const Dtype* data_im, const int num_spatial_axes,
+                     const int num_kernels, const int* im_shape,
+                     const int* col_shape, const int* kernel_shape,
+                     const int* pad, const int* stride, const int* kstride,
+                     Dtype* data_col);
+
+template<typename Dtype>
+void col2im_ndsk_gpu(const Dtype* data_col, const int num_spatial_axes,
+                     const int im_size, const int* im_shape,
+                     const int* col_shape, const int* kernel_shape,
+                     const int* pad, const int* stride, const int* kstride,
+                     Dtype* data_im);
 
 }  // namespace caffe
 

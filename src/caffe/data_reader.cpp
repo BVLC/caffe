@@ -63,7 +63,7 @@ DataReader::QueuePair::~QueuePair() {
 DataReader::Body::Body(const LayerParameter& param)
     : param_(param),
       new_queue_pairs_() {
-  StartInternalThread(Caffe::Get().GetDefaultDeviceContext());
+  StartInternalThread(Caffe::Get().GetDefaultDevice());
 }
 
 DataReader::Body::~Body() {

@@ -49,7 +49,7 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
 
 template<typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
-  device_context_ = Caffe::GetDefaultDeviceContext();
+  device_context_ = Caffe::GetDefaultDevice();
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
@@ -559,13 +559,13 @@ void SGDSolver<Dtype>::PreSolve() {
     const vector<int>& shape = net_params[i]->shape();
     history_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDeviceContext())));
+            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
     update_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDeviceContext())));
+            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
     temp_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDeviceContext())));
+            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
   }
 }
 
