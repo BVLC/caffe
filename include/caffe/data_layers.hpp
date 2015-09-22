@@ -256,6 +256,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   int lines_id_;
 };
 
+#ifdef USE_AUDIO
 /**
  * @brief Provides data to the Net from audio files.
  *
@@ -282,6 +283,7 @@ class AudioDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
 };
+#endif
 
 /**
  * @brief Provides data to the Net from memory.
