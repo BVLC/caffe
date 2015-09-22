@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "caffe/common.hpp"
 #include "caffe/internal_thread.hpp"
@@ -65,8 +66,11 @@ class DataReader {
 
   // A source is uniquely identified by its layer name + path, in case
   // the same database is read from two different locations in the net.
+  // DD: supplemented with thread id, as this was breaking learning the same
+  // model several times in parallel with the same instance of the lib.
   static inline string source_key(const LayerParameter& param) {
-    return param.name() + ":" + param.data_param().source();
+    int tid = idhasher_(std::this_thread::get_id());
+    return std::to_string(tid) + ":" + param.name() + ":" + param.data_param().source();
   }
 
   const shared_ptr<QueuePair> queue_pair_;
@@ -74,6 +78,7 @@ class DataReader {
 
   static map<const string, boost::weak_ptr<DataReader::Body> > bodies_;
 
+  static std::hash<std::thread::id> idhasher_;
 DISABLE_COPY_AND_ASSIGN(DataReader);
 };
 
