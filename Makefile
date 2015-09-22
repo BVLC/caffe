@@ -169,23 +169,9 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-
-LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5
-
-# handle IO dependencies
-USE_LEVELDB ?= 1
-USE_LMDB ?= 1
-USE_OPENCV ?= 1
-
-ifeq ($(USE_LEVELDB), 1)
-	LIBRARIES += leveldb snappy
-endif
-ifeq ($(USE_LMDB), 1)
-	LIBRARIES += lmdb
-endif
-ifeq ($(USE_OPENCV), 1)
-	LIBRARIES += opencv_core opencv_highgui opencv_imgproc
-endif
+LIBRARIES += glog gflags protobuf leveldb snappy \
+	lmdb boost_system hdf5_hl hdf5 m \
+	opencv_core opencv_highgui opencv_imgproc #opencv_imgcodecs
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -304,17 +290,6 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-# configure IO libraries
-ifeq ($(USE_OPENCV), 1)
-	COMMON_FLAGS += -DUSE_OPENCV
-endif
-ifeq ($(USE_LEVELDB), 1)
-	COMMON_FLAGS += -DUSE_LEVELDB
-endif
-ifeq ($(USE_LMDB), 1)
-	COMMON_FLAGS += -DUSE_LMDB
-endif
-
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
@@ -354,9 +329,8 @@ else
 		# OS X packages atlas as the vecLib framework
 		LIBRARIES += cblas
 		# 10.10 has accelerate while 10.9 has veclib
-		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep 'version' | sed 's/[^0-9]*\([0-9]\).*/\1/')
-		XCODE_CLT_GEQ_6 := $(shell [ $(XCODE_CLT_VER) -gt 5 ] && echo 1)
-		ifeq ($(XCODE_CLT_GEQ_6), 1)
+		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep -o 'version: 6')
+		ifneq (,$(findstring version: 6,$(XCODE_CLT_VER)))
 			BLAS_INCLUDE ?= /System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
 			LDFLAGS += -framework Accelerate
 		else
@@ -498,7 +472,7 @@ runtest: $(TEST_ALL_BIN)
 
 pytest: py
 	cd python; python -m unittest discover -s caffe/test
-
+	
 mattest: mat
 	cd matlab; $(MATLAB_DIR)/bin/matlab -nodisplay -r 'caffe.run_tests(), exit()'
 

@@ -193,7 +193,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_pad()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->add_pad(v0_layer_param.pad());
+        layer_param->mutable_convolution_param()->set_pad(v0_layer_param.pad());
       } else if (type == "pool") {
         layer_param->mutable_pooling_param()->set_pad(v0_layer_param.pad());
       } else {
@@ -203,7 +203,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_kernelsize()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->add_kernel_size(
+        layer_param->mutable_convolution_param()->set_kernel_size(
             v0_layer_param.kernelsize());
       } else if (type == "pool") {
         layer_param->mutable_pooling_param()->set_kernel_size(
@@ -224,7 +224,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_stride()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->add_stride(
+        layer_param->mutable_convolution_param()->set_stride(
             v0_layer_param.stride());
       } else if (type == "pool") {
         layer_param->mutable_pooling_param()->set_stride(
@@ -816,6 +816,10 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
     layer_param->mutable_threshold_param()->CopyFrom(
         v1_layer_param.threshold_param());
   }
+  if (v1_layer_param.has_triplet_loss_param()) {
+    layer_param->mutable_triplet_loss_param()->CopyFrom(
+        v1_layer_param.triplet_loss_param());
+  }
   if (v1_layer_param.has_window_data_param()) {
     layer_param->mutable_window_data_param()->CopyFrom(
         v1_layer_param.window_data_param());
@@ -913,6 +917,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "Slice";
   case V1LayerParameter_LayerType_TANH:
     return "TanH";
+  case V1LayerParameter_LayerType_TRIPLET_LOSS:
+    return "TripletLoss";
   case V1LayerParameter_LayerType_WINDOW_DATA:
     return "WindowData";
   case V1LayerParameter_LayerType_THRESHOLD:
