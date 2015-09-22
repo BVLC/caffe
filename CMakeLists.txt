@@ -26,6 +26,7 @@ caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_OPENCV "Build with OpenCV support" ON)
+caffe_option(USE_AUDIO "Build with audio data support" OFF)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
