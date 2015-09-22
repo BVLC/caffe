@@ -186,6 +186,9 @@ endif
 ifeq ($(USE_OPENCV), 1)
 	LIBRARIES += opencv_core opencv_highgui opencv_imgproc
 endif
+ifeq ($(USE_AUDIO), 1)
+	LIBRARIES += sndfile fftw3 fftw3f
+endif
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -313,6 +316,9 @@ ifeq ($(USE_LEVELDB), 1)
 endif
 ifeq ($(USE_LMDB), 1)
 	COMMON_FLAGS += -DUSE_LMDB
+endif
+ifeq ($(USE_AUDIO), 1)
+	COMMON_FLAGS += -DUSE_AUDIO
 endif
 
 # CPU-only configuration

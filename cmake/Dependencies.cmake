@@ -51,13 +51,23 @@ if(USE_LEVELDB)
   list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
 endif()
 
-# ---[ SNDFILE
+
 if(USE_AUDIO)
+# ---[ SNDFILE
   find_package(SNDFILE REQUIRED)
   if(SNDFILE_FOUND)
     include_directories(SYSTEM ${SNDFILE_INCLUDE_DIR})
     list(APPEND Caffe_LINKER_LIBS ${SNDFILE_LIBRARIES})
   endif()
+
+# ---[ FFT
+  find_package(FFTW QUIET)
+  if(FFTW_FOUND)
+    include_directories(SYSTEM ${FFTW_INCLUDE_DIR})
+    list(APPEND Caffe_LINKER_LIBS ${FFTW_LIBRARIES})
+  endif()
+
+  add_definitions(-DUSE_AUDIO)
 endif()
 
 # ---[ CUDA

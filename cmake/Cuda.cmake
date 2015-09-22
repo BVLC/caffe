@@ -190,6 +190,26 @@ endfunction()
 
 
 ################################################################################################
+
+# Include cuFFT
+set(CUFFT_ROOT "" CACHE PATH "CUFTT root folder")
+
+find_path(CUFFT_INCLUDE cufft.h
+          PATHS ${CUFFT_ROOT} $ENV{CUFFT_ROOT} ${CUDA_TOOLKIT_INCLUDE}
+          DOC "Path to cuFTT include directory." )
+
+get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
+find_library(CUFFT_LIBRARY NAMES libcufft.so # libcufft_static.a
+                           PATHS ${CUFFT_ROOT} $ENV{CUFFT_ROOT} ${CUFFT_INCLUDE} ${__libpath_hist}
+                           DOC "Path to cuFFT library.")
+
+if(CUFFT_INCLUDE AND CUFFT_LIBRARY)
+  include_directories(SYSTEM ${CUFFT_INCLUDE})
+  list(APPEND Caffe_LINKER_LIBS ${CUFFT_LIBRARY})
+  message(WARNING "Found cuFFT (include: ${CUFFT_INCLUDE}, library: ${CUFFT_LIBRARY})")
+endif()
+
+################################################################################################
 ###  Non macro section
 ################################################################################################
 

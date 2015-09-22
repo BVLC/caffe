@@ -68,6 +68,10 @@ function(caffe_generate_export_configs)
     list(APPEND Caffe_DEFINITIONS -DUSE_LEVELDB)
   endif()
 
+  if(USE_AUDIO)
+    list(APPEND Caffe_DEFINITIONS -DUSE_AUDIO)
+  endif()
+
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
   else()
