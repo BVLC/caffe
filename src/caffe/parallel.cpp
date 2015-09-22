@@ -208,13 +208,13 @@ void DevicePair::compute(const vector<device*> devices,
   CHECK_EQ(remaining.size(), 1);
 
   pairs->insert(pairs->begin(),
-                DevicePair(Caffe::Get().GetCPUDeviceContext(), remaining[0]));
+                DevicePair(Caffe::Get().GetCPUDevice(), remaining[0]));
 
   CHECK(pairs->size() == devices.size());
   for (int i = 0; i < pairs->size(); ++i) {
-    CHECK((*pairs)[i].parent() != (*pairs)[i].device());
+    CHECK((*pairs)[i].getParent() != (*pairs)[i].getDevice());
     for (int j = i + 1; j < pairs->size(); ++j) {
-      CHECK((*pairs)[i].device() != (*pairs)[j].device());
+      CHECK((*pairs)[i].getDevice() != (*pairs)[j].getDevice());
     }
   }
 #else
@@ -418,7 +418,7 @@ void P2PSync<Dtype>::run(const vector<device*>& gpus) {
   DevicePair::compute(gpus, &pairs);
   ostringstream s;
   for (int i = 1; i < pairs.size(); ++i) {
-    s << (i == 1 ? "" : ", ") << pairs[i].parent() << ":" << pairs[i].device();
+    s << (i == 1 ? "" : ", ") << pairs[i].getParent() << ":" << pairs[i].getDevice();
   }
   LOG(INFO)<< "GPUs pairs " << s.str();
 
@@ -434,13 +434,13 @@ void P2PSync<Dtype>::run(const vector<device*>& gpus) {
           P2PSync<Dtype>* sync = j == 0 ? this : syncs[j].get();
           if (sync) {
             const SolverParameter& p = sync->solver()->param();
-            if (p.device_id() == pairs[i].parent()->list_id()) {
+            if (p.device_id() == pairs[i].getParent()->list_id()) {
               parent = sync;
             }
           }
         }
         if (parent) {
-          param.set_device_id(pairs[i].device()->list_id());
+          param.set_device_id(pairs[i].getDevice()->list_id());
           syncs[i].reset(new P2PSync<Dtype>(solver_, parent, param));
           parent->children_.push_back((P2PSync<Dtype>*) syncs[i].get());
         }

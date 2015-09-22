@@ -77,9 +77,8 @@ void greentea_col2im_sk_gpu(viennacl::ocl::program *prog,
                             const int kstride_h, const int kstride_w,
                             cl_mem data_im, const int data_offset) {
   if (stride_w > 1 || stride_h > 1 || pad_h > 0 || pad_w > 0) {
-    LOG(FATAL)
-        << "stride greater than 1 or pad greater than 0"
-        << " not tested in col2im_sk_gpu().";
+    LOG(FATAL)<< "stride greater than 1 or pad greater than 0"
+    << " not tested in col2im_sk_gpu().";
   }
 
   int ext_patch_h = (patch_h - 1) * kstride_h + 1;
@@ -215,85 +214,180 @@ template void greentea_col2im_gpu<double>(viennacl::ocl::program *prog,
                                           const int stride_w, cl_mem data_im,
                                           const int data_im_off);
 
-
-
-
 template<typename Dtype>
-void greentea_im2col_ndsk_gpu(viennacl::ocl::program *prog,
-                            viennacl::ocl::context *ctx, cl_mem data_im,
-                            const int data_off, const int num_spatial_axes,
-                            const int num_kernels,
-                            cl_mem im_shape, cl_mem col_shape,
-                            cl_mem kernel_shape, cl_mem pad, cl_mem stride,
-                            cl_mem kstride, cl_mem data_col, int data_col_off) {
+void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
+                              viennacl::ocl::context *ctx, cl_mem data_im,
+                              const int data_off, const int num_spatial_axes,
+                              const int num_kernels, cl_mem im_shape,
+                              cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
+                              cl_mem stride, cl_mem data_col,
+                              int data_col_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
-                                CL_KERNEL_SELECT("im2col_nd"));
+      CL_KERNEL_SELECT("im2col_nd"));
 
   viennacl::ocl::enqueue(
-      kernel(num_kernels, num_spatial_axes,
-             WrapHandle(data_im, ctx), data_off, WrapHandle(im_shape, ctx),
-             WrapHandle(col_shape, ctx), WrapHandle(kernel_shape, ctx),
-             WrapHandle(pad, ctx), WrapHandle(stride, ctx),
-             WrapHandle(kstride, ctx), WrapHandle(data_col, ctx),
-             data_col_off),
+      kernel(num_kernels, num_spatial_axes, WrapHandle(data_im, ctx), data_off,
+             WrapHandle(im_shape, ctx), WrapHandle(col_shape, ctx),
+             WrapHandle(kernel_shape, ctx), WrapHandle(pad, ctx),
+             WrapHandle(stride, ctx), WrapHandle(data_col, ctx), data_col_off),
       ctx->get_queue());
 }
 
 // Explicit instantiation
 template void greentea_im2col_nd_gpu<float>(viennacl::ocl::program *prog,
-                            viennacl::ocl::context *ctx, cl_mem data_im,
-                            const int data_off,
-                            const int num_spatial_axes, const int num_kernels,
-                            cl_mem im_shape, cl_mem col_shape,
-                            cl_mem kernel_shape, cl_mem pad, cl_mem stride,
-                            cl_mem kstride, cl_mem data_col, int data_col_off);
+                                            viennacl::ocl::context *ctx,
+                                            cl_mem data_im, const int data_off,
+                                            const int num_spatial_axes,
+                                            const int num_kernels,
+                                            cl_mem im_shape, cl_mem col_shape,
+                                            cl_mem kernel_shape, cl_mem pad,
+                                            cl_mem stride, cl_mem data_col,
+                                            int data_col_off);
 
 template void greentea_im2col_nd_gpu<double>(viennacl::ocl::program *prog,
-                            viennacl::ocl::context *ctx, cl_mem data_im,
-                            const int data_off,
-                            const int num_spatial_axes, const int num_kernels,
-                            cl_mem im_shape, cl_mem col_shape,
-                            cl_mem kernel_shape, cl_mem pad, cl_mem stride,
-                            cl_mem kstride, cl_mem data_col, int data_col_off);
+                                             viennacl::ocl::context *ctx,
+                                             cl_mem data_im, const int data_off,
+                                             const int num_spatial_axes,
+                                             const int num_kernels,
+                                             cl_mem im_shape, cl_mem col_shape,
+                                             cl_mem kernel_shape, cl_mem pad,
+                                             cl_mem stride, cl_mem data_col,
+                                             int data_col_off);
 
 template<typename Dtype>
-void greentea_col2im_ndsk_gpu(viennacl::ocl::program *prog,
+void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_col,
                             const int data_col_off, const int num_spatial_axes,
-                            const int im_size, cl_mem im_shape,
-                            cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
-                            cl_mem stride, cl_mem kstride, cl_mem data_im,
-                            int data_off) {
+                            const int channel_axis_, const int im_size,
+                            cl_mem im_shape, cl_mem col_shape,
+                            cl_mem kernel_shape, cl_mem pad, cl_mem stride,
+                            cl_mem data_im, int data_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
-                                CL_KERNEL_SELECT("col2im_nd"));
+      CL_KERNEL_SELECT("col2im_nd"));
 
   viennacl::ocl::enqueue(
-      kernel(im_size, num_spatial_axes,
+      kernel(im_size, num_spatial_axes, channel_axis_,
              WrapHandle(data_col, ctx), data_col_off, WrapHandle(im_shape, ctx),
              WrapHandle(col_shape, ctx), WrapHandle(kernel_shape, ctx),
              WrapHandle(pad, ctx), WrapHandle(stride, ctx),
-             WrapHandle(kstride, ctx), WrapHandle(data_im, ctx),
-             data_off),
+             WrapHandle(data_im, ctx), data_off),
+      ctx->get_queue());
+}
+
+// Explicit instantiation
+template void greentea_col2im_nd_gpu<float>(viennacl::ocl::program *prog,
+                                            viennacl::ocl::context *ctx,
+                                            cl_mem data_col,
+                                            const int data_col_off,
+                                            const int num_spatial_axes,
+                                            const int channel_axis,
+                                            const int im_size, cl_mem im_shape,
+                                            cl_mem col_shape,
+                                            cl_mem kernel_shape, cl_mem pad,
+                                            cl_mem stride, cl_mem data_im,
+                                            int data_off);
+
+template void greentea_col2im_nd_gpu<double>(viennacl::ocl::program *prog,
+                                             viennacl::ocl::context *ctx,
+                                             cl_mem data_col,
+                                             const int data_col_off,
+                                             const int num_spatial_axes,
+                                             const int channel_axis,
+                                             const int im_size, cl_mem im_shape,
+                                             cl_mem col_shape,
+                                             cl_mem kernel_shape, cl_mem pad,
+                                             cl_mem stride, cl_mem data_im,
+                                             int data_off);
+
+template<typename Dtype>
+void greentea_im2col_ndsk_gpu(viennacl::ocl::program *prog,
+                              viennacl::ocl::context *ctx, cl_mem data_im,
+                              const int data_off, const int num_spatial_axes,
+                              const int num_kernels, cl_mem im_shape,
+                              cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
+                              cl_mem stride, cl_mem kstride, cl_mem data_col,
+                              int data_col_off) {
+  viennacl::ocl::kernel &kernel = prog->get_kernel(
+      CL_KERNEL_SELECT("im2col_ndsk"));
+
+  viennacl::ocl::enqueue(
+      kernel(num_kernels, num_spatial_axes, WrapHandle(data_im, ctx), data_off,
+             WrapHandle(im_shape, ctx), WrapHandle(col_shape, ctx),
+             WrapHandle(kernel_shape, ctx), WrapHandle(pad, ctx),
+             WrapHandle(stride, ctx), WrapHandle(kstride, ctx),
+             WrapHandle(data_col, ctx), data_col_off),
+      ctx->get_queue());
+}
+
+// Explicit instantiation
+template void greentea_im2col_ndsk_gpu<float>(viennacl::ocl::program *prog,
+                                              viennacl::ocl::context *ctx,
+                                              cl_mem data_im,
+                                              const int data_off,
+                                              const int num_spatial_axes,
+                                              const int num_kernels,
+                                              cl_mem im_shape, cl_mem col_shape,
+                                              cl_mem kernel_shape, cl_mem pad,
+                                              cl_mem stride, cl_mem kstride,
+                                              cl_mem data_col,
+                                              int data_col_off);
+
+template void greentea_im2col_ndsk_gpu<double>(viennacl::ocl::program *prog,
+                                               viennacl::ocl::context *ctx,
+                                               cl_mem data_im,
+                                               const int data_off,
+                                               const int num_spatial_axes,
+                                               const int num_kernels,
+                                               cl_mem im_shape,
+                                               cl_mem col_shape,
+                                               cl_mem kernel_shape, cl_mem pad,
+                                               cl_mem stride, cl_mem kstride,
+                                               cl_mem data_col,
+                                               int data_col_off);
+
+template<typename Dtype>
+void greentea_col2im_ndsk_gpu(viennacl::ocl::program *prog,
+                              viennacl::ocl::context *ctx, cl_mem data_col,
+                              const int data_col_off,
+                              const int num_spatial_axes, const int im_size,
+                              cl_mem im_shape, cl_mem col_shape,
+                              cl_mem kernel_shape, cl_mem pad, cl_mem stride,
+                              cl_mem kstride, cl_mem data_im, int data_off) {
+  viennacl::ocl::kernel &kernel = prog->get_kernel(
+      CL_KERNEL_SELECT("col2im_ndsk"));
+
+  viennacl::ocl::enqueue(
+      kernel(im_size, num_spatial_axes, WrapHandle(data_col, ctx), data_col_off,
+             WrapHandle(im_shape, ctx), WrapHandle(col_shape, ctx),
+             WrapHandle(kernel_shape, ctx), WrapHandle(pad, ctx),
+             WrapHandle(stride, ctx), WrapHandle(kstride, ctx),
+             WrapHandle(data_im, ctx), data_off),
       ctx->get_queue());
 }
 
 // Explicit instantiation
 template void greentea_col2im_ndsk_gpu<float>(viennacl::ocl::program *prog,
-                            viennacl::ocl::context *ctx, cl_mem data_col,
-                            const int data_col_off, const int num_spatial_axes,
-                            const int im_size, cl_mem im_shape,
-                            cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
-                            cl_mem stride, cl_mem kstride, cl_mem data_im,
-                            int data_off);
+                                              viennacl::ocl::context *ctx,
+                                              cl_mem data_col,
+                                              const int data_col_off,
+                                              const int num_spatial_axes,
+                                              const int im_size,
+                                              cl_mem im_shape, cl_mem col_shape,
+                                              cl_mem kernel_shape, cl_mem pad,
+                                              cl_mem stride, cl_mem kstride,
+                                              cl_mem data_im, int data_off);
 
 template void greentea_col2im_ndsk_gpu<double>(viennacl::ocl::program *prog,
-                            viennacl::ocl::context *ctx, cl_mem data_col,
-                            const int data_col_off, const int num_spatial_axes,
-                            const int im_size, cl_mem im_shape,
-                            cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
-                            cl_mem stride, cl_mem kstride, cl_mem data_im,
-                            int data_off);
-
+                                               viennacl::ocl::context *ctx,
+                                               cl_mem data_col,
+                                               const int data_col_off,
+                                               const int num_spatial_axes,
+                                               const int im_size,
+                                               cl_mem im_shape,
+                                               cl_mem col_shape,
+                                               cl_mem kernel_shape, cl_mem pad,
+                                               cl_mem stride, cl_mem kstride,
+                                               cl_mem data_im, int data_off);
 
 }  // namespace caffe
 #endif
