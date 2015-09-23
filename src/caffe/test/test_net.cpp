@@ -2306,7 +2306,7 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   for (int i = 0; i < output1.count(); ++i) {
-    CHECK_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
+    EXPECT_FLOAT_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
   }
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
@@ -2315,7 +2315,7 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   for (int i = 0; i < output2.count(); ++i) {
-    CHECK_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
+    EXPECT_FLOAT_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
   }
 }
 
