@@ -2269,8 +2269,10 @@ TYPED_TEST(NetTest, TestReshape) {
   FillerParameter filler_param;
   filler_param.set_std(1);
   GaussianFiller<Dtype> filler(filler_param);
-  Blob<Dtype> blob1(4, 3, 9, 11);
-  Blob<Dtype> blob2(2, 3, 12, 10);
+  // Check smaller shape first as larger first could hide realloc failures.
+  Blob<Dtype> blob1(2, 3, 12, 10);
+  Blob<Dtype> blob2(4, 3, 9, 11);
+  ASSERT_LT(blob1.count(), blob2.count());
   filler.Fill(&blob1);
   filler.Fill(&blob2);
 
