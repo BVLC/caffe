@@ -24,11 +24,16 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
+  if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int)) {
+    shape_data_.reset(new SyncedMemory(shape.size() * sizeof(int)));
+  }
+  int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
     count_ *= shape[i];
     shape_[i] = shape[i];
+    shape_data[i] = shape[i];
   }
   if (count_ > capacity_) {
     capacity_ = count_;
@@ -65,6 +70,12 @@ Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
   : capacity_(0) {
   Reshape(shape);
+}
+
+template <typename Dtype>
+const int* Blob<Dtype>::gpu_shape() const {
+  CHECK(shape_data_);
+  return (const int*)shape_data_->gpu_data();
 }
 
 template <typename Dtype>
