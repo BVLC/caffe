@@ -16,11 +16,6 @@
 
 namespace caffe {
 
-template<typename Dtype>
-shared_ptr<Layer<Dtype> > GetPoolingSKLayer(const LayerParameter& param) {
-  return shared_ptr<Layer<Dtype>>(new PoolingSKLayer<Dtype>(param));
-}
-
 // Get convolution layer according to engine.
 template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {

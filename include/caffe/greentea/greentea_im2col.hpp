@@ -64,9 +64,10 @@ template<typename Dtype>
 void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_col,
                             const int data_col_off, const int num_spatial_axes,
-                            const int im_size, cl_mem im_shape,
-                            cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
-                            cl_mem stride, cl_mem data_im, int data_off);
+                            const int channel_axis, const int im_size,
+                            cl_mem im_shape, cl_mem col_shape,
+                            cl_mem kernel_shape, cl_mem pad, cl_mem stride,
+                            cl_mem data_im, int data_off);
 
 template<typename Dtype>
 void greentea_im2col_ndsk_gpu(viennacl::ocl::program *prog,

@@ -269,9 +269,8 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-  if (Caffe::mode() == Caffe::Brew::CPU) {
-    col_buffer_.Reshape(col_buffer_shape_);
-  } else {
+  col_buffer_.Reshape(col_buffer_shape_);
+  if (Caffe::mode() == Caffe::Brew::GPU) {
     // Shared column buffer per device-queue across all layers on that device
     for (int i = 0; i < this->device_context_->num_queues(); ++i) {
       shared_ptr<Blob<Dtype> > buffer = this->device_context_

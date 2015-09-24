@@ -216,12 +216,12 @@ template void greentea_col2im_gpu<double>(viennacl::ocl::program *prog,
 
 template<typename Dtype>
 void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
-                              viennacl::ocl::context *ctx, cl_mem data_im,
-                              const int data_off, const int num_spatial_axes,
-                              const int num_kernels, cl_mem im_shape,
-                              cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
-                              cl_mem stride, cl_mem data_col,
-                              int data_col_off) {
+                            viennacl::ocl::context *ctx, cl_mem data_im,
+                            const int data_off, const int num_spatial_axes,
+                            const int channel_axis, const int num_kernels,
+                            cl_mem im_shape, cl_mem col_shape,
+                            cl_mem kernel_shape, cl_mem pad, cl_mem stride,
+                            cl_mem data_col, int data_col_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("im2col_nd"));
 
@@ -238,6 +238,7 @@ template void greentea_im2col_nd_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
                                             cl_mem data_im, const int data_off,
                                             const int num_spatial_axes,
+                                            const int channel_axis,
                                             const int num_kernels,
                                             cl_mem im_shape, cl_mem col_shape,
                                             cl_mem kernel_shape, cl_mem pad,
@@ -248,6 +249,7 @@ template void greentea_im2col_nd_gpu<double>(viennacl::ocl::program *prog,
                                              viennacl::ocl::context *ctx,
                                              cl_mem data_im, const int data_off,
                                              const int num_spatial_axes,
+                                             const int channel_axis,
                                              const int num_kernels,
                                              cl_mem im_shape, cl_mem col_shape,
                                              cl_mem kernel_shape, cl_mem pad,
