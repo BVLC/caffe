@@ -42,7 +42,7 @@ class DataTransformTest : public ::testing::Test {
     // Get crop sequence with Caffe seed 1701.
     DataTransformer<Dtype>* transformer =
         new DataTransformer<Dtype>(transform_param, phase,
-                                   Caffe::GetDefaultDeviceContext());
+                                   Caffe::GetDefaultDevice());
     const int crop_size = transform_param.crop_size();
     Caffe::set_random_seed(seed_);
     transformer->InitRand();
@@ -95,7 +95,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, channels, height, width);
   DataTransformer<TypeParam>* transformer =
       new DataTransformer<TypeParam>(transform_param, TEST,
-                                     Caffe::GetDefaultDeviceContext());
+                                     Caffe::GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -120,7 +120,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, 3, 4, 5);
   DataTransformer<TypeParam>* transformer =
       new DataTransformer<TypeParam>(transform_param, TEST,
-                                     Caffe::GetDefaultDeviceContext());
+                                     Caffe::GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -146,7 +146,7 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
   FillDatum(label, channels, height, width, unique_pixels, &datum);
   DataTransformer<TypeParam>* transformer =
       new DataTransformer<TypeParam>(transform_param, TEST,
-                                     Caffe::GetDefaultDeviceContext());
+                                     Caffe::GetDefaultDevice());
   transformer->InitRand();
   Blob<TypeParam>* blob =
       new Blob<TypeParam>(1, channels, crop_size, crop_size);
@@ -288,7 +288,7 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, channels, height, width);
   DataTransformer<TypeParam>* transformer =
       new DataTransformer<TypeParam>(transform_param, TEST,
-                                     Caffe::GetDefaultDeviceContext());
+                                     Caffe::GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {
@@ -312,7 +312,7 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, channels, height, width);
   DataTransformer<TypeParam>* transformer =
       new DataTransformer<TypeParam>(transform_param, TEST,
-                                     Caffe::GetDefaultDeviceContext());
+                                     Caffe::GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int c = 0; c < channels; ++c) {
@@ -353,7 +353,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, channels, height, width);
   DataTransformer<TypeParam>* transformer =
       new DataTransformer<TypeParam>(transform_param, TEST,
-                                     Caffe::GetDefaultDeviceContext());
+                                     Caffe::GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {

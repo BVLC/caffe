@@ -418,7 +418,8 @@ void P2PSync<Dtype>::run(const vector<device*>& gpus) {
   DevicePair::compute(gpus, &pairs);
   ostringstream s;
   for (int i = 1; i < pairs.size(); ++i) {
-    s << (i == 1 ? "" : ", ") << pairs[i].getParent() << ":" << pairs[i].getDevice();
+    s << (i == 1 ? "" : ", ") << pairs[i].getParent() << ":"
+      << pairs[i].getDevice();
   }
   LOG(INFO)<< "GPUs pairs " << s.str();
 

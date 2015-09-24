@@ -16,19 +16,21 @@ namespace caffe {
 
 // Forward declare kernel functions
 #ifdef USE_CUDA
-template <typename Dtype>
+template<typename Dtype>
 __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    const int height_col, const int width_col,
-    Dtype* data_col);
+                                  const int height, const int width,
+                                  const int kernel_h, const int kernel_w,
+                                  const int pad_h, const int pad_w,
+                                  const int stride_h, const int stride_w,
+                                  const int height_col, const int width_col,
+                                  Dtype* data_col);
 
-template <typename Dtype, int num_axes>
-__global__ void im2col_nd_gpu_kernel(const int n, const Dtype* data_im,
-    const int* im_shape, const int* col_shape,
-    const int* kernel_shape, const int* pad, const int* stride,
-    Dtype* data_col);
+template<typename Dtype>
+__global__ void im2col_nd_gpu_kernel(const int n, const int num_axes,
+                                     const Dtype* data_im, const int* im_shape,
+                                     const int* col_shape,
+                                     const int* kernel_shape, const int* pad,
+                                     const int* stride, Dtype* data_col);
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 #endif  // USE_CUDA

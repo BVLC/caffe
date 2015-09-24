@@ -602,7 +602,7 @@ void im2col_nd_gpu(const Dtype* data_im, const int num_spatial_axes,
                    const int* pad, const int* stride, Dtype* data_col) {
   im2col_nd_gpu_kernel<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
   CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
-      num_kernels, data_im, im_shape, col_shape,
+      num_kernels, num_spatial_axes, data_im, im_shape, col_shape,
       kernel_shape, pad, stride, data_col);
   CUDA_POST_KERNEL_CHECK;
 }
@@ -699,7 +699,7 @@ void col2im_nd_gpu(const Dtype* data_col, const int num_spatial_axes,
                    Dtype* data_im) {
   col2im_nd_gpu_kernel<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
   CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
-      im_size, data_col, im_shape, col_shape,
+      im_size, num_spatial_axes, data_col, im_shape, col_shape,
       kernel_shape, pad, stride, data_im);
   CUDA_POST_KERNEL_CHECK;
 }
