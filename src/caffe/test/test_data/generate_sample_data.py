@@ -36,7 +36,7 @@ with h5py.File(script_dir + '/sample_data.h5', 'w') as f:
     f['label'] = label
     f['label2'] = label2
 
-with h5py.File(script_dir + '/sample_data_uint8_gzip.h5', 'w') as f:
+with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
     f.create_dataset(
         'data', data=data + total_size,
         compression='gzip', compression_opts=1
@@ -54,7 +54,7 @@ with h5py.File(script_dir + '/sample_data_uint8_gzip.h5', 'w') as f:
 
 with open(script_dir + '/sample_data_list.txt', 'w') as f:
     f.write('src/caffe/test/test_data/sample_data.h5\n')
-    f.write('src/caffe/test/test_data/sample_uint8_gzip.h5\n')
+    f.write('src/caffe/test/test_data/sample_data_2_gzip.h5\n')
 
 # Generate GradientBasedSolver solver_data.h5
 
