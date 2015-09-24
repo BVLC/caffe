@@ -2262,15 +2262,17 @@ TEST_F(FilterNetTest, TestFilterInOutByExcludeMultiRule) {
 TYPED_TEST(NetTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
   // We set up bottom blobs of two different sizes, switch between
-  // them, and check that forward and backward both run and the results
-  // are the same.
+  // them, check that forward and backward both run and the results
+  // are the same, and check that the output shapes change.
   Caffe::set_random_seed(this->seed_);
   Caffe::set_mode(Caffe::CPU);
   FillerParameter filler_param;
   filler_param.set_std(1);
   GaussianFiller<Dtype> filler(filler_param);
-  Blob<Dtype> blob1(4, 3, 9, 11);
-  Blob<Dtype> blob2(2, 3, 12, 10);
+  // Check smaller shape first as larger first could hide realloc failures.
+  Blob<Dtype> blob1(2, 3, 12, 10);
+  Blob<Dtype> blob2(4, 3, 9, 11);
+  ASSERT_LT(blob1.count(), blob2.count());
   filler.Fill(&blob1);
   filler.Fill(&blob2);
 
@@ -2304,7 +2306,7 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   for (int i = 0; i < output1.count(); ++i) {
-    CHECK_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
+    EXPECT_FLOAT_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
   }
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
@@ -2313,8 +2315,20 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   for (int i = 0; i < output2.count(); ++i) {
-    CHECK_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
+    EXPECT_FLOAT_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
   }
+
+  EXPECT_EQ(output1.num(), blob1.num());
+  EXPECT_EQ(output2.num(), blob2.num());
+  bool same_spatial_shape = true;
+  const int kFirstSpatialAxis = 2;
+  for (int i = kFirstSpatialAxis; i < output1.num_axes(); ++i) {
+    if (output1.shape(i) != output2.shape(i)) {
+      same_spatial_shape = false;
+      break;
+    }
+  }
+  EXPECT_FALSE(same_spatial_shape);
 }
 
 TYPED_TEST(NetTest, TestSkipPropagateDown) {
