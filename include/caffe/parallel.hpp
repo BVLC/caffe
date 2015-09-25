@@ -70,11 +70,11 @@ class DevicePair {
         device_(dev) {
   }
 
-  inline device* getParent() {
+  inline device* get_parent() {
     return parent_;
   }
 
-  inline device* getDevice() {
+  inline device* get_device() {
     return device_;
   }
 

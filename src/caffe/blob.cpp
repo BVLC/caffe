@@ -209,7 +209,7 @@ template<> unsigned int Blob<unsigned int>::asum_data() const {
 }
 
 template<typename Dtype>
-device *Blob<Dtype>::device_context() {
+device *Blob<Dtype>::get_device() {
   return device_context_;
 }
 

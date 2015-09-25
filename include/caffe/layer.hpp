@@ -348,7 +348,7 @@ class Layer {
   /**
    * @brief Returns the device context this layer runs on
    */
-  inline device *device_context() {
+  inline device *get_device() {
     return device_context_;
   }
 
