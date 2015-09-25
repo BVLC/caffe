@@ -194,7 +194,7 @@ int train() {
         GetRequestedAction(FLAGS_sighup_effect));
 
   shared_ptr<caffe::Solver<float> >
-    solver(caffe::GetSolver<float>(solver_param));
+      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
