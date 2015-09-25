@@ -276,24 +276,47 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                    stride_.cpu_data()[1], col_buff);
       }
     } else {
-      im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
-          conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-          kernel_shape_.gpu_data(), pad_.gpu_data(),
-          stride_.gpu_data(), col_buff);
+      if (this->use_skernel_) {
+        im2col_ndsk_gpu(data, num_spatial_axes_, num_kernels_im2col_,
+            conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+            kernel_shape_.gpu_data(), pad_.gpu_data(),
+            stride_.gpu_data(), kstride_.gpu_data(), col_buff);
+      } else {
+        im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
+            conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+            kernel_shape_.gpu_data(), pad_.gpu_data(),
+            stride_.gpu_data(), col_buff);
+      }
     }
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      col2im_gpu(col_buff, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1], data);
+      if (this->use_skernel_) {
+        col2im_sk_gpu(col_buff, conv_in_channels_,
+            conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+            kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+            pad_.cpu_data()[0], pad_.cpu_data()[1],
+            stride_.cpu_data()[0], stride_.cpu_data()[1],
+            kstride_.gpu_data()[0], kstride_.gpu_data()[1], data);
+      } else {
+        col2im_gpu(col_buff, conv_in_channels_,
+            conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+            kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+            pad_.cpu_data()[0], pad_.cpu_data()[1],
+            stride_.cpu_data()[0], stride_.cpu_data()[1], data);
+      }
     } else {
-      col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
-          conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-          kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-          data);
+      if (this->use_skernel_) {
+        col2im_ndsk_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
+                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+                      kernel_shape_.gpu_data(), pad_.gpu_data(),
+                      stride_.gpu_data(), kstride_.gpu_data(), data);
+      } else {
+        col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
+                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+                      kernel_shape_.gpu_data(), pad_.gpu_data(),
+                      stride_.gpu_data(), data);
+      }
     }
   }
 #endif  // USE_CUDA

@@ -44,6 +44,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       pool_param.has_kernel_h() || pool_param.has_kernel_w()))
       << "With Global_pooling: true Filter size cannot specified";
   } else {
+    global_pooling_ = false;
     CHECK(!(pool_param.kernel_size_size() > 0) !=
         !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
         << "Filter size is kernel_size OR kernel_h and kernel_w; not both";

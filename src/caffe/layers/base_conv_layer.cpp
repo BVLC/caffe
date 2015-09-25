@@ -412,7 +412,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
     for (int g = 0; g < group_; ++g) {
       greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasNoTrans,
                                CblasNoTrans, conv_out_channels_ / group_,
-                               conv_out_spatial_dim_, kernel_dim_ / group_,
+                               conv_out_spatial_dim_, kernel_dim_,
                                (Dtype) 1., (cl_mem) weights, weight_offset_ * g,
                                (cl_mem) col_buff,
                                (is_1x1_ ? input_off : 0) + col_offset_ * g,
@@ -460,7 +460,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
     for (int g = 0; g < group_; ++g) {
       caffe_gpu_gemm<Dtype>(
           CblasTrans, CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
-          conv_out_channels_, (Dtype) 1., weights + weight_offset_ * g,
+          conv_out_channels_ / group_, (Dtype) 1., weights + weight_offset_ * g,
           output + output_off + output_offset_ * g, (Dtype) 0.,
           col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g);
     }
@@ -472,8 +472,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
 #ifdef USE_GREENTEA
     for (int g = 0; g < group_; ++g) {
       greentea_gpu_gemm<Dtype>(this->device_context_->id(), CblasTrans,
-                               CblasNoTrans, kernel_dim_ / group_,
-                               conv_out_spatial_dim_,
+                               CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
                                conv_out_channels_ / group_, (Dtype) 1.,
                                (cl_mem) weights, weight_offset_ * g,
                                (cl_mem) output, output_off + output_offset_ * g,

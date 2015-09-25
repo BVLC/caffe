@@ -297,7 +297,7 @@ class Blob {
   /**
    * @brief Return the device context to which this blob and shared memory belongs
    */
-  device *device_context();
+  device *get_device();
 
  protected:
   shared_ptr<SyncedMemory> data_;

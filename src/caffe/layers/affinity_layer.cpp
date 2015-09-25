@@ -44,7 +44,7 @@ void AffinityLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     top[bidx]->Reshape(1, 2, bottom[bidx]->height(), bottom[bidx]->width());
 
     shared_ptr<Blob<Dtype> > blob_pointer(
-        new Blob<Dtype>(this->device_context()));
+        new Blob<Dtype>(this->get_device()));
     min_index_.push_back(blob_pointer);
 
     // 1, #edges, height, width
