@@ -12,6 +12,11 @@
 # USE_LEVELDB := 0
 # USE_LMDB := 0
 
+# uncomment to allow MDB_NOLOCK when reading LMDB files (only if necessary)
+#	You should not set this flag if you will be reading LMDBs with any
+#	possibility of simultaneous read and write
+# ALLOW_LMDB_NOLOCK := 1
+
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
