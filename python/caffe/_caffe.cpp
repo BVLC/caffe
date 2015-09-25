@@ -16,6 +16,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/python_layer.hpp"
+#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
