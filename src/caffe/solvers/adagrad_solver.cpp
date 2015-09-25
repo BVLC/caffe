@@ -84,5 +84,6 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 }
 
 INSTANTIATE_CLASS(AdaGradSolver);
+REGISTER_SOLVER_CLASS(AdaGrad);
 
 }  // namespace caffe

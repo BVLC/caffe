@@ -66,5 +66,6 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 }
 
 INSTANTIATE_CLASS(NesterovSolver);
+REGISTER_SOLVER_CLASS(Nesterov);
 
 }  // namespace caffe

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "caffe/net.hpp"
+#include "caffe/solver_factory.hpp"
 
 namespace caffe {
 
@@ -83,6 +84,10 @@ class Solver {
   }
 
   void CheckSnapshotWritePermissions();
+  /**
+   * @brief Returns the solver type.
+   */
+  virtual inline const char* type() const { return ""; }
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -147,10 +152,6 @@ class WorkerSolver : public Solver<Dtype> {
     LOG(FATAL) << "Should not be called on worker solver.";
   }
 };
-
-// The solver factory function
-template <typename Dtype>
-Solver<Dtype>* GetSolver(const SolverParameter& param);
 
 }  // namespace caffe
 

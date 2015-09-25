@@ -19,6 +19,7 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param) { PreSolve(); }
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) { PreSolve(); }
+  virtual inline const char* type() const { return "SGD"; }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
 
@@ -51,6 +52,7 @@ class NesterovSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) {}
   explicit NesterovSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) {}
+  virtual inline const char* type() const { return "Nesterov"; }
 
  protected:
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
@@ -65,6 +67,7 @@ class AdaGradSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
   explicit AdaGradSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+  virtual inline const char* type() const { return "AdaGrad"; }
 
  protected:
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
@@ -84,6 +87,7 @@ class RMSPropSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
   explicit RMSPropSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+  virtual inline const char* type() const { return "RMSProp"; }
 
  protected:
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
@@ -106,6 +110,7 @@ class AdaDeltaSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { AdaDeltaPreSolve(); }
   explicit AdaDeltaSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { AdaDeltaPreSolve(); }
+  virtual inline const char* type() const { return "AdaDelta"; }
 
  protected:
   void AdaDeltaPreSolve();
@@ -129,6 +134,7 @@ class AdamSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { AdamPreSolve();}
   explicit AdamSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { AdamPreSolve(); }
+  virtual inline const char* type() const { return "Adam"; }
 
  protected:
   void AdamPreSolve();

@@ -151,5 +151,6 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 }
 
 INSTANTIATE_CLASS(AdaDeltaSolver);
+REGISTER_SOLVER_CLASS(AdaDelta);
 
 }  // namespace caffe
