@@ -36,7 +36,7 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
   SolverParameter param;
-  ReadProtoFromTextFileOrDie(param_file, &param);
+  ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
 }
 
