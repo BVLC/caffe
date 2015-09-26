@@ -188,7 +188,10 @@ static void get_solver(MEX_ARGS) {
       "Usage: caffe_('get_solver', solver_file)");
   char* solver_file = mxArrayToString(prhs[0]);
   mxCHECK_FILE_EXIST(solver_file);
-  shared_ptr<Solver<float> > solver(new caffe::SGDSolver<float>(solver_file));
+  SolverParameter solver_param;
+  ReadSolverParamsFromTextFileOrDie(solver_file, &solver_param);
+  shared_ptr<Solver<float> > solver(
+      SolverRegistry<float>::CreateSolver(solver_param));
   solvers_.push_back(solver);
   plhs[0] = ptr_to_handle<Solver<float> >(solver.get());
   mxFree(solver_file);

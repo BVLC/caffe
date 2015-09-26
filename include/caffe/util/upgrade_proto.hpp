@@ -59,6 +59,18 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param);
+
+bool UpgradeSolverType(SolverParameter* solver_param);
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param);
+
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param);
+
 }  // namespace caffe
 
 #endif   // CAFFE_UTIL_UPGRADE_PROTO_H_
