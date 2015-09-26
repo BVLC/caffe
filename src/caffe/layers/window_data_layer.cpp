@@ -82,7 +82,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   label_hist.insert(std::make_pair(0, 0));
 
   string hashtag;
-  int image_index, channels;
+  int image_index;
   if (!(infile >> hashtag >> image_index)) {
     LOG(FATAL) << "Window file is empty";
   }
@@ -95,8 +95,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     // read image dimensions
     vector<int> image_size(3);
     infile >> image_size[0] >> image_size[1] >> image_size[2];
-    channels = image_size[0];
-    image_database_.push_back(std::make_pair(image_path, image_size));
+    image_database_.push_back(image_path);
 
     if (cache_images_) {
       Datum datum;
@@ -171,6 +170,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int crop_size = this->transform_param_.crop_size();
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
+  const int channels =
+      this->layer_param_.window_data_param().is_color() ? 3 : 1;
   top[0]->Reshape(batch_size, channels, crop_size, crop_size);
   for (int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].data_.Reshape(
@@ -263,6 +264,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       * fg_fraction);
   const int num_samples[2] = { batch_size - num_fg, num_fg };
 
+  const int cv_img_flag = this->layer_param_.window_data_param().is_color() ?
+      CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE;
   int item_id = 0;
   // sample from bg set then fg set
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
@@ -277,7 +280,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       bool do_mirror = mirror && PrefetchRand() % 2;
 
       // load the image containing the window
-      pair<std::string, vector<int> > image =
+      std::string image_path  =
           image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
       cv::Mat cv_img;
@@ -286,9 +289,9 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
           image_database_cache_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
         cv_img = DecodeDatumToCVMat(image_cached.second, true);
       } else {
-        cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
+        cv_img = cv::imread(image_path, cv_img_flag);
         if (!cv_img.data) {
-          LOG(ERROR) << "Could not open or find file " << image.first;
+          LOG(ERROR) << "Could not open or find file " << image_path;
           return;
         }
       }
