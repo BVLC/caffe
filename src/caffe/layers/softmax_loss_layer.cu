@@ -200,7 +200,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       }
       if (bottom.size() == 3) {
         // TODO: Correct this for easy diff scaling
-        std::cout << "Size: " << bottom[0]->count() << std::endl;
+        // std::cout << "Size: " << bottom[0]->count() << std::endl;
         const Dtype* weight = bottom[2]->gpu_data();
         caffe_gpu_mul(bottom[2]->count(), bottom_diff, weight, bottom_diff);
       }
@@ -251,7 +251,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       }
       if (bottom.size() == 3) {
         // TODO: Correct this for easy diff scaling
-        std::cout << "Size: " << bottom[0]->count() << std::endl;
+        // std::cout << "Size: " << bottom[0]->count() << std::endl;
         const cl_mem weight = (cl_mem)(bottom[2]->gpu_data());
         greentea_gpu_mul<Dtype>(this->device_context_->id(),
              bottom[2]->count(), bottom_diff, 0, weight, 0, bottom_diff, 0);

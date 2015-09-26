@@ -280,6 +280,7 @@ void col2im_gpu(const Dtype* data_col, const int channels, const int height,
   int height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
   int width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
   int num_kernels = channels * height * width;
+
   // To avoid involving atomic operations, we will launch one kernel per
   // bottom dimension, and then in the kernel add up the top dimensions.
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -508,6 +509,7 @@ void col2im_ndsk_gpu(const Dtype* data_col, const int num_spatial_axes,
                      const int* col_shape, const int* kernel_shape,
                      const int* pad, const int* stride, const int* kstride,
                      Dtype* data_im) {
+
   col2im_ndsk_gpu_kernel<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
   CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
       im_size, num_spatial_axes, data_col, im_shape, col_shape,
@@ -697,6 +699,7 @@ void col2im_nd_gpu(const Dtype* data_col, const int num_spatial_axes,
                    const int im_size, const int* im_shape, const int* col_shape,
                    const int* kernel_shape, const int* pad, const int* stride,
                    Dtype* data_im) {
+
   col2im_nd_gpu_kernel<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
   CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
       im_size, num_spatial_axes, data_col, im_shape, col_shape,
