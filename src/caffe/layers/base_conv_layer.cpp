@@ -107,9 +107,9 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(num_spatial_axes_, 2)
         << "kstride_h & kstride_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.kstride_size())
-        << "Etiher kstride or kstirde_h/w should be specified; not both.";
-    kstride_data[0] = conv_param.pad_h();
-    kstride_data[1] = conv_param.pad_w();
+        << "Etiher kstride or kstride_h/w should be specified; not both.";
+    kstride_data[0] = conv_param.kstride_h();
+    kstride_data[1] = conv_param.kstride_w();
   } else {
     const int num_kstride_dims = conv_param.kstride_size();
     CHECK(num_kstride_dims == 0 || num_kstride_dims == 1 ||
