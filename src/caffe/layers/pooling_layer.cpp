@@ -16,26 +16,30 @@ using std::max;
 template<typename Dtype>
 void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
+
+  PoolingParameter pool_param = this->layer_param_.pooling_param();
+
   // Set the max number of top blobs before calling base Layer::SetUp.
   // If doing MAX pooling, we can optionally output an extra top Blob
   // for the mask.  Otherwise, we only have one top Blob.
-  if (this->layer_param_.pooling_param().pool()
-      == PoolingParameter_PoolMethod_MAX) {
+  if (pool_param.pool() == PoolingParameter_PoolMethod_MAX) {
     max_top_blobs_ = 2;
   } else {
     max_top_blobs_ = 1;
   }
-  PoolingParameter pool_param = this->layer_param_.pooling_param();
+
   channel_axis_ = bottom[0]->CanonicalAxisIndex(pool_param.axis());
   channels_ = bottom[0]->shape(channel_axis_);
 
   const int first_spatial_axis = channel_axis_ + 1;
   const int num_axes = bottom[0]->num_axes();
   num_spatial_axes_ = num_axes - first_spatial_axis;
-  CHECK_GE(num_spatial_axes_, 1);
-  vector<int> size_shape(1, num_spatial_axes_);
+  CHECK_GE(num_spatial_axes_, 0);
 
-  kernel_shape_.Reshape(size_shape);
+  vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
+  vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
+
+  kernel_shape_.Reshape(spatial_dim_blob_shape);
   int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
 
   if (pool_param.global_pooling()) {
@@ -65,7 +69,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-  size_.Reshape(size_shape);
+  size_.Reshape(spatial_dim_blob_shape);
   int* size_data = size_.mutable_cpu_data();
 
   vector<int> top_shape = bottom[0]->shape();
@@ -84,7 +88,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Setup stride dimensions (stride_).
-  stride_.Reshape(size_shape);
+  stride_.Reshape(spatial_dim_blob_shape);
   int* stride_data = stride_.mutable_cpu_data();
   if (pool_param.has_stride_h() || pool_param.has_stride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
@@ -107,8 +111,9 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
     }
   }
+
   // Setup pad dimensions (pad_).
-  pad_.Reshape(size_shape);
+  pad_.Reshape(spatial_dim_blob_shape);
   int* pad_data = pad_.mutable_cpu_data();
   if (pool_param.has_pad_h() || pool_param.has_pad_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
@@ -130,16 +135,17 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           pool_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
+
   // Setup kernel stride dimensions
-  kstride_.Reshape(size_shape);
+  kstride_.Reshape(spatial_dim_blob_shape);
   int* kstride_data = kstride_.mutable_cpu_data();
   if (pool_param.has_kstride_h() || pool_param.has_kstride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
         << "kstride_h & kstride_w can only be used for 2D convolution.";
     CHECK_EQ(0, pool_param.kstride_size())
         << "Etiher kstride or kstirde_h/w should be specified; not both.";
-    kstride_data[0] = pool_param.pad_h();
-    kstride_data[1] = pool_param.pad_w();
+    kstride_data[0] = pool_param.kstride_h();
+    kstride_data[1] = pool_param.kstride_w();
   } else {
     const int num_kstride_dims = pool_param.kstride_size();
     CHECK(num_kstride_dims == 0 || num_kstride_dims == 1 ||
@@ -194,6 +200,16 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     pooled_size_data[i] = static_cast<int>(ceil(
         static_cast<float>(size_data[i] + 2 * pad_data[i]
             - ext_kernel_shape_data[i]) / stride_data[i])) + 1;
+    if (pad_data[i] > 0) {
+      // If we have padding, ensure that the last pooling starts strictly
+      // inside the image (instead of at the padding); otherwise clip the last.
+      if ((pooled_size_data[i] - 1) * stride_data[i]
+          >= size_data[i] + pad_data[i]) {
+        --pooled_size_data[i];
+      }
+      CHECK_LT((pooled_size_data[i] - 1) * stride_data[i],
+               size_data[i] + pad_data[i]);
+    }
     top_shape[channel_axis_ + 1 + i] = pooled_size_data[i];
   }
   top[0]->Reshape(top_shape);
