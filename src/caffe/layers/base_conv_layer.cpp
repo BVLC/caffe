@@ -535,7 +535,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
                                                     const int input_off) {
   if (this->device_context_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, conv_out_spatial_dim_, 1.,
+    caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
                           input + input_off, bias_multiplier_.gpu_data(), 1.,
                           bias);
 #endif  // USE_CUDA

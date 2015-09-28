@@ -8,17 +8,18 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void DeconvolutionLayer<Dtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
+  const int* kstride_data = this->kstride_.cpu_data();
   this->output_shape_.clear();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
     const int input_dim = this->input_shape(i + 1);
     const int output_dim = stride_data[i] * (input_dim - 1)
-        + kernel_shape_data[i] - 2 * pad_data[i];
+        + ((kernel_shape_data[i] - 1) * kstride_data[i] + 1) - 2 * pad_data[i];
     this->output_shape_.push_back(output_dim);
   }
 }
