@@ -278,17 +278,18 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     } else {
       if (this->use_skernel_) {
         im2col_ndsk_gpu(data, num_spatial_axes_, num_kernels_im2col_,
-            conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-            kernel_shape_.gpu_data(), pad_.gpu_data(),
-            stride_.gpu_data(), kstride_.gpu_data(), col_buff);
+                        conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+                        kernel_shape_.gpu_data(), pad_.gpu_data(),
+                        stride_.gpu_data(), kstride_.gpu_data(), col_buff);
       } else {
         im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
-            conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-            kernel_shape_.gpu_data(), pad_.gpu_data(),
-            stride_.gpu_data(), col_buff);
+                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+                      kernel_shape_.gpu_data(), pad_.gpu_data(),
+                      stride_.gpu_data(), col_buff);
       }
     }
   }
+
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       if (this->use_skernel_) {
