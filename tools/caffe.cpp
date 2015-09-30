@@ -3,6 +3,7 @@
 namespace bp = boost::python;
 #endif
 
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include <cstring>
@@ -62,6 +63,10 @@ class __Registerer_##func { \
 }; \
 __Registerer_##func g_registerer_##func; \
 }
+
+// Hack to convert macro to string
+#define STRINGIZE(m) #m
+#define STRINGIZE2(m) STRINGIZE(m)
 
 static BrewFunction GetBrewFunction(const caffe::string& name) {
   if (g_brew_map.count(name)) {
@@ -378,6 +383,8 @@ RegisterBrewFunction(time);
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
+  // Set version
+  gflags::SetVersionString(STRINGIZE2(CAFFE_VERSION));
   // Usage message.
   gflags::SetUsageMessage("command line brew\n"
       "usage: caffe <command> <args>\n\n"
