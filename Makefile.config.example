@@ -96,5 +96,3 @@ TEST_GPUID := 0
 
 # enable pretty build (comment to see full commands)
 Q ?= @
-
-# test
