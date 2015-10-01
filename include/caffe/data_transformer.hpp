@@ -2,6 +2,7 @@
 #define CAFFE_DATA_TRANSFORMER_HPP
 
 #include <vector>
+#include <random>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -147,6 +148,8 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  std::mt19937 rg_;
+  std::uniform_int_distribution<int> rd_;
 };
 
 }  // namespace caffe
