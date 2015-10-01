@@ -32,3 +32,17 @@ def base_parser():
     return parser
 
 set_cpp_loglevel(3)
+
+# Apollocaffe uses print() over the obscure python logging module
+# Disable buffering of stdout ,equivalent to export PYTHONUNBUFFERED=x
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+
+import sys
+sys.stdout = Unbuffered(sys.stdout)
