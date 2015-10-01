@@ -461,9 +461,11 @@ cdef class ApolloNet:
                 params = self.params
                 names = []
                 f.visit(names.append)
-                for name in names :
+                for name in names:
                     if name in params:
                         params[name].data[:] = f[name]
+                    else:
+                        print 'WARNING: %s could not be loaded' % name
         elif extension == '.caffemodel':
             self.thisptr.CopyTrainedLayersFrom(filename)
         else:
