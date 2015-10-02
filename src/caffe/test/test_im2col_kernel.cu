@@ -98,45 +98,30 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(Im2colKernelTest, TestDtypes);
 
 TYPED_TEST(Im2colKernelTest, Test2D) {
-  // Reshape the blobs to correct size for im2col output
-  this->blob_top_->Reshape(this->blob_bottom_->num(),
-          this->channels_ * this->kernel_size_ * this->kernel_size_,
-          this->height_col_,
-          this->width_col_);
+  if(Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    // Reshape the blobs to correct size for im2col output
+    this->blob_top_->Reshape(this->blob_bottom_->num(),
+            this->channels_ * this->kernel_size_ * this->kernel_size_,
+            this->height_col_,
+            this->width_col_);
 
-  this->blob_top_cpu_->Reshape(this->blob_bottom_->num(),
-          this->channels_ * this->kernel_size_ * this->kernel_size_,
-          this->height_col_,
-          this->width_col_);
+    this->blob_top_cpu_->Reshape(this->blob_bottom_->num(),
+            this->channels_ * this->kernel_size_ * this->kernel_size_,
+            this->height_col_,
+            this->width_col_);
 
-  const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
-  TypeParam* top_data = this->blob_top_->mutable_gpu_data();
-  TypeParam* cpu_data = this->blob_top_cpu_->mutable_cpu_data();
+    const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
+    TypeParam* top_data = this->blob_top_->mutable_gpu_data();
+    TypeParam* cpu_data = this->blob_top_cpu_->mutable_cpu_data();
 
-  // CPU Version
-  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    im2col_cpu(this->blob_bottom_->cpu_data() + this->blob_bottom_->offset(n),
-      this->channels_, this->height_, this->width_,
-      this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
-      this->stride_, this->stride_,
-      cpu_data + this->blob_top_cpu_->offset(n));
-  }
-
-  // GPU version
-  int num_kernels = this->channels_ * this->height_col_ * this->width_col_;
-  int default_grid_dim = CAFFE_GET_BLOCKS(num_kernels);
-
-  // Launch with different grid sizes
-  for (int grid_div = 2; grid_div <= 8; grid_div++) {
+    // CPU Version
     for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-      im2col_cpu(this->blob_bottom_->cpu_data()
-                 + this->blob_bottom_->offset(n),
+      im2col_cpu(this->blob_bottom_->cpu_data() + this->blob_bottom_->offset(n),
         this->channels_, this->height_, this->width_,
         this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
         this->stride_, this->stride_,
         cpu_data + this->blob_top_cpu_->offset(n));
     }
-
 
     // GPU version
     int num_kernels = this->channels_ * this->height_col_ * this->width_col_;
@@ -145,25 +130,42 @@ TYPED_TEST(Im2colKernelTest, Test2D) {
     // Launch with different grid sizes
     for (int grid_div = 2; grid_div <= 8; grid_div++) {
       for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-        int grid_dim = default_grid_dim/grid_div;
-        // NOLINT_NEXT_LINE(whitespace/operators)
-        im2col_gpu_kernel<TypeParam>
-          CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS)(
-          num_kernels, bottom_data + this->blob_bottom_->offset(n),
-          this->height_, this->width_, this->kernel_size_, this->kernel_size_,
-          this->pad_, this->pad_, this->stride_, this->stride_,
-          this->height_col_, this->width_col_,
-          top_data + this->blob_top_->offset(n));
-        CUDA_POST_KERNEL_CHECK;
+        im2col_cpu(this->blob_bottom_->cpu_data()
+                   + this->blob_bottom_->offset(n),
+          this->channels_, this->height_, this->width_,
+          this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
+          this->stride_, this->stride_,
+          cpu_data + this->blob_top_cpu_->offset(n));
       }
 
-      // Compare results against CPU version
-      for (int i = 0; i < this->blob_top_->count(); ++i) {
-        TypeParam cpuval = cpu_data[i];
-        TypeParam gpuval = this->blob_top_->cpu_data()[i];
-        EXPECT_EQ(cpuval, gpuval);
-        if (cpuval != gpuval) {
-          break;
+
+      // GPU version
+      int num_kernels = this->channels_ * this->height_col_ * this->width_col_;
+      int default_grid_dim = CAFFE_GET_BLOCKS(num_kernels);
+
+      // Launch with different grid sizes
+      for (int grid_div = 2; grid_div <= 8; grid_div++) {
+        for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+          int grid_dim = default_grid_dim/grid_div;
+          // NOLINT_NEXT_LINE(whitespace/operators)
+          im2col_gpu_kernel<TypeParam>
+            CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS)(
+            num_kernels, bottom_data + this->blob_bottom_->offset(n),
+            this->height_, this->width_, this->kernel_size_, this->kernel_size_,
+            this->pad_, this->pad_, this->stride_, this->stride_,
+            this->height_col_, this->width_col_,
+            top_data + this->blob_top_->offset(n));
+          CUDA_POST_KERNEL_CHECK;
+        }
+
+        // Compare results against CPU version
+        for (int i = 0; i < this->blob_top_->count(); ++i) {
+          TypeParam cpuval = cpu_data[i];
+          TypeParam gpuval = this->blob_top_->cpu_data()[i];
+          EXPECT_EQ(cpuval, gpuval);
+          if (cpuval != gpuval) {
+            break;
+          }
         }
       }
     }
@@ -171,55 +173,57 @@ TYPED_TEST(Im2colKernelTest, Test2D) {
 }
 
 TYPED_TEST(Im2colKernelTest, TestND) {
-  // Reshape the blobs to correct size for im2col output
-  this->blob_top_->Reshape(this->blob_bottom_->num(),
-      this->channels_ * this->kernel_size_ * this->kernel_size_,
-      this->height_col_,
-      this->width_col_);
+  if(Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    // Reshape the blobs to correct size for im2col output
+    this->blob_top_->Reshape(this->blob_bottom_->num(),
+        this->channels_ * this->kernel_size_ * this->kernel_size_,
+        this->height_col_,
+        this->width_col_);
 
-  this->blob_top_cpu_->ReshapeLike(*this->blob_top_);
+    this->blob_top_cpu_->ReshapeLike(*this->blob_top_);
 
-  const TypeParam* bottom_data_cpu = this->blob_bottom_->cpu_data();
-  TypeParam* top_data_cpu = this->blob_top_cpu_->mutable_cpu_data();
+    const TypeParam* bottom_data_cpu = this->blob_bottom_->cpu_data();
+    TypeParam* top_data_cpu = this->blob_top_cpu_->mutable_cpu_data();
 
-  // CPU Version
-  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    im2col_nd_cpu(bottom_data_cpu + this->blob_bottom_->offset(n), 2,
-        this->blob_bottom_->shape().data() + 1,
-        this->blob_top_cpu_->shape().data() + 1,
-        this->blob_kernel_shape_->cpu_data(),
-        this->blob_pad_->cpu_data(), this->blob_stride_->cpu_data(),
-        top_data_cpu + this->blob_top_cpu_->offset(n));
-  }
-
-  // GPU version
-  int num_kernels = this->channels_ * this->height_col_ * this->width_col_;
-  int default_grid_dim = CAFFE_GET_BLOCKS(num_kernels);
-  const TypeParam* bottom_data_gpu = this->blob_bottom_->gpu_data();
-
-  // Launch with different grid sizes
-  for (int grid_div = 2; grid_div <= 8; grid_div++) {
+    // CPU Version
     for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-      const int grid_dim = default_grid_dim / grid_div;
-      TypeParam* top_data_gpu = this->blob_top_->mutable_gpu_data();
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    im2col_nd_gpu_kernel<TypeParam>
-      CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS) (
-        num_kernels, 2, bottom_data_gpu + this->blob_bottom_->offset(n),
-        this->blob_bottom_->gpu_shape() + 1, this->blob_top_->gpu_shape() + 1,
-        this->blob_kernel_shape_->gpu_data(), this->blob_pad_->gpu_data(),
-        this->blob_stride_->gpu_data(),
-        top_data_gpu + this->blob_top_->offset(n));
-    CUDA_POST_KERNEL_CHECK;
+      im2col_nd_cpu(bottom_data_cpu + this->blob_bottom_->offset(n), 2,
+          this->blob_bottom_->shape().data() + 1,
+          this->blob_top_cpu_->shape().data() + 1,
+          this->blob_kernel_shape_->cpu_data(),
+          this->blob_pad_->cpu_data(), this->blob_stride_->cpu_data(),
+          top_data_cpu + this->blob_top_cpu_->offset(n));
     }
 
-    // Compare results against CPU version
-    for (int i = 0; i < this->blob_top_->count(); ++i) {
-      TypeParam cpuval = top_data_cpu[i];
-      TypeParam gpuval = this->blob_top_->cpu_data()[i];
-      EXPECT_EQ(cpuval, gpuval);
-      if (cpuval != gpuval) {
-        break;
+    // GPU version
+    int num_kernels = this->channels_ * this->height_col_ * this->width_col_;
+    int default_grid_dim = CAFFE_GET_BLOCKS(num_kernels);
+    const TypeParam* bottom_data_gpu = this->blob_bottom_->gpu_data();
+
+    // Launch with different grid sizes
+    for (int grid_div = 2; grid_div <= 8; grid_div++) {
+      for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+        const int grid_dim = default_grid_dim / grid_div;
+        TypeParam* top_data_gpu = this->blob_top_->mutable_gpu_data();
+        // NOLINT_NEXT_LINE(whitespace/operators)
+        im2col_nd_gpu_kernel<TypeParam>
+        CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS) (
+            num_kernels, 2, bottom_data_gpu + this->blob_bottom_->offset(n),
+            this->blob_bottom_->gpu_shape() + 1, this->blob_top_->gpu_shape() + 1,
+            this->blob_kernel_shape_->gpu_data(), this->blob_pad_->gpu_data(),
+            this->blob_stride_->gpu_data(),
+            top_data_gpu + this->blob_top_->offset(n));
+        CUDA_POST_KERNEL_CHECK;
+      }
+
+      // Compare results against CPU version
+      for (int i = 0; i < this->blob_top_->count(); ++i) {
+        TypeParam cpuval = top_data_cpu[i];
+        TypeParam gpuval = this->blob_top_->cpu_data()[i];
+        EXPECT_EQ(cpuval, gpuval);
+        if (cpuval != gpuval) {
+          break;
+        }
       }
     }
   }
