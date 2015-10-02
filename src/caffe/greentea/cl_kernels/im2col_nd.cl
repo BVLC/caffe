@@ -3,6 +3,7 @@
 #endif
 
 __kernel void TEMPLATE(im2col_nd, Dtype)(const int n, const int num_axes,
+                                     const int channel_axis,
                                      __global const Dtype* data_im,
                                      const int data_off,
                                      __global const int* im_shape,
@@ -16,6 +17,9 @@ __kernel void TEMPLATE(im2col_nd, Dtype)(const int n, const int num_axes,
   int d_temp[6];
   int d_iter[6];
   int i;
+
+  im_shape += channel_axis;
+  col_shape += channel_axis;
 
   for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
     // Initialize channel_in, computed in the loop below, with intermediate
@@ -38,8 +42,8 @@ __kernel void TEMPLATE(im2col_nd, Dtype)(const int n, const int num_axes,
       data_col_inc *= col_shape[i + 1];
       d_iter[i] = 0;
     }
-    Dtype* data_col_ptr = data_col + channel_out;
-    const Dtype* data_im_ptr = data_im + channel_in;
+    __global Dtype* data_col_ptr = data_col + data_col_off + channel_out;
+    __global const Dtype* data_im_ptr = data_im + data_off + channel_in;
     bool incremented;
     do {
       bool in_range = true;
@@ -78,18 +82,24 @@ __kernel void TEMPLATE(im2col_nd, Dtype)(const int n, const int num_axes,
 
 
 
-__kernel void col2im_nd_gpu_kernel(const int n, const int num_axes,
-                                   __global const Dtype* data_col,
-                                   __global const int* im_shape,
-                                   __global const int* col_shape,
-                                   __global const int* kernel_shape,
-                                   __global const int* pad,
-                                   __global const int* stride,
-                                   __global Dtype* data_im) {
+__kernel void TEMPLATE(col2im_nd, Dtype)(const int n, const int num_axes,
+                                         const int channel_axis,
+                                         __global const Dtype* data_col,
+                                         const int data_col_off,
+                                         __global const int* im_shape,
+                                         __global const int* col_shape,
+                                         __global const int* kernel_shape,
+                                         __global const int* pad,
+                                         __global const int* stride,
+                                         __global Dtype* data_im,
+                                         const int data_im_off) {
   int d_im[6];
   int d_col_iter[6];
   int d_col_start[6];
   int d_col_end[6];
+
+  im_shape += channel_axis;
+  col_shape += channel_axis;
 
   for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
     // Initialize channel_in, computed in the loop below, with intermediate
@@ -110,7 +120,7 @@ __kernel void col2im_nd_gpu_kernel(const int n, const int num_axes,
       if (d_col_start[i] >= d_col_end[i]) {
         // Skip computation if the dimension is 0 at any spatial axis --
         // final val will be 0.
-        data_im[index] = 0;
+        data_im[index + data_im_off] = 0;
         done = true;
         break;  // for (int i = 0; i < num_axes; ++i)
       }
@@ -123,7 +133,7 @@ __kernel void col2im_nd_gpu_kernel(const int n, const int num_axes,
     bool incremented = true;
     do {
       // Compute the final offset.
-      int final_offset = 0;
+      int final_offset = data_col_off;
       int kernel_shape_prod = 1;
       for (int i = num_axes - 1; i >= 0; --i) {
         final_offset += (d_im[i] - d_col_iter[i] * stride[i])
@@ -148,6 +158,6 @@ __kernel void col2im_nd_gpu_kernel(const int n, const int num_axes,
         }
       }  // for (int i = num_axes - 1; i >= 0; --i)
     } while (incremented);
-    data_im[index] = val;
+    data_im[index + data_im_off] = val;
   }
 }

@@ -218,7 +218,8 @@ template<typename Dtype>
 void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_im,
                             const int data_off, const int num_spatial_axes,
-                            const int channel_axis, const int num_kernels,
+                            const int channel_axis,
+                            const int num_kernels,
                             cl_mem im_shape, cl_mem col_shape,
                             cl_mem kernel_shape, cl_mem pad, cl_mem stride,
                             cl_mem data_col, int data_col_off) {
@@ -226,10 +227,11 @@ void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
       CL_KERNEL_SELECT("im2col_nd"));
 
   viennacl::ocl::enqueue(
-      kernel(num_kernels, num_spatial_axes, WrapHandle(data_im, ctx), data_off,
-             WrapHandle(im_shape, ctx), WrapHandle(col_shape, ctx),
-             WrapHandle(kernel_shape, ctx), WrapHandle(pad, ctx),
-             WrapHandle(stride, ctx), WrapHandle(data_col, ctx), data_col_off),
+      kernel(num_kernels, num_spatial_axes, channel_axis,
+             WrapHandle(data_im, ctx), data_off, WrapHandle(im_shape, ctx),
+             WrapHandle(col_shape, ctx), WrapHandle(kernel_shape, ctx),
+             WrapHandle(pad, ctx), WrapHandle(stride, ctx),
+             WrapHandle(data_col, ctx), data_col_off),
       ctx->get_queue());
 }
 
@@ -260,7 +262,7 @@ template<typename Dtype>
 void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_col,
                             const int data_col_off, const int num_spatial_axes,
-                            const int channel_axis_, const int im_size,
+                            const int channel_axis, const int im_size,
                             cl_mem im_shape, cl_mem col_shape,
                             cl_mem kernel_shape, cl_mem pad, cl_mem stride,
                             cl_mem data_im, int data_off) {
@@ -268,8 +270,8 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
       CL_KERNEL_SELECT("col2im_nd"));
 
   viennacl::ocl::enqueue(
-      kernel(im_size, num_spatial_axes, channel_axis_,
-             WrapHandle(data_col, ctx), data_col_off, WrapHandle(im_shape, ctx),
+      kernel(im_size, num_spatial_axes, channel_axis, WrapHandle(data_col, ctx),
+             data_col_off, WrapHandle(im_shape, ctx),
              WrapHandle(col_shape, ctx), WrapHandle(kernel_shape, ctx),
              WrapHandle(pad, ctx), WrapHandle(stride, ctx),
              WrapHandle(data_im, ctx), data_off),
