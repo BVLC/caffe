@@ -16,7 +16,6 @@ using std::max;
 template<typename Dtype>
 void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
-
   PoolingParameter pool_param = this->layer_param_.pooling_param();
 
   // Set the max number of top blobs before calling base Layer::SetUp.
@@ -64,7 +63,8 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       for (int i = 0; i < num_spatial_axes_; ++i) {
         kernel_shape_data[i] = pool_param.kernel_size(
             (num_kernel_dims == 1) ? 0 : i);
-        CHECK_GT(kernel_shape_data[i], 0)<< "Filter dimensions must be nonzero.";
+        CHECK_GT(kernel_shape_data[i], 0)
+          << "Filter dimensions must be nonzero.";
       }
     }
   }
@@ -233,7 +233,6 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-
   int kernel_h_ = kernel_shape_.cpu_data()[0];
   int kernel_w_ = kernel_shape_.cpu_data()[1];
   int stride_h_ = stride_.cpu_data()[0];
@@ -348,7 +347,6 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-
   int kernel_h_ = kernel_shape_.cpu_data()[0];
   int kernel_w_ = kernel_shape_.cpu_data()[1];
   int stride_h_ = stride_.cpu_data()[0];
