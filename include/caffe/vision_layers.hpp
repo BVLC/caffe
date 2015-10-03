@@ -383,7 +383,7 @@ class LstmUnitLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline bool overwrites_param_diffs() { return true; }
+  virtual inline bool overwrites_bottom_diffs() { return false; }
   virtual inline const char* type() const { return "LstmUnit"; }
 
  protected:

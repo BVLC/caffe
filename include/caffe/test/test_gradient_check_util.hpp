@@ -96,6 +96,10 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   if (check_bottom == -1) {
     for (int i = 0; i < bottom.size(); ++i) {
       blobs_to_check.push_back(bottom[i]);
+      if (!layer->overwrites_bottom_diffs()) {
+        caffe_set(bottom[i]->count(), static_cast<Dtype>(0),
+          bottom[i]->mutable_cpu_diff());
+      }
     }
   } else if (check_bottom >= 0) {
     CHECK_LT(check_bottom, bottom.size());
