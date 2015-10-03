@@ -73,13 +73,15 @@ Blob<Dtype>::Blob(const vector<int>& shape)
 }
 
 template <typename Dtype>
-Blob<Dtype>::Blob(const vector<int>& shape, void * pre_allocated_gpu_ptr, int gpu_device)
+Blob<Dtype>::Blob(const vector<int>& shape, void * pre_allocated_gpu_ptr,
+    int gpu_device)
   // capacity_ must be initialized before calling Reshape
   : capacity_(0) {
 #ifdef CPU_ONLY
     NO_GPU;
 #endif
-  capacity_ = INT_MAX; // temporarily set capacity to INT_MAX to prevent Reshape from allocating data_ and diff_
+  capacity_ = INT_MAX; // temporarily set capacity to INT_MAX to prevent 
+                       // Reshape() from allocating data_ and diff_
   Reshape(shape);
   capacity_ = count_;
   data_.reset(new SyncedMemory(pre_allocated_gpu_ptr, count_, gpu_device));
