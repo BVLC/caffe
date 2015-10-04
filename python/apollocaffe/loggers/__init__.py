@@ -39,7 +39,7 @@ class TestLogger(object):
     def log(self, idx, meta_data):
         if idx % self.display_interval == 0:
             try:
-                loss = np.mean(meta_data['test_loss'][-self.display_interval:])
+                loss = meta_data['test_loss'][-1]
                 log_line = "%s - Iteration %4d - Test Loss: %g" % \
                     (strftime("%Y-%m-%d %H:%M:%S"), idx, loss)
             except IndexError:
@@ -79,7 +79,7 @@ class SnapshotLogger(object):
                 print('Saving failed')
 
 class PlotLogger(object):
-    def __init__(self, display_interval, plot_prefix='/tmp/apollo', boxcar_width=100):
+    def __init__(self, display_interval, plot_prefix='/tmp/apollo', boxcar_width={'train_loss': 100, 'test_loss': 1}):
         self.display_interval = display_interval
         self.plot_prefix = plot_prefix
         self.boxcar_width = boxcar_width
@@ -90,21 +90,22 @@ class PlotLogger(object):
             try:
                 for loss_type in ['train_loss', 'test_loss']:
                     history = meta_data[loss_type]
-                    if len(history) < 2 * self.boxcar_width:
+                    boxcar_width = self.boxcar_width[loss_type]
+                    if len(history) < 2 * boxcar_width:
                         return
                     smoothed_loss = []
                     xaxis = []
-                    for i in range(len(history) // self.boxcar_width):
+                    for i in range(len(history) // boxcar_width):
                         smoothed_loss.append(np.mean(
-                            history[i*self.boxcar_width:(i+1)*self.boxcar_width]))
-                        step = int(self.boxcar_width * (idx - meta_data['start_iter']) / len(history))
+                            history[i*boxcar_width:(i+1)*boxcar_width]))
+                        step = int(boxcar_width * (idx - meta_data['start_iter']) / len(history))
                         xaxis.append(meta_data['start_iter'] + i * step)
                     plt.plot(xaxis, smoothed_loss)
                     plot_file = '%s_%s.jpg' % (self.plot_prefix, loss_type)
                     plt.savefig(plot_file)
                     plt.close()
-                    print "%s - iteration %4d - Saving %s plot to %s" % \
-                        (strftime("%y-%m-%d %h:%m:%s"), idx, loss_type, plot_file)
+                    print "%s - Iteration %4d - Saving %s plot to %s" % \
+                        (strftime("%Y-%m-%d %H:%M:%S"), idx, loss_type, plot_file)
             except Exception as e:
-                log_line = "skipping train loss plot:"
+                log_line = "Skipping train loss plot:"
                 print traceback.format_exc()

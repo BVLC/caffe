@@ -60,8 +60,8 @@ cdef extern from "caffe/blob.hpp" namespace "caffe":
         void Reshape(vector[int]& shape) except +
         float* mutable_cpu_data() except +
         float* mutable_cpu_diff() except +
-        void ShareData(Blob& other)
-        void ShareDiff(Blob& other)
+        void ShareData(Blob& other) except +
+        void ShareDiff(Blob& other) except +
         shared_ptr[Tensor] data()
         shared_ptr[Tensor] diff()
 

@@ -64,6 +64,15 @@ class Eltwise(Layer):
         else:
             raise ValueError('Unknown Eltwise operator')
 
+class Embed(Layer):
+    def __init__(self, name, weight_filler=None, bias_filler=None, **kwargs):
+        super(Embed, self).__init__(self, name, kwargs)
+        if weight_filler is None:
+            weight_filler = Filler('uniform', 0.1)
+        self.p.embed_param.weight_filler.CopyFrom(weight_filler.filler_param)
+        if bias_filler is not None:
+            self.p.embed_param.bias_filler.CopyFrom(bias_filler.filler_param)
+
 class EuclideanLoss(LossLayer):
     def __init__(self, name, **kwargs):
         super(EuclideanLoss, self).__init__(self, name, kwargs)

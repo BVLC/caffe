@@ -58,10 +58,13 @@ class TheanoGPU(PyLayer):
         function_str = self.pythonargs[0]
         top_shape = self.pythonargs[1]
 
-        if self.function_str != function_str or self.top_shape != top_shape:
-            self.function_str = function_str
-            self.top_shape = top_shape
-
+        old_function_str = self.function_str
+        old_top_shape = self.top_shape
+        self.function_str = function_str
+        self.top_shape = top_shape
+        if function_str != old_function_str or len(top_shape) != len(old_top_shape):
+            if old_function_str != '':
+                print('TheanoGPU function string different from cache: recompiling')
             import theano.tensor as T
             import theano
             from theano.sandbox.cuda.basic_ops import gpu_from_host
