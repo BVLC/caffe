@@ -298,7 +298,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
             kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
             pad_.cpu_data()[0], pad_.cpu_data()[1],
             stride_.cpu_data()[0], stride_.cpu_data()[1],
-            kstride_.gpu_data()[0], kstride_.gpu_data()[1], data);
+            kstride_.cpu_data()[0], kstride_.cpu_data()[1], data);
       } else {
         col2im_gpu(col_buff, conv_in_channels_,
             conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
@@ -399,8 +399,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                       pad_.cpu_data()[0], pad_.cpu_data()[1],
                                       stride_.cpu_data()[0],
                                       stride_.cpu_data()[1],
-                                      kstride_.gpu_data()[0],
-                                      kstride_.gpu_data()[1], (cl_mem) data,
+                                      kstride_.cpu_data()[0],
+                                      kstride_.cpu_data()[1], (cl_mem) data,
                                       data_off);
       } else {
         greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
