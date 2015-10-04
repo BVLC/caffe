@@ -710,6 +710,7 @@ message LstmUnitParameter {
   optional FillerParameter input_gate_weight_filler = 3; // The filler for the weight
   optional FillerParameter forget_gate_weight_filler = 4; // The filler for the weight
   optional FillerParameter output_gate_weight_filler = 5; // The filler for the weight
+  optional bool tie_output_forget = 6 [default=false];
 }
 
 message NumpyDataParameter {

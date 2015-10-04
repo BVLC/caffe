@@ -118,4 +118,22 @@ TYPED_TEST(LstmUnitLayerTest, TestGradientAcrossChannels) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(LstmUnitLayerTest, TestGradientTieOutputForget) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  LstmUnitParameter* lstm_unit_param = layer_param.mutable_lstm_unit_param();
+  lstm_unit_param->set_num_cells(NUM_CELLS);
+  lstm_unit_param->mutable_input_weight_filler()->set_type("xavier");
+  lstm_unit_param->mutable_input_gate_weight_filler()->set_type("xavier");
+  lstm_unit_param->mutable_forget_gate_weight_filler()->set_type("xavier");
+  lstm_unit_param->mutable_output_gate_weight_filler()->set_type("xavier");
+  lstm_unit_param->set_tie_output_forget(true);
+
+  LstmUnitLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
 }  // namespace caffe
