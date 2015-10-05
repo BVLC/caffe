@@ -478,6 +478,29 @@ static void read_mean(MEX_ARGS) {
   mxFree(mean_proto_file);
 }
 
+// Usage: caffe_('write_mean', mean_data, mean_proto_file)
+static void write_mean(MEX_ARGS) {
+  mxCHECK(nrhs == 2 && mxIsSingle(prhs[0]) && mxIsChar(prhs[1]),
+      "Usage: caffe_('write_mean', mean_data, mean_proto_file)");
+  char* mean_proto_file = mxArrayToString(prhs[1]);
+  int ndims = mxGetNumberOfDimensions(prhs[0]);
+  mxCHECK(ndims >= 2 && ndims <= 3, "mean_data must have at 2 or 3 dimensions");
+  const mwSize *dims = mxGetDimensions(prhs[0]);
+  int width = dims[0];
+  int height = dims[1];
+  int channels;
+  if (ndims == 3)
+    channels = dims[2];
+  else
+    channels = 1;
+  Blob<float> data_mean(1, channels, height, width);
+  mx_mat_to_blob(prhs[0], &data_mean, DATA);
+  BlobProto blob_proto;
+  data_mean.ToProto(&blob_proto, false);
+  WriteProtoToBinaryFile(blob_proto, mean_proto_file);
+  mxFree(mean_proto_file);
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -515,6 +538,7 @@ static handler_registry handlers[] = {
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
+  { "write_mean",         write_mean      },
   // The end.
   { "END",                NULL            },
 };
