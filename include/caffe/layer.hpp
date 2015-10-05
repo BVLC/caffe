@@ -43,7 +43,7 @@ class Layer {
    */
   explicit Layer(const LayerParameter& param)
       : layer_param_(param), is_shared_(false) {
-    device_context_ = Caffe::GetDeviceContext(layer_param_.device());
+    device_context_ = Caffe::GetDevice(layer_param_.device());
     // Set phase and copy blobs (if there are any).
     phase_ = param.phase();
     if (layer_param_.blobs_size() > 0) {

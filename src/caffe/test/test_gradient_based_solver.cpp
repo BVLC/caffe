@@ -201,10 +201,10 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       vector<device*> gpus;
       // put current device at the beginning
       int device_id = solver_->param().device_id();
-      gpus.push_back(Caffe::Get().GetDeviceContext(device_id));
+      gpus.push_back(Caffe::Get().GetDevice(device_id));
       for (int i = 0; gpus.size() < devices; ++i) {
         if (i != device_id) {
-          gpus.push_back(Caffe::Get().GetDeviceContext(i));
+          gpus.push_back(Caffe::Get().GetDevice(i));
         }
       }
       Caffe::set_solver_count(gpus.size());
