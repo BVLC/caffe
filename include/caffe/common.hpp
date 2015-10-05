@@ -182,7 +182,7 @@ class Caffe {
   static void Synchronize(int device_id);
 
   // Get a device context
-  static device *GetDeviceContext(int id);
+  static device *GetDevice(int id);
 
   // Get a device OpenCL program
 #ifdef USE_GREENTEA
@@ -202,9 +202,9 @@ class Caffe {
 
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
-  static vector<shared_ptr< device> > device_contexts_;
+  static vector<shared_ptr< device> > devices_;
   shared_ptr<device> cpu_device_context_;
-  device* default_device_context_;
+  device* default_device_;
 
   int solver_count_;
   bool root_solver_;
