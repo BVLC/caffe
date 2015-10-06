@@ -12,7 +12,7 @@ layer {
   }
   data_param {
     source: "examples/cifar10/cifar10_train_lmdb"
-    batch_size: 111
+    batch_size: 100
     backend: LMDB
   }
 }
@@ -41,20 +41,15 @@ layer {
   param {
     lr_mult: 1
   }
-  param {
-    lr_mult: 2
-  }
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     stride: 1
+    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.0001
-    }
-    bias_filler {
-      type: "constant"
     }
   }
 }
@@ -75,23 +70,14 @@ layer {
   type: "BatchNorm"
   bottom: "pool1"
   top: "bn1"
-  bn_param {
-    scale_filler {
-      type: "constant"
-      value: 1
-    }
-    shift_filler {
-      type: "constant"
-      value: 0.001
-    } 
+  param {
+    lr_mult: 0
   }
   param {
-    lr_mult: 1.00001
-    decay_mult: 0
+    lr_mult: 0
   }
   param {
-    lr_mult: 1.00001
-    decay_mult: 0
+    lr_mult: 0
   }
 }
 
@@ -110,50 +96,35 @@ layer {
   param {
     lr_mult: 1
   }
-  param {
-    lr_mult: 2
-  }
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     stride: 1
+    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.01
     }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
-
-
 
 layer {
   name: "bn2"
   type: "BatchNorm"
   bottom: "conv2"
   top: "bn2"
-  bn_param {
-    scale_filler {
-      type: "constant"
-      value: 1
-    }
-    shift_filler {
-      type: "constant"
-      value: 0.001
-    } 
+  param {
+    lr_mult: 0
   }
   param {
-    lr_mult: 1.00001
-    decay_mult: 0
+    lr_mult: 0
   }
   param {
-    lr_mult: 1.00001
-    decay_mult: 0
+    lr_mult: 0
   }
 }
+
 layer {
   name: "Sigmoid2"
   type: "Sigmoid"
@@ -176,53 +147,38 @@ layer {
   type: "Convolution"
   bottom: "pool2"
   top: "conv3"
+  param {
+    lr_mult: 1
+  }
   convolution_param {
     num_output: 64
     pad: 2
     kernel_size: 5
     stride: 1
+    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.01
     }
-    bias_filler {
-      type: "constant"
-    }
   }
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 1
-  }
-
 }
-
 
 layer {
   name: "bn3"
   type: "BatchNorm"
   bottom: "conv3"
   top: "bn3"
-  bn_param {
-    scale_filler {
-      type: "constant"
-      value: 1
-    }
-    shift_filler {
-      type: "constant"
-      value: 0.001
-    } 
+  param {
+    lr_mult: 0
   }
   param {
-    lr_mult: 1.00001
-    decay_mult: 0
+    lr_mult: 0
   }
   param {
-    lr_mult: 1.00001
-    decay_mult: 0
+    lr_mult: 0
   }
 }
+
 layer {
   name: "Sigmoid3"
   type: "Sigmoid"
@@ -248,10 +204,10 @@ layer {
   top: "ip1"
   param {
     lr_mult: 1
-    decay_mult: 250
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.2
+    lr_mult: 1
     decay_mult: 0
   }
   inner_product_param {
