@@ -7,12 +7,12 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
 
 #include "caffe/greentea/greentea.hpp"
+#include "device.hpp"
 
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
@@ -43,7 +43,7 @@ class Layer {
    */
   explicit Layer(const LayerParameter& param)
       : layer_param_(param), is_shared_(false) {
-    device_context_ = Caffe::GetDeviceContext(layer_param_.device());
+    device_context_ = Caffe::GetDevice(layer_param_.device());
     // Set phase and copy blobs (if there are any).
     phase_ = param.phase();
     if (layer_param_.blobs_size() > 0) {
@@ -348,7 +348,7 @@ class Layer {
   /**
    * @brief Returns the device context this layer runs on
    */
-  inline DeviceContext *device_context() {
+  inline device *get_device() {
     return device_context_;
   }
 
@@ -378,7 +378,7 @@ class Layer {
   vector<Dtype> loss_;
 
   /** Device context */
-  DeviceContext *device_context_;
+  device *device_context_;
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

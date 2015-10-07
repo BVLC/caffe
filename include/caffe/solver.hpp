@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "caffe/device_context.hpp"
 #include "caffe/net.hpp"
+#include "device.hpp"
 
 namespace caffe {
 
@@ -115,7 +115,7 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
-  DeviceContext *device_context_;
+  device *device_context_;
   vector<Callback*> callbacks_;
 
   // The root solver that holds root nets (actually containing shared layers)
@@ -305,20 +305,20 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
   SolverParameter_SolverType type = param.solver_type();
 
   switch (type) {
-    case SolverParameter_SolverType_SGD:
-      return new SGDSolver<Dtype>(param);
-    case SolverParameter_SolverType_NESTEROV:
-      return new NesterovSolver<Dtype>(param);
-    case SolverParameter_SolverType_ADAGRAD:
-      return new AdaGradSolver<Dtype>(param);
-    case SolverParameter_SolverType_RMSPROP:
-      return new RMSPropSolver<Dtype>(param);
-    case SolverParameter_SolverType_ADADELTA:
-      return new AdaDeltaSolver<Dtype>(param);
+  case SolverParameter_SolverType_SGD:
+    return new SGDSolver<Dtype>(param);
+  case SolverParameter_SolverType_NESTEROV:
+    return new NesterovSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADAGRAD:
+    return new AdaGradSolver<Dtype>(param);
+  case SolverParameter_SolverType_RMSPROP:
+    return new RMSPropSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADADELTA:
+    return new AdaDeltaSolver<Dtype>(param);
   case SolverParameter_SolverType_ADAM:
-      return new AdamSolver<Dtype>(param);
+    return new AdamSolver<Dtype>(param);
   default:
-      LOG(FATAL) << "Unknown SolverType: " << type;
+    LOG(FATAL) << "Unknown SolverType: " << type;
   }
   return (Solver<Dtype>*) NULL;
 }

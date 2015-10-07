@@ -49,7 +49,7 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
 
 template<typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
-  device_context_ = Caffe::GetDefaultDeviceContext();
+  device_context_ = Caffe::GetDefaultDevice();
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
@@ -424,14 +424,14 @@ void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
   string model_filename;
   switch (param_.snapshot_format()) {
-    case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
-      model_filename = SnapshotToBinaryProto();
-      break;
-    case caffe::SolverParameter_SnapshotFormat_HDF5:
-      model_filename = SnapshotToHDF5();
-      break;
-    default:
-      LOG(FATAL) << "Unsupported snapshot format.";
+  case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
+    model_filename = SnapshotToBinaryProto();
+    break;
+  case caffe::SolverParameter_SnapshotFormat_HDF5:
+    model_filename = SnapshotToHDF5();
+    break;
+  default:
+    LOG(FATAL) << "Unsupported snapshot format.";
   }
 
   SnapshotSolverState(model_filename);
@@ -559,13 +559,13 @@ void SGDSolver<Dtype>::PreSolve() {
     const vector<int>& shape = net_params[i]->shape();
     history_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDeviceContext())));
+            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
     update_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDeviceContext())));
+            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
     temp_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDeviceContext())));
+            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
   }
 }
 

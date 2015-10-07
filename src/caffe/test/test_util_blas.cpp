@@ -18,11 +18,11 @@ class GemmTest : public ::testing::Test {};
 TYPED_TEST_CASE(GemmTest, TestDtypes);
 
 TYPED_TEST(GemmTest, TestGemmCPUGPU) {
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
 
-  Blob<TypeParam> A(1, 1, 2, 3, Caffe::GetDefaultDeviceContext());
-  Blob<TypeParam> B(1, 1, 3, 4, Caffe::GetDefaultDeviceContext());
-  Blob<TypeParam> C(1, 1, 2, 4, Caffe::GetDefaultDeviceContext());
+  Blob<TypeParam> A(1, 1, 2, 3, Caffe::GetDefaultDevice());
+  Blob<TypeParam> B(1, 1, 3, 4, Caffe::GetDefaultDevice());
+  Blob<TypeParam> C(1, 1, 2, 4, Caffe::GetDefaultDevice());
   TypeParam data[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
   TypeParam A_reshape_data[6] = {1, 4, 2, 5, 3, 6};
   TypeParam B_reshape_data[12] = {1, 5, 9, 2, 6, 10, 3, 7, 11, 4, 8, 12};
@@ -145,11 +145,11 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
 
 
 TYPED_TEST(GemmTest, TestGemvCPUGPU) {
-  DeviceContext *dc = Caffe::GetDefaultDeviceContext();
+  device *dc = Caffe::GetDefaultDevice();
 
-  Blob<TypeParam> A(1, 1, 2, 3, Caffe::GetDefaultDeviceContext());
-  Blob<TypeParam> x(1, 1, 1, 3, Caffe::GetDefaultDeviceContext());
-  Blob<TypeParam> y(1, 1, 1, 2, Caffe::GetDefaultDeviceContext());
+  Blob<TypeParam> A(1, 1, 2, 3, Caffe::GetDefaultDevice());
+  Blob<TypeParam> x(1, 1, 1, 3, Caffe::GetDefaultDevice());
+  Blob<TypeParam> y(1, 1, 1, 2, Caffe::GetDefaultDevice());
   TypeParam data[6] = {1, 2, 3, 4, 5, 6};
   TypeParam result_2[2] = {14, 32};
   TypeParam result_3[3] = {9, 12, 15};

@@ -8,7 +8,8 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-#include "caffe/device_context.hpp"
+
+#include "caffe/device.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
@@ -18,17 +19,17 @@
 
 namespace caffe {
 
-DeviceContext::DeviceContext()
+device::device()
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(0), list_id_(0),
       backend_(Backend::BACKEND_CPU), memory_usage_(0), peak_memory_usage_(0) {
 }
 
-DeviceContext::DeviceContext(int id, int list_id, Backend backend)
+device::device(int id, int list_id, Backend backend)
     : current_queue_id_(0), workgroup_sizes_(3, 0), id_(id), list_id_(list_id),
       backend_(backend), memory_usage_(0), peak_memory_usage_(0) {
 }
 
-void DeviceContext::Init() {
+void device::Init() {
 #ifndef CPU_ONLY
   if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -56,24 +57,24 @@ void DeviceContext::Init() {
 #endif  // !CPU_ONLY
 }
 
-Backend DeviceContext::backend() const {
+Backend device::backend() const {
   return backend_;
 }
 
-int DeviceContext::id() const {
+int device::id() const {
   return id_;
 }
 
-int DeviceContext::list_id() const {
+int device::list_id() const {
   return list_id_;
 }
 
-int DeviceContext::WorkgroupSize(int id) {
+int device::WorkgroupSize(int id) {
   return workgroup_sizes_[id];
   return 0;
 }
 
-int DeviceContext::num_queues() {
+int device::num_queues() {
   if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
     return 1;
@@ -87,7 +88,7 @@ int DeviceContext::num_queues() {
 }
 
 template<>
-shared_ptr<Blob<float> > DeviceContext::Buffer(int id) {
+shared_ptr<Blob<float> > device::Buffer(int id) {
   if (buff_f_.size() <= id) {
     shared_ptr<Blob<float> > blob_pointer(new Blob<float>(this));
     buff_f_.push_back(blob_pointer);
@@ -96,7 +97,7 @@ shared_ptr<Blob<float> > DeviceContext::Buffer(int id) {
 }
 
 template<>
-shared_ptr<Blob<double> > DeviceContext::Buffer(int id) {
+shared_ptr<Blob<double> > device::Buffer(int id) {
   if (buff_d_.size() <= id) {
     shared_ptr<Blob<double> > blob_pointer(new Blob<double>(this));
     buff_d_.push_back(blob_pointer);
@@ -104,11 +105,11 @@ shared_ptr<Blob<double> > DeviceContext::Buffer(int id) {
   return buff_d_[id];
 }
 
-int DeviceContext::current_queue_id() {
+int device::current_queue_id() {
   return current_queue_id_;
 }
 
-void DeviceContext::SwitchQueue(int id) {
+void device::SwitchQueue(int id) {
   if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
     (void) id;
@@ -122,7 +123,7 @@ void DeviceContext::SwitchQueue(int id) {
   }
 }
 
-void DeviceContext::FinishQueues() {
+void device::FinishQueues() {
   if (backend_ == BACKEND_CUDA) {
 #ifdef USE_CUDA
 #endif  // USE_CUDA
@@ -139,30 +140,30 @@ void DeviceContext::FinishQueues() {
   }
 }
 
-size_t DeviceContext::memory_usage() {
+size_t device::memory_usage() {
   return memory_usage_;
 }
 
-size_t DeviceContext::peak_memory_usage() {
+size_t device::peak_memory_usage() {
   return peak_memory_usage_;
 }
 
-void DeviceContext::IncreaseMemoryUsage(size_t bytes) {
+void device::IncreaseMemoryUsage(size_t bytes) {
   memory_usage_ += bytes;
   if (memory_usage_ > peak_memory_usage_) {
     peak_memory_usage_ = memory_usage_;
   }
 }
 
-void DeviceContext::DecreaseMemoryUsage(size_t bytes) {
+void device::DecreaseMemoryUsage(size_t bytes) {
   memory_usage_ -= bytes;
 }
 
-void DeviceContext::ResetPeakMemoryUsage() {
+void device::ResetPeakMemoryUsage() {
   peak_memory_usage_ = memory_usage_;
 }
 
-bool DeviceContext::CheckCapability(std::string cap) {
+bool device::CheckCapability(std::string cap) {
   if (backend_ == BACKEND_OpenCL) {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
@@ -186,11 +187,11 @@ bool DeviceContext::CheckCapability(std::string cap) {
 }
 
 #ifdef USE_GREENTEA
-viennacl::ocl::program &DeviceContext::program() {
+viennacl::ocl::program &device::program() {
   return ocl_program_;
 }
 
-void DeviceContext::SetProgram() {
+void device::SetProgram() {
   ocl_program_ = RegisterKernels(
       &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
 }

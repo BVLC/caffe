@@ -1,5 +1,5 @@
 if(NOT HAVE_PYTHON)
-  message(STATUS "Python interface is disabled or not all required dependecies found. Building without it...")
+  message(STATUS "Python interface is disabled or not all required dependencies found. Building without it...")
   return()
 endif()
 

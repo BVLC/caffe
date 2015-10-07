@@ -14,7 +14,7 @@ class InternalThreadTest : public ::testing::Test {};
 TEST_F(InternalThreadTest, TestStartAndExit) {
   InternalThread thread;
   EXPECT_FALSE(thread.is_started());
-  thread.StartInternalThread(Caffe::Get().GetDefaultDeviceContext());
+  thread.StartInternalThread(Caffe::Get().GetDefaultDevice());
   EXPECT_TRUE(thread.is_started());
   thread.StopInternalThread();
   EXPECT_FALSE(thread.is_started());
@@ -35,17 +35,17 @@ class TestThreadB : public InternalThread {
 TEST_F(InternalThreadTest, TestRandomSeed) {
   TestThreadA t1;
   Caffe::set_random_seed(9658361);
-  t1.StartInternalThread(Caffe::Get().GetDefaultDeviceContext());
+  t1.StartInternalThread(Caffe::Get().GetDefaultDevice());
   t1.StopInternalThread();
 
   TestThreadA t2;
   Caffe::set_random_seed(9658361);
-  t2.StartInternalThread(Caffe::Get().GetDefaultDeviceContext());
+  t2.StartInternalThread(Caffe::Get().GetDefaultDevice());
   t2.StopInternalThread();
 
   TestThreadB t3;
   Caffe::set_random_seed(3435563);
-  t3.StartInternalThread(Caffe::Get().GetDefaultDeviceContext());
+  t3.StartInternalThread(Caffe::Get().GetDefaultDevice());
   t3.StopInternalThread();
 }
 

@@ -40,7 +40,7 @@ def get_edge_label(layer):
 
     if layer.type == 'Data':
         edge_label = 'Batch ' + str(layer.data_param.batch_size)
-    elif layer.type == 'Convolution' or layer.type == 'ConvolutionND' or layer.type == 'ConvolutionSK' or layer.type == 'Deconvolution':
+    elif layer.type == 'Convolution' or layer.type == 'Deconvolution':
         edge_label = str(layer.convolution_param.num_output)
     elif layer.type == 'InnerProduct':
         edge_label = str(layer.inner_product_param.num_output)
@@ -74,7 +74,7 @@ def get_layer_label(layer, rankdir):
         # horizontal space is not; separate words with newlines
         separator = '\\n'
 
-    if layer.type == 'Convolution' or layer.type == 'ConvolutionND' or layer.type == 'ConvolutionSK' or layer.type == 'Deconvolution':
+    if layer.type == 'Convolution' or layer.type == 'Deconvolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
         node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
@@ -89,7 +89,7 @@ def get_layer_label(layer, rankdir):
                       layer.convolution_param.pad[0] if len(layer.convolution_param.pad) > 0 else 0,
                       separator,
                       layer.convolution_param.kstride[0] if len(layer.convolution_param.kstride) > 0 else 1)
-    elif layer.type == 'Pooling' or layer.type == 'PoolingND' or layer.type == 'PoolingSK':
+    elif layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
         node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
                      (layer.name,
@@ -113,9 +113,9 @@ def choose_color_by_layertype(layertype):
     """Define colors for nodes based on the layer type.
     """
     color = '#6495ED'  # Default
-    if layertype == 'Convolution' or layertype == 'ConvolutionND' or layertype == 'ConvolutionSK' or layertype == 'Deconvolution':
+    if layertype == 'Convolution' or layertype == 'Deconvolution':
         color = '#FF5050'
-    elif layertype == 'Pooling' or layertype == 'PoolingND' or layertype == 'PoolingSK':
+    elif layertype == 'Pooling':
         color = '#FF9900'
     elif layertype == 'InnerProduct':
         color = '#CC33FF'

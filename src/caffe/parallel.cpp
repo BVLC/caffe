@@ -125,10 +125,10 @@ void GPUParams<Dtype>::configure(Solver<Dtype>* solver) const {
   apply_buffers(net, diff_, size_, replace_gpu_diff);
 }
 
-void DevicePair::compute(const vector<DeviceContext*> devices,
+void DevicePair::compute(const vector<device*> devices,
                          vector<DevicePair>* pairs) {
 #ifndef CPU_ONLY
-  vector<DeviceContext*> remaining(devices);
+  vector<device*> remaining(devices);
 
   // Depth for reduction tree
   int remaining_depth = static_cast<int>(ceil(log2(remaining.size())));
@@ -208,13 +208,13 @@ void DevicePair::compute(const vector<DeviceContext*> devices,
   CHECK_EQ(remaining.size(), 1);
 
   pairs->insert(pairs->begin(),
-                DevicePair(Caffe::Get().GetCPUDeviceContext(), remaining[0]));
+                DevicePair(Caffe::Get().GetCPUDevice(), remaining[0]));
 
   CHECK(pairs->size() == devices.size());
   for (int i = 0; i < pairs->size(); ++i) {
-    CHECK((*pairs)[i].parent() != (*pairs)[i].device());
+    CHECK((*pairs)[i].get_parent() != (*pairs)[i].get_device());
     for (int j = i + 1; j < pairs->size(); ++j) {
-      CHECK((*pairs)[i].device() != (*pairs)[j].device());
+      CHECK((*pairs)[i].get_device() != (*pairs)[j].get_device());
     }
   }
 #else
@@ -412,13 +412,14 @@ void P2PSync<Dtype>::on_gradients_ready() {
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::run(const vector<DeviceContext*>& gpus) {
+void P2PSync<Dtype>::run(const vector<device*>& gpus) {
   // Pair devices for map-reduce synchronization
   vector<DevicePair> pairs;
   DevicePair::compute(gpus, &pairs);
   ostringstream s;
   for (int i = 1; i < pairs.size(); ++i) {
-    s << (i == 1 ? "" : ", ") << pairs[i].parent() << ":" << pairs[i].device();
+    s << (i == 1 ? "" : ", ") << pairs[i].get_parent() << ":"
+      << pairs[i].get_device();
   }
   LOG(INFO)<< "GPUs pairs " << s.str();
 
@@ -434,13 +435,13 @@ void P2PSync<Dtype>::run(const vector<DeviceContext*>& gpus) {
           P2PSync<Dtype>* sync = j == 0 ? this : syncs[j].get();
           if (sync) {
             const SolverParameter& p = sync->solver()->param();
-            if (p.device_id() == pairs[i].parent()->list_id()) {
+            if (p.device_id() == pairs[i].get_parent()->list_id()) {
               parent = sync;
             }
           }
         }
         if (parent) {
-          param.set_device_id(pairs[i].device()->list_id());
+          param.set_device_id(pairs[i].get_device()->list_id());
           syncs[i].reset(new P2PSync<Dtype>(solver_, parent, param));
           parent->children_.push_back((P2PSync<Dtype>*) syncs[i].get());
         }
@@ -451,7 +452,7 @@ void P2PSync<Dtype>::run(const vector<DeviceContext*>& gpus) {
   LOG(INFO)<< "Starting Optimization";
 
   for (int i = 1; i < syncs.size(); ++i) {
-    syncs[i]->StartInternalThread(Caffe::GetDefaultDeviceContext());
+    syncs[i]->StartInternalThread(Caffe::GetDefaultDevice());
   }
 
   // Run root solver on current thread
