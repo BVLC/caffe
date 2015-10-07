@@ -138,7 +138,7 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
 TYPED_TEST(EmbedLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   // Skip the test on unsupported OpenCL devices with double
-  if (!Caffe::GetDefaultDeviceContext()->
+  if (!Caffe::GetDefaultDevice()->
         CheckCapability("cl_khr_int64_base_atomics")
         && is_same<Dtype, double>::value) {
     return;
@@ -164,7 +164,7 @@ TYPED_TEST(EmbedLayerTest, TestGradient) {
 TYPED_TEST(EmbedLayerTest, TestGradientWithBias) {
   typedef typename TypeParam::Dtype Dtype;
   // Skip the test on unsupported OpenCL devices with double
-  if (!Caffe::GetDefaultDeviceContext()->
+  if (!Caffe::GetDefaultDevice()->
         CheckCapability("cl_khr_int64_base_atomics")
         && is_same<Dtype, double>::value) {
     return;

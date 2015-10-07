@@ -53,7 +53,7 @@ void EmbedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   const int count = top[0]->count();
-  if (this->device_context()->backend() == BACKEND_CUDA) {
+  if (this->get_device()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
 
     EmbedForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
@@ -81,7 +81,7 @@ void EmbedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           ctx.get_queue());
 
     if (bias_term_) {
-      greentea_gpu_gemm<Dtype>(this->device_context()->id(), CblasNoTrans,
+      greentea_gpu_gemm<Dtype>(this->get_device()->id(), CblasNoTrans,
                                CblasNoTrans, M_, N_, 1, Dtype(1),
                                (cl_mem) (bias_multiplier_.gpu_data()), 0,
                                (cl_mem) (this->blobs_[1]->gpu_data()), 0,
@@ -101,7 +101,7 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     const Dtype* bottom_data = bottom[0]->gpu_data();
     Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
-    if (this->device_context()->backend() == BACKEND_CUDA) {
+    if (this->get_device()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     EmbedBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(top_count), CAFFE_CUDA_NUM_THREADS)(
@@ -127,14 +127,14 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (bias_term_ && this->param_propagate_down_[1]) {
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    if (this->device_context()->backend() == BACKEND_CUDA) {
+    if (this->get_device()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_gemv<Dtype>(CblasTrans, M_, N_, Dtype(1), top_diff,
         bias_multiplier_.gpu_data(), Dtype(1), bias_diff);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
-      greentea_gpu_gemv<Dtype>(this->device_context()->id(), CblasTrans, M_, N_,
+      greentea_gpu_gemv<Dtype>(this->get_device()->id(), CblasTrans, M_, N_,
                                Dtype(1), (cl_mem) top_diff, 0,
                                (cl_mem) (bias_multiplier_.gpu_data()), 0,
                                Dtype(1), (cl_mem) bias_diff, 0);

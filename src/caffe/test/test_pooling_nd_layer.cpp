@@ -64,7 +64,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     pooling_param->set_axis(1);
 
-    PoolingNDLayer<TypeParam> layer(layer_param);
+    PoolingLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int d = blob_bottom_->shape(2);
@@ -109,7 +109,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     pooling_param->set_axis(1);
 
-    PoolingNDLayer<TypeParam> layer(layer_param);
+    PoolingLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int d = blob_bottom_->shape(2);
@@ -166,19 +166,21 @@ TYPED_TEST_CASE(PoolingNDLayerTest, TestDtypes);
 
 TYPED_TEST(PoolingNDLayerTest, TestSetup) {
   LayerParameter layer_param;
-  PoolingParameter* Pooling_param =
+  PoolingParameter* pooling_param =
       layer_param.mutable_pooling_param();
 
-  Pooling_param->add_kernel_size(3);
-  Pooling_param->add_kernel_size(3);
-  Pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
 
-  Pooling_param->add_kstride(2);
-  Pooling_param->add_kstride(2);
-  Pooling_param->add_kstride(2);
+  pooling_param->add_kstride(2);
+  pooling_param->add_kstride(2);
+  pooling_param->add_kstride(2);
+
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
 
 
-  PoolingNDLayer<TypeParam> layer(layer_param);
+  PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(1, this->blob_top_->shape(2));

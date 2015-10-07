@@ -67,7 +67,7 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 #endif
   DLOG(INFO) << "Initializing prefetch";
   this->data_transformer_->InitRand();
-  StartInternalThread(this->device_context());
+  StartInternalThread(this->get_device());
   DLOG(INFO) << "Prefetch initialized.";
 }
 
@@ -77,7 +77,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifdef USE_CUDA
   cudaStream_t stream;
   if (Caffe::mode() == Caffe::GPU) {
-    if (this->device_context()->backend() == BACKEND_CUDA) {
+    if (this->get_device()->backend() == BACKEND_CUDA) {
       CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     }
   }
@@ -91,7 +91,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       if (Caffe::mode() == Caffe::GPU) {
-        if (this->device_context()->backend() == BACKEND_CUDA) {
+        if (this->get_device()->backend() == BACKEND_CUDA) {
           batch->data_.data().get()->async_gpu_push(stream);
           CUDA_CHECK(cudaStreamSynchronize(stream));
         }
@@ -106,7 +106,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
   if (Caffe::mode() == Caffe::GPU) {
-    if (this->device_context()->backend() == BACKEND_CUDA) {
+    if (this->get_device()->backend() == BACKEND_CUDA) {
       CUDA_CHECK(cudaStreamDestroy(stream));
     }
   }

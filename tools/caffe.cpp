@@ -1,3 +1,4 @@
+
 #ifdef WITH_PYTHON_LAYER
 #include "boost/python.hpp"
 namespace bp = boost::python;
@@ -12,7 +13,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe/device_context.hpp"
+#include "caffe/device.hpp"
 #include "caffe/util/signal_handler.h"
 
 using caffe::Blob;
@@ -24,7 +25,7 @@ using caffe::shared_ptr;
 using caffe::string;
 using caffe::Timer;
 using caffe::vector;
-using caffe::DeviceContext;
+using caffe::device;
 using std::ostringstream;
 
 DEFINE_string(gpu, "",
@@ -224,9 +225,9 @@ int train() {
 
   if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
-    std::vector<DeviceContext*> devices;
+    std::vector<device*> devices;
     for (int i = 0; i < gpus.size(); ++i) {
-      devices.push_back(Caffe::Get().GetDeviceContext(i));
+      devices.push_back(Caffe::Get().GetDevice(i));
     }
     sync.run(devices);
   } else {
@@ -365,7 +366,7 @@ int time() {
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-      Caffe::Synchronize(Caffe::GetDefaultDeviceContext()->id());
+      Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
@@ -374,7 +375,7 @@ int time() {
       timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
-      Caffe::Synchronize(Caffe::GetDefaultDeviceContext()->id());
+      Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
       backward_time_per_layer[i] += timer.MicroSeconds();
     }
     backward_time += backward_timer.MicroSeconds();

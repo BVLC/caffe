@@ -2,8 +2,9 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+
+#include "../../include/caffe/device.hpp"
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -30,10 +31,11 @@ bool Blob<Dtype>::Reshape(const vector<int>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
-  shape_data_.reset(new SyncedMemory(shape.size()
-                                * sizeof(int), device_context_));
+  if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int)) {
+    shape_data_.reset(
+        new SyncedMemory(shape.size() * sizeof(int), device_context_));
+  }
   int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
-
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     CHECK_LE(shape[i], INT_MAX / count_)<< "blob size exceeds INT_MAX";
@@ -67,14 +69,14 @@ bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
 
 template<typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
-                  const int width, DeviceContext *device_context)
+                  const int width, device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_context_(device_context) {
   Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>
-Blob<Dtype>::Blob(const vector<int>& shape, DeviceContext *device_context)
+Blob<Dtype>::Blob(const vector<int>& shape, device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_context_(device_context) {
   Reshape(shape);
@@ -86,7 +88,7 @@ const int* Blob<Dtype>::gpu_shape() const {
   return (const int*)shape_data_->gpu_data();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
   return (const Dtype*) data_->cpu_data();
@@ -207,7 +209,7 @@ template<> unsigned int Blob<unsigned int>::asum_data() const {
 }
 
 template<typename Dtype>
-DeviceContext *Blob<Dtype>::device_context() {
+device *Blob<Dtype>::get_device() {
   return device_context_;
 }
 

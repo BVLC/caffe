@@ -65,24 +65,26 @@ class GPUParams : public Params<Dtype> {
 
 class DevicePair {
  public:
-  DevicePair(DeviceContext* parent, DeviceContext* device)
+  DevicePair(device* parent, device* dev)
       : parent_(parent),
-        device_(device) {
+        device_(dev) {
   }
-  inline DeviceContext* parent() {
+
+  inline device* get_parent() {
     return parent_;
   }
-  inline DeviceContext* device() {
+
+  inline device* get_device() {
     return device_;
   }
 
   // Group GPUs in pairs, by proximity depending on machine's topology
-  static void compute(const vector<DeviceContext*> devices,
+  static void compute(const vector<device*> devices,
                       vector<DevicePair>* pairs);
 
  protected:
-  DeviceContext* parent_;
-  DeviceContext* device_;
+  device* parent_;
+  device* device_;
 };
 
 // Synchronous data parallelism using map-reduce between local GPUs.
@@ -98,7 +100,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
     return solver_;
   }
 
-  void run(const vector<DeviceContext*>& gpus);
+  void run(const vector<device*>& gpus);
 
  protected:
   void on_start();

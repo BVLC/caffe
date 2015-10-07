@@ -9,8 +9,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "../device.hpp"
 #include "caffe/common.hpp"
-#include "caffe/device_context.hpp"
 
 using std::cout;
 using std::endl;

@@ -77,7 +77,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+        && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
       CUDA_CHECK(cudaGetDevice(&device_id));
     }
 #endif  // USE_CUDA
@@ -198,13 +198,13 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       this->solver_->Solve();
     } else {
       LOG(INFO) << "Multi-GPU test on " << devices << " devices";
-      vector<DeviceContext*> gpus;
+      vector<device*> gpus;
       // put current device at the beginning
       int device_id = solver_->param().device_id();
-      gpus.push_back(Caffe::Get().GetDeviceContext(device_id));
+      gpus.push_back(Caffe::Get().GetDevice(device_id));
       for (int i = 0; gpus.size() < devices; ++i) {
         if (i != device_id) {
-          gpus.push_back(Caffe::Get().GetDeviceContext(i));
+          gpus.push_back(Caffe::Get().GetDevice(i));
         }
       }
       Caffe::set_solver_count(gpus.size());
@@ -478,7 +478,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
     if (Caffe::mode() == Caffe::GPU &&
-        Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+        Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
       CUDA_CHECK(cudaGetDeviceCount(&available_devices));
     }
 #endif  // USE_CUDA
