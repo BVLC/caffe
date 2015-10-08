@@ -166,6 +166,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
         scale_data);
   } else {
+    // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_fast_sum<Dtype><<<bottom[0]->shape(0), speedup_>>>(
         outer_num_, channels, speedup_, top_data, scale_buf_data, scale_data);
   }
