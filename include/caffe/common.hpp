@@ -18,11 +18,6 @@
 
 #include "caffe/util/device_alternate.hpp"
 
-#ifdef USE_CNMEM
-// cuMEM integration
-#include <cnmem.h>
-#endif
-
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
@@ -69,6 +64,12 @@ private:\
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
+
+#include "CuMem.hpp"
+
+// bfomitchev: temporary, for better merge
+#define MemoryHandler CuMem
+#define MemoryHandlerActivator CuMemActivator
 
 // See PR #1236
 namespace cv { class Mat; }
@@ -184,67 +185,7 @@ class Caffe {
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
 
-class MemoryHandler {
- public:
-  static MemoryHandler& Get();
-#ifndef CPU_ONLY
-  static void mallocGPU(void **ptr, size_t size,
-                        cudaStream_t stream = cudaStreamDefault);
-  static void freeGPU(void *ptr, cudaStream_t = cudaStreamDefault);
-  static void registerStream(cudaStream_t stream);
-#endif
-  static void setGPUs(const std::vector<int>& gpus) { Get().gpus_ = gpus; }
-  static void usePool() { Get().using_pool_ = true; }
-  static bool usingPool() {
-#ifdef USE_CNMEM
-    return Get().using_pool_;
-#else
-    return false;
-#endif
-  }
-  static void getInfo(size_t *free_mem, size_t *used_mem);
-  static void destroy();
-  ~MemoryHandler() { }
-
- private:
-  MemoryHandler() : using_pool_(false), initialized_(false) {}
-  static void Init();
-  // static void Destroy();
-#ifndef CPU_ONLY
-  void allocate_memory(void **ptr, size_t size, cudaStream_t stream);
-  void free_memory(void *ptr, cudaStream_t stream);
-#endif
-  DISABLE_COPY_AND_ASSIGN(MemoryHandler);
-
-  bool using_pool_;
-  bool initialized_;
-  std::vector<int> gpus_;
-};
-
-class MemoryHandlerActivator {
- public:
-  explicit MemoryHandlerActivator(const std::vector<int>& gpus)
-            : using_pool_(false) {
-    if (gpus.size() > 0) {
-      using_pool_ = true;
-      MemoryHandler::usePool();
-      MemoryHandler::setGPUs(gpus);
-#ifndef CPU_ONLY
-      void* temp;
-      MemoryHandler::mallocGPU(&temp, 4);
-      MemoryHandler::freeGPU(temp);
-#endif
-    }
-  }
-  ~MemoryHandlerActivator() {
-    if (using_pool_) {
-      MemoryHandler::destroy();
-    }
-  }
- private:
-  int using_pool_;
-};
-
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_HPP_
+

@@ -189,9 +189,8 @@ int train() {
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_solver_count(gpus.size());
   }
-#ifdef USE_CNMEM
+
   MemoryHandlerActivator handler(gpus);
-#endif
 
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
