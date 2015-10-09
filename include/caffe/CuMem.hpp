@@ -1,16 +1,16 @@
-#ifndef CAFFE_MEMORYHANDLER_HPP_
-#define CAFFE_MEMORYHANDLER_HPP_
+#ifndef CAFFE_CUMEM_HPP_
+#define CAFFE_CUMEM_HPP_
 
 #include "common.hpp"
 
 #ifdef USE_CNMEM
-// cuMEM integration
+// CNMEM integration
 #include <cnmem.h>
 #endif
 
 namespace caffe {
 
-class MemoryHandler {
+class CuMem {
  public:
 #ifndef CPU_ONLY
   static void mallocGPU(void **ptr, size_t size,
@@ -29,27 +29,27 @@ class MemoryHandler {
   static void init(const std::vector<int>& gpus_, bool use_pool=true);
   static void destroy();
 
-  friend class MemoryHandlerActivator;
+  friend class CuMemActivator;
   static bool using_pool_;
   static bool initialized_;
 
 
 };
 
-class MemoryHandlerActivator {
+class CuMemActivator {
  public:
-  explicit MemoryHandlerActivator(const std::vector<int>& gpus)
+  explicit CuMemActivator(const std::vector<int>& gpus)
             : using_pool_(false) {
     if (gpus.size() > 0) {
 #ifdef USE_CNMEM
       using_pool_ = true;
 #endif
-      MemoryHandler::init(gpus, using_pool_);
+      CuMem::init(gpus, using_pool_);
     }
   }
-  ~MemoryHandlerActivator() {
+  ~CuMemActivator() {
     if (using_pool_) {
-      MemoryHandler::destroy();
+      CuMem::destroy();
     }
   }
  private:

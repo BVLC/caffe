@@ -1,12 +1,12 @@
 #include "caffe/common.hpp"
-#include "caffe/MemoryHandler.hpp"
+#include "caffe/CuMem.hpp"
 
 #include <boost/thread.hpp>
 
 namespace caffe {
 
-bool MemoryHandler::using_pool_ = false;
-bool MemoryHandler::initialized_ = false;
+bool CuMem::using_pool_ = false;
+bool CuMem::initialized_ = false;
 
 using namespace boost;
 
@@ -16,7 +16,7 @@ using namespace boost;
 
 #ifndef CPU_ONLY  // CPU-only Caffe.
 
-void MemoryHandler::mallocGPU(void **ptr, size_t size, cudaStream_t stream) {
+void CuMem::mallocGPU(void **ptr, size_t size, cudaStream_t stream) {
   CHECK(initialized_);
   if (using_pool_) {
     CNMEM_CHECK(cnmemMalloc(ptr, size, stream));
@@ -26,7 +26,7 @@ void MemoryHandler::mallocGPU(void **ptr, size_t size, cudaStream_t stream) {
 }
 
 
-void MemoryHandler::freeGPU(void *ptr, cudaStream_t stream) {
+void CuMem::freeGPU(void *ptr, cudaStream_t stream) {
   CHECK(initialized_);
   if (using_pool_) {
     CNMEM_CHECK(cnmemFree(ptr, stream));
@@ -35,21 +35,21 @@ void MemoryHandler::freeGPU(void *ptr, cudaStream_t stream) {
   }
 }
 
-void MemoryHandler::registerStream(cudaStream_t stream) {
+void CuMem::registerStream(cudaStream_t stream) {
   CHECK(initialized_);
   if (using_pool_) {
     CNMEM_CHECK(cnmemRegisterStream(stream));
   }
 }
 
-void MemoryHandler::destroy() {
+void CuMem::destroy() {
   CHECK(initialized_);
   CNMEM_CHECK(cnmemFinalize());
   initialized_ = false;
   using_pool_ = false;
 }
 
-void MemoryHandler::init(const std::vector<int>& gpus, bool use_pool) {
+void CuMem::init(const std::vector<int>& gpus, bool use_pool) {
   CHECK(!initialized_);
 #ifdef USE_CNMEM
   if (false /* use_pool */) {
@@ -80,11 +80,11 @@ void MemoryHandler::init(const std::vector<int>& gpus, bool use_pool) {
   }
 #endif
   initialized_ = true;
-  std::cout << "MemoryHandler initialized" << 
+  std::cout << "CuMem initialized" << 
     (using_pool_ ? " with CNMEM pool.\n" : " with CUDA allocator.\n");
 }
 
-void MemoryHandler::getInfo(size_t *free_mem, size_t *total_mem) {
+void CuMem::getInfo(size_t *free_mem, size_t *total_mem) {
   if (using_pool_) {
     CNMEM_CHECK(cnmemMemGetInfo(free_mem, total_mem, cudaStreamDefault));
   } else {
