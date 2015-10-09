@@ -74,7 +74,8 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     CHECK_EQ(status, CNMEM_STATUS_SUCCESS) << " " \
       << cnmemGetErrorString(status); \
   } while (0)
-
+#else
+#define CNMEM_CHECK(condition)
 #endif
 
 // CUDA: grid stride looping

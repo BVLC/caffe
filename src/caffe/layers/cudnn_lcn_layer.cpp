@@ -42,22 +42,21 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   size_t totalSizeInBytes = sizeof(Dtype)*bottom[0]->num()* \
                             this->channels_*this->height_*this->width_;
 
-#ifdef USE_CNMEM
-  this->tempDataSize = totalSizeInBytes;
-#else
-  if (totalSizeInBytes > tempDataSize) {
-    tempDataSize = totalSizeInBytes;
-
-    MemoryHandler::freeGPU(tempData1);
-    MemoryHandler::freeGPU(tempData2);
-    tempData1 = NULL;
-    tempData2 = NULL;
-
-    // allocate new buffers
-    MemoryHandler::mallocGPU(&tempData1, totalSizeInBytes);
-    MemoryHandler::mallocGPU(&tempData2, totalSizeInBytes);
-  }
-#endif
+  if (MemoryHandler::usingPool())
+    this->tempDataSize = totalSizeInBytes;
+  else
+    if (totalSizeInBytes > tempDataSize) {
+      tempDataSize = totalSizeInBytes;
+      
+      MemoryHandler::freeGPU(tempData1);
+      MemoryHandler::freeGPU(tempData2);
+      tempData1 = NULL;
+      tempData2 = NULL;
+      
+      // allocate new buffers
+      MemoryHandler::mallocGPU(&tempData1, totalSizeInBytes);
+      MemoryHandler::mallocGPU(&tempData2, totalSizeInBytes);
+    }
 }
 
 template <typename Dtype>

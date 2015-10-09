@@ -171,7 +171,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
           bwd_filter_algo_[i], &workspace_bwd_filter_sizes_[i]));
 
     // choose backward algo for data
-      CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm(
+    CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm(
             Caffe::cudnn_handle(),
           filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
           CUDNN_CONVOLUTION_BWD_DATA_SPECIFY_WORKSPACE_LIMIT,
@@ -183,46 +183,46 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
           filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
           bwd_data_algo_[i], &workspace_bwd_data_sizes_[i]) );
   }
-
-#ifndef USE_CNMEM
-  // reduce over all workspace sizes to get a maximum to allocate / reallocate
-  size_t total_workspace_fwd = 0;
-  size_t total_workspace_bwd_data = 0;
-  size_t total_workspace_bwd_filter = 0;
-
-  for (size_t i = 0; i < bottom.size(); i++) {
-    total_workspace_fwd        = std::max(total_workspace_fwd,
-                                     workspace_fwd_sizes_[i]);
-    total_workspace_bwd_data   = std::max(total_workspace_bwd_data,
-                                     workspace_bwd_data_sizes_[i]);
-    total_workspace_bwd_filter = std::max(total_workspace_bwd_filter,
-                                     workspace_bwd_filter_sizes_[i]);
-  }
-  // get max over all operations
-  size_t max_workspace = std::max(total_workspace_fwd,
-                             total_workspace_bwd_data);
-  max_workspace = std::max(max_workspace, total_workspace_bwd_filter);
-  // ensure all groups have enough workspace
-  size_t total_max_workspace = max_workspace *
-                               (this->group_ * CUDNN_STREAMS_PER_GROUP);
-
-  // this is the total amount of storage needed over all groups + streams
-  if (total_max_workspace > workspaceSizeInBytes) {
-    LOG(INFO) << "Reallocating workspace storage: " << total_max_workspace;
-    workspaceSizeInBytes = total_max_workspace;
-
-    // free the existing workspace and allocate a new (larger) one
-    MemoryHandler::freeGPU(this->workspaceData);
-    this->workspaceData = NULL;
-
-    MemoryHandler::mallocGPU(&(this->workspaceData), workspaceSizeInBytes);
-
-    // if we succeed in the allocation, set pointer aliases for workspaces
-    for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
-      workspace[g] = reinterpret_cast<char *>(workspaceData) + g*max_workspace;
+  
+  if (!MemoryHandler::usingPool()) {
+    // reduce over all workspace sizes to get a maximum to allocate / reallocate
+    size_t total_workspace_fwd = 0;
+    size_t total_workspace_bwd_data = 0;
+    size_t total_workspace_bwd_filter = 0;
+    
+    for (size_t i = 0; i < bottom.size(); i++) {
+      total_workspace_fwd        = std::max(total_workspace_fwd,
+					    workspace_fwd_sizes_[i]);
+      total_workspace_bwd_data   = std::max(total_workspace_bwd_data,
+					    workspace_bwd_data_sizes_[i]);
+      total_workspace_bwd_filter = std::max(total_workspace_bwd_filter,
+					    workspace_bwd_filter_sizes_[i]);
+    }
+    // get max over all operations
+    size_t max_workspace = std::max(total_workspace_fwd,
+				    total_workspace_bwd_data);
+    max_workspace = std::max(max_workspace, total_workspace_bwd_filter);
+    // ensure all groups have enough workspace
+    size_t total_max_workspace = max_workspace *
+      (this->group_ * CUDNN_STREAMS_PER_GROUP);
+    
+    // this is the total amount of storage needed over all groups + streams
+    if (total_max_workspace > workspaceSizeInBytes) {
+      LOG(INFO) << "Reallocating workspace storage: " << total_max_workspace;
+      workspaceSizeInBytes = total_max_workspace;
+      
+      // free the existing workspace and allocate a new (larger) one
+      MemoryHandler::freeGPU(this->workspaceData);
+      this->workspaceData = NULL;
+      
+      MemoryHandler::mallocGPU(&(this->workspaceData), workspaceSizeInBytes);
+      
+      // if we succeed in the allocation, set pointer aliases for workspaces
+      for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
+	workspace[g] = reinterpret_cast<char *>(workspaceData) + g*max_workspace;
+      }
     }
   }
-#endif
 
   // Tensor descriptor for bias.
   if (this->bias_term_) {
