@@ -52,7 +52,7 @@ void CuMem::destroy() {
 void CuMem::init(const std::vector<int>& gpus, bool use_pool) {
   CHECK(!initialized_);
 #ifdef USE_CNMEM
-  if (false /* use_pool */) {
+  if (use_pool) {
      using_pool_  = true;
     cnmemDevice_t *devs = new cnmemDevice_t[gpus.size()];
 
