@@ -17,8 +17,11 @@ __global__ void kernel_fast_max(const int num, const int channels,
     int n = index / p;
     int s = index % p;
     Dtype maxval = -FLT_MAX;
-    for (int c = s * (channels / p); c < (s + 1) * (channels / p); ++c) {
-      maxval = max(data[(n * channels + c)], maxval);
+    int stride = 1 + (channels / p);
+    for (int c = s * stride; c < (s + 1) * stride; ++c) {
+      if (c < channels) {
+        maxval = max(data[(n * channels + c)], maxval);
+      }
     }
     buf[index] = maxval;
     __syncthreads();
@@ -39,8 +42,11 @@ __global__ void kernel_fast_sum(const int num, const int channels,
     int n = index / p;
     int s = index % p;
     Dtype sumval = Dtype(0.);
-    for (int c = s * (channels / p); c < (s + 1) * (channels / p); ++c) {
-      sumval = data[(n * channels + c)] + sumval;
+    int stride = 1 + (channels / p);
+    for (int c = s * stride; c < (s + 1) * stride; ++c) {
+      if (c < channels) {
+        sumval = data[(n * channels + c)] + sumval;
+      }
     }
     buf[index] = sumval;
     __syncthreads();

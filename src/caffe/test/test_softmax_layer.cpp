@@ -19,7 +19,7 @@ class SoftmaxLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   SoftmaxLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 10, 1, 1)),
+      : blob_bottom_(new Blob<Dtype>(2, 11, 1, 1)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
