@@ -21,22 +21,18 @@ def blobproto_to_array(blob, return_diff=False):
     unless return_diff is True, in which case we will return the diff.
     """
     if return_diff:
-        return np.array(blob.diff).reshape(
-            blob.num, blob.channels, blob.height, blob.width)
+        return np.array(blob.diff).reshape(*blob.shape.dim)
     else:
-        return np.array(blob.data).reshape(
-            blob.num, blob.channels, blob.height, blob.width)
+        return np.array(blob.data).reshape(*blob.shape.dim)
 
 
 def array_to_blobproto(arr, diff=None):
-    """Converts a 4-dimensional array to blob proto. If diff is given, also
+    """Converts a N-dimensional array to blob proto. If diff is given, also
     convert the diff. You need to make sure that arr and diff have the same
     shape, and this function does not do sanity check.
     """
-    if arr.ndim != 4:
-        raise ValueError('Incorrect array shape.')
     blob = caffe_pb2.BlobProto()
-    blob.num, blob.channels, blob.height, blob.width = arr.shape
+    blob.shape.dim.extend(arr.shape)
     blob.data.extend(arr.astype(float).flat)
     if diff is not None:
         blob.diff.extend(diff.astype(float).flat)
