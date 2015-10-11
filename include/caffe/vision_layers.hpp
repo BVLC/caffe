@@ -408,6 +408,7 @@ class LstmUnitLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > input_values_data_buffer_;
   shared_ptr<Blob<Dtype> > gates_diff_buffer_;
   shared_ptr<Blob<Dtype> > next_state_tot_diff_buffer_;
+  shared_ptr<Blob<Dtype> > tanh_mem_buffer_;
   shared_ptr<Blob<Dtype> > dldg_buffer_;
 };
 

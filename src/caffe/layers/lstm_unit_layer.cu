@@ -30,11 +30,13 @@ __device__ Dtype cuda_tanh_diff(Dtype x) {
 template <typename Dtype>
 __global__ void ForwardCombineGates(
   int n,
+  bool tanh_hidden,
   const Dtype* prev_state_data,
   Dtype* input_gates,
   Dtype* forget_gates,
   Dtype* output_gates,
   Dtype* input_values,
+  Dtype* tanh_next_memory_state,
   Dtype* next_memory_state,
   Dtype* next_hidden_state) {
   CUDA_KERNEL_LOOP(idx, n) {
@@ -45,26 +47,39 @@ __global__ void ForwardCombineGates(
 
     next_memory_state[idx] = prev_state_data[idx] * forget_gates[idx] +
         input_gates[idx] * input_values[idx];
-    next_hidden_state[idx] = next_memory_state[idx] * output_gates[idx];
+    if (tanh_hidden) {
+      tanh_next_memory_state[idx] = cuda_tanh(next_memory_state[idx]);
+    } else {
+      tanh_next_memory_state[idx] = next_memory_state[idx];
+    }
+    next_hidden_state[idx] = tanh_next_memory_state[idx] * output_gates[idx];
   }
 }
 
 template <typename Dtype>
 __global__ void BackwardGates(
   int n,
+  bool tanh_hidden,
   const Dtype* input_gates,
   const Dtype* forget_gates,
   const Dtype* output_gates,
   const Dtype* input_values,
+  const Dtype* tanh_next_memory_state,
   Dtype* input_gates_diff,
   Dtype* forget_gates_diff,
   Dtype* output_gates_diff,
-  Dtype* input_values_diff) {
+  Dtype* input_values_diff,
+  Dtype* tanh_next_memory_diff) {
   CUDA_KERNEL_LOOP(idx, n) {
     input_gates_diff[idx] = cuda_sigmoid_diff(input_gates[idx]);
     forget_gates_diff[idx] = cuda_sigmoid_diff(forget_gates[idx]);
     output_gates_diff[idx] = cuda_sigmoid_diff(output_gates[idx]);
     input_values_diff[idx] = cuda_tanh_diff(input_values[idx]);
+    if (tanh_hidden) {
+      tanh_next_memory_diff[idx] = cuda_tanh_diff(tanh_next_memory_state[idx]);
+    } else {
+      tanh_next_memory_diff[idx] = Dtype(1.);
+    }
   }
 }
 
@@ -86,6 +101,7 @@ void LstmUnitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* forget_gates = forget_gates_data_buffer_->mutable_gpu_data();
   Dtype* output_gates = output_gates_data_buffer_->mutable_gpu_data();
   Dtype* input_values = input_values_data_buffer_->mutable_gpu_data();
+  Dtype* tanh_next_memory_state = tanh_mem_buffer_->mutable_gpu_data();
 
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, N_, K_,
     (Dtype)1., input_data, input_weight,
@@ -110,11 +126,13 @@ void LstmUnitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   ForwardCombineGates<Dtype><<<CAFFE_GET_BLOCKS(count),
         CAFFE_CUDA_NUM_THREADS>>>(
       count,
+      this->layer_param_.lstm_unit_param().tanh_hidden(),
       prev_state_data,
       input_gates,
       forget_gates,
       output_gates,
       input_values,
+      tanh_next_memory_state,
       next_memory_state,
       next_hidden_state);
 
@@ -136,6 +154,7 @@ void LstmUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* forget_gates = forget_gates_data_buffer_->gpu_data();
   const Dtype* output_gates = output_gates_data_buffer_->gpu_data();
   const Dtype* input_values = input_values_data_buffer_->gpu_data();
+  const Dtype* tanh_next_memory_state = tanh_mem_buffer_->gpu_data();
 
   Dtype* gates_diff = gates_diff_buffer_->mutable_gpu_data();
 
@@ -143,19 +162,23 @@ void LstmUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* forget_gates_diff = gates_diff + channels_ * num_ * 1;
   Dtype* output_gates_diff = gates_diff + channels_ * num_ * 2;
   Dtype* input_values_diff = gates_diff + channels_ * num_ * 3;
+  Dtype* tanh_next_memory_diff = tanh_mem_buffer_->mutable_gpu_diff();
 
   const int count = num_ * channels_;
   // NOLINT_NEXT_LINE(whitespace/operators)
   BackwardGates<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
     count,
+    this->layer_param_.lstm_unit_param().tanh_hidden(),
     input_gates,
     forget_gates,
     output_gates,
     input_values,
+    tanh_next_memory_state,
     input_gates_diff,
     forget_gates_diff,
     output_gates_diff,
-    input_values_diff);
+    input_values_diff,
+    tanh_next_memory_diff);
 
   CUDA_POST_KERNEL_CHECK;
 
@@ -168,12 +191,13 @@ void LstmUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* prev_state_diff = bottom[1]->mutable_gpu_diff();
 
   const Dtype* next_hidden_state_diff = top[0]->gpu_diff();
-  const Dtype* next_memory_state = top[1]->gpu_data();
   const Dtype* next_memory_state_diff = top[1]->gpu_diff();
 
   Dtype* next_state_tot_diff = next_state_tot_diff_buffer_->mutable_gpu_data();
   caffe_gpu_mul(num_ * channels_, output_gates,
     next_hidden_state_diff, next_state_tot_diff);
+  caffe_gpu_mul(num_ * channels_, tanh_next_memory_diff,
+    next_state_tot_diff, next_state_tot_diff);
   caffe_gpu_add(num_ * channels_, next_memory_state_diff,
     next_state_tot_diff, next_state_tot_diff);
 
@@ -229,7 +253,7 @@ void LstmUnitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       (Dtype)1., dldg_data, forget_gate_weight,
       (Dtype)1., input_diff);
   }
-  caffe_gpu_mul(num_ * channels_, output_gates_diff, next_memory_state,
+  caffe_gpu_mul(num_ * channels_, output_gates_diff, tanh_next_memory_state,
     dldg_data);
   caffe_gpu_mul(num_ * channels_, next_hidden_state_diff, dldg_data, dldg_data);
   caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
