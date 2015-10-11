@@ -54,7 +54,7 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
     throw std::runtime_error(name + " must be C contiguous");
   }
-  // This must not hold anymore
+  // This does not have to hold anymore
   /*
   if (PyArray_NDIM(arr) != 4) {
     throw std::runtime_error(name + " must be 4-d");
@@ -66,8 +66,9 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   for (int i = 1; i < PyArray_NDIM(arr); ++i) {
     if (PyArray_DIMS(arr)[i] != shape[i]) {
       throw std::runtime_error(
-          "Shape dimension " + i + " has wrong size (" + PyArray_DIMS(arr)[i]
-              + " vs. " + shape[i] + ")");
+          "Shape dimension " + std::to_string(i) + " has wrong size ("
+              + std::to_string(static_cast<int>(PyArray_DIMS(arr)[i])) + " vs. "
+              + std::to_string(shape[i]) + ")");
     }
   }
 }
