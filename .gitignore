@@ -1,5 +1,8 @@
 ## General
 
+# Fuse files
+*.fuse*
+
 # Compiled Object files
 *.slo
 *.lo

@@ -284,16 +284,21 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   void Reset(Dtype* data, Dtype* label, int n);
   void set_batch_size(int new_size);
 
-  int batch_size() { return batch_size_; }
-  int channels() { return channels_; }
-  int height() { return height_; }
-  int width() { return width_; }
+  vector<int> shape() { return shape_; }
+  vector<int> label_shape() { return label_shape_; }
+  int batch_size() { return shape_[0]; }
+  int channels() { return shape_[1]; }
+  int height() { return shape_[2]; }
+  int width() { return shape_[3]; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int batch_size_, channels_, height_, width_, size_;
+  vector<int> shape_;
+  vector<int> label_shape_;
+  int size_;
+
   Dtype* data_;
   Dtype* labels_;
   int n_;

@@ -7,7 +7,6 @@ namespace caffe {
 template<typename Type>
 ocl_dev_ptr<Type>::ocl_dev_ptr(cl_mem ocl_mem)
     : ocl_mem_(ocl_mem) {
-
 }
 
 template<typename Type>
