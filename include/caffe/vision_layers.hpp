@@ -323,7 +323,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
   inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
-                                       Dtype* col_buff, const int col_buff_off) {
+                                       Dtype* col_buff,
+                                       const int col_buff_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
