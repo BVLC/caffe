@@ -21,10 +21,10 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->blobs_.resize(1);
     if (channel_shared_) {
       this->blobs_[0].reset(new Blob<Dtype>(vector<int>(0),
-                                            this->device_context_));
+                                            this->device_));
     } else {
       this->blobs_[0].reset(new Blob<Dtype>(vector<int>(1, channels),
-                                            this->device_context_));
+                                            this->device_));
     }
     shared_ptr<Filler<Dtype> > filler;
     if (prelu_param.has_filler()) {

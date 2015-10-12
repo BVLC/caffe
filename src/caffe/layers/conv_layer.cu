@@ -22,10 +22,10 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     // Multi queue execution, all previous work needs to be done first
-    this->device_context_->FinishQueues();
+    this->device_->FinishQueues();
     for (int n = 0; n < this->num_; ++n) {
       // Multi queue execution, go through work queues
-      this->device_context_->SwitchQueue(n);
+      this->device_->SwitchQueue(n);
       this->forward_gpu_gemm(bottom_data, n * this->bottom_dim_, weight,
           top_data,  n * this->top_dim_);
       if (this->bias_term_) {
@@ -34,7 +34,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
     // Multi queue execution, finish all queues
-    this->device_context_->FinishQueues();
+    this->device_->FinishQueues();
   }
 }
 
@@ -65,15 +65,15 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       // gradient w.r.t. bottom data, if necessary.
       if (propagate_down[i]) {
         // Multi queue execution, all previous work needs to be done first
-        this->device_context_->FinishQueues();
+        this->device_->FinishQueues();
         for (int n = 0; n < this->num_; ++n) {
           // Multi queue execution, go through work queues
-          this->device_context_->SwitchQueue(n);
+          this->device_->SwitchQueue(n);
           this->backward_gpu_gemm(top_diff, n * this->top_dim_, weight,
                                   bottom_diff, n * this->bottom_dim_);
         }
         // Multi queue execution, finish all queues
-        this->device_context_->FinishQueues();
+        this->device_->FinishQueues();
       }
     }
   }

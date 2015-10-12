@@ -28,7 +28,7 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // New ND parameters
   if (mem_param.dim_size() > 0) {
     shape_.clear();
-    for (int i = 1; i < mem_param.dim_size(); ++i) {
+    for (int i = 0; i < mem_param.dim_size(); ++i) {
       shape_.push_back(mem_param.dim(i));
     }
   }

@@ -90,14 +90,14 @@ device *Caffe::GetDefaultDevice() {
 }
 
 device *Caffe::GetCPUDevice() {
-  return Get().cpu_device_context_.get();
+  return Get().cpu_device_.get();
 }
 
 // Copy constructor for thread-local copy
 Caffe::Caffe(const Caffe &obj) {
   mode_ = obj.mode_;
   default_device_ = obj.default_device_;
-  cpu_device_context_ = obj.cpu_device_context_;
+  cpu_device_ = obj.cpu_device_;
   root_solver_ = obj.root_solver_;
   solver_count_ = obj.solver_count_;
 
@@ -197,8 +197,8 @@ Caffe::Caffe()
 #endif  // USE_CUDA
       random_generator_(),
       mode_(Caffe::CPU),
-      cpu_device_context_(new device(-1, -1, Backend::BACKEND_CPU)),
-      default_device_(cpu_device_context_.get()),
+      cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
+      default_device_(cpu_device_.get()),
       solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).

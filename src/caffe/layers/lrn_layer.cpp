@@ -116,7 +116,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
     scale_data[i] = k_;
   }
   Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_,
-                            this->device_context_);
+                            this->device_);
   Dtype* padded_square_data = padded_square.mutable_cpu_data();
   caffe_set(padded_square.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
@@ -189,8 +189,8 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   const Dtype* scale_data = scale_.cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   Blob<Dtype> padded_ratio(1, channels_ + size_ - 1, height_, width_,
-                           this->device_context_);
-  Blob<Dtype> accum_ratio(1, 1, height_, width_, this->device_context_);
+                           this->device_);
+  Blob<Dtype> accum_ratio(1, 1, height_, width_, this->device_);
   Dtype* padded_ratio_data = padded_ratio.mutable_cpu_data();
   Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
   // We hack a little bit by using the diff() to store an additional result

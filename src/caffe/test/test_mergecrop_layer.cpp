@@ -109,7 +109,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
                 && w < a_w) {
               EXPECT_EQ(
                   -(w + h * 10 + c * 100 + n * 1000 + 10000),
-                  blob_top_->mutable_cpu_data()[offset + (w - (b_h - a_h) / 2)
+                  blob_top_->cpu_data()[offset + (w - (b_h - a_h) / 2)
                       + (h - (b_h - a_h) / 2) * a_w + c * a_h * a_w]);
             }
           }
