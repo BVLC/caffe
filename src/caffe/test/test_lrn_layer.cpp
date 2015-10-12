@@ -342,7 +342,6 @@ TYPED_TEST_CASE(CuDNNLRNLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
   // typedef typename TypeParam::Dtype Dtype;
-  Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   CuDNNLRNLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -357,7 +356,6 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsLargeRegionCuDNN) {
-  Caffe::set_mode(Caffe::GPU);
   typedef TypeParam Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_local_size(15);
@@ -391,7 +389,6 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardWithinChannel) {
-  Caffe::set_mode(Caffe::GPU);
   typedef TypeParam Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_norm_region(
@@ -410,7 +407,6 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardWithinChannel) {
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestGradientWithinChannel) {
-  Caffe::set_mode(Caffe::GPU);
   typedef TypeParam Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_norm_region(
