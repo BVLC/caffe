@@ -305,13 +305,25 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   cudnnHandle_t* handle_;
   cudaStream_t*  stream_;
 
+  // algorithms for forward and backwards convolutions
+  cudnnConvolutionFwdAlgo_t *fwd_algo_;
+  cudnnConvolutionBwdFilterAlgo_t *bwd_filter_algo_;
+  cudnnConvolutionBwdDataAlgo_t *bwd_data_algo_;
+
+  int bottom_offset_, top_offset_, weight_offset_, bias_offset_;
+
+  size_t *workspace_fwd_sizes_;
+  size_t *workspace_bwd_data_sizes_;
+  size_t *workspace_bwd_filter_sizes_;
+  size_t workspaceSizeInBytes;  // size of underlying storage
+  void *workspaceData;  // underlying storage
+  void **workspace;  // aliases into workspaceData
+
   vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
   cudnnTensorDescriptor_t    bias_desc_;
   cudnnFilterDescriptor_t      filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
-  int bottom_offset_, top_offset_, bias_offset_;
-  size_t workspaceSizeInBytes;
-  void *workspace;
+
 };
 #endif
 
@@ -463,7 +475,6 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool handles_setup_;
-  cudnnHandle_t             handle_;
   cudnnLRNDescriptor_t norm_desc_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 
@@ -490,7 +501,6 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool handles_setup_;
-  cudnnHandle_t             handle_;
   cudnnLRNDescriptor_t norm_desc_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 
@@ -575,7 +585,6 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool handles_setup_;
-  cudnnHandle_t             handle_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
   cudnnPoolingDescriptor_t  pooling_desc_;
   cudnnPoolingMode_t        mode_;

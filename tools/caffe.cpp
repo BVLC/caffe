@@ -24,6 +24,7 @@ using caffe::string;
 using caffe::Timer;
 using caffe::vector;
 using std::ostringstream;
+using caffe::MemoryHandlerActivator;
 
 DEFINE_string(gpu, "",
     "Optional; run in GPU mode on given device IDs separated by ','."
@@ -189,6 +190,8 @@ int train() {
     Caffe::set_solver_count(gpus.size());
   }
 
+  MemoryHandlerActivator handler(gpus);
+
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
@@ -213,6 +216,8 @@ int train() {
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+  // solver.reset();
   return 0;
 }
 RegisterBrewFunction(train);

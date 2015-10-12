@@ -14,7 +14,6 @@ void CuDNNLCNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   LRNLayer<Dtype>::LayerSetUp(bottom, top);
 
-  CUDNN_CHECK(cudnnCreate(&handle_));
   CUDNN_CHECK(cudnnCreateLRNDescriptor(&norm_desc_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
@@ -43,16 +42,21 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   size_t totalSizeInBytes = sizeof(Dtype)*bottom[0]->num()* \
                             this->channels_*this->height_*this->width_;
 
-  if (totalSizeInBytes > tempDataSize) {
-    tempDataSize = totalSizeInBytes;
-
-    cudaFree(tempData1);
-    cudaFree(tempData2);
-
-    // allocate new buffers
-    CUDA_CHECK(cudaMalloc(&tempData1, totalSizeInBytes));
-    CUDA_CHECK(cudaMalloc(&tempData2, totalSizeInBytes));
-  }
+  if (MemoryHandler::usingPool())
+    this->tempDataSize = totalSizeInBytes;
+  else
+    if (totalSizeInBytes > tempDataSize) {
+      tempDataSize = totalSizeInBytes;
+      
+      MemoryHandler::freeGPU(tempData1);
+      MemoryHandler::freeGPU(tempData2);
+      tempData1 = NULL;
+      tempData2 = NULL;
+      
+      // allocate new buffers
+      MemoryHandler::mallocGPU(&tempData1, totalSizeInBytes);
+      MemoryHandler::mallocGPU(&tempData2, totalSizeInBytes);
+    }
 }
 
 template <typename Dtype>
@@ -60,11 +64,11 @@ CuDNNLCNLayer<Dtype>::~CuDNNLCNLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
-  cudnnDestroyTensorDescriptor(bottom_desc_);
-  cudnnDestroyTensorDescriptor(top_desc_);
+  CUDNN_CHECK(cudnnDestroyTensorDescriptor(bottom_desc_));
+  CUDNN_CHECK(cudnnDestroyTensorDescriptor(top_desc_));
 
   // destroy LRN handle
-  cudnnDestroy(handle_);
+  CUDNN_CHECK(cudnnDestroyLRNDescriptor(norm_desc_));
 
   // free temp buffers
   cudaFree(tempData1);
