@@ -1,5 +1,5 @@
-#ifndef CAFFE_CUMEM_HPP_
-#define CAFFE_CUMEM_HPP_
+#ifndef CAFFE_MEMORYHANDLER_HPP_
+#define CAFFE_MEMORYHANDLER_HPP_
 
 #include "common.hpp"
 
@@ -10,7 +10,7 @@
 
 namespace caffe {
 
-class CuMem {
+class MemoryHandler {
  public:
 #ifndef CPU_ONLY
   static void mallocGPU(void **ptr, size_t size,
@@ -29,27 +29,27 @@ class CuMem {
   static void init(const std::vector<int>& gpus_, bool use_pool=true);
   static void destroy();
 
-  friend class CuMemActivator;
+  friend class MemoryHandlerActivator;
   static bool using_pool_;
   static bool initialized_;
 
 
 };
 
-class CuMemActivator {
+class MemoryHandlerActivator {
  public:
-  explicit CuMemActivator(const std::vector<int>& gpus)
+  explicit MemoryHandlerActivator(const std::vector<int>& gpus)
             : using_pool_(false) {
     if (gpus.size() > 0) {
 #ifdef USE_CNMEM
       using_pool_ = true;
 #endif
-      CuMem::init(gpus, using_pool_);
+      MemoryHandler::init(gpus, using_pool_);
     }
   }
-  ~CuMemActivator() {
+  ~MemoryHandlerActivator() {
     if (using_pool_) {
-      CuMem::destroy();
+      MemoryHandler::destroy();
     }
   }
  private:
