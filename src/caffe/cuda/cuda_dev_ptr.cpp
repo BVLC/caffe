@@ -7,7 +7,6 @@ namespace caffe {
 template<typename Type>
 cuda_dev_ptr<Type>::cuda_dev_ptr(Type* ptr)
     : raw_ptr_(ptr) {
-
 }
 
 template<typename Type>

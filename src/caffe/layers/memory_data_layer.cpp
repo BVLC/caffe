@@ -10,37 +10,56 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-     const vector<Blob<Dtype>*>& top) {
-  batch_size_ = this->layer_param_.memory_data_param().batch_size();
-  channels_ = this->layer_param_.memory_data_param().channels();
-  height_ = this->layer_param_.memory_data_param().height();
-  width_ = this->layer_param_.memory_data_param().width();
-  size_ = channels_ * height_ * width_;
-  CHECK_GT(batch_size_ * size_, 0) <<
-      "batch_size, channels, height, and width must be specified and"
-      " positive in memory_data_param";
-  vector<int> label_shape(1, batch_size_);
-  top[0]->Reshape(batch_size_, channels_, height_, width_);
-  top[1]->Reshape(label_shape);
-  added_data_.Reshape(batch_size_, channels_, height_, width_);
-  added_label_.Reshape(label_shape);
+                                            const vector<Blob<Dtype>*>& top) {
+  MemoryDataParameter mem_param = this->layer_param_.memory_data_param();
+
+  // Old 4D parameters
+  if (mem_param.has_batch_size() && mem_param.has_channels()
+      && mem_param.has_height() && mem_param.has_width()) {
+    shape_.clear();
+    shape_.push_back(mem_param.batch_size());
+    shape_.push_back(mem_param.channels());
+    shape_.push_back(mem_param.height());
+    shape_.push_back(mem_param.width());
+  }
+
+  // New ND parameters
+  if (mem_param.dim_size() > 0) {
+    shape_.clear();
+    for (int i = 1; i < mem_param.dim_size(); ++i) {
+      shape_.push_back(mem_param.dim(i));
+    }
+  }
+
+  // Labels have shape batch_size, 1, 1, ..., 1
+  label_shape_.push_back(shape_[0]);
+  // All sizes except the batch index
+  for (int i = 1; i < shape_.size(); ++i) {
+    size_ *= shape_[i];
+    label_shape_.push_back(1);
+  }
+
+  top[0]->Reshape(shape_);
+  top[1]->Reshape(label_shape_);
+  added_data_.Reshape(shape_);
+  added_label_.Reshape(label_shape_);
   data_ = NULL;
   labels_ = NULL;
   added_data_.cpu_data();
   added_label_.cpu_data();
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK(!has_new_data_) <<
-      "Can't add data until current data has been consumed.";
+  "Can't add data until current data has been consumed.";
   size_t num = datum_vector.size();
-  CHECK_GT(num, 0) << "There is no datum to add.";
-  CHECK_EQ(num % batch_size_, 0) <<
-      "The added data must be a multiple of the batch size.";
-  added_data_.Reshape(num, channels_, height_, width_);
+  CHECK_GT(num, 0)<< "There is no datum to add.";
+  CHECK_EQ(num % shape_[0], 0)<<
+  "The added data must be a multiple of the batch size.";
+  added_data_.Reshape(shape_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(datum_vector, &added_data_);
@@ -61,12 +80,16 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
     const vector<int>& labels) {
   size_t num = mat_vector.size();
   CHECK(!has_new_data_) <<
-      "Can't add mat until current data has been consumed.";
+  "Can't add mat until current data has been consumed.";
   CHECK_GT(num, 0) << "There is no mat to add";
-  CHECK_EQ(num % batch_size_, 0) <<
-      "The added data must be a multiple of the batch size.";
-  added_data_.Reshape(num, channels_, height_, width_);
-  added_label_.Reshape(num, 1, 1, 1);
+  CHECK_EQ(num % shape_[0], 0) <<
+  "The added data must be a multiple of the batch size.";
+  vector<int> added_shape = shape_;
+  added_shape[0] = num;
+  added_data_.Reshape(added_shape);
+  vector<int> added_label_shape = label_shape_;
+  added_label_shape[0] = num;
+  added_label_.Reshape(label_shape_);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(mat_vector, &added_data_);
   // Copy Labels
@@ -81,15 +104,15 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
 }
 #endif  // USE_OPENCV
 
-template <typename Dtype>
+template<typename Dtype>
 void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   CHECK(data);
   CHECK(labels);
-  CHECK_EQ(n % batch_size_, 0) << "n must be a multiple of batch size";
+  CHECK_EQ(n % shape_[0], 0)<< "n must be a multiple of batch size";
   // Warn with transformation parameters since a memory array is meant to
   // be generic and no transformations are done with Reset().
   if (this->layer_param_.has_transform_param()) {
-    LOG(WARNING) << this->type() << " does not transform array data on Reset()";
+    LOG(WARNING)<< this->type() << " does not transform array data on Reset()";
   }
   data_ = data;
   labels_ = labels;
@@ -97,26 +120,28 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   pos_ = 0;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
   CHECK(!has_new_data_) <<
-      "Can't change batch_size until current data has been consumed.";
-  batch_size_ = new_size;
-  added_data_.Reshape(batch_size_, channels_, height_, width_);
-  added_label_.Reshape(batch_size_, 1, 1, 1);
+  "Can't change batch_size until current data has been consumed.";
+  shape_[0] = new_size;
+  label_shape_[0] = new_size;
+  added_data_.Reshape(shape_);
+  added_label_.Reshape(label_shape_);
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+                                         const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
-  top[0]->Reshape(batch_size_, channels_, height_, width_);
-  top[1]->Reshape(batch_size_, 1, 1, 1);
+  top[0]->Reshape(shape_);
+  top[1]->Reshape(label_shape_);
   top[0]->set_cpu_data(data_ + pos_ * size_);
   top[1]->set_cpu_data(labels_ + pos_);
-  pos_ = (pos_ + batch_size_) % n_;
-  if (pos_ == 0)
+  pos_ = (pos_ + shape_[0]) % n_;
+  if (pos_ == 0) {
     has_new_data_ = false;
+  }
 }
 
 INSTANTIATE_CLASS(MemoryDataLayer);
