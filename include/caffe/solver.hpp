@@ -73,6 +73,11 @@ class Solver {
   int iter() {
     return iter_;
   }
+
+  int max_iter() {
+    return param_.max_iter();
+  }
+
   virtual void SnapshotSolverState(const string& model_filename) = 0;
 
 

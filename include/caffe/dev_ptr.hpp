@@ -16,7 +16,6 @@ namespace caffe {
  * */
 template<typename Type> class dev_ptr {
  public:
-
   virtual Type* get() = 0;
   virtual std::ptrdiff_t off() = 0;
 

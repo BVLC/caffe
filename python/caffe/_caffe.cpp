@@ -50,24 +50,26 @@ static void CheckFile(const string& filename) {
 }
 
 void CheckContiguousArray(PyArrayObject* arr, string name,
-    int channels, int height, int width) {
+    vector<int> shape) {
   if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
     throw std::runtime_error(name + " must be C contiguous");
   }
+  // This does not have to hold anymore
+  /*
   if (PyArray_NDIM(arr) != 4) {
     throw std::runtime_error(name + " must be 4-d");
   }
+  */
   if (PyArray_TYPE(arr) != NPY_FLOAT32) {
     throw std::runtime_error(name + " must be float32");
   }
-  if (PyArray_DIMS(arr)[1] != channels) {
-    throw std::runtime_error(name + " has wrong number of channels");
-  }
-  if (PyArray_DIMS(arr)[2] != height) {
-    throw std::runtime_error(name + " has wrong height");
-  }
-  if (PyArray_DIMS(arr)[3] != width) {
-    throw std::runtime_error(name + " has wrong width");
+  for (int i = 1; i < PyArray_NDIM(arr); ++i) {
+    if (PyArray_DIMS(arr)[i] != shape[i]) {
+      throw std::runtime_error(
+          "Shape dimension " + std::to_string(i) + " has wrong size ("
+              + std::to_string(static_cast<int>(PyArray_DIMS(arr)[i])) + " vs. "
+              + std::to_string(shape[i]) + ")");
+    }
   }
 }
 
@@ -99,11 +101,11 @@ void Net_Save(const Net<Dtype>& net, string filename) {
   WriteProtoToBinaryFile(net_param, filename.c_str());
 }
 
-void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
+void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
     bp::object labels_obj) {
   // check that this network has an input MemoryDataLayer
   shared_ptr<MemoryDataLayer<Dtype> > md_layer =
-    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
+    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[index]);
   if (!md_layer) {
     throw std::runtime_error("set_input_arrays may only be called if the"
         " first layer is a MemoryDataLayer");
@@ -114,9 +116,8 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       reinterpret_cast<PyArrayObject*>(data_obj.ptr());
   PyArrayObject* labels_arr =
       reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
-  CheckContiguousArray(data_arr, "data array", md_layer->channels(),
-      md_layer->height(), md_layer->width());
-  CheckContiguousArray(labels_arr, "labels array", 1, 1, 1);
+  CheckContiguousArray(data_arr, "data array", md_layer->shape());
+  CheckContiguousArray(labels_arr, "labels array", md_layer->label_shape());
   if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
     throw std::runtime_error("data and labels must have the same first"
         " dimension");
@@ -244,7 +245,7 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::make_function(&Net<Dtype>::output_blob_indices,
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
-        bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
+        bp::with_custodian_and_ward<1, 3, bp::with_custodian_and_ward<1, 4> >())
     .def("save", &Net_Save);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
@@ -280,6 +281,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
     .add_property("net", &Solver<Dtype>::net)
+    .add_property("max_iter", &Solver<Dtype>::max_iter)
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)

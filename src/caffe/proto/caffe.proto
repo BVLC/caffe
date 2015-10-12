@@ -745,6 +745,10 @@ message MemoryDataParameter {
   optional uint32 channels = 2;
   optional uint32 height = 3;
   optional uint32 width = 4;
+  // Dim works in the following order (examples):
+  // batch_size, channels, height, width
+  // batch_size, channels, Z, Y, X
+  repeated uint32 dim = 5;
 }
 
 message MVNParameter {

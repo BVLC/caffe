@@ -98,7 +98,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(Im2colKernelTest, TestDtypes);
 
 TYPED_TEST(Im2colKernelTest, Test2D) {
-  if(Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
     // Reshape the blobs to correct size for im2col output
     this->blob_top_->Reshape(this->blob_bottom_->num(),
             this->channels_ * this->kernel_size_ * this->kernel_size_,
@@ -173,7 +173,7 @@ TYPED_TEST(Im2colKernelTest, Test2D) {
 }
 
 TYPED_TEST(Im2colKernelTest, TestND) {
-  if(Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
     // Reshape the blobs to correct size for im2col output
     this->blob_top_->Reshape(this->blob_bottom_->num(),
         this->channels_ * this->kernel_size_ * this->kernel_size_,
@@ -209,8 +209,10 @@ TYPED_TEST(Im2colKernelTest, TestND) {
         im2col_nd_gpu_kernel<TypeParam>
         CUDA_KERNEL(grid_dim, CAFFE_CUDA_NUM_THREADS) (
             num_kernels, 2, bottom_data_gpu + this->blob_bottom_->offset(n),
-            this->blob_bottom_->gpu_shape() + 1, this->blob_top_->gpu_shape() + 1,
-            this->blob_kernel_shape_->gpu_data(), this->blob_pad_->gpu_data(),
+            this->blob_bottom_->gpu_shape() + 1,
+            this->blob_top_->gpu_shape() + 1,
+            this->blob_kernel_shape_->gpu_data(),
+            this->blob_pad_->gpu_data(),
             this->blob_stride_->gpu_data(),
             top_data_gpu + this->blob_top_->offset(n));
         CUDA_POST_KERNEL_CHECK;
