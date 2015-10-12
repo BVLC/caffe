@@ -120,7 +120,7 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
-  device *device_context_;
+  device *device_;
   vector<Callback*> callbacks_;
 
   // The root solver that holds root nets (actually containing shared layers)

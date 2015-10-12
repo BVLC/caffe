@@ -44,7 +44,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
 
-  if (this->device_context_->backend() == BACKEND_CUDA) {
+  if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     const Dtype* prob_data = prob_.gpu_data();
     const Dtype* label = bottom[1]->gpu_data();
@@ -84,9 +84,9 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     cl_mem prob_data = (cl_mem) (prob_.gpu_data());
     cl_mem label = (cl_mem) (bottom[1]->gpu_data());
@@ -109,11 +109,11 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
 
     Dtype loss;
 
-    greentea_gpu_asum(this->device_context_->id(), nthreads, loss_data, 0,
+    greentea_gpu_asum(this->device_->id(), nthreads, loss_data, 0,
                       &loss);
     if (normalize_) {
       Dtype count;
-      greentea_gpu_asum(this->device_context_->id(), nthreads, counts, 0,
+      greentea_gpu_asum(this->device_->id(), nthreads, counts, 0,
                         &count);
       if (count == 0) {
         loss = 0;
@@ -168,7 +168,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
     << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
-    if (this->device_context_->backend() == BACKEND_CUDA) {
+    if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
       const Dtype* prob_data = prob_.gpu_data();
@@ -208,9 +208,9 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_->id());
+          this->device_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_->id());
+          this->device_->id());
 
       cl_mem bottom_diff = (cl_mem)(bottom[0]->mutable_gpu_diff());
       cl_mem prob_data = (cl_mem)(prob_.gpu_data());
@@ -236,24 +236,24 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       const Dtype loss_weight = top[0]->cpu_diff()[0];
       if (normalize_) {
         Dtype count;
-        greentea_gpu_asum<Dtype>(this->device_context_->id(),
+        greentea_gpu_asum<Dtype>(this->device_->id(),
             nthreads, counts, 0, &count);
         if (count == 0) {
-          greentea_gpu_set<Dtype>(this->device_context_->id(),
+          greentea_gpu_set<Dtype>(this->device_->id(),
                            prob_.count(), 0.0, bottom_diff, 0);
         } else {
-          greentea_gpu_scal<Dtype>(this->device_context_->id(),
+          greentea_gpu_scal<Dtype>(this->device_->id(),
             prob_.count(), loss_weight / count, bottom_diff, 0);
         }
       } else {
-        greentea_gpu_scal<Dtype>(this->device_context_->id(),
+        greentea_gpu_scal<Dtype>(this->device_->id(),
             prob_.count(), loss_weight / num, bottom_diff, 0);
       }
       if (bottom.size() == 3) {
         // TODO: Correct this for easy diff scaling
         // std::cout << "Size: " << bottom[0]->count() << std::endl;
         const cl_mem weight = (cl_mem)(bottom[2]->gpu_data());
-        greentea_gpu_mul<Dtype>(this->device_context_->id(),
+        greentea_gpu_mul<Dtype>(this->device_->id(),
              bottom[2]->count(), bottom_diff, 0, weight, 0, bottom_diff, 0);
       }
 #endif  // USE_GREENTEA

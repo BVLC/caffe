@@ -38,14 +38,14 @@ class Blob {
         diff_(),
         count_(0),
         capacity_(0),
-        device_context_(Caffe::GetDefaultDevice()) {
+        device_(Caffe::GetDefaultDevice()) {
   }
   explicit Blob(device *device_context)
       : data_(),
         diff_(),
         count_(0),
         capacity_(0),
-        device_context_(device_context) {
+        device_(device_context) {
   }
   explicit Blob(const int num, const int channels, const int height,
                 const int width, device *device_context =
@@ -306,7 +306,7 @@ class Blob {
   vector<int> shape_;
   int count_;
   int capacity_;
-  device *device_context_;
+  device *device_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };
