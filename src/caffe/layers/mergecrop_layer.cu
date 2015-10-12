@@ -135,8 +135,7 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         forward_[0], bottom_data_b,
         forward_[1], top_data, num, channels_a,
         channels_b, shape_a_.gpu_data(), shape_b_.gpu_data());
-    CUDA_POST_KERNEL_CHECK
-    ;
+    CUDA_POST_KERNEL_CHECK;
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -151,8 +150,8 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         oclk_copy_forward(count, spatial_dims,
                           WrapHandle((cl_mem) bottom_data_a, &ctx), forward_[0],
                           WrapHandle((cl_mem) bottom_data_b, &ctx), forward_[1],
-                          WrapHandle((cl_mem) top_data, &ctx),
-                          num, channels_a, channels_b,
+                          WrapHandle((cl_mem) top_data, &ctx), num, channels_a,
+                          channels_b,
                           WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
                           WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
         ctx.get_queue());
@@ -196,8 +195,7 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, spatial_dims, bottom_diff_a, backward_[0],
         bottom_diff_b, backward_[1], top_diff, num,
         channels_a, channels_b, shape_a_.gpu_data(), shape_b_.gpu_data());
-    CUDA_POST_KERNEL_CHECK
-    ;
+    CUDA_POST_KERNEL_CHECK;
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -210,9 +208,10 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         CL_KERNEL_SELECT("merge_copy_backward"));
     viennacl::ocl::enqueue(
         oclk_copy_backward(count, spatial_dims,
-                           WrapHandle((cl_mem) bottom_diff_a, &ctx), backward_[0],
-                           WrapHandle((cl_mem) bottom_diff_b, &ctx), backward_[1],
-                           WrapHandle((cl_mem) top_diff, &ctx),
+                           WrapHandle((cl_mem) bottom_diff_a, &ctx),
+                           backward_[0],
+                           WrapHandle((cl_mem) bottom_diff_b, &ctx),
+                           backward_[1], WrapHandle((cl_mem) top_diff, &ctx),
                            num, channels_a, channels_b,
                            WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
                            WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
