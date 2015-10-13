@@ -18,31 +18,27 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
+    size_t workspaceSizeInBytes_temp;
 
     // Forward through cuDNN in parallel over groups.
     for (int g = 0; g < this->group_; g++) {
-#ifdef USE_CNMEM
-      MemoryHandler::mallocGPU(&workspace[0], workspace_fwd_sizes_[i]);
-#endif
+      MemoryHandler::mallocGPU(&workspaceData, workspace_fwd_sizes_[i]);
       // Filters.
-      // CUDNN_CHECK(cudnnConvolutionForward(handle_[g],
       CUDNN_CHECK(cudnnConvolutionForward(Caffe::cudnn_handle(),
             cudnn::dataType<Dtype>::one,
             bottom_descs_[i], bottom_data + bottom_offset_ * g,
             filter_desc_, weight + this->weight_offset_ * g,
             conv_descs_[i],
-            fwd_algo_[i], workspace[0], workspace_fwd_sizes_[i],
+            fwd_algo_[i], workspaceData, workspace_fwd_sizes_[i],
             cudnn::dataType<Dtype>::zero,
             top_descs_[i], top_data + top_offset_ * g));
 
-#ifdef USE_CNMEM
-      MemoryHandler::freeGPU(workspace[0]);
-      workspace[0] = NULL;
-#endif
+      MemoryHandler::freeGPU(workspaceData);
+      workspaceData = NULL;
       // Bias.
       if (this->bias_term_) {
         const Dtype* bias_data = this->blobs_[1]->gpu_data();
-        CUDNN_CHECK(cudnnAddTensor_v3(Caffe::cudnn_handle(), //CUDNN_ADD_SAME_C,
+        CUDNN_CHECK(cudnnAddTensor_v3(Caffe::cudnn_handle(),
               cudnn::dataType<Dtype>::one,
               bias_desc_, bias_data + bias_offset_ * g,
               cudnn::dataType<Dtype>::one,
@@ -62,18 +58,22 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
+
   if (this->param_propagate_down_[0]) {
     weight = this->blobs_[0]->gpu_data();
     weight_diff = this->blobs_[0]->mutable_gpu_diff();
     caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
   }
   Dtype* bias_diff = NULL;
+
   if (this->bias_term_ && this->param_propagate_down_[1]) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
     caffe_gpu_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
   }
+
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
+
     // Backward through cuDNN in parallel over groups and gradients.
     for (int g = 0; g < this->group_; g++) {
       // Gradient w.r.t. bias.
@@ -87,9 +87,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       // Gradient w.r.t. weights.
       if (this->param_propagate_down_[0]) {
-#ifdef USE_CNMEM
-        MemoryHandler::mallocGPU(&workspace[0], workspace_bwd_filter_sizes_[i]);
-#endif
+        MemoryHandler::mallocGPU(&workspaceData, workspace_bwd_filter_sizes_[i]);
         const Dtype* bottom_data = bottom[i]->gpu_data();
         CUDNN_CHECK(cudnnConvolutionBackwardFilter_v3(
               Caffe::cudnn_handle(),
@@ -97,13 +95,11 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               bottom_descs_[i], bottom_data + bottom_offset_ * g,
               top_descs_[i],    top_diff + top_offset_ * g,
               conv_descs_[i],
-              bwd_filter_algo_[i], workspace[0], workspace_bwd_filter_sizes_[i],
+              bwd_filter_algo_[i], workspaceData, workspace_bwd_filter_sizes_[i],
               cudnn::dataType<Dtype>::one,
               filter_desc_, weight_diff + this->weight_offset_ * g));
-#ifdef USE_CNMEM
-        MemoryHandler::freeGPU(workspace[0]);
-        workspace[0] = NULL;
-#endif
+        MemoryHandler::freeGPU(workspaceData);
+        workspaceData = NULL;
       }
 
       // Gradient w.r.t. bottom data.
@@ -112,23 +108,19 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           weight = this->blobs_[0]->gpu_data();
         }
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-#ifdef USE_CNMEM
-        MemoryHandler::mallocGPU(&workspace[0], workspace_bwd_data_sizes_[i]);
-#endif
+        MemoryHandler::mallocGPU(&workspaceData, workspace_bwd_data_sizes_[i]);
         CUDNN_CHECK(cudnnConvolutionBackwardData_v3(
               Caffe::cudnn_handle(),
               cudnn::dataType<Dtype>::one,
               filter_desc_, weight + this->weight_offset_ * g,
               top_descs_[i], top_diff + top_offset_ * g,
               conv_descs_[i],
-              bwd_data_algo_[i], workspace[0], workspace_bwd_data_sizes_[i],
+              bwd_data_algo_[i], workspaceData, workspace_bwd_data_sizes_[i],
               workspace_bwd_data_sizes_[i],
               cudnn::dataType<Dtype>::zero,
               bottom_descs_[i], bottom_diff + bottom_offset_ * g));
-#ifdef USE_CNMEM
-        MemoryHandler::freeGPU(workspace[0]);
-        workspace[0] = NULL;
-#endif
+        MemoryHandler::freeGPU(workspaceData);
+        workspaceData = NULL;
       }
     }
 

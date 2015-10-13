@@ -301,12 +301,16 @@ endif
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
+	INCLUDE_DIRS += ${CUDNN_DIR}/include
+	LIBRARY_DIRS += ${CUDNN_DIR}/install/cuda/lib64
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
 # cuMEM integration
 ifeq ($(USE_CNMEM), 1)
 	LIBRARIES += cnmem
+        LIBRARY_DIRS += ${CNMEM_DIR}/build
+        INCLUDE_DIRS += ${CNMEM_DIR}/include
 	COMMON_FLAGS += -DUSE_CNMEM
 endif
 

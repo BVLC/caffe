@@ -193,6 +193,8 @@ int train() {
   MemoryHandlerActivator handler(gpus);
 #endif
 
+  MemoryHandlerActivator handler(gpus);
+
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));

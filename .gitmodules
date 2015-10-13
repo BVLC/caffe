@@ -1,0 +1,3 @@
+[submodule "cnmem"]
+	path = cnmem
+	url = https://github.com/NVIDIA/cnmem.git

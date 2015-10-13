@@ -264,12 +264,8 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
 template<typename Dtype>
 P2PSync<Dtype>::~P2PSync() {
 #ifndef CPU_ONLY
-  int initial_device;
-  CUDA_CHECK(cudaGetDevice(&initial_device));
-  const int self = solver_->param().device_id();
-  CUDA_CHECK(cudaSetDevice(self));
-
   if (parent_) {
+
     const int peer = parent_->solver_->param().device_id();
     cudaSetDevice(peer);
     MemoryHandler::freeGPU(parent_grads_);
@@ -281,8 +277,6 @@ P2PSync<Dtype>::~P2PSync() {
       CUDA_CHECK(cudaDeviceDisablePeerAccess(peer));
     }
   }
-
-  CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
 }
 
