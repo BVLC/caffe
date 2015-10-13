@@ -18,7 +18,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
-    size_t workspaceSizeInBytes_temp;
+
 
     // Forward through cuDNN in parallel over groups.
     for (int g = 0; g < this->group_; g++) {
@@ -116,7 +116,6 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               top_descs_[i], top_diff + top_offset_ * g,
               conv_descs_[i],
               bwd_data_algo_[i], workspaceData, workspace_bwd_data_sizes_[i],
-              workspace_bwd_data_sizes_[i],
               cudnn::dataType<Dtype>::zero,
               bottom_descs_[i], bottom_diff + bottom_offset_ * g));
         MemoryHandler::freeGPU(workspaceData);

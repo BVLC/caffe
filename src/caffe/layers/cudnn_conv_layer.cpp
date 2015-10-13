@@ -102,7 +102,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
-  size_t workspace_limit_bytes;
+  size_t workspace_limit_bytes, total_memory;
   MemoryHandler::getInfo(&workspace_limit_bytes, &total_memory);
 
   for (int i = 0; i < bottom.size(); i++) {
