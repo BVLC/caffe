@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
   cudaGetDevice(&device);
   cout << "Current device id: " << device << endl;
   cudaGetDeviceProperties(&CAFFE_TEST_CUDA_PROP, device);
-  caffe::MemoryHandlerActivator activator(devices, false);
+  caffe::MemoryHandlerActivator activator(devices);
 
 #endif
   // invoke the test.
