@@ -12,6 +12,9 @@
 # USE_LMDB := 0
 # USE_OPENCV := 0
 
+# Uncomment if you're using OpenCV 3
+# OPENCV_VERSION := 3
+
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
