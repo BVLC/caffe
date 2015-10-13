@@ -9,8 +9,7 @@
 
 namespace caffe {
 
-bool MemoryHandler::using_pool_ = false;
-bool MemoryHandler::initialized_ = false;
+MemoryHandler::PoolMode MemoryHandler::mode_ = MemoryHandler::NoPool;
 
 using namespace boost;
 
@@ -21,83 +20,120 @@ using namespace boost;
 #ifndef CPU_ONLY  // CPU-only Caffe.
 
 void MemoryHandler::mallocGPU(void **ptr, size_t size, cudaStream_t stream) {
-  CHECK(initialized_);
   CHECK(ptr!=0);
-  if (using_pool_) {
+  switch (mode_) {
+  case CnMemPool:
     CNMEM_CHECK(cnmemMalloc(ptr, size, stream));
-  } else {
+    break;
+  case CubPool:
+  default:
     CUDA_CHECK(cudaMalloc(ptr, size));
+    break;
   }
 }
 
 
 void MemoryHandler::freeGPU(void *ptr, cudaStream_t stream) {
-  CHECK(initialized_);
   // allow for null pointer deallocation
   if(!ptr)
     return;
-  if (using_pool_) {
+  switch (mode_) {
+  case CnMemPool:
     CNMEM_CHECK(cnmemFree(ptr, stream));
-  } else {
+    break;
+  case CubPool:
+  default:
     CUDA_CHECK(cudaFree(ptr));
+    break;
   }
 }
 
 void MemoryHandler::registerStream(cudaStream_t stream) {
-  CHECK(initialized_);
-  if (using_pool_) {
+  switch (mode_) {
+  case CnMemPool:
     CNMEM_CHECK(cnmemRegisterStream(stream));
+    break;
+  case CubPool:
+  default:
+    break;
   }
 }
 
 void MemoryHandler::destroy() {
-  CHECK(initialized_);
-  CNMEM_CHECK(cnmemFinalize());
-  initialized_ = false;
-  using_pool_ = false;
+  switch (mode_) {
+  case CnMemPool:
+    CNMEM_CHECK(cnmemFinalize());
+    break;
+  case CubPool:
+  default:
+    break;
+  }  
+  mode_ = NoPool;
 }
 
-void MemoryHandler::init(const std::vector<int>& gpus, bool use_pool)
+void MemoryHandler::init(const std::vector<int>& gpus, PoolMode m)
 {
-  CHECK(!initialized_);
-  
-#ifdef USE_CNMEM
-  if (use_pool) {
-     using_pool_  = true;
-    cnmemDevice_t *devs = new cnmemDevice_t[gpus.size()];
+  if (gpus.size() <= 0) {
+    // should we report an error here ?
+    m = MemoryHandler::NoPool;
+  }
 
+  switch (m) {
+  case CnMemPool:
+    {
+#ifdef USE_CNMEM
+    cnmemDevice_t* devs = new cnmemDevice_t[gpus.size()];
     int initial_device;
     CUDA_CHECK(cudaGetDevice(&initial_device));
-
+    
     for (int i = 0; i < gpus.size(); i++) {
       CUDA_CHECK(cudaSetDevice(gpus[i]));
-
+      
       devs[i].device = gpus[i];
-
+      
       size_t free_mem, used_mem;
       CUDA_CHECK(cudaMemGetInfo(&free_mem, &used_mem));
-
+      
       devs[i].size = size_t(0.95*free_mem);
       devs[i].numStreams = 0;
       devs[i].streams = NULL;
     }
     CNMEM_CHECK(cnmemInit(gpus.size(), devs, CNMEM_FLAGS_DEFAULT));
-    initialized_ = true;
-
+    
     CUDA_CHECK(cudaSetDevice(initial_device));
-
+    
     delete [] devs;
-  }
+    mode_  = m;
+    }
 #endif
-  initialized_ = true;
-  std::cout << "MemoryHandler initialized" << 
-    (using_pool_ ? " with CNMEM pool.\n" : " with CUDA allocator.\n");
-}
+    break;
+  case CubPool:
+  default:
+    break;
+  }
 
+
+  std::cout << "MemoryHandler initialized with " << getName() << std::endl;
+}
+  
+const char* MemoryHandler::getName()  {
+  switch (mode_) {
+  case CnMemPool:
+    return "CNMEM Pool";
+  case CubPool:
+    return "CUB Pool";
+  default:
+    return "No Pool : Plain CUDA Allocator";
+  }
+}
+  
 void MemoryHandler::getInfo(size_t *free_mem, size_t *total_mem) {
-  if (using_pool_) {
+  switch (mode_) {
+  case CnMemPool:
     CNMEM_CHECK(cnmemMemGetInfo(free_mem, total_mem, cudaStreamDefault));
-  } else {
+    break;
+  case CubPool:
+  default:
     CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));
   }
 }
