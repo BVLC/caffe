@@ -77,7 +77,7 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
   for (int64_t i = 0; i < nhood_dims[0]; ++i) {
     nHood[i] = 0;
     for (int64_t j = 0; j < nhood_dims[1]; ++j) {
-      nHood[i] += (int32_t) nhood_data[i + j * nhood_dims[0]] * prodDims[j];
+      nHood[i] += (int32_t) nhood_data[j + i * nhood_dims[1]] * prodDims[j];
     }
   }
 
@@ -115,16 +115,20 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
                    * std::max((conn_dims[2] - 1), 1));
   int64_t j = 0;
   // Loop over #edges
-  for (int64_t d = 0, i = 0; d < conn_dims[3]; ++d) {
+  for (int64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
     // Loop over Z
-    for (int64_t z = 0; z < conn_dims[2]; ++z) {
+    for (int64_t z = 0; z < conn_dims[1]; ++z) {
       // Loop over Y
-      for (int64_t y = 0; y < conn_dims[1]; ++y) {
+      for (int64_t y = 0; y < conn_dims[2]; ++y) {
         // Loop over X
-        for (int64_t x = 0; x < conn_dims[0]; ++x, ++i) {
-          if (x < std::max(conn_dims[0] - 1, 1) &&
-              y < std::max(conn_dims[1] - 1, 1) &&
-              z < std::max(conn_dims[2] - 1, 1)) {
+        for (int64_t x = 0; x < conn_dims[3]; ++x, ++i) {
+          // Out-of-bounds check:
+          if (!((z + nhood_data[d * 3 + 0] < 0)
+              ||(z + nhood_data[d * 3 + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * 3 + 1] < 0)
+              ||(y + nhood_data[d * 3 + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * 3 + 2] < 0)
+              ||(x + nhood_data[d * 3 + 2] >= conn_dims[3]))) {
             pqueue[j++] = i;
           }
         }
@@ -241,6 +245,16 @@ void MalisLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
 
+  // Expected inputs:
+  // Required (bottom 0 to 2):
+  // Bottom 0: Predicted affinity, shaped     (batch size, #edges, (Z), (Y), X)
+  // Bottom 1: Segmented ground truth, shaped (batch size, 1,      (Z), (Y), X)
+  // Bottom 2: Ground truth affinity, shaped  (batch size, #edges, (Z), (Y), X)
+
+  // Optional (bottom 3):
+  // Bottom 3: Edge connectivity, size #edges * 3, shaped (Z,Y,X);(Z,Y,X);...
+  // (this means pairs of 3 per edge)
+
 #ifdef CAFFE_MALIS_DEBUG
   cv::namedWindow("labelled");
   cv::namedWindow("test");
@@ -256,32 +270,40 @@ void MalisLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     top[1]->ReshapeLike(*bottom[0]);
   }
 
+  // Up to 5 dimensional; supported modes:
+  // batch, channels (edges), Z, Y, X    => 3D affinity
+  // batch, channels (edges), Y, X       => 2D affinity
+  // batch, channels (edges), X          => 1D affinity
+  vector<int> shape = bottom[0]->shape();
+
   conn_dims_.clear();
   nhood_dims_.clear();
-  nhood_data_.clear();
 
+  // #edges, Z, Y, X specification (4 dimensions)
   conn_num_dims_ = 4;
-  conn_dims_.push_back(bottom[0]->width());       // X-axis
-  conn_dims_.push_back(bottom[0]->height());      // Y-axis
-  conn_dims_.push_back(1);                        // Z-axis
-  conn_dims_.push_back(2);                        // #edges
 
-  nhood_dims_.push_back(2);                       // #edges
-  nhood_dims_.push_back(3);                       // 3 dimensional
+  // Channel axis equals number of edges
+  nedges_ = shape[1];
 
-  nhood_data_.push_back(1);                       // Edge 1, X
-  nhood_data_.push_back(0);                       // Edge 2, X
+  // #edges
+  conn_dims_.push_back(nedges_);
+  // Z-axis
+  conn_dims_.push_back(shape.size() >= 5 ? shape[shape.size() - 3] : 1);
+  // Y-axis
+  conn_dims_.push_back(shape.size() >= 4 ? shape[shape.size() - 2] : 1);
+  // X-axis
+  conn_dims_.push_back(shape.size() >= 3 ? shape[shape.size() - 1] : 1);
 
-  nhood_data_.push_back(0);                       // Edge 1, Y
-  nhood_data_.push_back(1);                       // Edge 2, Y
+  // #edges
+  nhood_dims_.push_back(nedges_);
+  // 3 dimensional (always, to simplify things;
+  // can just set unused spatials to 0)
+  nhood_dims_.push_back(3);
 
-  nhood_data_.push_back(0);                       // Edge 1, Z
-  nhood_data_.push_back(0);                       // Edge 2, Z
-
-  dloss_pos_.Reshape(
-      1, 2, bottom[0]->height(), bottom[0]->width());
-  dloss_neg_.Reshape(
-      1, 2, bottom[0]->height(), bottom[0]->width());
+  affinity_pos_.Reshape(shape);
+  affinity_neg_.Reshape(shape);
+  dloss_pos_.Reshape(shape);
+  dloss_neg_.Reshape(shape);
 }
 
 template<typename Dtype>
@@ -337,82 +359,80 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 #endif
 
-  int inner_num = bottom[0]->width() * bottom[0]->height();
+  // Set up the neighborhood
+  nhood_data_.clear();
+  if (bottom.size() == 4) {
+    // Custom edges
+    for (int i = 0; i < nedges_; ++i) {
+      // Z edge direction
+      nhood_data_.push_back(bottom[3]->cpu_data()[i * 3 + 0]);
+      // Y edge direction
+      nhood_data_.push_back(bottom[3]->cpu_data()[i * 3 + 1]);
+      // X edge direction
+      nhood_data_.push_back(bottom[3]->cpu_data()[i * 3 + 2]);
+    }
+  } else {
+    // Dimension primary edges (+Z, +Y, +X) only:
+    // 1 edge:    +X          (0,0,1)
+    // 2 edges:   +Y, +X      (0,1,0); (0,0,1)
+    // 3 edges:   +Z, +Y, +X  (1,0,0); (0,1,0); (0,0,1)
+    for (int i = 3 - nedges_; i < 3; ++i) {
+      nhood_data_.push_back((i + 0) % 3 == 0 ? 1 : 0);
+      nhood_data_.push_back((i + 1) % 3 == 0 ? 1 : 0);
+      nhood_data_.push_back((i + 2) % 3 == 0 ? 1 : 0);
+    }
+  }
 
   // Predicted affinity
-  const Dtype* affinity_prob_x = bottom[0]->cpu_data();
-  const Dtype* affinity_prob_y = bottom[0]->cpu_data() + inner_num;
+  const Dtype* affinity_prob = bottom[0]->cpu_data();
 
   // Effective affinity
-  const Dtype* affinity_x = bottom[1]->cpu_data();
-  const Dtype* affinity_y = bottom[1]->cpu_data() + inner_num;
+  const Dtype* affinity = bottom[1]->cpu_data();
 
-#ifdef CAFFE_MALIS_DEBUG
-  {Dtype* prob_rd = bottom[0]->mutable_cpu_data();
-  cv::Mat wrapped(bottom[0]->height(), bottom[0]->width(),
-                    cv::DataType<Dtype>::type,
-                  prob_rd, sizeof(Dtype) * bottom[0]->width());
-  cv::imshow("test", wrapped);}
-#endif
+  Dtype* affinity_data_pos = affinity_pos_.mutable_cpu_data();
+  Dtype* affinity_data_neg = affinity_neg_.mutable_cpu_data();
 
-  // Connection data
-  std::vector<Dtype> conn_data_pos(
-      2 * bottom[0]->height() * bottom[0]->width());
-  std::vector<Dtype> conn_data_neg(
-      2 * bottom[0]->height() * bottom[0]->width());
-
-  // Construct positive and negative affinity graph
 #pragma omp parallel for
-  for (int i = 0; i < bottom[0]->height() - 1; ++i) {
-    for (int j = 0; j < bottom[0]->width() - 1; ++j) {
-      // X positive
-      conn_data_pos[i * bottom[0]->width() + j] = std::min(
-          affinity_prob_x[i * bottom[0]->width() + j],
-          affinity_x[i * bottom[0]->width() + j]);
+  for (int i = 0; i < bottom[0]->count(); ++i) {
+    affinity_data_pos[i] = std::min(affinity_prob[i], affinity[i]);
+    affinity_data_neg[i] = std::max(affinity_prob[i], affinity[i]);
+  }
 
-      // X negative
-      conn_data_neg[i * bottom[0]->width() + j] = std::max(
-          affinity_prob_x[i * bottom[0]->width() + j],
-          affinity_x[i * bottom[0]->width() + j]);
-
-      // Y positive
-      conn_data_pos[inner_num
-          + i * bottom[0]->width() + j] = std::min(
-          affinity_prob_y[i * bottom[0]->width() + j],
-          affinity_y[i * bottom[0]->width() + j]);
-
-      // Y negative
-      conn_data_neg[inner_num
-          + i * bottom[0]->width() + j] = std::max(
-          affinity_prob_y[i * bottom[0]->width() + j],
-          affinity_y[i * bottom[0]->width() + j]);
-    }
+  size_t batch_offset = 1;
+  for (int i = 1; i < bottom[0]->shape().size(); ++i) {
+    batch_offset *= bottom[0]->shape()[i];
   }
 
   Dtype loss = 0;
 
-  Dtype loss_out = 0;
-  Dtype classerr_out = 0;
-  Dtype rand_index_out = 0;
+#pragma omp parallel for reduction(+:loss)
+  for (int batch = 0; batch < bottom[0]->shape()[0]; ++batch) {
+    Dtype loss_out = 0;
+    Dtype classerr_out = 0;
+    Dtype rand_index_out = 0;
 
-  caffe_set(dloss_neg_.count(), Dtype(0.0), dloss_neg_.mutable_cpu_data());
-  caffe_set(dloss_pos_.count(), Dtype(0.0), dloss_pos_.mutable_cpu_data());
+    caffe_set(dloss_neg_.count(), Dtype(0.0), dloss_neg_.mutable_cpu_data());
+    caffe_set(dloss_pos_.count(), Dtype(0.0), dloss_pos_.mutable_cpu_data());
 
-  Malis(&conn_data_neg[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
-        &nhood_dims_[0], bottom[2]->cpu_data(),
-        false, dloss_neg_.mutable_cpu_data(),
-        &loss_out, &classerr_out, &rand_index_out, 0.3, 0.5);
+    Malis(&affinity_data_neg[batch_offset * batch], conn_num_dims_,
+          &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
+          bottom[2]->cpu_data() + batch_offset * batch, false,
+          dloss_neg_.mutable_cpu_data() + batch_offset * batch, &loss_out,
+          &classerr_out, &rand_index_out, 0.3, 0.5);
 
-  loss += loss_out;
+    loss += loss_out;
 
-  Malis(&conn_data_pos[0], conn_num_dims_, &conn_dims_[0], &nhood_data_[0],
-        &nhood_dims_[0], bottom[2]->cpu_data(),
-        true, dloss_pos_.mutable_cpu_data(),
-        &loss_out, &classerr_out, &rand_index_out, 0.3, 0.5);
+    Malis(&affinity_data_pos[batch_offset * batch], conn_num_dims_,
+          &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
+          bottom[2]->cpu_data() + batch_offset * batch, true,
+          dloss_pos_.mutable_cpu_data() + batch_offset * batch, &loss_out,
+          &classerr_out, &rand_index_out, 0.3, 0.5);
 
-  loss += loss_out;
+    loss += loss_out;
+  }
 
-  top[0]->mutable_cpu_data()[0] = loss;
+  // Normalized loss over batch size
+  top[0]->mutable_cpu_data()[0] = loss / ((Dtype)bottom[0]->shape()[0]);
 
   if (top.size() == 2) {
     top[1]->ShareData(*(bottom[0]));
@@ -424,7 +444,6 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                          const vector<bool>& propagate_down,
                                          const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
-    // Diff to propagate to (size w * h * c)
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const Dtype* dloss_pos_data = dloss_pos_.cpu_data();
     const Dtype* dloss_neg_data = dloss_neg_.cpu_data();
@@ -432,18 +451,9 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // Clear the diff
     caffe_set(bottom[0]->count(), Dtype(0.0), bottom_diff);
 
-    int inner_num = bottom[0]->height() * bottom[0]->width();
-
 #pragma omp parallel for
-    for (int i = 0; i < bottom[0]->height(); ++i) {
-      for (int j = 0; j < bottom[0]->width(); ++j) {
-        bottom_diff[i * bottom[0]->width() + j] =
-            dloss_pos_data[i * bottom[0]->width() + j] +
-            dloss_neg_data[i * bottom[0]->width() + j];
-        bottom_diff[inner_num + i * bottom[0]->width() + j] =
-            dloss_pos_data[inner_num + i * bottom[0]->width() + j] +
-            dloss_neg_data[inner_num + i * bottom[0]->width() + j];
-      }
+    for (int i = 0; i < bottom[0]->count(); ++i) {
+      bottom_diff[i] = dloss_pos_data[i] + dloss_neg_data[i];
     }
   }
 }
