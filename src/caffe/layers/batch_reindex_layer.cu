@@ -8,6 +8,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void BRForward(const int count, const int inner_dim, const Dtype* in,
                           const Dtype* permut, Dtype* out) {
@@ -17,6 +18,7 @@ __global__ void BRForward(const int count, const int inner_dim, const Dtype* in,
     out[index] = in[in_n * (inner_dim) + index % (inner_dim)];
   }
 }
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -27,13 +29,36 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     return;
   }
   int threads = top[0]->count();
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  BRForward<Dtype> <<<CAFFE_GET_BLOCKS(threads), CAFFE_CUDA_NUM_THREADS>>>(
-      top[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
-      bottom[0]->gpu_data(), bottom[1]->gpu_data(), top[0]->mutable_gpu_data());
-  CUDA_POST_KERNEL_CHECK;
+
+  if (this->device_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    BRForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads), CAFFE_CUDA_NUM_THREADS) (
+        top[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
+        bottom[0]->gpu_data(), bottom[1]->gpu_data(), top[0]->mutable_gpu_data());
+    CUDA_POST_KERNEL_CHECK;
+#endif  // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_->id());
+
+    viennacl::ocl::kernel &oclk_br = program.get_kernel(
+        CL_KERNEL_SELECT("br_forward"));
+    viennacl::ocl::enqueue(
+        oclk_br(top[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
+                WrapHandle((cl_mem) (bottom[0]->gpu_data()), &ctx),
+                WrapHandle((cl_mem) (bottom[1]->gpu_data()), &ctx),
+                WrapHandle((cl_mem) (top[0]->mutable_gpu_data()), &ctx)),
+        ctx.get_queue());
+#endif  // USE_GREENTEA
+  }
+
 }
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void BRBackward(const int count, const int inner_dim,
                            const Dtype* in, const Dtype* top_indexes,
@@ -50,6 +75,7 @@ __global__ void BRBackward(const int count, const int inner_dim,
     }
   }
 }
+#endif  // USE_CUDA
 
 template<typename Dtype>
 void BatchReindexLayer<Dtype>::Backward_gpu(
@@ -94,12 +120,36 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
   }
 
   int threads = bottom[0]->count();
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  BRBackward<Dtype> <<<CAFFE_GET_BLOCKS(threads), CAFFE_CUDA_NUM_THREADS>>>(
-      bottom[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
-      top[0]->gpu_diff(), top_indexes.gpu_data(), begins.gpu_data(),
-      counts.gpu_data(), bottom[0]->mutable_gpu_diff());
-  CUDA_POST_KERNEL_CHECK;
+
+  if (this->device_->backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    BRBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads), CAFFE_CUDA_NUM_THREADS) (
+        bottom[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
+        top[0]->gpu_diff(), top_indexes.gpu_data(), begins.gpu_data(),
+        counts.gpu_data(), bottom[0]->mutable_gpu_diff());
+    CUDA_POST_KERNEL_CHECK;
+#endif  //USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_->id());
+
+    viennacl::ocl::kernel &oclk_br = program.get_kernel(
+        CL_KERNEL_SELECT("br_backward"));
+    viennacl::ocl::enqueue(
+        oclk_br(bottom[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
+                  WrapHandle((cl_mem)(top[0]->gpu_diff()), &ctx),
+                  WrapHandle((cl_mem)(top_indexes.gpu_data()), &ctx),
+                  WrapHandle((cl_mem)(begins.gpu_data()), &ctx),
+                  WrapHandle((cl_mem)(counts.gpu_data()), &ctx),
+                  WrapHandle((cl_mem)(bottom[0]->mutable_gpu_diff()), &ctx)),
+        ctx.get_queue());
+#endif  // USE_GREENTEA
+  }
+
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BatchReindexLayer);
