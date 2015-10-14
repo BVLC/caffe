@@ -116,7 +116,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         this->num_output_ / this->group_, height_out, width_out,
         this->num_output_ * this->out_spatial_dim_,
         this->out_spatial_dim_, width_out, 1);
-    
+
     cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
         filter_desc_, pad_h, pad_w, stride_h, stride_w);
 

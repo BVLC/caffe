@@ -14,7 +14,7 @@ void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  
+
   MemoryHandler::mallocGPU(&this->tempData1, this->tempDataSize);
   MemoryHandler::mallocGPU(&this->tempData2, this->tempDataSize);
 
