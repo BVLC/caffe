@@ -21,7 +21,7 @@ bool InternalThread::must_stop() {
 void InternalThread::StartInternalThread(device* device_context) {
   CHECK(!is_started()) << "Threads should persist and not be restarted.";
 
-  thread_device_context_ = device_context;
+  thread_device_ = device_context;
 
   Caffe::Brew mode = Caffe::mode();
   int rand_seed = caffe_rng_rand();
@@ -30,7 +30,7 @@ void InternalThread::StartInternalThread(device* device_context) {
 
   try {
     thread_.reset(
-        new boost::thread(&InternalThread::entry, this, thread_device_context_,
+        new boost::thread(&InternalThread::entry, this, thread_device_,
                           mode, rand_seed, solver_count, root_solver));
   } catch (std::exception& e) {
     LOG(FATAL)<< "Thread exception: " << e.what();

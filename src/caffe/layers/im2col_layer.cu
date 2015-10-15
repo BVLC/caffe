@@ -20,7 +20,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int num_kernels = channels_ * top[0]->count(channel_axis_ + 1);
 
-  if (this->device_context_->backend() == BACKEND_CUDA) {
+  if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     for (int n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
@@ -43,9 +43,9 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     for (int n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
@@ -81,7 +81,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-  if (this->device_context_->backend() == BACKEND_CUDA) {
+  if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     for (int n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
@@ -105,9 +105,9 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     for (int n = 0; n < top[0]->num(); ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {

@@ -47,7 +47,7 @@ class InternalThread {
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
-  device* thread_device_context_;
+  device* thread_device_;
 
  private:
   void entry(device* device_context, Caffe::Brew mode, int rand_seed,

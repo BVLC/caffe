@@ -47,7 +47,7 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const int bottom_concat_size = bottom_concat_axis * concat_input_size_;
     const int nthreads = bottom_concat_size * num_concats_;
 
-    if (this->device_context_->backend() == BACKEND_CUDA) {
+    if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       // NOLINT_NEXT_LINE(whitespace/operators)
       Concat<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
@@ -59,9 +59,9 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
 
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_->id());
+          this->device_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_->id());
+          this->device_->id());
 
       viennacl::ocl::kernel &oclk_concat = program.get_kernel(
           CL_KERNEL_SELECT("concat"));
@@ -93,7 +93,7 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const int bottom_concat_size = bottom_concat_axis * concat_input_size_;
       const int nthreads = bottom_concat_size * num_concats_;
 
-      if (this->device_context_->backend() == BACKEND_CUDA) {
+      if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         // NOLINT_NEXT_LINE(whitespace/operators)
         Concat<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
@@ -106,9 +106,9 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
 
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_context_->id());
+            this->device_->id());
         viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-            this->device_context_->id());
+            this->device_->id());
 
         viennacl::ocl::kernel &oclk_concat = program.get_kernel(
             CL_KERNEL_SELECT("concat"));

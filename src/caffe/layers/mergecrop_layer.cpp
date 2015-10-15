@@ -9,34 +9,22 @@ namespace caffe {
 template<typename Dtype>
 void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
-  std::vector<int> forward_shape(1);
-  forward_shape[0] = 2;
-
-  std::vector<int> backward_shape(1);
-  backward_shape[0] = 2;
-
-  forward.Reshape(forward_shape);
-  backward.Reshape(backward_shape);
-
-  int* forward_data = forward.mutable_cpu_data();
-  int* backward_data = backward.mutable_cpu_data();
-
   // By default, forward both a and b
-  forward_data[0] = 1;
-  forward_data[1] = 1;
+  forward_.push_back(1);
+  forward_.push_back(1);
 
   // By default, backward a and do not backward b
-  backward_data[0] = 1;
-  backward_data[1] = 0;
+  backward_.push_back(1);
+  backward_.push_back(0);
 
 
   if (this->layer_param_.has_mergecrop_param()) {
     MergeCropParameter mergecrop_param = this->layer_param_.mergecrop_param();
     for (int i = 0; i < mergecrop_param.forward_size(); ++i) {
-      forward_data[i] = mergecrop_param.forward(i);
+      forward_[i] = mergecrop_param.forward(i);
     }
     for (int i = 0; i < mergecrop_param.backward_size(); ++i) {
-      backward_data[i] = mergecrop_param.backward(i);
+      backward_[i] = mergecrop_param.backward(i);
     }
   }
 
@@ -48,16 +36,26 @@ void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   // Same number of batches requires
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
-  int num = bottom[0]->num();
 
   // All channels of both inputs are copied
   int channels = bottom[0]->channels() + bottom[1]->channels();
 
-  // Width and height of the smaller input, which should be input 0
-  int height = bottom[0]->height();
-  int width = bottom[0]->width();
+  // Spatial of the smaller input, which should be input 0
+  vector<int> top_shape = bottom[0]->shape();
+  top_shape[1] = channels;
 
-  top[0]->Reshape(num, channels, height, width);
+  top[0]->Reshape(top_shape);
+
+  shape_a_.Reshape(1, 1, 1, top_shape.size() - 2);
+  shape_b_.Reshape(1, 1, 1, top_shape.size() - 2);
+
+  int* shape_a_data = shape_a_.mutable_cpu_data();
+  int* shape_b_data = shape_b_.mutable_cpu_data();
+
+  for (int i = 0; i < top_shape.size() - 2; ++i) {
+    shape_a_data[i] = bottom[0]->shape()[i + 2];
+    shape_b_data[i] = bottom[1]->shape()[i + 2];
+  }
 }
 
 template<typename Dtype>

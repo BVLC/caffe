@@ -43,7 +43,7 @@ class Layer {
    */
   explicit Layer(const LayerParameter& param)
       : layer_param_(param), is_shared_(false) {
-    device_context_ = Caffe::GetDevice(layer_param_.device());
+    device_ = Caffe::GetDevice(layer_param_.device());
     // Set phase and copy blobs (if there are any).
     phase_ = param.phase();
     if (layer_param_.blobs_size() > 0) {
@@ -349,7 +349,7 @@ class Layer {
    * @brief Returns the device context this layer runs on
    */
   inline device *get_device() {
-    return device_context_;
+    return device_;
   }
 
   /**
@@ -378,7 +378,7 @@ class Layer {
   vector<Dtype> loss_;
 
   /** Device context */
-  device *device_context_;
+  device *device_;
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -519,7 +519,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     case Caffe::GPU:
       Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
-      if (device_context_->backend() == BACKEND_CUDA) {
+      if (device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
         for (int top_id = 0; top_id < top.size(); ++top_id) {
           if (!this->loss(top_id)) {
@@ -543,7 +543,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
           cl_mem data = (cl_mem) (top[top_id]->gpu_data());
           cl_mem loss_weights = (cl_mem) (top[top_id]->gpu_diff());
           Dtype blob_loss = 0;
-          greentea_gpu_dot(this->device_context_->id(), count, data, 0,
+          greentea_gpu_dot(this->device_->id(), count, data, 0,
                            loss_weights, 0, &blob_loss);
           loss += blob_loss;
         }
