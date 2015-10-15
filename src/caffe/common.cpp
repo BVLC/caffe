@@ -10,7 +10,6 @@
 
 namespace caffe {
 
-static boost::shared_ptr<MemoryHandler> mem_handler;
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 

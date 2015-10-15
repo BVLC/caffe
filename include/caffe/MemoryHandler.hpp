@@ -6,16 +6,17 @@
 
 namespace caffe {
 
+#ifndef CPU_ONLY
+
 class MemoryHandler {
  public:
   enum PoolMode { NoPool, CnMemPool, CubPool };
 
-#ifndef CPU_ONLY
+
   static void mallocGPU(void **ptr, size_t size,
                         cudaStream_t stream = cudaStreamDefault);
   static void freeGPU(void *ptr, cudaStream_t = cudaStreamDefault);
   static void registerStream(cudaStream_t stream);
-#endif
 
   static const char* getName();
   static bool usingPool() {
@@ -35,9 +36,13 @@ class MemoryHandler {
   static PoolMode mode_;
 };
 
+#endif    // CPU_ONLY
+
 class MemoryHandlerActivator {
  public:
+#ifndef CPU_ONLY
   MemoryHandlerActivator(const std::vector<int>& gpus,
+                         // experimental
                          MemoryHandler::PoolMode m = MemoryHandler::CnMemPool) {
     MemoryHandler::init(gpus, m);
   }
@@ -45,6 +50,10 @@ class MemoryHandlerActivator {
   ~MemoryHandlerActivator() {
       MemoryHandler::destroy();
   }
+#else
+  explicit MemoryHandlerActivator(const std::vector<int>&) {
+  }
+#endif
 };
 
 }  // namespace caffe
