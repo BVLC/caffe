@@ -15,15 +15,12 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
   MemoryDataParameter mem_param = this->layer_param_.memory_data_param();
 
-  // Old 4D parameters
-  if (mem_param.has_batch_size() && mem_param.has_channels()
-      && mem_param.has_height() && mem_param.has_width()) {
-    shape_.clear();
-    shape_.push_back(mem_param.batch_size());
-    shape_.push_back(mem_param.channels());
-    shape_.push_back(mem_param.height());
-    shape_.push_back(mem_param.width());
-  }
+  // Old 4D (2D spatial) parameters
+  shape_.clear();
+  shape_.push_back(mem_param.batch_size());
+  shape_.push_back(mem_param.channels());
+  shape_.push_back(mem_param.height());
+  shape_.push_back(mem_param.width());
 
   // New ND parameters
   if (mem_param.dim_size() > 0) {
@@ -35,6 +32,7 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Labels have shape batch_size, 1, 1, ..., 1
   label_shape_.push_back(shape_[0]);
+  size_ = 1;
   // All sizes except the batch index
   for (int i = 1; i < shape_.size(); ++i) {
     size_ *= shape_[i];
@@ -59,8 +57,12 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK_GT(num, 0)<< "There is no datum to add.";
   CHECK_EQ(num % shape_[0], 0)<<
   "The added data must be a multiple of the batch size.";
-  added_data_.Reshape(shape_);
-  added_label_.Reshape(num, 1, 1, 1);
+  vector<int> added_shape = shape_;
+  added_shape[0] = num;
+  added_data_.Reshape(added_shape);
+  vector<int> added_label_shape = label_shape_;
+  added_label_shape[0] = num;
+  added_label_.Reshape(added_label_shape);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(datum_vector, &added_data_);
   // Copy Labels
@@ -89,7 +91,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   added_data_.Reshape(added_shape);
   vector<int> added_label_shape = label_shape_;
   added_label_shape[0] = num;
-  added_label_.Reshape(label_shape_);
+  added_label_.Reshape(added_label_shape);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(mat_vector, &added_data_);
   // Copy Labels
