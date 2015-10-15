@@ -8,8 +8,6 @@
 #ifdef USE_CNMEM
 // CNMEM integration
 #include <cnmem.h>
-# else
-#  define CNMEM_CHECK(x)
 #endif
 
 
