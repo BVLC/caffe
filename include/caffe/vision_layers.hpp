@@ -130,8 +130,10 @@ class MergeCropLayer : public Layer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
 
  private:
-  Blob<int> forward;
-  Blob<int> backward;
+  vector<int> forward_;
+  vector<int> backward_;
+  Blob<int> shape_a_;
+  Blob<int> shape_b_;
 };
 
 /**
@@ -326,9 +328,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        Dtype* col_buff,
                                        const int col_buff_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       if (this->use_skernel_) {
@@ -385,9 +387,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        const int col_buff_off, Dtype* data,
                                        const int data_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       if (this->use_skernel_) {

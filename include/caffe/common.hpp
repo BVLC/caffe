@@ -203,7 +203,7 @@ class Caffe {
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
   static vector<shared_ptr< device> > devices_;
-  shared_ptr<device> cpu_device_context_;
+  shared_ptr<device> cpu_device_;
   device* default_device_;
 
   int solver_count_;

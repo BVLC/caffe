@@ -32,7 +32,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
-        device_context_(Caffe::GetDefaultDevice()),
+        device_(Caffe::GetDefaultDevice()),
         cl_gpu_mem_(NULL) {
   }
   explicit SyncedMemory(device *device_context)
@@ -42,7 +42,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
-        device_context_(device_context),
+        device_(device_context),
         cl_gpu_mem_(NULL) {
   }
   explicit SyncedMemory(size_t size, device *device_context)
@@ -52,7 +52,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
-        device_context_(device_context),
+        device_(device_context),
         cl_gpu_mem_(NULL) {
   }
 #else
@@ -63,7 +63,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
-        device_context_(Caffe::GetDefaultDevice()) {
+        device_(Caffe::GetDefaultDevice()) {
   }
   explicit SyncedMemory(device *device_context)
       : cpu_ptr_(NULL),
@@ -72,7 +72,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
-        device_context_(device_context) {
+        device_(device_context) {
   }
   explicit SyncedMemory(size_t size, device *device_context)
       : cpu_ptr_(NULL),
@@ -81,7 +81,7 @@ class SyncedMemory {
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
-        device_context_(device_context) {
+        device_(device_context) {
   }
 #endif
 
@@ -121,7 +121,7 @@ class SyncedMemory {
   SyncedHead head_;
   bool own_cpu_data_;
   bool own_gpu_data_;
-  device *device_context_;
+  device *device_;
 
 #ifdef USE_GREENTEA
   cl_mem cl_gpu_mem_;

@@ -68,9 +68,9 @@ void EmbedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_->id());
+          this->device_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_->id());
+          this->device_->id());
 
       viennacl::ocl::kernel &oclk_embed = program.get_kernel(
           CL_KERNEL_SELECT("embed_forward"));
@@ -110,9 +110,9 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_->id());
+          this->device_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_->id());
+          this->device_->id());
 
       viennacl::ocl::kernel &oclk_embed = program.get_kernel(
           CL_KERNEL_SELECT("embed_backward"));

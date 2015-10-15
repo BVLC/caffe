@@ -682,7 +682,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int* mask = NULL;
   Dtype* top_mask = NULL;
 
-  if (this->device_context_->backend() == BACKEND_CUDA) {
+  if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
 
     if (num_spatial_axes_ == 2) {
@@ -839,9 +839,9 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     if (num_spatial_axes_ == 2) {
       int kernel_h_ = kernel_shape_.cpu_data()[0];
@@ -903,7 +903,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           case PoolingParameter_PoolMethod_STOCHASTIC: {
             if (this->phase_ == caffe::TRAIN) {
               // We need to create the random index as well.
-              greentea_gpu_rng_uniform(this->device_context_->id(), count,
+              greentea_gpu_rng_uniform(this->device_->id(), count,
                   Dtype(0), Dtype(1),
                   (cl_mem)(rand_idx_.mutable_gpu_data()), 0);
 
@@ -978,7 +978,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           case PoolingParameter_PoolMethod_STOCHASTIC: {
             if (this->phase_ == caffe::TRAIN) {
               // We need to create the random index as well.
-              greentea_gpu_rng_uniform(this->device_context_->id(), count,
+              greentea_gpu_rng_uniform(this->device_->id(), count,
                   Dtype(0), Dtype(1),
                   (cl_mem)(rand_idx_.mutable_gpu_data()), 0);
 
@@ -1063,7 +1063,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int* mask = NULL;
   const Dtype* top_mask = NULL;
 
-  if (this->device_context_->backend() == BACKEND_CUDA) {
+  if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_set(count, Dtype(0.), bottom_diff);
 
@@ -1172,11 +1172,11 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_->id());
+          this->device_->id());
       viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_->id());
+          this->device_->id());
 
-      greentea_gpu_set(this->device_context_->id(), count, Dtype(0.),
+      greentea_gpu_set(this->device_->id(), count, Dtype(0.),
           (cl_mem) bottom_diff, 0);
 
       if (num_spatial_axes_ == 2) {

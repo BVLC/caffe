@@ -781,7 +781,9 @@ class MalisLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MalisLoss"; }
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return 3; }
+  virtual inline int MaxBottomBlobs() const { return 4; }
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
@@ -801,11 +803,14 @@ class MalisLossLayer : public LossLayer<Dtype> {
              Dtype *classerr_out, Dtype *rand_index_out,
              Dtype margin, Dtype threshold);
 
+  int nedges_;
   int conn_num_dims_;
   std::vector<int> conn_dims_;
   std::vector<int> nhood_data_;
   std::vector<int> nhood_dims_;
 
+  Blob<Dtype> affinity_pos_;
+  Blob<Dtype> affinity_neg_;
   Blob<Dtype> dloss_pos_;
   Blob<Dtype> dloss_neg_;
 };

@@ -5,8 +5,8 @@
  *      Author: Fabian Tschopp
  */
 
-#ifndef CAFFE_DEVICE_CONTEXT_HPP_
-#define CAFFE_DEVICE_CONTEXT_HPP_
+#ifndef CAFFE_device_HPP_
+#define CAFFE_device_HPP_
 
 #ifdef CMAKE_BUILD
   #include "caffe_config.h"
@@ -70,4 +70,4 @@ class device {
 };
 }  // namespace caffe
 
-#endif /* CAFFE_DEVICE_CONTEXT_HPP_ */
+#endif /* CAFFE_device_HPP_ */

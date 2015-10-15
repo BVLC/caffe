@@ -43,9 +43,9 @@ void TileLayer<Dtype>::Forward_gpu(
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     viennacl::ocl::kernel &oclk_tile = program.get_kernel(
         CL_KERNEL_SELECT("tile"));
@@ -96,9 +96,9 @@ void TileLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-        this->device_context_->id());
+        this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_context_->id());
+        this->device_->id());
 
     viennacl::ocl::kernel &oclk_tile = program.get_kernel(
         CL_KERNEL_SELECT("tile_backward"));

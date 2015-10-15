@@ -17,7 +17,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
                                         Phase phase,
                                         device *device_context)
     : param_(param),
-      phase_(phase), device_context_(device_context) {
+      phase_(phase), device_(device_context) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0)<<
@@ -196,7 +196,7 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   CHECK_GT(datum_num, 0)<< "There is no datum to add";
   CHECK_LE(datum_num, num)<<
   "The size of datum_vector must be no greater than transformed_blob->num()";
-  Blob<Dtype> uni_blob(1, channels, height, width, device_context_);
+  Blob<Dtype> uni_blob(1, channels, height, width, device_);
   for (int item_id = 0; item_id < datum_num; ++item_id) {
     int offset = transformed_blob->offset(item_id);
     uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);
@@ -217,7 +217,7 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
   CHECK_GT(mat_num, 0)<< "There is no MAT to add";
   CHECK_EQ(mat_num, num)<<
   "The size of mat_vector must be equals to transformed_blob->num()";
-  Blob<Dtype> uni_blob(1, channels, height, width, device_context_);
+  Blob<Dtype> uni_blob(1, channels, height, width, device_);
   for (int item_id = 0; item_id < mat_num; ++item_id) {
     int offset = transformed_blob->offset(item_id);
     uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);

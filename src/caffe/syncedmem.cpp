@@ -59,32 +59,32 @@ void CaffeFreeHost(void* ptr) {
 SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
-    if (device_context_->backend() == Backend::BACKEND_CUDA) {
+    if (device_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
       // Free device memory
       // Get current device active during call of destructor
       int initial_device;
       cudaGetDevice(&initial_device);
-      // We know that this memory blob belongs to the device_context_
-      cudaSetDevice(device_context_->id());
+      // We know that this memory blob belongs to the device_
+      cudaSetDevice(device_->id());
       cudaFree(gpu_ptr_);
       // Restore current device
       cudaSetDevice(initial_device);
       gpu_ptr_ = nullptr;
-      device_context_->DecreaseMemoryUsage(size_);
+      device_->DecreaseMemoryUsage(size_);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       // Free device memory
       viennacl::ocl::context ctx = viennacl::ocl::get_context(
-          device_context_->id());
+          device_->id());
       ctx.get_queue().finish();
       CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
           << "OpenCL memory corruption";
       gpu_ptr_ = nullptr;
       cl_gpu_mem_ = nullptr;
       ctx.get_queue().finish();
-      device_context_->DecreaseMemoryUsage(size_);
+      device_->DecreaseMemoryUsage(size_);
 #endif  // USE_GREENTEA
     }
   }
@@ -111,14 +111,14 @@ inline void SyncedMemory::to_cpu() {
         CaffeMallocHost(&cpu_ptr_, size_);
         own_cpu_data_ = true;
       }
-      if (device_context_->backend() == Backend::BACKEND_CUDA) {
+      if (device_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
-            device_context_->id());
+            device_->id());
         greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, &ctx);
         ctx.get_queue().finish();
 #endif
@@ -139,17 +139,17 @@ inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
     case UNINITIALIZED: {
-      if (device_context_->backend() == Backend::BACKEND_CUDA) {
+      if (device_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-        device_context_->IncreaseMemoryUsage(size_);
+        device_->IncreaseMemoryUsage(size_);
         caffe_gpu_memset(size_, 0, gpu_ptr_);
         own_gpu_data_ = true;
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
-            device_context_->id());
+            device_->id());
         ctx.get_queue().finish();
         cl_int err;
         if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
@@ -162,9 +162,9 @@ inline void SyncedMemory::to_gpu() {
         }
         CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                         << size_ << " failed.";
-        device_context_->IncreaseMemoryUsage(size_);
+        device_->IncreaseMemoryUsage(size_);
         int alpha = 0;
-        greentea_memset(device_context_->id(), size_, alpha, cl_gpu_mem_, 0);
+        greentea_memset(device_->id(), size_, alpha, cl_gpu_mem_, 0);
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();
         own_gpu_data_ = true;
@@ -174,11 +174,11 @@ inline void SyncedMemory::to_gpu() {
       break;
     }
     case HEAD_AT_CPU: {
-      if (device_context_->backend() == Backend::BACKEND_CUDA) {
+      if (device_->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
         if (gpu_ptr_ == nullptr) {
           CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-          device_context_->IncreaseMemoryUsage(size_);
+          device_->IncreaseMemoryUsage(size_);
         }
         caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
         own_gpu_data_ = true;
@@ -186,7 +186,7 @@ inline void SyncedMemory::to_gpu() {
       } else {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
-            device_context_->id());
+            device_->id());
         ctx.get_queue().finish();
         if (gpu_ptr_ == nullptr) {
           cl_int err;
@@ -200,7 +200,7 @@ inline void SyncedMemory::to_gpu() {
           }
           CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                           << size_ << " failed.";
-          device_context_->IncreaseMemoryUsage(size_);
+          device_->IncreaseMemoryUsage(size_);
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
           ctx.get_queue().finish();
         }
@@ -247,13 +247,13 @@ const void* SyncedMemory::gpu_data() {
 
 void SyncedMemory::set_gpu_data(void* data) {
 #ifndef CPU_ONLY
-  if (this->device_context_->backend() == BACKEND_CUDA) {
+  if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
   CHECK(data);
   if (own_gpu_data_) {
     int initial_device;
     cudaGetDevice(&initial_device);
-    CUDA_CHECK(cudaSetDevice(device_context_->id()));
+    CUDA_CHECK(cudaSetDevice(device_->id()));
     CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
