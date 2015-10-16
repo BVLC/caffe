@@ -432,7 +432,8 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Normalized loss over batch size
-  top[0]->mutable_cpu_data()[0] = loss / ((Dtype)bottom[0]->shape()[0]);
+  top[0]->mutable_cpu_data()[0] = loss
+      / (static_cast<Dtype>(bottom[0]->shape()[0]));
 
   if (top.size() == 2) {
     top[1]->ShareData(*(bottom[0]));
