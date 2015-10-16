@@ -43,16 +43,18 @@ with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
     )
     f.create_dataset(
         'label', data=label,
-        compression='gzip', compression_opts=1
+        compression='gzip', compression_opts=1,
+        dtype='uint8',
     )
     f.create_dataset(
         'label2', data=label2,
-        compression='gzip', compression_opts=1
+        compression='gzip', compression_opts=1,
+        dtype='uint8',
     )
 
 with open(script_dir + '/sample_data_list.txt', 'w') as f:
-    f.write(script_dir + '/sample_data.h5\n')
-    f.write(script_dir + '/sample_data_2_gzip.h5\n')
+    f.write('src/caffe/test/test_data/sample_data.h5\n')
+    f.write('src/caffe/test/test_data/sample_data_2_gzip.h5\n')
 
 # Generate GradientBasedSolver solver_data.h5
 
@@ -76,4 +78,4 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
     f['targets'] = targets
 
 with open(script_dir + '/solver_data_list.txt', 'w') as f:
-    f.write(script_dir + '/solver_data.h5\n')
+    f.write('src/caffe/test/test_data/solver_data.h5\n')
