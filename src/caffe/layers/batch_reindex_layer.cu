@@ -33,9 +33,11 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    BRForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads), CAFFE_CUDA_NUM_THREADS) (
+    BRForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads),
+                                 CAFFE_CUDA_NUM_THREADS) (
         top[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
-        bottom[0]->gpu_data(), bottom[1]->gpu_data(), top[0]->mutable_gpu_data());
+        bottom[0]->gpu_data(), bottom[1]->gpu_data(),
+        top[0]->mutable_gpu_data());
     CUDA_POST_KERNEL_CHECK;
 #endif  // USE_CUDA
   } else {
@@ -55,7 +57,6 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
-
 }
 
 #ifdef USE_CUDA
@@ -124,12 +125,13 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    BRBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads), CAFFE_CUDA_NUM_THREADS) (
+    BRBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(threads),
+                                  CAFFE_CUDA_NUM_THREADS) (
         bottom[0]->count(), bottom[0]->count() / bottom[0]->shape(0),
         top[0]->gpu_diff(), top_indexes.gpu_data(), begins.gpu_data(),
         counts.gpu_data(), bottom[0]->mutable_gpu_diff());
     CUDA_POST_KERNEL_CHECK;
-#endif  //USE_CUDA
+#endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
@@ -149,7 +151,6 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
         ctx.get_queue());
 #endif  // USE_GREENTEA
   }
-
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(BatchReindexLayer);

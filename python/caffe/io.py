@@ -20,11 +20,18 @@ def blobproto_to_array(blob, return_diff=False):
     Convert a blob proto to an array. In default, we will just return the data,
     unless return_diff is True, in which case we will return the diff.
     """
+    # Read the data into an array
     if return_diff:
-        return np.array(blob.diff).reshape(*blob.shape.dim)
+        data = np.array(blob.diff)
     else:
-        return np.array(blob.data).reshape(*blob.shape.dim)
+        data = np.array(blob.data)
 
+    # Reshape the array
+    if blob.HasField('num') or blob.HasField('channels') or blob.HasField('height') or blob.HasField('width'):
+        # Use legacy 4D shape
+        return data.reshape(blob.num, blob.channels, blob.height, blob.width)
+    else:
+        return data.reshape(blob.shape.dim)
 
 def array_to_blobproto(arr, diff=None):
     """Converts a N-dimensional array to blob proto. If diff is given, also
