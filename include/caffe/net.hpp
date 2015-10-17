@@ -32,11 +32,10 @@ class Net {
   void Init(const NetParameter& param);
 
   /**
-   * @brief Run Forward with the input Blob%s already fed separately.
+   * @brief Run Forward and return the result.
    *
-   * You can get the input blobs using input_blobs().
    */
-  const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL);
+  const vector<Blob<Dtype>*>& Forward(Dtype* loss = NULL);
 
   /**
    * The From and To variants of Forward and Backward operate on the
@@ -49,14 +48,6 @@ class Net {
   Dtype ForwardFromTo(int start, int end);
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
-  /// @brief Run forward using a set of bottom blobs, and return the result.
-  const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
-      Dtype* loss = NULL);
-  /**
-   * @brief Run forward using a serialized BlobProtoVector and return the
-   *        result as a serialized BlobProtoVector
-   */
-  string Forward(const string& input_blob_protos, Dtype* loss = NULL);
 
   /**
    * @brief Zeroes out the diffs of all net parameters.
@@ -82,9 +73,9 @@ class Net {
    */
   void Reshape();
 
-  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
+  Dtype ForwardBackward() {
     Dtype loss;
-    Forward(bottom, &loss);
+    Forward(&loss);
     Backward();
     return loss;
   }
@@ -194,17 +185,10 @@ class Net {
   inline const vector<string>& param_display_names() const {
     return param_display_names_;
   }
-  /// @brief Input and output blob numbers
-  inline int num_inputs() const { return net_input_blobs_.size(); }
+  /// @brief output blob number
   inline int num_outputs() const { return net_output_blobs_.size(); }
-  inline const vector<Blob<Dtype>*>& input_blobs() const {
-    return net_input_blobs_;
-  }
   inline const vector<Blob<Dtype>*>& output_blobs() const {
     return net_output_blobs_;
-  }
-  inline const vector<int>& input_blob_indices() const {
-    return net_input_blob_indices_;
   }
   inline const vector<int>& output_blob_indices() const {
     return net_output_blob_indices_;
@@ -229,7 +213,7 @@ class Net {
 
  protected:
   // Helpers for Init.
-  /// @brief Append a new input or top blob to the net.
+  /// @brief Append a new top blob to the net.
   void AppendTop(const NetParameter& param, const int layer_id,
                  const int top_id, set<string>* available_blobs,
                  map<string, int>* blob_name_to_idx);
@@ -241,8 +225,6 @@ class Net {
   void AppendParam(const NetParameter& param, const int layer_id,
                    const int param_id);
 
-  /// @brief Helper for displaying debug info in Forward about input Blobs.
-  void InputDebugInfo(const int layer_id);
   /// @brief Helper for displaying debug info in Forward.
   void ForwardDebugInfo(const int layer_id);
   /// @brief Helper for displaying debug info in Backward.
@@ -281,10 +263,8 @@ class Net {
   vector<string> param_display_names_;
   vector<pair<int, int> > param_layer_indices_;
   map<string, int> param_names_index_;
-  /// blob indices for the input and the output of the net
-  vector<int> net_input_blob_indices_;
+  /// blob indices for the output of the net
   vector<int> net_output_blob_indices_;
-  vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
