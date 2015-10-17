@@ -14,22 +14,20 @@ void im2col_cpu(const Dtype* data_im, const int channels,
     const int pad_h, const int pad_w,
     const int stride_h, const int stride_w,
     Dtype* data_col) {
-  int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
-  int channels_col = channels * kernel_h * kernel_w;
-  for (int c = 0; c < channels_col; ++c) {
-    int w_offset = c % kernel_w;
-    int h_offset = (c / kernel_w) % kernel_h;
-    int c_im = c / kernel_h / kernel_w;
-    for (int h = 0; h < height_col; ++h) {
-      for (int w = 0; w < width_col; ++w) {
-        int h_pad = h * stride_h - pad_h + h_offset;
-        int w_pad = w * stride_w - pad_w + w_offset;
-        if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width)
-          data_col[(c * height_col + h) * width_col + w] =
-            data_im[(c_im * height + h_pad) * width + w_pad];
-        else
-          data_col[(c * height_col + h) * width_col + w] = 0;
+  const int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
+  const int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+  const int channels_col = channels * kernel_h * kernel_w;
+  for (int c_col = 0; c_col < channels_col; ++c_col) {
+    int w_offset = c_col % kernel_w;
+    int h_offset = (c_col / kernel_w) % kernel_h;
+    int c_im = c_col / kernel_h / kernel_w;
+    for (int h_col = 0; h_col < height_col; ++h_col) {
+      for (int w_col = 0; w_col < width_col; ++w_col) {
+        int h_im = h_col * stride_h - pad_h + h_offset;
+        int w_im = w_col * stride_w - pad_w + w_offset;
+        data_col[(c_col * height_col + h_col) * width_col + w_col] =
+            (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?
+            data_im[(c_im * height + h_im) * width + w_im] : 0;
       }
     }
   }
@@ -64,9 +62,9 @@ inline void im2col_nd_core_cpu(const Dtype* data_input, const bool im2col,
   const int channels_col = col_shape[0];
   vector<int> d_offset(num_spatial_axes, 0);
   vector<int> d_iter(num_spatial_axes, 0);
-  for (int c = 0; c < channels_col; ++c) {
+  for (int c_col = 0; c_col < channels_col; ++c_col) {
     // Loop over spatial axes in reverse order to compute a per-axis offset.
-    int offset = c;
+    int offset = c_col;
     for (int d_i = num_spatial_axes - 1; d_i >= 0; --d_i) {
       if (d_i < num_spatial_axes - 1) {
         offset /= kernel_shape[d_i + 1];
@@ -76,17 +74,17 @@ inline void im2col_nd_core_cpu(const Dtype* data_input, const bool im2col,
     for (bool incremented = true; incremented; ) {
       // Loop over spatial axes in forward order to compute the indices in the
       // image and column, and whether the index lies in the padding.
-      int index_col = c;
-      int index_im = c / kernel_size;
+      int index_col = c_col;
+      int index_im = c_col / kernel_size;
       bool is_padding = false;
       for (int d_i = 0; d_i < num_spatial_axes; ++d_i) {
         const int d = d_iter[d_i];
-        const int d_pad = d * stride[d_i] - pad[d_i] + d_offset[d_i];
-        is_padding |= d_pad < 0 || d_pad >= im_shape[d_i + 1];
+        const int d_im = d * stride[d_i] - pad[d_i] + d_offset[d_i];
+        is_padding |= d_im < 0 || d_im >= im_shape[d_i + 1];
         index_col *= col_shape[d_i + 1];
         index_col += d;
         index_im *= im_shape[d_i + 1];
-        index_im += d_pad;
+        index_im += d_im;
       }
       if (im2col) {
         if (is_padding) {
@@ -139,25 +137,25 @@ template void im2col_nd_cpu<double>(const double* data_im,
 
 template <typename Dtype>
 void col2im_cpu(const Dtype* data_col, const int channels,
-    const int height, const int width, const int patch_h, const int patch_w,
+    const int height, const int width, const int kernel_h, const int kernel_w,
     const int pad_h, const int pad_w,
     const int stride_h, const int stride_w,
     Dtype* data_im) {
   caffe_set(height * width * channels, Dtype(0), data_im);
-  int height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
-  int channels_col = channels * patch_h * patch_w;
-  for (int c = 0; c < channels_col; ++c) {
-    int w_offset = c % patch_w;
-    int h_offset = (c / patch_w) % patch_h;
-    int c_im = c / patch_h / patch_w;
-    for (int h = 0; h < height_col; ++h) {
-      for (int w = 0; w < width_col; ++w) {
-        int h_pad = h * stride_h - pad_h + h_offset;
-        int w_pad = w * stride_w - pad_w + w_offset;
-        if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width)
-          data_im[(c_im * height + h_pad) * width + w_pad] +=
-              data_col[(c * height_col + h) * width_col + w];
+  const int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
+  const int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+  const int channels_col = channels * kernel_h * kernel_w;
+  for (int c_col = 0; c_col < channels_col; ++c_col) {
+    int w_offset = c_col % kernel_w;
+    int h_offset = (c_col / kernel_w) % kernel_h;
+    int c_im = c_col / kernel_h / kernel_w;
+    for (int h_col = 0; h_col < height_col; ++h_col) {
+      for (int w_col = 0; w_col < width_col; ++w_col) {
+        int h_im = h_col * stride_h - pad_h + h_offset;
+        int w_im = w_col * stride_w - pad_w + w_offset;
+        if (h_im >= 0 && h_im < height && w_im >= 0 && w_im < width)
+          data_im[(c_im * height + h_im) * width + w_im] +=
+              data_col[(c_col * height_col + h_col) * width_col + w_col];
       }
     }
   }
@@ -165,11 +163,11 @@ void col2im_cpu(const Dtype* data_col, const int channels,
 
 // Explicit instantiation
 template void col2im_cpu<float>(const float* data_col, const int channels,
-    const int height, const int width, const int patch_h, const int patch_w,
+    const int height, const int width, const int kernel_h, const int kernel_w,
     const int pad_h, const int pad_w, const int stride_h,
     const int stride_w, float* data_im);
 template void col2im_cpu<double>(const double* data_col, const int channels,
-    const int height, const int width, const int patch_h, const int patch_w,
+    const int height, const int width, const int kernel_h, const int kernel_w,
     const int pad_h, const int pad_w, const int stride_h,
     const int stride_w, double* data_im);
 
