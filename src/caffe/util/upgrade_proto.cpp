@@ -937,4 +937,78 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   }
 }
 
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
+  if (solver_param.has_solver_type()) {
+    return true;
+  }
+  return false;
+}
+
+bool UpgradeSolverType(SolverParameter* solver_param) {
+  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
+      << "Failed to upgrade solver: old solver_type field (enum) and new type "
+      << "field (string) cannot be both specified in solver proto text.";
+  if (solver_param->has_solver_type()) {
+    string type;
+    switch (solver_param->solver_type()) {
+    case SolverParameter_SolverType_SGD:
+      type = "SGD";
+      break;
+    case SolverParameter_SolverType_NESTEROV:
+      type = "Nesterov";
+      break;
+    case SolverParameter_SolverType_ADAGRAD:
+      type = "AdaGrad";
+      break;
+    case SolverParameter_SolverType_RMSPROP:
+      type = "RMSProp";
+      break;
+    case SolverParameter_SolverType_ADADELTA:
+      type = "AdaDelta";
+      break;
+    case SolverParameter_SolverType_ADAM:
+      type = "Adam";
+      break;
+    default:
+      LOG(FATAL) << "Unknown SolverParameter solver_type: " << type;
+    }
+    solver_param->set_type(type);
+    solver_param->clear_solver_type();
+  } else {
+    LOG(ERROR) << "Warning: solver type already up to date. ";
+    return false;
+  }
+  return true;
+}
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
+  bool success = true;
+  // Try to upgrade old style solver_type enum fields into new string type
+  if (SolverNeedsTypeUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "'solver_type' field (enum)': " << param_file;
+    if (!UpgradeSolverType(param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+                 << "SolverType (see above).";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "'solver_type' field (enum) to 'type' field (string).";
+      LOG(WARNING) << "Note that future Caffe releases will only support "
+                   << "'type' field (string) for a solver's type.";
+    }
+  }
+  return success;
+}
+
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse SolverParameter file: " << param_file;
+  UpgradeSolverAsNeeded(param_file, param);
+}
+
 }  // namespace caffe
