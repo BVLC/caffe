@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
+#include <complex>
 
 #include "glog/logging.h"
 
@@ -42,6 +43,9 @@ void caffe_set(const int N, const Dtype alpha, Dtype *X);
 inline void caffe_memset(const size_t N, const int alpha, void* X) {
   memset(X, alpha, N);  // NOLINT(caffe/alt_fn)
 }
+
+template <typename Dtype>
+void caffe_cvnrm(std::complex<Dtype>* input, Dtype* output, int size);
 
 template <typename Dtype>
 void caffe_add_scalar(const int N, const Dtype alpha, Dtype *X);

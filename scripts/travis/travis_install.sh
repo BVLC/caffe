@@ -68,7 +68,7 @@ if [ ! -d $CONDA_DIR ]; then
 	fi
 	chmod +x miniconda.sh
 	./miniconda.sh -b -p $CONDA_DIR
-	
+
 	conda update --yes conda
 	conda install --yes numpy scipy matplotlib scikit-image pip
 	# Let conda install boost (so that boost_python matches)
@@ -92,4 +92,10 @@ if [ "$PYTHON_VERSION" -eq "3" ]; then
 	pip install --pre protobuf
 else
 	pip install protobuf
+fi
+
+# install audio dependencies
+if $WITH_AUDIO; then
+apt-get -y update
+apt-get install libfftw3-dev libsndfile-dev
 fi

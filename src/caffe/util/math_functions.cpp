@@ -1,6 +1,7 @@
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
+#include <functional>
 #include <limits>
 
 #include "caffe/common.hpp"
@@ -67,6 +68,20 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
 template void caffe_set<int>(const int N, const int alpha, int* Y);
 template void caffe_set<float>(const int N, const float alpha, float* Y);
 template void caffe_set<double>(const int N, const double alpha, double* Y);
+
+template <>
+void caffe_cvnrm(std::complex<double>* input, double* output, int size) {
+  for (int i = 0; i < size; ++i) {
+    output[i] = std::abs(input[i]);
+  }
+}
+
+template <>
+void caffe_cvnrm(std::complex<float>* input, float* output, int size) {
+  for (int i = 0; i < size; ++i) {
+    output[i] = std::abs(input[i]);
+  }
+}
 
 template <>
 void caffe_add_scalar(const int N, const float alpha, float* Y) {

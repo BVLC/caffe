@@ -2,12 +2,18 @@
 # one using CMake, and one using make.
 env:
   matrix:
-    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true
-    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3
-    - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true
-    - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
-    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
-    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true WITH_AUDIO=false
+    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true WITH_AUDIO=true
+    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3 WITH_AUDIO=false
+    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3 WITH_AUDIO=true
+    - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true WITH_AUDIO=false
+    - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true WITH_AUDIO=true
+    - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true WITH_AUDIO=false
+    - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true WITH_AUDIO=true
+    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false WITH_AUDIO=false
+    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false WITH_AUDIO=true
+    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3 WITH_AUDIO=false
+    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3 WITH_AUDIO=true
 
 language: cpp
 

@@ -51,6 +51,25 @@ if(USE_LEVELDB)
   list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
 endif()
 
+
+if(USE_AUDIO)
+# ---[ SNDFILE
+  find_package(SNDFILE REQUIRED)
+  if(SNDFILE_FOUND)
+    include_directories(SYSTEM ${SNDFILE_INCLUDE_DIR})
+    list(APPEND Caffe_LINKER_LIBS ${SNDFILE_LIBRARIES})
+  endif()
+
+# ---[ FFT
+  find_package(FFTW QUIET)
+  if(FFTW_FOUND)
+    include_directories(SYSTEM ${FFTW_INCLUDE_DIR})
+    list(APPEND Caffe_LINKER_LIBS ${FFTW_LIBRARIES})
+  endif()
+
+  add_definitions(-DUSE_AUDIO)
+endif()
+
 # ---[ CUDA
 include(cmake/Cuda.cmake)
 if(NOT HAVE_CUDA)
@@ -110,18 +129,18 @@ if(BUILD_python)
     find_package(NumPy 1.7.1)
     # Find the matching boost python implementation
     set(version ${PYTHONLIBS_VERSION_STRING})
-    
+
     STRING( REPLACE "." "" boost_py_version ${version} )
     find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
     set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-    
+
     while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
       STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
-      
+
       STRING( REPLACE "." "" boost_py_version ${version} )
       find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
       set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-      
+
       STRING( REGEX MATCHALL "([0-9.]+).[0-9]+" has_more_version ${version} )
       if("${has_more_version}" STREQUAL "")
         break()

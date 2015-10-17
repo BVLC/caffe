@@ -32,5 +32,3 @@ install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
 file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)
 list(APPEND proto_python ${PROJECT_BINARY_DIR}/__init__.py)
 install(PROGRAMS ${proto_python} DESTINATION python/caffe/proto)
-
-

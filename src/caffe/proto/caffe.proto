@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 139 (last added: tile_param)
+// LayerParameter next available layer-specific ID: 141 (last added: spectrogram_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -355,6 +355,7 @@ message LayerParameter {
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
+  optional AudioDataParameter audio_data_param = 139;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -384,6 +385,7 @@ message LayerParameter {
   optional ReshapeParameter reshape_param = 133;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
+  optional SpectrogramParameter spectrogram_param = 140;
   optional SPPParameter spp_param = 132;
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
@@ -453,6 +455,18 @@ message ArgMaxParameter {
   // By default ArgMaxLayer maximizes over the flattened trailing dimensions
   // for each index of the first / num dimension.
   optional int32 axis = 3;
+}
+
+message AudioDataParameter {
+  // Specify the data source.
+  required string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 2;
+  // Specify number of samples.
+  required uint32 width = 3;
+  // Whether or not AudioDataLayer should shuffle the list of files at every epoch.
+  optional bool shuffle = 4 [default = false];
+  optional string root_folder = 5 [default = ""];
 }
 
 message ConcatParameter {
@@ -949,6 +963,11 @@ message SoftmaxParameter {
   // from the end (e.g., -1 for the last axis).
   // Any other axes will be evaluated as independent softmaxes.
   optional int32 axis = 2 [default = 1];
+}
+
+message SpectrogramParameter {
+  required int32 window_size = 1;
+  required int32 step_size = 2;
 }
 
 message TanHParameter {
