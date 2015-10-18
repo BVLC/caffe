@@ -4,9 +4,11 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
+
 
 namespace caffe {
 
@@ -103,7 +105,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
   size_t workspace_limit_bytes, total_memory;
-  MemoryHandler::getInfo(&workspace_limit_bytes, &total_memory);
+  gpu_memory::getInfo(&workspace_limit_bytes, &total_memory);
 
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
@@ -195,7 +197,8 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   delete [] workspace_bwd_data_sizes_;
   delete [] workspace_bwd_filter_sizes_;
 
-  MemoryHandler::freeGPU(this->workspaceData);
+  gpu_memory::deallocate(this->workspaceData);
+  this->workspaceData = NULL;
 }
 
 INSTANTIATE_CLASS(CuDNNConvolutionLayer);

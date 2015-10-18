@@ -1,21 +1,58 @@
 #include <vector>
 #include "caffe/common.hpp"
 
-#include "caffe/MemoryHandler.hpp"
+#include "caffe/util/gpu_memory.hpp"
 
-#ifndef CPU_ONLY  // CPU-only Caffe.
-
-#ifdef USE_CNMEM
 // CNMEM integration
-#include <cnmem.h>
-#endif
-
+#include "cnmem.h"
 
 namespace caffe {
 
-  MemoryHandler::PoolMode MemoryHandler::mode_ = MemoryHandler::NoPool;
+  gpu_memory::PoolMode gpu_memory::mode_ = gpu_memory::NoPool;
 
-  void MemoryHandler::mallocGPU(void **ptr, size_t size, cudaStream_t stream) {
+#ifdef CPU_ONLY  // CPU-only Caffe.
+  void gpu_memory::init(const std::vector<int>& gpus,
+                        PoolMode m)  {}
+  void gpu_memory::destroy() {}
+
+  const char* gpu_memory::getPoolName()  {
+    return "No GPU: CPU Only Memory";
+  }
+#else
+  void gpu_memory::init(const std::vector<int>& gpus,
+                           PoolMode m)  {
+    if (gpus.size() <= 0) {
+      // should we report an error here ?
+      m = gpu_memory::NoPool;
+    }
+
+    switch (m) {
+    case CnMemPool:
+      initCNMEM(gpus);
+      break;
+    case CubPool:
+    default:
+      break;
+    }
+
+    std::cout << "gpu_memory initialized with "
+              << getPoolName() << std::endl;
+  }
+
+  void gpu_memory::destroy() {
+    switch (mode_) {
+    case CnMemPool:
+      CNMEM_CHECK(cnmemFinalize());
+      break;
+    case CubPool:
+    default:
+      break;
+    }
+    mode_ = NoPool;
+  }
+
+
+  void gpu_memory::allocate(void **ptr, size_t size, cudaStream_t stream) {
     CHECK((ptr) != NULL);
     switch (mode_) {
     case CnMemPool:
@@ -28,8 +65,7 @@ namespace caffe {
     }
   }
 
-
-  void MemoryHandler::freeGPU(void *ptr, cudaStream_t stream) {
+  void gpu_memory::deallocate(void *ptr, cudaStream_t stream) {
     // allow for null pointer deallocation
     if (!ptr)
       return;
@@ -44,7 +80,7 @@ namespace caffe {
     }
   }
 
-  void MemoryHandler::registerStream(cudaStream_t stream) {
+  void gpu_memory::registerStream(cudaStream_t stream) {
     switch (mode_) {
     case CnMemPool:
       CNMEM_CHECK(cnmemRegisterStream(stream));
@@ -55,19 +91,7 @@ namespace caffe {
     }
   }
 
-  void MemoryHandler::destroy() {
-    switch (mode_) {
-    case CnMemPool:
-      CNMEM_CHECK(cnmemFinalize());
-      break;
-    case CubPool:
-    default:
-      break;
-    }
-    mode_ = NoPool;
-  }
-
-  void MemoryHandler::initCNMEM(const std::vector<int>& gpus) {
+  void gpu_memory::initCNMEM(const std::vector<int>& gpus) {
 #ifdef USE_CNMEM
     cnmemDevice_t* devs = new cnmemDevice_t[gpus.size()];
     int initial_device;
@@ -89,27 +113,7 @@ namespace caffe {
 #endif
   }
 
-  void MemoryHandler::init(const std::vector<int>& gpus,
-                           PoolMode m)  {
-    if (gpus.size() <= 0) {
-      // should we report an error here ?
-      m = MemoryHandler::NoPool;
-    }
-
-    switch (m) {
-    case CnMemPool:
-      initCNMEM(gpus);
-      break;
-    case CubPool:
-    default:
-      break;
-    }
-
-    std::cout << "MemoryHandler initialized with "
-              << getName() << std::endl;
-  }
-
-  const char* MemoryHandler::getName()  {
+  const char* gpu_memory::getPoolName()  {
     switch (mode_) {
     case CnMemPool:
       return "CNMEM Pool";
@@ -120,7 +124,7 @@ namespace caffe {
     }
   }
 
-  void MemoryHandler::getInfo(size_t *free_mem, size_t *total_mem) {
+  void gpu_memory::getInfo(size_t *free_mem, size_t *total_mem) {
     switch (mode_) {
     case CnMemPool:
       CNMEM_CHECK(cnmemMemGetInfo(free_mem, total_mem, cudaStreamDefault));
@@ -130,7 +134,8 @@ namespace caffe {
       CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));
     }
   }
+#endif  // CPU_ONLY
 
 }  // namespace caffe
 
-#endif  // CPU_ONLY
+

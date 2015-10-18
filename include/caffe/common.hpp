@@ -65,8 +65,6 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
-#include "MemoryHandler.hpp"
-
 // See PR #1236
 namespace cv { class Mat; }
 

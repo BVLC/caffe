@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
+#include "caffe/util/gpu_memory.hpp"
+
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
@@ -48,7 +50,7 @@ int main(int argc, char** argv) {
   cudaGetDevice(&device);
   cout << "Current device id: " << device << endl;
   cudaGetDeviceProperties(&CAFFE_TEST_CUDA_PROP, device);
-  caffe::MemoryHandlerActivator activator(devices);
+  caffe::gpu_memory::arena arena(devices);
 
 #endif
   // invoke the test.

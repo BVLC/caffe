@@ -3,6 +3,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
@@ -30,7 +31,7 @@ namespace caffe {
 
       // Forward through cuDNN in parallel over groups.
       for (int g = 0; g < this->group_; g++) {
-        MemoryHandler::mallocGPU(&workspaceData, workspace_fwd_sizes_[i]);
+        gpu_memory::allocate(&workspaceData, workspace_fwd_sizes_[i]);
         // Filters.
         CUDNN_CHECK(cudnnConvFwd(Caffe::cudnn_handle(),
                                  cudnn::dataType<Dtype>::one,
@@ -45,7 +46,7 @@ namespace caffe {
                                  top_descs_[i],
                                  top_data + top_offset_ * g));
 
-        MemoryHandler::freeGPU(workspaceData);
+        gpu_memory::deallocate(workspaceData);
         workspaceData = NULL;
         // Bias.
         if (this->bias_term_) {
@@ -106,8 +107,8 @@ namespace caffe {
 
         // Gradient w.r.t. weights.
         if (this->param_propagate_down_[0]) {
-          MemoryHandler::mallocGPU(&workspaceData,
-                                   workspace_bwd_filter_sizes_[i]);
+          gpu_memory::allocate(&workspaceData,
+                               workspace_bwd_filter_sizes_[i]);
           const Dtype* bottom_data = bottom[i]->gpu_data();
           CUDNN_CHECK(cudnnConvBwdFilter(Caffe::cudnn_handle(),
                                          cudnn::dataType<Dtype>::one,
@@ -122,7 +123,7 @@ namespace caffe {
                                          cudnn::dataType<Dtype>::one,
                                          filter_desc_,
                                          weight_diff + weight_offset_ * g));
-          MemoryHandler::freeGPU(workspaceData);
+          gpu_memory::deallocate(workspaceData);
           workspaceData = NULL;
         }
 
@@ -132,8 +133,8 @@ namespace caffe {
             weight = this->blobs_[0]->gpu_data();
           }
           Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-          MemoryHandler::mallocGPU(&workspaceData,
-                                   workspace_bwd_data_sizes_[i]);
+          gpu_memory::allocate(&workspaceData,
+                               workspace_bwd_data_sizes_[i]);
           CUDNN_CHECK(cudnnConvBwdData(Caffe::cudnn_handle(),
                                        cudnn::dataType<Dtype>::one,
                                        filter_desc_,
@@ -146,7 +147,7 @@ namespace caffe {
                                        cudnn::dataType<Dtype>::zero,
                                        bottom_descs_[i],
                                        bottom_diff + bottom_offset_ * g));
-          MemoryHandler::freeGPU(workspaceData);
+          gpu_memory::deallocate(workspaceData);
           workspaceData = NULL;
         }
       }
