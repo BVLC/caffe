@@ -4,8 +4,6 @@
 #include <thrust/reduce.h>
 
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"

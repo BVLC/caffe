@@ -8,7 +8,6 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
-#include "caffe/util/math_functions.hpp"
 
 const int kMaxBlobAxes = 32;
 
