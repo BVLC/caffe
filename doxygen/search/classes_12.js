@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['xavierfiller',['XavierFiller',['../classcaffe_1_1XavierFiller.html',1,'caffe']]]
+  ['windowdatalayer',['WindowDataLayer',['../classcaffe_1_1WindowDataLayer.html',1,'caffe']]],
+  ['workersolver',['WorkerSolver',['../classcaffe_1_1WorkerSolver.html',1,'caffe']]]
 ];

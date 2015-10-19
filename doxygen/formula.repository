@@ -131,3 +131,10 @@
 \form#130:$ \frac{\partial E}{\partial a_i} = \left\{ \begin{array}{lr} \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ 0 & \mathrm{if} \; x_i > 0 \end{array} \right. $
 \form#131:$ (S \times C \times H \times W) $
 \form#132:$ y = log_{\gamma}(\alpha x + \beta) $
+\form#133:$ (N \times K \times H \times W) $
+\form#134:$ (N \times ...) $
+\form#135:$ (M) $
+\form#136:$ (M \times ...) $
+\form#137:$ y = x_1[x_2] $
+\form#138:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d + \left(1-y\right) \max \left(margin-d, 0\right)^2 $
+\form#139:$ d = \left| \left| a_n - b_n \right| \right|_2 $

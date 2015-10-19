@@ -188,12 +188,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00098"></a><span class="lineno"><a class="line" href="classcaffe_1_1Caffe.html">   98</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1Caffe.html">Caffe</a> {</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  ~<a class="code" href="classcaffe_1_1Caffe.html">Caffe</a>();</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keyword">inline</span> <span class="keyword">static</span> <a class="code" href="classcaffe_1_1Caffe.html">Caffe</a>&amp; Get() {</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordflow">if</span> (!singleton_.get()) {</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      singleton_.reset(<span class="keyword">new</span> <a class="code" href="classcaffe_1_1Caffe.html">Caffe</a>());</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    }</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordflow">return</span> *singleton_;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  }</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="comment">// Thread local context for Caffe. Moved to common.cpp instead of</span></div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="comment">// including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="comment">// on OSX. Also fails on Linux with CUDA 7.0.18.</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keyword">static</span> <a class="code" href="classcaffe_1_1Caffe.html">Caffe</a>&amp; Get();</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keyword">enum</span> Brew { CPU, GPU };</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="comment">// This random number generator facade hides boost and CUDA rng</span></div>
@@ -239,36 +239,42 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> SetDevice(<span class="keyword">const</span> <span class="keywordtype">int</span> device_id);</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="comment">// Prints the current GPU status.</span></div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> DeviceQuery();</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="preprocessor">#ifndef CPU_ONLY</span></div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  cublasHandle_t cublas_handle_;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  curandGenerator_t curand_generator_;</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  shared_ptr&lt;RNG&gt; random_generator_;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  Brew mode_;</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  <span class="keyword">static</span> shared_ptr&lt;Caffe&gt; singleton_;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;  <span class="comment">// The private constructor to avoid duplicate instantiation.</span></div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;  Caffe();</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;  DISABLE_COPY_AND_ASSIGN(Caffe);</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;};</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;}  <span class="comment">// namespace caffe</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="preprocessor">#endif  // CAFFE_COMMON_HPP_</span></div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <span class="comment">// Parallel training info</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  <span class="keyword">inline</span> <span class="keyword">static</span> <span class="keywordtype">int</span> solver_count() { <span class="keywordflow">return</span> Get().solver_count_; }</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keyword">inline</span> <span class="keyword">static</span> <span class="keywordtype">void</span> set_solver_count(<span class="keywordtype">int</span> val) { Get().solver_count_ = val; }</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  <span class="keyword">inline</span> <span class="keyword">static</span> <span class="keywordtype">bool</span> root_solver() { <span class="keywordflow">return</span> Get().root_solver_; }</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  <span class="keyword">inline</span> <span class="keyword">static</span> <span class="keywordtype">void</span> set_root_solver(<span class="keywordtype">bool</span> val) { Get().root_solver_ = val; }</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160; <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="preprocessor">#ifndef CPU_ONLY</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  cublasHandle_t cublas_handle_;</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  curandGenerator_t curand_generator_;</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  shared_ptr&lt;RNG&gt; random_generator_;</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;  Brew mode_;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  <span class="keywordtype">int</span> solver_count_;</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;  <span class="keywordtype">bool</span> root_solver_;</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="comment">// The private constructor to avoid duplicate instantiation.</span></div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  Caffe();</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  DISABLE_COPY_AND_ASSIGN(Caffe);</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;};</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;}  <span class="comment">// namespace caffe</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="preprocessor">#endif  // CAFFE_COMMON_HPP_</span></div>
 <div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
 <div class="ttc" id="namespacecv_html"><div class="ttname"><a href="namespacecv.html">cv</a></div><div class="ttdef"><b>Definition:</b> common.hpp:69</div></div>
 <div class="ttc" id="classcaffe_1_1Caffe_1_1RNG_html"><div class="ttname"><a href="classcaffe_1_1Caffe_1_1RNG.html">caffe::Caffe::RNG</a></div><div class="ttdef"><b>Definition:</b> common.hpp:111</div></div>
-<div class="ttc" id="classcaffe_1_1Caffe_1_1RNG_1_1Generator_html"><div class="ttname"><a href="classcaffe_1_1Caffe_1_1RNG_1_1Generator.html">caffe::Caffe::RNG::Generator</a></div><div class="ttdef"><b>Definition:</b> common.cpp:185</div></div>
+<div class="ttc" id="classcaffe_1_1Caffe_1_1RNG_1_1Generator_html"><div class="ttname"><a href="classcaffe_1_1Caffe_1_1RNG_1_1Generator.html">caffe::Caffe::RNG::Generator</a></div><div class="ttdef"><b>Definition:</b> common.cpp:196</div></div>
 <div class="ttc" id="classcaffe_1_1Caffe_html"><div class="ttname"><a href="classcaffe_1_1Caffe.html">caffe::Caffe</a></div><div class="ttdef"><b>Definition:</b> common.hpp:98</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 21 2015 22:13:57 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Oct 19 2015 15:25:08 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

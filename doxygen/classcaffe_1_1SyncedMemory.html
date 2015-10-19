@@ -124,6 +124,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>set_cpu_data</b> (voi
 <tr class="memitem:acf04d9fabcde73902bdad08672696933"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf04d9fabcde73902bdad08672696933"></a>
 const void *&#160;</td><td class="memItemRight" valign="bottom"><b>gpu_data</b> ()</td></tr>
 <tr class="separator:acf04d9fabcde73902bdad08672696933"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d3831fe6c03370890d76dc8a82f4ca1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d3831fe6c03370890d76dc8a82f4ca1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>set_gpu_data</b> (void *data)</td></tr>
+<tr class="separator:a9d3831fe6c03370890d76dc8a82f4ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab32cd46d7f0cf524d79e4ba7da7449dd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab32cd46d7f0cf524d79e4ba7da7449dd"></a>
 void *&#160;</td><td class="memItemRight" valign="bottom"><b>mutable_cpu_data</b> ()</td></tr>
 <tr class="separator:ab32cd46d7f0cf524d79e4ba7da7449dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -136,6 +139,9 @@ SyncedHead&#160;</td><td class="memItemRight" valign="bottom"><b>head</b> ()</td
 <tr class="memitem:ae181c18b137d62de33bc91501aabb841"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae181c18b137d62de33bc91501aabb841"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> ()</td></tr>
 <tr class="separator:ae181c18b137d62de33bc91501aabb841"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16308ac4986b99fb62303c4f4c1d118b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16308ac4986b99fb62303c4f4c1d118b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>async_gpu_push</b> (const cudaStream_t &amp;stream)</td></tr>
+<tr class="separator:a16308ac4986b99fb62303c4f4c1d118b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Manages memory allocation and synchronization between the host (CPU) and device (GPU). </p>
@@ -147,7 +153,7 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> ()</td></t
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 21 2015 22:14:07 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Oct 19 2015 15:25:20 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

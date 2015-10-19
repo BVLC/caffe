@@ -82,8 +82,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#namespaces">Namespaces</a> &#124;
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
@@ -94,6 +96,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>A layer factory that allows one to register layers. During runtime, registered layers could be called by passing a LayerParameter protobuffer to the CreateLayer function:  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:namespacecaffe_1_1SolverAction"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecaffe_1_1SolverAction.html">SolverAction</a></td></tr>
+<tr class="memdesc:namespacecaffe_1_1SolverAction"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of actions that a client of the <a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a> may request by implementing the <a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a>'s action request function, which a a client may optionally provide in order to request early termination or saving a snapshot without exiting. In the executable caffe, this mechanism is used to allow the snapshot to be saved when stopping execution with a SIGINT (Ctrl-C). <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1AbsValLayer.html">AbsValLayer</a></td></tr>
@@ -102,7 +110,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1AccuracyLayer.html">AccuracyLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the classification accuracy for a one-of-many classification task.  <a href="classcaffe_1_1AccuracyLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1AdaDeltaSolver.html">AdaDeltaSolver</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1AdaGradSolver.html">AdaGradSolver</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1AdamSolver.html">AdamSolver</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcaffe_1_1AdamSolver.html" title="AdamSolver, an algorithm for first-order gradient-based optimization of stochastic objective function...">AdamSolver</a>, an algorithm for first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates of lower-order moments. Described in [1].  <a href="classcaffe_1_1AdamSolver.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ArgMaxLayer.html">ArgMaxLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the index of the <img class="formulaInl" alt="$ K $" src="form_0.png"/> max values for each datum across all dimensions <img class="formulaInl" alt="$ (C \times H \times W) $" src="form_1.png"/>.  <a href="classcaffe_1_1ArgMaxLayer.html#details">More...</a><br /></td></tr>
@@ -115,11 +128,18 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html">BasePrefetchingDataLayer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Batch.html">Batch</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BatchReindexLayer.html">BatchReindexLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Index into the input blob along its first axis.  <a href="classcaffe_1_1BatchReindexLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BilinearFiller.html">BilinearFiller</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with coefficients for bilinear interpolation.  <a href="classcaffe_1_1BilinearFiller.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html">Blob</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapper around <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holders serving as the basic computational unit through which <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s, <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a>s, and <a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a>s interact.  <a href="classcaffe_1_1Blob.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BlockingQueue.html">BlockingQueue</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BNLLLayer.html">BNLLLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes <img class="formulaInl" alt="$ y = x + \log(1 + \exp(-x)) $" src="form_93.png"/> if <img class="formulaInl" alt="$ x > 0 $" src="form_94.png"/>; <img class="formulaInl" alt="$ y = \log(1 + \exp(x)) $" src="form_95.png"/> otherwise.  <a href="classcaffe_1_1BNLLLayer.html#details">More...</a><br /></td></tr>
@@ -133,7 +153,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with constant values <img class="formulaInl" alt="$ x = 0 $" src="form_18.png"/>.  <a href="classcaffe_1_1ConstantFiller.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ContrastiveLossLayer.html">ContrastiveLossLayer</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the contrastive loss <img class="formulaInl" alt="$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d + \left(1-y\right) \max \left(margin-d, 0\right) $" src="form_25.png"/> where <img class="formulaInl" alt="$ d = \left| \left| a_n - b_n \right| \right|_2^2 $" src="form_26.png"/>. This can be used to train siamese networks.  <a href="classcaffe_1_1ContrastiveLossLayer.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the contrastive loss <img class="formulaInl" alt="$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d + \left(1-y\right) \max \left(margin-d, 0\right)^2 $" src="form_138.png"/> where <img class="formulaInl" alt="$ d = \left| \left| a_n - b_n \right| \right|_2 $" src="form_139.png"/>. This can be used to train siamese networks.  <a href="classcaffe_1_1ContrastiveLossLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ConvolutionLayer.html">ConvolutionLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convolves the input image with a bank of learned filters, and (optionally) adds biases.  <a href="classcaffe_1_1ConvolutionLayer.html#details">More...</a><br /></td></tr>
@@ -142,11 +162,16 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataLayer.html">DataLayer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataReader.html">DataReader</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads data from a source to queues available to data layers. A single reading thread is created per source, even if multiple solvers are running in parallel, e.g. for multi-GPU training. This makes sure databases are read sequentially, and that each solver accesses a different subset of the database. Data is distributed to solvers in a round-robin way to keep parallel training deterministic.  <a href="classcaffe_1_1DataReader.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DataTransformer.html">DataTransformer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies common transformations to the input data, such as scaling, mirroring, substracting the image mean...  <a href="classcaffe_1_1DataTransformer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DeconvolutionLayer.html">DeconvolutionLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convolve the input with a bank of learned filters, and (optionally) add biases, treating filters and convolution parameters in the opposite sense as <a class="el" href="classcaffe_1_1ConvolutionLayer.html" title="Convolves the input image with a bank of learned filters, and (optionally) adds biases. ">ConvolutionLayer</a>.  <a href="classcaffe_1_1DeconvolutionLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DevicePair.html">DevicePair</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DropoutLayer.html">DropoutLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">During training only, sets a random portion of <img class="formulaInl" alt="$x$" src="form_89.png"/> to 0, adjusting the rest of the vector magnitude accordingly.  <a href="classcaffe_1_1DropoutLayer.html#details">More...</a><br /></td></tr>
@@ -156,6 +181,9 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1EltwiseLayer.html">EltwiseLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute elementwise operations, such as product and sum, along multiple input Blobs.  <a href="classcaffe_1_1EltwiseLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1EmbedLayer.html">EmbedLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A layer for learning "embeddings" of one-hot vector input. Equivalent to an <a class="el" href="classcaffe_1_1InnerProductLayer.html" title="Also known as a &quot;fully-connected&quot; layer, computes an inner product with a set of learned weights...">InnerProductLayer</a> with one-hot vectors as input, but for efficiency the input is the "hot" index of each column itself.  <a href="classcaffe_1_1EmbedLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1EuclideanLossLayer.html">EuclideanLossLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the Euclidean (L2) loss <img class="formulaInl" alt="$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n \right| \right|_2^2 $" src="form_33.png"/> for real-valued regression tasks.  <a href="classcaffe_1_1EuclideanLossLayer.html#details">More...</a><br /></td></tr>
@@ -174,6 +202,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1GaussianFiller.html">GaussianFiller</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with Gaussian-distributed values <img class="formulaInl" alt="$ x = a $" src="form_20.png"/>.  <a href="classcaffe_1_1GaussianFiller.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1GPUParams.html">GPUParams</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1HDF5DataLayer.html">HDF5DataLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides data to the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> from HDF5 files.  <a href="classcaffe_1_1HDF5DataLayer.html#details">More...</a><br /></td></tr>
@@ -234,6 +264,10 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1NeuronLayer.html">NeuronLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for layers that take one blob as input ( <img class="formulaInl" alt="$ x $" src="form_3.png"/>) and produce one equally-sized blob as output ( <img class="formulaInl" alt="$ y $" src="form_15.png"/>), where each element of the output depends only on the corresponding input element.  <a href="classcaffe_1_1NeuronLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1P2PSync.html">P2PSync</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Params.html">Params</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1PoolingLayer.html">PoolingLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pools the input image by taking the max, average, etc. within regions.  <a href="classcaffe_1_1PoolingLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -256,6 +290,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ReshapeLayer.html">ReshapeLayer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1RMSPropSolver.html">RMSPropSolver</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SGDSolver.html">SGDSolver</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optimizes the parameters of a <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> using stochastic gradient descent (SGD) with momentum.  <a href="classcaffe_1_1SGDSolver.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -264,6 +300,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SigmoidLayer.html">SigmoidLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sigmoid function non-linearity <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_103.png"/>, a classic choice in neural networks.  <a href="classcaffe_1_1SigmoidLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SignalHandler.html">SignalHandler</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SilenceLayer.html">SilenceLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ignores bottom blobs while producing no top blobs. (This is useful to suppress outputs during testing.)  <a href="classcaffe_1_1SilenceLayer.html#details">More...</a><br /></td></tr>
@@ -280,6 +318,10 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Solver.html">Solver</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An interface for classes that perform optimization on <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a>s.  <a href="classcaffe_1_1Solver.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SolverRegisterer.html">SolverRegisterer</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SolverRegistry.html">SolverRegistry</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SplitLayer.html">SplitLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a "split" path in the network by copying the bottom <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> into multiple top <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>s to be used by multiple consuming layers.  <a href="classcaffe_1_1SplitLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -295,6 +337,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ThresholdLayer.html">ThresholdLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tests whether the input exceeds a threshold: outputs 1 for inputs above threshold; 0 otherwise.  <a href="classcaffe_1_1ThresholdLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1TileLayer.html">TileLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> along specified dimensions.  <a href="classcaffe_1_1TileLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Timer.html">Timer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1UniformFiller.html">UniformFiller</a></td></tr>
@@ -303,15 +348,35 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1WindowDataLayer.html">WindowDataLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides data to the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> from windows of images files, specified by a window data file.  <a href="classcaffe_1_1WindowDataLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1WorkerSolver.html">WorkerSolver</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a> that only computes gradients, used as worker for multi-GPU training.  <a href="classcaffe_1_1WorkerSolver.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1XavierFiller.html">XavierFiller</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to number of incoming nodes, outgoing nodes, or their average.  <a href="classcaffe_1_1XavierFiller.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
+<tr class="memitem:a79ce9ffbdd44b367252e0b8cf99bf430"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79ce9ffbdd44b367252e0b8cf99bf430"></a>
+typedef boost::function&lt; SolverAction::Enum()&gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecaffe.html#a79ce9ffbdd44b367252e0b8cf99bf430">ActionCallback</a></td></tr>
+<tr class="memdesc:a79ce9ffbdd44b367252e0b8cf99bf430"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type of a function that returns a <a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a> Action enumeration. <br /></td></tr>
+<tr class="separator:a79ce9ffbdd44b367252e0b8cf99bf430"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeff0d41eefd30caf64b0c9d03e142af3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeff0d41eefd30caf64b0c9d03e142af3"></a>
 typedef boost::mt19937&#160;</td><td class="memItemRight" valign="bottom"><b>rng_t</b></td></tr>
 <tr class="separator:aeff0d41eefd30caf64b0c9d03e142af3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a40a7cd4a30b9ee96c2b7d3ec57620913"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40a7cd4a30b9ee96c2b7d3ec57620913"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>Op</b> { <br />
+&#160;&#160;<b>copy</b>, 
+<b>replace_cpu</b>, 
+<b>replace_gpu</b>, 
+<b>replace_cpu_diff</b>, 
+<br />
+&#160;&#160;<b>replace_gpu_diff</b>
+<br />
+ }</td></tr>
+<tr class="separator:a40a7cd4a30b9ee96c2b7d3ec57620913"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -322,16 +387,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>GlobalInit</b> (int *
 <tr class="memitem:a819e1b2fe30b54d6df0fd88e646ec126"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classcaffe_1_1Filler.html">Filler</a>&lt; Dtype &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">GetFiller</a> (const FillerParameter &amp;param)</td></tr>
 <tr class="memdesc:a819e1b2fe30b54d6df0fd88e646ec126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a specific filler from the specification given in FillerParameter.  <a href="#a819e1b2fe30b54d6df0fd88e646ec126">More...</a><br /></td></tr>
 <tr class="separator:a819e1b2fe30b54d6df0fd88e646ec126"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12878b38378a0658366fa0d21bd3968b"><td class="memTemplParams" colspan="2"><a class="anchor" id="a12878b38378a0658366fa0d21bd3968b"></a>
-template&lt;typename Dtype &gt; </td></tr>
-<tr class="memitem:a12878b38378a0658366fa0d21bd3968b"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classcaffe_1_1Solver.html">Solver</a>&lt; Dtype &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><b>GetSolver</b> (const SolverParameter &amp;param)</td></tr>
-<tr class="separator:a12878b38378a0658366fa0d21bd3968b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f2ffa496ad8c552560065585b326095"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f2ffa496ad8c552560065585b326095"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>CaffeMallocHost</b> (void **ptr, size_t size)</td></tr>
-<tr class="separator:a4f2ffa496ad8c552560065585b326095"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9a6e69c0c49a355cf94964fa93ff990"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9a6e69c0c49a355cf94964fa93ff990"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>CaffeFreeHost</b> (void *ptr)</td></tr>
-<tr class="separator:ae9a6e69c0c49a355cf94964fa93ff990"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d5bca26af8cf109866f31a6a9250673"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d5bca26af8cf109866f31a6a9250673"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>CaffeMallocHost</b> (void **ptr, size_t size, bool *use_cuda)</td></tr>
+<tr class="separator:a1d5bca26af8cf109866f31a6a9250673"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f7cfe1afc7fa32c3f52d12184d8c00d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7f7cfe1afc7fa32c3f52d12184d8c00d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>CaffeFreeHost</b> (void *ptr, bool use_cuda)</td></tr>
+<tr class="separator:a7f7cfe1afc7fa32c3f52d12184d8c00d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad035f2ba804d9d55dfe0076375a8516c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad035f2ba804d9d55dfe0076375a8516c"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>cublasGetErrorString</b> (cublasStatus_t error)</td></tr>
 <tr class="separator:ad035f2ba804d9d55dfe0076375a8516c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -341,22 +402,68 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>curandGetErro
 <tr class="memitem:a8e21af5757c4326c467f2aafac590350"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e21af5757c4326c467f2aafac590350"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>CAFFE_GET_BLOCKS</b> (const int N)</td></tr>
 <tr class="separator:a8e21af5757c4326c467f2aafac590350"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5243a4244e34275539dc9c9406f56ecb"><td class="memTemplParams" colspan="2"><a class="anchor" id="a5243a4244e34275539dc9c9406f56ecb"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a5243a4244e34275539dc9c9406f56ecb"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_load_nd_dataset_helper</b> (hid_t file_id, const char *dataset_name_, int min_dim, int max_dim, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *blob)</td></tr>
+<tr class="separator:a5243a4244e34275539dc9c9406f56ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a674ad3e6b7d8802abc2e69e33ef667dc"><td class="memTemplParams" colspan="2"><a class="anchor" id="a674ad3e6b7d8802abc2e69e33ef667dc"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a674ad3e6b7d8802abc2e69e33ef667dc"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_load_nd_dataset</b> (hid_t file_id, const char *dataset_name_, int min_dim, int max_dim, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *blob)</td></tr>
+<tr class="separator:a674ad3e6b7d8802abc2e69e33ef667dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54a9b96a2fd60bdd4df802248d1d241a"><td class="memTemplParams" colspan="2"><a class="anchor" id="a54a9b96a2fd60bdd4df802248d1d241a"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a54a9b96a2fd60bdd4df802248d1d241a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_save_nd_dataset</b> (const hid_t file_id, const string &amp;dataset_name, const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &amp;blob, bool write_diff=false)</td></tr>
+<tr class="separator:a54a9b96a2fd60bdd4df802248d1d241a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af13193217dcca8c363172e4879032903"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af13193217dcca8c363172e4879032903"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>hdf5_load_int</b> (hid_t loc_id, const string &amp;dataset_name)</td></tr>
+<tr class="separator:af13193217dcca8c363172e4879032903"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d7369c88d93cff8a76e3abf0d675ce7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d7369c88d93cff8a76e3abf0d675ce7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>hdf5_save_int</b> (hid_t loc_id, const string &amp;dataset_name, int i)</td></tr>
+<tr class="separator:a7d7369c88d93cff8a76e3abf0d675ce7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b914c70a5b96bf41d1fcb7b5966981d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b914c70a5b96bf41d1fcb7b5966981d"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>hdf5_load_string</b> (hid_t loc_id, const string &amp;dataset_name)</td></tr>
+<tr class="separator:a0b914c70a5b96bf41d1fcb7b5966981d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adebcd3841c17a53e5272ca12dd56c332"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adebcd3841c17a53e5272ca12dd56c332"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>hdf5_save_string</b> (hid_t loc_id, const string &amp;dataset_name, const string &amp;s)</td></tr>
+<tr class="separator:adebcd3841c17a53e5272ca12dd56c332"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af264874274a4bd45b677bfef7e3bdc1c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af264874274a4bd45b677bfef7e3bdc1c"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>hdf5_get_num_links</b> (hid_t loc_id)</td></tr>
+<tr class="separator:af264874274a4bd45b677bfef7e3bdc1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac77f870cd203946f61302327a8daa587"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac77f870cd203946f61302327a8daa587"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>hdf5_get_name_by_idx</b> (hid_t loc_id, int idx)</td></tr>
+<tr class="separator:ac77f870cd203946f61302327a8daa587"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80def8b338a28a7cdd8b22e38debde40"><td class="memTemplParams" colspan="2"><a class="anchor" id="a80def8b338a28a7cdd8b22e38debde40"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a80def8b338a28a7cdd8b22e38debde40"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>im2col_nd_cpu</b> (const Dtype *data_im, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, Dtype *data_col)</td></tr>
+<tr class="separator:a80def8b338a28a7cdd8b22e38debde40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee6df21e5c5d1567d0615d5e5806a526"><td class="memTemplParams" colspan="2"><a class="anchor" id="aee6df21e5c5d1567d0615d5e5806a526"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:aee6df21e5c5d1567d0615d5e5806a526"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>im2col_cpu</b> (const Dtype *data_im, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, Dtype *data_col)</td></tr>
 <tr class="separator:aee6df21e5c5d1567d0615d5e5806a526"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af489aa01b394ce56b64336895b97d155"><td class="memTemplParams" colspan="2"><a class="anchor" id="af489aa01b394ce56b64336895b97d155"></a>
+<tr class="memitem:adbe844d8dfb7d1dbc907e973c4fdb16f"><td class="memTemplParams" colspan="2"><a class="anchor" id="adbe844d8dfb7d1dbc907e973c4fdb16f"></a>
 template&lt;typename Dtype &gt; </td></tr>
-<tr class="memitem:af489aa01b394ce56b64336895b97d155"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>col2im_cpu</b> (const Dtype *data_col, const int channels, const int height, const int width, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, Dtype *data_im)</td></tr>
-<tr class="separator:af489aa01b394ce56b64336895b97d155"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbe844d8dfb7d1dbc907e973c4fdb16f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>col2im_nd_cpu</b> (const Dtype *data_col, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, Dtype *data_im)</td></tr>
+<tr class="separator:adbe844d8dfb7d1dbc907e973c4fdb16f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af32fcd7bba796294761563212ad48dff"><td class="memTemplParams" colspan="2"><a class="anchor" id="af32fcd7bba796294761563212ad48dff"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:af32fcd7bba796294761563212ad48dff"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>col2im_cpu</b> (const Dtype *data_col, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, Dtype *data_im)</td></tr>
+<tr class="separator:af32fcd7bba796294761563212ad48dff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3e562638d968283f8f29f1ea6727812"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae3e562638d968283f8f29f1ea6727812"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:ae3e562638d968283f8f29f1ea6727812"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>im2col_nd_gpu</b> (const Dtype *data_im, const int num_spatial_axes, const int col_size, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, Dtype *data_col)</td></tr>
+<tr class="separator:ae3e562638d968283f8f29f1ea6727812"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afca8ae25ea217b563a5ec7f5598a41ba"><td class="memTemplParams" colspan="2"><a class="anchor" id="afca8ae25ea217b563a5ec7f5598a41ba"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:afca8ae25ea217b563a5ec7f5598a41ba"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>im2col_gpu</b> (const Dtype *data_im, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, Dtype *data_col)</td></tr>
 <tr class="separator:afca8ae25ea217b563a5ec7f5598a41ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d59aa85be3ba56dca91357d962b1577"><td class="memTemplParams" colspan="2"><a class="anchor" id="a8d59aa85be3ba56dca91357d962b1577"></a>
+<tr class="memitem:a03ba511133590172b314254be6db5c46"><td class="memTemplParams" colspan="2"><a class="anchor" id="a03ba511133590172b314254be6db5c46"></a>
 template&lt;typename Dtype &gt; </td></tr>
-<tr class="memitem:a8d59aa85be3ba56dca91357d962b1577"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>col2im_gpu</b> (const Dtype *data_col, const int channels, const int height, const int width, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, Dtype *data_im)</td></tr>
-<tr class="separator:a8d59aa85be3ba56dca91357d962b1577"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03ba511133590172b314254be6db5c46"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>col2im_nd_gpu</b> (const Dtype *data_col, const int num_spatial_axes, const int im_size, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, Dtype *data_im)</td></tr>
+<tr class="separator:a03ba511133590172b314254be6db5c46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2af2754ab5e3a898c7331bcc315f5f6"><td class="memTemplParams" colspan="2"><a class="anchor" id="af2af2754ab5e3a898c7331bcc315f5f6"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:af2af2754ab5e3a898c7331bcc315f5f6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>col2im_gpu</b> (const Dtype *data_col, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, Dtype *data_im)</td></tr>
+<tr class="separator:af2af2754ab5e3a898c7331bcc315f5f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3496a2d5b76ce0e58d9888c9ccace709"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3496a2d5b76ce0e58d9888c9ccace709"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>InsertSplits</b> (const NetParameter &amp;param, NetParameter *param_split)</td></tr>
 <tr class="separator:a3496a2d5b76ce0e58d9888c9ccace709"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -441,39 +548,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>DecodeDatumNative</b>
 <tr class="memitem:a6335d16a871bb3f679699b19f3a61faf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6335d16a871bb3f679699b19f3a61faf"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>DecodeDatum</b> (Datum *datum, bool is_color)</td></tr>
 <tr class="separator:a6335d16a871bb3f679699b19f3a61faf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c7926ffa453d694f9ebccb42ddf0266"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c7926ffa453d694f9ebccb42ddf0266"></a>
-cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><b>ReadImageToCVMat</b> (const string &amp;filename, const int height, const int width, const bool is_color)</td></tr>
-<tr class="separator:a0c7926ffa453d694f9ebccb42ddf0266"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8fdcb7c7f79d2d02974fce4e627402f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8fdcb7c7f79d2d02974fce4e627402f"></a>
-cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><b>ReadImageToCVMat</b> (const string &amp;filename, const int height, const int width)</td></tr>
-<tr class="separator:ad8fdcb7c7f79d2d02974fce4e627402f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d5c369a6b6217a604af3e4b2623e6ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d5c369a6b6217a604af3e4b2623e6ea"></a>
-cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><b>ReadImageToCVMat</b> (const string &amp;filename, const bool is_color)</td></tr>
-<tr class="separator:a5d5c369a6b6217a604af3e4b2623e6ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe27d3cd65e1f3c4dfc29e99607ba100"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe27d3cd65e1f3c4dfc29e99607ba100"></a>
-cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><b>ReadImageToCVMat</b> (const string &amp;filename)</td></tr>
-<tr class="separator:afe27d3cd65e1f3c4dfc29e99607ba100"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a804fb0daf260505a4319ab807db101b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a804fb0daf260505a4319ab807db101b1"></a>
-cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><b>DecodeDatumToCVMatNative</b> (const Datum &amp;datum)</td></tr>
-<tr class="separator:a804fb0daf260505a4319ab807db101b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0af485c4d1410ff03ca9ac1aad44e34"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0af485c4d1410ff03ca9ac1aad44e34"></a>
-cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><b>DecodeDatumToCVMat</b> (const Datum &amp;datum, bool is_color)</td></tr>
-<tr class="separator:af0af485c4d1410ff03ca9ac1aad44e34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5fe12f4e06f1c104e11bff02ea9ab018"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5fe12f4e06f1c104e11bff02ea9ab018"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>CVMatToDatum</b> (const cv::Mat &amp;cv_img, Datum *datum)</td></tr>
-<tr class="separator:a5fe12f4e06f1c104e11bff02ea9ab018"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5243a4244e34275539dc9c9406f56ecb"><td class="memTemplParams" colspan="2"><a class="anchor" id="a5243a4244e34275539dc9c9406f56ecb"></a>
-template&lt;typename Dtype &gt; </td></tr>
-<tr class="memitem:a5243a4244e34275539dc9c9406f56ecb"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_load_nd_dataset_helper</b> (hid_t file_id, const char *dataset_name_, int min_dim, int max_dim, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *blob)</td></tr>
-<tr class="separator:a5243a4244e34275539dc9c9406f56ecb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a674ad3e6b7d8802abc2e69e33ef667dc"><td class="memTemplParams" colspan="2"><a class="anchor" id="a674ad3e6b7d8802abc2e69e33ef667dc"></a>
-template&lt;typename Dtype &gt; </td></tr>
-<tr class="memitem:a674ad3e6b7d8802abc2e69e33ef667dc"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_load_nd_dataset</b> (hid_t file_id, const char *dataset_name_, int min_dim, int max_dim, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; *blob)</td></tr>
-<tr class="separator:a674ad3e6b7d8802abc2e69e33ef667dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d2ac51f16c00735663d80ca1d87c805"><td class="memTemplParams" colspan="2"><a class="anchor" id="a5d2ac51f16c00735663d80ca1d87c805"></a>
-template&lt;typename Dtype &gt; </td></tr>
-<tr class="memitem:a5d2ac51f16c00735663d80ca1d87c805"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_save_nd_dataset</b> (const hid_t file_id, const string &amp;dataset_name, const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &amp;blob)</td></tr>
-<tr class="separator:a5d2ac51f16c00735663d80ca1d87c805"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa92272cd2715dcb6bf21cdcec8237434"><td class="memTemplParams" colspan="2"><a class="anchor" id="aa92272cd2715dcb6bf21cdcec8237434"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:aa92272cd2715dcb6bf21cdcec8237434"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_cpu_gemm</b> (const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const Dtype alpha, const Dtype *A, const Dtype *B, const Dtype beta, Dtype *C)</td></tr>
@@ -724,6 +798,15 @@ template&lt;class RandomAccessIterator &gt; </td></tr>
 <tr class="memitem:a83f79549cfd215fa6b8dc19ef3cc17f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83f79549cfd215fa6b8dc19ef3cc17f8"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>NetNeedsUpgrade</b> (const NetParameter &amp;net_param)</td></tr>
 <tr class="separator:a83f79549cfd215fa6b8dc19ef3cc17f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1267415c684b414ca65f4832624d869b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1267415c684b414ca65f4832624d869b"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeNetAsNeeded</b> (const string &amp;param_file, NetParameter *param)</td></tr>
+<tr class="separator:a1267415c684b414ca65f4832624d869b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8801bcd5125b2aec799adcc7f617be1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8801bcd5125b2aec799adcc7f617be1a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ReadNetParamsFromTextFileOrDie</b> (const string &amp;param_file, NetParameter *param)</td></tr>
+<tr class="separator:a8801bcd5125b2aec799adcc7f617be1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec4379a5d972592245df191bec9c75bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec4379a5d972592245df191bec9c75bd"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ReadNetParamsFromBinaryFileOrDie</b> (const string &amp;param_file, NetParameter *param)</td></tr>
+<tr class="separator:aec4379a5d972592245df191bec9c75bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ae89f37ec932cd9be668a9fe34af02b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ae89f37ec932cd9be668a9fe34af02b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>NetNeedsV0ToV1Upgrade</b> (const NetParameter &amp;net_param)</td></tr>
 <tr class="separator:a5ae89f37ec932cd9be668a9fe34af02b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -757,15 +840,18 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeV1LayerParamet
 <tr class="memitem:a0c08684e0bf64620ba505b112b27067b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c08684e0bf64620ba505b112b27067b"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeV1LayerType</b> (const V1LayerParameter_LayerType type)</td></tr>
 <tr class="separator:a0c08684e0bf64620ba505b112b27067b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1267415c684b414ca65f4832624d869b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1267415c684b414ca65f4832624d869b"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeNetAsNeeded</b> (const string &amp;param_file, NetParameter *param)</td></tr>
-<tr class="separator:a1267415c684b414ca65f4832624d869b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8801bcd5125b2aec799adcc7f617be1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8801bcd5125b2aec799adcc7f617be1a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ReadNetParamsFromTextFileOrDie</b> (const string &amp;param_file, NetParameter *param)</td></tr>
-<tr class="separator:a8801bcd5125b2aec799adcc7f617be1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec4379a5d972592245df191bec9c75bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec4379a5d972592245df191bec9c75bd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ReadNetParamsFromBinaryFileOrDie</b> (const string &amp;param_file, NetParameter *param)</td></tr>
-<tr class="separator:aec4379a5d972592245df191bec9c75bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94c0499a4e250e932475b98a0ed5aba6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94c0499a4e250e932475b98a0ed5aba6"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>SolverNeedsTypeUpgrade</b> (const SolverParameter &amp;solver_param)</td></tr>
+<tr class="separator:a94c0499a4e250e932475b98a0ed5aba6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84566800a0ee8db1da676cbb8b831c6a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84566800a0ee8db1da676cbb8b831c6a"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeSolverType</b> (SolverParameter *solver_param)</td></tr>
+<tr class="separator:a84566800a0ee8db1da676cbb8b831c6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3777408533d54e17e1293ecb711f6ffd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3777408533d54e17e1293ecb711f6ffd"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeSolverAsNeeded</b> (const string &amp;param_file, SolverParameter *param)</td></tr>
+<tr class="separator:a3777408533d54e17e1293ecb711f6ffd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a952ac3fd680ae9c565299b7b4bfb8a3d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a952ac3fd680ae9c565299b7b4bfb8a3d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ReadSolverParamsFromTextFileOrDie</b> (const string &amp;param_file, SolverParameter *param)</td></tr>
+<tr class="separator:a952ac3fd680ae9c565299b7b4bfb8a3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23fdc8cf55ff6d4673e4d6a9379cd478"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23fdc8cf55ff6d4673e4d6a9379cd478"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1Blob.html">Blob</a>)</td></tr>
 <tr class="separator:a23fdc8cf55ff6d4673e4d6a9379cd478"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -775,6 +861,9 @@ int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>cluster_seedgen</b
 <tr class="memitem:a5f53f0075544bd1a369e9bee585f0799"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f53f0075544bd1a369e9bee585f0799"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1DataTransformer.html">DataTransformer</a>)</td></tr>
 <tr class="separator:a5f53f0075544bd1a369e9bee585f0799"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a651a9d87b2b5e2d398c2cfd802b0a4eb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a651a9d87b2b5e2d398c2cfd802b0a4eb"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1Layer.html">Layer</a>)</td></tr>
+<tr class="separator:a651a9d87b2b5e2d398c2cfd802b0a4eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a259b2477b70134b1269e767ad3ddd254"><td class="memTemplParams" colspan="2"><a class="anchor" id="a259b2477b70134b1269e767ad3ddd254"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a259b2477b70134b1269e767ad3ddd254"><td class="memTemplItemLeft" align="right" valign="top">shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>GetConvolutionLayer</b> (const LayerParameter &amp;param)</td></tr>
@@ -789,6 +878,13 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:ae15dbd197521d5690de784adacd4351c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae15dbd197521d5690de784adacd4351c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CREATOR</b> (Pooling, GetPoolingLayer)</td></tr>
 <tr class="separator:ae15dbd197521d5690de784adacd4351c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d35f50f4dc6ff971fde340034f14f48"><td class="memTemplParams" colspan="2"><a class="anchor" id="a5d35f50f4dc6ff971fde340034f14f48"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a5d35f50f4dc6ff971fde340034f14f48"><td class="memTemplItemLeft" align="right" valign="top">shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>GetLRNLayer</b> (const LayerParameter &amp;param)</td></tr>
+<tr class="separator:a5d35f50f4dc6ff971fde340034f14f48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e71677619e9bda16a7db5ca8b1076b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e71677619e9bda16a7db5ca8b1076b4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CREATOR</b> (LRN, GetLRNLayer)</td></tr>
+<tr class="separator:a8e71677619e9bda16a7db5ca8b1076b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a324c8bc02e74a55534c5ee88e6091870"><td class="memTemplParams" colspan="2"><a class="anchor" id="a324c8bc02e74a55534c5ee88e6091870"></a>
 template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a324c8bc02e74a55534c5ee88e6091870"><td class="memTemplItemLeft" align="right" valign="top">shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>GetReLULayer</b> (const LayerParameter &amp;param)</td></tr>
@@ -844,6 +940,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a06ec5bd1a6534ff0711a051d23199cf5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06ec5bd1a6534ff0711a051d23199cf5"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html">BasePrefetchingDataLayer</a>)</td></tr>
 <tr class="separator:a06ec5bd1a6534ff0711a051d23199cf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac47c1db98ed016502b029ddb5fc400ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac47c1db98ed016502b029ddb5fc400ec"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1BatchReindexLayer.html">BatchReindexLayer</a>)</td></tr>
+<tr class="separator:ac47c1db98ed016502b029ddb5fc400ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0e00e7d1a29ab0928d8821564beb9f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0e00e7d1a29ab0928d8821564beb9f4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (BatchReindex)</td></tr>
+<tr class="separator:af0e00e7d1a29ab0928d8821564beb9f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a301bc2174de79871a19fb90bb561791b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a301bc2174de79871a19fb90bb561791b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1BNLLLayer.html">BNLLLayer</a>)</td></tr>
 <tr class="separator:a301bc2174de79871a19fb90bb561791b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -895,6 +997,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a7675bc7c3c792f098fd5aef2b0ae0cb9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7675bc7c3c792f098fd5aef2b0ae0cb9"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Eltwise)</td></tr>
 <tr class="separator:a7675bc7c3c792f098fd5aef2b0ae0cb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a134db7f2d2ee76300729a74925fa20cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a134db7f2d2ee76300729a74925fa20cb"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1EmbedLayer.html">EmbedLayer</a>)</td></tr>
+<tr class="separator:a134db7f2d2ee76300729a74925fa20cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e4cb8c13df5e1fff14800717da6f05e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e4cb8c13df5e1fff14800717da6f05e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Embed)</td></tr>
+<tr class="separator:a8e4cb8c13df5e1fff14800717da6f05e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3486a0b745654ba8a682ff8642fd9b9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3486a0b745654ba8a682ff8642fd9b9c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1EuclideanLossLayer.html">EuclideanLossLayer</a>)</td></tr>
 <tr class="separator:a3486a0b745654ba8a682ff8642fd9b9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -943,12 +1051,6 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:acecabc819a0b63da422b455913343b59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acecabc819a0b63da422b455913343b59"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Im2col)</td></tr>
 <tr class="separator:acecabc819a0b63da422b455913343b59"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d45d14c45e75d872ff0675cd9dbcec1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d45d14c45e75d872ff0675cd9dbcec1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1ImageDataLayer.html">ImageDataLayer</a>)</td></tr>
-<tr class="separator:a5d45d14c45e75d872ff0675cd9dbcec1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade33c7b4a187845c27f2f672f7bb57e3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade33c7b4a187845c27f2f672f7bb57e3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (ImageData)</td></tr>
-<tr class="separator:ade33c7b4a187845c27f2f672f7bb57e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a434258d6113160a68f66d00654ae7a63"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a434258d6113160a68f66d00654ae7a63"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1InfogainLossLayer.html">InfogainLossLayer</a>)</td></tr>
 <tr class="separator:a434258d6113160a68f66d00654ae7a63"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -973,9 +1075,6 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a818b23abbae9ca690cd0a4bd07a8870e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a818b23abbae9ca690cd0a4bd07a8870e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1LRNLayer.html">LRNLayer</a>)</td></tr>
 <tr class="separator:a818b23abbae9ca690cd0a4bd07a8870e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30b89ddbd25b2e824e7a2c480d6b4908"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a30b89ddbd25b2e824e7a2c480d6b4908"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (LRN)</td></tr>
-<tr class="separator:a30b89ddbd25b2e824e7a2c480d6b4908"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a760d67cbf4c0daf41b5ea8035455a295"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a760d67cbf4c0daf41b5ea8035455a295"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1MemoryDataLayer.html">MemoryDataLayer</a>)</td></tr>
 <tr class="separator:a760d67cbf4c0daf41b5ea8035455a295"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1082,39 +1181,63 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:ae425614c734e0dbeaaffcee36d24dadf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae425614c734e0dbeaaffcee36d24dadf"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Threshold)</td></tr>
 <tr class="separator:ae425614c734e0dbeaaffcee36d24dadf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f03ba694679a26b9e565f9ca2bc02ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2f03ba694679a26b9e565f9ca2bc02ca"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1WindowDataLayer.html">WindowDataLayer</a>)</td></tr>
-<tr class="separator:a2f03ba694679a26b9e565f9ca2bc02ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3666bd940c121b2ce8d0ce95b874edd7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3666bd940c121b2ce8d0ce95b874edd7"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (WindowData)</td></tr>
-<tr class="separator:a3666bd940c121b2ce8d0ce95b874edd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a357afca83e3c67f2ccc7402bd4b97353"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a357afca83e3c67f2ccc7402bd4b97353"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1TileLayer.html">TileLayer</a>)</td></tr>
+<tr class="separator:a357afca83e3c67f2ccc7402bd4b97353"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6236555220de28c43c8064b5ce1d0db4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6236555220de28c43c8064b5ce1d0db4"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Tile)</td></tr>
+<tr class="separator:a6236555220de28c43c8064b5ce1d0db4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8030f9a1ee4f018561a42359c365da9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8030f9a1ee4f018561a42359c365da9"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1Net.html">Net</a>)</td></tr>
 <tr class="separator:af8030f9a1ee4f018561a42359c365da9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa455bd2e132a90360d4f1edd074f8099"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa455bd2e132a90360d4f1edd074f8099"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1Params.html">Params</a>)</td></tr>
+<tr class="separator:aa455bd2e132a90360d4f1edd074f8099"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78ab37f8058357499aff91259f2b6a80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78ab37f8058357499aff91259f2b6a80"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1GPUParams.html">GPUParams</a>)</td></tr>
+<tr class="separator:a78ab37f8058357499aff91259f2b6a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad845b44a369c0cebb5c1c266a741cb66"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad845b44a369c0cebb5c1c266a741cb66"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1P2PSync.html">P2PSync</a>)</td></tr>
+<tr class="separator:ad845b44a369c0cebb5c1c266a741cb66"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76fd1ebc28ae6ed213991bcfbbc2d25c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a76fd1ebc28ae6ed213991bcfbbc2d25c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1Solver.html">Solver</a>)</td></tr>
 <tr class="separator:a76fd1ebc28ae6ed213991bcfbbc2d25c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab49a0e695d3ff3f6774083c4ed6fe9a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab49a0e695d3ff3f6774083c4ed6fe9a3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1SGDSolver.html">SGDSolver</a>)</td></tr>
-<tr class="separator:ab49a0e695d3ff3f6774083c4ed6fe9a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02cc71391faa1a585e54847dee621d3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02cc71391faa1a585e54847dee621d3e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1NesterovSolver.html">NesterovSolver</a>)</td></tr>
-<tr class="separator:a02cc71391faa1a585e54847dee621d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a113bdc980cbb9f2af47aacd96e65745b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a113bdc980cbb9f2af47aacd96e65745b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1AdaDeltaSolver.html">AdaDeltaSolver</a>)</td></tr>
+<tr class="separator:a113bdc980cbb9f2af47aacd96e65745b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb127972b9f22d3db0c8aa8ca91292f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb127972b9f22d3db0c8aa8ca91292f9"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SOLVER_CLASS</b> (AdaDelta)</td></tr>
+<tr class="separator:abb127972b9f22d3db0c8aa8ca91292f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a831bef9b557689042deec03d8bfeaa4d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a831bef9b557689042deec03d8bfeaa4d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1AdaGradSolver.html">AdaGradSolver</a>)</td></tr>
 <tr class="separator:a831bef9b557689042deec03d8bfeaa4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5dfb9c57ee9039c4a2d610e9bd889364"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5dfb9c57ee9039c4a2d610e9bd889364"></a>
-template void&#160;</td><td class="memItemRight" valign="bottom"><b>im2col_cpu&lt; float &gt;</b> (const float *data_im, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, float *data_col)</td></tr>
-<tr class="separator:a5dfb9c57ee9039c4a2d610e9bd889364"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb5f1ce011a1fab4114c4e1fc250b2f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb5f1ce011a1fab4114c4e1fc250b2f2"></a>
-template void&#160;</td><td class="memItemRight" valign="bottom"><b>im2col_cpu&lt; double &gt;</b> (const double *data_im, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, double *data_col)</td></tr>
-<tr class="separator:afb5f1ce011a1fab4114c4e1fc250b2f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d5fa6758ed68311b421b3f8d46a0a7b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d5fa6758ed68311b421b3f8d46a0a7b"></a>
-template void&#160;</td><td class="memItemRight" valign="bottom"><b>col2im_cpu&lt; float &gt;</b> (const float *data_col, const int channels, const int height, const int width, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, float *data_im)</td></tr>
-<tr class="separator:a1d5fa6758ed68311b421b3f8d46a0a7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa93fab1cf44665ef7cf21c1f669388b3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa93fab1cf44665ef7cf21c1f669388b3"></a>
-template void&#160;</td><td class="memItemRight" valign="bottom"><b>col2im_cpu&lt; double &gt;</b> (const double *data_col, const int channels, const int height, const int width, const int patch_h, const int patch_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, double *data_im)</td></tr>
-<tr class="separator:aa93fab1cf44665ef7cf21c1f669388b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7e8efd116fe1ad53ac4687a17e58368"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7e8efd116fe1ad53ac4687a17e58368"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SOLVER_CLASS</b> (AdaGrad)</td></tr>
+<tr class="separator:aa7e8efd116fe1ad53ac4687a17e58368"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4ddedfd2728d0c2fdceb68ee4f394fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4ddedfd2728d0c2fdceb68ee4f394fa"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1AdamSolver.html">AdamSolver</a>)</td></tr>
+<tr class="separator:af4ddedfd2728d0c2fdceb68ee4f394fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaabbc77f8f1b832c4a1e10cb711f8650"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaabbc77f8f1b832c4a1e10cb711f8650"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SOLVER_CLASS</b> (Adam)</td></tr>
+<tr class="separator:aaabbc77f8f1b832c4a1e10cb711f8650"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02cc71391faa1a585e54847dee621d3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02cc71391faa1a585e54847dee621d3e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1NesterovSolver.html">NesterovSolver</a>)</td></tr>
+<tr class="separator:a02cc71391faa1a585e54847dee621d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd512384c2b9ee0431403c8fb678314a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afd512384c2b9ee0431403c8fb678314a"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SOLVER_CLASS</b> (Nesterov)</td></tr>
+<tr class="separator:afd512384c2b9ee0431403c8fb678314a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afbfed44d531472cf6f362c9b6b8b806e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbfed44d531472cf6f362c9b6b8b806e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1RMSPropSolver.html">RMSPropSolver</a>)</td></tr>
+<tr class="separator:afbfed44d531472cf6f362c9b6b8b806e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06c041d02b37d5ba5345957b0654ae10"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06c041d02b37d5ba5345957b0654ae10"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SOLVER_CLASS</b> (RMSProp)</td></tr>
+<tr class="separator:a06c041d02b37d5ba5345957b0654ae10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab49a0e695d3ff3f6774083c4ed6fe9a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab49a0e695d3ff3f6774083c4ed6fe9a3"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1SGDSolver.html">SGDSolver</a>)</td></tr>
+<tr class="separator:ab49a0e695d3ff3f6774083c4ed6fe9a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04e510057496d7ef8d16fc71e9ac7ac9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04e510057496d7ef8d16fc71e9ac7ac9"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_SOLVER_CLASS</b> (SGD)</td></tr>
+<tr class="separator:a04e510057496d7ef8d16fc71e9ac7ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a346345cb5abedfb53722bf09788e409a"><td class="memTemplParams" colspan="2"><a class="anchor" id="a346345cb5abedfb53722bf09788e409a"></a>
 template&lt;&gt; </td></tr>
 <tr class="memitem:a346345cb5abedfb53722bf09788e409a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_load_nd_dataset&lt; float &gt;</b> (hid_t file_id, const char *dataset_name_, int min_dim, int max_dim, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; float &gt; *blob)</td></tr>
@@ -1123,14 +1246,42 @@ template&lt;&gt; </td></tr>
 template&lt;&gt; </td></tr>
 <tr class="memitem:aa62f496e422afc011f5099b6803ba2be"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_load_nd_dataset&lt; double &gt;</b> (hid_t file_id, const char *dataset_name_, int min_dim, int max_dim, <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; double &gt; *blob)</td></tr>
 <tr class="separator:aa62f496e422afc011f5099b6803ba2be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44a69d58bc009d4892154aba2cef48bf"><td class="memTemplParams" colspan="2"><a class="anchor" id="a44a69d58bc009d4892154aba2cef48bf"></a>
+<tr class="memitem:aea2d44137826e942cabd48bf54abbc21"><td class="memTemplParams" colspan="2"><a class="anchor" id="aea2d44137826e942cabd48bf54abbc21"></a>
 template&lt;&gt; </td></tr>
-<tr class="memitem:a44a69d58bc009d4892154aba2cef48bf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_save_nd_dataset&lt; float &gt;</b> (const hid_t file_id, const string &amp;dataset_name, const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; float &gt; &amp;blob)</td></tr>
-<tr class="separator:a44a69d58bc009d4892154aba2cef48bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95cb3f8e09455707a37c3081736d1142"><td class="memTemplParams" colspan="2"><a class="anchor" id="a95cb3f8e09455707a37c3081736d1142"></a>
+<tr class="memitem:aea2d44137826e942cabd48bf54abbc21"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_save_nd_dataset&lt; float &gt;</b> (const hid_t file_id, const string &amp;dataset_name, const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; float &gt; &amp;blob, bool write_diff)</td></tr>
+<tr class="separator:aea2d44137826e942cabd48bf54abbc21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91c74b78f13fb2d6fba4f45ead5480bf"><td class="memTemplParams" colspan="2"><a class="anchor" id="a91c74b78f13fb2d6fba4f45ead5480bf"></a>
 template&lt;&gt; </td></tr>
-<tr class="memitem:a95cb3f8e09455707a37c3081736d1142"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_save_nd_dataset&lt; double &gt;</b> (const hid_t file_id, const string &amp;dataset_name, const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; double &gt; &amp;blob)</td></tr>
-<tr class="separator:a95cb3f8e09455707a37c3081736d1142"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91c74b78f13fb2d6fba4f45ead5480bf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>hdf5_save_nd_dataset&lt; double &gt;</b> (hid_t file_id, const string &amp;dataset_name, const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; double &gt; &amp;blob, bool write_diff)</td></tr>
+<tr class="separator:a91c74b78f13fb2d6fba4f45ead5480bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5dfb9c57ee9039c4a2d610e9bd889364"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5dfb9c57ee9039c4a2d610e9bd889364"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>im2col_cpu&lt; float &gt;</b> (const float *data_im, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, float *data_col)</td></tr>
+<tr class="separator:a5dfb9c57ee9039c4a2d610e9bd889364"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb5f1ce011a1fab4114c4e1fc250b2f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb5f1ce011a1fab4114c4e1fc250b2f2"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>im2col_cpu&lt; double &gt;</b> (const double *data_im, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, double *data_col)</td></tr>
+<tr class="separator:afb5f1ce011a1fab4114c4e1fc250b2f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33afbf6cda96ac9db6df4b16bebade2d"><td class="memTemplParams" colspan="2"><a class="anchor" id="a33afbf6cda96ac9db6df4b16bebade2d"></a>
+template&lt;typename Dtype &gt; </td></tr>
+<tr class="memitem:a33afbf6cda96ac9db6df4b16bebade2d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>im2col_nd_core_cpu</b> (const Dtype *data_input, const bool im2col, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, Dtype *data_output)</td></tr>
+<tr class="separator:a33afbf6cda96ac9db6df4b16bebade2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fb85d0e192d41dd1027052f1f0e1874"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fb85d0e192d41dd1027052f1f0e1874"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>im2col_nd_cpu&lt; float &gt;</b> (const float *data_im, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, float *data_col)</td></tr>
+<tr class="separator:a9fb85d0e192d41dd1027052f1f0e1874"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a877c0817fd814ab09bf131787bad2151"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a877c0817fd814ab09bf131787bad2151"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>im2col_nd_cpu&lt; double &gt;</b> (const double *data_im, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, double *data_col)</td></tr>
+<tr class="separator:a877c0817fd814ab09bf131787bad2151"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6c8c0fea8a57849f88432413ce799e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6c8c0fea8a57849f88432413ce799e2"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>col2im_cpu&lt; float &gt;</b> (const float *data_col, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, float *data_im)</td></tr>
+<tr class="separator:ae6c8c0fea8a57849f88432413ce799e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4559532afe6357dfcb24aeea895ac063"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4559532afe6357dfcb24aeea895ac063"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>col2im_cpu&lt; double &gt;</b> (const double *data_col, const int channels, const int height, const int width, const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, const int stride_h, const int stride_w, double *data_im)</td></tr>
+<tr class="separator:a4559532afe6357dfcb24aeea895ac063"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b10983ea9f4ac865408e10c9b6ca3b8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8b10983ea9f4ac865408e10c9b6ca3b8"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>col2im_nd_cpu&lt; float &gt;</b> (const float *data_col, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, float *data_im)</td></tr>
+<tr class="separator:a8b10983ea9f4ac865408e10c9b6ca3b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f6b624202f3f644eb1c51da77d6db5f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f6b624202f3f644eb1c51da77d6db5f"></a>
+template void&#160;</td><td class="memItemRight" valign="bottom"><b>col2im_nd_cpu&lt; double &gt;</b> (const double *data_col, const int num_spatial_axes, const int *im_shape, const int *col_shape, const int *kernel_shape, const int *pad, const int *stride, double *data_im)</td></tr>
+<tr class="separator:a3f6b624202f3f644eb1c51da77d6db5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2b584d464ec95b349ba159204d58ba7"><td class="memTemplParams" colspan="2"><a class="anchor" id="af2b584d464ec95b349ba159204d58ba7"></a>
 template&lt;&gt; </td></tr>
 <tr class="memitem:af2b584d464ec95b349ba159204d58ba7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>caffe_cpu_gemm&lt; float &gt;</b> (const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const float alpha, const float *A, const float *B, const float beta, float *C)</td></tr>
@@ -1355,6 +1506,7 @@ const float&#160;</td><td class="memItemRight" valign="bottom"><b>kBNLL_THRESHOL
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A layer factory that allows one to register layers. During runtime, registered layers could be called by passing a LayerParameter protobuffer to the CreateLayer function: </p>
+<p>A solver factory that allows one to register solvers, similar to layer factory. During runtime, registered solvers could be called by passing a SolverParameter protobuffer to the CreateSolver function:</p>
 <p>LayerRegistry&lt;Dtype&gt;::CreateLayer(param);</p>
 <p>There are two ways to register a layer. Assuming that we have a layer like:</p>
 <p>template &lt;typename dtype&gt;=""&gt; class MyAwesomeLayer : public Layer&lt;Dtype&gt; { // your implementations };</p>
@@ -1365,7 +1517,18 @@ const float&#160;</td><td class="memItemRight" valign="bottom"><b>kBNLL_THRESHOL
 <p>template &lt;typename dtype&gt;=""&gt; Layer&lt;Dtype*&gt; GetMyAwesomeLayer(const LayerParameter&amp; param) { // your implementation }</p>
 <p>(for example, when your layer has multiple backends, see GetConvolutionLayer for a use case), then you can register the creator function instead, like</p>
 <p>REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)</p>
-<p>Note that each layer type should only be registered once. </p>
+<p>Note that each layer type should only be registered once.</p>
+<p>SolverRegistry&lt;Dtype&gt;::CreateSolver(param);</p>
+<p>There are two ways to register a solver. Assuming that we have a solver like:</p>
+<p>template &lt;typename dtype&gt;=""&gt; class MyAwesomeSolver : public Solver&lt;Dtype&gt; { // your implementations };</p>
+<p>and its type is its C++ class name, but without the "Solver" at the end ("MyAwesomeSolver" -&gt; "MyAwesome").</p>
+<p>If the solver is going to be created simply by its constructor, in your c++ file, add the following line:</p>
+<p>REGISTER_SOLVER_CLASS(MyAwesome);</p>
+<p>Or, if the solver is going to be created by another creator function, in the format of:</p>
+<p>template &lt;typename dtype&gt;=""&gt; Solver&lt;Dtype*&gt; GetMyAwesomeSolver(const SolverParameter&amp; param) { // your implementation }</p>
+<p>then you can register the creator function instead, like</p>
+<p>REGISTER_SOLVER_CREATOR(MyAwesome, GetMyAwesomeSolver)</p>
+<p>Note that each solver type should only be registered once. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a819e1b2fe30b54d6df0fd88e646ec126"></a>
 <div class="memitem">
@@ -1391,7 +1554,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 21 2015 22:13:57 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Oct 19 2015 15:25:08 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

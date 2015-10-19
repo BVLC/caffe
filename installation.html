@@ -71,7 +71,7 @@ The official Makefile and <code>Makefile.config</code> build are complemented by
 
 <h2 id="prerequisites">Prerequisites</h2>
 
-<p>Caffe has several dependencies.</p>
+<p>Caffe has several dependencies:</p>
 
 <ul>
   <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> is required for GPU mode.
@@ -82,9 +82,15 @@ The official Makefile and <code>Makefile.config</code> build are complemented by
   </li>
   <li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> via ATLAS, MKL, or OpenBLAS.</li>
   <li><a href="http://www.boost.org/">Boost</a> &gt;= 1.55</li>
+  <li><code>protobuf</code>, <code>glog</code>, <code>gflags</code>, <code>hdf5</code></li>
+</ul>
+
+<p>Optional dependencies:</p>
+
+<ul>
   <li><a href="http://opencv.org/">OpenCV</a> &gt;= 2.4 including 3.0</li>
-  <li><code>protobuf</code>, <code>glog</code>, <code>gflags</code></li>
-  <li>IO libraries <code>hdf5</code>, <code>leveldb</code>, <code>snappy</code>, <code>lmdb</code></li>
+  <li>IO libraries: <code>lmdb</code>, <code>leveldb</code> (note: leveldb requires <code>snappy</code>)</li>
+  <li>cuDNN for GPU acceleration (v3)</li>
 </ul>
 
 <p>Pycaffe and Matcaffe interfaces have their own natural needs.</p>
@@ -94,7 +100,7 @@ The official Makefile and <code>Makefile.config</code> build are complemented by
   <li>For MATLAB Caffe: MATLAB with the <code>mex</code> compiler.</li>
 </ul>
 
-<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code>USE_CUDNN := 1</code> flag in <code>Makefile.config</code> when installing Caffe. Acceleration is automatic. For now cuDNN v1 is integrated but see <a href="https://github.com/BVLC/caffe/pull/1731">PR #1731</a> for v2.</p>
+<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code>USE_CUDNN := 1</code> flag in <code>Makefile.config</code> when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.</p>
 
 <p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code>CPU_ONLY := 1</code> flag in <code>Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
 

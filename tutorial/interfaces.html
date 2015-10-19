@@ -110,6 +110,14 @@ caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mni
 caffe device_query -gpu 0
 </code></pre>
 
+<p><strong>Parallelism</strong>: the <code>-gpu</code> flag to the <code>caffe</code> tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.</p>
+
+<pre><code># train on GPUs 0 &amp; 1 (doubling the batch size)
+caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 0,1
+# train on all GPUs (multiplying batch size by number of devices)
+caffe train -solver examples/mnist/lenet_solver.prototxt -gpu all
+</code></pre>
+
 <h2 id="python">Python</h2>
 
 <p>The Python interface – pycaffe – is the <code>caffe</code> module and its scripts in caffe/python. <code>import caffe</code> to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.</p>
