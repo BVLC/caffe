@@ -55,9 +55,9 @@ endif()
 include(cmake/Cuda.cmake)
 if(NOT HAVE_CUDA)
   if(CPU_ONLY)
-    message("-- CUDA is disabled. Building without it...")
+    message(STATUS "-- CUDA is disabled. Building without it...")
   else()
-    message("-- CUDA is not detected by cmake. Building without it...")
+    message(WARNING "-- CUDA is not detected by cmake. Building without it...")
   endif()
 
   # TODO: remove this not cross platform define in future. Use caffe_config.h instead.
