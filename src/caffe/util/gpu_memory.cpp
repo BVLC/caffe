@@ -3,8 +3,11 @@
 
 #include "caffe/util/gpu_memory.hpp"
 
+
+#ifdef USE_CNMEM
 // CNMEM integration
 #include "cnmem.h"
+#endif
 
 namespace caffe {
 
