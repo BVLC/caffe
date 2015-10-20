@@ -379,3 +379,21 @@ function(caffe_detect_darwin_version output_var)
     set(${output_var} "" PARENT_SCOPE)
   endif()
 endfunction()
+
+################################################################################################
+# Helper function to add appropriate c++11 flags to CMAKE_CXX_FLAGS
+# Usage:
+#   caffe_enable_cpp11_support()
+include(CheckCXXCompilerFlag)
+
+function(caffe_enable_cpp11_support)
+  set(__flags "-std=c++11" "-std=c++0x" "/Qstd=c++0x")
+
+  foreach(__f ${__flags})
+    check_cxx_compiler_flag(${__f} __result)
+    if(__result)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${__f}" PARENT_SCOPE)
+      break()
+    endif()
+  endforeach()
+endfunction()

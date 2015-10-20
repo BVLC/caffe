@@ -47,6 +47,10 @@ if(USE_libstdcpp)
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
+if(ANDROID)
+  caffe_enable_cpp11_support()
+endif()
+
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
 
 # ---[ Warnings
@@ -65,6 +69,7 @@ add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)
 add_subdirectory(examples)
+add_subdirectory(android)
 add_subdirectory(python)
 add_subdirectory(matlab)
 add_subdirectory(docs)
