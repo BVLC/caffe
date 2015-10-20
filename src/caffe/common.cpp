@@ -297,3 +297,4 @@ const char* curandGetErrorString(curandStatus_t error) {
 #endif  // CPU_ONLY
 
 }  // namespace caffe
+
