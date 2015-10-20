@@ -26,8 +26,8 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
-THIRDPARTY_DIR=$(PROJECT_DIR)/third_party
-THIRDPARTY=$(BUILD_DIR)/.third_party_done
+THIRDPARTY_DIR=$(PROJECT_DIR)/3rdparty
+THIRDPARTY=$(BUILD_DIR)/.3rdparty_done
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -437,10 +437,13 @@ all: lib tools examples
 
 lib:  $(STATIC_NAME) $(DYNAMIC_NAME)
 
-$(THIRDPARTY): | $(LIB_BUILD_DIR)
+$(THIRDPARTY): Makefile Makefile.config | $(LIB_BUILD_DIR) 
+ifneq ($(THIRDPARTY_TARGETS),)
 	echo "Building third-party libraries ..."
-	@$(MAKE) -C $(THIRDPARTY_DIR) DEBUG=$(DEBUG) CAFFE_BUILD_DIR=$(BUILD_DIR)
+	@$(MAKE) -C $(THIRDPARTY_DIR) DEBUG=$(DEBUG) INSTALLDIR=$(BUILD_DIR) $(THIRDPARTY_TARGETS)
+endif
 	@touch $(THIRDPARTY)
+
 
 everything: $(EVERYTHING_TARGETS)
 
