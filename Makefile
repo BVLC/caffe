@@ -381,6 +381,17 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
+# OpenMP
+USE_OPENMP ?= 0
+ifeq ($(USE_OPENMP), 1)
+        CXXFLAGS += -fopenmp
+        LINKFLAGS += -fopenmp
+        ifeq ($(BLAS), mkl)
+                LIBRARIES += iomp5
+                LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
+        endif
+endif
+
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
