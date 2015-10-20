@@ -11,8 +11,6 @@ build : cnmem
 
 CNMEM_BUILD_DIR=./cnmem/build
 cnmem:
-	@mkdir -p $(CNMEM_BUILD_DIR)
-	( cd $(CNMEM_BUILD_DIR) && cmake ..)
 	$(MAKE) -C $(CNMEM_BUILD_DIR) DEBUG=$(DEBUG)
 
 
