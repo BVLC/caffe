@@ -7,6 +7,19 @@ $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
+# Rectify input parameters
+ifeq ($(CPU_ONLY),1)
+  USE_CUDNN=0
+  USE_CNMEM=0
+endif
+
+ifeq ($(USE_CUDNN),1)
+# CNMEM is ON by default in CUDNN is ON
+  ifeq ($(USE_CNMEM),)
+    USE_CNMEM=1
+  endif
+endif
+
 PROJECT_DIR=$(PWD)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
