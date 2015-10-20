@@ -1,5 +1,5 @@
 # CMakeLists to build the cnmem library.
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.7)
 project(cnmem)
 
 # We need CUDA to build that library.
