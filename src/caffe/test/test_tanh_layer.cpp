@@ -56,7 +56,7 @@ class TanHLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
     const Dtype min_precision = 1e-5;
-    for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
       Dtype expected_value = tanh_naive(bottom_data[i]);
       Dtype precision = std::max(
         Dtype(std::abs(expected_value * Dtype(1e-4))), min_precision);

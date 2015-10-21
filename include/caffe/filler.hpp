@@ -39,10 +39,10 @@ class ConstantFiller : public Filler<Dtype> {
   }
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
-    const int count = blob->count();
+    const int_tp count = blob->count();
     const Dtype value = this->filler_param_.value();
     CHECK(count);
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       data[i] = value;
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
@@ -80,7 +80,7 @@ class GaussianFiller : public Filler<Dtype> {
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
                               Dtype(this->filler_param_.std()),
                               blob->mutable_cpu_data());
-    int sparse = this->filler_param_.sparse();
+    int_tp sparse = this->filler_param_.sparse();
     CHECK_GE(sparse, -1);
     if (sparse >= 0) {
       // Sparse initialization is implemented for "weight" blobs; i.e. matrices.
@@ -88,14 +88,14 @@ class GaussianFiller : public Filler<Dtype> {
       // number of outputs.  The 'sparse' variable specifies the mean number
       // of non-zero input weights for a given output.
       CHECK_GE(blob->num_axes(), 1);
-      const int num_outputs = blob->shape(0);
+      const int_tp num_outputs = blob->shape(0);
       Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
       rand_vec_.reset(
-          new SyncedMemory(blob->count() * sizeof(int),
+          new SyncedMemory(blob->count() * sizeof(int_tp),
                            blob->get_device()));
-      int* mask = reinterpret_cast<int*>(rand_vec_->mutable_cpu_data());
+      int_tp* mask = reinterpret_cast<int_tp*>(rand_vec_->mutable_cpu_data());
       caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);
-      for (int i = 0; i < blob->count(); ++i) {
+      for (int_tp i = 0; i < blob->count(); ++i) {
         data[i] *= mask[i];
       }
     }
@@ -120,14 +120,14 @@ class PositiveUnitballFiller : public Filler<Dtype> {
     caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
     // We expect the filler to not be called very frequently, so we will
     // just use a simple implementation
-    int dim = blob->count() / blob->num();
+    int_tp dim = blob->count() / blob->num();
     CHECK(dim);
-    for (int i = 0; i < blob->num(); ++i) {
+    for (int_tp i = 0; i < blob->num(); ++i) {
       Dtype sum = 0;
-      for (int j = 0; j < dim; ++j) {
+      for (int_tp j = 0; j < dim; ++j) {
         sum += data[i * dim + j];
       }
-      for (int j = 0; j < dim; ++j) {
+      for (int_tp j = 0; j < dim; ++j) {
         data[i * dim + j] /= sum;
       }
     }
@@ -160,8 +160,8 @@ class XavierFiller : public Filler<Dtype> {
   }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int fan_in = blob->count() / blob->num();
-    int fan_out = blob->count() / blob->channels();
+    int_tp fan_in = blob->count() / blob->num();
+    int_tp fan_out = blob->count() / blob->channels();
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm()
         == FillerParameter_VarianceNorm_AVERAGE) {
@@ -204,8 +204,8 @@ class MSRAFiller : public Filler<Dtype> {
   }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int fan_in = blob->count() / blob->num();
-    int fan_out = blob->count() / blob->channels();
+    int_tp fan_in = blob->count() / blob->num();
+    int_tp fan_out = blob->count() / blob->channels();
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm()
         == FillerParameter_VarianceNorm_AVERAGE) {
@@ -264,9 +264,9 @@ class BilinearFiller : public Filler<Dtype> {
     CHECK_EQ(blob->num_axes(), 4) << "Blob must be 4 dim.";
     CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
     Dtype* data = blob->mutable_cpu_data();
-    int f = ceil(blob->width() / 2.);
+    int_tp f = ceil(blob->width() / 2.);
     float c = (2 * f - 1 - f % 2) / (2. * f);
-    for (int i = 0; i < blob->count(); ++i) {
+    for (int_tp i = 0; i < blob->count(); ++i) {
       float x = i % blob->width();
       float y = (i / blob->width()) % blob->height();
       data[i] = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));

@@ -13,8 +13,8 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   const Dtype* mult_data = NULL;
 
-  int bottom_data_off = 0;
-  int top_data_off = 0;
+  int_tp bottom_data_off = 0;
+  int_tp top_data_off = 0;
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -22,7 +22,7 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       mult_data = sum_multiplier_.gpu_data();
     }
     Dtype* top_data = top[0]->mutable_cpu_data();
-    for (int i = 0; i < num_; ++i) {
+    for (int_tp i = 0; i < num_; ++i) {
       switch (op_) {
         case ReductionParameter_ReductionOp_SUM:
         case ReductionParameter_ReductionOp_MEAN:
@@ -56,7 +56,7 @@ void ReductionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       mult_data = sum_multiplier_.gpu_data();
     }
     Dtype* top_data = top[0]->mutable_cpu_data();
-    for (int i = 0; i < num_; ++i) {
+    for (int_tp i = 0; i < num_; ++i) {
       switch (op_) {
         case ReductionParameter_ReductionOp_SUM:
         case ReductionParameter_ReductionOp_MEAN:
@@ -118,13 +118,13 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-  int bottom_data_off = 0;
-  int bottom_diff_off = 0;
-  int top_diff_off = 0;
+  int_tp bottom_data_off = 0;
+  int_tp bottom_diff_off = 0;
+  int_tp top_diff_off = 0;
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    for (int i = 0; i < num_; ++i) {
+    for (int_tp i = 0; i < num_; ++i) {
       const Dtype bottom_coeff = (*(top_diff + top_diff_off)) * coeff_;
       switch (op_) {
         case ReductionParameter_ReductionOp_SUM:
@@ -151,7 +151,7 @@ void ReductionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    for (int i = 0; i < num_; ++i) {
+    for (int_tp i = 0; i < num_; ++i) {
       const Dtype bottom_coeff = (*(top_diff + top_diff_off)) * coeff_;
       switch (op_) {
         case ReductionParameter_ReductionOp_SUM:

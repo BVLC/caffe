@@ -63,7 +63,7 @@ TYPED_TEST(Im2colLayerTest, TestForward) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
-  for (int c = 0; c < 27; ++c) {
+  for (int_tp c = 0; c < 27; ++c) {
     EXPECT_EQ(this->blob_bottom_->data_at(0, (c / 9), (c / 3) % 3, c % 3),
         this->blob_top_->data_at(0, c, 0, 0));
   }
@@ -108,7 +108,7 @@ TYPED_TEST(Im2colLayerTest, TestRect) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
-  for (int c = 0; c < 45; ++c) {
+  for (int_tp c = 0; c < 45; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, (c / 15), (c / 3) % 5, c % 3));
   }

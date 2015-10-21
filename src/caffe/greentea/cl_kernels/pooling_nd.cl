@@ -2,34 +2,34 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int n,
-                                                   const int num_axes,
-                                                   const __global Dtype* bottom_data,
-                                                   const int channels,
-                                                   __global const int* size,
-                                                   __global const int* pooled_size,
-                                                   __global const int* kernel_size,
-                                                   __global const int* ext_kernel_size,
-                                                   __global const int* stride,
-                                                   __global const int* kstride,
-                                                   __global const int* pad,
+__kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
+                                                   const int_tp num_axes,
+                                                   __global const Dtype* bottom_data,
+                                                   const int_tp channels,
+                                                   __global const int_tp* size,
+                                                   __global const int_tp* pooled_size,
+                                                   __global const int_tp* kernel_size,
+                                                   __global const int_tp* ext_kernel_size,
+                                                   __global const int_tp* stride,
+                                                   __global const int_tp* kstride,
+                                                   __global const int_tp* pad,
                                                    __global Dtype* top_data,
-                                                   const int use_mask,
-                                                   __global int* mask, __global Dtype* top_mask) {
-  int d_idx[6];
-  int d_start[6];
-  int d_end[6];
-  int d_iter[6];
-  int i;
+                                                   const int_tp use_mask,
+                                                   __global int_tp* mask, __global Dtype* top_mask) {
+  int_tp d_idx[6];
+  int_tp d_start[6];
+  int_tp d_end[6];
+  int_tp d_iter[6];
+  int_tp i;
 
-  for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
-    int offset = 1;
-    int num = index;
+  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
+    int_tp offset = 1;
+    int_tp num = index;
     for (i = num_axes - 1; i >= 0; --i) {
       d_idx[i] = index % pooled_size[i];
       d_start[i] = d_idx[i] * stride[i] - pad[i];
       d_end[i] = min(d_start[i] + ext_kernel_size[i], size[i]);
-      d_start[i] = max(d_start[i], 0);
+      d_start[i] = max(d_start[i], 0L);
       num /= pooled_size[i];
       offset *= size[i];
       d_iter[i] = d_start[i];
@@ -44,18 +44,18 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int n,
         return;
       }
     }
-    int chan = num % channels;
+    int_tp chan = num % channels;
     num /= channels;
     offset *= (num * channels + chan);
 
     Dtype maxval = -FLT_MAX;
-    int maxidx = -1;
-    int final_offset = 0;
+    int_tp maxidx = -1;
+    int_tp final_offset = 0;
 
     bool incremented;
     do {
       final_offset = offset;
-      int size_prod = 1;
+      int_tp size_prod = 1;
       for (i = num_axes - 1; i >= 0; --i) {
         final_offset += d_iter[i] * size_prod;
         size_prod *= size[i];
@@ -88,32 +88,32 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int n,
 }
 
 
-__kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int n,
-                                                    const int num_axes,
-                                                    const __global Dtype* top_diff,
-                                                    const int use_mask,
-                                                    __global const int* mask,
+__kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int_tp n,
+                                                    const int_tp num_axes,
+                                                    __global const Dtype* top_diff,
+                                                    const int_tp use_mask,
+                                                    __global const int_tp* mask,
                                                     __global const Dtype* top_mask,
-                                                    const int channels,
-                                                    __global const int* size,
-                                                    __global const int* pooled_size,
-                                                    __global const int* kernel_size,
-                                                    __global const int* ext_kernel_size,
-                                                    __global const int* stride,
-                                                    __global const int* kstride,
-                                                    __global const int* pad,
+                                                    const int_tp channels,
+                                                    __global const int_tp* size,
+                                                    __global const int_tp* pooled_size,
+                                                    __global const int_tp* kernel_size,
+                                                    __global const int_tp* ext_kernel_size,
+                                                    __global const int_tp* stride,
+                                                    __global const int_tp* kstride,
+                                                    __global const int_tp* pad,
                                                     __global Dtype* bottom_diff) {
-  int d_idx[6];
-  int d_start[6];
-  int d_end[6];
-  int d_iter[6];
-  int i;
+  int_tp d_idx[6];
+  int_tp d_start[6];
+  int_tp d_end[6];
+  int_tp d_iter[6];
+  int_tp i;
 
-  for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
+  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     // find out the local index
     // find out the local offset
-    int offset = 1;
-    int num = index;
+    int_tp offset = 1;
+    int_tp num = index;
     for (i = num_axes - 1; i >= 0; --i) {
       d_idx[i] = num % size[i];
       d_start[i] = (d_idx[i] < ext_kernel_size[i]) ?
@@ -130,20 +130,20 @@ __kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int n,
         return;
       }
     }
-    int chan = num % channels;
+    int_tp chan = num % channels;
     num /= channels;
     offset *= (num * channels + chan);
 
     Dtype gradient = 0;
-    int final_offset = 0;
-    int im_offset = 0;
+    int_tp final_offset = 0;
+    int_tp im_offset = 0;
 
     bool incremented;
     do {
       final_offset = offset;
       im_offset = 0;
-      int size_prod = 1;
-      int pooled_size_prod = 1;
+      int_tp size_prod = 1;
+      int_tp pooled_size_prod = 1;
       for (i = num_axes - 1; i >= 0; --i) {
         final_offset += d_iter[i] * pooled_size_prod;
         im_offset += d_idx[i] * size_prod;

@@ -12,7 +12,7 @@ template<typename Type> class cuda_dev_ptr : public dev_ptr<Type> {
   explicit cuda_dev_ptr(Type* ptr);
 
   void* get();
-  std::ptrdiff_t off();
+  int_tp off();
 
  private:
   Type* raw_ptr_;

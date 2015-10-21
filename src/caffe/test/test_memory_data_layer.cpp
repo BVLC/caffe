@@ -45,11 +45,11 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
     delete data_;
     delete labels_;
   }
-  int batch_size_;
-  int batches_;
-  int channels_;
-  int height_;
-  int width_;
+  int_tp batch_size_;
+  int_tp batches_;
+  int_tp channels_;
+  int_tp height_;
+  int_tp width_;
   // we don't really need blobs for the input data, but it makes it
   //  easier to call Filler
   Blob<Dtype>* const data_;
@@ -100,15 +100,15 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   layer->DataLayerSetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Reset(this->data_->mutable_cpu_data(),
       this->labels_->mutable_cpu_data(), this->data_->num());
-  for (int i = 0; i < this->batches_ * 6; ++i) {
-    int batch_num = i % this->batches_;
+  for (int_tp i = 0; i < this->batches_ * 6; ++i) {
+    int_tp batch_num = i % this->batches_;
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    for (int j = 0; j < this->data_blob_->count(); ++j) {
+    for (int_tp j = 0; j < this->data_blob_->count(); ++j) {
       EXPECT_EQ(this->data_blob_->cpu_data()[j],
           this->data_->cpu_data()[
               this->data_->offset(1) * this->batch_size_ * batch_num + j]);
     }
-    for (int j = 0; j < this->label_blob_->count(); ++j) {
+    for (int_tp j = 0; j < this->label_blob_->count(); ++j) {
       EXPECT_EQ(this->label_blob_->cpu_data()[j],
           this->labels_->cpu_data()[this->batch_size_ * batch_num + j]);
     }
@@ -129,36 +129,36 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // We add batch_size*num_iter items, then for each iteration
   // we forward batch_size elements
-  int num_iter = 5;
+  int_tp num_iter = 5;
   vector<Datum> datum_vector(this->batch_size_ * num_iter);
-  const size_t count = this->channels_ * this->height_ * this->width_;
-  size_t pixel_index = 0;
-  for (int i = 0; i < this->batch_size_ * num_iter; ++i) {
+  const uint_tp count = this->channels_ * this->height_ * this->width_;
+  uint_tp pixel_index = 0;
+  for (int_tp i = 0; i < this->batch_size_ * num_iter; ++i) {
     datum_vector[i].set_channels(this->channels_);
     datum_vector[i].set_height(this->height_);
     datum_vector[i].set_width(this->width_);
     datum_vector[i].set_label(i);
     vector<char> pixels(count);
-    for (int j = 0; j < count; ++j) {
+    for (int_tp j = 0; j < count; ++j) {
       pixels[j] = pixel_index++ % 256;
     }
     datum_vector[i].set_data(&(pixels[0]), count);
   }
   layer.AddDatumVector(datum_vector);
 
-  int data_index;
+  int_tp data_index;
   // Go through the data 5 times
-  for (int iter = 0; iter < num_iter; ++iter) {
-    int offset = this->batch_size_ * iter;
+  for (int_tp iter = 0; iter < num_iter; ++iter) {
+    int_tp offset = this->batch_size_ * iter;
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
-    size_t index = 0;
-    for (int i = 0; i < this->batch_size_; ++i) {
+    uint_tp index = 0;
+    for (int_tp i = 0; i < this->batch_size_; ++i) {
       const string& data_string = datum_vector[offset + i].data();
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
-      for (int c = 0; c < this->channels_; ++c) {
-        for (int h = 0; h < this->height_; ++h) {
-          for (int w = 0; w < this->width_; ++w) {
+      for (int_tp c = 0; c < this->channels_; ++c) {
+        for (int_tp h = 0; h < this->height_; ++h) {
+          for (int_tp w = 0; w < this->width_; ++w) {
             data_index = (c * this->height_ + h) * this->width_ + w;
             EXPECT_EQ(static_cast<Dtype>(
                 static_cast<uint8_t>(data_string[data_index])),
@@ -182,32 +182,32 @@ TYPED_TEST(MemoryDataLayerTest, AddMatVectorDefaultTransform) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // We add batch_size*num_iter items, then for each iteration
   // we forward batch_size elements
-  int num_iter = 5;
+  int_tp num_iter = 5;
   vector<cv::Mat> mat_vector(this->batch_size_ * num_iter);
-  vector<int> label_vector(this->batch_size_ * num_iter);
-  for (int i = 0; i < this->batch_size_*num_iter; ++i) {
+  vector<int_tp> label_vector(this->batch_size_ * num_iter);
+  for (int_tp i = 0; i < this->batch_size_*num_iter; ++i) {
     mat_vector[i] = cv::Mat(this->height_, this->width_, CV_8UC4);
     label_vector[i] = i;
     cv::randu(mat_vector[i], cv::Scalar::all(0), cv::Scalar::all(255));
   }
   layer.AddMatVector(mat_vector, label_vector);
 
-  int data_index;
-  const size_t count = this->channels_ * this->height_ * this->width_;
-  for (int iter = 0; iter < num_iter; ++iter) {
-    int offset = this->batch_size_ * iter;
+  int_tp data_index;
+  const uint_tp count = this->channels_ * this->height_ * this->width_;
+  for (int_tp iter = 0; iter < num_iter; ++iter) {
+    int_tp offset = this->batch_size_ * iter;
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
-    for (int i = 0; i < this->batch_size_; ++i) {
+    for (int_tp i = 0; i < this->batch_size_; ++i) {
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
-      for (int h = 0; h < this->height_; ++h) {
+      for (int_tp h = 0; h < this->height_; ++h) {
         const unsigned char* ptr_mat = mat_vector[offset + i].ptr<uchar>(h);
-        int index = 0;
-        for (int w = 0; w < this->width_; ++w) {
-          for (int c = 0; c < this->channels_; ++c) {
+        int_tp index = 0;
+        for (int_tp w = 0; w < this->width_; ++w) {
+          for (int_tp c = 0; c < this->channels_; ++c) {
             data_index = (i*count) + (c * this->height_ + h) * this->width_ + w;
             Dtype pixel = static_cast<Dtype>(ptr_mat[index++]);
-            EXPECT_EQ(static_cast<int>(pixel),
+            EXPECT_EQ(static_cast<int_tp>(pixel),
                       data[data_index]);
           }
         }
@@ -227,45 +227,45 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
   MemoryDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // first add data as usual
-  int num_iter = 5;
+  int_tp num_iter = 5;
   vector<cv::Mat> mat_vector(this->batch_size_ * num_iter);
-  vector<int> label_vector(this->batch_size_ * num_iter);
-  for (int i = 0; i < this->batch_size_*num_iter; ++i) {
+  vector<int_tp> label_vector(this->batch_size_ * num_iter);
+  for (int_tp i = 0; i < this->batch_size_*num_iter; ++i) {
     mat_vector[i] = cv::Mat(this->height_, this->width_, CV_8UC4);
     label_vector[i] = i;
     cv::randu(mat_vector[i], cv::Scalar::all(0), cv::Scalar::all(255));
   }
   layer.AddMatVector(mat_vector, label_vector);
   // then consume the data
-  int data_index;
-  const size_t count = this->channels_ * this->height_ * this->width_;
-  for (int iter = 0; iter < num_iter; ++iter) {
-    int offset = this->batch_size_ * iter;
+  int_tp data_index;
+  const uint_tp count = this->channels_ * this->height_ * this->width_;
+  for (int_tp iter = 0; iter < num_iter; ++iter) {
+    int_tp offset = this->batch_size_ * iter;
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
-    for (int i = 0; i < this->batch_size_; ++i) {
+    for (int_tp i = 0; i < this->batch_size_; ++i) {
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
-      for (int h = 0; h < this->height_; ++h) {
+      for (int_tp h = 0; h < this->height_; ++h) {
         const unsigned char* ptr_mat = mat_vector[offset + i].ptr<uchar>(h);
-        int index = 0;
-        for (int w = 0; w < this->width_; ++w) {
-          for (int c = 0; c < this->channels_; ++c) {
+        int_tp index = 0;
+        for (int_tp w = 0; w < this->width_; ++w) {
+          for (int_tp c = 0; c < this->channels_; ++c) {
             data_index = (i*count) + (c * this->height_ + h) * this->width_ + w;
             Dtype pixel = static_cast<Dtype>(ptr_mat[index++]);
-            EXPECT_EQ(static_cast<int>(pixel), data[data_index]);
+            EXPECT_EQ(static_cast<int_tp>(pixel), data[data_index]);
           }
         }
       }
     }
   }
   // and then add new data with different batch_size
-  int new_batch_size = 16;
+  int_tp new_batch_size = 16;
   layer.set_batch_size(new_batch_size);
   mat_vector.clear();
   mat_vector.resize(new_batch_size * num_iter);
   label_vector.clear();
   label_vector.resize(new_batch_size * num_iter);
-  for (int i = 0; i < new_batch_size*num_iter; ++i) {
+  for (int_tp i = 0; i < new_batch_size*num_iter; ++i) {
     mat_vector[i] = cv::Mat(this->height_, this->width_, CV_8UC4);
     label_vector[i] = i;
     cv::randu(mat_vector[i], cv::Scalar::all(0), cv::Scalar::all(255));
@@ -273,22 +273,22 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
   layer.AddMatVector(mat_vector, label_vector);
 
   // finally consume new data and check if everything is fine
-  for (int iter = 0; iter < num_iter; ++iter) {
-    int offset = new_batch_size * iter;
+  for (int_tp iter = 0; iter < num_iter; ++iter) {
+    int_tp offset = new_batch_size * iter;
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(new_batch_size, this->blob_top_vec_[0]->num());
     EXPECT_EQ(new_batch_size, this->blob_top_vec_[1]->num());
     const Dtype* data = this->data_blob_->cpu_data();
-    for (int i = 0; i < new_batch_size; ++i) {
+    for (int_tp i = 0; i < new_batch_size; ++i) {
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
-      for (int h = 0; h < this->height_; ++h) {
+      for (int_tp h = 0; h < this->height_; ++h) {
         const unsigned char* ptr_mat = mat_vector[offset + i].ptr<uchar>(h);
-        int index = 0;
-        for (int w = 0; w < this->width_; ++w) {
-          for (int c = 0; c < this->channels_; ++c) {
+        int_tp index = 0;
+        for (int_tp w = 0; w < this->width_; ++w) {
+          for (int_tp c = 0; c < this->channels_; ++c) {
             data_index = (i*count) + (c * this->height_ + h) * this->width_ + w;
             Dtype pixel = static_cast<Dtype>(ptr_mat[index++]);
-            EXPECT_EQ(static_cast<int>(pixel), data[data_index]);
+            EXPECT_EQ(static_cast<int_tp>(pixel), data[data_index]);
           }
         }
       }

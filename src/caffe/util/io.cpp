@@ -19,7 +19,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
-const int kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
+const int_tp kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
 
 namespace caffe {
 
@@ -32,7 +32,7 @@ using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
+  int_tp fd = open(filename, O_RDONLY);
   CHECK_NE(fd, -1) << "File not found: " << filename;
   FileInputStream* input = new FileInputStream(fd);
   bool success = google::protobuf::TextFormat::Parse(input, proto);
@@ -42,7 +42,7 @@ bool ReadProtoFromTextFile(const char* filename, Message* proto) {
 }
 
 void WriteProtoToTextFile(const Message& proto, const char* filename) {
-  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  int_tp fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   FileOutputStream* output = new FileOutputStream(fd);
   CHECK(google::protobuf::TextFormat::Print(proto, output));
   delete output;
@@ -50,7 +50,7 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
+  int_tp fd = open(filename, O_RDONLY);
   CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
@@ -71,9 +71,9 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 
 #ifdef USE_OPENCV
 cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width, const bool is_color) {
+    const int_tp height, const int_tp width, const bool is_color) {
   cv::Mat cv_img;
-  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+  int_tp cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
@@ -89,7 +89,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
 }
 
 cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width) {
+    const int_tp height, const int_tp width) {
   return ReadImageToCVMat(filename, height, width, true);
 }
 
@@ -105,7 +105,7 @@ cv::Mat ReadImageToCVMat(const string& filename) {
 // Do the file extension and encoding match?
 static bool matchExt(const std::string & fn,
                      std::string en) {
-  size_t p = fn.rfind('.');
+  uint_tp p = fn.rfind('.');
   std::string ext = p != fn.npos ? fn.substr(p) : fn;
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
   std::transform(en.begin(), en.end(), en.begin(), ::tolower);
@@ -116,8 +116,8 @@ static bool matchExt(const std::string & fn,
   return false;
 }
 
-bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color,
+bool ReadImageToDatum(const string& filename, const int_tp label,
+    const int_tp height, const int_tp width, const bool is_color,
     const std::string & encoding, Datum* datum) {
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
   if (cv_img.data) {
@@ -142,7 +142,7 @@ bool ReadImageToDatum(const string& filename, const int label,
 }
 #endif  // USE_OPENCV
 
-bool ReadFileToDatum(const string& filename, const int label,
+bool ReadFileToDatum(const string& filename, const int_tp label,
     Datum* datum) {
   std::streampos size;
 
@@ -179,7 +179,7 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   CHECK(datum.encoded()) << "Datum not encoded";
   const string& data = datum.data();
   std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
-  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+  int_tp cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
   cv_img = cv::imdecode(vec_data, cv_read_flag);
   if (!cv_img.data) {
@@ -217,17 +217,17 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   datum->clear_data();
   datum->clear_float_data();
   datum->set_encoded(false);
-  int datum_channels = datum->channels();
-  int datum_height = datum->height();
-  int datum_width = datum->width();
-  int datum_size = datum_channels * datum_height * datum_width;
+  int_tp datum_channels = datum->channels();
+  int_tp datum_height = datum->height();
+  int_tp datum_width = datum->width();
+  int_tp datum_size = datum_channels * datum_height * datum_width;
   std::string buffer(datum_size, ' ');
-  for (int h = 0; h < datum_height; ++h) {
+  for (int_tp h = 0; h < datum_height; ++h) {
     const uchar* ptr = cv_img.ptr<uchar>(h);
-    int img_index = 0;
-    for (int w = 0; w < datum_width; ++w) {
-      for (int c = 0; c < datum_channels; ++c) {
-        int datum_index = (c * datum_height + h) * datum_width + w;
+    int_tp img_index = 0;
+    for (int_tp w = 0; w < datum_width; ++w) {
+      for (int_tp c = 0; c < datum_channels; ++c) {
+        int_tp datum_index = (c * datum_height + h) * datum_width + w;
         buffer[datum_index] = static_cast<char>(ptr[img_index++]);
       }
     }

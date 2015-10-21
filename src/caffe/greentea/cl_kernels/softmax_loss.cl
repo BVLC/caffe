@@ -3,16 +3,16 @@
 #endif
 
 __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
-    int n, __global const Dtype* prob_data, __global const Dtype* label,
+    int_tp n, __global const Dtype* prob_data, __global const Dtype* label,
     __global Dtype* loss,
-    const int num, const int dim, const int spatial_dim,
-    const int has_ignore_label_, const int ignore_label_,
+    const int_tp num, const int_tp dim, const int_tp spatial_dim,
+    const int_tp has_ignore_label_, const int_tp ignore_label_,
     __global Dtype* counts) {
 
-  for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
-    const int n = index / spatial_dim;
-    const int s = index % spatial_dim;
-    const int label_value = (int) (label[n * spatial_dim + s]);
+  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
+    const int_tp n = index / spatial_dim;
+    const int_tp s = index % spatial_dim;
+    const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);
     if (has_ignore_label_ == 1 && label_value == ignore_label_) {
       loss[index] = 0;
       counts[index] = 0;
@@ -25,28 +25,28 @@ __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
   }
 }
 
-__kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int nthreads,
+__kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,
                                                     __global const Dtype* top,
                                                     __global const Dtype* label,
                                                     __global Dtype* bottom_diff,
-                                                    const int num,
-                                                    const int dim,
-                                                    const int spatial_dim,
-                                                    const int has_ignore_label_,
-                                                    const int ignore_label_,
+                                                    const int_tp num,
+                                                    const int_tp dim,
+                                                    const int_tp spatial_dim,
+                                                    const int_tp has_ignore_label_,
+                                                    const int_tp ignore_label_,
                                                     __global Dtype* counts) {
 
-  const int channels = dim / spatial_dim;
+  const int_tp channels = dim / spatial_dim;
 
-  for (int index = get_global_id(0); index < nthreads;
+  for (int_tp index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
     {
-      const int n = index / spatial_dim;
-      const int s = index % spatial_dim;
-      const int label_value = (int) (label[n * spatial_dim + s]);
+      const int_tp n = index / spatial_dim;
+      const int_tp s = index % spatial_dim;
+      const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);
 
       if (has_ignore_label_ == 1 && label_value == ignore_label_) {
-        for (int c = 0; c < channels; ++c) {
+        for (int_tp c = 0; c < channels; ++c) {
           bottom_diff[n * dim + c * spatial_dim + s] = 0;
         }
         counts[index] = 0;

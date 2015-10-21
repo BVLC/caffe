@@ -17,7 +17,7 @@ bool NetNeedsUpgrade(const NetParameter& net_param) {
 }
 
 bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
-  for (int i = 0; i < net_param.layers_size(); ++i) {
+  for (int_tp i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).has_layer()) {
       return true;
     }
@@ -40,14 +40,14 @@ bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
   if (v0_net_param.has_name()) {
     net_param->set_name(v0_net_param.name());
   }
-  for (int i = 0; i < v0_net_param.layers_size(); ++i) {
+  for (int_tp i = 0; i < v0_net_param.layers_size(); ++i) {
     is_fully_compatible &= UpgradeV0LayerParameter(v0_net_param.layers(i),
                                                    net_param->add_layers());
   }
-  for (int i = 0; i < v0_net_param.input_size(); ++i) {
+  for (int_tp i = 0; i < v0_net_param.input_size(); ++i) {
     net_param->add_input(v0_net_param.input(i));
   }
-  for (int i = 0; i < v0_net_param.input_dim_size(); ++i) {
+  for (int_tp i = 0; i < v0_net_param.input_dim_size(); ++i) {
     net_param->add_input_dim(v0_net_param.input_dim(i));
   }
   if (v0_net_param.has_force_backward()) {
@@ -63,25 +63,25 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
   param_upgraded_pad->CopyFrom(param);
   param_upgraded_pad->clear_layers();
   // Figure out which layer each bottom blob comes from.
-  map<string, int> blob_name_to_last_top_idx;
-  for (int i = 0; i < param.input_size(); ++i) {
+  map<string, int_tp> blob_name_to_last_top_idx;
+  for (int_tp i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
     blob_name_to_last_top_idx[blob_name] = -1;
   }
-  for (int i = 0; i < param.layers_size(); ++i) {
+  for (int_tp i = 0; i < param.layers_size(); ++i) {
     const V1LayerParameter& layer_connection = param.layers(i);
     const V0LayerParameter& layer_param = layer_connection.layer();
     // Add the layer to the new net, unless it's a padding layer.
     if (layer_param.type() != "padding") {
       param_upgraded_pad->add_layers()->CopyFrom(layer_connection);
     }
-    for (int j = 0; j < layer_connection.bottom_size(); ++j) {
+    for (int_tp j = 0; j < layer_connection.bottom_size(); ++j) {
       const string& blob_name = layer_connection.bottom(j);
       if (blob_name_to_last_top_idx.find(blob_name)
           == blob_name_to_last_top_idx.end()) {
         LOG(FATAL)<< "Unknown blob input " << blob_name << " to layer " << j;
       }
-      const int top_idx = blob_name_to_last_top_idx[blob_name];
+      const int_tp top_idx = blob_name_to_last_top_idx[blob_name];
       if (top_idx == -1) {
         continue;
       }
@@ -101,14 +101,14 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
           << "Padding Layer takes a single blob as input.";
         CHECK_EQ(source_layer.top_size(), 1)
           << "Padding Layer produces a single blob as output.";
-        int layer_index = param_upgraded_pad->layers_size() - 1;
+        int_tp layer_index = param_upgraded_pad->layers_size() - 1;
         param_upgraded_pad->mutable_layers(layer_index)->mutable_layer()
             ->set_pad(source_layer.layer().pad());
         param_upgraded_pad->mutable_layers(layer_index)->set_bottom(
             j, source_layer.bottom(0));
       }
     }
-    for (int j = 0; j < layer_connection.top_size(); ++j) {
+    for (int_tp j = 0; j < layer_connection.top_size(); ++j) {
       const string& blob_name = layer_connection.top(j);
       blob_name_to_last_top_idx[blob_name] = i;
     }
@@ -119,10 +119,10 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
                              V1LayerParameter* layer_param) {
   bool is_fully_compatible = true;
   layer_param->Clear();
-  for (int i = 0; i < v0_layer_connection.bottom_size(); ++i) {
+  for (int_tp i = 0; i < v0_layer_connection.bottom_size(); ++i) {
     layer_param->add_bottom(v0_layer_connection.bottom(i));
   }
-  for (int i = 0; i < v0_layer_connection.top_size(); ++i) {
+  for (int_tp i = 0; i < v0_layer_connection.top_size(); ++i) {
     layer_param->add_top(v0_layer_connection.top(i));
   }
   if (v0_layer_connection.has_layer()) {
@@ -134,13 +134,13 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     if (v0_layer_param.has_type()) {
       layer_param->set_type(UpgradeV0LayerType(type));
     }
-    for (int i = 0; i < v0_layer_param.blobs_size(); ++i) {
+    for (int_tp i = 0; i < v0_layer_param.blobs_size(); ++i) {
       layer_param->add_blobs()->CopyFrom(v0_layer_param.blobs(i));
     }
-    for (int i = 0; i < v0_layer_param.blobs_lr_size(); ++i) {
+    for (int_tp i = 0; i < v0_layer_param.blobs_lr_size(); ++i) {
       layer_param->add_blobs_lr(v0_layer_param.blobs_lr(i));
     }
-    for (int i = 0; i < v0_layer_param.weight_decay_size(); ++i) {
+    for (int_tp i = 0; i < v0_layer_param.weight_decay_size(); ++i) {
       layer_param->add_weight_decay(v0_layer_param.weight_decay(i));
     }
     if (v0_layer_param.has_num_output()) {
@@ -522,7 +522,7 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
 }
 
 bool NetNeedsDataUpgrade(const NetParameter& net_param) {
-  for (int i = 0; i < net_param.layers_size(); ++i) {
+  for (int_tp i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
       DataParameter layer_param = net_param.layers(i).data_param();
       if (layer_param.has_scale()) {
@@ -599,7 +599,7 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   } while (0)
 
 void UpgradeNetDataTransformation(NetParameter* net_param) {
-  for (int i = 0; i < net_param->layers_size(); ++i) {
+  for (int_tp i = 0; i < net_param->layers_size(); ++i) {
     CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
     CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
     CONVERT_LAYER_TRANSFORM_PARAM(WINDOW_DATA, WindowData, window_data);
@@ -663,7 +663,7 @@ bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
   net_param->CopyFrom(v1_net_param);
   net_param->clear_layers();
   net_param->clear_layer();
-  for (int i = 0; i < v1_net_param.layers_size(); ++i) {
+  for (int_tp i = 0; i < v1_net_param.layers_size(); ++i) {
     if (!UpgradeV1LayerParameter(v1_net_param.layers(i),
                                  net_param->add_layer())) {
       LOG(ERROR)<< "Upgrade of input layer " << i << " failed.";
@@ -677,35 +677,35 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
                              LayerParameter* layer_param) {
   layer_param->Clear();
   bool is_fully_compatible = true;
-  for (int i = 0; i < v1_layer_param.bottom_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.bottom_size(); ++i) {
     layer_param->add_bottom(v1_layer_param.bottom(i));
   }
-  for (int i = 0; i < v1_layer_param.top_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.top_size(); ++i) {
     layer_param->add_top(v1_layer_param.top(i));
   }
   if (v1_layer_param.has_name()) {
     layer_param->set_name(v1_layer_param.name());
   }
-  for (int i = 0; i < v1_layer_param.include_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.include_size(); ++i) {
     layer_param->add_include()->CopyFrom(v1_layer_param.include(i));
   }
-  for (int i = 0; i < v1_layer_param.exclude_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.exclude_size(); ++i) {
     layer_param->add_exclude()->CopyFrom(v1_layer_param.exclude(i));
   }
   if (v1_layer_param.has_type()) {
     layer_param->set_type(UpgradeV1LayerType(v1_layer_param.type()));
   }
-  for (int i = 0; i < v1_layer_param.blobs_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.blobs_size(); ++i) {
     layer_param->add_blobs()->CopyFrom(v1_layer_param.blobs(i));
   }
-  for (int i = 0; i < v1_layer_param.param_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.param_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
     layer_param->mutable_param(i)->set_name(v1_layer_param.param(i));
   }
   ParamSpec_DimCheckMode mode;
-  for (int i = 0; i < v1_layer_param.blob_share_mode_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.blob_share_mode_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
@@ -723,20 +723,20 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
       }
     layer_param->mutable_param(i)->set_share_mode(mode);
   }
-  for (int i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
     layer_param->mutable_param(i)->set_lr_mult(v1_layer_param.blobs_lr(i));
   }
-  for (int i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
     layer_param->mutable_param(i)->set_decay_mult(
         v1_layer_param.weight_decay(i));
   }
-  for (int i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
+  for (int_tp i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
     layer_param->add_loss_weight(v1_layer_param.loss_weight(i));
   }
   if (v1_layer_param.has_accuracy_param()) {

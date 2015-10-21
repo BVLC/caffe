@@ -51,7 +51,7 @@ class AffinityLayer : public Layer<Dtype> {
 
  private:
   std::vector< shared_ptr< Blob<Dtype> > > min_index_;
-  std::vector<int> offsets_;
+  std::vector<int_tp> offsets_;
 };
 
 /**
@@ -70,11 +70,11 @@ class ConnectedComponentLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const {
+  virtual inline int_tp ExactNumBottomBlobs() const {
     return 1;
   }
 
-  virtual inline int ExactNumTopBlobs() const {
+  virtual inline int_tp ExactNumTopBlobs() const {
     return 1;
   }
 
@@ -90,7 +90,7 @@ class ConnectedComponentLayer : public Layer<Dtype> {
                               const vector<Blob<Dtype>*>& bottom);
 
  private:
-     cv::Mat FindBlobs(const int maxlabel, const cv::Mat &input);
+     cv::Mat FindBlobs(const int_tp maxlabel, const cv::Mat &input);
 };
 
 /**
@@ -109,7 +109,7 @@ class MergeCropLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const {
+  virtual inline int_tp ExactNumBottomBlobs() const {
     return 2;
   }
 
@@ -130,10 +130,10 @@ class MergeCropLayer : public Layer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
 
  private:
-  vector<int> forward_;
-  vector<int> backward_;
-  Blob<int> shape_a_;
-  Blob<int> shape_b_;
+  vector<int_tp> forward_;
+  vector<int_tp> backward_;
+  Blob<int_tp> shape_a_;
+  Blob<int_tp> shape_b_;
 };
 
 /**
@@ -151,10 +151,10 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                        const vector<Blob<Dtype>*>& top);
 
-  virtual inline int MinBottomBlobs() const {
+  virtual inline int_tp MinBottomBlobs() const {
     return 1;
   }
-  virtual inline int MinTopBlobs() const {
+  virtual inline int_tp MinTopBlobs() const {
     return 1;
   }
   virtual inline bool EqualNumBottomTopBlobs() const {
@@ -174,23 +174,23 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
 #ifndef CPU_ONLY
-  void forward_gpu_gemm(const Dtype* col_input, const int col_input_off,
+  void forward_gpu_gemm(const Dtype* col_input, const int_tp col_input_off,
                         const Dtype* weights, Dtype* output,
-                        const int output_off, bool skip_im2col = false);
-  void forward_gpu_bias(Dtype* output, const int output_off, const Dtype* bias);
-  void backward_gpu_gemm(const Dtype* input, const int input_off,
+                        const int_tp output_off, bool skip_im2col = false);
+  void forward_gpu_bias(Dtype* output, const int_tp output_off, const Dtype* bias);
+  void backward_gpu_gemm(const Dtype* input, const int_tp input_off,
                          const Dtype* weights, Dtype* col_output,
-                         const int col_output_off);
-  void weight_gpu_gemm(const Dtype* col_input, const int col_input_off,
-                       const Dtype* output, const int output_off,
+                         const int_tp col_output_off);
+  void weight_gpu_gemm(const Dtype* col_input, const int_tp col_input_off,
+                       const Dtype* output, const int_tp output_off,
                        Dtype* weights);
-  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int input_off);
+  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int_tp input_off);
 
   shared_ptr< Blob<Dtype> > col_buffer();
 #endif
 
   /// @brief The spatial dimensions of the input.
-  inline int input_shape(int i) {
+  inline int_tp input_shape(int_tp i) {
     return (*bottom_shape_)[channel_axis_ + i];
   }
   // reverse_dimensions should return true iff we are implementing deconv, so
@@ -200,32 +200,32 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   virtual void compute_output_shape() = 0;
 
   /// @brief The spatial dimensions of a filter kernel.
-  Blob<int> kernel_shape_;
+  Blob<int_tp> kernel_shape_;
   /// @brief The spatial dimensions of the stride.
-  Blob<int> stride_;
+  Blob<int_tp> stride_;
   /// @brief The spatial dimensions of the padding.
-  Blob<int> pad_;
+  Blob<int_tp> pad_;
   /// @brief The spatial dimension of the kernel stride.
-  Blob<int> kstride_;
+  Blob<int_tp> kstride_;
   /// @brief The spatial dimensions of the convolution input.
-  Blob<int> conv_input_shape_;
+  Blob<int_tp> conv_input_shape_;
   /// @brief The spatial dimensions of the col_buffer.
-  vector<int> col_buffer_shape_;
+  vector<int_tp> col_buffer_shape_;
   /// @brief The spatial dimensions of the output.
-  vector<int> output_shape_;
-  const vector<int>* bottom_shape_;
+  vector<int_tp> output_shape_;
+  const vector<int_tp>* bottom_shape_;
 
-  int num_spatial_axes_;
-  int bottom_dim_;
-  int top_dim_;
+  int_tp num_spatial_axes_;
+  int_tp bottom_dim_;
+  int_tp top_dim_;
 
-  int channel_axis_;
-  int num_;
-  int channels_;
-  int group_;
-  int out_spatial_dim_;
-  int weight_offset_;
-  int num_output_;
+  int_tp channel_axis_;
+  int_tp num_;
+  int_tp channels_;
+  int_tp group_;
+  int_tp out_spatial_dim_;
+  int_tp weight_offset_;
+  int_tp num_output_;
   bool bias_term_;
   bool is_1x1_;
   bool force_nd_im2col_;
@@ -324,9 +324,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   }
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
-  inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
+  inline void greentea_conv_im2col_gpu(const Dtype* data, const int_tp data_off,
                                        Dtype* col_buff,
-                                       const int col_buff_off) {
+                                       const int_tp col_buff_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
@@ -384,8 +384,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   }
 
   inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
-                                       const int col_buff_off, Dtype* data,
-                                       const int data_off) {
+                                       const int_tp col_buff_off, Dtype* data,
+                                       const int_tp data_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
@@ -447,14 +447,14 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 #endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
 
-  int num_kernels_im2col_;
-  int num_kernels_col2im_;
-  int conv_out_channels_;
-  int conv_in_channels_;
-  int conv_out_spatial_dim_;
-  int kernel_dim_;
-  int col_offset_;
-  int output_offset_;
+  int_tp num_kernels_im2col_;
+  int_tp num_kernels_col2im_;
+  int_tp conv_out_channels_;
+  int_tp conv_in_channels_;
+  int_tp conv_out_spatial_dim_;
+  int_tp kernel_dim_;
+  int_tp col_offset_;
+  int_tp output_offset_;
 
   bool use_skernel_;
 
@@ -476,13 +476,13 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
     return "Convolution";
   }
 
-  virtual size_t ForwardFlops() {
-    size_t group = this->group_;
-    size_t N = 1;
-    size_t M = this->num_output_ / group;
-    size_t K = this->channels_;
-    const int* kshape = this->kernel_shape_.cpu_data();
-    for (int i = 0; i < this->output_shape_.size(); ++i) {
+  virtual uint_tp ForwardFlops() {
+    uint_tp group = this->group_;
+    uint_tp N = 1;
+    uint_tp M = this->num_output_ / group;
+    uint_tp K = this->channels_;
+    const int_tp* kshape = this->kernel_shape_.cpu_data();
+    for (int_tp i = 0; i < this->output_shape_.size(); ++i) {
       N *= this->output_shape_[i];
       K *= kshape[i];
     }
@@ -573,12 +573,12 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   cudnnTensorDescriptor_t bias_desc_;
   cudnnFilterDescriptor_t filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
-  int bottom_offset_, top_offset_, bias_offset_;
+  int_tp bottom_offset_, top_offset_, bias_offset_;
 
-  size_t *workspace_fwd_sizes_;
-  size_t *workspace_bwd_data_sizes_;
-  size_t *workspace_bwd_filter_sizes_;
-  size_t workspaceSizeInBytes;  // size of underlying storage
+  uint_tp *workspace_fwd_sizes_;
+  uint_tp *workspace_bwd_data_sizes_;
+  uint_tp *workspace_bwd_filter_sizes_;
+  uint_tp workspaceSizeInBytes;  // size of underlying storage
   void *workspaceData;  // underlying storage
   void **workspace;  // aliases into workspaceData
 };
@@ -605,10 +605,10 @@ class Im2colLayer : public Layer<Dtype> {
   virtual inline const char* type() const {
     return "Im2col";
   }
-  virtual inline int ExactNumBottomBlobs() const {
+  virtual inline int_tp ExactNumBottomBlobs() const {
     return 1;
   }
-  virtual inline int ExactNumTopBlobs() const {
+  virtual inline int_tp ExactNumTopBlobs() const {
     return 1;
   }
 
@@ -625,19 +625,19 @@ class Im2colLayer : public Layer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
 
   /// @brief The spatial dimensions of a filter kernel.
-  Blob<int> kernel_shape_;
+  Blob<int_tp> kernel_shape_;
   /// @brief The spatial dimensions of the stride.
-  Blob<int> stride_;
+  Blob<int_tp> stride_;
   /// @brief The spatial dimensions of the padding.
-  Blob<int> pad_;
+  Blob<int_tp> pad_;
 
-  int num_spatial_axes_;
-  int bottom_dim_;
-  int top_dim_;
+  int_tp num_spatial_axes_;
+  int_tp bottom_dim_;
+  int_tp top_dim_;
 
-  int channel_axis_;
-  int num_;
-  int channels_;
+  int_tp channel_axis_;
+  int_tp num_;
+  int_tp channels_;
 
   bool force_nd_im2col_;
 };
@@ -665,10 +665,10 @@ class LRNLayer : public Layer<Dtype> {
   virtual inline const char* type() const {
     return "LRN";
   }
-  virtual inline int ExactNumBottomBlobs() const {
+  virtual inline int_tp ExactNumBottomBlobs() const {
     return 1;
   }
-  virtual inline int ExactNumTopBlobs() const {
+  virtual inline int_tp ExactNumTopBlobs() const {
     return 1;
   }
 
@@ -700,15 +700,15 @@ class LRNLayer : public Layer<Dtype> {
                                      const vector<bool>& propagate_down,
                                      const vector<Blob<Dtype>*>& bottom);
 
-  int size_;
-  int pre_pad_;
+  int_tp size_;
+  int_tp pre_pad_;
   Dtype alpha_;
   Dtype beta_;
   Dtype k_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
+  int_tp num_;
+  int_tp channels_;
+  int_tp height_;
+  int_tp width_;
 
   // Fields used for normalization ACROSS_CHANNELS
   // scale_ stores the intermediate summing results
@@ -757,7 +757,7 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   cudnnLRNDescriptor_t norm_desc_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 
-  int size_;
+  int_tp size_;
   Dtype alpha_, beta_, k_;
 };
 
@@ -784,10 +784,10 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   cudnnLRNDescriptor_t norm_desc_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 
-  int size_, pre_pad_;
+  int_tp size_, pre_pad_;
   Dtype alpha_, beta_, k_;
 
-  size_t tempDataSize;
+  uint_tp tempDataSize;
   void *tempData1, *tempData2;
 };
 
@@ -824,38 +824,38 @@ class PoolingLayer : public Layer<Dtype> {
   virtual inline const char* type() const {
     return "Pooling";
   }
-  virtual inline int ExactNumBottomBlobs() const {
+  virtual inline int_tp ExactNumBottomBlobs() const {
     return 1;
   }
-  virtual inline int MinTopBlobs() const {
+  virtual inline int_tp MinTopBlobs() const {
     return 1;
   }
   // MAX POOL layers can output an extra top blob for the mask;
   // others can only output the pooled inputs.
-  virtual inline int MaxTopBlobs() const {
+  virtual inline int_tp MaxTopBlobs() const {
     return
         (this->layer_param_.pooling_param().pool()
             == PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
-  Blob<int> kernel_shape_;
-  Blob<int> ext_kernel_shape_;
-  Blob<int> stride_;
-  Blob<int> pad_;
-  Blob<int> kstride_;
-  Blob<int> size_;
-  Blob<int> pooled_size_;
+  Blob<int_tp> kernel_shape_;
+  Blob<int_tp> ext_kernel_shape_;
+  Blob<int_tp> stride_;
+  Blob<int_tp> pad_;
+  Blob<int_tp> kstride_;
+  Blob<int_tp> size_;
+  Blob<int_tp> pooled_size_;
 
-  int channel_axis_;
-  int num_spatial_axes_;
-  int channels_;
+  int_tp channel_axis_;
+  int_tp num_spatial_axes_;
+  int_tp channels_;
 
   bool use_skernel_;
   bool global_pooling_;
 
-  int max_top_blobs_;
+  int_tp max_top_blobs_;
   Blob<Dtype> rand_idx_;
-  Blob<int> max_idx_;
+  Blob<int_tp> max_idx_;
 };
 
 #ifdef USE_CUDNN
@@ -874,8 +874,8 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNPoolingLayer();
   // Currently, cuDNN does not support the extra top blob.
-  virtual inline int MinTopBlobs() const {return -1;}
-  virtual inline int ExactNumTopBlobs() const {return 1;}
+  virtual inline int_tp MinTopBlobs() const {return -1;}
+  virtual inline int_tp ExactNumTopBlobs() const {return 1;}
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -909,8 +909,8 @@ class SPPLayer : public Layer<Dtype> {
                        const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "SPP"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -920,16 +920,16 @@ class SPPLayer : public Layer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom);
   // calculates the kernel and stride dimensions for the pooling layer,
   // returns a correctly configured LayerParameter for a PoolingLayer
-  virtual LayerParameter GetPoolingParam(const int pyramid_level,
-                                         const int bottom_h, const int bottom_w,
+  virtual LayerParameter GetPoolingParam(const int_tp pyramid_level,
+                                         const int_tp bottom_h, const int_tp bottom_w,
                                          const SPPParameter spp_param);
 
-  int pyramid_height_;
-  int bottom_h_, bottom_w_;
-  int num_;
-  int channels_;
-  int kernel_h_, kernel_w_;
-  int pad_h_, pad_w_;
+  int_tp pyramid_height_;
+  int_tp bottom_h_, bottom_w_;
+  int_tp num_;
+  int_tp channels_;
+  int_tp kernel_h_, kernel_w_;
+  int_tp pad_h_, pad_w_;
   bool reshaped_first_time_;
 
   /// the internal Split layer that feeds the pooling layers

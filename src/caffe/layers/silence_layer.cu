@@ -21,7 +21,7 @@ template<typename Dtype>
 void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                        const vector<bool>& propagate_down,
                                        const vector<Blob<Dtype>*>& bottom) {
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int_tp i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
       if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

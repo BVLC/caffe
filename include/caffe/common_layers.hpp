@@ -37,7 +37,7 @@ class ArgMaxLayer : public Layer<Dtype> {
    *   - out_max_val (\b optional bool, default false).
    *     if set, output a vector of pairs (max_ind, max_val) unless axis is set then
    *     output max_val along the specified axis.
-   *   - axis (\b optional int).
+   *   - axis (\b optional int_tp).
    *     if set, maximise along the specified axis else maximise the flattened
    *     trailing dimensions for each index of the first / num dimension.
    */
@@ -49,8 +49,8 @@ class ArgMaxLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "ArgMax"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -73,16 +73,16 @@ class ArgMaxLayer : public Layer<Dtype> {
     NOT_IMPLEMENTED;
   }
   bool out_max_val_;
-  size_t top_k_;
+  uint_tp top_k_;
   bool has_axis_;
-  int axis_;
+  int_tp axis_;
 };
 
 /**
  * @brief Index into the input blob along its first axis.
  *
  * This layer can be used to select, reorder, and even replicate examples in a
- * batch.  The second blob is cast to int and treated as an index into the
+ * batch.  The second blob is cast to int_tp and treated as an index into the
  * first axis of the first blob.
  */
 template <typename Dtype>
@@ -94,8 +94,8 @@ class BatchReindexLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "BatchReindex"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -137,12 +137,12 @@ class BatchReindexLayer : public Layer<Dtype> {
 
  private:
   struct pair_sort_first {
-    bool operator()(const std::pair<int, int> &left,
-                    const std::pair<int, int> &right) {
+    bool operator()(const std::pair<int_tp, int_tp> &left,
+                    const std::pair<int_tp, int_tp> &right) {
       return left.first < right.first;
     }
   };
-  void check_batch_reindex(int initial_num, int final_num,
+  void check_batch_reindex(int_tp initial_num, int_tp final_num,
                            const Dtype* ridx_data);
 };
 
@@ -162,8 +162,8 @@ class ConcatLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Concat"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -214,10 +214,10 @@ class ConcatLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int count_;
-  int num_concats_;
-  int concat_input_size_;
-  int concat_axis_;
+  int_tp count_;
+  int_tp num_concats_;
+  int_tp concat_input_size_;
+  int_tp concat_axis_;
 };
 
 /**
@@ -237,8 +237,8 @@ class EltwiseLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Eltwise"; }
-  virtual inline int MinBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -252,7 +252,7 @@ class EltwiseLayer : public Layer<Dtype> {
 
   EltwiseParameter_EltwiseOp op_;
   vector<Dtype> coeffs_;
-  Blob<int> max_idx_;
+  Blob<int_tp> max_idx_;
 
   bool stable_prod_grad_;
 };
@@ -275,8 +275,8 @@ class EmbedLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Embed"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -288,9 +288,9 @@ class EmbedLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int M_;
-  int K_;
-  int N_;
+  int_tp M_;
+  int_tp K_;
+  int_tp N_;
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
 };
@@ -312,8 +312,8 @@ class FilterLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Filter"; }
-  virtual inline int MinBottomBlobs() const { return 2; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 2; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -355,7 +355,7 @@ class FilterLayer : public Layer<Dtype> {
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool first_reshape_;
-  vector<int> indices_to_forward_;
+  vector<int_tp> indices_to_forward_;
 };
 
 /**
@@ -377,8 +377,8 @@ class FlattenLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Flatten"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -422,8 +422,8 @@ class InnerProductLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "InnerProduct"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -435,9 +435,9 @@ class InnerProductLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int M_;
-  int K_;
-  int N_;
+  int_tp M_;
+  int_tp K_;
+  int_tp N_;
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
 };
@@ -456,8 +456,8 @@ class MVNLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MVN"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -493,8 +493,8 @@ class ReshapeLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Reshape"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -507,11 +507,11 @@ class ReshapeLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
   /// @brief vector of axes indices whose dimensions we'll copy from the bottom
-  vector<int> copy_axes_;
+  vector<int_tp> copy_axes_;
   /// @brief the index of the axis whose dimension we infer, or -1 if none
-  int inferred_axis_;
+  int_tp inferred_axis_;
   /// @brief the product of the "constant" output dimensions
-  int constant_count_;
+  int_tp constant_count_;
 };
 
 /**
@@ -532,8 +532,8 @@ class ReductionLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Reduction"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -550,11 +550,11 @@ class ReductionLayer : public Layer<Dtype> {
   /// @brief a scalar coefficient applied to all outputs
   Dtype coeff_;
   /// @brief the index of the first input axis to reduce
-  int axis_;
+  int_tp axis_;
   /// @brief the number of reductions performed
-  int num_;
+  int_tp num_;
   /// @brief the input size of each reduction
-  int dim_;
+  int_tp dim_;
   /// @brief a helper Blob used for summation (op_ == SUM)
   Blob<Dtype> sum_multiplier_;
 };
@@ -572,8 +572,8 @@ class SilenceLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "Silence"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
+  virtual inline int_tp MinBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 0; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -602,8 +602,8 @@ class SoftmaxLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Softmax"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -615,9 +615,9 @@ class SoftmaxLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int outer_num_;
-  int inner_num_;
-  int softmax_axis_;
+  int_tp outer_num_;
+  int_tp inner_num_;
+  int_tp softmax_axis_;
   /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
   /// scale is an intermediate Blob to hold temporary results.
@@ -668,8 +668,8 @@ class SplitLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Split"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -681,7 +681,7 @@ class SplitLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int count_;
+  int_tp count_;
 };
 
 /**
@@ -701,8 +701,8 @@ class SliceLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Slice"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -714,11 +714,11 @@ class SliceLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int count_;
-  int num_slices_;
-  int slice_size_;
-  int slice_axis_;
-  vector<int> slice_point_;
+  int_tp count_;
+  int_tp num_slices_;
+  int_tp slice_size_;
+  int_tp slice_axis_;
+  vector<int_tp> slice_point_;
 };
 
 /**
@@ -733,8 +733,8 @@ class TileLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Tile"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -747,7 +747,7 @@ class TileLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  unsigned int axis_, tiles_, outer_dim_, inner_dim_;
+  uint_tp axis_, tiles_, outer_dim_, inner_dim_;
 };
 
 }  // namespace caffe

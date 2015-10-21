@@ -30,7 +30,7 @@ class DBTest : public ::testing::Test {
     scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
     db->Open(this->source_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
-    for (int i = 0; i < 2; ++i) {
+    for (int_tp i = 0; i < 2; ++i) {
       Datum datum;
       ReadImageToDatum(root_images_ + keys[i], i, &datum);
       string out;
