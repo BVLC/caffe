@@ -44,6 +44,9 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
    *  convolution, given by pad for equal dimensions or pad_h and pad_w for
    *  different padding. Input padding is computed implicitly instead of
    *  actually padding.
+   *  - kernel_stride / kernel_stride_h / kernel_stride_w (\b optional, default 1). Stride
+   *  between consecutive filter taps before performing convolution.
+   *  This is aka atrous algorithm in the context of undecimated wavelet transform.
    *  - group (\b optional, default 1). The number of filter groups. Group
    *  convolution is a method for reducing parameterization by selectively
    *  connecting input and output channels. The input and output channel dimensions must be divisible

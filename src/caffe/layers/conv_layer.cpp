@@ -9,11 +9,14 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
+  const int* kernel_stride_data = this->kernel_stride_.cpu_data();
   this->output_shape_.clear();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
     const int input_dim = this->input_shape(i + 1);
-    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+    const int kernel_shape_eff = kernel_shape_data[i]
+        + (kernel_shape_data[i] - 1) * (kernel_stride_data[i] - 1);
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_eff)
         / stride_data[i] + 1;
     this->output_shape_.push_back(output_dim);
   }

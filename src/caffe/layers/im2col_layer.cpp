@@ -87,6 +87,30 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
+  // Setup kernel_stride dimensions (kernel_stride_).
+  kernel_stride_.Reshape(dim_blob_shape);
+  int* kernel_stride_data = kernel_stride_.mutable_cpu_data();
+  if (conv_param.has_kernel_stride_h() || conv_param.has_kernel_stride_w()) {
+    CHECK_EQ(num_spatial_axes_, 2)
+    << "kernel_stride_h & kernel_stride_w can only be used for 2D convolution.";
+    CHECK_EQ(0, conv_param.pad_size())
+    << "Either kernel_stride or kernel_stride_h/w should be specified; not both.";
+    kernel_stride_data[0] = conv_param.kernel_stride_h();
+    kernel_stride_data[1] = conv_param.kernel_stride_w();
+  } else {
+    const int num_kernel_stride_dims = conv_param.kernel_stride_size();
+    CHECK(num_kernel_stride_dims == 0 || num_kernel_stride_dims == 1 ||
+          num_kernel_stride_dims == num_spatial_axes_)
+        << "kernel_stride must be specified once, or once per spatial dimension "
+        << "(kernel_stride specified " << num_kernel_stride_dims << " times; "
+        << num_spatial_axes_ << " spatial dims);";
+    const int kDefaultkernel_stride = 1;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+        kernel_stride_data[i] = (num_kernel_stride_dims == 0) ?
+          kDefaultkernel_stride :
+          conv_param.kernel_stride((num_kernel_stride_dims == 1) ? 0 : i);
+    }
+  }
 }
 
 template <typename Dtype>
@@ -96,10 +120,13 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const int* kernel_shape_data = kernel_shape_.cpu_data();
   const int* stride_data = stride_.cpu_data();
   const int* pad_data = pad_.cpu_data();
+  const int* kernel_stride_data = kernel_stride_.cpu_data();
   for (int i = 0; i < num_spatial_axes_; ++i) {
     top_shape[channel_axis_] *= kernel_shape_data[i];
     const int input_dim = bottom[0]->shape(channel_axis_ + i + 1);
-    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+    const int kernel_eff = kernel_shape_data[i]
+        + (kernel_shape_data[i] - 1) * (kernel_stride_data[i] - 1);
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_eff)
         / stride_data[i] + 1;
     top_shape[channel_axis_ + i + 1] = output_dim;
   }
@@ -109,6 +136,7 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top_dim_ = top[0]->count(channel_axis_);
 
   channels_ = bottom[0]->shape(channel_axis_);
+
 }
 
 template <typename Dtype>
@@ -129,13 +157,14 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
+          kernel_stride_.cpu_data()[0], kernel_stride_.cpu_data()[1],
           top_data + n * top_dim_);
     } else {
       im2col_nd_cpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          top_data + n * top_dim_);
+          kernel_stride_.cpu_data(), top_data + n * top_dim_);
     }
   }
 }
@@ -153,13 +182,14 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
+          kernel_stride_.cpu_data()[0], kernel_stride_.cpu_data()[1],
           bottom_diff + n * bottom_dim_);
     } else {
       col2im_nd_cpu(top_diff + n * top_dim_, num_spatial_axes_,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          bottom_diff + n * bottom_dim_);
+          kernel_stride_.cpu_data(), bottom_diff + n * bottom_dim_);
     }
   }
 }
