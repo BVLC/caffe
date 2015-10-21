@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 2.8.7)
 # ---[ Caffe project
 project(Caffe C CXX)
 
+# ---[ Caffe version
+set(CAFFE_TARGET_VERSION "0.14.0-alpha")
+set(CAFFE_TARGET_SOVERSION "0.14")
+add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
+
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
