@@ -12,7 +12,9 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/signal_handler.h"
+
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -147,6 +149,7 @@ caffe::SolverAction::Enum GetRequestedAction(
     return caffe::SolverAction::NONE;
   }
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
+  return caffe::SolverAction::NONE;
 }
 
 // Train / Finetune a model.
@@ -189,6 +192,8 @@ int train() {
     Caffe::set_solver_count(gpus.size());
   }
 
+  caffe::gpu_memory::arena arena(gpus);
+
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
@@ -213,6 +218,8 @@ int train() {
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+  // solver.reset();
   return 0;
 }
 RegisterBrewFunction(train);

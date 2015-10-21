@@ -10,39 +10,48 @@
 namespace caffe {
 
 template <typename Dtype>
-void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void CuDNNLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  PoolingLayer<Dtype>::LayerSetUp(bottom, top);
+  LRNLayer<Dtype>::LayerSetUp(bottom, top);
+
+  // CUDNN_CHECK(cudnnCreate(&handle_));
+  CUDNN_CHECK(cudnnCreateLRNDescriptor(&norm_desc_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
-  cudnn::createPoolingDesc<Dtype>(&pooling_desc_,
-      this->layer_param_.pooling_param().pool(), &mode_,
-      this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
-      this->stride_h_, this->stride_w_);
+
+  // create a LRN handle
   handles_setup_ = true;
+
+  size_ = this->layer_param().lrn_param().local_size();
+  alpha_ = this->layer_param().lrn_param().alpha();
+  beta_ = this->layer_param().lrn_param().beta();
+  k_ = this->layer_param().lrn_param().k();
 }
 
 template <typename Dtype>
-void CuDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void CuDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  PoolingLayer<Dtype>::Reshape(bottom, top);
+  LRNLayer<Dtype>::Reshape(bottom, top);
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, bottom[0]->num(),
       this->channels_, this->height_, this->width_);
   cudnn::setTensor4dDesc<Dtype>(&top_desc_, bottom[0]->num(),
-      this->channels_, this->pooled_height_, this->pooled_width_);
+      this->channels_, this->height_, this->width_);
+  CUDNN_CHECK(cudnnSetLRNDescriptor(norm_desc_, size_, alpha_, beta_, k_));
 }
 
 template <typename Dtype>
-CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
+CuDNNLRNLayer<Dtype>::~CuDNNLRNLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
-  cudnnDestroyPoolingDescriptor(pooling_desc_);
+
+  // destroy LRN handle
+  CUDNN_CHECK(cudnnDestroyLRNDescriptor(norm_desc_));
 }
 
-INSTANTIATE_CLASS(CuDNNPoolingLayer);
+INSTANTIATE_CLASS(CuDNNLRNLayer);
 
 }   // namespace caffe
 #endif

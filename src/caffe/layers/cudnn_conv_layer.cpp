@@ -1,18 +1,16 @@
 #ifdef USE_CUDNN
+#include <algorithm>
 #include <vector>
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-namespace caffe {
 
-// Set to three for the benefit of the backward pass, which
-// can use separate streams for calculating the gradient w.r.t.
-// bias, filter weights, and bottom data for each group independently
-#define CUDNN_STREAMS_PER_GROUP 3
+namespace caffe {
 
 /**
  * TODO(dox) explain cuDNN interface
@@ -20,17 +18,32 @@ namespace caffe {
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
-  // Initialize CUDA streams and cuDNN.
-  stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
-  handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
-  workspaceSizeInBytes = 0;
-  workspace = NULL;
 
-  for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
-    CUDA_CHECK(cudaStreamCreate(&stream_[g]));
-    CUDNN_CHECK(cudnnCreate(&handle_[g]));
-    CUDNN_CHECK(cudnnSetStream(handle_[g], stream_[g]));
+  ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+
+  // Initialize algorithm arrays
+  fwd_algo_       = new cudnnConvolutionFwdAlgo_t[bottom.size()];
+  bwd_filter_algo_= new cudnnConvolutionBwdFilterAlgo_t[bottom.size()];
+  bwd_data_algo_  = new cudnnConvolutionBwdDataAlgo_t[bottom.size()];
+
+  // initialize size arrays
+  workspace_fwd_sizes_ = new size_t[bottom.size()];
+  workspace_bwd_filter_sizes_ = new size_t[bottom.size()];
+  workspace_bwd_data_sizes_ = new size_t[bottom.size()];
+
+  // workspace data
+  workspaceSizeInBytes = 0;
+  workspaceData = NULL;
+
+  for (size_t i = 0; i < bottom.size(); ++i) {
+    // initialize all to default algorithms
+    fwd_algo_[i] = (cudnnConvolutionFwdAlgo_t)0;
+    bwd_filter_algo_[i] = (cudnnConvolutionBwdFilterAlgo_t)0;
+    bwd_data_algo_[i] = (cudnnConvolutionBwdDataAlgo_t)0;
+    // default algorithms don't require workspace
+    workspace_fwd_sizes_[i] = 0;
+    workspace_bwd_data_sizes_[i] = 0;
+    workspace_bwd_filter_sizes_[i] = 0;
   }
 
   // Set the indexing parameters.
@@ -44,6 +57,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
       this->num_output_ / this->group_, this->channels_ / this->group_,
       kernel_h, kernel_w);
 
+  this->weight_offset_ = (this->num_output_ / this->group_) *
+                         (this->channels_ / this->group_) *
+                         kernel_h * kernel_w;
   // Create tensor descriptor(s) for data and corresponding convolution(s).
   for (int i = 0; i < bottom.size(); i++) {
     cudnnTensorDescriptor_t bottom_desc;
@@ -86,6 +102,11 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   const int stride_h = stride_data[0];
   const int stride_w = stride_data[1];
 
+  // Specify workspace limit for kernels directly until we have a
+  // planning strategy and a rewrite of Caffe's GPU memory mangagement
+  size_t workspace_limit_bytes, total_memory;
+  gpu_memory::getInfo(&workspace_limit_bytes, &total_memory);
+
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
         this->num_,
@@ -97,8 +118,54 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         this->num_output_ / this->group_, height_out, width_out,
         this->num_output_ * this->out_spatial_dim_,
         this->out_spatial_dim_, width_out, 1);
+
     cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
         filter_desc_, pad_h, pad_w, stride_h, stride_w);
+
+     // choose forward and backward algorithms + workspace(s)
+      CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(Caffe::cudnn_handle(),
+      bottom_descs_[i],
+      filter_desc_,
+      conv_descs_[i],
+      top_descs_[i],
+      CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
+      workspace_limit_bytes,
+      &fwd_algo_[i]));
+
+    CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(Caffe::cudnn_handle(),
+      bottom_descs_[i],
+      filter_desc_,
+      conv_descs_[i],
+      top_descs_[i],
+      fwd_algo_[i],
+      &(workspace_fwd_sizes_[i])));
+
+    //
+    // choose backward algorithm for filter
+      CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm(
+            Caffe::cudnn_handle(),
+          bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
+          CUDNN_CONVOLUTION_BWD_FILTER_SPECIFY_WORKSPACE_LIMIT,
+          workspace_limit_bytes, &bwd_filter_algo_[i]) );
+
+    // get workspace for backwards filter algorithm
+    CUDNN_CHECK(cudnnGetConvolutionBackwardFilterWorkspaceSize(
+          Caffe::cudnn_handle(),
+          bottom_descs_[i], top_descs_[i], conv_descs_[i], filter_desc_,
+          bwd_filter_algo_[i], &workspace_bwd_filter_sizes_[i]));
+
+    // choose backward algo for data
+    CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm(
+            Caffe::cudnn_handle(),
+          filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
+          CUDNN_CONVOLUTION_BWD_DATA_SPECIFY_WORKSPACE_LIMIT,
+        workspace_limit_bytes, &bwd_data_algo_[i]));
+
+    // get workspace size
+    CUDNN_CHECK(cudnnGetConvolutionBackwardDataWorkspaceSize(
+          Caffe::cudnn_handle(),
+          filter_desc_, top_descs_[i], conv_descs_[i], bottom_descs_[i],
+          bwd_data_algo_[i], &workspace_bwd_data_sizes_[i]) );
   }
 
   // Tensor descriptor for bias.
@@ -123,13 +190,15 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   }
   cudnnDestroyFilterDescriptor(filter_desc_);
 
-  for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
-    cudaStreamDestroy(stream_[g]);
-    cudnnDestroy(handle_[g]);
-  }
+  delete [] fwd_algo_;
+  delete [] bwd_filter_algo_;
+  delete [] bwd_data_algo_;
+  delete [] workspace_fwd_sizes_;
+  delete [] workspace_bwd_data_sizes_;
+  delete [] workspace_bwd_filter_sizes_;
 
-  delete [] stream_;
-  delete [] handle_;
+  gpu_memory::deallocate(this->workspaceData);
+  this->workspaceData = NULL;
 }
 
 INSTANTIATE_CLASS(CuDNNConvolutionLayer);

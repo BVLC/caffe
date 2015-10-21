@@ -28,4 +28,5 @@ PYTHON_LIB := $(ANACONDA_HOME)/lib
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 WITH_PYTHON_LAYER := 1
+USE_CUDNN := 0
 EOF
