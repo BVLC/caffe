@@ -16,7 +16,7 @@ template<typename Dtype>
 void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -75,7 +75,7 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                      const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    const int count = bottom[0]->count();
+    const int_tp count = bottom[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();
 
     if (this->device_->backend() == BACKEND_CUDA) {

@@ -12,13 +12,13 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                   const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  int num;
+  int_tp num;
   if (this->layer_param_.mvn_param().across_channels())
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
 
-  int dim = bottom[0]->count() / num;
+  int_tp dim = bottom[0]->count() / num;
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -115,13 +115,13 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-  int num;
+  int_tp num;
   if (this->layer_param_.mvn_param().across_channels())
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
 
-  int dim = bottom[0]->count() / num;
+  int_tp dim = bottom[0]->count() / num;
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

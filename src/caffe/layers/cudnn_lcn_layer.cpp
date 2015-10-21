@@ -40,7 +40,7 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CUDNN_CHECK(cudnnSetLRNDescriptor(norm_desc_, size_, alpha_, beta_, k_));
 
   // allocate / reallocate tempData buffers
-  size_t totalSizeInBytes = sizeof(Dtype)*bottom[0]->num()* \
+  uint_tp totalSizeInBytes = sizeof(Dtype)*bottom[0]->num()* \
                             this->channels_*this->height_*this->width_;
 
   if (totalSizeInBytes > tempDataSize) {

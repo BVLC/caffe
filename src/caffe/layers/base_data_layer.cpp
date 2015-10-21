@@ -36,7 +36,7 @@ BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
     : BaseDataLayer<Dtype>(param),
       prefetch_free_(),
       prefetch_full_() {
-  for (int i = 0; i < PREFETCH_COUNT; ++i) {
+  for (int_tp i = 0; i < PREFETCH_COUNT; ++i) {
     prefetch_free_.push(&prefetch_[i]);
   }
 }
@@ -49,7 +49,7 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   // calls so that the prefetch thread does not accidentally make simultaneous
   // cudaMalloc calls when the main thread is running. In some GPUs this
   // seems to cause failures if we do not so.
-  for (int i = 0; i < PREFETCH_COUNT; ++i) {
+  for (int_tp i = 0; i < PREFETCH_COUNT; ++i) {
     prefetch_[i].data_.mutable_cpu_data();
     if (this->output_labels_) {
       prefetch_[i].label_.mutable_cpu_data();
@@ -57,7 +57,7 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    for (int i = 0; i < PREFETCH_COUNT; ++i) {
+    for (int_tp i = 0; i < PREFETCH_COUNT; ++i) {
       prefetch_[i].data_.mutable_gpu_data();
       if (this->output_labels_) {
         prefetch_[i].label_.mutable_gpu_data();

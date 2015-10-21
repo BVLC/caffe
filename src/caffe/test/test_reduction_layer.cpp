@@ -35,7 +35,7 @@ class ReductionLayerTest : public MultiDeviceTest<TypeParam> {
   }
 
   void TestForward(ReductionParameter_ReductionOp op,
-                   float coeff = 1, int axis = 0) {
+                   float coeff = 1, int_tp axis = 0) {
     LayerParameter layer_param;
     ReductionParameter* reduction_param = layer_param.mutable_reduction_param();
     reduction_param->set_operation(op);
@@ -46,11 +46,11 @@ class ReductionLayerTest : public MultiDeviceTest<TypeParam> {
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* in_data = this->blob_bottom_->cpu_data();
-    const int num = this->blob_bottom_->count(0, axis);
-    const int dim = this->blob_bottom_->count(axis);
-    for (int n = 0; n < num; ++n) {
+    const int_tp num = this->blob_bottom_->count(0, axis);
+    const int_tp dim = this->blob_bottom_->count(axis);
+    for (int_tp n = 0; n < num; ++n) {
       Dtype expected_result = 0;
-      for (int d = 0; d < dim; ++d) {
+      for (int_tp d = 0; d < dim; ++d) {
         switch (op) {
           case ReductionParameter_ReductionOp_SUM:
             expected_result += *in_data;
@@ -79,7 +79,7 @@ class ReductionLayerTest : public MultiDeviceTest<TypeParam> {
   }
 
   void TestGradient(ReductionParameter_ReductionOp op,
-                    float coeff = 1, int axis = 0) {
+                    float coeff = 1, int_tp axis = 0) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
     ReductionParameter* reduction_param = layer_param.mutable_reduction_param();
@@ -146,7 +146,7 @@ TYPED_TEST(ReductionLayerTest, TestSumCoeff) {
 TYPED_TEST(ReductionLayerTest, TestSumCoeffAxis1) {
   const ReductionParameter_ReductionOp kOp = ReductionParameter_ReductionOp_SUM;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestForward(kOp, kCoeff, kAxis);
 }
 
@@ -164,7 +164,7 @@ TYPED_TEST(ReductionLayerTest, TestSumCoeffGradient) {
 TYPED_TEST(ReductionLayerTest, TestSumCoeffAxis1Gradient) {
   const ReductionParameter_ReductionOp kOp = ReductionParameter_ReductionOp_SUM;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestGradient(kOp, kCoeff, kAxis);
 }
 
@@ -185,7 +185,7 @@ TYPED_TEST(ReductionLayerTest, TestMeanCoeffAxis1) {
   const ReductionParameter_ReductionOp kOp =
       ReductionParameter_ReductionOp_MEAN;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestForward(kOp, kCoeff, kAxis);
 }
 
@@ -206,7 +206,7 @@ TYPED_TEST(ReductionLayerTest, TestMeanCoeffGradientAxis1) {
   const ReductionParameter_ReductionOp kOp =
       ReductionParameter_ReductionOp_MEAN;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestGradient(kOp, kCoeff, kAxis);
 }
 
@@ -227,7 +227,7 @@ TYPED_TEST(ReductionLayerTest, TestAbsSumCoeffAxis1) {
   const ReductionParameter_ReductionOp kOp =
       ReductionParameter_ReductionOp_ASUM;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestForward(kOp, kCoeff, kAxis);
 }
 
@@ -248,7 +248,7 @@ TYPED_TEST(ReductionLayerTest, TestAbsSumCoeffAxis1Gradient) {
   const ReductionParameter_ReductionOp kOp =
       ReductionParameter_ReductionOp_ASUM;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestGradient(kOp, kCoeff, kAxis);
 }
 
@@ -269,7 +269,7 @@ TYPED_TEST(ReductionLayerTest, TestSumOfSquaresCoeffAxis1) {
   const ReductionParameter_ReductionOp kOp =
       ReductionParameter_ReductionOp_SUMSQ;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestForward(kOp, kCoeff, kAxis);
 }
 
@@ -290,7 +290,7 @@ TYPED_TEST(ReductionLayerTest, TestSumOfSquaresCoeffAxis1Gradient) {
   const ReductionParameter_ReductionOp kOp =
       ReductionParameter_ReductionOp_SUMSQ;
   const float kCoeff = 2.3;
-  const int kAxis = 1;
+  const int_tp kAxis = 1;
   this->TestGradient(kOp, kCoeff, kAxis);
 }
 

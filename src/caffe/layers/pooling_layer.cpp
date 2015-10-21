@@ -30,16 +30,16 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   channel_axis_ = bottom[0]->CanonicalAxisIndex(pool_param.axis());
   channels_ = bottom[0]->shape(channel_axis_);
 
-  const int first_spatial_axis = channel_axis_ + 1;
-  const int num_axes = bottom[0]->num_axes();
+  const int_tp first_spatial_axis = channel_axis_ + 1;
+  const int_tp num_axes = bottom[0]->num_axes();
   num_spatial_axes_ = num_axes - first_spatial_axis;
   CHECK_GE(num_spatial_axes_, 0);
 
-  vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-  vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
+  vector<int_tp> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
+  vector<int_tp> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1L));
 
   kernel_shape_.Reshape(spatial_dim_blob_shape);
-  int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
+  int_tp* kernel_shape_data = kernel_shape_.mutable_cpu_data();
 
   if (pool_param.global_pooling()) {
     global_pooling_ = true;
@@ -58,9 +58,9 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       kernel_shape_data[0] = pool_param.kernel_h();
       kernel_shape_data[1] = pool_param.kernel_w();
     } else {
-      const int num_kernel_dims = pool_param.kernel_size_size();
+      const int_tp num_kernel_dims = pool_param.kernel_size_size();
       CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_);
-      for (int i = 0; i < num_spatial_axes_; ++i) {
+      for (int_tp i = 0; i < num_spatial_axes_; ++i) {
         kernel_shape_data[i] = pool_param.kernel_size(
             (num_kernel_dims == 1) ? 0 : i);
         CHECK_GT(kernel_shape_data[i], 0)
@@ -70,10 +70,10 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   size_.Reshape(spatial_dim_blob_shape);
-  int* size_data = size_.mutable_cpu_data();
+  int_tp* size_data = size_.mutable_cpu_data();
 
-  vector<int> top_shape = bottom[0]->shape();
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  vector<int_tp> top_shape = bottom[0]->shape();
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     size_data[i] = bottom[0]->shape(channel_axis_ + 1 + i);
   }
   top[0]->Reshape(top_shape);
@@ -82,14 +82,14 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   if (global_pooling_) {
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       kernel_shape_data[i] = size_data[i];
     }
   }
 
   // Setup stride dimensions (stride_).
   stride_.Reshape(spatial_dim_blob_shape);
-  int* stride_data = stride_.mutable_cpu_data();
+  int_tp* stride_data = stride_.mutable_cpu_data();
   if (pool_param.has_stride_h() || pool_param.has_stride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
         << "stride_h & stride_w can only be used for 2D convolution.";
@@ -98,14 +98,14 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_data[0] = pool_param.stride_h();
     stride_data[1] = pool_param.stride_w();
   } else {
-    const int num_stride_dims = pool_param.stride_size();
+    const int_tp num_stride_dims = pool_param.stride_size();
     CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
           num_stride_dims == num_spatial_axes_)
         << "stride must be specified once, or once per spatial dimension "
         << "(stride specified " << num_stride_dims << " times; "
         << num_spatial_axes_ << " spatial dims);";
-    const int kDefaultStride = 1;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    const int_tp kDefaultStride = 1;
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       stride_data[i] = (num_stride_dims == 0) ? kDefaultStride :
           pool_param.stride((num_stride_dims == 1) ? 0 : i);
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
@@ -114,7 +114,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Setup pad dimensions (pad_).
   pad_.Reshape(spatial_dim_blob_shape);
-  int* pad_data = pad_.mutable_cpu_data();
+  int_tp* pad_data = pad_.mutable_cpu_data();
   if (pool_param.has_pad_h() || pool_param.has_pad_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
         << "pad_h & pad_w can only be used for 2D convolution.";
@@ -123,14 +123,14 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     pad_data[0] = pool_param.pad_h();
     pad_data[1] = pool_param.pad_w();
   } else {
-    const int num_pad_dims = pool_param.pad_size();
+    const int_tp num_pad_dims = pool_param.pad_size();
     CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
           num_pad_dims == num_spatial_axes_)
         << "pad must be specified once, or once per spatial dimension "
         << "(pad specified " << num_pad_dims << " times; "
         << num_spatial_axes_ << " spatial dims);";
-    const int kDefaultPad = 0;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    const int_tp kDefaultPad = 0;
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
           pool_param.pad((num_pad_dims == 1) ? 0 : i);
     }
@@ -138,7 +138,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Setup kernel stride dimensions
   kstride_.Reshape(spatial_dim_blob_shape);
-  int* kstride_data = kstride_.mutable_cpu_data();
+  int_tp* kstride_data = kstride_.mutable_cpu_data();
   if (pool_param.has_kstride_h() || pool_param.has_kstride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
         << "kstride_h & kstride_w can only be used for 2D convolution.";
@@ -147,14 +147,14 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     kstride_data[0] = pool_param.kstride_h();
     kstride_data[1] = pool_param.kstride_w();
   } else {
-    const int num_kstride_dims = pool_param.kstride_size();
+    const int_tp num_kstride_dims = pool_param.kstride_size();
     CHECK(num_kstride_dims == 0 || num_kstride_dims == 1 ||
           num_kstride_dims == num_spatial_axes_)
       << "kstride must be specified once, or once per spatial dimension "
       << "(kstride specified " << num_kstride_dims << " times; "
       << num_spatial_axes_ << " spatial dims);";
-    const int kDefaultKstride = 1;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    const int_tp kDefaultKstride = 1;
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       kstride_data[i] = (num_kstride_dims == 0) ? kDefaultKstride :
           pool_param.kstride((num_kstride_dims == 1) ? 0 : i);
     }
@@ -162,7 +162,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Different 2D and ND im2col/col2im kernels for strided kernels
   use_skernel_ = false;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     use_skernel_ |= (kstride_data[i] != 1);
     if (use_skernel_) {
       break;
@@ -174,30 +174,30 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  vector<int> size_shape(1, num_spatial_axes_);
+  vector<int_tp> size_shape(1, num_spatial_axes_);
 
   size_.Reshape(size_shape);
   pooled_size_.Reshape(size_shape);
   ext_kernel_shape_.Reshape(size_shape);
-  int* size_data = size_.mutable_cpu_data();
-  int* pooled_size_data = pooled_size_.mutable_cpu_data();
-  int* ext_kernel_shape_data = ext_kernel_shape_.mutable_cpu_data();
-  int* kstride_data = kstride_.mutable_cpu_data();
-  int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
-  int* pad_data = pad_.mutable_cpu_data();
-  int* stride_data = stride_.mutable_cpu_data();
+  int_tp* size_data = size_.mutable_cpu_data();
+  int_tp* pooled_size_data = pooled_size_.mutable_cpu_data();
+  int_tp* ext_kernel_shape_data = ext_kernel_shape_.mutable_cpu_data();
+  int_tp* kstride_data = kstride_.mutable_cpu_data();
+  int_tp* kernel_shape_data = kernel_shape_.mutable_cpu_data();
+  int_tp* pad_data = pad_.mutable_cpu_data();
+  int_tp* stride_data = stride_.mutable_cpu_data();
 
   if (global_pooling_) {
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       kernel_shape_data[i] = size_data[i];
     }
   }
 
-  vector<int> top_shape = bottom[0]->shape();
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  vector<int_tp> top_shape = bottom[0]->shape();
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     size_data[i] = bottom[0]->shape(channel_axis_ + 1 + i);
     ext_kernel_shape_data[i] = (kernel_shape_data[i] - 1) * kstride_data[i] + 1;
-    pooled_size_data[i] = static_cast<int>(ceil(
+    pooled_size_data[i] = static_cast<int_tp>(ceil(
         static_cast<float>(size_data[i] + 2 * pad_data[i]
             - ext_kernel_shape_data[i]) / stride_data[i])) + 1;
     if (pad_data[i] > 0) {
@@ -233,24 +233,24 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  int kernel_h_ = kernel_shape_.cpu_data()[0];
-  int kernel_w_ = kernel_shape_.cpu_data()[1];
-  int stride_h_ = stride_.cpu_data()[0];
-  int stride_w_ = stride_.cpu_data()[1];
-  int pad_h_ = pad_.cpu_data()[0];
-  int pad_w_ = pad_.cpu_data()[1];
-  int height_ = size_.cpu_data()[0];
-  int width_ = size_.cpu_data()[1];
-  int pooled_height_ = pooled_size_.cpu_data()[0];
-  int pooled_width_ = pooled_size_.cpu_data()[1];
+  int_tp kernel_h_ = kernel_shape_.cpu_data()[0];
+  int_tp kernel_w_ = kernel_shape_.cpu_data()[1];
+  int_tp stride_h_ = stride_.cpu_data()[0];
+  int_tp stride_w_ = stride_.cpu_data()[1];
+  int_tp pad_h_ = pad_.cpu_data()[0];
+  int_tp pad_w_ = pad_.cpu_data()[1];
+  int_tp height_ = size_.cpu_data()[0];
+  int_tp width_ = size_.cpu_data()[1];
+  int_tp pooled_height_ = pooled_size_.cpu_data()[0];
+  int_tp pooled_width_ = pooled_size_.cpu_data()[1];
 
 
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  const int top_count = top[0]->count();
+  const int_tp top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
-  int* mask = NULL;  // suppress warnings about uninitalized variables
+  int_tp* mask = NULL;  // suppress warnings about uninitalized variables
   Dtype* top_mask = NULL;
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more code.
@@ -262,24 +262,24 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       caffe_set(top_count, Dtype(-1), top_mask);
     } else {
       mask = max_idx_.mutable_cpu_data();
-      caffe_set(top_count, -1, mask);
+      caffe_set(top_count, -1L, mask);
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
-    for (int n = 0; n < bottom[0]->num(); ++n) {
-      for (int c = 0; c < channels_; ++c) {
-        for (int ph = 0; ph < pooled_height_; ++ph) {
-          for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_h_ - pad_h_;
-            int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_);
-            int wend = min(wstart + kernel_w_, width_);
-            hstart = max(hstart, 0);
-            wstart = max(wstart, 0);
-            const int pool_index = ph * pooled_width_ + pw;
-            for (int h = hstart; h < hend; ++h) {
-              for (int w = wstart; w < wend; ++w) {
-                const int index = h * width_ + w;
+    for (int_tp n = 0; n < bottom[0]->num(); ++n) {
+      for (int_tp c = 0; c < channels_; ++c) {
+        for (int_tp ph = 0; ph < pooled_height_; ++ph) {
+          for (int_tp pw = 0; pw < pooled_width_; ++pw) {
+            int_tp hstart = ph * stride_h_ - pad_h_;
+            int_tp wstart = pw * stride_w_ - pad_w_;
+            int_tp hend = min(hstart + kernel_h_, height_);
+            int_tp wend = min(wstart + kernel_w_, width_);
+            hstart = max(hstart, 0L);
+            wstart = max(wstart, 0L);
+            const int_tp pool_index = ph * pooled_width_ + pw;
+            for (int_tp h = hstart; h < hend; ++h) {
+              for (int_tp w = wstart; w < wend; ++w) {
+                const int_tp index = h * width_ + w;
                 if (bottom_data[index] > top_data[pool_index]) {
                   top_data[pool_index] = bottom_data[index];
                   if (use_top_mask) {
@@ -304,25 +304,25 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_AVE:
-    for (int i = 0; i < top_count; ++i) {
+    for (int_tp i = 0; i < top_count; ++i) {
       top_data[i] = 0;
     }
     // The main loop
-    for (int n = 0; n < bottom[0]->num(); ++n) {
-      for (int c = 0; c < channels_; ++c) {
-        for (int ph = 0; ph < pooled_height_; ++ph) {
-          for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_h_ - pad_h_;
-            int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_w_, width_ + pad_w_);
-            int pool_size = (hend - hstart) * (wend - wstart);
-            hstart = max(hstart, 0);
-            wstart = max(wstart, 0);
+    for (int_tp n = 0; n < bottom[0]->num(); ++n) {
+      for (int_tp c = 0; c < channels_; ++c) {
+        for (int_tp ph = 0; ph < pooled_height_; ++ph) {
+          for (int_tp pw = 0; pw < pooled_width_; ++pw) {
+            int_tp hstart = ph * stride_h_ - pad_h_;
+            int_tp wstart = pw * stride_w_ - pad_w_;
+            int_tp hend = min(hstart + kernel_h_, height_ + pad_h_);
+            int_tp wend = min(wstart + kernel_w_, width_ + pad_w_);
+            int_tp pool_size = (hend - hstart) * (wend - wstart);
+            hstart = max(hstart, 0L);
+            wstart = max(wstart, 0L);
             hend = min(hend, height_);
             wend = min(wend, width_);
-            for (int h = hstart; h < hend; ++h) {
-              for (int w = wstart; w < wend; ++w) {
+            for (int_tp h = hstart; h < hend; ++h) {
+              for (int_tp w = wstart; w < wend; ++w) {
                 top_data[ph * pooled_width_ + pw] +=
                     bottom_data[h * width_ + w];
               }
@@ -347,16 +347,16 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  int kernel_h_ = kernel_shape_.cpu_data()[0];
-  int kernel_w_ = kernel_shape_.cpu_data()[1];
-  int stride_h_ = stride_.cpu_data()[0];
-  int stride_w_ = stride_.cpu_data()[1];
-  int pad_h_ = pad_.cpu_data()[0];
-  int pad_w_ = pad_.cpu_data()[1];
-  int height_ = size_.cpu_data()[0];
-  int width_ = size_.cpu_data()[1];
-  int pooled_height_ = pooled_size_.cpu_data()[0];
-  int pooled_width_ = pooled_size_.cpu_data()[1];
+  int_tp kernel_h_ = kernel_shape_.cpu_data()[0];
+  int_tp kernel_w_ = kernel_shape_.cpu_data()[1];
+  int_tp stride_h_ = stride_.cpu_data()[0];
+  int_tp stride_w_ = stride_.cpu_data()[1];
+  int_tp pad_h_ = pad_.cpu_data()[0];
+  int_tp pad_w_ = pad_.cpu_data()[1];
+  int_tp height_ = size_.cpu_data()[0];
+  int_tp width_ = size_.cpu_data()[1];
+  int_tp pooled_height_ = pooled_size_.cpu_data()[0];
+  int_tp pooled_width_ = pooled_size_.cpu_data()[1];
 
   if (!propagate_down[0]) {
     return;
@@ -368,7 +368,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
-  const int* mask = NULL;  // suppress warnings about uninitialized variables
+  const int_tp* mask = NULL;  // suppress warnings about uninitialized variables
   const Dtype* top_mask = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
@@ -378,12 +378,12 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     } else {
       mask = max_idx_.cpu_data();
     }
-    for (int n = 0; n < top[0]->num(); ++n) {
-      for (int c = 0; c < channels_; ++c) {
-        for (int ph = 0; ph < pooled_height_; ++ph) {
-          for (int pw = 0; pw < pooled_width_; ++pw) {
-            const int index = ph * pooled_width_ + pw;
-            const int bottom_index =
+    for (int_tp n = 0; n < top[0]->num(); ++n) {
+      for (int_tp c = 0; c < channels_; ++c) {
+        for (int_tp ph = 0; ph < pooled_height_; ++ph) {
+          for (int_tp pw = 0; pw < pooled_width_; ++pw) {
+            const int_tp index = ph * pooled_width_ + pw;
+            const int_tp bottom_index =
                 use_top_mask ? top_mask[index] : mask[index];
             bottom_diff[bottom_index] += top_diff[index];
           }
@@ -400,21 +400,21 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     break;
   case PoolingParameter_PoolMethod_AVE:
     // The main loop
-    for (int n = 0; n < top[0]->num(); ++n) {
-      for (int c = 0; c < channels_; ++c) {
-        for (int ph = 0; ph < pooled_height_; ++ph) {
-          for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_h_ - pad_h_;
-            int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_w_, width_ + pad_w_);
-            int pool_size = (hend - hstart) * (wend - wstart);
-            hstart = max(hstart, 0);
-            wstart = max(wstart, 0);
+    for (int_tp n = 0; n < top[0]->num(); ++n) {
+      for (int_tp c = 0; c < channels_; ++c) {
+        for (int_tp ph = 0; ph < pooled_height_; ++ph) {
+          for (int_tp pw = 0; pw < pooled_width_; ++pw) {
+            int_tp hstart = ph * stride_h_ - pad_h_;
+            int_tp wstart = pw * stride_w_ - pad_w_;
+            int_tp hend = min(hstart + kernel_h_, height_ + pad_h_);
+            int_tp wend = min(wstart + kernel_w_, width_ + pad_w_);
+            int_tp pool_size = (hend - hstart) * (wend - wstart);
+            hstart = max(hstart, 0L);
+            wstart = max(wstart, 0L);
             hend = min(hend, height_);
             wend = min(wend, width_);
-            for (int h = hstart; h < hend; ++h) {
-              for (int w = wstart; w < wend; ++w) {
+            for (int_tp h = hstart; h < hend; ++h) {
+              for (int_tp w = wstart; w < wend; ++w) {
                 bottom_diff[h * width_ + w] +=
                   top_diff[ph * pooled_width_ + pw] / pool_size;
               }

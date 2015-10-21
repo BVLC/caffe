@@ -18,11 +18,11 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                      const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int num_kernels = channels_ * top[0]->count(channel_axis_ + 1);
+  const int_tp num_kernels = channels_ * top[0]->count(channel_axis_ + 1);
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    for (int n = 0; n < num_; ++n) {
+    for (int_tp n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
         im2col_gpu<Dtype>(bottom_data + n * bottom_dim_, channels_,
                    bottom[0]->shape(channel_axis_ + 1),
@@ -47,7 +47,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_->id());
 
-    for (int n = 0; n < num_; ++n) {
+    for (int_tp n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
         greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) bottom_data,
                                    n * bottom_dim_, channels_,
@@ -83,7 +83,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    for (int n = 0; n < num_; ++n) {
+    for (int_tp n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
         col2im_gpu<Dtype>(top_diff + n * top_dim_, channels_,
                           bottom[0]->shape(channel_axis_ + 1),
@@ -109,7 +109,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_->id());
 
-    for (int n = 0; n < top[0]->num(); ++n) {
+    for (int_tp n = 0; n < top[0]->num(); ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
         greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) top_diff,
                                    n * top_dim_, channels_,

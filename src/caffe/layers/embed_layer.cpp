@@ -28,7 +28,7 @@ void EmbedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     // Initialize the weights --
     // transposed from InnerProductLayer for spatial locality.
-    vector<int> weight_shape(2);
+    vector<int_tp> weight_shape(2);
     weight_shape[0] = K_;
     weight_shape[1] = N_;
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
@@ -38,7 +38,7 @@ void EmbedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the bias term
     if (bias_term_) {
-      vector<int> bias_shape(1, N_);
+      vector<int_tp> bias_shape(1, N_);
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
           this->layer_param_.embed_param().bias_filler()));
@@ -53,12 +53,12 @@ void EmbedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Figure out the dimensions
   M_ = bottom[0]->count();
-  vector<int> top_shape = bottom[0]->shape();
+  vector<int_tp> top_shape = bottom[0]->shape();
   top_shape.push_back(N_);
   top[0]->Reshape(top_shape);
   // Set up the bias multiplier
   if (bias_term_) {
-    vector<int> bias_shape(1, M_);
+    vector<int_tp> bias_shape(1, M_);
     bias_multiplier_.Reshape(bias_shape);
     caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
@@ -70,9 +70,9 @@ void EmbedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  int index;
-  for (int n = 0; n < M_; ++n) {
-    index = static_cast<int>(bottom_data[n]);
+  int_tp index;
+  for (int_tp n = 0; n < M_; ++n) {
+    index = static_cast<int_tp>(bottom_data[n]);
     DCHECK_GE(index, 0);
     DCHECK_LT(index, K_);
     DCHECK_EQ(static_cast<Dtype>(index), bottom_data[n]) << "non-integer input";
@@ -94,9 +94,9 @@ void EmbedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* bottom_data = bottom[0]->cpu_data();
     // Gradient with respect to weight
     Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-    int index;
-    for (int n = 0; n < M_; ++n) {
-      index = static_cast<int>(bottom_data[n]);
+    int_tp index;
+    for (int_tp n = 0; n < M_; ++n) {
+      index = static_cast<int_tp>(bottom_data[n]);
       DCHECK_GE(index, 0);
       DCHECK_LT(index, K_);
       DCHECK_EQ(static_cast<Dtype>(index), bottom_data[n])

@@ -63,14 +63,14 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
   void* cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   caffe_memset(mem.size(), 1, cpu_data);
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(cpu_data))[i], 1);
   }
   // do another round
   cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   caffe_memset(mem.size(), 2, cpu_data);
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(cpu_data))[i], 2);
   }
 }
@@ -100,14 +100,14 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
 #endif  // USE_GREENTEA
   }
 
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(recovered_value))[i], 1);
   }
   // do another round
   cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   caffe_memset(mem.size(), 2, cpu_data);
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(cpu_data))[i], 2);
   }
   gpu_data = mem.gpu_data();
@@ -125,7 +125,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
 #endif  // USE_GREENTEA
   }
 
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(recovered_value))[i], 2);
   }
   delete[] recovered_value;
@@ -149,7 +149,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   }
 
   const void* cpu_data = mem.cpu_data();
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<const char*>(cpu_data))[i], 1);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
@@ -168,7 +168,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   }
 
   cpu_data = mem.cpu_data();
-  for (int i = 0; i < mem.size(); ++i) {
+  for (int_tp i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<const char*>(cpu_data))[i], 2);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);

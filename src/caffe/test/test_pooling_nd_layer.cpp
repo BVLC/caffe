@@ -67,17 +67,17 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     PoolingLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    int d = blob_bottom_->shape(2);
-    int h = blob_bottom_->shape(3);
-    int w = blob_bottom_->shape(4);
+    int_tp d = blob_bottom_->shape(2);
+    int_tp h = blob_bottom_->shape(3);
+    int_tp w = blob_bottom_->shape(4);
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
     TypeParam maxval = 0;
 
-    for (int cd = 0; cd < d; ++cd) {
-      for (int ch = 0; ch < h; ++ch) {
-        for (int cw = 0; cw < w; ++cw) {
+    for (int_tp cd = 0; cd < d; ++cd) {
+      for (int_tp ch = 0; ch < h; ++ch) {
+        for (int_tp cw = 0; cw < w; ++cw) {
           bottom_data[cw + ch * w + cd * w * h] =
               cw + ch * w + cd * w * h;
           if (cw % 2 == 0 && ch % 2 == 0 && cd % 2 == 0) {
@@ -112,17 +112,17 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     PoolingLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    int d = blob_bottom_->shape(2);
-    int h = blob_bottom_->shape(3);
-    int w = blob_bottom_->shape(4);
+    int_tp d = blob_bottom_->shape(2);
+    int_tp h = blob_bottom_->shape(3);
+    int_tp w = blob_bottom_->shape(4);
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
     TypeParam maxval = 0;
 
-    for (int cd = 0; cd < d; ++cd) {
-      for (int ch = 0; ch < h; ++ch) {
-        for (int cw = 0; cw < w; ++cw) {
+    for (int_tp cd = 0; cd < d; ++cd) {
+      for (int_tp ch = 0; ch < h; ++ch) {
+        for (int_tp cw = 0; cw < w; ++cw) {
           bottom_data[cw + ch * w + cd * w * h] =
               cw + ch * w + cd * w * h;
           if (cw % 2 == 0 && ch % 2 == 0 && cd % 2 == 0) {
@@ -144,9 +144,9 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     const TypeParam *bottom_diff = blob_bottom_->cpu_diff();
 
-    for (int cd = 0; cd < d; ++cd) {
-      for (int ch = 0; ch < h; ++ch) {
-        for (int cw = 0; cw < w; ++cw) {
+    for (int_tp cd = 0; cd < d; ++cd) {
+      for (int_tp ch = 0; ch < h; ++ch) {
+        for (int_tp cw = 0; cw < w; ++cw) {
           if (maxval == cw + ch * w + cd * w * h) {
             EXPECT_EQ(maxval, bottom_diff[cw + ch * w + cd * w * h]);
           }

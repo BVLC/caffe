@@ -22,6 +22,7 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 
+#include "caffe/definitions.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
@@ -107,8 +108,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   // Storing to db
   char label;
   char* pixels = new char[rows * cols];
-  int count = 0;
-  const int kMaxKeyLength = 10;
+  int_tp count = 0;
+  const int_tp kMaxKeyLength = 10;
   char key_cstr[kMaxKeyLength];
   string value;
 
@@ -118,7 +119,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-  for (int item_id = 0; item_id < num_items; ++item_id) {
+  for (int_tp item_id = 0; item_id < num_items; ++item_id) {
     image_file.read(pixels, rows * cols);
     label_file.read(&label, 1);
     datum.set_data(pixels, rows*cols);

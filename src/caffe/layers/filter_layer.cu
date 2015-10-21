@@ -9,15 +9,15 @@ namespace caffe {
 template<typename Dtype>
 void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                      const vector<Blob<Dtype>*>& top) {
-  int new_tops_num = indices_to_forward_.size();
+  int_tp new_tops_num = indices_to_forward_.size();
   // forward all filtered items for all bottoms but the Selector (bottom[last])
-  for (int t = 0; t < top.size(); ++t) {
+  for (int_tp t = 0; t < top.size(); ++t) {
     const Dtype* bottom_data = bottom[t]->gpu_data();
     Dtype* top_data = top[t]->mutable_gpu_data();
-    int dim = bottom[t]->count() / bottom[t]->shape(0);
-    for (int n = 0; n < new_tops_num; ++n) {
-      int data_offset_top = n * dim;
-      int data_offset_bottom = indices_to_forward_[n] * dim;
+    int_tp dim = bottom[t]->count() / bottom[t]->shape(0);
+    for (int_tp n = 0; n < new_tops_num; ++n) {
+      int_tp data_offset_top = n * dim;
+      int_tp data_offset_bottom = indices_to_forward_[n] * dim;
 
       if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -45,19 +45,19 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     LOG(FATAL)<< this->type()
     << "Layer cannot backpropagate to filter index inputs";
   }
-  for (int i = 0; i < top.size(); ++i) {
+  for (int_tp i = 0; i < top.size(); ++i) {
     // bottom[last] is the selector and never needs backpropagation
     // so we can iterate over top vector because top.size() == bottom.size() -1
     if (propagate_down[i]) {
-      const int dim = top[i]->count() / top[i]->shape(0);
-      int next_to_backward_offset = 0;
-      int batch_offset = 0;
-      int data_offset_bottom = 0;
-      int data_offset_top = 0;
+      const int_tp dim = top[i]->count() / top[i]->shape(0);
+      int_tp next_to_backward_offset = 0;
+      int_tp batch_offset = 0;
+      int_tp data_offset_bottom = 0;
+      int_tp data_offset_top = 0;
 
       if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-        for (int n = 0; n < bottom[i]->shape(0); ++n) {
+        for (int_tp n = 0; n < bottom[i]->shape(0); ++n) {
           if (next_to_backward_offset >= indices_to_forward_.size()) {
             // we already visited all items that were been forwarded, so
             // just set to zero remaining ones
@@ -84,7 +84,7 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             this->device_->id());
 
-        for (int n = 0; n < bottom[i]->shape(0); ++n) {
+        for (int_tp n = 0; n < bottom[i]->shape(0); ++n) {
           if (next_to_backward_offset >= indices_to_forward_.size()) {
             // we already visited all items that were been forwarded, so
             // just set to zero remaining ones

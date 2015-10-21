@@ -47,10 +47,10 @@ class device {
 
   void Init();
 
-  size_t memory_usage();
-  size_t peak_memory_usage();
-  void IncreaseMemoryUsage(size_t bytes);
-  void DecreaseMemoryUsage(size_t bytes);
+  uint_tp memory_usage();
+  uint_tp peak_memory_usage();
+  void IncreaseMemoryUsage(uint_tp bytes);
+  void DecreaseMemoryUsage(uint_tp bytes);
   void ResetPeakMemoryUsage();
   bool CheckCapability(std::string cap);
 
@@ -60,8 +60,8 @@ class device {
   int id_;
   int list_id_;
   Backend backend_;
-  size_t memory_usage_;
-  size_t peak_memory_usage_;
+  uint_tp memory_usage_;
+  uint_tp peak_memory_usage_;
   std::vector< shared_ptr< Blob<float> > > buff_f_;
   std::vector< shared_ptr< Blob<double> > > buff_d_;
 #ifdef USE_GREENTEA

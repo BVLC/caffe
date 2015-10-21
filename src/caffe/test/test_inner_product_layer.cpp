@@ -73,8 +73,8 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
-  for (int i = 0; i < count; ++i) {
+  const int_tp count = this->blob_top_->count();
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_GE(data[i], 1.);
   }
 }
@@ -95,8 +95,8 @@ TYPED_TEST(InnerProductLayerTest, TestForwardNoBatch) {
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
-  for (int i = 0; i < count; ++i) {
+  const int_tp count = this->blob_top_->count();
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_GE(data[i], 1.);
   }
 }

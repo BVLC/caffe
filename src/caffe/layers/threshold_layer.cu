@@ -13,7 +13,7 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void ThresholdForward(const int n, const Dtype threshold,
+__global__ void ThresholdForward(const int_tp n, const Dtype threshold,
                                  const Dtype* in, Dtype* out) {
   CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] > threshold ? 1 : 0;
@@ -26,7 +26,7 @@ void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

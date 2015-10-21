@@ -89,7 +89,7 @@ TYPED_TEST(FlattenLayerTest, TestForward) {
   FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int c = 0; c < 3 * 6 * 5; ++c) {
+  for (int_tp c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, c / (6 * 5), (c / 5) % 6, c % 5));
     EXPECT_EQ(this->blob_top_->data_at(1, c, 0, 0),
