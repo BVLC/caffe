@@ -313,6 +313,9 @@ ifeq ($(USE_LEVELDB), 1)
 endif
 ifeq ($(USE_LMDB), 1)
 	COMMON_FLAGS += -DUSE_LMDB
+ifeq ($(ALLOW_LMDB_NOLOCK), 1)
+	COMMON_FLAGS += -DALLOW_LMDB_NOLOCK
+endif
 endif
 
 # CPU-only configuration
