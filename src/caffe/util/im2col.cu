@@ -1,7 +1,4 @@
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
 
 #include "caffe/common.hpp"
 #include "caffe/util/im2col.hpp"

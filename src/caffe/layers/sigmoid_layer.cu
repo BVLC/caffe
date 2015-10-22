@@ -1,9 +1,7 @@
-#include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/neuron_layers.hpp"
 
 namespace caffe {
 
