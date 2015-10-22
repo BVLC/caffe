@@ -110,8 +110,6 @@ function(caffe_default_properties target)
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
-    VERSION   ${CAFFE_TARGET_VERSION}
-    SOVERSION ${CAFFE_TARGET_SOVERSION}
   )
 
   # make sure we build all external depepdencies first
