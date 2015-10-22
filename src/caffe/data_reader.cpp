@@ -62,6 +62,7 @@ DataReader::QueuePair::~QueuePair() {
 
 DataReader::Body::Body(const LayerParameter& param)
     : param_(param),
+      read(0),
       new_queue_pairs_() {
   StartInternalThread();
 }
@@ -76,26 +77,19 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   vector<shared_ptr<QueuePair> > qps;
   try {
-    int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
-
-    // To ensure deterministic runs, only start running once all solvers
-    // are ready. But solvers need to peek on one item during initialization,
-    // so read one item, then wait for the next solver.
-    for (int i = 0; i < solver_count; ++i) {
-      shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
-      read_one(cursor.get(), qp.get());
-      qps.push_back(qp);
-    }
     // Main loop
     while (!must_stop()) {
-      for (int i = 0; i < solver_count; ++i) {
+      // To ensure deterministic runs, only start running once all solvers
+      // are ready. But solvers need to peek on one item during initialization,
+      // so read one item, then wait for the next solver.
+      while (new_queue_pairs_.size()) {
+        shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
+        qps.push_back(qp);
+      }
+
+      for (int i = 0; i < qps.size(); ++i) {
         read_one(cursor.get(), qps[i].get());
       }
-      // Check no additional readers have been created. This can happen if
-      // more than one net is trained at a time per process, whether single
-      // or multi solver. It might also happen if two data layers have same
-      // name and same source.
-      CHECK_EQ(new_queue_pairs_.size(), 0);
     }
   } catch (boost::thread_interrupted&) {
     // Interrupted exception is expected on shutdown
@@ -103,15 +97,20 @@ void DataReader::Body::InternalThreadEntry() {
 }
 
 void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
+  if (qp->free_.size() == 0) {
+    return;
+  }
   Datum* datum = qp->free_.pop();
   // TODO deserialize in-place instead of copy?
   datum->ParseFromString(cursor->value());
   qp->full_.push(datum);
+  ++read;
 
   // go to the next iter
   cursor->Next();
   if (!cursor->valid()) {
-    DLOG(INFO) << "Restarting data prefetching from start.";
+    LOG(INFO) << "Restarting data prefetching from start, read: " << read;
+    read = 0;
     cursor->SeekToFirst();
   }
 }

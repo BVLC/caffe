@@ -56,6 +56,7 @@ class DataReader {
     void read_one(db::Cursor* cursor, QueuePair* qp);
 
     const LayerParameter param_;
+    int read;
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
 
     friend class DataReader;

@@ -57,22 +57,22 @@ class Solver {
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   void Step(int iters);
+
+  virtual Dtype ForwardBackward();
+
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
   // methods to restore the state from the appropriate snapshot type.
   void Restore(const char* resume_file);
-  // The Solver::Snapshot function implements the basic snapshotting utility
-  // that stores the learned net. You should implement the SnapshotSolverState()
-  // function that produces a SolverState protocol buffer that needs to be
-  // written to disk together with the learned net.
-  void Snapshot();
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
+  inline SolverParameter& param() { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
   int iter() { return iter_; }
+  void set_iter(int value) { iter_ = value; }
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -88,20 +88,34 @@ class Solver {
     callbacks_.push_back(value);
   }
 
+  typedef boost::function<Dtype()> ForwardBackwardFunc;
+  void set_forward_backward(ForwardBackwardFunc func) {
+    forward_backward_ = func;
+  }
+
   void CheckSnapshotWritePermissions();
   /**
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
 
- protected:
+  // The Solver::Snapshot function implements the basic snapshotting utility
+  // that stores the learned net. You should implement the SnapshotSolverState()
+  // function that produces a SolverState protocol buffer that needs to be
+  // written to disk together with the learned net.
+  void Snapshot();
+
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
+  virtual void ApplyUpdate(int param_id) = 0;
+
+  void TestAll();
+
+ protected:
   string SnapshotFilename(const string extension);
   string SnapshotToBinaryProto();
   string SnapshotToHDF5();
   // The test routine
-  void TestAll();
   void Test(const int test_net_id = 0);
   virtual void SnapshotSolverState(const string& model_filename) = 0;
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
@@ -126,6 +140,8 @@ class Solver {
   // True iff a request to stop early was received.
   bool requested_early_exit_;
 
+  ForwardBackwardFunc forward_backward_;
+
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
@@ -141,7 +157,8 @@ class WorkerSolver : public Solver<Dtype> {
       : Solver<Dtype>(param, root_solver) {}
 
  protected:
-  void ApplyUpdate() {}
+  void ApplyUpdate() { }
+  void ApplyUpdate(int) { }
   void SnapshotSolverState(const string& model_filename) {
     LOG(FATAL) << "Should not be called on worker solver.";
   }

@@ -235,7 +235,13 @@ void caffe_abs<double>(const int n, const double* a, double* y) {
 }
 
 unsigned int caffe_rng_rand() {
+#ifdef CAFFE_COMPLETELY_DETERMINISTIC
+  //the multithreading indeterminism may cause
+  //caffe to behave slightly different each execution
+  return 99;
+#else
   return (*caffe_rng())();
+#endif
 }
 
 template <typename Dtype>
