@@ -1,0 +1,26 @@
+# The train/test net protocol buffer definition
+net: "examples/cifar10/cifar10_cm_train_test.prototxt"
+# test_iter specifies how many forward passes the test should carry out.
+# In the case of MNIST, we have test batch size 100 and 100 test iterations,
+# covering the full 10,000 testing images.
+test_iter: 100
+# Carry out testing every 500 training iterations.
+test_interval: 500
+# The base learning rate, momentum and the weight decay of the network.
+base_lr: 0.001
+momentum: 0.9
+weight_decay: 0.004
+# The learning rate policy: reduce lr after 5000 iters(10 epochs) by 5x
+lr_policy: "multistep"
+stepvalue: 5000
+stepvalue: 10000
+gamma: 0.2
+# Display every 100 iterations
+display: 100
+# The maximum number of iterations
+max_iter: 15000
+# snapshot intermediate results
+#sapshot: 10000
+#snapshot_prefix: "examples/cifar10/cifar10_quick"
+# solver mode: CPU or GPU
+solver_mode: GPU
