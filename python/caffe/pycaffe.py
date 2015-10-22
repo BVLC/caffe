@@ -146,8 +146,6 @@ def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
         # Set top diffs according to defined shapes and make arrays single and
         # C-contiguous as Caffe expects.
         for top, diff in kwargs.iteritems():
-            if diff.ndim != 4:
-                raise Exception('{} diff is not 4-d'.format(top))
             if diff.shape[0] != self.blobs[top].num:
                 raise Exception('Diff is not batch sized')
             self.blobs[top].diff[...] = diff
