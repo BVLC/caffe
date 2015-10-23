@@ -1,5 +1,3 @@
-#include <cstring>
-
 #include "caffe/common.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/syncedmem.hpp"

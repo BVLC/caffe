@@ -10,7 +10,7 @@
 #include "caffe/definitions.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/device_alternate.hpp"
+#include "caffe/util/math_functions.hpp"
 
 #include "caffe/greentea/greentea.hpp"
 #include "device.hpp"

@@ -6,7 +6,6 @@
 
 #include "google/protobuf/message.h"
 
-#include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 

@@ -34,6 +34,9 @@ if(USE_LMDB)
   include_directories(SYSTEM ${LMDB_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
   add_definitions(-DUSE_LMDB)
+  if(ALLOW_LMDB_NOLOCK)
+    add_definitions(-DALLOW_LMDB_NOLOCK)
+  endif()
 endif()
 
 # ---[ LevelDB

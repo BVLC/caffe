@@ -16,8 +16,69 @@ bool NetNeedsUpgrade(const NetParameter& net_param) {
   return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param);
 }
 
+bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
+  bool success = true;
+  if (NetNeedsV0ToV1Upgrade(*param)) {
+    // NetParameter was specified using the old style (V0LayerParameter); try to
+    // upgrade it.
+    LOG(INFO)<< "Attempting to upgrade input file specified using deprecated "
+    << "V0LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV0Net(original_param, param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+      << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+      << "V0LayerParameter";
+    }
+    LOG(WARNING) << "Note that future Caffe releases will not support "
+    << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
+    << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
+    << "weights upgrade this and any other net protos to the new format.";
+  }
+  // NetParameter uses old style data transformation fields; try to upgrade it.
+  if (NetNeedsDataUpgrade(*param)) {
+    LOG(INFO)<< "Attempting to upgrade input file specified using deprecated "
+    << "transformation parameters: " << param_file;
+    UpgradeNetDataTransformation(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+    << "data transformation parameters.";
+    LOG(WARNING) << "Note that future Caffe releases will only support "
+    << "transform_param messages for transformation fields.";
+  }
+  if (NetNeedsV1ToV2Upgrade(*param)) {
+    LOG(INFO)<< "Attempting to upgrade input file specified using deprecated "
+    << "V1LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV1Net(original_param, param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+      << "V1LayerParameter (see above); continuing anyway.";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+      << "V1LayerParameter";
+    }
+  }
+  return success;
+}
+
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
+}
+
+void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+                                      NetParameter* param) {
+  CHECK(ReadProtoFromBinaryFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
+}
+
 bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
-  for (int_tp i = 0; i < net_param.layers_size(); ++i) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).has_layer()) {
       return true;
     }
@@ -40,14 +101,14 @@ bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
   if (v0_net_param.has_name()) {
     net_param->set_name(v0_net_param.name());
   }
-  for (int_tp i = 0; i < v0_net_param.layers_size(); ++i) {
+  for (int i = 0; i < v0_net_param.layers_size(); ++i) {
     is_fully_compatible &= UpgradeV0LayerParameter(v0_net_param.layers(i),
                                                    net_param->add_layers());
   }
-  for (int_tp i = 0; i < v0_net_param.input_size(); ++i) {
+  for (int i = 0; i < v0_net_param.input_size(); ++i) {
     net_param->add_input(v0_net_param.input(i));
   }
-  for (int_tp i = 0; i < v0_net_param.input_dim_size(); ++i) {
+  for (int i = 0; i < v0_net_param.input_dim_size(); ++i) {
     net_param->add_input_dim(v0_net_param.input_dim(i));
   }
   if (v0_net_param.has_force_backward()) {
@@ -63,25 +124,25 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
   param_upgraded_pad->CopyFrom(param);
   param_upgraded_pad->clear_layers();
   // Figure out which layer each bottom blob comes from.
-  map<string, int_tp> blob_name_to_last_top_idx;
-  for (int_tp i = 0; i < param.input_size(); ++i) {
+  map<string, int> blob_name_to_last_top_idx;
+  for (int i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
     blob_name_to_last_top_idx[blob_name] = -1;
   }
-  for (int_tp i = 0; i < param.layers_size(); ++i) {
+  for (int i = 0; i < param.layers_size(); ++i) {
     const V1LayerParameter& layer_connection = param.layers(i);
     const V0LayerParameter& layer_param = layer_connection.layer();
     // Add the layer to the new net, unless it's a padding layer.
     if (layer_param.type() != "padding") {
       param_upgraded_pad->add_layers()->CopyFrom(layer_connection);
     }
-    for (int_tp j = 0; j < layer_connection.bottom_size(); ++j) {
+    for (int j = 0; j < layer_connection.bottom_size(); ++j) {
       const string& blob_name = layer_connection.bottom(j);
       if (blob_name_to_last_top_idx.find(blob_name)
           == blob_name_to_last_top_idx.end()) {
         LOG(FATAL)<< "Unknown blob input " << blob_name << " to layer " << j;
       }
-      const int_tp top_idx = blob_name_to_last_top_idx[blob_name];
+      const int top_idx = blob_name_to_last_top_idx[blob_name];
       if (top_idx == -1) {
         continue;
       }
@@ -95,20 +156,17 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
             << "Padding layer input to "
             "non-convolutional / non-pooling layer type "
             << layer_param.type();
-        CHECK_EQ(layer_connection.bottom_size(), 1)
-          << "Conv Layer takes a single blob as input.";
-        CHECK_EQ(source_layer.bottom_size(), 1)
-          << "Padding Layer takes a single blob as input.";
-        CHECK_EQ(source_layer.top_size(), 1)
-          << "Padding Layer produces a single blob as output.";
-        int_tp layer_index = param_upgraded_pad->layers_size() - 1;
+        CHECK_EQ(layer_connection.bottom_size(), 1)<< "Conv Layer takes a single blob as input.";
+        CHECK_EQ(source_layer.bottom_size(), 1)<< "Padding Layer takes a single blob as input.";
+        CHECK_EQ(source_layer.top_size(), 1)<< "Padding Layer produces a single blob as output.";
+        int layer_index = param_upgraded_pad->layers_size() - 1;
         param_upgraded_pad->mutable_layers(layer_index)->mutable_layer()
             ->set_pad(source_layer.layer().pad());
         param_upgraded_pad->mutable_layers(layer_index)->set_bottom(
             j, source_layer.bottom(0));
       }
     }
-    for (int_tp j = 0; j < layer_connection.top_size(); ++j) {
+    for (int j = 0; j < layer_connection.top_size(); ++j) {
       const string& blob_name = layer_connection.top(j);
       blob_name_to_last_top_idx[blob_name] = i;
     }
@@ -119,10 +177,10 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
                              V1LayerParameter* layer_param) {
   bool is_fully_compatible = true;
   layer_param->Clear();
-  for (int_tp i = 0; i < v0_layer_connection.bottom_size(); ++i) {
+  for (int i = 0; i < v0_layer_connection.bottom_size(); ++i) {
     layer_param->add_bottom(v0_layer_connection.bottom(i));
   }
-  for (int_tp i = 0; i < v0_layer_connection.top_size(); ++i) {
+  for (int i = 0; i < v0_layer_connection.top_size(); ++i) {
     layer_param->add_top(v0_layer_connection.top(i));
   }
   if (v0_layer_connection.has_layer()) {
@@ -134,13 +192,13 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     if (v0_layer_param.has_type()) {
       layer_param->set_type(UpgradeV0LayerType(type));
     }
-    for (int_tp i = 0; i < v0_layer_param.blobs_size(); ++i) {
+    for (int i = 0; i < v0_layer_param.blobs_size(); ++i) {
       layer_param->add_blobs()->CopyFrom(v0_layer_param.blobs(i));
     }
-    for (int_tp i = 0; i < v0_layer_param.blobs_lr_size(); ++i) {
+    for (int i = 0; i < v0_layer_param.blobs_lr_size(); ++i) {
       layer_param->add_blobs_lr(v0_layer_param.blobs_lr(i));
     }
-    for (int_tp i = 0; i < v0_layer_param.weight_decay_size(); ++i) {
+    for (int i = 0; i < v0_layer_param.weight_decay_size(); ++i) {
       layer_param->add_weight_decay(v0_layer_param.weight_decay(i));
     }
     if (v0_layer_param.has_num_output()) {
@@ -522,7 +580,7 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
 }
 
 bool NetNeedsDataUpgrade(const NetParameter& net_param) {
-  for (int_tp i = 0; i < net_param.layers_size(); ++i) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
       DataParameter layer_param = net_param.layers(i).data_param();
       if (layer_param.has_scale()) {
@@ -599,58 +657,11 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   } while (0)
 
 void UpgradeNetDataTransformation(NetParameter* net_param) {
-  for (int_tp i = 0; i < net_param->layers_size(); ++i) {
+  for (int i = 0; i < net_param->layers_size(); ++i) {
     CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
     CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
     CONVERT_LAYER_TRANSFORM_PARAM(WINDOW_DATA, WindowData, window_data);
   }
-}
-
-bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
-  bool success = true;
-  if (NetNeedsV0ToV1Upgrade(*param)) {
-    // NetParameter was specified using the old style (V0LayerParameter); try to
-    // upgrade it.
-    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
-              << "V0LayerParameter: " << param_file;
-    NetParameter original_param(*param);
-    if (!UpgradeV0Net(original_param, param)) {
-      success = false;
-      LOG(ERROR) << "Warning: had one or more problems upgrading "
-      << "V0NetParameter to NetParameter (see above); continuing anyway.";
-    } else {
-      LOG(INFO) << "Successfully upgraded file specified using deprecated "
-      << "V0LayerParameter";
-    }
-    LOG(WARNING) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
-        << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
-        << "weights upgrade this and any other net protos to the new format.";
-  }
-  // NetParameter uses old style data transformation fields; try to upgrade it.
-  if (NetNeedsDataUpgrade(*param)) {
-    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
-              << "transformation parameters: " << param_file;
-    UpgradeNetDataTransformation(param);
-    LOG(INFO) << "Successfully upgraded file specified using deprecated "
-              << "data transformation parameters.";
-    LOG(WARNING) << "Note that future Caffe releases will only support "
-                 << "transform_param messages for transformation fields.";
-  }
-  if (NetNeedsV1ToV2Upgrade(*param)) {
-    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
-              << "V1LayerParameter: " << param_file;
-    NetParameter original_param(*param);
-    if (!UpgradeV1Net(original_param, param)) {
-      success = false;
-      LOG(ERROR) << "Warning: had one or more problems upgrading "
-                 << "V1LayerParameter (see above); continuing anyway.";
-    } else {
-      LOG(INFO) << "Successfully upgraded file specified using deprecated "
-                << "V1LayerParameter";
-    }
-  }
-  return success;
 }
 
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
@@ -663,7 +674,7 @@ bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
   net_param->CopyFrom(v1_net_param);
   net_param->clear_layers();
   net_param->clear_layer();
-  for (int_tp i = 0; i < v1_net_param.layers_size(); ++i) {
+  for (int i = 0; i < v1_net_param.layers_size(); ++i) {
     if (!UpgradeV1LayerParameter(v1_net_param.layers(i),
                                  net_param->add_layer())) {
       LOG(ERROR)<< "Upgrade of input layer " << i << " failed.";
@@ -677,35 +688,35 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
                              LayerParameter* layer_param) {
   layer_param->Clear();
   bool is_fully_compatible = true;
-  for (int_tp i = 0; i < v1_layer_param.bottom_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.bottom_size(); ++i) {
     layer_param->add_bottom(v1_layer_param.bottom(i));
   }
-  for (int_tp i = 0; i < v1_layer_param.top_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.top_size(); ++i) {
     layer_param->add_top(v1_layer_param.top(i));
   }
   if (v1_layer_param.has_name()) {
     layer_param->set_name(v1_layer_param.name());
   }
-  for (int_tp i = 0; i < v1_layer_param.include_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.include_size(); ++i) {
     layer_param->add_include()->CopyFrom(v1_layer_param.include(i));
   }
-  for (int_tp i = 0; i < v1_layer_param.exclude_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.exclude_size(); ++i) {
     layer_param->add_exclude()->CopyFrom(v1_layer_param.exclude(i));
   }
   if (v1_layer_param.has_type()) {
     layer_param->set_type(UpgradeV1LayerType(v1_layer_param.type()));
   }
-  for (int_tp i = 0; i < v1_layer_param.blobs_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.blobs_size(); ++i) {
     layer_param->add_blobs()->CopyFrom(v1_layer_param.blobs(i));
   }
-  for (int_tp i = 0; i < v1_layer_param.param_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.param_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
     layer_param->mutable_param(i)->set_name(v1_layer_param.param(i));
   }
   ParamSpec_DimCheckMode mode;
-  for (int_tp i = 0; i < v1_layer_param.blob_share_mode_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.blob_share_mode_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
@@ -723,20 +734,20 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
       }
     layer_param->mutable_param(i)->set_share_mode(mode);
   }
-  for (int_tp i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
     layer_param->mutable_param(i)->set_lr_mult(v1_layer_param.blobs_lr(i));
   }
-  for (int_tp i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
     while (layer_param->param_size() <= i) {
       layer_param->add_param();
     }
     layer_param->mutable_param(i)->set_decay_mult(
         v1_layer_param.weight_decay(i));
   }
-  for (int_tp i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
+  for (int i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
     layer_param->add_loss_weight(v1_layer_param.loss_weight(i));
   }
   if (v1_layer_param.has_accuracy_param()) {
@@ -945,18 +956,78 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     }
   }
 
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
-                                    NetParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
-  UpgradeNetAsNeeded(param_file, param);
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
+  if (solver_param.has_solver_type()) {
+    return true;
+  }
+  return false;
 }
 
-void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
-                                      NetParameter* param) {
-  CHECK(ReadProtoFromBinaryFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
-  UpgradeNetAsNeeded(param_file, param);
+bool UpgradeSolverType(SolverParameter* solver_param) {
+  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
+      << "Failed to upgrade solver: old solver_type field (enum) and new type "
+      << "field (string) cannot be both specified in solver proto text.";
+  if (solver_param->has_solver_type()) {
+    string type;
+    switch (solver_param->solver_type()) {
+      case SolverParameter_SolverType_SGD:
+        type = "SGD";
+        break;
+      case SolverParameter_SolverType_NESTEROV:
+        type = "Nesterov";
+        break;
+      case SolverParameter_SolverType_ADAGRAD:
+        type = "AdaGrad";
+        break;
+      case SolverParameter_SolverType_RMSPROP:
+        type = "RMSProp";
+        break;
+      case SolverParameter_SolverType_ADADELTA:
+        type = "AdaDelta";
+        break;
+      case SolverParameter_SolverType_ADAM:
+        type = "Adam";
+        break;
+      default:
+        LOG(FATAL)<< "Unknown SolverParameter solver_type: " << type;
+      }
+    solver_param->set_type(type);
+    solver_param->clear_solver_type();
+  } else {
+    LOG(ERROR)<< "Warning: solver type already up to date. ";
+    return false;
+  }
+  return true;
+}
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
+  bool success = true;
+  // Try to upgrade old style solver_type enum fields into new string type
+  if (SolverNeedsTypeUpgrade(*param)) {
+    LOG(INFO)<< "Attempting to upgrade input file specified using deprecated "
+    << "'solver_type' field (enum)': " << param_file;
+    if (!UpgradeSolverType(param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+      << "SolverType (see above).";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+      << "'solver_type' field (enum) to 'type' field (string).";
+      LOG(WARNING) << "Note that future Caffe releases will only support "
+      << "'type' field (string) for a solver's type.";
+    }
+  }
+  return success;
+}
+
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse SolverParameter file: " << param_file;
+  UpgradeSolverAsNeeded(param_file, param);
 }
 
 }  // namespace caffe

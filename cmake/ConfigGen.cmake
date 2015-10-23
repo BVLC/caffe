@@ -61,6 +61,9 @@ function(caffe_generate_export_configs)
 
   if(USE_LMDB)
     list(APPEND Caffe_DEFINITIONS -DUSE_LMDB)
+    if (ALLOW_LMDB_NOLOCK)
+        list(APPEND Caffe_DEFINITIONS -DALLOW_LMDB_NOLOCK)
+    endif()
   endif()
 
   if(USE_LEVELDB)
