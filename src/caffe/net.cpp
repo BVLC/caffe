@@ -15,6 +15,7 @@
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -33,6 +34,7 @@ Net<Dtype>::Net(const string& param_file, Phase phase) {
 
 template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
+  total_time_ = 0;
   // Set phase from the state.
   phase_ = in_param.state().phase();
   // Filter layers based on their include/exclude rules and
@@ -489,6 +491,7 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
           &layers_[i]->layer_param().param(j) : &default_param_spec;
       params_lr_.push_back(param_spec->lr_mult());
       params_weight_decay_.push_back(param_spec->decay_mult());
+      params_group_weight_decay_.push_back(param_spec->group_decay_mult());
     }
   }
 }
@@ -503,13 +506,44 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
       InputDebugInfo(i);
     }
   }
+  //Timer timer;
+  //double cur_time_total = 0;
   for (int i = start; i <= end; ++i) {
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
+	//nvtxRangePushA(layer_names_[i].c_str());
+	//PUSH_RANGE(layer_names_[i].c_str(),i);
+    //timer.Start();
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+    //timer.Stop();
+    //nvtxRangePop();
+    //POP_RANGE;
+    //cur_time_total += timer.MicroSeconds();
+    //LOG(INFO) << "Forwarding " << layer_names_[i] << "\t("<<timer.MicroSeconds()<<" us)";
+    //layers_[i]->SetTestTime( layers_[i]->GetTestTime() + timer.MicroSeconds() );
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
+  //LOG(INFO) << "Total time in this iteration: " << "\t("<<cur_time_total<<" us)";
+  //total_time_ += cur_time_total;
   return loss;
+}
+
+
+template <typename Dtype>
+void Net<Dtype>::PrintTestTime(){
+	double total = GetTotalTime();
+	for (int i = 0; i <=layers_.size() - 1; ++i) {
+	    LOG(INFO) << " Test time of " << layer_names_[i]
+	              << "\t"<< (layers_[i]->GetTestTime()/1000)<< " ms ( "<< (100*layers_[i]->GetTestTime()/total) <<" % )";
+	}
+}
+
+template <typename Dtype>
+double Net<Dtype>::GetTotalTime(){
+	double total = 0;
+	for (int i = 0; i <=layers_.size() - 1; ++i) {
+		total += layers_[i]->GetTestTime();
+	}
+	return total;
 }
 
 template <typename Dtype>
@@ -742,6 +776,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       const bool kReshape = false;
       target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
     }
+    LOG(INFO) << "Aligning Weights";
+    layers_[target_layer_id]->WeightAlign();
   }
 }
 
@@ -808,6 +844,7 @@ void Net<Dtype>::Update() {
     if (param_owners_[i] >= 0) { continue; }
     if (debug_info_) { UpdateDebugInfo(i); }
     params_[i]->Update();
+    params_[i]->Zerout();
   }
 }
 

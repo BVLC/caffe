@@ -25,6 +25,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
  public:
   explicit BaseConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+#ifdef FOR_SCNN_PAPER
+  virtual void WeightAlign();
+#endif
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -75,12 +78,22 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int height_out_, width_out_;
   bool bias_term_;
   bool is_1x1_;
+#ifdef FOR_SCNN_PAPER
+  bool is_skip_channels_;
+  bool is_scnn_;
+  vector<int> forward_outputs_;
+  vector<int> forward_channels_;
+  vector<int> forward_channel_group_sizes_;
+  vector<int> forward_output_group_sizes_;
+  vector<int> forwarding_channel_mask_;
+  vector<int> forwarding_output_mask_;
+#endif
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
-  inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
+  inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff, int* all_zero_mask = NULL, int* map_mask = NULL) {
     im2col_cpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff);
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff,all_zero_mask, map_mask);
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
     col2im_cpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
@@ -109,6 +122,19 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
+  Blob<Dtype> weight_buffer_; //store nonzero weights in the continuous memory
+  //Three blobs for sparse matrix storage in CSC/CSR format
+//#define GPU_USE_CUSPARSE
+#ifdef GPU_USE_CUSPARSE
+  Blob<Dtype> nonzero_elements_buffer_;
+  Blob<int> nonzero_indices_buffer_;
+  Blob<int> index_pointers_buffer_;
+  Blob<int> nonzero_per_rowcol_buffer_;
+#endif
+  bool is_sparse_feature_maps_;
+  Blob<int> dense_feature_map_mask_;//to skip all zero rows in col_buffer_
+  Blob<int> col_buf_mask_;
+  Blob<Dtype> squeezed_weight_buffer_;
 };
 
 /**
@@ -353,6 +379,9 @@ class LRNLayer : public Layer<Dtype> {
   // Fields used for normalization ACROSS_CHANNELS
   // scale_ stores the intermediate summing results
   Blob<Dtype> scale_;
+
+  //intermediate blob
+  Blob<Dtype> padded_square_;
 
   // Fields used for normalization WITHIN_CHANNEL
   shared_ptr<SplitLayer<Dtype> > split_layer_;

@@ -149,6 +149,9 @@ class Net {
   inline const vector<float>& params_weight_decay() const {
     return params_weight_decay_;
   }
+  inline const vector<float>& params_group_weight_decay() const {
+      return params_group_weight_decay_;
+    }
   const map<string, int>& param_names_index() const {
     return param_names_index_;
   }
@@ -186,6 +189,9 @@ class Net {
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
 
+  void PrintTestTime();
+  double GetTotalTime();//{return total_time_;}
+
  protected:
   // Helpers for Init.
   /// @brief Append a new input or top blob to the net.
@@ -216,6 +222,8 @@ class Net {
   string name_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
+  /// @brief total testing time
+  double total_time_;
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
@@ -254,6 +262,8 @@ class Net {
   vector<float> params_lr_;
   /// the weight decay multipliers
   vector<float> params_weight_decay_;
+  /// the group lasso weight decay multipliers
+  vector<float> params_group_weight_decay_;
   /// The bytes of memory used by this net
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.

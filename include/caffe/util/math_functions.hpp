@@ -21,6 +21,11 @@ void caffe_cpu_gemm(const CBLAS_TRANSPOSE TransA,
     Dtype* C);
 
 template <typename Dtype>
+void caffe_cpu_cblas_gemm(const int M, const int N, const int K,
+    const Dtype alpha, const Dtype* A, const int lda, const Dtype* B, const int ldb, const Dtype beta,
+    Dtype* C, const int ldc);
+
+template <typename Dtype>
 void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
     const Dtype alpha, const Dtype* A, const Dtype* x, const Dtype beta,
     Dtype* y);
@@ -65,7 +70,13 @@ template <typename Dtype>
 void caffe_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
+void caffe_div_checkzero(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+template <typename Dtype>
 void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
+
+template <typename Dtype>
+void caffe_powx_seperate(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
 unsigned int caffe_rng_rand();
 
@@ -114,6 +125,12 @@ template<typename Dtype>
 inline int8_t caffe_sign(Dtype val) {
   return (Dtype(0) < val) - (val < Dtype(0));
 }
+template<typename Dtype>
+inline int8_t caffe_if_zerout(Dtype val) {
+	Dtype thre = Dtype(0.0001);
+	if(val<thre && val>(-thre)) return 1;
+	else return 0;
+}
 
 // The following two macros are modifications of DEFINE_VSL_UNARY_FUNC
 //   in include/caffe/util/mkl_alternate.hpp authored by @Rowland Depp.
@@ -132,6 +149,7 @@ inline int8_t caffe_sign(Dtype val) {
 
 // output is 1 for the positives, 0 for zero, and -1 for the negatives
 DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
+DEFINE_CAFFE_CPU_UNARY_FUNC(if_zerout, y[i] = caffe_if_zerout<Dtype>(x[i]));
 
 // This returns a nonzero value if the input has its sign bit set.
 // The name sngbit is meant to avoid conflicts with std::signbit in the macro.
@@ -145,6 +163,14 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 template <typename Dtype>
 void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
+//get all zero flag for matrix
+template <typename Dtype>
+void caffe_cpu_ifzero(const int M, const int N, const Dtype *x, bool* y, const Dtype thre);
+
+//get masked cols
+template <typename Dtype>
+void caffe_cpu_del_zero_cols(const int M, const int N, const Dtype *x, Dtype *y, int * left_cols, const int* mask);
+
 #ifndef CPU_ONLY  // GPU
 
 // Decaf gpu gemm provides an interface that is almost the same as the cpu
@@ -156,6 +182,20 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA,
     const Dtype alpha, const Dtype* A, const Dtype* B, const Dtype beta,
     Dtype* C);
 
+// dense matrix A *  sparse matrix B
+// B is stored in CSR format
+template <typename Dtype>
+void caffe_gpu_sparse_mmcsr(const int M, const int N, const int K,
+    const Dtype alpha, const Dtype* A,
+    const int nnz, const Dtype* B_nonzero_buf, const int* B_idx_pointer_buf, const int* B_nonzero_idx_buf,
+    const Dtype beta,Dtype* C);
+
+// dense matrix A to sparse matrix A in CSR format
+template <typename Dtype>
+void caffe_gpu_sparse_dense2csr(const int M, const int N,
+    const Dtype* A, int* nnzPerRow,
+    Dtype* A_nonzero_buf, int* A_idx_pointer_buf, int* A_nonzero_idx_buf,int *nnz_total);
+
 template <typename Dtype>
 void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
     const Dtype alpha, const Dtype* A, const Dtype* x, const Dtype beta,
@@ -164,6 +204,9 @@ void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
 template <typename Dtype>
 void caffe_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
     Dtype* Y);
+
+template <typename Dtype>
+void caffe_gpu_zerout(void * mutable_gpu_data, int count, Dtype th);
 
 template <typename Dtype>
 void caffe_gpu_axpby(const int N, const Dtype alpha, const Dtype* X,
@@ -199,6 +242,9 @@ void caffe_gpu_mul(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_div_checkzero(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_abs(const int n, const Dtype* a, Dtype* y);
@@ -245,6 +291,9 @@ template<typename Dtype>
 void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);
 
 template<typename Dtype>
+void caffe_gpu_if_zerout(const int n, const Dtype* x, Dtype* y);
+
+template<typename Dtype>
 void caffe_gpu_sgnbit(const int n, const Dtype* x, Dtype* y);
 
 template <typename Dtype>
@@ -252,6 +301,9 @@ void caffe_gpu_fabs(const int n, const Dtype* x, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_group_lasso(const int n, const int c, const Dtype *x, Dtype* y);
 
 #define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
 template<typename Dtype> \

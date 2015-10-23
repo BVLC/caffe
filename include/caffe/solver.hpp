@@ -41,6 +41,7 @@ class Solver {
  protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
+
   // The Solver::Snapshot function implements the basic snapshotting utility
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
@@ -58,7 +59,7 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
-
+  Dtype total_regularization_term_;
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
@@ -81,8 +82,10 @@ class SGDSolver : public Solver<Dtype> {
   void PreSolve();
   Dtype GetLearningRate();
   virtual void ApplyUpdate();
+  virtual Dtype GetSparsity(int param_id);
   virtual void Normalize(int param_id);
-  virtual void Regularize(int param_id);
+  virtual Dtype Regularize(int param_id);
+  virtual Dtype GroupLassoRegularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual void ClipGradients();
   virtual void SnapshotSolverState(SolverState * state);

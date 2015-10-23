@@ -79,6 +79,7 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     top[0]->Reshape(num_, channels_, height_, width_);
     scale_.Reshape(num_, channels_, height_, width_);
+    padded_square_.Reshape(1, channels_ + size_ - 1, height_, width_);
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
     split_layer_->Reshape(bottom, split_top_vec_);
@@ -115,20 +116,20 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   for (int i = 0; i < scale_.count(); ++i) {
     scale_data[i] = k_;
   }
-  Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
-  Dtype* padded_square_data = padded_square.mutable_cpu_data();
-  caffe_set(padded_square.count(), Dtype(0), padded_square_data);
+  //Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);//memory allocation, very time-consumption
+  Dtype* padded_square_data = padded_square_.mutable_cpu_data();
+  caffe_set(padded_square_.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
   // go through the images
   for (int n = 0; n < num_; ++n) {
     // compute the padded square
     caffe_sqr(channels_ * height_ * width_,
         bottom_data + bottom[0]->offset(n),
-        padded_square_data + padded_square.offset(0, pre_pad_));
+        padded_square_data + padded_square_.offset(0, pre_pad_));
     // Create the first channel scale
     for (int c = 0; c < size_; ++c) {
       caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-          padded_square_data + padded_square.offset(0, c),
+          padded_square_data + padded_square_.offset(0, c),
           scale_data + scale_.offset(n, 0));
     }
     for (int c = 1; c < channels_; ++c) {
@@ -138,17 +139,22 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
           scale_data + scale_.offset(n, c));
       // add head
       caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-          padded_square_data + padded_square.offset(0, c + size_ - 1),
+          padded_square_data + padded_square_.offset(0, c + size_ - 1),
           scale_data + scale_.offset(n, c));
       // subtract tail
       caffe_axpy<Dtype>(height_ * width_, -alpha_over_size,
-          padded_square_data + padded_square.offset(0, c - 1),
+          padded_square_data + padded_square_.offset(0, c - 1),
           scale_data + scale_.offset(n, c));
     }
   }
 
   // In the end, compute output
+  //Timer timer;
+  //timer.Start();
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
+  //caffe_powx_seperate<Dtype>(scale_.count(), scale_data, -beta_, top_data);
+  //timer.Stop();
+  //LOG(INFO)<< (timer.MicroSeconds()/1000) << " ms caffe_powx " << bottom[0]->shape_string()<< " " << scale_.count();
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 }
 

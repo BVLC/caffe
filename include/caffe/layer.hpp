@@ -10,6 +10,7 @@
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -42,6 +43,7 @@ class Layer {
           blobs_[i]->FromProto(layer_param_.blobs(i));
         }
       }
+      test_time_ = 0;
     }
   virtual ~Layer() {}
 
@@ -84,6 +86,17 @@ class Layer {
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+
+  /*
+   * typically for convolutional layers, to align nonzero weights together
+   * */
+  virtual void WeightAlign() {}
+
+  /*
+   * time consumption
+   * */
+  virtual double GetTestTime() { return test_time_;}
+  virtual void SetTestTime(double t) { test_time_ = t;}
 
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accomodate
@@ -300,6 +313,8 @@ class Layer {
    *  the objective function. */
   vector<Dtype> loss_;
 
+  double test_time_;
+
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) = 0;
@@ -406,10 +421,13 @@ template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   Dtype loss = 0;
+  Timer timer;
   Reshape(bottom, top);
   switch (Caffe::mode()) {
   case Caffe::CPU:
+	timer.Start();
     Forward_cpu(bottom, top);
+    timer.Stop();
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
       const int count = top[top_id]->count();
@@ -419,7 +437,9 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case Caffe::GPU:
+	timer.Start();
     Forward_gpu(bottom, top);
+    timer.Stop();
 #ifndef CPU_ONLY
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
@@ -435,6 +455,8 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
+  test_time_ = timer.MicroSeconds();
+  //LOG(INFO)<<"Test time of "<< layer_param_.name()<<":\t"<< (test_time_/1000)<<"\t\tms";
   return loss;
 }
 

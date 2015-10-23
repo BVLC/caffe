@@ -76,6 +76,7 @@ DEFINE_VSL_BINARY_FUNC(Add, y[i] = a[i] + b[i]);
 DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i]);
 DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i]);
 DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
+DEFINE_VSL_BINARY_FUNC(DivCheckZero, y[i] = (b[i]==0 ? 0: a[i] / b[i]));
 
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way

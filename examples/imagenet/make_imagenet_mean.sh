@@ -6,7 +6,7 @@ EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
 TOOLS=build/tools
 
-$TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
+$TOOLS/compute_image_mean $IMAGENETPATH/ilsvrc12_train_lmdb \
   $DATA/imagenet_mean.binaryproto
 
 echo "Done."

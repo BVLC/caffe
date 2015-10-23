@@ -5,6 +5,7 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/io.hpp"
 
 namespace caffe {
 
@@ -164,6 +165,46 @@ void Blob<Dtype>::Update() {
     LOG(FATAL) << "Syncedmem not initialized.";
   }
 }
+
+
+template <typename Dtype>
+void Blob<Dtype>::Zerout() {
+  // Zero out elements whose values are smaller than thre.
+  Dtype thre = Dtype(0.0001);
+  Dtype* data_ptr_tmp = 0;
+  switch (data_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    // perform computation on CPU
+    //caffe_axpy<Dtype>(count_, Dtype(-1),
+    //    static_cast<const Dtype*>(diff_->cpu_data()),
+    //    static_cast<Dtype*>(data_->mutable_cpu_data()));
+	  data_ptr_tmp = static_cast<Dtype*>(data_->mutable_cpu_data());
+	  for(int i=0;i<count_;i++){
+		  if(data_ptr_tmp[i]<thre && data_ptr_tmp[i]>(-thre)){
+			  data_ptr_tmp[i]=0;
+		  }
+	  }
+    break;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
+    // perform zerout on GPU
+	  //data_ptr_tmp = static_cast<Dtype*>(data_->mutable_gpu_data());
+	  //	  for(int i=0;i<count_;i++){
+	  //		  if(data_ptr_tmp[i]<thre && data_ptr_tmp[i]>(-thre)){
+	  //			data_ptr_tmp[i]=0;
+	  //		  }
+	  //	  }
+	  caffe_gpu_zerout(data_->mutable_gpu_data(),count_,thre);
+#else
+    NO_GPU;
+#endif
+    break;
+  default:
+    LOG(FATAL) << "Syncedmem not initialized.";
+  }
+}
+
 
 template <> unsigned int Blob<unsigned int>::asum_data() const {
   NOT_IMPLEMENTED;
@@ -485,6 +526,16 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
       proto->add_diff(diff_vec[i]);
     }
   }
+}
+
+template <typename Dtype>
+void Blob<Dtype>::Snapshot(string filename, bool write_diff) const{
+	if(filename.empty()){
+		filename = shape_string()+".blob";
+	}
+	BlobProto proto;
+	ToProto(&proto, write_diff);
+	WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
 INSTANTIATE_CLASS(Blob);

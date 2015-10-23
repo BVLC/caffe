@@ -202,6 +202,9 @@ message SolverParameter {
 
   // If false, don't save a snapshot after training finishes.
   optional bool snapshot_after_train = 28 [default = true];
+  
+  optional float group_weight_decay = 37 [default = 0.0]; // The weight decay of group lasso contraint.
+  
 }
 
 // A message that stores the solver snapshots
@@ -264,6 +267,9 @@ message ParamSpec {
 
   // The multiplier on the global weight decay for this parameter.
   optional float decay_mult = 4 [default = 1.0];
+  
+  // The multiplier on the global group lasso weight decay for this parameter.
+  optional float group_decay_mult = 5 [default = 0.0];
 }
 
 // NOTE
@@ -457,6 +463,8 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
+  repeated uint32 forward_channels = 16; // the name of each bottom blob
+  repeated uint32 forward_outputs = 17; // the name of each top blob
 }
 
 message DataParameter {

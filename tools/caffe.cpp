@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <cuda_profiler_api.h>
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
@@ -139,6 +140,7 @@ RegisterBrewFunction(train);
 
 // Test: score a model.
 int test() {
+  //openblas_set_num_threads(1);
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
 
@@ -162,8 +164,10 @@ int test() {
   float loss = 0;
   for (int i = 0; i < FLAGS_iterations; ++i) {
     float iter_loss;
+    //CUDA_CHECK(cudaProfilerStart());
     const vector<Blob<float>*>& result =
         caffe_net.Forward(bottom_vec, &iter_loss);
+    //CUDA_CHECK(cudaProfilerStop());
     loss += iter_loss;
     int idx = 0;
     for (int j = 0; j < result.size(); ++j) {
@@ -176,17 +180,19 @@ int test() {
         } else {
           test_score[idx] += score;
         }
-        const std::string& output_name = caffe_net.blob_names()[
-            caffe_net.output_blob_indices()[j]];
-        LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
+        //const std::string& output_name = caffe_net.blob_names()[
+        //   caffe_net.output_blob_indices()[j]];
+        //LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
       }
     }
+    caffe_net.PrintTestTime();
+    LOG(INFO) << "Total forwarding time: " << caffe_net.GetTotalTime()/1000 << " ms";
   }
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
   for (int i = 0; i < test_score.size(); ++i) {
-    const std::string& output_name = caffe_net.blob_names()[
-        caffe_net.output_blob_indices()[test_score_output_id[i]]];
+    //const std::string& output_name = caffe_net.blob_names()[
+    //    caffe_net.output_blob_indices()[test_score_output_id[i]]];
     const float loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
     std::ostringstream loss_msg_stream;
@@ -195,7 +201,7 @@ int test() {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
     }
-    LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
+    //LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
 
   return 0;
@@ -218,6 +224,7 @@ int time() {
   }
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
+  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
@@ -291,6 +298,7 @@ int time() {
 RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
+   //CUDA_CHECK(cudaProfilerInitialize());
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Usage message.
