@@ -4,8 +4,6 @@
 #include <queue>
 #include <string>
 
-#include "caffe/common.hpp"
-
 namespace caffe {
 
 template<typename T>
