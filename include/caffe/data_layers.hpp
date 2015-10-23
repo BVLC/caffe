@@ -17,6 +17,9 @@
 #include "caffe/util/blocking_queue.hpp"
 #include "caffe/util/db.hpp"
 
+#define HDF5_DATA_DATASET_NAME "data"
+#define HDF5_DATA_LABEL_NAME "label"
+
 namespace caffe {
 
 /**

@@ -16,6 +16,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/python_layer.hpp"
+#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -133,8 +134,8 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
 
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
-  ReadProtoFromTextFileOrDie(filename, &param);
-  return GetSolver<Dtype>(param);
+  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  return SolverRegistry<Dtype>::CreateSolver(param);
 }
 
 struct NdarrayConverterGenerator {
