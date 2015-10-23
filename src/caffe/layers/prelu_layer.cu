@@ -38,10 +38,16 @@ __global__ void PReLUBackward(const int_tp n, const int_tp channels, const int_t
 
 // CUDA kernel for element-wise parameter backward
 template<typename Dtype>
-__global__ void PReLUParamBackward(const int_tp n, const Dtype* in_diff,
+__global__ void PReLUParamBackward(const int_tp n, const int_tp rows,
+                                   const int_tp rowPitch, const Dtype* in_diff,
                                    const Dtype* in_data, Dtype* out_diff) {
   CUDA_KERNEL_LOOP(index, n) {
     out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
+    for (int k = 1; k < rows; k++) {
+      out_diff[index] += in_diff[index + k * rowPitch]
+          * in_data[index + k * rowPitch]
+          * (in_data[index + k * rowPitch] <= 0);
+    }
   }
 }
 #endif  // USE_CUDA
@@ -119,29 +125,24 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->param_propagate_down_[0]) {
       Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
       int_tp cdim = channels * dim;
-      Dtype dsum = 0.;
-      for (int_tp n = 0; n < bottom[0]->num(); ++n) {
-        // compute element-wise diff
-        // NOLINT_NEXT_LINE(whitespace/operators)
-        PReLUParamBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(cdim),
-            CAFFE_CUDA_NUM_THREADS)(
-            cdim, top_diff + top[0]->offset(n),
-            bottom_data + bottom[0]->offset(n),
-            backward_buff_.mutable_gpu_diff());
-        CUDA_POST_KERNEL_CHECK;
-        if (channel_shared_) {
-          Dtype d;
-          caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
-                               multiplier_.gpu_data(), &d);
-          dsum += d;
-        } else {
-          caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
-                                backward_buff_.gpu_diff(),
-                                multiplier_.gpu_data(), 1., slope_diff);
-        }
-      }
+
+      // compute element-wise diff
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PReLUParamBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(cdim),
+        CAFFE_CUDA_NUM_THREADS)(
+        cdim, bottom[0]->num(), top[0]->offset(1), top_diff ,
+        bottom_data ,
+        backward_buff_.mutable_gpu_diff());
+      CUDA_POST_KERNEL_CHECK;
       if (channel_shared_) {
+        Dtype dsum;
+        caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
+         multiplier_.gpu_data(), &dsum);
         caffe_gpu_add_scalar(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
+      } else {
+        caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
+          backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
+          slope_diff);
       }
     }
     // Propagate to bottom
@@ -164,38 +165,34 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_->id());
 
+    // Propagate to param
+    // Since to write bottom diff will affect top diff if top and bottom blobs
+    // are identical (in-place computaion), we first compute param backward to
+    // keep top_diff unchanged.
     if (this->param_propagate_down_[0]) {
       Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
       int_tp cdim = channels * dim;
-      Dtype dsum = 0.;
-      for (int_tp n = 0; n < bottom[0]->num(); ++n) {
-        viennacl::ocl::kernel &oclk_prelu_param = program.get_kernel(
-            CL_KERNEL_SELECT("prelu_param_backward"));
-        viennacl::ocl::enqueue(
-            oclk_prelu_param(
-                cdim, WrapHandle((cl_mem) top_diff, &ctx), top[0]->offset(n),
-                WrapHandle((cl_mem) bottom_data, &ctx), bottom[0]->offset(n),
-                WrapHandle((cl_mem) (backward_buff_.mutable_gpu_diff()), &ctx)),
-            ctx.get_queue());
 
-        if (channel_shared_) {
-          Dtype d;
-          greentea_gpu_dot<Dtype>(this->device_->id(), channels * dim,
-                                  (cl_mem) (backward_buff_.gpu_diff()), 0,
-                                  (cl_mem) (multiplier_.gpu_data()), 0, &d);
-          dsum += d;
-        } else {
-          greentea_gpu_gemv<Dtype>(this->device_->id(), CblasNoTrans,
-                                   channels, dim, 1.,
-                                   (cl_mem) (backward_buff_.gpu_diff()), 0,
-                                   (cl_mem) (multiplier_.gpu_data()), 0, 1.,
-                                   (cl_mem) slope_diff, 0);
-        }
-      }
+      // compute element-wise diff
+
+      viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
+          CL_KERNEL_SELECT("prelu_param_backward"));
+      viennacl::ocl::enqueue(
+          oclk_prelu(cdim, bottom[0]->num(), top[0]->offset(1),
+                     WrapHandle((cl_mem)top_diff, &ctx), 0,
+                     WrapHandle((cl_mem)bottom_data, &ctx), 0,
+                     WrapHandle((cl_mem)(backward_buff_.mutable_gpu_diff()), &ctx)),
+          ctx.get_queue());
+
       if (channel_shared_) {
-        greentea_gpu_add_scalar<Dtype>(this->device_->id(),
-                                       this->blobs_[0]->count(), Dtype(dsum),
-                                       (cl_mem) slope_diff, 0);
+        Dtype dsum;
+        caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
+         multiplier_.gpu_data(), &dsum);
+        caffe_gpu_add_scalar(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
+      } else {
+        caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
+          backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
+          slope_diff);
       }
     }
     // Propagate to bottom
@@ -203,7 +200,6 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
       const Dtype* slope_data = this->blobs_[0]->gpu_data();
       int_tp div_factor = channel_shared_ ? channels : 1;
-
       viennacl::ocl::kernel &oclk_prelu = program.get_kernel(
           CL_KERNEL_SELECT("prelu_backward"));
       viennacl::ocl::enqueue(
