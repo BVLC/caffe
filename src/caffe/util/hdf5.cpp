@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <hdf5/H5LTpublic.h>
 
 namespace caffe {
 
@@ -10,9 +11,9 @@ template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
     hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
     Blob<Dtype>* blob) {
+  // REVIEW ktran: fix the logic in mil_data_layer and uncomment this check
   // Verify that the dataset exists.
-  CHECK(H5LTfind_dataset(file_id, dataset_name_))
-      << "Failed to find HDF5 dataset " << dataset_name_;
+  ////CHECK(H5LTfind_dataset(file_id, dataset_name_)) << "Failed to find HDF5 dataset " << dataset_name_;
   // Verify that the number of dimensions is in the accepted range.
   herr_t status;
   int ndims;
@@ -29,11 +30,15 @@ void hdf5_load_nd_dataset_helper(
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
   switch (class_) {
   case H5T_FLOAT:
+  {
     LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_FLOAT";
     break;
+  }
   case H5T_INTEGER:
+  {
     LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_INTEGER";
     break;
+  }
   case H5T_TIME:
     LOG(FATAL) << "Unsupported datatype class: H5T_TIME";
   case H5T_STRING:

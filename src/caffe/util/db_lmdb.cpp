@@ -1,8 +1,11 @@
 #ifdef USE_LMDB
 #include "caffe/util/db_lmdb.hpp"
+#ifdef _MSC_VER
+#include <direct.h>
+#define mkdir(str, mode) _mkdir(str)
+#endif
 
 #include <sys/stat.h>
-
 #include <string>
 
 namespace caffe { namespace db {

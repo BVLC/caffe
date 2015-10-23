@@ -3,8 +3,12 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+#ifdef _MSC_VER
+#include <process.h>
+#endif
 
 #include "caffe/common.hpp"
+#include "caffe/util/msvc.hpp"
 #include "caffe/util/rng.hpp"
 
 namespace caffe {
@@ -46,7 +50,9 @@ void GlobalInit(int* pargc, char*** pargv) {
   // Google logging.
   ::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
+#ifndef _MSC_VER  // InstallFailureSignalHandler is not defined windows glog
   ::google::InstallFailureSignalHandler();
+#endif
 }
 
 #ifdef CPU_ONLY  // CPU-only Caffe.

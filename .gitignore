@@ -93,3 +93,11 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+
+# Windows dev files
+Release/
+Debug/
+3rdparty/
+*.*sdf
+*.deps

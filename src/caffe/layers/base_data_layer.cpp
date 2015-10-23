@@ -1,3 +1,5 @@
+#pragma warning ( disable : 4703 ) //REVIEW ktran: make caffe warnings free
+
 #include <boost/thread.hpp>
 #include <string>
 #include <vector>
