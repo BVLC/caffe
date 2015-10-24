@@ -16,6 +16,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/python_layer.hpp"
+#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -50,7 +51,7 @@ static void CheckFile(const string& filename) {
 }
 
 void CheckContiguousArray(PyArrayObject* arr, string name,
-    vector<int> shape) {
+    vector<int_tp> shape) {
   if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
     throw std::runtime_error(name + " must be C contiguous");
   }
@@ -63,11 +64,12 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   if (PyArray_TYPE(arr) != NPY_FLOAT32) {
     throw std::runtime_error(name + " must be float32");
   }
-  for (int i = 1; i < PyArray_NDIM(arr); ++i) {
+  for (int_tp i = 1; i < PyArray_NDIM(arr); ++i) {
     if (PyArray_DIMS(arr)[i] != shape[i]) {
       throw std::runtime_error(
           "Shape dimension " + std::to_string(i) + " has wrong size ("
-              + std::to_string(static_cast<int>(PyArray_DIMS(arr)[i])) + " vs. "
+              + std::to_string(static_cast<int_tp>
+                  (PyArray_DIMS(arr)[i])) + " vs. "
               + std::to_string(shape[i]) + ")");
     }
   }
@@ -134,8 +136,8 @@ void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
 
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
-  ReadProtoFromTextFileOrDie(filename, &param);
-  return GetSolver<Dtype>(param);
+  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  return SolverRegistry<Dtype>::CreateSolver(param);
 }
 
 struct NdarrayConverterGenerator {
@@ -165,8 +167,8 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
     // the shape information from the blob.
     void* data = PyArray_DATA(reinterpret_cast<PyArrayObject*>(result));
     Py_DECREF(result);
-    const int num_axes = blob->num_axes();
-    vector<npy_intp> dims(blob->shape().begin(), blob->shape().end());
+    const int_tp num_axes = blob->num_axes();
+    vector<npy_long> dims(blob->shape().begin(), blob->shape().end());
     PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
                                                   NPY_FLOAT32, data);
     // SetBaseObject steals a ref, so we need to INCREF.
@@ -182,9 +184,9 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
     throw std::runtime_error("Blob.reshape takes no kwargs");
   }
   Blob<Dtype>* self = bp::extract<Blob<Dtype>*>(args[0]);
-  vector<int> shape(bp::len(args) - 1);
-  for (int i = 1; i < bp::len(args); ++i) {
-    shape[i - 1] = bp::extract<int>(args[i]);
+  vector<int_tp> shape(bp::len(args) - 1);
+  for (int_tp i = 1; i < bp::len(args); ++i) {
+    shape[i - 1] = bp::extract<int_tp>(args[i]);
   }
   self->Reshape(shape);
   // We need to explicitly return None to use bp::raw_function.
@@ -197,9 +199,9 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
   }
   typedef vector<shared_ptr<Blob<Dtype> > > BlobVec;
   BlobVec* self = bp::extract<BlobVec*>(args[0]);
-  vector<int> shape(bp::len(args) - 1);
-  for (int i = 1; i < bp::len(args); ++i) {
-    shape[i - 1] = bp::extract<int>(args[i]);
+  vector<int_tp> shape(bp::len(args) - 1);
+  for (int_tp i = 1; i < bp::len(args); ++i) {
+    shape[i - 1] = bp::extract<int_tp>(args[i]);
   }
   self->push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
   // We need to explicitly return None to use bp::raw_function.
@@ -252,14 +254,14 @@ BOOST_PYTHON_MODULE(_caffe) {
     "Blob", bp::no_init)
     .add_property("shape",
         bp::make_function(
-            static_cast<const vector<int>& (Blob<Dtype>::*)() const>(
+            static_cast<const vector<int_tp>& (Blob<Dtype>::*)() const>(
                 &Blob<Dtype>::shape),
             bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("num",      &Blob<Dtype>::num)
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
     .add_property("width",    &Blob<Dtype>::width)
-    .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
+    .add_property("count",    static_cast<int_tp (Blob<Dtype>::*)() const>(
         &Blob<Dtype>::count))
     .def("reshape",           bp::raw_function(&Blob_Reshape))
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
@@ -322,8 +324,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype> > >, true>());
   bp::class_<vector<string> >("StringVec")
     .def(bp::vector_indexing_suite<vector<string> >());
-  bp::class_<vector<int> >("IntVec")
-    .def(bp::vector_indexing_suite<vector<int> >());
+  bp::class_<vector<int_tp> >("IntVec")
+    .def(bp::vector_indexing_suite<vector<int_tp> >());
   bp::class_<vector<Dtype> >("DtypeVec")
     .def(bp::vector_indexing_suite<vector<Dtype> >());
   bp::class_<vector<shared_ptr<Net<Dtype> > > >("NetVec")
