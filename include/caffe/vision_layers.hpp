@@ -177,14 +177,16 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void forward_gpu_gemm(const Dtype* col_input, const int_tp col_input_off,
                         const Dtype* weights, Dtype* output,
                         const int_tp output_off, bool skip_im2col = false);
-  void forward_gpu_bias(Dtype* output, const int_tp output_off, const Dtype* bias);
+  void forward_gpu_bias(Dtype* output, const int_tp output_off,
+                        const Dtype* bias);
   void backward_gpu_gemm(const Dtype* input, const int_tp input_off,
                          const Dtype* weights, Dtype* col_output,
                          const int_tp col_output_off);
   void weight_gpu_gemm(const Dtype* col_input, const int_tp col_input_off,
                        const Dtype* output, const int_tp output_off,
                        Dtype* weights);
-  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int_tp input_off);
+  void backward_gpu_bias(Dtype* bias, const Dtype* input,
+                         const int_tp input_off);
 
   shared_ptr< Blob<Dtype> > col_buffer();
 #endif
@@ -921,7 +923,8 @@ class SPPLayer : public Layer<Dtype> {
   // calculates the kernel and stride dimensions for the pooling layer,
   // returns a correctly configured LayerParameter for a PoolingLayer
   virtual LayerParameter GetPoolingParam(const int_tp pyramid_level,
-                                         const int_tp bottom_h, const int_tp bottom_w,
+                                         const int_tp bottom_h,
+                                         const int_tp bottom_w,
                                          const SPPParameter spp_param);
 
   int_tp pyramid_height_;

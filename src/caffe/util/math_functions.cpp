@@ -71,7 +71,8 @@ void caffe_set(const int_tp N, const Dtype alpha, Dtype* Y) {
 }
 
 template void caffe_set<int>(const int_tp N, const int alpha, int* Y);
-template void caffe_set<uint_tp>(const int_tp N, const uint_tp alpha, uint_tp* Y);
+template void caffe_set<uint_tp>(const int_tp N, const uint_tp alpha,
+                                 uint_tp* Y);
 template void caffe_set<int_tp>(const int_tp N, const int_tp alpha, int_tp* Y);
 template void caffe_set<float>(const int_tp N, const float alpha, float* Y);
 template void caffe_set<double>(const int_tp N, const double alpha, double* Y);
@@ -97,11 +98,13 @@ void caffe_cpu_copy(const int_tp N, const Dtype* X, Dtype* Y) {
   }
 }
 
-template void caffe_cpu_copy<int_tp>(const int_tp N, const int_tp* X, int_tp* Y);
+template void caffe_cpu_copy<int_tp>(const int_tp N, const int_tp* X,
+                                     int_tp* Y);
 template void caffe_cpu_copy<uint_tp>(const int_tp N, const uint_tp* X,
-                                           uint_tp* Y);
+uint_tp* Y);
 template void caffe_cpu_copy<float>(const int_tp N, const float* X, float* Y);
-template void caffe_cpu_copy<double>(const int_tp N, const double* X, double* Y);
+template void caffe_cpu_copy<double>(const int_tp N, const double* X,
+                                     double* Y);
 
 template<typename Dtype>
 void caffe_copy(const int_tp N, const Dtype* X, Dtype* Y) {
@@ -123,7 +126,7 @@ void caffe_copy(const int_tp N, const Dtype* X, Dtype* Y) {
 
 template void caffe_copy<int_tp>(const int_tp N, const int_tp* X, int_tp* Y);
 template void caffe_copy<uint_tp>(const int_tp N, const uint_tp* X,
-                                       uint_tp* Y);
+uint_tp* Y);
 template void caffe_copy<float>(const int_tp N, const float* X, float* Y);
 template void caffe_copy<double>(const int_tp N, const double* X, double* Y);
 
@@ -144,13 +147,14 @@ void caffe_cpu_axpby<float>(const int_tp N, const float alpha, const float* X,
 }
 
 template<>
-void caffe_cpu_axpby<double>(const int_tp N, const double alpha, const double* X,
-                             const double beta, double* Y) {
+void caffe_cpu_axpby<double>(const int_tp N, const double alpha,
+                             const double* X, const double beta, double* Y) {
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
 
 template<>
-void caffe_add<float>(const int_tp n, const float* a, const float* b, float* y) {
+void caffe_add<float>(const int_tp n, const float* a, const float* b,
+                      float* y) {
   vsAdd(n, a, b, y);
 }
 
@@ -161,7 +165,8 @@ void caffe_add<double>(const int_tp n, const double* a, const double* b,
 }
 
 template<>
-void caffe_sub<float>(const int_tp n, const float* a, const float* b, float* y) {
+void caffe_sub<float>(const int_tp n, const float* a, const float* b,
+                      float* y) {
   vsSub(n, a, b, y);
 }
 
@@ -172,7 +177,8 @@ void caffe_sub<double>(const int_tp n, const double* a, const double* b,
 }
 
 template<>
-void caffe_mul<float>(const int_tp n, const float* a, const float* b, float* y) {
+void caffe_mul<float>(const int_tp n, const float* a, const float* b,
+                      float* y) {
   vsMul(n, a, b, y);
 }
 
@@ -183,7 +189,8 @@ void caffe_mul<double>(const int_tp n, const double* a, const double* b,
 }
 
 template<>
-void caffe_div<float>(const int_tp n, const float* a, const float* b, float* y) {
+void caffe_div<float>(const int_tp n, const float* a, const float* b,
+                      float* y) {
   vsDiv(n, a, b, y);
 }
 
@@ -194,7 +201,8 @@ void caffe_div<double>(const int_tp n, const double* a, const double* b,
 }
 
 template<>
-void caffe_powx<float>(const int_tp n, const float* a, const float b, float* y) {
+void caffe_powx<float>(const int_tp n, const float* a, const float b,
+                       float* y) {
   vsPowx(n, a, b, y);
 }
 
@@ -262,9 +270,11 @@ double caffe_nextafter(const double b);
 void caffe_rng_uniform(const int_tp n, uint_tp* r) {
   CHECK_GE(n, 0);
   CHECK(r);
-  boost::uniform_int<int_tp> random_distribution(INT64_MIN, INT64_MAX);
-  boost::variate_generator<caffe::rng_t*, boost::uniform_int<int_tp>>
-    variate_generator(caffe_rng(), random_distribution);
+  boost::uniform_int<int_tp> random_distribution(
+      std::numeric_limits<int_tp>::min(), std::numeric_limits<int_tp>::max());
+  boost::variate_generator<caffe::rng_t*,
+  boost::uniform_int<int_tp>> variate_generator(
+      caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
@@ -276,8 +286,9 @@ void caffe_rng_uniform(const int_tp n, const Dtype a, const Dtype b, Dtype* r) {
   CHECK(r);
   CHECK_LE(a, b);
   boost::uniform_real<Dtype> random_distribution(a, caffe_nextafter<Dtype>(b));
-  boost::variate_generator<caffe::rng_t*, boost::uniform_real<Dtype>>
-    variate_generator(caffe_rng(), random_distribution);
+  boost::variate_generator<caffe::rng_t*,
+  boost::uniform_real<Dtype>> variate_generator(
+      caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
@@ -298,16 +309,17 @@ void caffe_rng_gaussian(const int_tp n, const Dtype a, const Dtype sigma,
   CHECK(r);
   CHECK_GT(sigma, 0);
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
-  boost::variate_generator<caffe::rng_t*, boost::normal_distribution<Dtype>>
-    variate_generator(caffe_rng(), random_distribution);
+  boost::variate_generator<caffe::rng_t*,
+  boost::normal_distribution<Dtype>> variate_generator(
+      caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
 }
 
 template
-void caffe_rng_gaussian<float>(const int_tp n, const float mu, const float sigma,
-                               float* r);
+void caffe_rng_gaussian<float>(const int_tp n, const float mu,
+                               const float sigma, float* r);
 
 template
 void caffe_rng_gaussian<double>(const int_tp n, const double mu,
@@ -320,30 +332,35 @@ void caffe_rng_bernoulli(const int_tp n, const Dtype p, Itype* r) {
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
   boost::bernoulli_distribution<Dtype> random_distribution(p);
-  boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype>>
-    variate_generator(caffe_rng(), random_distribution);
+  boost::variate_generator<caffe::rng_t*,
+  boost::bernoulli_distribution<Dtype>> variate_generator(
+      caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = static_cast<Itype>(variate_generator());
   }
 }
 
 template
-void caffe_rng_bernoulli<double, unsigned long>(const int_tp n, const double p, unsigned long* r);
+void caffe_rng_bernoulli<double, unsigned long>(const int_tp n, const double p,  // NOLINT
+                                                unsigned long* r);  // NOLINT
 
 template
-void caffe_rng_bernoulli<float, unsigned long>(const int_tp n, const float p, unsigned long* r);
+void caffe_rng_bernoulli<float, unsigned long>(const int_tp n, const float p,  // NOLINT
+                                               unsigned long* r);  // NOLINT
 
 template
-void caffe_rng_bernoulli<double, long>(const int_tp n, const double p, long* r);
+void caffe_rng_bernoulli<double, long>(const int_tp n, const double p, long* r);  // NOLINT
 
 template
-void caffe_rng_bernoulli<float, long>(const int_tp n, const float p, long* r);
+void caffe_rng_bernoulli<float, long>(const int_tp n, const float p, long* r);  // NOLINT
 
 template
-void caffe_rng_bernoulli<double, unsigned int>(const int_tp n, const double p, unsigned int* r);
+void caffe_rng_bernoulli<double, unsigned int>(const int_tp n, const double p,
+                                               unsigned int* r);
 
 template
-void caffe_rng_bernoulli<float, unsigned int>(const int_tp n, const float p, unsigned int* r);
+void caffe_rng_bernoulli<float, unsigned int>(const int_tp n, const float p,
+                                              unsigned int* r);
 
 template
 void caffe_rng_bernoulli<double, int>(const int_tp n, const double p, int* r);
@@ -352,8 +369,9 @@ template
 void caffe_rng_bernoulli<float, int>(const int_tp n, const float p, int* r);
 
 template<>
-float caffe_cpu_strided_dot<float>(const int_tp n, const float* x, const int_tp incx,
-                                   const float* y, const int_tp incy) {
+float caffe_cpu_strided_dot<float>(const int_tp n, const float* x,
+                                   const int_tp incx, const float* y,
+                                   const int_tp incy) {
   return cblas_sdot(n, x, incx, y, incy);
 }
 
@@ -377,7 +395,7 @@ double caffe_cpu_dot<double>(const int_tp n, const double* x, const double* y);
 
 template<>
 int_tp caffe_cpu_hamming_distance<float>(const int_tp n, const float* x,
-                                      const float* y) {
+                                         const float* y) {
   int_tp dist = 0;
   for (int_tp i = 0; i < n; ++i) {
     dist += __builtin_popcount(
@@ -388,7 +406,7 @@ int_tp caffe_cpu_hamming_distance<float>(const int_tp n, const float* x,
 
 template<>
 int_tp caffe_cpu_hamming_distance<double>(const int_tp n, const double* x,
-                                       const double* y) {
+                                          const double* y) {
   int_tp dist = 0;
   for (int_tp i = 0; i < n; ++i) {
     dist += __builtin_popcountl(
@@ -415,8 +433,8 @@ void caffe_cpu_scale<float>(const int_tp n, const float alpha, const float *x,
 }
 
 template<>
-void caffe_cpu_scale<double>(const int_tp n, const double alpha, const double *x,
-                             double* y) {
+void caffe_cpu_scale<double>(const int_tp n, const double alpha,
+                             const double *x, double* y) {
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
 }

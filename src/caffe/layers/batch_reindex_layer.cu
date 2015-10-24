@@ -9,8 +9,8 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void BRForward(const int_tp count, const int_tp inner_dim, const Dtype* in,
-                          const Dtype* permut, Dtype* out) {
+__global__ void BRForward(const int_tp count, const int_tp inner_dim,
+                          const Dtype* in, const Dtype* permut, Dtype* out) {
   CUDA_KERNEL_LOOP(index, count) {
     int_tp n = index / (inner_dim);
     int_tp in_n = static_cast<int_tp>(permut[n]);

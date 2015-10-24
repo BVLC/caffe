@@ -45,7 +45,8 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
   }
 
   // http://en.wikipedia.org/wiki/Hamming_distance
-  int_tp ReferenceHammingDistance(const int_tp n, const Dtype* x, const Dtype* y) {
+  int_tp ReferenceHammingDistance(const int_tp n, const Dtype* x,
+                                  const Dtype* y) {
     int_tp dist = 0;
     uint64_t val;
     for (int_tp i = 0; i < n; ++i) {

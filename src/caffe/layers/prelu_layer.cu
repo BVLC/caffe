@@ -13,8 +13,8 @@ namespace caffe {
 #ifdef USE_CUDA
 // CUDA kernele for forward
 template<typename Dtype>
-__global__ void PReLUForward(const int_tp n, const int_tp channels, const int_tp dim,
-                             const Dtype* in, Dtype* out,
+__global__ void PReLUForward(const int_tp n, const int_tp channels,
+                             const int_tp dim, const Dtype* in, Dtype* out,
                              const Dtype* slope_data, const int_tp div_factor) {
   CUDA_KERNEL_LOOP(index, n) {
     int_tp c = (index / dim) % channels / div_factor;
@@ -24,9 +24,10 @@ __global__ void PReLUForward(const int_tp n, const int_tp channels, const int_tp
 
 // CUDA kernel for bottom backward
 template<typename Dtype>
-__global__ void PReLUBackward(const int_tp n, const int_tp channels, const int_tp dim,
-                              const Dtype* in_diff, const Dtype* in_data,
-                              Dtype* out_diff, const Dtype* slope_data,
+__global__ void PReLUBackward(const int_tp n, const int_tp channels,
+                              const int_tp dim, const Dtype* in_diff,
+                              const Dtype* in_data, Dtype* out_diff,
+                              const Dtype* slope_data,
                               const int_tp div_factor) {
   CUDA_KERNEL_LOOP(index, n) {
     int_tp c = (index / dim) % channels / div_factor;

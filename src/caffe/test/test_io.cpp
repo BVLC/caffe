@@ -18,7 +18,8 @@ namespace caffe {
 class IOTest : public ::testing::Test {};
 
 bool ReadImageToDatumReference(const string& filename, const int_tp label,
-    const int_tp height, const int_tp width, const bool is_color, Datum* datum) {
+                               const int_tp height, const int_tp width,
+                               const bool is_color, Datum* datum) {
   cv::Mat cv_img;
   int_tp cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);

@@ -91,9 +91,9 @@ bool ReadImageToDatum(const string& filename, const int_tp label,
     const std::string & encoding, Datum* datum);
 
 inline bool ReadImageToDatum(const string& filename, const int_tp label,
-    const int_tp height, const int_tp width, const bool is_color, Datum* datum) {
-  return ReadImageToDatum(filename, label, height, width, is_color,
-                          "", datum);
+                             const int_tp height, const int_tp width,
+                             const bool is_color, Datum* datum) {
+  return ReadImageToDatum(filename, label, height, width, is_color, "", datum);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int_tp label,

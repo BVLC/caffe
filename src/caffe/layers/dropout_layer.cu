@@ -29,7 +29,7 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (this->phase_ == TRAIN) {
       uint_tp* mask =
           static_cast<uint_tp*>(rand_vec_.mutable_gpu_data());
-      caffe_gpu_rng_uniform(count, (uint_tpc*)(mask));
+      caffe_gpu_rng_uniform(count, (uint_tpc*) (mask));  // NOLINT
       // set thresholds
       // NOLINT_NEXT_LINE(whitespace/operators)
       DropoutForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),

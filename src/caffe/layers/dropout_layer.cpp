@@ -1,5 +1,6 @@
 // TODO (sergeyk): effect should not be dependent on phase. wasted memcpy.
 
+#include <limits>
 #include <vector>
 
 #include "caffe/neuron_layers.hpp"
@@ -15,7 +16,10 @@ void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   DCHECK(threshold_ > 0.);
   DCHECK(threshold_ < 1.);
   scale_ = 1. / (1. - threshold_);
-  uint_thres_ = static_cast<uint_tp>(ULONG_MAX * threshold_);
+  uint_thres_ =
+      static_cast<uint_tp>(static_cast<long double>
+          (std::numeric_limits<uint_tp>::max())
+          * static_cast<long double>(threshold_));
 }
 
 template <typename Dtype>

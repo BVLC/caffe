@@ -108,7 +108,8 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 template <typename Dtype>
 inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
-    int_tp h, int_tp w, int_tp pad_h, int_tp pad_w, int_tp stride_h, int_tp stride_w) {
+    int_tp h, int_tp w, int_tp pad_h, int_tp pad_w,
+    int_tp stride_h, int_tp stride_w) {
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;

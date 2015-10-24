@@ -16,9 +16,9 @@ template<typename Dtype>
 __global__ void CopyForward(const int_tp nthreads, const int_tp dims,
                             const Dtype* bottom_a, const bool forward_a,
                             const Dtype* bottom_b, const bool forward_b,
-                            Dtype* top, const int_tp num, const int_tp channels_a,
-                            const int_tp channels_b, const int_tp* shape_a,
-                            const int_tp* shape_b) {
+                            Dtype* top, const int_tp num,
+                            const int_tp channels_a, const int_tp channels_b,
+                            const int_tp* shape_a, const int_tp* shape_b) {
   int_tp pad[6];  // NOLINT(runtime/arrays)
   int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
   int_tp size_a = 1;

@@ -99,7 +99,8 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     top_shape[channel_axis_] *= kernel_shape_data[i];
     const int_tp input_dim = bottom[0]->shape(channel_axis_ + i + 1);
-    const int_tp output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+    const int_tp output_dim = (input_dim + 2 * pad_data[i]
+        - kernel_shape_data[i])
         / stride_data[i] + 1;
     top_shape[channel_axis_ + i + 1] = output_dim;
   }

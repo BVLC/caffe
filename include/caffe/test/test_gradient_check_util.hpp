@@ -24,10 +24,7 @@ class GradientChecker {
   GradientChecker(const Dtype stepsize, const Dtype threshold,
                   const uint_tp seed = 1701, const Dtype kink = 0.,
                   const Dtype kink_range = -1)
-      : stepsize_(stepsize),
-        threshold_(threshold),
-        seed_(seed),
-        kink_(kink),
+      : stepsize_(stepsize), threshold_(threshold), seed_(seed), kink_(kink),
         kink_range_(kink_range) {
   }
   // Checks the gradient of a layer, with provided bottom layers and top
@@ -35,7 +32,8 @@ class GradientChecker {
   // Note that after the gradient check, we do not guarantee that the data
   // stored in the layer parameters and the blobs are unchanged.
   void CheckGradient(Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
-                     const vector<Blob<Dtype>*>& top, int_tp check_bottom = -1) {
+                     const vector<Blob<Dtype>*>& top,
+                     int_tp check_bottom = -1) {
     layer->SetUp(bottom, top);
     CheckGradientSingle(layer, bottom, top, check_bottom, -1, -1);
   }
@@ -58,8 +56,8 @@ class GradientChecker {
   void CheckGradientSingle(Layer<Dtype>* layer,
                            const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top, int_tp check_bottom,
-                           int_tp top_id, int_tp top_data_id, bool element_wise =
-                               false);
+                           int_tp top_id,
+                           int_tp top_data_id, bool element_wise = false);
 
   // Checks the gradient of a network. This network should not have any data
   // layers or loss layers, since the function does not explicitly deal with
@@ -83,7 +81,8 @@ template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(
     Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top, int_tp check_bottom, int_tp top_id,
-    int_tp top_data_id, bool element_wise) {
+    int_tp top_data_id,
+    bool element_wise) {
   if (element_wise) {
     CHECK_EQ(0, layer->blobs().size());
     CHECK_LE(0, top_id);
@@ -111,7 +110,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(
     blobs_to_check.push_back(bottom[check_bottom]);
     propagate_down[check_bottom] = true;
   }
-  CHECK_GT(blobs_to_check.size(), 0) << "No blobs to check.";
+  CHECK_GT(blobs_to_check.size(), 0)<< "No blobs to check.";
   // Compute the gradient analytically using Backward
   Caffe::set_random_seed(seed_);
   // Ignore the loss from the layer (it's just the weighted sum of the losses
@@ -126,8 +125,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(
   for (int_tp blob_id = 0; blob_id < blobs_to_check.size(); ++blob_id) {
     Blob<Dtype>* current_blob = blobs_to_check[blob_id];
     computed_gradient_blobs[blob_id].reset(new Blob<Dtype>());
-    computed_gradient_blobs[blob_id]->ReshapeLike(
-        *current_blob);
+    computed_gradient_blobs[blob_id]->ReshapeLike(*current_blob);
     const int_tp count = blobs_to_check[blob_id]->count();
     const Dtype* diff = blobs_to_check[blob_id]->cpu_diff();
     Dtype* computed_gradients = computed_gradient_blobs[blob_id]
@@ -242,7 +240,8 @@ void GradientChecker<Dtype>::CheckGradientNet(
 template<typename Dtype>
 Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype>& layer,
                                                 const vector<Blob<Dtype>*>& top,
-                                                int_tp top_id, int_tp top_data_id) {
+                                                int_tp top_id,
+                                                int_tp top_data_id) {
   Dtype loss = 0;
   if (top_id < 0) {
     // the loss will be half of the sum of squares of all outputs

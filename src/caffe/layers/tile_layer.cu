@@ -12,10 +12,10 @@
 namespace caffe {
 
 #ifdef USE_CUDA
-template <typename Dtype>
+template<typename Dtype>
 __global__ void Tile(const int_tp nthreads, const Dtype* bottom_data,
-    const int_tp tile_size, const int_tp num_tiles, const int_tp bottom_tile_axis,
-    Dtype* top_data) {
+                     const int_tp tile_size, const int_tp num_tiles,
+                     const int_tp bottom_tile_axis, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int_tp d = index % tile_size;
     const int_tp b = (index / tile_size / num_tiles) % bottom_tile_axis;
@@ -60,7 +60,8 @@ void TileLayer<Dtype>::Forward_gpu(
 #ifdef USE_CUDA
 template <typename Dtype>
 __global__ void TileBackward(const int_tp nthreads, const Dtype* top_diff,
-    const int_tp tile_size, const int_tp num_tiles, const int_tp bottom_tile_axis,
+                             const int_tp tile_size, const int_tp num_tiles,
+                             const int_tp bottom_tile_axis,
     Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int_tp d = index % tile_size;

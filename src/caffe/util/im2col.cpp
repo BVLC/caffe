@@ -5,12 +5,11 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void im2col_cpu(const Dtype* data_im, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w,
-    const int_tp stride_h, const int_tp stride_w,
-    Dtype* data_col) {
+                const int_tp height, const int_tp width, const int_tp kernel_h,
+                const int_tp kernel_w, const int_tp pad_h, const int_tp pad_w,
+                const int_tp stride_h, const int_tp stride_w, Dtype* data_col) {
   int_tp height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
   int_tp width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
   int_tp channels_col = channels * kernel_h * kernel_w;
@@ -34,19 +33,24 @@ void im2col_cpu(const Dtype* data_im, const int_tp channels,
 
 // Explicit instantiation
 template void im2col_cpu<float>(const float* data_im, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h,
-    const int_tp stride_w, float* data_col);
+                                const int_tp height, const int_tp width,
+                                const int_tp kernel_h, const int_tp kernel_w,
+                                const int_tp pad_h, const int_tp pad_w,
+                                const int_tp stride_h, const int_tp stride_w,
+                                float* data_col);
 template void im2col_cpu<double>(const double* data_im, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h,
-    const int_tp stride_w, double* data_col);
+                                 const int_tp height, const int_tp width,
+                                 const int_tp kernel_h, const int_tp kernel_w,
+                                 const int_tp pad_h, const int_tp pad_w,
+                                 const int_tp stride_h, const int_tp stride_w,
+                                 double* data_col);
 
 template <typename Dtype>
 inline void im2col_nd_core_cpu(const Dtype* data_input, const bool im2col,
-    const int_tp num_spatial_axes, const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    Dtype* data_output) {
+                               const int_tp num_spatial_axes,
+                               const int_tp* im_shape, const int_tp* col_shape,
+                               const int_tp* kernel_shape, const int_tp* pad,
+                               const int_tp* stride, Dtype* data_output) {
   if (!im2col) {
     int_tp im_size = im_shape[0];
     for (int_tp i = 0; i < num_spatial_axes; ++i) {
@@ -134,12 +138,11 @@ template void im2col_nd_cpu<double>(const double* data_im,
     const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
     double* data_col);
 
-template <typename Dtype>
+template<typename Dtype>
 void col2im_cpu(const Dtype* data_col, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp patch_h, const int_tp patch_w,
-    const int_tp pad_h, const int_tp pad_w,
-    const int_tp stride_h, const int_tp stride_w,
-    Dtype* data_im) {
+                const int_tp height, const int_tp width, const int_tp patch_h,
+                const int_tp patch_w, const int_tp pad_h, const int_tp pad_w,
+                const int_tp stride_h, const int_tp stride_w, Dtype* data_im) {
   caffe_set(height * width * channels, Dtype(0), data_im);
   int_tp height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
   int_tp width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
@@ -162,13 +165,17 @@ void col2im_cpu(const Dtype* data_col, const int_tp channels,
 
 // Explicit instantiation
 template void col2im_cpu<float>(const float* data_col, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp patch_h, const int_tp patch_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h,
-    const int_tp stride_w, float* data_im);
+                                const int_tp height, const int_tp width,
+                                const int_tp patch_h, const int_tp patch_w,
+                                const int_tp pad_h, const int_tp pad_w,
+                                const int_tp stride_h, const int_tp stride_w,
+                                float* data_im);
 template void col2im_cpu<double>(const double* data_col, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp patch_h, const int_tp patch_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h,
-    const int_tp stride_w, double* data_im);
+                                 const int_tp height, const int_tp width,
+                                 const int_tp patch_h, const int_tp patch_w,
+                                 const int_tp pad_h, const int_tp pad_w,
+                                 const int_tp stride_h, const int_tp stride_w,
+                                 double* data_im);
 
 template <typename Dtype>
 void col2im_nd_cpu(const Dtype* data_col, const int_tp num_spatial_axes,

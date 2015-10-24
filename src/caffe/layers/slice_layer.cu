@@ -10,7 +10,8 @@ template<typename Dtype>
 __global__ void Slice(const int_tp nthreads, const Dtype* in_data,
                       const bool forward, const int_tp num_slices,
                       const int_tp slice_size, const int_tp bottom_slice_axis,
-                      const int_tp top_slice_axis, const int_tp offset_slice_axis,
+                      const int_tp top_slice_axis,
+                      const int_tp offset_slice_axis,
                       Dtype* out_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int_tp total_slice_size = slice_size * top_slice_axis;

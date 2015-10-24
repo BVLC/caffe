@@ -138,8 +138,10 @@ void Solver<Dtype>::InitTestNets() {
   // test networks -- the actual number is given by the number of remaining
   // test_iters after any test nets specified by test_net_param and/or test_net
   // are evaluated.
-  const int_tp num_generic_net_instances = param_.test_iter_size() - num_test_nets;
-  const int_tp num_test_net_instances = num_test_nets + num_generic_net_instances;
+  const int_tp num_generic_net_instances = param_.test_iter_size()
+      - num_test_nets;
+  const int_tp num_test_net_instances = num_test_nets
+      + num_generic_net_instances;
   if (param_.test_state_size()) {
     CHECK_EQ(param_.test_state_size(), num_test_net_instances)
         << "test_state must be unspecified or specified once per test net.";
