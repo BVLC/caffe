@@ -3,7 +3,7 @@
 #endif
 
 __kernel void TEMPLATE(concat,Dtype)(const int_tp nthreads, __global const Dtype* in_data,
-                                     const int_tp forward, const int_tp num_concats,
+                                     const int forward, const int_tp num_concats,
                                      const int_tp concat_size,
                                      const int_tp top_concat_axis,
                                      const int_tp bottom_concat_axis,

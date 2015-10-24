@@ -6,7 +6,7 @@ __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
     int_tp n, __global const Dtype* prob_data, __global const Dtype* label,
     __global Dtype* loss,
     const int_tp num, const int_tp dim, const int_tp spatial_dim,
-    const int_tp has_ignore_label_, const int_tp ignore_label_,
+    const int has_ignore_label_, const int_tp ignore_label_,
     __global Dtype* counts) {
 
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
@@ -32,7 +32,7 @@ __kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,
                                                     const int_tp num,
                                                     const int_tp dim,
                                                     const int_tp spatial_dim,
-                                                    const int_tp has_ignore_label_,
+                                                    const int has_ignore_label_,
                                                     const int_tp ignore_label_,
                                                     __global Dtype* counts) {
 
