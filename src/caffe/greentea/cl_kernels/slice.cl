@@ -4,7 +4,7 @@
 
 __kernel void TEMPLATE(slice,Dtype)(const int_tp nthreads,
                                     __global const Dtype* in_data,
-                                    const int_tp forward, const int_tp num_slices,
+                                    const int forward, const int_tp num_slices,
                                     const int_tp slice_size,
                                     const int_tp bottom_slice_axis,
                                     const int_tp top_slice_axis,

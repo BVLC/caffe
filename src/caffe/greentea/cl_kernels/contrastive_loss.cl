@@ -3,7 +3,7 @@
 #endif
 
 __kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp channels,
-                            const Dtype margin, const int_tp legacy_version,
+                            const Dtype margin, const int legacy_version,
                             const Dtype alpha, __global const Dtype* y,
                             __global const Dtype* diff, __global const Dtype* dist_sq,
                             __global Dtype *bottom_diff) {

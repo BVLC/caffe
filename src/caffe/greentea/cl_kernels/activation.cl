@@ -94,8 +94,8 @@ __kernel void TEMPLATE(prelu_backward,Dtype)(const int_tp n, const int_tp channe
 
 __kernel void TEMPLATE(prelu_param_backward,Dtype)(const int_tp n, const int_tp rows,
                                                    const int_tp rowPitch,
-                                                   __global const Dtype* in_diff, const int_tp in_diff_off,
-                                                   __global const Dtype* in_data, const int_tp in_data_off,
+                                                   __global const Dtype* in_diff,
+                                                   __global const Dtype* in_data,
                                                    __global Dtype* out_diff) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
