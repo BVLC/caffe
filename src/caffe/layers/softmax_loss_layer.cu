@@ -20,7 +20,8 @@ __global__ void SoftmaxLossForwardGPU(const int_tp nthreads,
                                       const int_tp num, const int_tp dim,
                                       const int_tp spatial_dim,
                                       const bool has_ignore_label_,
-                                      const int_tp ignore_label_, Dtype* counts) {
+                                      const int_tp ignore_label_,
+                                      Dtype* counts) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int_tp n = index / spatial_dim;
     const int_tp s = index % spatial_dim;
@@ -137,7 +138,8 @@ __global__ void SoftmaxLossBackwardGPU(const int_tp nthreads, const Dtype* top,
                                        const int_tp num, const int_tp dim,
                                        const int_tp spatial_dim,
                                        const bool has_ignore_label_,
-                                       const int_tp ignore_label_, Dtype* counts) {
+                                       const int_tp ignore_label_,
+                                       Dtype* counts) {
   const int_tp channels = dim / spatial_dim;
 
   CUDA_KERNEL_LOOP(index, nthreads) {

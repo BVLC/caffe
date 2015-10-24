@@ -234,7 +234,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* top_label = batch->label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
   const int_tp batch_size = this->layer_param_.window_data_param().batch_size();
-  const int_tp context_pad = this->layer_param_.window_data_param().context_pad();
+  const int_tp context_pad =
+      this->layer_param_.window_data_param().context_pad();
   const int_tp crop_size = this->transform_param_.crop_size();
   const bool mirror = this->transform_param_.mirror();
   const float fg_fraction =
@@ -356,11 +357,12 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
             static_cast<Dtype>(crop_size)/static_cast<Dtype>(unclipped_height);
 
         // size to warp the clipped expanded region to
-        cv_crop_size.width =
-            static_cast<int_tp>(round(static_cast<Dtype>(clipped_width)*scale_x));
-        cv_crop_size.height =
-            static_cast<int_tp>(round(static_cast<Dtype>(clipped_height)*scale_y));
-        pad_x1 = static_cast<int_tp>(round(static_cast<Dtype>(pad_x1)*scale_x));
+        cv_crop_size.width = static_cast<int_tp>(round(
+            static_cast<Dtype>(clipped_width) * scale_x));
+        cv_crop_size.height = static_cast<int_tp>(round(
+            static_cast<Dtype>(clipped_height) * scale_y));
+        pad_x1 =
+            static_cast<int_tp>(round(static_cast<Dtype>(pad_x1) * scale_x));
         pad_x2 = static_cast<int_tp>(round(static_cast<Dtype>(pad_x2)*scale_x));
         pad_y1 = static_cast<int_tp>(round(static_cast<Dtype>(pad_y1)*scale_y));
         pad_y2 = static_cast<int_tp>(round(static_cast<Dtype>(pad_y2)*scale_y));
@@ -399,8 +401,9 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         int_tp img_index = 0;
         for (int_tp w = 0; w < cv_cropped_img.cols; ++w) {
           for (int_tp c = 0; c < channels; ++c) {
-            int_tp top_index = ((item_id * channels + c) * crop_size + h + pad_h)
-                     * crop_size + w + pad_w;
+            int_tp top_index =
+                ((item_id * channels + c) * crop_size + h + pad_h) * crop_size
+                    + w + pad_w;
             // int_tp top_index = (c * height + h) * width + w;
             Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
             if (this->has_mean_file_) {

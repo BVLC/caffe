@@ -193,7 +193,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
     if (need_backward) {
-      for (int_tp top_id = 0; top_id < top_id_vecs_[layer_id].size(); ++top_id) {
+      for (int_tp top_id = 0; top_id < top_id_vecs_[layer_id].size();
+          ++top_id) {
         blob_need_backward_[top_id_vecs_[layer_id][top_id]] = true;
       }
     }
@@ -471,9 +472,10 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
 // Helper for Net::Init: add a new bottom blob to the net.
 
 template<typename Dtype>
-int_tp Net<Dtype>::AppendBottom(const NetParameter& param, const int_tp layer_id,
-                             const int_tp bottom_id, set<string>* available_blobs,
-                             map<string, int_tp>* blob_name_to_idx) {
+int_tp Net<Dtype>::AppendBottom(const NetParameter& param,
+                                const int_tp layer_id, const int_tp bottom_id,
+                                set<string>* available_blobs,
+                                map<string, int_tp>* blob_name_to_idx) {
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {

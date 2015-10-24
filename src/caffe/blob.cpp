@@ -16,8 +16,8 @@
 namespace caffe {
 
 template<typename Dtype>
-bool Blob<Dtype>::Reshape(const int_tp num, const int_tp channels, const int_tp height,
-                          const int_tp width) {
+bool Blob<Dtype>::Reshape(const int_tp num, const int_tp channels,
+                          const int_tp height, const int_tp width) {
   vector<int_tp> shape(4);
   shape[0] = num;
   shape[1] = channels;

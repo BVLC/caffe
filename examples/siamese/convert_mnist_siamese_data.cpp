@@ -99,7 +99,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       datum.set_label(0);
     }
     datum.SerializeToString(&value);
-    snprintf(key, kMaxKeyLength, "%08d", itemid);
+    snprintf(key, kMaxKeyLength, "%08zd", itemid);
     db->Put(leveldb::WriteOptions(), std::string(key), value);
   }
 

@@ -68,7 +68,8 @@ __global__ void kernel_channel_sum(const int_tp num, const int_tp channels,
 
 template<typename Dtype>
 __global__ void kernel_channel_div(const int_tp count, const int_tp num,
-                                   const int_tp channels, const int_tp spatial_dim,
+                                   const int_tp channels,
+                                   const int_tp spatial_dim,
                                    const Dtype* channel_sum, Dtype* data) {
   CUDA_KERNEL_LOOP(index, count) {
     int_tp n = index / channels / spatial_dim;
@@ -79,8 +80,9 @@ __global__ void kernel_channel_div(const int_tp count, const int_tp num,
 
 template<typename Dtype>
 __global__ void kernel_channel_dot(const int_tp num, const int_tp channels,
-                                   const int_tp spatial_dim, const Dtype* data_1,
-                                   const Dtype* data_2, Dtype* channel_dot) {
+                                   const int_tp spatial_dim,
+                                   const Dtype* data_1, const Dtype* data_2,
+                                   Dtype* channel_dot) {
   CUDA_KERNEL_LOOP(index, num * spatial_dim) {
     int_tp n = index / spatial_dim;
     int_tp s = index % spatial_dim;

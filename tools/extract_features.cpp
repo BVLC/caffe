@@ -172,7 +172,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
         }
       }  // for (int_tp n = 0; n < batch_size; ++n)
     }  // for (int_tp i = 0; i < num_features; ++i)
-  }  // for (int_tp batch_index = 0; batch_index < num_mini_batches; ++batch_index)
+  }  // for (int_tp batch_index = 0;
+  // batch_index < num_mini_batches; ++batch_index)
   // write the last batch
   for (int_tp i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {

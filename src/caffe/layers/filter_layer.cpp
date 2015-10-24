@@ -33,7 +33,8 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // look for non-zero elements in bottom[0]. Items of each bottom that
   // have the same index as the items in bottom[0] with value == non-zero
   // will be forwarded
-  for (int_tp item_id = 0; item_id < bottom[selector_index]->shape(0); ++item_id) {
+  for (int_tp item_id = 0; item_id < bottom[selector_index]->shape(0);
+      ++item_id) {
     // we don't need an offset because item size == 1
     const Dtype* tmp_data_selector = bottom_data_selector + item_id;
     if (*tmp_data_selector) {

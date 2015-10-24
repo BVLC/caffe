@@ -34,7 +34,7 @@ template <typename Dtype>
 class DataTransformTest : public ::testing::Test {
  protected:
   DataTransformTest()
-      : seed_(1701),
+      : seed_(1704),
       num_iter_(10) {}
 
   int_tp NumSequenceMatches(const TransformationParameter transform_param,

@@ -36,7 +36,8 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
                    << layer_param.name() << "', bottom index " << j << ")";
       }
       const pair<int_tp, int_tp>& bottom_idx = make_pair(i, j);
-      const pair<int_tp, int_tp>& top_idx = blob_name_to_last_top_idx[blob_name];
+      const pair<int_tp, int_tp>& top_idx =
+          blob_name_to_last_top_idx[blob_name];
       bottom_idx_to_source_top_idx[bottom_idx] = top_idx;
       ++top_idx_to_bottom_count[top_idx];
     }
@@ -50,7 +51,8 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
         std::min(layer_param.loss_weight_size(), layer_param.top_size());
     for (int_tp j = 0; j < last_loss; ++j) {
       const string& blob_name = layer_param.top(j);
-      const pair<int_tp, int_tp>& top_idx = blob_name_to_last_top_idx[blob_name];
+      const pair<int_tp, int_tp>& top_idx =
+          blob_name_to_last_top_idx[blob_name];
       top_idx_to_loss_weight[top_idx] = layer_param.loss_weight(j);
       if (top_idx_to_loss_weight[top_idx]) {
         ++top_idx_to_bottom_count[top_idx];

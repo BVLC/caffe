@@ -9,9 +9,9 @@ namespace caffe {
 template<typename Dtype>
 __global__ void LRNFillScale(const int_tp nthreads, const Dtype* const in,
                              const int_tp num, const int_tp channels,
-                             const int_tp height, const int_tp width, const int_tp size,
-                             const Dtype alpha_over_size, const Dtype k,
-                             Dtype* const scale) {
+                             const int_tp height, const int_tp width,
+                             const int_tp size, const Dtype alpha_over_size,
+                             const Dtype k, Dtype* const scale) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     const int_tp w = index % width;

@@ -60,7 +60,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       read_image(&data_file, &label, str_buffer);
       datum.set_label(label);
       datum.set_data(str_buffer, kCIFARImageNBytes);
-      int_tp length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
+      int_tp length = snprintf(str_buffer, kCIFARImageNBytes, "%05zd",
           fileid * kCIFARBatchSize + itemid);
       string out;
       CHECK(datum.SerializeToString(&out));
@@ -82,7 +82,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
     read_image(&data_file, &label, str_buffer);
     datum.set_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
-    int_tp length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
+    int_tp length = snprintf(str_buffer, kCIFARImageNBytes, "%05zd", itemid);
     string out;
     CHECK(datum.SerializeToString(&out));
     txn->Put(string(str_buffer, length), out);

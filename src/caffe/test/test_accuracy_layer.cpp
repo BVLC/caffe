@@ -166,7 +166,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
         }
         label_offset[0] = n; label_offset[1] = h; label_offset[2] = w;
         const int_tp correct_label =
-            static_cast<int_tp>(this->blob_bottom_label_->data_at(label_offset));
+            static_cast<int_tp>(this->blob_bottom_label_
+                                ->data_at(label_offset));
         if (max_id == correct_label) {
           ++num_correct_labels;
         }

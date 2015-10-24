@@ -105,8 +105,8 @@ void caffe_gpu_axpby<float>(const int_tp N, const float alpha, const float* X,
 }
 
 template<>
-void caffe_gpu_axpby<double>(const int_tp N, const double alpha, const double* X,
-                             const double beta, double* Y) {
+void caffe_gpu_axpby<double>(const int_tp N, const double alpha,
+                             const double* X, const double beta, double* Y) {
   caffe_gpu_scal<double>(N, beta, Y);
   caffe_gpu_axpy<double>(N, alpha, X, Y);
 }
@@ -141,8 +141,8 @@ void caffe_gpu_scale<float>(const int_tp n, const float alpha, const float *x,
 }
 
 template<>
-void caffe_gpu_scale<double>(const int_tp n, const double alpha, const double *x,
-                             double* y) {
+void caffe_gpu_scale<double>(const int_tp n, const double alpha,
+                             const double *x, double* y) {
   CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
   CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
@@ -165,9 +165,11 @@ void caffe_gpu_set(const int_tp N, const Dtype alpha, Dtype* Y) {
       N, alpha, Y);
 }
 
-template void caffe_gpu_set<int_tp>(const int_tp N, const int_tp alpha, int_tp* Y);
+template void caffe_gpu_set<int_tp>(const int_tp N, const int_tp alpha,
+                                    int_tp* Y);
 template void caffe_gpu_set<float>(const int_tp N, const float alpha, float* Y);
-template void caffe_gpu_set<double>(const int_tp N, const double alpha, double* Y);
+template void caffe_gpu_set<double>(const int_tp N, const double alpha,
+                                    double* Y);
 
 template<typename Dtype>
 __global__ void add_scalar_kernel(const int_tp n, const Dtype alpha, Dtype* y) {
@@ -425,11 +427,11 @@ uint32_t caffe_gpu_hamming_distance<double>(const int_tp n, const double* x,
                         thrust::plus<uint32_t>());
 }
 
-void caffe_gpu_rng_uniform(const int_tp n, unsigned int* r) {
+void caffe_gpu_rng_uniform(const int_tp n, unsigned int* r) {  // NOLINT
   CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
 }
 
-void caffe_gpu_rng_uniform(const int_tp n, unsigned long long* r) {
+void caffe_gpu_rng_uniform(const int_tp n, unsigned long long* r) {  // NOLINT
   CURAND_CHECK(curandGenerateLongLong(Caffe::curand_generator64(), r, n));
 }
 
@@ -447,8 +449,8 @@ void caffe_gpu_rng_uniform<float>(const int_tp n, const float a, const float b,
 }
 
 template<>
-void caffe_gpu_rng_uniform<double>(const int_tp n, const double a, const double b,
-                                   double* r) {
+void caffe_gpu_rng_uniform<double>(const int_tp n, const double a,
+                                   const double b, double* r) {
   CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
   const double range = b - a;
   if (range != static_cast<double>(1)) {

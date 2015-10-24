@@ -222,7 +222,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-      caffe_gpu_rng_uniform(sample_size_, (uint_tpc*)rng_data);
+      caffe_gpu_rng_uniform(sample_size_, (uint_tpc*)rng_data);  // NOLINT
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA

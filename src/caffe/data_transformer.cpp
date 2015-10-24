@@ -320,7 +320,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                      [img_index++]);
         }
         if (has_mean_file) {
-          int_tp mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
+          int_tp mean_index = (c * img_height + h_off + h) * img_width + w_off
+              + w;
           transformed_data[top_index] = (pixel - mean[mean_index]) * scale;
         } else {
           if (has_mean_values) {

@@ -22,7 +22,8 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                    temp_.mutable_gpu_data());
 
     if (use_global_stats_) {
-      // use the stored mean/variance estimates.  TODO(cdoersch): allow an option
+      // use the stored mean/variance estimates.
+      // TODO(cdoersch): allow an option
       // to use an unbiased variance estimate, like the paper does.
       const Dtype scale_factor = 1 / this->blobs_[2]->cpu_data()[0];
       caffe_gpu_scale(variance_.count(), scale_factor,
@@ -106,7 +107,8 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                              (cl_mem) (temp_.mutable_gpu_data()), 0);
 
     if (use_global_stats_) {
-      // use the stored mean/variance estimates.  TODO(cdoersch): allow an option
+      // use the stored mean/variance estimates.
+      // TODO(cdoersch): allow an option
       // to use an unbiased variance estimate, like the paper does.
       const Dtype scale_factor = 1 / this->blobs_[2]->cpu_data()[0];
       greentea_gpu_scale<Dtype>(this->device_->id(), variance_.count(),
@@ -159,10 +161,11 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                              (cl_mem) (mean_.gpu_data()), 0, Dtype(2),
                              (cl_mem) (temp_.mutable_gpu_data()), 0);
 
+    // variance
     greentea_gpu_sub<Dtype>(this->device_->id(), mean_.count(),
                             (cl_mem) (variance_.gpu_data()), 0,
                             (cl_mem) (temp_.gpu_data()), 0,
-                            (cl_mem) (variance_.mutable_gpu_data()), 0);  // variance
+                            (cl_mem) (variance_.mutable_gpu_data()), 0);
 
     // normalize variance
     greentea_gpu_add_scalar<Dtype>(this->device_->id(), variance_.count(), eps_,
@@ -198,8 +201,9 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                              (cl_mem) (num_by_chans_.gpu_data()), 0,
                              (cl_mem) (spatial_sum_multiplier_.gpu_data()), 0,
                              0., (cl_mem) (temp_.mutable_gpu_data()), 0);
-    greentea_gpu_div<Dtype>(this->device_->id(), temp_.count(), (cl_mem) top_data, 0,
-                     (cl_mem) (temp_.gpu_data()), 0, (cl_mem) top_data, 0);
+    greentea_gpu_div<Dtype>(this->device_->id(), temp_.count(),
+                            (cl_mem) top_data, 0, (cl_mem) (temp_.gpu_data()),
+                            0, (cl_mem) top_data, 0);
     // TODO(cdoersch): The caching is only needed because later in-place layers
     //                 might clobber the data.  Can we skip this if they won't?
     greentea_copy<Dtype>(x_norm_.count(), (cl_mem) top_data, 0,

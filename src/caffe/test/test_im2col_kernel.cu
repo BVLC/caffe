@@ -22,15 +22,17 @@ __global__ void im2col_gpu_kernel(const int_tp n, const Dtype* data_im,
                                   const int_tp kernel_h, const int_tp kernel_w,
                                   const int_tp pad_h, const int_tp pad_w,
                                   const int_tp stride_h, const int_tp stride_w,
-                                  const int_tp height_col, const int_tp width_col,
-                                  Dtype* data_col);
+                                  const int_tp height_col,
+                                  const int_tp width_col, Dtype* data_col);
 
 template<typename Dtype>
 __global__ void im2col_nd_gpu_kernel(const int_tp n, const int_tp num_axes,
-                                     const Dtype* data_im, const int_tp* im_shape,
+                                     const Dtype* data_im,
+                                     const int_tp* im_shape,
                                      const int_tp* col_shape,
-                                     const int_tp* kernel_shape, const int_tp* pad,
-                                     const int_tp* stride, Dtype* data_col);
+                                     const int_tp* kernel_shape,
+                                     const int_tp* pad, const int_tp* stride,
+                                     Dtype* data_col);
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 #endif  // USE_CUDA
@@ -140,7 +142,8 @@ TYPED_TEST(Im2colKernelTest, Test2D) {
 
 
       // GPU version
-      int_tp num_kernels = this->channels_ * this->height_col_ * this->width_col_;
+      int_tp num_kernels = this->channels_ * this->height_col_
+          * this->width_col_;
       int_tp default_grid_dim = CAFFE_GET_BLOCKS(num_kernels);
 
       // Launch with different grid sizes

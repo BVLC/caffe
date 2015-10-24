@@ -119,7 +119,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       datum.set_height(i % 2 + 1);
       datum.set_width(i % 4 + 1);
       std::string* data = datum.mutable_data();
-      const int_tp data_size = datum.channels() * datum.height() * datum.width();
+      const int_tp data_size = datum.channels() * datum.height()
+          * datum.width();
       for (int_tp j = 0; j < data_size; ++j) {
         data->push_back(static_cast<uint8_t>(j));
       }

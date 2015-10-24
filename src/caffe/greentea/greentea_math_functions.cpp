@@ -65,7 +65,8 @@ void greentea_memset(const int_tp ctx_id, const uint_tp N, const int_tp alpha,
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
   // OpenCL Version >= 1.2 approach
-  // clEnqueueFillBuffer(ctx.get_queue().handle().get(), X, &alpha, sizeof(int_tp),
+  // clEnqueueFillBuffer(ctx.get_queue().handle().get(),
+  //  X, &alpha, sizeof(int_tp),
   //                     offX, N, 0, NULL, NULL);
   // OpenCL Version < 1.2 fallback
   typedef float Dtype;
@@ -128,71 +129,77 @@ void greentea_copy(const int_tp N, const cl_mem X, const int_tp offX, cl_mem Y,
 }
 
 // Explicit instantiations
-template void greentea_copy<int_tp>(const int_tp N, const cl_mem X, const int_tp offX,
-                                 int_tp* Y, viennacl::ocl::context *ctx);
+template void greentea_copy<int_tp>(const int_tp N, const cl_mem X,
+                                    const int_tp offX,
+                                    int_tp* Y,
+                                    viennacl::ocl::context *ctx);
 template void greentea_copy<uint_tp>(const int_tp N, const cl_mem X,
-                                          const int_tp offX, uint_tp* Y,
-                                          viennacl::ocl::context *ctx);
-template void greentea_copy<float>(const int_tp N, const cl_mem X, const int_tp offX,
-                                   float* Y, viennacl::ocl::context *ctx);
-template void greentea_copy<double>(const int_tp N, const cl_mem X, const int_tp offX,
-                                    double* Y, viennacl::ocl::context *ctx);
+                                     const int_tp offX, uint_tp* Y,
+                                     viennacl::ocl::context *ctx);
+template void greentea_copy<float>(const int_tp N, const cl_mem X,
+                                   const int_tp offX, float* Y,
+                                   viennacl::ocl::context *ctx);
+template void greentea_copy<double>(const int_tp N, const cl_mem X,
+                                    const int_tp offX, double* Y,
+                                    viennacl::ocl::context *ctx);
 template void greentea_copy<int_tp>(const int_tp N, const int_tp* X, cl_mem Y,
-                                 const int_tp offY, viennacl::ocl::context *ctx);
-template void greentea_copy<uint_tp>(const int_tp N, const uint_tp* X,
-                                          cl_mem Y, const int_tp offY,
-                                          viennacl::ocl::context *ctx);
+                                    const int_tp offY,
+                                    viennacl::ocl::context *ctx);
+template void greentea_copy<uint_tp>(const int_tp N, const uint_tp* X, cl_mem Y,
+                                     const int_tp offY,
+                                     viennacl::ocl::context *ctx);
 template void greentea_copy<float>(const int_tp N, const float* X, cl_mem Y,
-                                   const int_tp offY, viennacl::ocl::context *ctx);
+                                   const int_tp offY,
+                                   viennacl::ocl::context *ctx);
 template void greentea_copy<double>(const int_tp N, const double* X, cl_mem Y,
                                     const int_tp offY,
                                     viennacl::ocl::context *ctx);
-template void greentea_copy<int_tp>(const int_tp N, const cl_mem X, const int_tp offX,
-                                 cl_mem Y, const int_tp offY,
-                                 viennacl::ocl::context *ctx);
+template void greentea_copy<int_tp>(const int_tp N, const cl_mem X,
+                                    const int_tp offX, cl_mem Y,
+                                    const int_tp offY,
+                                    viennacl::ocl::context *ctx);
 template void greentea_copy<uint_tp>(const int_tp N, const cl_mem X,
-                                          const int_tp offX, cl_mem Y,
-                                          const int_tp offY,
-                                          viennacl::ocl::context *ctx);
-template void greentea_copy<float>(const int_tp N, const cl_mem X, const int_tp offX,
-                                   cl_mem Y, const int_tp offY,
+                                     const int_tp offX, cl_mem Y,
+                                     const int_tp offY,
+                                     viennacl::ocl::context *ctx);
+template void greentea_copy<float>(const int_tp N, const cl_mem X,
+                                   const int_tp offX, cl_mem Y,
+                                   const int_tp offY,
                                    viennacl::ocl::context *ctx);
-template void greentea_copy<double>(const int_tp N, const cl_mem X, const int_tp offX,
-                                    cl_mem Y, const int_tp offY,
+template void greentea_copy<double>(const int_tp N, const cl_mem X,
+                                    const int_tp offX, cl_mem Y,
+                                    const int_tp offY,
                                     viennacl::ocl::context *ctx);
 
 template<typename Dtype>
 void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
-                       const CBLAS_TRANSPOSE TransB, const int_tp M, const int_tp N,
-                       const int_tp K, const Dtype alpha, const cl_mem A,
-                       const int_tp offA, const cl_mem B, const int_tp offB,
-                       const Dtype beta, cl_mem C, const int_tp offC) {
+                       const CBLAS_TRANSPOSE TransB, const int_tp M,
+                       const int_tp N, const int_tp K, const Dtype alpha,
+                       const cl_mem A, const int_tp offA, const cl_mem B,
+                       const int_tp offB, const Dtype beta, cl_mem C,
+                       const int_tp offC) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* Aptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       A, true, CL_MAP_READ, sizeof(Dtype) * offA,
-                       sizeof(Dtype) * M * K, 0, NULL, NULL, NULL));
-    Dtype* Bptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       B, true, CL_MAP_READ, sizeof(Dtype) * offB,
-                       sizeof(Dtype) * N * K, 0, NULL, NULL, NULL));
-    Dtype* Cptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       C, true, CL_MAP_READ | CL_MAP_WRITE,
-                       sizeof(Dtype) * offC,
-                       sizeof(Dtype) * M * N, 0, NULL, NULL, NULL));
+    Dtype* Aptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), A, true, CL_MAP_READ,
+        sizeof(Dtype) * offA, sizeof(Dtype) * M * K, 0, NULL, NULL, NULL));
+    Dtype* Bptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), B, true, CL_MAP_READ,
+        sizeof(Dtype) * offB, sizeof(Dtype) * N * K, 0, NULL, NULL, NULL));
+    Dtype* Cptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), C, true, CL_MAP_READ | CL_MAP_WRITE,
+        sizeof(Dtype) * offC, sizeof(Dtype) * M * N, 0, NULL, NULL, NULL));
 
-    caffe_cpu_gemm<Dtype>(TransA, TransB, M, N, K, alpha, Aptr,
-                          Bptr, beta, Cptr);
+    caffe_cpu_gemm<Dtype>(TransA, TransB, M, N, K, alpha, Aptr, Bptr, beta,
+                          Cptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            A, Aptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            B, Bptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            C, Cptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A, Aptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), B, Bptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), C, Cptr, 0, NULL,
+                            NULL);
   } else {
     int_tp lda = (TransA == CblasNoTrans) ? K : M;
     int_tp ldb = (TransB == CblasNoTrans) ? N : K;
@@ -200,62 +207,70 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::matrix_base<Dtype>::uint_tpype uint_tpype;
-    typedef typename viennacl::matrix_base<Dtype>::uint_tpype difference_type;
+    typedef typename viennacl::matrix_base<Dtype>::uint_tpype
+        uint_tpype;
+    typedef typename viennacl::matrix_base<Dtype>::uint_tpype
+        difference_type;
 
-    uint_tpype A_size1 = static_cast<uint_tpype>((TransA == CblasTrans) ? K : M);
-    uint_tpype A_size2 = static_cast<uint_tpype>((TransA == CblasTrans) ? M : K);
+    uint_tpype A_size1 = static_cast<uint_tpype>(
+        (TransA == CblasTrans) ? K : M);
+    uint_tpype A_size2 = static_cast<uint_tpype>(
+        (TransA == CblasTrans) ? M : K);
 
-    uint_tpype B_size1 = static_cast<uint_tpype>((TransB == CblasTrans) ? N : K);
-    uint_tpype B_size2 = static_cast<uint_tpype>((TransB == CblasTrans) ? K : N);
+    uint_tpype B_size1 = static_cast<uint_tpype>(
+        (TransB == CblasTrans) ? N : K);
+    uint_tpype B_size2 = static_cast<uint_tpype>(
+        (TransB == CblasTrans) ? K : N);
 
-    viennacl::matrix_base<Dtype> matA(A, ctx,
-        A_size1, uint_tpype(0), difference_type(1), uint_tpype(M),
-        A_size2, uint_tpype(offA), difference_type(1), uint_tpype(lda)
-        VCL_ROW_MAJOR);
+    viennacl::matrix_base<Dtype> matA(A, ctx, A_size1, uint_tpype(0),
+                                      difference_type(1), uint_tpype(M),
+                                      A_size2, uint_tpype(offA),
+                                      difference_type(1), uint_tpype(lda)
+                                      VCL_ROW_MAJOR);
 
-    viennacl::matrix_base<Dtype> matB(B, ctx,
-        B_size1, uint_tpype(0), difference_type(1), uint_tpype(K),
-        B_size2, uint_tpype(offB), difference_type(1), uint_tpype(ldb)
-        VCL_ROW_MAJOR);
+    viennacl::matrix_base<Dtype> matB(B, ctx, B_size1, uint_tpype(0),
+                                      difference_type(1), uint_tpype(K),
+                                      B_size2, uint_tpype(offB),
+                                      difference_type(1), uint_tpype(ldb)
+                                      VCL_ROW_MAJOR);
 
-    viennacl::matrix_base<Dtype> matC(C, ctx,
-        uint_tpype(M), uint_tpype(0), difference_type(1), uint_tpype(M),
-        uint_tpype(N), uint_tpype(offC), difference_type(1),
-        uint_tpype(ldc) VCL_ROW_MAJOR);
+    viennacl::matrix_base<Dtype> matC(C, ctx, uint_tpype(M), uint_tpype(0),
+                                      difference_type(1), uint_tpype(M),
+                                      uint_tpype(N), uint_tpype(offC),
+                                      difference_type(1), uint_tpype(ldc)
+                                      VCL_ROW_MAJOR);
 
-  if (TransA == CblasTrans && TransB == CblasTrans)
-    viennacl::linalg::prod_impl(viennacl::trans(matA), viennacl::trans(matB),
-                                matC, alpha, beta);
-  else if (TransA == CblasTrans && TransB == CblasNoTrans)
-    viennacl::linalg::prod_impl(viennacl::trans(matA), matB,
-                                matC, alpha, beta);
-  else if (TransA == CblasNoTrans && TransB == CblasTrans)
-    viennacl::linalg::prod_impl(matA, viennacl::trans(matB),
-                                matC, alpha, beta);
-  else if (TransA == CblasNoTrans && TransB == CblasNoTrans)
-    viennacl::linalg::prod_impl(matA, matB,
-                                matC, alpha, beta);
+    if (TransA == CblasTrans && TransB == CblasTrans)
+      viennacl::linalg::prod_impl(viennacl::trans(matA), viennacl::trans(matB),
+                                  matC, alpha, beta);
+    else if (TransA == CblasTrans && TransB == CblasNoTrans)
+      viennacl::linalg::prod_impl(viennacl::trans(matA), matB, matC, alpha,
+                                  beta);
+    else if (TransA == CblasNoTrans && TransB == CblasTrans)
+      viennacl::linalg::prod_impl(matA, viennacl::trans(matB), matC, alpha,
+                                  beta);
+    else if (TransA == CblasNoTrans && TransB == CblasNoTrans)
+      viennacl::linalg::prod_impl(matA, matB, matC, alpha, beta);
 
 #else
     clblasOrder clOrder = clblasRowMajor;
     clblasTranspose clTransA =
-        (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+    (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
     clblasTranspose clTransB =
-        (TransB == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+    (TransB == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasSgemm(clOrder, clTransA, clTransB,
-                      M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
-                      C, offC, ldc, 1, &queue, 0, NULL, NULL));
+              M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
+              C, offC, ldc, 1, &queue, 0, NULL, NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
           clblasDgemm(clOrder, clTransA, clTransB,
-                      M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
-                      C, offC, ldc, 1, &queue, 0, NULL, NULL));
+              M, N, K, alpha, A, offA, lda, B, offB, ldb, beta,
+              C, offC, ldc, 1, &queue, 0, NULL, NULL));
     }
 #endif
   }
@@ -264,19 +279,21 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 template void greentea_gpu_gemm<float>(const int_tp ctx_id,
                                        const CBLAS_TRANSPOSE TransA,
                                        const CBLAS_TRANSPOSE TransB,
-                                       const int_tp M, const int_tp N, const int_tp K,
-                                       const float alpha, const cl_mem A,
-                                       const int_tp offA, const cl_mem B,
-                                       const int_tp offB, const float beta,
-                                       cl_mem C, const int_tp offC);
+                                       const int_tp M, const int_tp N,
+                                       const int_tp K, const float alpha,
+                                       const cl_mem A, const int_tp offA,
+                                       const cl_mem B, const int_tp offB,
+                                       const float beta, cl_mem C,
+                                       const int_tp offC);
 template void greentea_gpu_gemm<double>(const int_tp ctx_id,
                                         const CBLAS_TRANSPOSE TransA,
                                         const CBLAS_TRANSPOSE TransB,
-                                        const int_tp M, const int_tp N, const int_tp K,
-                                        const double alpha, const cl_mem A,
-                                        const int_tp offA, const cl_mem B,
-                                        const int_tp offB, const double beta,
-                                        cl_mem C, const int_tp offC);
+                                        const int_tp M, const int_tp N,
+                                        const int_tp K, const double alpha,
+                                        const cl_mem A, const int_tp offA,
+                                        const cl_mem B, const int_tp offB,
+                                        const double beta, cl_mem C,
+                                        const int_tp offC);
 
 template<typename Dtype>
 void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
@@ -287,31 +304,26 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* Aptr = reinterpret_cast<Dtype*>(
-                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                        A, true, CL_MAP_READ, sizeof(Dtype) * offA,
-                        sizeof(Dtype) * M * N, 0, NULL, NULL, NULL));
-    Dtype* xptr = reinterpret_cast<Dtype*>(
-                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                        x, true, CL_MAP_READ, sizeof(Dtype) * offx,
-                        sizeof(Dtype) * (TransA == CblasTrans) ? M : N,
-                            0, NULL, NULL, NULL));
-    Dtype* yptr = reinterpret_cast<Dtype*>(
-                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                        y, true, CL_MAP_READ | CL_MAP_WRITE,
-                        sizeof(Dtype) * offy,
-                        sizeof(Dtype) * (TransA == CblasTrans) ? N : M,
-                            0, NULL, NULL, NULL));
+    Dtype* Aptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), A, true, CL_MAP_READ,
+        sizeof(Dtype) * offA, sizeof(Dtype) * M * N, 0, NULL, NULL, NULL));
+    Dtype* xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), x, true, CL_MAP_READ,
+        sizeof(Dtype) * offx, sizeof(Dtype) * (TransA == CblasTrans) ? M : N, 0,
+        NULL, NULL, NULL));
+    Dtype* yptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), y, true, CL_MAP_READ | CL_MAP_WRITE,
+        sizeof(Dtype) * offy, sizeof(Dtype) * (TransA == CblasTrans) ? N : M, 0,
+        NULL, NULL, NULL));
 
-    caffe_cpu_gemv<Dtype>(TransA, M, N, alpha, Aptr, xptr, beta,
-                          yptr);
+    caffe_cpu_gemv<Dtype>(TransA, M, N, alpha, Aptr, xptr, beta, yptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                                A, Aptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                                x, xptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                                y, yptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A, Aptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x, xptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), y, yptr, 0, NULL,
+                            NULL);
   } else {
 #ifndef USE_CLBLAS
 
@@ -324,8 +336,7 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     viennacl::vector_base<Dtype> v2(y,
                                     uint_tpype((TransA == CblasTrans) ? N : M),
                                     uint_tpype(offy), difference_type(1), ctx);
-    viennacl::matrix_base<Dtype> mat(A, ctx,
-                                     uint_tpype(M), uint_tpype(0),
+    viennacl::matrix_base<Dtype> mat(A, ctx, uint_tpype(M), uint_tpype(0),
                                      difference_type(1), uint_tpype(M),
                                      uint_tpype(N), uint_tpype(offA),
                                      difference_type(1), uint_tpype(N)
@@ -338,18 +349,20 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #else
     clblasTranspose clTransA =
-        (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+    (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
-      clblasSgemv(clblasRowMajor, clTransA, M, N, alpha, A, offA, N, x, offx, 1,
-                  beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
+          clblasSgemv(clblasRowMajor,
+              clTransA, M, N, alpha, A, offA, N, x, offx, 1,
+              beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
-      clblasDgemv(clblasRowMajor, clTransA, M, N, alpha, A, offA, N, x, offx, 1,
-                  beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
+          clblasDgemv(clblasRowMajor,
+              clTransA, M, N, alpha, A, offA, N, x, offx, 1,
+              beta, y, offy, 1, 1, &queue, 0, NULL, NULL));
     }
 #endif
   }
@@ -377,21 +390,19 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* Xptr = reinterpret_cast<Dtype*>(
-                     clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                          X, true, CL_MAP_READ, sizeof(Dtype) * offX,
-                          sizeof(Dtype) * N, 0, NULL, NULL, NULL));
-    Dtype* Yptr = reinterpret_cast<Dtype*>(
-                     clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                          Y, true, CL_MAP_WRITE, sizeof(Dtype) * offY,
-                          sizeof(Dtype) * N, 0, NULL, NULL, NULL));
+    Dtype* Xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), X, true, CL_MAP_READ,
+        sizeof(Dtype) * offX, sizeof(Dtype) * N, 0, NULL, NULL, NULL));
+    Dtype* Yptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), Y, true, CL_MAP_WRITE,
+        sizeof(Dtype) * offY, sizeof(Dtype) * N, 0, NULL, NULL, NULL));
 
     caffe_axpy<Dtype>(N, alpha, Xptr, Yptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            X, Xptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            Y, Yptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
+                            NULL);
   } else {
 #ifndef USE_CLBLAS
 
@@ -411,11 +422,11 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasSaxpy(N, alpha, X, offX,
-                      1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
+              1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
           clblasDaxpy(N, alpha, X, offX,
-                      1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
+              1, Y, offY, 1, 1, &queue, 0, NULL, NULL));
     }
 #endif
   }
@@ -432,8 +443,8 @@ template void greentea_gpu_axpy<double>(const int_tp ctx_id, const int_tp N,
 
 template<typename Dtype>
 void greentea_gpu_mul(const int_tp ctx_id, const int_tp N, const cl_mem a,
-                      const int_tp offa, const cl_mem b, const int_tp offb, cl_mem y,
-                      const int_tp offy) {
+                      const int_tp offa, const cl_mem b, const int_tp offb,
+                      cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -446,17 +457,17 @@ void greentea_gpu_mul(const int_tp ctx_id, const int_tp N, const cl_mem a,
 
 template void greentea_gpu_mul<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
-                                      const cl_mem b, const int_tp offb, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem b, const int_tp offb,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_mul<double>(const int_tp ctx_id, const int_tp N,
                                        const cl_mem a, const int_tp offa,
-                                       const cl_mem b, const int_tp offb, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem b, const int_tp offb,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
 void greentea_gpu_div(const int_tp ctx_id, const int_tp N, const cl_mem a,
-                      const int_tp offa, const cl_mem b, const int_tp offb, cl_mem y,
-                      const int_tp offy) {
+                      const int_tp offa, const cl_mem b, const int_tp offb,
+                      cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -469,12 +480,12 @@ void greentea_gpu_div(const int_tp ctx_id, const int_tp N, const cl_mem a,
 
 template void greentea_gpu_div<float>(const int_tp ctx_id, const int_tp N,
                                       const cl_mem a, const int_tp offa,
-                                      const cl_mem b, const int_tp offb, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem b, const int_tp offb,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_div<double>(const int_tp ctx_id, const int_tp N,
                                        const cl_mem a, const int_tp offa,
-                                       const cl_mem b, const int_tp offb, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem b, const int_tp offb,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
 void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
@@ -482,24 +493,22 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* xptr = reinterpret_cast<Dtype*>(
-                   clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                        x, true, CL_MAP_READ | CL_MAP_WRITE,
-                        sizeof(Dtype) * offx,
-                        sizeof(Dtype) * N, 0, NULL, NULL, NULL));
+    Dtype* xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), x, true, CL_MAP_READ | CL_MAP_WRITE,
+        sizeof(Dtype) * offx, sizeof(Dtype) * N, 0, NULL, NULL, NULL));
 
     caffe_scal<Dtype>(N, alpha, xptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            x, xptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x, xptr, 0, NULL,
+                            NULL);
   } else {
 #ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::uint_tpype uint_tpype;
     typedef typename viennacl::vector_base<Dtype>::uint_tpype difference_type;
 
-    viennacl::vector_base<Dtype> v1(x, uint_tpype(N),
-                                    uint_tpype(offx), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v1(x, uint_tpype(N), uint_tpype(offx),
+                                    difference_type(1), ctx);
 
     v1 *= alpha;
 
@@ -508,10 +517,10 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(clblasSscal(N, alpha, x, offx,
-                                         1, 1, &queue, 0, NULL, NULL));
+              1, 1, &queue, 0, NULL, NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(clblasDscal(N, alpha, x, offx,
-                                         1, 1, &queue, 0, NULL, NULL));
+              1, 1, &queue, 0, NULL, NULL));
     }
 #endif
   }
@@ -549,31 +558,29 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* Xptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       X, true, CL_MAP_READ, sizeof(Dtype) * offX,
-                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
-    Dtype* Yptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       Y, true, CL_MAP_READ, sizeof(Dtype) * offY,
-                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), X, true, CL_MAP_READ,
+        sizeof(Dtype) * offX, sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Yptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), Y, true, CL_MAP_READ,
+        sizeof(Dtype) * offY, sizeof(Dtype) * n, 0, NULL, NULL, NULL));
 
     *out = caffe_cpu_dot<Dtype>(n, Xptr, Yptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            X, Xptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            Y, Yptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
+                            NULL);
 
   } else {
 #ifndef USE_CLBLAS
     typedef typename viennacl::vector_base<Dtype>::uint_tpype uint_tpype;
     typedef typename viennacl::vector_base<Dtype>::uint_tpype difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, uint_tpype(n),
-                                    uint_tpype(offX), difference_type(1), ctx);
-    viennacl::vector_base<Dtype> v2(Y, uint_tpype(n),
-                                    uint_tpype(offY), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v1(X, uint_tpype(n), uint_tpype(offX),
+                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v2(Y, uint_tpype(n), uint_tpype(offY),
+                                    difference_type(1), ctx);
 
     *out = viennacl::linalg::inner_prod(v1, v2);
 
@@ -582,18 +589,18 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
     cl_int err;
     cl_mem gpuout = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                   sizeof(Dtype), NULL, &err);
+        sizeof(Dtype), NULL, &err);
     cl_mem scratch = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                    n * sizeof(Dtype), NULL, &err);
+        n * sizeof(Dtype), NULL, &err);
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasSdot(n, gpuout, 0, X, offX, 1, Y,
-                     offY, 1, scratch, 1, &queue, 0, NULL, NULL));
+              offY, 1, scratch, 1, &queue, 0, NULL, NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
           clblasDdot(n, gpuout, 0, X, offX, 1, Y,
-                     offY, 1, scratch, 1, &queue, 0, NULL, NULL));
+              offY, 1, scratch, 1, &queue, 0, NULL, NULL));
     }
 
     greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, out, &ctx);
@@ -620,23 +627,22 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* Xptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       X, true, CL_MAP_READ, sizeof(Dtype) * offX,
-                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), X, true, CL_MAP_READ,
+        sizeof(Dtype) * offX, sizeof(Dtype) * n, 0, NULL, NULL, NULL));
 
     *Y = caffe_cpu_asum<Dtype>(n, Xptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            X, Xptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
+                            NULL);
   } else {
 #ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::uint_tpype uint_tpype;
     typedef typename viennacl::vector_base<Dtype>::uint_tpype difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, uint_tpype(n),
-                                    uint_tpype(offX), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v1(X, uint_tpype(n), uint_tpype(offX),
+                                    difference_type(1), ctx);
 
     *Y = viennacl::linalg::norm_1(v1);
 
@@ -645,18 +651,18 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
     cl_int err;
     cl_mem gpuout = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                   sizeof(Dtype), NULL, &err);
+        sizeof(Dtype), NULL, &err);
     cl_mem scratch = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                    n * sizeof(Dtype), NULL, &err);
+        n * sizeof(Dtype), NULL, &err);
 
     if (std::is_same<Dtype, float>::value) {
       GREENTEA_CL_BLAS_CHECK(
           clblasSasum(n, gpuout, 0, X, offX, 1,
-                      scratch, 1, &queue, 0, NULL, NULL));
+              scratch, 1, &queue, 0, NULL, NULL));
     } else {
       GREENTEA_CL_BLAS_CHECK(
           clblasDasum(n, gpuout, 0, X, offX, 1,
-                      scratch, 1, &queue, 0, NULL, NULL));
+              scratch, 1, &queue, 0, NULL, NULL));
     }
 
     greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, Y, &ctx);
@@ -681,31 +687,29 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    Dtype* Xptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       X, true, CL_MAP_READ, sizeof(Dtype) * offX,
-                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
-    Dtype* Yptr = reinterpret_cast<Dtype*>(
-                  clEnqueueMapBuffer(ctx.get_queue().handle().get(),
-                       Y, true, CL_MAP_WRITE, sizeof(Dtype) * offY,
-                       sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), X, true, CL_MAP_READ,
+        sizeof(Dtype) * offX, sizeof(Dtype) * n, 0, NULL, NULL, NULL));
+    Dtype* Yptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
+        ctx.get_queue().handle().get(), Y, true, CL_MAP_WRITE,
+        sizeof(Dtype) * offY, sizeof(Dtype) * n, 0, NULL, NULL, NULL));
 
     caffe_cpu_scale<Dtype>(n, alpha, Xptr, Yptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            X, Xptr, 0, NULL, NULL);
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
-                            Y, Yptr, 0, NULL, NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
+                            NULL);
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
+                            NULL);
   } else {
 #ifndef USE_CLBLAS
 
     typedef typename viennacl::vector_base<Dtype>::uint_tpype uint_tpype;
     typedef typename viennacl::vector_base<Dtype>::uint_tpype difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, uint_tpype(n),
-                                    uint_tpype(offX), difference_type(1), ctx);
-    viennacl::vector_base<Dtype> v2(Y, uint_tpype(n),
-                                    uint_tpype(offY), difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v1(X, uint_tpype(n), uint_tpype(offX),
+                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype> v2(Y, uint_tpype(n), uint_tpype(offY),
+                                    difference_type(1), ctx);
 
     v2 = v1 * alpha;
 
@@ -757,7 +761,8 @@ void greentea_gpu_set(const int_tp ctx_id, const int_tp N, const Dtype alpha,
 }
 
 template void greentea_gpu_set<int_tp>(const int_tp ctx_id, const int_tp N,
-                                    const int_tp alpha, cl_mem Y, const int_tp offY);
+                                       const int_tp alpha, cl_mem Y,
+                                       const int_tp offY);
 template void greentea_gpu_set<float>(const int_tp ctx_id, const int_tp N,
                                       const float alpha, cl_mem Y,
                                       const int_tp offY);
@@ -766,8 +771,8 @@ template void greentea_gpu_set<double>(const int_tp ctx_id, const int_tp N,
                                        const int_tp offY);
 
 template<typename Dtype>
-void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N, const Dtype alpha,
-                             cl_mem Y, const int_tp offY) {
+void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N,
+                             const Dtype alpha, cl_mem Y, const int_tp offY) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -777,17 +782,18 @@ void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N, const Dtype al
                          ctx.get_queue());
 }
 
-template void greentea_gpu_add_scalar<float>(const int_tp ctx_id, const int_tp N,
-                                             const float alpha, cl_mem Y,
-                                             const int_tp offY);
-template void greentea_gpu_add_scalar<double>(const int_tp ctx_id, const int_tp N,
+template void greentea_gpu_add_scalar<float>(const int_tp ctx_id,
+                                             const int_tp N, const float alpha,
+                                             cl_mem Y, const int_tp offY);
+template void greentea_gpu_add_scalar<double>(const int_tp ctx_id,
+                                              const int_tp N,
                                               const double alpha, cl_mem Y,
                                               const int_tp offY);
 
 template<typename Dtype>
 void greentea_gpu_add(const int_tp ctx_id, const int_tp n, const cl_mem a,
-                      const int_tp offa, const cl_mem b, const int_tp offb, cl_mem y,
-                      const int_tp offy) {
+                      const int_tp offa, const cl_mem b, const int_tp offb,
+                      cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -800,17 +806,17 @@ void greentea_gpu_add(const int_tp ctx_id, const int_tp n, const cl_mem a,
 
 template void greentea_gpu_add<float>(const int_tp ctx_id, const int_tp n,
                                       const cl_mem a, const int_tp offa,
-                                      const cl_mem b, const int_tp offb, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem b, const int_tp offb,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_add<double>(const int_tp ctx_id, const int_tp n,
                                        const cl_mem a, const int_tp offa,
-                                       const cl_mem b, const int_tp offb, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem b, const int_tp offb,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
 void greentea_gpu_sub(const int_tp ctx_id, const int_tp n, const cl_mem a,
-                      const int_tp offa, const cl_mem b, const int_tp offb, cl_mem y,
-                      const int_tp offy) {
+                      const int_tp offa, const cl_mem b, const int_tp offb,
+                      cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -823,12 +829,12 @@ void greentea_gpu_sub(const int_tp ctx_id, const int_tp n, const cl_mem a,
 
 template void greentea_gpu_sub<float>(const int_tp ctx_id, const int_tp n,
                                       const cl_mem a, const int_tp offa,
-                                      const cl_mem b, const int_tp offb, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem b, const int_tp offb,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_sub<double>(const int_tp ctx_id, const int_tp n,
                                        const cl_mem a, const int_tp offa,
-                                       const cl_mem b, const int_tp offb, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem b, const int_tp offb,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
 void greentea_gpu_abs(const int_tp ctx_id, const int_tp N, const cl_mem a,
@@ -843,11 +849,11 @@ void greentea_gpu_abs(const int_tp ctx_id, const int_tp N, const cl_mem a,
 }
 
 template void greentea_gpu_abs<float>(const int_tp ctx_id, const int_tp N,
-                                      const cl_mem a, const int_tp offa, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem a, const int_tp offa,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_abs<double>(const int_tp ctx_id, const int_tp N,
-                                       const cl_mem a, const int_tp offa, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem a, const int_tp offa,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
 void greentea_gpu_exp(const int_tp ctx_id, const int_tp N, const cl_mem a,
@@ -862,11 +868,11 @@ void greentea_gpu_exp(const int_tp ctx_id, const int_tp N, const cl_mem a,
 }
 
 template void greentea_gpu_exp<float>(const int_tp ctx_id, const int_tp N,
-                                      const cl_mem a, const int_tp offa, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem a, const int_tp offa,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_exp<double>(const int_tp ctx_id, const int_tp N,
-                                       const cl_mem a, const int_tp offa, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem a, const int_tp offa,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
 void greentea_gpu_powx(const int_tp ctx_id, const int_tp N, const cl_mem a,
@@ -904,15 +910,15 @@ void greentea_gpu_log(const int_tp ctx_id, const int_tp N, const cl_mem a,
 }
 
 template void greentea_gpu_log<float>(const int_tp ctx_id, const int_tp N,
-                                      const cl_mem a, const int_tp offa, cl_mem y,
-                                      const int_tp offy);
+                                      const cl_mem a, const int_tp offa,
+                                      cl_mem y, const int_tp offy);
 template void greentea_gpu_log<double>(const int_tp ctx_id, const int_tp N,
-                                       const cl_mem a, const int_tp offa, cl_mem y,
-                                       const int_tp offy);
+                                       const cl_mem a, const int_tp offa,
+                                       cl_mem y, const int_tp offy);
 
 template<typename Dtype>
-void greentea_gpu_sign(const int_tp ctx_id, const int_tp n, const cl_mem x, int_tp offx,
-                       cl_mem y, const int_tp offy) {
+void greentea_gpu_sign(const int_tp ctx_id, const int_tp n, const cl_mem x,
+                       int_tp offx, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -932,7 +938,8 @@ template void greentea_gpu_sign<double>(const int_tp ctx_id, const int_tp n,
 
 template<typename Dtype>
 void greentea_gpu_sgnbit(const int_tp ctx_id, const int_tp n, const cl_mem x,
-                         int_tp offx, cl_mem y, const int_tp offy) {
+int_tp offx,
+                         cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
@@ -951,7 +958,7 @@ template void greentea_gpu_sgnbit<double>(const int_tp ctx_id, const int_tp n,
                                           const int_tp offy);
 
 void greentea_gpu_rng_uniform(const int_tp ctx_id, const int_tp n, cl_mem r,
-                              int_tp offr) {
+int_tp offr) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   std::vector<uint_tp> random(n);  //NOLINT
   caffe_rng_uniform(n, &random[0]);
@@ -959,37 +966,41 @@ void greentea_gpu_rng_uniform(const int_tp ctx_id, const int_tp n, cl_mem r,
 }
 
 template<typename Dtype>
-void greentea_gpu_rng_uniform(const int_tp ctx_id, const int_tp n, const Dtype a,
-                              const Dtype b, cl_mem r, const int_tp offr) {
+void greentea_gpu_rng_uniform(const int_tp ctx_id, const int_tp n,
+                              const Dtype a, const Dtype b, cl_mem r,
+                              const int_tp offr) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   std::vector<Dtype> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
   greentea_gpu_memcpy(sizeof(Dtype) * n, &random[0], r, offr, &ctx);
 }
 
-template void greentea_gpu_rng_uniform<float>(const int_tp ctx_id, const int_tp n,
-                                              const float a, const float b,
-                                              cl_mem r, const int_tp offr);
-template void greentea_gpu_rng_uniform<double>(const int_tp ctx_id, const int_tp n,
-                                               const double a, const double b,
-                                               cl_mem r, const int_tp offr);
+template void greentea_gpu_rng_uniform<float>(const int_tp ctx_id,
+                                              const int_tp n, const float a,
+                                              const float b, cl_mem r,
+                                              const int_tp offr);
+template void greentea_gpu_rng_uniform<double>(const int_tp ctx_id,
+                                               const int_tp n, const double a,
+                                               const double b, cl_mem r,
+                                               const int_tp offr);
 
 template<typename Dtype>
-void greentea_gpu_rng_gaussian(const int_tp ctx_id, const int_tp n, const Dtype mu,
-                               const Dtype sigma, cl_mem r, const int_tp offr) {
+void greentea_gpu_rng_gaussian(const int_tp ctx_id, const int_tp n,
+                               const Dtype mu, const Dtype sigma, cl_mem r,
+                               const int_tp offr) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   std::vector<Dtype> random(n);  // NOLINT
   caffe_rng_gaussian(n, mu, sigma, &random[0]);
   greentea_gpu_memcpy(sizeof(Dtype) * n, &random[0], r, offr, &ctx);
 }
 
-template void greentea_gpu_rng_gaussian<float>(const int_tp ctx_id, const int_tp n,
-                                               const float mu,
+template void greentea_gpu_rng_gaussian<float>(const int_tp ctx_id,
+                                               const int_tp n, const float mu,
                                                const float sigma, cl_mem r,
                                                const int_tp offr);
 
-template void greentea_gpu_rng_gaussian<double>(const int_tp ctx_id, const int_tp n,
-                                                const double mu,
+template void greentea_gpu_rng_gaussian<double>(const int_tp ctx_id,
+                                                const int_tp n, const double mu,
                                                 const double sigma, cl_mem r,
                                                 const int_tp offr);
 

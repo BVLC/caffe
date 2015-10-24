@@ -21,7 +21,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  NetTest() : seed_(1701) {}
+  NetTest() : seed_(1702) {}
 
   virtual void InitNetFromProtoString(const string& proto) {
     NetParameter param;
@@ -2335,7 +2335,8 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
   // check bottom_need_backward if propagate_down is true
   this->InitSkipPropNet(false);
   vector<bool> vec_layer_need_backward = this->net_->layer_need_backward();
-  for (int_tp layer_id = 0; layer_id < this->net_->layers().size(); ++layer_id) {
+for (int_tp layer_id = 0; layer_id < this->net_->layers().size();
+      ++layer_id) {
     string layer_name = this->net_->layer_names()[layer_id];
     if (layer_name == "loss") {
       // access to bottom_need_backward coresponding to label's blob
@@ -2358,7 +2359,8 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
   this->InitSkipPropNet(true);
   vec_layer_need_backward.clear();
   vec_layer_need_backward = this->net_->layer_need_backward();
-  for (int_tp layer_id = 0; layer_id < this->net_->layers().size(); ++layer_id) {
+  for (int_tp layer_id = 0; layer_id < this->net_->layers().size();
+        ++layer_id) {
     string layer_name = this->net_->layer_names()[layer_id];
     if (layer_name == "loss") {
       // access to bottom_need_backward coresponding to label's blob

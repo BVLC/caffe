@@ -10,7 +10,9 @@ using std::max;
 
 template <typename Dtype>
 LayerParameter SPPLayer<Dtype>::GetPoolingParam(const int_tp pyramid_level,
-      const int_tp bottom_h, const int_tp bottom_w, const SPPParameter spp_param) {
+                                                const int_tp bottom_h,
+                                                const int_tp bottom_w,
+                                                const SPPParameter spp_param) {
   LayerParameter pooling_param;
   int_tp num_bins = pow(2, pyramid_level);
 

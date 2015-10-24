@@ -16,13 +16,14 @@ namespace caffe {
 // limitation that the data has to be contiguous in memory.
 template<typename Dtype>
 void caffe_cpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
-                    const int_tp M, const int_tp N, const int_tp K, const Dtype alpha,
-                    const Dtype* A, const Dtype* B, const Dtype beta, Dtype* C);
+                    const int_tp M, const int_tp N, const int_tp K,
+                    const Dtype alpha, const Dtype* A, const Dtype* B,
+                    const Dtype beta, Dtype* C);
 
 template<typename Dtype>
-void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int_tp M, const int_tp N,
-                    const Dtype alpha, const Dtype* A, const Dtype* x,
-                    const Dtype beta, Dtype* y);
+void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int_tp M,
+                    const int_tp N, const Dtype alpha, const Dtype* A,
+                    const Dtype* x, const Dtype beta, Dtype* y);
 
 template<typename Dtype>
 void caffe_axpy(const int_tp N, const Dtype alpha, const Dtype* X, Dtype* Y);
@@ -102,7 +103,8 @@ Dtype caffe_cpu_strided_dot(const int_tp n, const Dtype* x, const int_tp incx,
                             const Dtype* y, const int_tp incy);
 
 template<typename Dtype>
-int_tp caffe_cpu_hamming_distance(const int_tp n, const Dtype* x, const Dtype* y);
+int_tp caffe_cpu_hamming_distance(const int_tp n, const Dtype* x,
+                                  const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
 template<typename Dtype>
@@ -143,7 +145,8 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit,
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 
 template<typename Dtype>
-void caffe_cpu_scale(const int_tp n, const Dtype alpha, const Dtype *x, Dtype* y);
+void caffe_cpu_scale(const int_tp n, const Dtype alpha, const Dtype *x,
+                     Dtype* y);
 
 #ifndef CPU_ONLY  // GPU
 #ifdef USE_CUDA
@@ -153,16 +156,18 @@ void caffe_cpu_scale(const int_tp n, const Dtype alpha, const Dtype *x, Dtype* y
 // gpu code under the hood.
 template<typename Dtype>
 void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
-                    const int_tp M, const int_tp N, const int_tp K, const Dtype alpha,
-                    const Dtype* A, const Dtype* B, const Dtype beta, Dtype* C);
+                    const int_tp M, const int_tp N, const int_tp K,
+                    const Dtype alpha, const Dtype* A, const Dtype* B,
+                    const Dtype beta, Dtype* C);
 
 template<typename Dtype>
-void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int_tp M, const int_tp N,
-                    const Dtype alpha, const Dtype* A, const Dtype* x,
-                    const Dtype beta, Dtype* y);
+void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int_tp M,
+                    const int_tp N, const Dtype alpha, const Dtype* A,
+                    const Dtype* x, const Dtype beta, Dtype* y);
 
 template<typename Dtype>
-void caffe_gpu_axpy(const int_tp N, const Dtype alpha, const Dtype* X, Dtype* Y);
+void caffe_gpu_axpy(const int_tp N, const Dtype alpha, const Dtype* X,
+                    Dtype* Y);
 
 template<typename Dtype>
 void caffe_gpu_axpby(const int_tp N, const Dtype alpha, const Dtype* X,
@@ -209,9 +214,8 @@ void caffe_gpu_powx(const int_tp n, const Dtype* a, const Dtype b, Dtype* y);
 
 // caffe_gpu_rng_uniform with two arguments generates integers in the range
 // [0, UINT_MAX].
-void caffe_gpu_rng_uniform(const int_tp n, unsigned int* r);
-void caffe_gpu_rng_uniform(const int_tp n, unsigned long long* r);
-
+void caffe_gpu_rng_uniform(const int_tp n, unsigned int* r);  // NOLINT
+void caffe_gpu_rng_uniform(const int_tp n, unsigned long long* r);  // NOLINT
 
 // caffe_gpu_rng_uniform with four arguments generates floats in the range
 // (a, b] (strictly greater than a, less than or equal to b) due to the
@@ -219,7 +223,8 @@ void caffe_gpu_rng_uniform(const int_tp n, unsigned long long* r);
 // curandGenerateUniform; with other limits will shift and scale the outputs
 // appropriately after calling curandGenerateUniform.
 template<typename Dtype>
-void caffe_gpu_rng_uniform(const int_tp n, const Dtype a, const Dtype b, Dtype* r);
+void caffe_gpu_rng_uniform(const int_tp n, const Dtype a, const Dtype b,
+                           Dtype* r);
 
 template<typename Dtype>
 void caffe_gpu_rng_gaussian(const int_tp n, const Dtype mu, const Dtype sigma,
@@ -248,7 +253,8 @@ template<typename Dtype>
 void caffe_gpu_fabs(const int_tp n, const Dtype* x, Dtype* y);
 
 template<typename Dtype>
-void caffe_gpu_scale(const int_tp n, const Dtype alpha, const Dtype *x, Dtype* y);
+void caffe_gpu_scale(const int_tp n, const Dtype alpha, const Dtype *x,
+                     Dtype* y);
 
 #define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
 template<typename Dtype> \
