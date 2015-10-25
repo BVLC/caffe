@@ -35,10 +35,10 @@ template<typename Dtype>
 void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   // Same number of batches requires
-  CHECK_EQ(bottom[0]->num(), bottom[1]->num());
+  CHECK_EQ(bottom[0]->shape(0), bottom[1]->shape(0));
 
   // All channels of both inputs are copied
-  int_tp channels = bottom[0]->channels() + bottom[1]->channels();
+  int_tp channels = bottom[0]->shape(1) + bottom[1]->shape(1);
 
   // Spatial of the smaller input, which should be input 0
   vector<int_tp> top_shape = bottom[0]->shape();

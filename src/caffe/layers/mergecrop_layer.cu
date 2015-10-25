@@ -120,12 +120,12 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data_b = bottom[1]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
 
-  int_tp num = bottom[0]->num();
+  int_tp num = bottom[0]->shape(0);
   int_tp spatial_dims = bottom[0]->shape().size() - 2;
 
   // All channels of both inputs are copied
-  int_tp channels_a = bottom[0]->channels();
-  int_tp channels_b = bottom[1]->channels();
+  int_tp channels_a = bottom[0]->shape(1);
+  int_tp channels_b = bottom[1]->shape(1);
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -174,12 +174,12 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff_b = bottom[1]->mutable_gpu_diff();
   const Dtype* top_diff = top[0]->gpu_diff();
 
-  int_tp num = bottom[0]->num();
+  int_tp num = bottom[0]->shape(0);
   int_tp spatial_dims = bottom[0]->shape().size() - 2;
 
   // All channels of both inputs are copied
-  int_tp channels_a = bottom[0]->channels();
-  int_tp channels_b = bottom[1]->channels();
+  int_tp channels_a = bottom[0]->shape(1);
+  int_tp channels_b = bottom[1]->shape(1);
 
   // Width and height of the smaller input, which should be input 0
   int_tp height_a = bottom[0]->height();

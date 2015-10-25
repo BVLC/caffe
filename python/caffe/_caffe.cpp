@@ -247,7 +247,8 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::make_function(&Net<Dtype>::output_blob_indices,
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
-        bp::with_custodian_and_ward<1, 3, bp::with_custodian_and_ward<1, 4> >())
+        bp::with_custodian_and_ward<1, 3,
+        bp::with_custodian_and_ward<1, 4> > ())
     .def("save", &Net_Save);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(

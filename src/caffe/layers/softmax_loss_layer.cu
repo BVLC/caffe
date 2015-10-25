@@ -48,7 +48,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
 #ifdef USE_CUDA
     const Dtype* prob_data = prob_.gpu_data();
     const Dtype* label = bottom[1]->gpu_data();
-    const int_tp num = prob_.num();
+    const int_tp num = prob_.shape(0);
     const int_tp dim = prob_.count() / num;
     const int_tp spatial_dim = prob_.height() * prob_.width();
     const int_tp nthreads = num * spatial_dim;
@@ -90,7 +90,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
 
     cl_mem prob_data = (cl_mem) (prob_.gpu_data());
     cl_mem label = (cl_mem) (bottom[1]->gpu_data());
-    const int_tp num = prob_.num();
+    const int_tp num = prob_.shape(0);
     const int_tp dim = prob_.count() / num;
     const int_tp spatial_dim = prob_.height() * prob_.width();
     const int_tp nthreads = num * spatial_dim;
@@ -176,7 +176,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       const Dtype* top_data = top[0]->gpu_data();
       caffe_gpu_memcpy(prob_.count() * sizeof(Dtype), prob_data, bottom_diff);
       const Dtype* label = bottom[1]->gpu_data();
-      const int_tp num = prob_.num();
+      const int_tp num = prob_.shape(0);
       const int_tp dim = prob_.count() / num;
       const int_tp spatial_dim = prob_.height() * prob_.width();
       const int_tp nthreads = num * spatial_dim;
@@ -219,7 +219,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       greentea_gpu_memcpy(prob_.count() * sizeof(Dtype),
                           prob_data, 0, bottom_diff, 0, &ctx);
       cl_mem label = (cl_mem)(bottom[1]->gpu_data());
-      const int_tp num = prob_.num();
+      const int_tp num = prob_.shape(0);
       const int_tp dim = prob_.count() / num;
       const int_tp spatial_dim = prob_.height() * prob_.width();
       const int_tp nthreads = num * spatial_dim;

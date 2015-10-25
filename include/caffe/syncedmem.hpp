@@ -12,7 +12,7 @@
 
 namespace caffe {
 
-void CaffeMallocHost(void** ptr, uint_tp size);
+void CaffeMallocHost(void** ptr, int_tp size);
 
 void CaffeFreeHost(void* ptr);
 
