@@ -9,7 +9,8 @@ __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
     const int has_ignore_label_, const int_tp ignore_label_,
     __global Dtype* counts) {
 
-  for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
+  for (int_tp index = get_global_id(0); index < n;
+      index += get_global_size(0)) {
     const int_tp n = index / spatial_dim;
     const int_tp s = index % spatial_dim;
     const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);
@@ -38,8 +39,8 @@ __kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,
 
   const int_tp channels = dim / spatial_dim;
 
-  for (int_tp index = get_global_id(0); index < nthreads;
-      index += get_global_size(0)) {
+  for (int_tp index = get_global_id(0); index < nthreads; index +=
+      get_global_size(0)) {
     {
       const int_tp n = index / spatial_dim;
       const int_tp s = index % spatial_dim;

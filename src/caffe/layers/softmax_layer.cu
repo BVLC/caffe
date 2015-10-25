@@ -103,9 +103,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
   int_tp count = bottom[0]->count();
-  int_tp num = bottom[0]->num();
-  int_tp channels = bottom[0]->channels();
-  int_tp spatial_dim = bottom[0]->height() * bottom[0]->width();
+  int_tp channels = top[0]->shape(softmax_axis_);
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -115,29 +113,29 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     // and then normalize.
     // compute max
     // NOLINT_NEXT_LINE(whitespace/operators)
-    kernel_channel_max<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(num * spatial_dim),
-        CAFFE_CUDA_NUM_THREADS)(num, channels, spatial_dim, top_data,
+    kernel_channel_max<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_, top_data,
         scale_data);
     // subtract
     // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_channel_subtract<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS)(count, num, channels, spatial_dim,
+        CAFFE_CUDA_NUM_THREADS)(count, outer_num_, channels, inner_num_,
         scale_data, top_data);
     // exponentiate
     // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_exp<Dtype> CUDA_KERNEL(
-        CAFFE_GET_BLOCKS(num * channels * spatial_dim),
-        CAFFE_CUDA_NUM_THREADS)(num * channels * spatial_dim, top_data,
+        CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS)(count, top_data,
         top_data);
     // sum after exp
     // NOLINT_NEXT_LINE(whitespace/operators)
-    kernel_channel_sum<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(num * spatial_dim),
-        CAFFE_CUDA_NUM_THREADS)(num, channels, spatial_dim, top_data,
+    kernel_channel_sum<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_, top_data,
         scale_data);
     // divide
     // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_channel_div<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS)(count, num, channels, spatial_dim,
+        CAFFE_CUDA_NUM_THREADS)(count, outer_num_, channels, inner_num_,
         scale_data, top_data);
 #endif
   } else {
@@ -147,53 +145,48 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_->id());
 
-    greentea_copy<Dtype>(count, (cl_mem)bottom_data,
-                         0, (cl_mem)top_data, 0, &ctx);
+    greentea_copy<Dtype>(count, (cl_mem) bottom_data, 0, (cl_mem) top_data, 0,
+                         &ctx);
 
     viennacl::ocl::kernel &oclk_channel_max = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_max"));
     viennacl::ocl::enqueue(
-        oclk_channel_max(num, channels, spatial_dim,
-                         WrapHandle((cl_mem)top_data, &ctx),
-                         WrapHandle((cl_mem)scale_data, &ctx)),
+        oclk_channel_max(outer_num_, channels, inner_num_,
+                         WrapHandle((cl_mem) top_data, &ctx),
+                         WrapHandle((cl_mem) scale_data, &ctx)),
         ctx.get_queue());
-
 
     viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_subtract"));
     viennacl::ocl::enqueue(
-        oclk_channel_subtract(count, num, channels, spatial_dim,
-                              WrapHandle((cl_mem)scale_data, &ctx),
-                              WrapHandle((cl_mem)top_data, &ctx)),
+        oclk_channel_subtract(count, outer_num_, channels, inner_num_,
+                              WrapHandle((cl_mem) scale_data, &ctx),
+                              WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-
 
     viennacl::ocl::kernel &oclk_exp = program.get_kernel(
         CL_KERNEL_SELECT("kernel_exp"));
     viennacl::ocl::enqueue(
-        oclk_exp(num * channels * spatial_dim,
-                 WrapHandle((cl_mem)top_data, &ctx),
-                 WrapHandle((cl_mem)top_data, &ctx)),
+        oclk_exp(count,
+                 WrapHandle((cl_mem) top_data, &ctx),
+                 WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-
 
     viennacl::ocl::kernel &oclk_channel_sum = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_sum"));
     viennacl::ocl::enqueue(
-        oclk_channel_sum(num, channels, spatial_dim,
-                         WrapHandle((cl_mem)top_data, &ctx),
-                         WrapHandle((cl_mem)scale_data, &ctx)),
+        oclk_channel_sum(outer_num_, channels, inner_num_,
+                         WrapHandle((cl_mem) top_data, &ctx),
+                         WrapHandle((cl_mem) scale_data, &ctx)),
         ctx.get_queue());
-
 
     viennacl::ocl::kernel &oclk_channel_div = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_div"));
     viennacl::ocl::enqueue(
-        oclk_channel_div(count, num, channels, spatial_dim,
-                         WrapHandle((cl_mem)scale_data, &ctx),
-                         WrapHandle((cl_mem)top_data, &ctx)),
+        oclk_channel_div(count, outer_num_, channels, inner_num_,
+                         WrapHandle((cl_mem) scale_data, &ctx),
+                         WrapHandle((cl_mem) top_data, &ctx)),
         ctx.get_queue());
-
 
 #endif
   }
@@ -203,14 +196,12 @@ template<typename Dtype>
 void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                        const vector<bool>& propagate_down,
                                        const vector<Blob<Dtype>*>& bottom) {
-  int_tp count = top[0]->count();
-  int_tp num = top[0]->num();
-  int_tp channels = top[0]->channels();
-  int_tp spatial_dim = top[0]->height() * top[0]->width();
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   Dtype* scale_data = scale_.mutable_gpu_data();
+  int_tp count = top[0]->count();
+  int_tp channels = top[0]->shape(softmax_axis_);
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -218,12 +209,12 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Compute inner1d(top_diff, top_data) and
     // subtract them from the bottom diff.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    kernel_channel_dot<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(num * spatial_dim),
-        CAFFE_CUDA_NUM_THREADS)(num, channels, spatial_dim, top_diff, top_data,
+    kernel_channel_dot<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_, top_diff, top_data,
         scale_data);
     // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_channel_subtract<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS)(count, num, channels, spatial_dim,
+        CAFFE_CUDA_NUM_THREADS)(count, outer_num_, channels, inner_num_,
         scale_data, bottom_diff);
     // elementwise multiplication
     caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
@@ -242,7 +233,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::kernel &oclk_channel_dot = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_dot"));
     viennacl::ocl::enqueue(
-        oclk_channel_dot(num, channels, spatial_dim,
+        oclk_channel_dot(outer_num_, channels, inner_num_,
                          WrapHandle((cl_mem)top_diff, &ctx),
                          WrapHandle((cl_mem)top_data, &ctx),
                          WrapHandle((cl_mem)scale_data, &ctx)),
@@ -251,7 +242,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_subtract"));
     viennacl::ocl::enqueue(
-        oclk_channel_subtract(count, num, channels, spatial_dim,
+        oclk_channel_subtract(count, outer_num_, channels, inner_num_,
                               WrapHandle((cl_mem)scale_data, &ctx),
                               WrapHandle((cl_mem)bottom_diff, &ctx)),
         ctx.get_queue());
