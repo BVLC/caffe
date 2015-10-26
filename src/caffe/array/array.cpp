@@ -5,6 +5,7 @@
 #include <vector>
 #include "caffe/array/array.hpp"
 #include "caffe/array/math.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
