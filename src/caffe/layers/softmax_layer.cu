@@ -113,7 +113,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     // and then normalize.
     // compute max
     // NOLINT_NEXT_LINE(whitespace/operators)
-    kernel_channel_max<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+    kernel_channel_max<Dtype> CUDA_KERNEL(
+        CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
         CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_, top_data,
         scale_data);
     // subtract
@@ -129,9 +130,10 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         top_data);
     // sum after exp
     // NOLINT_NEXT_LINE(whitespace/operators)
-    kernel_channel_sum<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
-        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_, top_data,
-        scale_data);
+    kernel_channel_sum<Dtype> CUDA_KERNEL(
+        CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels,
+            inner_num_, top_data, scale_data);
     // divide
     // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_channel_div<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
@@ -209,9 +211,10 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Compute inner1d(top_diff, top_data) and
     // subtract them from the bottom diff.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    kernel_channel_dot<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
-        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_, top_diff, top_data,
-        scale_data);
+    kernel_channel_dot<Dtype> CUDA_KERNEL(
+        CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS)(outer_num_, channels, inner_num_,
+            top_diff, top_data, scale_data);
     // NOLINT_NEXT_LINE(whitespace/operators)
     kernel_channel_subtract<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
         CAFFE_CUDA_NUM_THREADS)(count, outer_num_, channels, inner_num_,

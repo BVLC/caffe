@@ -288,9 +288,11 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
-    .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
+    .def("step",
+      static_cast<Dtype (Solver<Dtype>::*)(const int_tp)>(&Solver<Dtype>::Step))
+    .def("solve",
+      static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
-    .def("step", &Solver<Dtype>::Step)
     .def("restore", &Solver<Dtype>::Restore);
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,

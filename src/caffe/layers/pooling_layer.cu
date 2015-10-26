@@ -749,7 +749,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             // NOLINT_NEXT_LINE(whitespace/operators)
             MaxPoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, bottom_data, bottom[0]->num(), channels_,
+                count, bottom_data, bottom[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, ext_kernel_h, ext_kernel_w,
                 stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -760,7 +760,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             // NOLINT_NEXT_LINE(whitespace/operators)
             AvePoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, bottom_data, bottom[0]->num(), channels_,
+                count, bottom_data, bottom[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, ext_kernel_h, ext_kernel_w,
                 stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -774,7 +774,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               // NOLINT_NEXT_LINE(whitespace/operators)
               StoPoolForwardTrain<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                   CAFFE_CUDA_NUM_THREADS)(
-                  count, bottom_data, bottom[0]->num(), channels_,
+                  count, bottom_data, bottom[0]->shape(0), channels_,
                   height_, width_, pooled_height_, pooled_width_, kernel_h_,
                   kernel_w_, ext_kernel_h, ext_kernel_w,
                   stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -783,7 +783,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               // NOLINT_NEXT_LINE(whitespace/operators)
               StoPoolForwardTest<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                   CAFFE_CUDA_NUM_THREADS)(
-                  count, bottom_data, bottom[0]->num(), channels_,
+                  count, bottom_data, bottom[0]->shape(0), channels_,
                   height_, width_, pooled_height_, pooled_width_, kernel_h_,
                   kernel_w_, ext_kernel_h, ext_kernel_w,
                   stride_h_, stride_w_, kstride_h_, kstride_w_, top_data);
@@ -806,7 +806,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           // NOLINT_NEXT_LINE(whitespace/operators)
           MaxPoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
               CAFFE_CUDA_NUM_THREADS)(
-              count, bottom_data, bottom[0]->num(), channels_,
+              count, bottom_data, bottom[0]->shape(0), channels_,
               height_, width_, pooled_height_, pooled_width_, kernel_h_,
               kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
               mask, top_mask);
@@ -815,7 +815,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           // NOLINT_NEXT_LINE(whitespace/operators)
           AvePoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
               CAFFE_CUDA_NUM_THREADS)(
-              count, bottom_data, bottom[0]->num(), channels_,
+              count, bottom_data, bottom[0]->shape(0), channels_,
               height_, width_, pooled_height_, pooled_width_, kernel_h_,
               kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
           break;
@@ -827,7 +827,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             // NOLINT_NEXT_LINE(whitespace/operators)
             StoPoolForwardTrain<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, bottom_data, bottom[0]->num(), channels_,
+                count, bottom_data, bottom[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, stride_h_, stride_w_,
                 rand_idx_.mutable_gpu_data(), top_data);
@@ -835,7 +835,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             // NOLINT_NEXT_LINE(whitespace/operators)
             StoPoolForwardTest<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, bottom_data, bottom[0]->num(), channels_,
+                count, bottom_data, bottom[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, stride_h_, stride_w_, top_data);
           }
@@ -909,7 +909,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             viennacl::ocl::enqueue(
                 oclk_max_pool_forward(count,
                     WrapHandle((cl_mem) bottom_data, &ctx),
-                    bottom[0]->num(), channels_, height_, width_,
+                    bottom[0]->shape(0), channels_, height_, width_,
                     pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, ext_kernel_h, ext_kernel_w,
                     stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -927,7 +927,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             viennacl::ocl::enqueue(
                 oclk_ave_pool_forward(count,
                     WrapHandle((cl_mem) bottom_data, &ctx),
-                    bottom[0]->num(), channels_,
+                    bottom[0]->shape(0), channels_,
                     height_, width_, pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, ext_kernel_h, ext_kernel_w,
                     stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -947,7 +947,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
                       WrapHandle((cl_mem)bottom_data, &ctx),
-                      bottom[0]->num(), channels_,
+                      bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, ext_kernel_h, ext_kernel_w,
                       stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -960,7 +960,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
                       WrapHandle((cl_mem)bottom_data, &ctx),
-                      bottom[0]->num(), channels_,
+                      bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, ext_kernel_h, ext_kernel_w,
                       stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -987,7 +987,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             viennacl::ocl::enqueue(
                 oclk_max_pool_forward(count,
                     WrapHandle((cl_mem) bottom_data, &ctx),
-                    bottom[0]->num(), channels_, height_, width_,
+                    bottom[0]->shape(0), channels_, height_, width_,
                     pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
                     WrapHandle((cl_mem) top_data, &ctx),
@@ -1003,7 +1003,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             viennacl::ocl::enqueue(
                 oclk_ave_pool_forward(count,
                     WrapHandle((cl_mem) bottom_data, &ctx),
-                    bottom[0]->num(), channels_,
+                    bottom[0]->shape(0), channels_,
                     height_, width_, pooled_height_, pooled_width_, kernel_h_,
                     kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
                     WrapHandle((cl_mem)top_data, &ctx)),
@@ -1022,7 +1022,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
                       WrapHandle((cl_mem)bottom_data, &ctx),
-                      bottom[0]->num(), channels_,
+                      bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_, pooled_width_,
                       kernel_h_, kernel_w_,
                       stride_h_, stride_w_,
@@ -1035,7 +1035,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               viennacl::ocl::enqueue(
                   oclk_sto_pool_forward(count,
                       WrapHandle((cl_mem)bottom_data, &ctx),
-                      bottom[0]->num(), channels_,
+                      bottom[0]->shape(0), channels_,
                       height_, width_, pooled_height_,
                       pooled_width_, kernel_h_, kernel_w_,
                       stride_h_, stride_w_, WrapHandle((cl_mem)top_data, &ctx)),
@@ -1129,7 +1129,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             // NOLINT_NEXT_LINE(whitespace/operators)
             MaxPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, top_diff, mask, top_mask, top[0]->num(), channels_,
+                count, top_diff, mask, top_mask, top[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_,
                 kernel_h_, kernel_w_, ext_kernel_h, ext_kernel_w,
                 stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -1152,7 +1152,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             // NOLINT_NEXT_LINE(whitespace/operators)
             MaxPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, top_diff, mask, top_mask, top[0]->num(), channels_,
+                count, top_diff, mask, top_mask, top[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_,
                 kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
                 bottom_diff);
@@ -1161,7 +1161,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             // NOLINT_NEXT_LINE(whitespace/operators)
             AvePoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
-                count, top_diff, top[0]->num(), channels_,
+                count, top_diff, top[0]->shape(0), channels_,
                 height_, width_, pooled_height_, pooled_width_, kernel_h_,
                 kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
             break;
@@ -1170,7 +1170,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             StoPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                 CAFFE_CUDA_NUM_THREADS)(
                 count, rand_idx_.gpu_data(), top_diff,
-                top[0]->num(), channels_, height_, width_, pooled_height_,
+                top[0]->shape(0), channels_, height_, width_, pooled_height_,
                 pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
                 bottom_diff);
             break;
@@ -1247,7 +1247,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                       mask == NULL ? 0 : 1,
                       WrapHandle((cl_mem) mask, &ctx),
                       WrapHandle((cl_mem) top_mask, &ctx),
-                      top[0]->num(), channels_, height_, width_,
+                      top[0]->shape(0), channels_, height_, width_,
                       pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, ext_kernel_h, ext_kernel_w,
                       stride_h_, stride_w_, kstride_h_, kstride_w_,
@@ -1277,7 +1277,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                       mask == NULL ? 0 : 1,
                       WrapHandle((cl_mem) mask, &ctx),
                       WrapHandle((cl_mem) top_mask, &ctx),
-                      top[0]->num(), channels_, height_, width_,
+                      top[0]->shape(0), channels_, height_, width_,
                       pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, stride_h_, stride_w_, pad_h_,
                       pad_w_,
@@ -1292,7 +1292,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               viennacl::ocl::enqueue(
                   oclk_ave_pool_backward(count,
                       WrapHandle((cl_mem) top_diff, &ctx),
-                      top[0]->num(), channels_, height_, width_,
+                      top[0]->shape(0), channels_, height_, width_,
                       pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, stride_h_, stride_w_, pad_h_,
                       pad_w_,
@@ -1307,7 +1307,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
               viennacl::ocl::enqueue(
                   oclk_sto_pool_backward(
                       count, WrapHandle((cl_mem) (rand_idx_.gpu_data()), &ctx),
-                      WrapHandle((cl_mem) top_diff, &ctx), top[0]->num(),
+                      WrapHandle((cl_mem) top_diff, &ctx), top[0]->shape(0),
                       channels_,
                       height_, width_, pooled_height_, pooled_width_, kernel_h_,
                       kernel_w_, stride_h_, stride_w_,

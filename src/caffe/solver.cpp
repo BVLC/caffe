@@ -200,7 +200,7 @@ void Solver<Dtype>::InitTestNets() {
 }
 
 template<typename Dtype>
-void Solver<Dtype>::Step(int_tp iters) {
+Dtype Solver<Dtype>::Step(int_tp iters) {
   vector<Blob<Dtype>*> bottom_vec;
   const int_tp start_iter = iter_;
   const int_tp stop_iter = iter_ + iters;
@@ -289,6 +289,7 @@ void Solver<Dtype>::Step(int_tp iters) {
       break;
     }
   }
+  return smoothed_loss;
 }
 
 template<typename Dtype>
