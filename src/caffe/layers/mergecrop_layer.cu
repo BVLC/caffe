@@ -181,13 +181,6 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int_tp channels_a = bottom[0]->shape(1);
   int_tp channels_b = bottom[1]->shape(1);
 
-  // Width and height of the smaller input, which should be input 0
-  int_tp height_a = bottom[0]->height();
-  int_tp width_a = bottom[0]->width();
-
-  int_tp height_b = bottom[1]->height();
-  int_tp width_b = bottom[1]->width();
-
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     CopyBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
