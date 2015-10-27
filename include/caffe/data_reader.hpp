@@ -36,7 +36,7 @@ class DataReader {
   // Queue pairs are shared between a body and its readers
   class QueuePair {
    public:
-    explicit QueuePair(int size);
+    explicit QueuePair(int_tp size);
     ~QueuePair();
 
     BlockingQueue<Datum*> free_;

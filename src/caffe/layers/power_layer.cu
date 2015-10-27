@@ -1,9 +1,7 @@
-#include <algorithm>
 #include <vector>
 
-#include "caffe/layer.hpp"
+#include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
@@ -16,7 +14,7 @@ template<typename Dtype>
 void PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -75,7 +73,7 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                      const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    const int count = bottom[0]->count();
+    const int_tp count = bottom[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();
 
     if (this->device_->backend() == BACKEND_CUDA) {

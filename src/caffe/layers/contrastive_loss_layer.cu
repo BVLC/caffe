@@ -1,10 +1,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/util/io.hpp"
+#include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
@@ -16,7 +14,7 @@ namespace caffe {
 template<typename Dtype>
 void ContrastiveLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -55,8 +53,8 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
   bool legacy_version = this->layer_param_.contrastive_loss_param()
       .legacy_version();
   Dtype loss(0.0);
-  for (int i = 0; i < bottom[0]->num(); ++i) {
-    if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
+  for (int_tp i = 0; i < bottom[0]->num(); ++i) {
+    if (static_cast<int_tp>(bottom[2]->cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       if (legacy_version) {
@@ -74,14 +72,14 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void CLLBackward(const int count, const int channels,
+__global__ void CLLBackward(const int_tp count, const int_tp channels,
                             const Dtype margin, const bool legacy_version,
                             const Dtype alpha, const Dtype* y,
                             const Dtype* diff, const Dtype* dist_sq,
                             Dtype *bottom_diff) {
   CUDA_KERNEL_LOOP(i, count) {
-    int n = i / channels;  // the num index, to access y and dist_sq
-    if (static_cast<int>(y[n])) {  // similar pairs
+    int_tp n = i / channels;  // the num index, to access y and dist_sq
+    if (static_cast<int_tp>(y[n])) {  // similar pairs
       bottom_diff[i] = alpha * diff[i];
     } else {  // dissimilar pairs
       Dtype mdist(0.0);
@@ -108,10 +106,10 @@ template<typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  for (int i = 0; i < 2; ++i) {
+  for (int_tp i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
-      const int count = bottom[0]->count();
-      const int channels = bottom[0]->channels();
+      const int_tp count = bottom[0]->count();
+      const int_tp channels = bottom[0]->channels();
       Dtype margin = this->layer_param_.contrastive_loss_param().margin();
       const bool legacy_version = this->layer_param_.contrastive_loss_param()
           .legacy_version();

@@ -169,7 +169,7 @@ int train() {
       "but not both.";
 
   caffe::SolverParameter solver_param;
-  caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
+  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
@@ -194,7 +194,7 @@ int train() {
     Caffe::SetDevices(gpus);
 
     ostringstream s;
-    for (int i = 0; i < gpus.size(); ++i) {
+    for (int_tp i = 0; i < gpus.size(); ++i) {
       s << (i ? ", " : "") << gpus[i];
     }
     LOG(INFO) << "Using GPUs " << s.str();
@@ -212,7 +212,7 @@ int train() {
         GetRequestedAction(FLAGS_sighup_effect));
 
   shared_ptr<caffe::Solver<float> >
-    solver(caffe::GetSolver<float>(solver_param));
+      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
@@ -226,7 +226,7 @@ int train() {
   if (gpus.size() > 1) {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     std::vector<device*> devices;
-    for (int i = 0; i < gpus.size(); ++i) {
+    for (int_tp i = 0; i < gpus.size(); ++i) {
       devices.push_back(Caffe::Get().GetDevice(i));
     }
     sync.run(devices);
@@ -268,15 +268,15 @@ int test() {
   vector<int> test_score_output_id;
   vector<float> test_score;
   float loss = 0;
-  for (int i = 0; i < FLAGS_iterations; ++i) {
+  for (int_tp i = 0; i < FLAGS_iterations; ++i) {
     float iter_loss;
     const vector<Blob<float>*>& result =
         caffe_net.Forward(bottom_vec, &iter_loss);
     loss += iter_loss;
-    int idx = 0;
-    for (int j = 0; j < result.size(); ++j) {
+    int_tp idx = 0;
+    for (int_tp j = 0; j < result.size(); ++j) {
       const float* result_vec = result[j]->cpu_data();
-      for (int k = 0; k < result[j]->count(); ++k, ++idx) {
+      for (int_tp k = 0; k < result[j]->count(); ++k, ++idx) {
         const float score = result_vec[k];
         if (i == 0) {
           test_score.push_back(score);
@@ -292,7 +292,7 @@ int test() {
   }
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
-  for (int i = 0; i < test_score.size(); ++i) {
+  for (int_tp i = 0; i < test_score.size(); ++i) {
     const std::string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
     const float loss_weight = caffe_net.blob_loss_weights()[
@@ -359,11 +359,11 @@ int time() {
   std::vector<double> backward_time_per_layer(layers.size(), 0.0);
   double forward_time = 0.0;
   double backward_time = 0.0;
-  for (int j = 0; j < FLAGS_iterations; ++j) {
+  for (int_tp j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
     iter_timer.Start();
     forward_timer.Start();
-    for (int i = 0; i < layers.size(); ++i) {
+    for (int_tp i = 0; i < layers.size(); ++i) {
       timer.Start();
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
       Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
@@ -371,7 +371,7 @@ int time() {
     }
     forward_time += forward_timer.MicroSeconds();
     backward_timer.Start();
-    for (int i = layers.size() - 1; i >= 0; --i) {
+    for (int_tp i = layers.size() - 1; i >= 0; --i) {
       timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
@@ -383,7 +383,7 @@ int time() {
       << iter_timer.MilliSeconds() << " ms.";
   }
   LOG(INFO) << "Average time per layer: ";
-  for (int i = 0; i < layers.size(); ++i) {
+  for (int_tp i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
       "\tforward: " << forward_time_per_layer[i] / 1000 /

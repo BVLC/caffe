@@ -21,6 +21,7 @@
 #include <utility>  // pair
 #include <vector>
 
+#include "caffe/definitions.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
@@ -122,7 +123,7 @@ class Caffe {
   class RNG {
    public:
     RNG();
-    explicit RNG(unsigned int seed);
+    explicit RNG(size_t);
     explicit RNG(const RNG&);
     RNG& operator=(const RNG&);
     void* generator();
@@ -144,6 +145,9 @@ class Caffe {
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
+  inline static curandGenerator_t curand_generator64() {
+    return Get().curand_generator64_;
+  }
 #endif  // USE_CUDA
 #endif  // !CPU_ONLY
 
@@ -156,7 +160,7 @@ class Caffe {
   // it personally but better to note it here in the header file.
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the random seed of both boost and curand
-  static void set_random_seed(const unsigned int seed);
+  static void set_random_seed(const size_t seed);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
@@ -194,6 +198,7 @@ class Caffe {
 #ifdef USE_CUDA
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
+  curandGenerator_t curand_generator64_;
 #endif  // USE_CUDA
 #endif  // !CPU_ONLY
   shared_ptr<RNG> random_generator_;

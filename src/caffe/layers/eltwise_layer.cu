@@ -1,9 +1,8 @@
 #include <cfloat>
 #include <vector>
 
-#include "caffe/layer.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
@@ -14,12 +13,12 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void MaxForward(const int nthreads, const Dtype* bottom_data_a,
-                           const Dtype* bottom_data_b, const int blob_idx,
-                           Dtype* top_data, int* mask) {
+__global__ void MaxForward(const int_tp nthreads, const Dtype* bottom_data_a,
+                           const Dtype* bottom_data_b, const int_tp blob_idx,
+                           Dtype* top_data, int_tp* mask) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     Dtype maxval = -FLT_MAX;
-    int maxidx = -1;
+    int_tp maxidx = -1;
     if (bottom_data_a[index] > bottom_data_b[index]) {
       // only update for very first bottom_data blob (blob_idx == 0)
       if (blob_idx == 0) {
@@ -41,8 +40,8 @@ __global__ void MaxForward(const int nthreads, const Dtype* bottom_data_a,
 template<typename Dtype>
 void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                       const vector<Blob<Dtype>*>& top) {
-  int* mask = NULL;
-  const int count = top[0]->count();
+  int_tp* mask = NULL;
+  const int_tp count = top[0]->count();
   Dtype* top_data = top[0]->mutable_gpu_data();
 
   if (this->device_->backend() == BACKEND_CUDA) {
@@ -51,14 +50,14 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       case EltwiseParameter_EltwiseOp_PROD:
         caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
                       top_data);
-        for (int i = 2; i < bottom.size(); ++i) {
+        for (int_tp i = 2; i < bottom.size(); ++i) {
           caffe_gpu_mul(count, top_data, bottom[i]->gpu_data(), top_data);
         }
         break;
       case EltwiseParameter_EltwiseOp_SUM:
         caffe_gpu_set(count, Dtype(0.), top_data);
         // TODO(shelhamer) does cuBLAS optimize to sum for coeff = 1?
-        for (int i = 0; i < bottom.size(); ++i) {
+        for (int_tp i = 0; i < bottom.size(); ++i) {
           caffe_gpu_axpy(count, coeffs_[i], bottom[i]->gpu_data(), top_data);
         }
         break;
@@ -69,7 +68,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                       CAFFE_CUDA_NUM_THREADS)(
             count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
             0, top_data, mask);
-        for (int i = 2; i < bottom.size(); ++i) {
+        for (int_tp i = 2; i < bottom.size(); ++i) {
           // NOLINT_NEXT_LINE(whitespace/operators)
           MaxForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
                                         CAFFE_CUDA_NUM_THREADS)(
@@ -94,7 +93,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                 count, (cl_mem)(bottom[0]->gpu_data()), 0,
                                 (cl_mem)(bottom[1]->gpu_data()), 0,
             (cl_mem)top_data, 0);
-        for (int i = 2; i < bottom.size(); ++i) {
+        for (int_tp i = 2; i < bottom.size(); ++i) {
           greentea_gpu_mul<Dtype>(this->device_->id(),
                                   count, (cl_mem)top_data, 0,
                                   (cl_mem)(bottom[i]->gpu_data()), 0,
@@ -105,7 +104,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       case EltwiseParameter_EltwiseOp_SUM: {
         greentea_gpu_set<Dtype>(this->device_->id(), count, 0,
                                 (cl_mem)top_data, 0);
-        for (int i = 0; i < bottom.size(); ++i) {
+        for (int_tp i = 0; i < bottom.size(); ++i) {
           greentea_gpu_axpy<Dtype>(this->device_->id(),
                                    count, coeffs_[i],
                                    (cl_mem)(bottom[i]->gpu_data()),
@@ -122,12 +121,12 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         viennacl::ocl::enqueue(
             oclk_max_forward(count,
                 WrapHandle((cl_mem)(bottom[0]->gpu_data()), &ctx),
-                WrapHandle((cl_mem)(bottom[1]->gpu_data()), &ctx), 0,
+                WrapHandle((cl_mem)(bottom[1]->gpu_data()), &ctx), 0L,
                 WrapHandle((cl_mem)top_data, &ctx),
                 WrapHandle((cl_mem)mask, &ctx)),
             ctx.get_queue());
 
-        for (int i = 2; i < bottom.size(); ++i) {
+        for (int_tp i = 2; i < bottom.size(); ++i) {
           viennacl::ocl::enqueue(
               oclk_max_forward(count, WrapHandle((cl_mem)(top_data), &ctx),
                   WrapHandle((cl_mem)(bottom[i]->gpu_data()), &ctx), i-1,
@@ -147,8 +146,8 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
-                            const int blob_idx, const int* mask,
+__global__ void MaxBackward(const int_tp nthreads, const Dtype* top_diff,
+                            const int_tp blob_idx, const int_tp* mask,
                             Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     Dtype gradient = 0;
@@ -164,14 +163,14 @@ template<typename Dtype>
 void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                        const vector<bool>& propagate_down,
                                        const vector<Blob<Dtype>*>& bottom) {
-  const int* mask = NULL;
-  const int count = top[0]->count();
+  const int_tp* mask = NULL;
+  const int_tp count = top[0]->count();
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* top_diff = top[0]->gpu_diff();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    for (int i = 0; i < bottom.size(); ++i) {
+    for (int_tp i = 0; i < bottom.size(); ++i) {
       if (propagate_down[i]) {
         const Dtype* bottom_data = bottom[i]->gpu_data();
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
@@ -179,7 +178,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           case EltwiseParameter_EltwiseOp_PROD:
             if (stable_prod_grad_) {
               bool initialized = false;
-              for (int j = 0; j < bottom.size(); ++j) {
+              for (int_tp j = 0; j < bottom.size(); ++j) {
                 if (i == j) {
                   continue;
                 }
@@ -223,7 +222,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
         this->device_->id());
 
-    for (int i = 0; i < bottom.size(); ++i) {
+    for (int_tp i = 0; i < bottom.size(); ++i) {
       if (propagate_down[i]) {
         const Dtype* bottom_data = bottom[i]->gpu_data();
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
@@ -231,7 +230,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           case EltwiseParameter_EltwiseOp_PROD: {
             if (stable_prod_grad_) {
               bool initialized = false;
-              for (int j = 0; j < bottom.size(); ++j) {
+              for (int_tp j = 0; j < bottom.size(); ++j) {
                 if (i == j) {
                   continue;
                 }

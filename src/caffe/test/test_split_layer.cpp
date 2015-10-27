@@ -1,4 +1,3 @@
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -7,10 +6,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/insert_splits.hpp"
-#include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -69,7 +68,7 @@ TYPED_TEST(SplitLayerTest, Test) {
   SplitLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     Dtype bottom_value = this->blob_bottom_->cpu_data()[i];
     EXPECT_EQ(bottom_value, this->blob_top_a_->cpu_data()[i]);
     EXPECT_EQ(bottom_value, this->blob_top_b_->cpu_data()[i]);

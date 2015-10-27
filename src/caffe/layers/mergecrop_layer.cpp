@@ -20,10 +20,10 @@ void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   if (this->layer_param_.has_mergecrop_param()) {
     MergeCropParameter mergecrop_param = this->layer_param_.mergecrop_param();
-    for (int i = 0; i < mergecrop_param.forward_size(); ++i) {
+    for (int_tp i = 0; i < mergecrop_param.forward_size(); ++i) {
       forward_[i] = mergecrop_param.forward(i);
     }
-    for (int i = 0; i < mergecrop_param.backward_size(); ++i) {
+    for (int_tp i = 0; i < mergecrop_param.backward_size(); ++i) {
       backward_[i] = mergecrop_param.backward(i);
     }
   }
@@ -35,13 +35,13 @@ template<typename Dtype>
 void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   // Same number of batches requires
-  CHECK_EQ(bottom[0]->num(), bottom[1]->num());
+  CHECK_EQ(bottom[0]->shape(0), bottom[1]->shape(0));
 
   // All channels of both inputs are copied
-  int channels = bottom[0]->channels() + bottom[1]->channels();
+  int_tp channels = bottom[0]->shape(1) + bottom[1]->shape(1);
 
   // Spatial of the smaller input, which should be input 0
-  vector<int> top_shape = bottom[0]->shape();
+  vector<int_tp> top_shape = bottom[0]->shape();
   top_shape[1] = channels;
 
   top[0]->Reshape(top_shape);
@@ -49,10 +49,10 @@ void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   shape_a_.Reshape(1, 1, 1, top_shape.size() - 2);
   shape_b_.Reshape(1, 1, 1, top_shape.size() - 2);
 
-  int* shape_a_data = shape_a_.mutable_cpu_data();
-  int* shape_b_data = shape_b_.mutable_cpu_data();
+  int_tp* shape_a_data = shape_a_.mutable_cpu_data();
+  int_tp* shape_b_data = shape_b_.mutable_cpu_data();
 
-  for (int i = 0; i < top_shape.size() - 2; ++i) {
+  for (int_tp i = 0; i < top_shape.size() - 2; ++i) {
     shape_a_data[i] = bottom[0]->shape()[i + 2];
     shape_b_data[i] = bottom[1]->shape()[i + 2];
   }

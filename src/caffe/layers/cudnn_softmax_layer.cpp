@@ -1,12 +1,8 @@
 #ifdef USE_CUDNN
-#include <algorithm>
-#include <cfloat>
 #include <vector>
 
 #include "thrust/device_vector.h"
 
-#include "caffe/layer.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -26,10 +22,10 @@ template <typename Dtype>
 void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   SoftmaxLayer<Dtype>::Reshape(bottom, top);
-  int N = this->outer_num_;
-  int K = bottom[0]->shape(this->softmax_axis_);
-  int H = this->inner_num_;
-  int W = 1;
+  int_tp N = this->outer_num_;
+  int_tp K = bottom[0]->shape(this->softmax_axis_);
+  int_tp H = this->inner_num_;
+  int_tp W = 1;
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
   cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
 }

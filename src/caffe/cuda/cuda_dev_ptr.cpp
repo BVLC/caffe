@@ -15,7 +15,7 @@ void* cuda_dev_ptr<Type>::get() {
 }
 
 template<typename Type>
-std::ptrdiff_t cuda_dev_ptr<Type>::off() {
+int_tp cuda_dev_ptr<Type>::off() {
   return 0;
 }
 

@@ -38,7 +38,8 @@
 
 /* IO libraries */
 #cmakedefine USE_OPENCV
-#cmakedefine USE_LMDB
 #cmakedefine USE_LEVELDB
+#cmakedefine USE_LMDB
+#cmakedefine ALLOW_LMDB_NOLOCK
 
 #endif  // CAFFE_CONFIG_HPP_

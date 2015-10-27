@@ -13,46 +13,46 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void CopyForward(const int nthreads, const int dims,
+__global__ void CopyForward(const int_tp nthreads, const int_tp dims,
                             const Dtype* bottom_a, const bool forward_a,
                             const Dtype* bottom_b, const bool forward_b,
-                            Dtype* top, const int num, const int channels_a,
-                            const int channels_b, const int* shape_a,
-                            const int* shape_b) {
-  int pad[6];  // NOLINT(runtime/arrays)
-  int tmp_idx[6];  // NOLINT(runtime/arrays)
-  int size_a = 1;
-  int size_b = 1;
+                            Dtype* top, const int_tp num,
+                            const int_tp channels_a, const int_tp channels_b,
+                            const int_tp* shape_a, const int_tp* shape_b) {
+  int_tp pad[6];  // NOLINT(runtime/arrays)
+  int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
+  int_tp size_a = 1;
+  int_tp size_b = 1;
 
-  for (int i = 0; i < dims; ++i) {
+  for (int_tp i = 0; i < dims; ++i) {
     pad[i] = (shape_b[i] - shape_a[i]) / 2;
     size_a *= shape_a[i];
     size_b *= shape_b[i];
   }
 
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int batch_id = index / ((channels_a + channels_b) * size_a);
-    int bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)
+    int_tp batch_id = index / ((channels_a + channels_b) * size_a);
+    int_tp bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)
         / (channels_a * size_a)) % 2;
-    int counter = index;
-    for (int i = dims - 1; i >= 0; --i) {
+    int_tp counter = index;
+    for (int_tp i = dims - 1; i >= 0; --i) {
       tmp_idx[i] = counter % shape_a[i];
       counter /= shape_a[i];
     }
 
     if (bottom_id == 0) {
-      int channel_id = (index / size_a) % channels_a;
-      int aidx = batch_id * channels_a + channel_id;
-      for (int i = 0; i < dims; ++i) {
+      int_tp channel_id = (index / size_a) % channels_a;
+      int_tp aidx = batch_id * channels_a + channel_id;
+      for (int_tp i = 0; i < dims; ++i) {
         aidx *= shape_a[i];
         aidx += tmp_idx[i];
       }
       top[index] = forward_a ? bottom_a[aidx] : 0;
     } else {
-      int channel_id = (index / size_a) % channels_b;
-      int bidx = (batch_id * channels_b + channel_id) * size_b;
-      int btemp = 1;
-      for (int i = dims - 1; i >= 0; --i) {
+      int_tp channel_id = (index / size_a) % channels_b;
+      int_tp bidx = (batch_id * channels_b + channel_id) * size_b;
+      int_tp btemp = 1;
+      for (int_tp i = dims - 1; i >= 0; --i) {
         bidx += btemp * (tmp_idx[i] + pad[i]);
         btemp *= shape_b[i];
       }
@@ -62,46 +62,46 @@ __global__ void CopyForward(const int nthreads, const int dims,
 }
 
 template<typename Dtype>
-__global__ void CopyBackward(const int nthreads, const int dims,
+__global__ void CopyBackward(const int_tp nthreads, const int_tp dims,
                              Dtype* bottom_a, const bool backward_a,
                              Dtype* bottom_b, const bool backward_b,
-                             const Dtype* top, const int num,
-                             const int channels_a, const int channels_b,
-                             const int* shape_a, const int* shape_b) {
-  int pad[6];  // NOLINT(runtime/arrays)
-  int tmp_idx[6];  // NOLINT(runtime/arrays)
-  int size_a = 1;
-  int size_b = 1;
+                             const Dtype* top, const int_tp num,
+                             const int_tp channels_a, const int_tp channels_b,
+                             const int_tp* shape_a, const int_tp* shape_b) {
+  int_tp pad[6];  // NOLINT(runtime/arrays)
+  int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
+  int_tp size_a = 1;
+  int_tp size_b = 1;
 
-  for (int i = 0; i < dims; ++i) {
+  for (int_tp i = 0; i < dims; ++i) {
     pad[i] = (shape_b[i] - shape_a[i]) / 2;
     size_a *= shape_a[i];
     size_b *= shape_b[i];
   }
 
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int batch_id = index / ((channels_a + channels_b) * size_a);
-    int bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)
+    int_tp batch_id = index / ((channels_a + channels_b) * size_a);
+    int_tp bottom_id = ((index - batch_id * (channels_a + channels_b) * size_a)
         / (channels_a * size_a)) % 2;
-    int counter = index;
-    for (int i = dims - 1; i >= 0; --i) {
+    int_tp counter = index;
+    for (int_tp i = dims - 1; i >= 0; --i) {
       tmp_idx[i] = counter % shape_a[i];
       counter /= shape_a[i];
     }
 
     if (bottom_id == 0) {
-      int channel_id = (index / size_a) % channels_a;
-      int aidx = batch_id * channels_a + channel_id;
-      for (int i = 0; i < dims; ++i) {
+      int_tp channel_id = (index / size_a) % channels_a;
+      int_tp aidx = batch_id * channels_a + channel_id;
+      for (int_tp i = 0; i < dims; ++i) {
         aidx *= shape_a[i];
         aidx += tmp_idx[i];
       }
       bottom_a[aidx] = backward_a ? top[index] : 0;
     } else {
-      int channel_id = (index / size_a) % channels_b;
-      int bidx = (batch_id * channels_b + channel_id) * size_b;
-      int btemp = 1;
-      for (int i = dims - 1; i >= 0; --i) {
+      int_tp channel_id = (index / size_a) % channels_b;
+      int_tp bidx = (batch_id * channels_b + channel_id) * size_b;
+      int_tp btemp = 1;
+      for (int_tp i = dims - 1; i >= 0; --i) {
         bidx += btemp * (tmp_idx[i] + pad[i]);
         btemp *= shape_b[i];
       }
@@ -114,18 +114,18 @@ __global__ void CopyBackward(const int nthreads, const int dims,
 template<typename Dtype>
 void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
-  int count = top[0]->count();
+  int_tp count = top[0]->count();
 
   const Dtype* bottom_data_a = bottom[0]->gpu_data();
   const Dtype* bottom_data_b = bottom[1]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
 
-  int num = bottom[0]->num();
-  int spatial_dims = bottom[0]->shape().size() - 2;
+  int_tp num = bottom[0]->shape(0);
+  int_tp spatial_dims = bottom[0]->shape().size() - 2;
 
   // All channels of both inputs are copied
-  int channels_a = bottom[0]->channels();
-  int channels_b = bottom[1]->channels();
+  int_tp channels_a = bottom[0]->shape(1);
+  int_tp channels_b = bottom[1]->shape(1);
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -168,25 +168,18 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     return;
   }
 
-  int count = top[0]->count();
+  int_tp count = top[0]->count();
 
   Dtype* bottom_diff_a = bottom[0]->mutable_gpu_diff();
   Dtype* bottom_diff_b = bottom[1]->mutable_gpu_diff();
   const Dtype* top_diff = top[0]->gpu_diff();
 
-  int num = bottom[0]->num();
-  int spatial_dims = bottom[0]->shape().size() - 2;
+  int_tp num = bottom[0]->shape(0);
+  int_tp spatial_dims = bottom[0]->shape().size() - 2;
 
   // All channels of both inputs are copied
-  int channels_a = bottom[0]->channels();
-  int channels_b = bottom[1]->channels();
-
-  // Width and height of the smaller input, which should be input 0
-  int height_a = bottom[0]->height();
-  int width_a = bottom[0]->width();
-
-  int height_b = bottom[1]->height();
-  int width_b = bottom[1]->width();
+  int_tp channels_a = bottom[0]->shape(1);
+  int_tp channels_b = bottom[1]->shape(1);
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

@@ -4,8 +4,6 @@
 #include <queue>
 #include <string>
 
-#include "caffe/common.hpp"
-
 namespace caffe {
 
 template<typename T>
@@ -26,7 +24,7 @@ class BlockingQueue {
   // Return element without removing it
   T peek();
 
-  size_t size() const;
+  uint_tp size() const;
 
  protected:
   /**

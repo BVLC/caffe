@@ -1,7 +1,5 @@
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -9,7 +7,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/loss_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -35,7 +33,7 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_data_i_);
     filler.Fill(this->blob_bottom_data_j_);
     blob_bottom_vec_.push_back(blob_bottom_data_j_);
-    for (int i = 0; i < blob_bottom_y_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_y_->count(); ++i) {
       blob_bottom_y_->mutable_cpu_data()[i] = caffe_rng_rand() % 2;  // 0 or 1
     }
     blob_bottom_vec_.push_back(blob_bottom_y_);
@@ -66,12 +64,12 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
   const Dtype margin = layer_param.contrastive_loss_param().margin();
-  const int num = this->blob_bottom_data_i_->num();
-  const int channels = this->blob_bottom_data_i_->channels();
+  const int_tp num = this->blob_bottom_data_i_->num();
+  const int_tp channels = this->blob_bottom_data_i_->channels();
   Dtype loss(0);
-  for (int i = 0; i < num; ++i) {
+  for (int_tp i = 0; i < num; ++i) {
     Dtype dist_sq(0);
-    for (int j = 0; j < channels; ++j) {
+    for (int_tp j = 0; j < channels; ++j) {
       Dtype diff = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
           this->blob_bottom_data_j_->cpu_data()[i*channels+j];
       dist_sq += diff*diff;
@@ -109,12 +107,12 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForwardLegacy) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
   const Dtype margin = layer_param.contrastive_loss_param().margin();
-  const int num = this->blob_bottom_data_i_->num();
-  const int channels = this->blob_bottom_data_i_->channels();
+  const int_tp num = this->blob_bottom_data_i_->num();
+  const int_tp channels = this->blob_bottom_data_i_->channels();
   Dtype loss(0);
-  for (int i = 0; i < num; ++i) {
+  for (int_tp i = 0; i < num; ++i) {
     Dtype dist_sq(0);
-    for (int j = 0; j < channels; ++j) {
+    for (int_tp j = 0; j < channels; ++j) {
       Dtype diff = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
           this->blob_bottom_data_j_->cpu_data()[i*channels+j];
       dist_sq += diff*diff;

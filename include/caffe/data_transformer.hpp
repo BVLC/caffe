@@ -99,7 +99,7 @@ class DataTransformer {
    * @param datum
    *    Datum containing the data to be transformed.
    */
-  vector<int> InferBlobShape(const Datum& datum);
+  vector<int_tp> InferBlobShape(const Datum& datum);
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -108,7 +108,7 @@ class DataTransformer {
    * @param datum_vector
    *    A vector of Datum containing the data to be transformed.
    */
-  vector<int> InferBlobShape(const vector<Datum> & datum_vector);
+  vector<int_tp> InferBlobShape(const vector<Datum> & datum_vector);
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -118,7 +118,7 @@ class DataTransformer {
    *    A vector of Mat containing the data to be transformed.
    */
 #ifdef USE_OPENCV
-  vector<int> InferBlobShape(const vector<cv::Mat> & mat_vector);
+  vector<int_tp> InferBlobShape(const vector<cv::Mat> & mat_vector);
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -126,7 +126,7 @@ class DataTransformer {
    * @param cv_img
    *    cv::Mat containing the data to be transformed.
    */
-  vector<int> InferBlobShape(const cv::Mat& cv_img);
+  vector<int_tp> InferBlobShape(const cv::Mat& cv_img);
 #endif  // USE_OPENCV
 
  protected:
@@ -138,7 +138,7 @@ class DataTransformer {
    * @return
    *    A uniformly random integer value from ({0, 1, ..., n-1}).
    */
-  virtual int Rand(int n);
+  virtual int_tp Rand(int_tp n);
 
   void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters

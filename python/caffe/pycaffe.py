@@ -146,8 +146,6 @@ def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
         # Set top diffs according to defined shapes and make arrays single and
         # C-contiguous as Caffe expects.
         for top, diff in kwargs.iteritems():
-            if diff.ndim != 4:
-                raise Exception('{} diff is not 4-d'.format(top))
             if diff.shape[0] != self.blobs[top].num:
                 raise Exception('Diff is not batch sized')
             self.blobs[top].diff[...] = diff
@@ -234,7 +232,7 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     return all_outs, all_diffs
 
 
-def _Net_set_input_arrays(self, data, labels):
+def _Net_set_input_arrays(self, index, data, labels):
     """
     Set input arrays of the in-memory MemoryDataLayer.
     (Note: this is only for networks declared with the memory data layer.)
@@ -242,7 +240,7 @@ def _Net_set_input_arrays(self, data, labels):
     if labels.ndim == 1:
         labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
                                              np.newaxis])
-    return self._set_input_arrays(data, labels)
+    return self._set_input_arrays(index, data, labels)
 
 
 def _Net_batch(self, blobs):

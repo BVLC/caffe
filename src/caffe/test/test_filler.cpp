@@ -1,5 +1,3 @@
-#include <cstring>
-
 #include "gtest/gtest.h"
 
 #include "caffe/filler.hpp"
@@ -28,9 +26,9 @@ TYPED_TEST_CASE(ConstantFillerTest, TestDtypes);
 
 TYPED_TEST(ConstantFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
-  const int count = this->blob_->count();
+  const int_tp count = this->blob_->count();
   const TypeParam* data = this->blob_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_GE(data[i], this->filler_param_.value());
   }
 }
@@ -57,9 +55,9 @@ TYPED_TEST_CASE(UniformFillerTest, TestDtypes);
 
 TYPED_TEST(UniformFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
-  const int count = this->blob_->count();
+  const int_tp count = this->blob_->count();
   const TypeParam* data = this->blob_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_GE(data[i], this->filler_param_.min());
     EXPECT_LE(data[i], this->filler_param_.max());
   }
@@ -84,17 +82,17 @@ TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypes);
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
-  const int num = this->blob_->num();
-  const int count = this->blob_->count();
-  const int dim = count / num;
+  const int_tp num = this->blob_->num();
+  const int_tp count = this->blob_->count();
+  const int_tp dim = count / num;
   const TypeParam* data = this->blob_->cpu_data();
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     EXPECT_GE(data[i], 0);
     EXPECT_LE(data[i], 1);
   }
-  for (int i = 0; i < num; ++i) {
+  for (int_tp i = 0; i < num; ++i) {
     TypeParam sum = 0;
-    for (int j = 0; j < dim; ++j) {
+    for (int_tp j = 0; j < dim; ++j) {
       sum += data[i * dim + j];
     }
     EXPECT_GE(sum, 0.999);
@@ -123,11 +121,11 @@ TYPED_TEST_CASE(GaussianFillerTest, TestDtypes);
 
 TYPED_TEST(GaussianFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
-  const int count = this->blob_->count();
+  const int_tp count = this->blob_->count();
   const TypeParam* data = this->blob_->cpu_data();
   TypeParam mean = 0.;
   TypeParam var = 0.;
-  for (int i = 0; i < count; ++i) {
+  for (int_tp i = 0; i < count; ++i) {
     mean += data[i];
     var += (data[i] - this->filler_param_.mean()) *
         (data[i] - this->filler_param_.mean());
@@ -155,11 +153,11 @@ class XavierFillerTest : public ::testing::Test {
     this->filler_.reset(new XavierFiller<Dtype>(this->filler_param_));
     this->filler_->Fill(blob_);
     EXPECT_TRUE(this->blob_);
-    const int count = this->blob_->count();
+    const int_tp count = this->blob_->count();
     const Dtype* data = this->blob_->cpu_data();
     Dtype mean = 0.;
     Dtype ex2 = 0.;
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       mean += data[i];
       ex2 += data[i] * data[i];
     }
@@ -204,11 +202,11 @@ class MSRAFillerTest : public ::testing::Test {
     this->filler_.reset(new MSRAFiller<Dtype>(this->filler_param_));
     this->filler_->Fill(blob_);
     EXPECT_TRUE(this->blob_);
-    const int count = this->blob_->count();
+    const int_tp count = this->blob_->count();
     const Dtype* data = this->blob_->cpu_data();
     Dtype mean = 0.;
     Dtype ex2 = 0.;
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       mean += data[i];
       ex2 += data[i] * data[i];
     }

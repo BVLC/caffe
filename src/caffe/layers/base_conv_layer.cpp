@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "caffe/filler.hpp"
-#include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
@@ -22,15 +21,15 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   force_nd_im2col_ = conv_param.force_nd_im2col();
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
-  const int first_spatial_axis = channel_axis_ + 1;
-  const int num_axes = bottom[0]->num_axes();
+  const int_tp first_spatial_axis = channel_axis_ + 1;
+  const int_tp num_axes = bottom[0]->num_axes();
   num_spatial_axes_ = num_axes - first_spatial_axis;
   CHECK_GE(num_spatial_axes_, 0);
-  vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-  vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
+  vector<int_tp> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
+  vector<int_tp> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1L));
   // Setup filter kernel dimensions (kernel_shape_).
   kernel_shape_.Reshape(spatial_dim_blob_shape);
-  int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
+  int_tp* kernel_shape_data = kernel_shape_.mutable_cpu_data();
   if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
       << "kernel_h & kernel_w can only be used for 2D convolution.";
@@ -39,22 +38,22 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     kernel_shape_data[0] = conv_param.kernel_h();
     kernel_shape_data[1] = conv_param.kernel_w();
   } else {
-    const int num_kernel_dims = conv_param.kernel_size_size();
+    const int_tp num_kernel_dims = conv_param.kernel_size_size();
     CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
     << "kernel_size must be specified once, or once per spatial dimension "
     << "(kernel_size specified " << num_kernel_dims << " times; "
     << num_spatial_axes_ << " spatial dims);";
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       kernel_shape_data[i] =
       conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
     }
   }
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0)<< "Filter dimensions must be nonzero.";
   }
   // Setup stride dimensions (stride_).
   stride_.Reshape(spatial_dim_blob_shape);
-  int* stride_data = stride_.mutable_cpu_data();
+  int_tp* stride_data = stride_.mutable_cpu_data();
   if (conv_param.has_stride_h() || conv_param.has_stride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
       << "stride_h & stride_w can only be used for 2D convolution.";
@@ -63,14 +62,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_data[0] = conv_param.stride_h();
     stride_data[1] = conv_param.stride_w();
   } else {
-    const int num_stride_dims = conv_param.stride_size();
+    const int_tp num_stride_dims = conv_param.stride_size();
     CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
         num_stride_dims == num_spatial_axes_)
     << "stride must be specified once, or once per spatial dimension "
     << "(stride specified " << num_stride_dims << " times; "
     << num_spatial_axes_ << " spatial dims);";
-    const int kDefaultStride = 1;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    const int_tp kDefaultStride = 1;
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       stride_data[i] = (num_stride_dims == 0) ? kDefaultStride :
       conv_param.stride((num_stride_dims == 1) ? 0 : i);
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
@@ -78,7 +77,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Setup pad dimensions (pad_).
   pad_.Reshape(spatial_dim_blob_shape);
-  int* pad_data = pad_.mutable_cpu_data();
+  int_tp* pad_data = pad_.mutable_cpu_data();
   if (conv_param.has_pad_h() || conv_param.has_pad_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
       << "pad_h & pad_w can only be used for 2D convolution.";
@@ -87,14 +86,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     pad_data[0] = conv_param.pad_h();
     pad_data[1] = conv_param.pad_w();
   } else {
-    const int num_pad_dims = conv_param.pad_size();
+    const int_tp num_pad_dims = conv_param.pad_size();
     CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
         num_pad_dims == num_spatial_axes_)
     << "pad must be specified once, or once per spatial dimension "
     << "(pad specified " << num_pad_dims << " times; "
     << num_spatial_axes_ << " spatial dims);";
-    const int kDefaultPad = 0;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    const int_tp kDefaultPad = 0;
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
       conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
@@ -102,7 +101,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Setup kernel stride dimensions
   kstride_.Reshape(spatial_dim_blob_shape);
-  int* kstride_data = kstride_.mutable_cpu_data();
+  int_tp* kstride_data = kstride_.mutable_cpu_data();
   if (conv_param.has_kstride_h() || conv_param.has_kstride_w()) {
     CHECK_EQ(num_spatial_axes_, 2)
         << "kstride_h & kstride_w can only be used for 2D convolution.";
@@ -111,14 +110,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     kstride_data[0] = conv_param.kstride_h();
     kstride_data[1] = conv_param.kstride_w();
   } else {
-    const int num_kstride_dims = conv_param.kstride_size();
+    const int_tp num_kstride_dims = conv_param.kstride_size();
     CHECK(num_kstride_dims == 0 || num_kstride_dims == 1 ||
           num_kstride_dims == num_spatial_axes_)
       << "kstride must be specified once, or once per spatial dimension "
       << "(kstride specified " << num_kstride_dims << " times; "
       << num_spatial_axes_ << " spatial dims);";
-    const int kDefaultKstride = 1;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    const int_tp kDefaultKstride = 1;
+    for (int_tp i = 0; i < num_spatial_axes_; ++i) {
       kstride_data[i] = (num_kstride_dims == 0) ? kDefaultKstride :
           conv_param.kstride((num_kstride_dims == 1) ? 0 : i);
     }
@@ -126,7 +125,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Different 2D and ND im2col/col2im kernels for strided kernels
   use_skernel_ = false;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     use_skernel_ |= (kstride_data[i] != 1);
     if (use_skernel_) {
       break;
@@ -136,7 +135,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
   is_1x1_ = true;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     is_1x1_ &= kernel_shape_data[i] == 1 && stride_data[i] == 1
         && pad_data[i] == 0;
     if (!is_1x1_) {
@@ -161,14 +160,14 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
-  vector<int> weight_shape(2);
+  vector<int_tp> weight_shape(2);
   weight_shape[0] = conv_out_channels_;
   weight_shape[1] = conv_in_channels_ / group_;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     weight_shape.push_back(kernel_shape_data[i]);
   }
   bias_term_ = this->layer_param_.convolution_param().bias_term();
-  vector<int> bias_shape(bias_term_, num_output_);
+  vector<int_tp> bias_shape(bias_term_, num_output_);
   if (this->blobs_.size() > 0) {
     CHECK_EQ(1 + bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
@@ -214,27 +213,27 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                           const vector<Blob<Dtype>*>& top) {
-  const int first_spatial_axis = channel_axis_ + 1;
+  const int_tp first_spatial_axis = channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
     << "bottom num_axes may not change.";
   num_ = bottom[0]->count(0, channel_axis_);
   CHECK_EQ(bottom[0]->shape(channel_axis_), channels_)
     << "Input size incompatible with convolution kernel.";
   // TODO: generalize to handle inputs of different shapes.
-  for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
+  for (int_tp bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
         << "All inputs must have the same shape.";
   }
   // Shape the tops.
   bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();
-  vector<int> top_shape(bottom[0]->shape().begin(),
+  vector<int_tp> top_shape(bottom[0]->shape().begin(),
                         bottom[0]->shape().begin() + channel_axis_);
   top_shape.push_back(num_output_);
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     top_shape.push_back(output_shape_[i]);
   }
-  for (int top_id = 0; top_id < top.size(); ++top_id) {
+  for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(top_shape);
   }
   if (reverse_dimensions()) {
@@ -245,10 +244,10 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   col_offset_ = kernel_dim_ * conv_out_spatial_dim_;
   output_offset_ = conv_out_channels_ * conv_out_spatial_dim_ / group_;
   // Setup input dimensions (conv_input_shape_).
-  vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
+  vector<int_tp> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
   conv_input_shape_.Reshape(bottom_dim_blob_shape);
-  int* conv_input_shape_data = conv_input_shape_.mutable_cpu_data();
-  for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
+  int_tp* conv_input_shape_data = conv_input_shape_.mutable_cpu_data();
+  for (int_tp i = 0; i < num_spatial_axes_ + 1; ++i) {
     if (reverse_dimensions()) {
       conv_input_shape_data[i] = top[0]->shape(channel_axis_ + i);
     } else {
@@ -261,7 +260,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   col_buffer_shape_.clear();
   col_buffer_shape_.push_back(kernel_dim_ * group_);
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     if (reverse_dimensions()) {
       col_buffer_shape_.push_back(input_shape(i + 1));
     } else {
@@ -272,7 +271,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   col_buffer_.Reshape(col_buffer_shape_);
   if (Caffe::mode() == Caffe::Brew::GPU) {
     // Shared column buffer per device-queue across all layers on that device
-    for (int i = 0; i < this->device_->num_queues(); ++i) {
+    for (int_tp i = 0; i < this->device_->num_queues(); ++i) {
       shared_ptr<Blob<Dtype> > buffer = this->device_
           ->template Buffer<Dtype>(i);
       buffer->Reshape(col_buffer_shape_);
@@ -287,7 +286,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   out_spatial_dim_ = top[0]->count(first_spatial_axis);
   if (bias_term_) {
-    vector<int> bias_multiplier_shape(1, out_spatial_dim_);
+    vector<int_tp> bias_multiplier_shape(1, out_spatial_dim_);
     bool reshaped = bias_multiplier_.Reshape(bias_multiplier_shape);
     // This will trigger a memory copy if in GPU mode,
     // which may not be necessary.
@@ -311,7 +310,7 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
     }
     col_buff = col_buffer_.cpu_data();
   }
-  for (int g = 0; g < group_; ++g) {
+  for (int_tp g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
                           conv_out_channels_ / group_, conv_out_spatial_dim_,
                           kernel_dim_, (Dtype) 1., weights + weight_offset_ * g,
@@ -336,7 +335,7 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
   if (is_1x1_) {
     col_buff = input;
   }
-  for (int g = 0; g < group_; ++g) {
+  for (int_tp g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
                           conv_out_spatial_dim_, conv_out_channels_ / group_,
                           (Dtype) 1., weights + weight_offset_ * g,
@@ -357,7 +356,7 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
     col_buff = col_buffer_.cpu_data();
   }
-  for (int g = 0; g < group_; ++g) {
+  for (int_tp g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
                           kernel_dim_, conv_out_spatial_dim_, (Dtype) 1.,
                           output + output_offset_ * g,
@@ -377,10 +376,10 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_bias(Dtype* bias,
 
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
-                                                   const int input_off,
+                                                   const int_tp input_off,
                                                    const Dtype* weights,
                                                    Dtype* output,
-                                                   const int output_off,
+                                                   const int_tp output_off,
                                                    bool skip_im2col) {
   const Dtype* col_buff = input;
   if (this->device_->backend() == BACKEND_CUDA) {
@@ -391,7 +390,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
       }
       col_buff = col_buffer()->gpu_data();
     }
-    for (int g = 0; g < group_; ++g) {
+    for (int_tp g = 0; g < group_; ++g) {
       caffe_gpu_gemm<Dtype>(
           CblasNoTrans, CblasNoTrans, conv_out_channels_ / group_,
           conv_out_spatial_dim_, kernel_dim_, (Dtype) 1.,
@@ -409,7 +408,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
       }
       col_buff = col_buffer()->gpu_data();
     }
-    for (int g = 0; g < group_; ++g) {
+    for (int_tp g = 0; g < group_; ++g) {
       greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
                                CblasNoTrans, conv_out_channels_ / group_,
                                conv_out_spatial_dim_, kernel_dim_,
@@ -425,7 +424,7 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
 
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
-                                                   const int output_off,
+                                                   const int_tp output_off,
                                                    const Dtype* bias) {
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -447,17 +446,17 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
 
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
-                                                    const int output_off,
+                                                    const int_tp output_off,
                                                     const Dtype* weights,
                                                     Dtype* input,
-                                                    const int input_off) {
+                                                    const int_tp input_off) {
   Dtype* col_buff = col_buffer()->mutable_gpu_data();
   if (is_1x1_) {
     col_buff = input;
   }
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    for (int g = 0; g < group_; ++g) {
+    for (int_tp g = 0; g < group_; ++g) {
       caffe_gpu_gemm<Dtype>(
           CblasTrans, CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
           conv_out_channels_ / group_, (Dtype) 1., weights + weight_offset_ * g,
@@ -470,7 +469,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    for (int g = 0; g < group_; ++g) {
+    for (int_tp g = 0; g < group_; ++g) {
       greentea_gpu_gemm<Dtype>(this->device_->id(), CblasTrans,
                                CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
                                conv_out_channels_ / group_, (Dtype) 1.,
@@ -488,9 +487,9 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
 
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
-                                                  const int input_off,
+                                                  const int_tp input_off,
                                                   const Dtype* output,
-                                                  const int output_off,
+                                                  const int_tp output_off,
                                                   Dtype* weights) {
   const Dtype* col_buff = input;
   if (this->device_->backend() == BACKEND_CUDA) {
@@ -499,7 +498,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
       conv_im2col_gpu(input + input_off, col_buffer()->mutable_gpu_data());
       col_buff = col_buffer()->gpu_data();
     }
-    for (int g = 0; g < group_; ++g) {
+    for (int_tp g = 0; g < group_; ++g) {
       caffe_gpu_gemm<Dtype>(
           CblasNoTrans, CblasTrans, conv_out_channels_ / group_, kernel_dim_,
           conv_out_spatial_dim_, (Dtype) 1.,
@@ -515,7 +514,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
                                col_buffer()->mutable_gpu_data(), 0);
       col_buff = col_buffer()->gpu_data();
     }
-    for (int g = 0; g < group_; ++g) {
+    for (int_tp g = 0; g < group_; ++g) {
       greentea_gpu_gemm<Dtype>(this->device_->id(), CblasNoTrans,
                                CblasTrans, conv_out_channels_ / group_,
                                kernel_dim_, conv_out_spatial_dim_, (Dtype) 1.,
@@ -532,7 +531,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
                                                     const Dtype* input,
-                                                    const int input_off) {
+                                                    const int_tp input_off) {
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,

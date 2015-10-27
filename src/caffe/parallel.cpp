@@ -13,7 +13,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -34,7 +33,7 @@ enum Op {
 
 template<typename Dtype>
 static void apply_buffers(const vector<Blob<Dtype>*>& blobs, Dtype* buffer,
-                          size_t total_size, Op op) {
+                          uint_tp total_size, Op op) {
   Dtype* ptr = buffer;
   for (int i = 0; i < blobs.size(); ++i) {
     int size = blobs[i]->count();
@@ -67,8 +66,8 @@ static void apply_buffers(const vector<Blob<Dtype>*>& blobs, Dtype* buffer,
 
 // Buffer size necessary to store given blobs
 template<typename Dtype>
-static size_t total_size(const vector<Blob<Dtype>*>& params) {
-  size_t size = 0;
+static uint_tp total_size(const vector<Blob<Dtype>*>& params) {
+  uint_tp size = 0;
   for (int i = 0; i < params.size(); ++i)
     size += params[i]->count();
   // Size have at least one byte, otherwise cudaMalloc fails if net has no

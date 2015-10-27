@@ -41,9 +41,9 @@ DataReader::~DataReader() {
 
 //
 
-DataReader::QueuePair::QueuePair(int size) {
+DataReader::QueuePair::QueuePair(int_tp size) {
   // Initialize the free queue with requested number of datums
-  for (int i = 0; i < size; ++i) {
+  for (int_tp i = 0; i < size; ++i) {
     free_.push(new Datum());
   }
 }
@@ -76,19 +76,19 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   vector<shared_ptr<QueuePair> > qps;
   try {
-    int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
+    int_tp solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
 
     // To ensure deterministic runs, only start running once all solvers
     // are ready. But solvers need to peek on one item during initialization,
     // so read one item, then wait for the next solver.
-    for (int i = 0; i < solver_count; ++i) {
+    for (int_tp i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
       read_one(cursor.get(), qp.get());
       qps.push_back(qp);
     }
     // Main loop
     while (!must_stop()) {
-      for (int i = 0; i < solver_count; ++i) {
+      for (int_tp i = 0; i < solver_count; ++i) {
         read_one(cursor.get(), qps[i].get());
       }
       // Check no additional readers have been created. This can happen if

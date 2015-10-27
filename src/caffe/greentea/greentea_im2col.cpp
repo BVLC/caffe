@@ -13,18 +13,18 @@ namespace caffe {
 template<typename Dtype>
 void greentea_im2col_sk_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, const cl_mem data_im,
-                            const int data_offset, const int channels,
-                            const int height, const int width,
-                            const int kernel_h, const int kernel_w,
-                            const int pad_h, const int pad_w,
-                            const int stride_h, const int stride_w,
-                            const int kstride_h, const int kstride_w,
+                            const int_tp data_offset, const int_tp channels,
+                            const int_tp height, const int_tp width,
+                            const int_tp kernel_h, const int_tp kernel_w,
+                            const int_tp pad_h, const int_tp pad_w,
+                            const int_tp stride_h, const int_tp stride_w,
+                            const int_tp kstride_h, const int_tp kstride_w,
                             cl_mem data_col) {
-  int ext_kernel_h = (kernel_h - 1) * kstride_h + 1;
-  int ext_kernel_w = (kernel_w - 1) * kstride_w + 1;
-  int height_col = (height + 2 * pad_h - ext_kernel_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - ext_kernel_w) / stride_w + 1;
-  int num_kernels = channels * height_col * width_col;
+  int_tp ext_kernel_h = (kernel_h - 1) * kstride_h + 1;
+  int_tp ext_kernel_w = (kernel_w - 1) * kstride_w + 1;
+  int_tp height_col = (height + 2 * pad_h - ext_kernel_h) / stride_h + 1;
+  int_tp width_col = (width + 2 * pad_w - ext_kernel_w) / stride_w + 1;
+  int_tp num_kernels = channels * height_col * width_col;
 
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("im2col_sk"));
@@ -41,51 +41,57 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program *prog,
 template void greentea_im2col_sk_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
                                             const cl_mem data_im,
-                                            const int data_offset,
-                                            const int channels,
-                                            const int height, const int width,
-                                            const int kernel_h,
-                                            const int kernel_w, const int pad_h,
-                                            const int pad_w, const int stride_h,
-                                            const int stride_w,
-                                            const int kstride_h,
-                                            const int kstride_w,
+                                            const int_tp data_offset,
+                                            const int_tp channels,
+                                            const int_tp height,
+                                            const int_tp width,
+                                            const int_tp kernel_h,
+                                            const int_tp kernel_w,
+                                            const int_tp pad_h,
+                                            const int_tp pad_w,
+                                            const int_tp stride_h,
+                                            const int_tp stride_w,
+                                            const int_tp kstride_h,
+                                            const int_tp kstride_w,
                                             cl_mem data_col);
 
 template void greentea_im2col_sk_gpu<double>(viennacl::ocl::program *prog,
                                              viennacl::ocl::context *ctx,
                                              const cl_mem data_im,
-                                             const int data_offset,
-                                             const int channels,
-                                             const int height, const int width,
-                                             const int kernel_h,
-                                             const int kernel_w,
-                                             const int pad_h, const int pad_w,
-                                             const int stride_h,
-                                             const int stride_w,
-                                             const int kstride_h,
-                                             const int kstride_w,
+                                             const int_tp data_offset,
+                                             const int_tp channels,
+                                             const int_tp height,
+                                             const int_tp width,
+                                             const int_tp kernel_h,
+                                             const int_tp kernel_w,
+                                             const int_tp pad_h,
+                                             const int_tp pad_w,
+                                             const int_tp stride_h,
+                                             const int_tp stride_w,
+                                             const int_tp kstride_h,
+                                             const int_tp kstride_w,
                                              cl_mem data_col);
 
 template<typename Dtype>
 void greentea_col2im_sk_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, const cl_mem data_col,
-                            const int channels, const int height,
-                            const int width, const int patch_h,
-                            const int patch_w, const int pad_h, const int pad_w,
-                            const int stride_h, const int stride_w,
-                            const int kstride_h, const int kstride_w,
-                            cl_mem data_im, const int data_offset) {
+                            const int_tp channels, const int_tp height,
+                            const int_tp width, const int_tp patch_h,
+                            const int_tp patch_w, const int_tp pad_h,
+                            const int_tp pad_w, const int_tp stride_h,
+                            const int_tp stride_w, const int_tp kstride_h,
+                            const int_tp kstride_w, cl_mem data_im,
+                            const int_tp data_offset) {
   if (stride_w > 1 || stride_h > 1 || pad_h > 0 || pad_w > 0) {
     LOG(FATAL)<< "stride greater than 1 or pad greater than 0"
     << " not tested in col2im_sk_gpu().";
   }
 
-  int ext_patch_h = (patch_h - 1) * kstride_h + 1;
-  int ext_patch_w = (patch_w - 1) * kstride_w + 1;
-  int height_col = (height + 2 * pad_h - ext_patch_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - ext_patch_w) / stride_w + 1;
-  int num_kernels = channels * height * width;
+  int_tp ext_patch_h = (patch_h - 1) * kstride_h + 1;
+  int_tp ext_patch_w = (patch_w - 1) * kstride_w + 1;
+  int_tp height_col = (height + 2 * pad_h - ext_patch_h) / stride_h + 1;
+  int_tp width_col = (width + 2 * pad_w - ext_patch_w) / stride_w + 1;
+  int_tp num_kernels = channels * height * width;
 
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("col2im_sk"));
@@ -101,44 +107,51 @@ void greentea_col2im_sk_gpu(viennacl::ocl::program *prog,
 template void greentea_col2im_sk_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
                                             const cl_mem data_col,
-                                            const int channels,
-                                            const int height, const int width,
-                                            const int patch_h,
-                                            const int patch_w, const int pad_h,
-                                            const int pad_w, const int stride_h,
-                                            const int stride_w,
-                                            const int kstride_h,
-                                            const int kstride_w, cl_mem data_im,
-                                            const int data_offset);
+                                            const int_tp channels,
+                                            const int_tp height,
+                                            const int_tp width,
+                                            const int_tp patch_h,
+                                            const int_tp patch_w,
+                                            const int_tp pad_h,
+                                            const int_tp pad_w,
+                                            const int_tp stride_h,
+                                            const int_tp stride_w,
+                                            const int_tp kstride_h,
+                                            const int_tp kstride_w,
+                                            cl_mem data_im,
+                                            const int_tp data_offset);
 
 template void greentea_col2im_sk_gpu<double>(viennacl::ocl::program *prog,
                                              viennacl::ocl::context *ctx,
                                              const cl_mem data_col,
-                                             const int channels,
-                                             const int height, const int width,
-                                             const int patch_h,
-                                             const int patch_w, const int pad_h,
-                                             const int pad_w,
-                                             const int stride_h,
-                                             const int stride_w,
-                                             const int kstride_h,
-                                             const int kstride_w,
+                                             const int_tp channels,
+                                             const int_tp height,
+                                             const int_tp width,
+                                             const int_tp patch_h,
+                                             const int_tp patch_w,
+                                             const int_tp pad_h,
+                                             const int_tp pad_w,
+                                             const int_tp stride_h,
+                                             const int_tp stride_w,
+                                             const int_tp kstride_h,
+                                             const int_tp kstride_w,
                                              cl_mem data_im,
-                                             const int data_offset);
+                                             const int_tp data_offset);
 
 template<typename Dtype>
 void greentea_im2col_gpu(viennacl::ocl::program *prog,
                          viennacl::ocl::context *ctx, const cl_mem data_im,
-                         const int data_im_off, const int channels,
-                         const int height, const int width, const int kernel_h,
-                         const int kernel_w, const int pad_h, const int pad_w,
-                         const int stride_h, const int stride_w,
-                         cl_mem data_col, const int data_col_off) {
+                         const int_tp data_im_off, const int_tp channels,
+                         const int_tp height, const int_tp width,
+                         const int_tp kernel_h, const int_tp kernel_w,
+                         const int_tp pad_h, const int_tp pad_w,
+                         const int_tp stride_h, const int_tp stride_w,
+                         cl_mem data_col, const int_tp data_col_off) {
   // We are going to launch channels * height_col * width_col kernels, each
   // kernel responsible for copying a single-channel grid.
-  int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
-  int num_kernels = channels * height_col * width_col;
+  int_tp height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
+  int_tp width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
+  int_tp num_kernels = channels * height_col * width_col;
 
   viennacl::ocl::kernel &kernel = prog->get_kernel(CL_KERNEL_SELECT("im2col"));
 
@@ -152,36 +165,45 @@ void greentea_im2col_gpu(viennacl::ocl::program *prog,
 template void greentea_im2col_gpu<float>(viennacl::ocl::program *prog,
                                          viennacl::ocl::context *ctx,
                                          const cl_mem data_im,
-                                         const int data_im_off,
-                                         const int channels, const int height,
-                                         const int width, const int kernel_h,
-                                         const int kernel_w, const int pad_h,
-                                         const int pad_w, const int stride_h,
-                                         const int stride_w, cl_mem data_col,
-                                         const int data_col_off);
+                                         const int_tp data_im_off,
+                                         const int_tp channels,
+                                         const int_tp height,
+                                         const int_tp width,
+                                         const int_tp kernel_h,
+                                         const int_tp kernel_w,
+                                         const int_tp pad_h, const int_tp pad_w,
+                                         const int_tp stride_h,
+                                         const int_tp stride_w, cl_mem data_col,
+                                         const int_tp data_col_off);
 
 template void greentea_im2col_gpu<double>(viennacl::ocl::program *prog,
                                           viennacl::ocl::context *ctx,
                                           const cl_mem data_im,
-                                          const int data_im_off,
-                                          const int channels, const int height,
-                                          const int width, const int kernel_h,
-                                          const int kernel_w, const int pad_h,
-                                          const int pad_w, const int stride_h,
-                                          const int stride_w, cl_mem data_col,
-                                          const int data_col_off);
+                                          const int_tp data_im_off,
+                                          const int_tp channels,
+                                          const int_tp height,
+                                          const int_tp width,
+                                          const int_tp kernel_h,
+                                          const int_tp kernel_w,
+                                          const int_tp pad_h,
+                                          const int_tp pad_w,
+                                          const int_tp stride_h,
+                                          const int_tp stride_w,
+                                          cl_mem data_col,
+                                          const int_tp data_col_off);
 
 template<typename Dtype>
 void greentea_col2im_gpu(viennacl::ocl::program *prog,
                          viennacl::ocl::context *ctx, const cl_mem data_col,
-                         const int data_col_off, const int channels,
-                         const int height, const int width, const int patch_h,
-                         const int patch_w, const int pad_h, const int pad_w,
-                         const int stride_h, const int stride_w, cl_mem data_im,
-                         const int data_im_off) {
-  int height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
-  int num_kernels = channels * height * width;
+                         const int_tp data_col_off, const int_tp channels,
+                         const int_tp height, const int_tp width,
+                         const int_tp patch_h, const int_tp patch_w,
+                         const int_tp pad_h, const int_tp pad_w,
+                         const int_tp stride_h, const int_tp stride_w,
+                         cl_mem data_im, const int_tp data_im_off) {
+  int_tp height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
+  int_tp width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
+  int_tp num_kernels = channels * height * width;
 
   viennacl::ocl::kernel &kernel = prog->get_kernel(CL_KERNEL_SELECT("col2im"));
 
@@ -196,33 +218,40 @@ void greentea_col2im_gpu(viennacl::ocl::program *prog,
 template void greentea_col2im_gpu<float>(viennacl::ocl::program *prog,
                                          viennacl::ocl::context *ctx,
                                          const cl_mem data_col,
-                                         const int data_col_off,
-                                         const int channels, const int height,
-                                         const int width, const int patch_h,
-                                         const int patch_w, const int pad_h,
-                                         const int pad_w, const int stride_h,
-                                         const int stride_w, cl_mem data_im,
-                                         const int data_im_off);
+                                         const int_tp data_col_off,
+                                         const int_tp channels,
+                                         const int_tp height,
+                                         const int_tp width,
+                                         const int_tp patch_h,
+                                         const int_tp patch_w,
+                                         const int_tp pad_h, const int_tp pad_w,
+                                         const int_tp stride_h,
+                                         const int_tp stride_w, cl_mem data_im,
+                                         const int_tp data_im_off);
 template void greentea_col2im_gpu<double>(viennacl::ocl::program *prog,
                                           viennacl::ocl::context *ctx,
                                           const cl_mem data_col,
-                                          const int data_col_off,
-                                          const int channels, const int height,
-                                          const int width, const int patch_h,
-                                          const int patch_w, const int pad_h,
-                                          const int pad_w, const int stride_h,
-                                          const int stride_w, cl_mem data_im,
-                                          const int data_im_off);
+                                          const int_tp data_col_off,
+                                          const int_tp channels,
+                                          const int_tp height,
+                                          const int_tp width,
+                                          const int_tp patch_h,
+                                          const int_tp patch_w,
+                                          const int_tp pad_h,
+                                          const int_tp pad_w,
+                                          const int_tp stride_h,
+                                          const int_tp stride_w, cl_mem data_im,
+                                          const int_tp data_im_off);
 
 template<typename Dtype>
 void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_im,
-                            const int data_off, const int num_spatial_axes,
-                            const int channel_axis,
-                            const int num_kernels,
+                            const int_tp data_off,
+                            const int_tp num_spatial_axes,
+                            const int_tp channel_axis, const int_tp num_kernels,
                             cl_mem im_shape, cl_mem col_shape,
                             cl_mem kernel_shape, cl_mem pad, cl_mem stride,
-                            cl_mem data_col, int data_col_off) {
+                            cl_mem data_col, int_tp data_col_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("im2col_nd"));
 
@@ -238,34 +267,37 @@ void greentea_im2col_nd_gpu(viennacl::ocl::program *prog,
 // Explicit instantiation
 template void greentea_im2col_nd_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
-                                            cl_mem data_im, const int data_off,
-                                            const int num_spatial_axes,
-                                            const int channel_axis,
-                                            const int num_kernels,
+                                            cl_mem data_im,
+                                            const int_tp data_off,
+                                            const int_tp num_spatial_axes,
+                                            const int_tp channel_axis,
+                                            const int_tp num_kernels,
                                             cl_mem im_shape, cl_mem col_shape,
                                             cl_mem kernel_shape, cl_mem pad,
                                             cl_mem stride, cl_mem data_col,
-                                            int data_col_off);
+                                            int_tp data_col_off);
 
 template void greentea_im2col_nd_gpu<double>(viennacl::ocl::program *prog,
                                              viennacl::ocl::context *ctx,
-                                             cl_mem data_im, const int data_off,
-                                             const int num_spatial_axes,
-                                             const int channel_axis,
-                                             const int num_kernels,
+                                             cl_mem data_im,
+                                             const int_tp data_off,
+                                             const int_tp num_spatial_axes,
+                                             const int_tp channel_axis,
+                                             const int_tp num_kernels,
                                              cl_mem im_shape, cl_mem col_shape,
                                              cl_mem kernel_shape, cl_mem pad,
                                              cl_mem stride, cl_mem data_col,
-                                             int data_col_off);
+                                             int_tp data_col_off);
 
 template<typename Dtype>
 void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
                             viennacl::ocl::context *ctx, cl_mem data_col,
-                            const int data_col_off, const int num_spatial_axes,
-                            const int channel_axis, const int im_size,
+                            const int_tp data_col_off,
+                            const int_tp num_spatial_axes,
+                            const int_tp channel_axis, const int_tp im_size,
                             cl_mem im_shape, cl_mem col_shape,
                             cl_mem kernel_shape, cl_mem pad, cl_mem stride,
-                            cl_mem data_im, int data_off) {
+                            cl_mem data_im, int_tp data_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("col2im_nd"));
 
@@ -282,35 +314,36 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
 template void greentea_col2im_nd_gpu<float>(viennacl::ocl::program *prog,
                                             viennacl::ocl::context *ctx,
                                             cl_mem data_col,
-                                            const int data_col_off,
-                                            const int num_spatial_axes,
-                                            const int channel_axis,
-                                            const int im_size, cl_mem im_shape,
-                                            cl_mem col_shape,
+                                            const int_tp data_col_off,
+                                            const int_tp num_spatial_axes,
+                                            const int_tp channel_axis,
+                                            const int_tp im_size,
+                                            cl_mem im_shape, cl_mem col_shape,
                                             cl_mem kernel_shape, cl_mem pad,
                                             cl_mem stride, cl_mem data_im,
-                                            int data_off);
+                                            int_tp data_off);
 
 template void greentea_col2im_nd_gpu<double>(viennacl::ocl::program *prog,
                                              viennacl::ocl::context *ctx,
                                              cl_mem data_col,
-                                             const int data_col_off,
-                                             const int num_spatial_axes,
-                                             const int channel_axis,
-                                             const int im_size, cl_mem im_shape,
-                                             cl_mem col_shape,
+                                             const int_tp data_col_off,
+                                             const int_tp num_spatial_axes,
+                                             const int_tp channel_axis,
+                                             const int_tp im_size,
+                                             cl_mem im_shape, cl_mem col_shape,
                                              cl_mem kernel_shape, cl_mem pad,
                                              cl_mem stride, cl_mem data_im,
-                                             int data_off);
+                                             int_tp data_off);
 
 template<typename Dtype>
 void greentea_im2col_ndsk_gpu(viennacl::ocl::program *prog,
                               viennacl::ocl::context *ctx, cl_mem data_im,
-                              const int data_off, const int num_spatial_axes,
-                              const int num_kernels, cl_mem im_shape,
+                              const int_tp data_off,
+                              const int_tp num_spatial_axes,
+                              const int_tp num_kernels, cl_mem im_shape,
                               cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
                               cl_mem stride, cl_mem kstride, cl_mem data_col,
-                              int data_col_off) {
+                              int_tp data_col_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("im2col_ndsk"));
 
@@ -327,36 +360,37 @@ void greentea_im2col_ndsk_gpu(viennacl::ocl::program *prog,
 template void greentea_im2col_ndsk_gpu<float>(viennacl::ocl::program *prog,
                                               viennacl::ocl::context *ctx,
                                               cl_mem data_im,
-                                              const int data_off,
-                                              const int num_spatial_axes,
-                                              const int num_kernels,
+                                              const int_tp data_off,
+                                              const int_tp num_spatial_axes,
+                                              const int_tp num_kernels,
                                               cl_mem im_shape, cl_mem col_shape,
                                               cl_mem kernel_shape, cl_mem pad,
                                               cl_mem stride, cl_mem kstride,
                                               cl_mem data_col,
-                                              int data_col_off);
+                                              int_tp data_col_off);
 
 template void greentea_im2col_ndsk_gpu<double>(viennacl::ocl::program *prog,
                                                viennacl::ocl::context *ctx,
                                                cl_mem data_im,
-                                               const int data_off,
-                                               const int num_spatial_axes,
-                                               const int num_kernels,
+                                               const int_tp data_off,
+                                               const int_tp num_spatial_axes,
+                                               const int_tp num_kernels,
                                                cl_mem im_shape,
                                                cl_mem col_shape,
                                                cl_mem kernel_shape, cl_mem pad,
                                                cl_mem stride, cl_mem kstride,
                                                cl_mem data_col,
-                                               int data_col_off);
+                                               int_tp data_col_off);
 
 template<typename Dtype>
 void greentea_col2im_ndsk_gpu(viennacl::ocl::program *prog,
                               viennacl::ocl::context *ctx, cl_mem data_col,
-                              const int data_col_off,
-                              const int num_spatial_axes, const int im_size,
-                              cl_mem im_shape, cl_mem col_shape,
-                              cl_mem kernel_shape, cl_mem pad, cl_mem stride,
-                              cl_mem kstride, cl_mem data_im, int data_off) {
+                              const int_tp data_col_off,
+                              const int_tp num_spatial_axes,
+                              const int_tp im_size, cl_mem im_shape,
+                              cl_mem col_shape, cl_mem kernel_shape, cl_mem pad,
+                              cl_mem stride, cl_mem kstride, cl_mem data_im,
+                              int_tp data_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("col2im_ndsk"));
 
@@ -373,25 +407,25 @@ void greentea_col2im_ndsk_gpu(viennacl::ocl::program *prog,
 template void greentea_col2im_ndsk_gpu<float>(viennacl::ocl::program *prog,
                                               viennacl::ocl::context *ctx,
                                               cl_mem data_col,
-                                              const int data_col_off,
-                                              const int num_spatial_axes,
-                                              const int im_size,
+                                              const int_tp data_col_off,
+                                              const int_tp num_spatial_axes,
+                                              const int_tp im_size,
                                               cl_mem im_shape, cl_mem col_shape,
                                               cl_mem kernel_shape, cl_mem pad,
                                               cl_mem stride, cl_mem kstride,
-                                              cl_mem data_im, int data_off);
+                                              cl_mem data_im, int_tp data_off);
 
 template void greentea_col2im_ndsk_gpu<double>(viennacl::ocl::program *prog,
                                                viennacl::ocl::context *ctx,
                                                cl_mem data_col,
-                                               const int data_col_off,
-                                               const int num_spatial_axes,
-                                               const int im_size,
+                                               const int_tp data_col_off,
+                                               const int_tp num_spatial_axes,
+                                               const int_tp im_size,
                                                cl_mem im_shape,
                                                cl_mem col_shape,
                                                cl_mem kernel_shape, cl_mem pad,
                                                cl_mem stride, cl_mem kstride,
-                                               cl_mem data_im, int data_off);
+                                               cl_mem data_im, int_tp data_off);
 
 }  // namespace caffe
 #endif

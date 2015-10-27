@@ -22,9 +22,9 @@ void AffinityLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   offsets_.resize(bottom.size());
   if (this->layer_param().has_affinity_param()) {
     AffinityParameter affinity_param = this->layer_param().affinity_param();
-    for (int i = 0; i <
-          std::min(static_cast<int>(bottom.size()),
-                   static_cast<int>(affinity_param.offset_size())); ++i) {
+    for (int_tp i = 0; i <
+          std::min(static_cast<int_tp>(bottom.size()),
+                   static_cast<int_tp>(affinity_param.offset_size())); ++i) {
       offsets_[i] = affinity_param.offset(i);
     }
   }
@@ -39,7 +39,7 @@ template<typename Dtype>
 void AffinityLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
   min_index_.clear();
-  for (int bidx = 0; bidx < bottom.size(); ++bidx) {
+  for (int_tp bidx = 0; bidx < bottom.size(); ++bidx) {
     // 1, #edges, height, width
     top[bidx]->Reshape(1, 2, bottom[bidx]->height(), bottom[bidx]->width());
 
@@ -56,20 +56,20 @@ void AffinityLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void AffinityLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
-  for (int bidx = 0; bidx < bottom.size(); ++bidx) {
+  for (int_tp bidx = 0; bidx < bottom.size(); ++bidx) {
     const Dtype* bottom_data = bottom[bidx]->cpu_data();
     Dtype* top_data = top[bidx]->mutable_cpu_data();
     Dtype* min_data = min_index_[bidx]->mutable_cpu_data();
 
-    int inner_num = bottom[bidx]->width()
+    int_tp inner_num = bottom[bidx]->width()
                 * bottom[bidx]->height();
 
-    int xmin, ymin;
+    int_tp xmin, ymin;
 
     // Construct affinity graph
 #pragma omp parallel for
-    for (int i = 0; i < bottom[bidx]->height() - 1; ++i) {
-      for (int j = 0; j < bottom[bidx]->width() - 1; ++j) {
+    for (int_tp i = 0; i < bottom[bidx]->height() - 1; ++i) {
+      for (int_tp j = 0; j < bottom[bidx]->width() - 1; ++j) {
         // Center
         Dtype p0 = bottom_data[offsets_[bidx] * inner_num
                              + i * bottom[bidx]->width() + j];
@@ -100,7 +100,7 @@ template<typename Dtype>
 void AffinityLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                          const vector<bool>& propagate_down,
                                         const vector<Blob<Dtype>*>& bottom) {
-  for (int bidx = 0; bidx < bottom.size(); ++bidx) {
+  for (int_tp bidx = 0; bidx < bottom.size(); ++bidx) {
     if (propagate_down[bidx]) {
       const Dtype* top_diff = top[bidx]->cpu_diff();
       Dtype* bottom_diff = bottom[bidx]->mutable_cpu_diff();
@@ -108,17 +108,17 @@ void AffinityLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
       caffe_set(bottom[0]->count(), Dtype(0.0), bottom_diff);
 
-      int inner_num = bottom[bidx]->width()
+      int_tp inner_num = bottom[bidx]->width()
                   * bottom[bidx]->height();
 
       // Spread out the affinity losses to pixels
-      for (int i = 0; i < bottom[0]->height() - 1; ++i) {
-        for (int j = 0; j < bottom[0]->width() - 1; ++j) {
+      for (int_tp i = 0; i < bottom[0]->height() - 1; ++i) {
+        for (int_tp j = 0; j < bottom[0]->width() - 1; ++j) {
           Dtype lx = top_diff[i * bottom[0]->width() + j];
           Dtype ly = top_diff[inner_num + i * bottom[0]->width() + j];
 
-          int mx = min_data[i * bottom[0]->width() + j];
-          int my = min_data[bottom[0]->width()
+          int_tp mx = min_data[i * bottom[0]->width() + j];
+          int_tp my = min_data[bottom[0]->width()
               * bottom[0]->height() + i * bottom[0]->width() + j];
 
           // Only propagate to min index contributor of affinity graph

@@ -1,8 +1,6 @@
 #ifdef USE_CUDNN
-#include <algorithm>
 #include <vector>
 
-#include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -22,10 +20,10 @@ template <typename Dtype>
 void CuDNNSigmoidLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   SigmoidLayer<Dtype>::Reshape(bottom, top);
-  const int N = bottom[0]->num();
-  const int K = bottom[0]->channels();
-  const int H = bottom[0]->height();
-  const int W = bottom[0]->width();
+  const int_tp N = bottom[0]->num();
+  const int_tp K = bottom[0]->channels();
+  const int_tp H = bottom[0]->height();
+  const int_tp W = bottom[0]->width();
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
   cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
 }

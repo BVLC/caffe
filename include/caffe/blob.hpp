@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/definitions.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
@@ -17,7 +18,7 @@
 #include "caffe/greentea/greentea_math_functions.hpp"
 #endif
 
-const int kMaxBlobAxes = 32;
+const int_tp kMaxBlobAxes = 32;
 
 namespace caffe {
 
@@ -47,10 +48,10 @@ class Blob {
         capacity_(0),
         device_(device_context) {
   }
-  explicit Blob(const int num, const int channels, const int height,
-                const int width, device *device_context =
+  explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
+                const int_tp width, device *device_context =
                     Caffe::GetDefaultDevice());
-  explicit Blob(const vector<int>& shape, device *device_context =
+  explicit Blob(const vector<int_tp>& shape, device *device_context =
                     Caffe::GetDefaultDevice());
 
   /**
@@ -69,20 +70,20 @@ class Blob {
    *
    * Reshape returns true if new memory was allocated.
    */
-  bool Reshape(const vector<int>& shape);
+  bool Reshape(const vector<int_tp>& shape);
   bool Reshape(const BlobShape& shape);
-  bool Reshape(const int num, const int channels, const int height,
-               const int width);
+  bool Reshape(const int_tp num, const int_tp channels, const int_tp height,
+               const int_tp width);
   bool ReshapeLike(const Blob& other);
   inline string shape_string() const {
     ostringstream stream;
-    for (int i = 0; i < shape_.size(); ++i) {
+    for (int_tp i = 0; i < shape_.size(); ++i) {
       stream << shape_[i] << " ";
     }
     stream << "(" << count_ << ")";
     return stream.str();
   }
-  inline const vector<int>& shape() const {
+  inline const vector<int_tp>& shape() const {
     return shape_;
   }
   /**
@@ -93,13 +94,13 @@ class Blob {
    *        "canonicalized" using CanonicalAxisIndex.
    *        Dies on out of range index.
    */
-  inline int shape(int index) const {
+  inline int_tp shape(int_tp index) const {
     return shape_[CanonicalAxisIndex(index)];
   }
-  inline int num_axes() const {
+  inline int_tp num_axes() const {
     return shape_.size();
   }
-  inline int count() const {
+  inline int_tp count() const {
     return count_;
   }
 
@@ -111,14 +112,14 @@ class Blob {
    *
    * @param end_axis The first axis to exclude from the slice.
    */
-  inline int count(int start_axis, int end_axis) const {
+  inline int_tp count(int_tp start_axis, int_tp end_axis) const {
     CHECK_LE(start_axis, end_axis);
     CHECK_GE(start_axis, 0);
     CHECK_GE(end_axis, 0);
     CHECK_LE(start_axis, num_axes());
     CHECK_LE(end_axis, num_axes());
-    int count = 1;
-    for (int i = start_axis; i < end_axis; ++i) {
+    int_tp count = 1;
+    for (int_tp i = start_axis; i < end_axis; ++i) {
       count *= shape(i);
     }
     return count;
@@ -129,7 +130,7 @@ class Blob {
    *
    * @param start_axis The first axis to include in the slice.
    */
-  inline int count(int start_axis) const {
+  inline int_tp count(int_tp start_axis) const {
     return count(start_axis, num_axes());
   }
 
@@ -144,7 +145,7 @@ class Blob {
    *        the second to last if index == -2, etc.
    *        Dies on out of range index.
    */
-  inline int CanonicalAxisIndex(int axis_index) const {
+  inline int_tp CanonicalAxisIndex(int_tp axis_index) const {
     CHECK_GE(axis_index, -num_axes())
         <<"axis " << axis_index
         << " out of range for " << num_axes()
@@ -159,14 +160,14 @@ class Blob {
   }
 
   /// @brief Deprecated legacy shape accessor num: use shape(0) instead.
-  inline int num() const {return LegacyShape(0);}
+  inline int_tp num() const {return LegacyShape(0);}
   /// @brief Deprecated legacy shape accessor channels: use shape(1) instead.
-  inline int channels() const {return LegacyShape(1);}
+  inline int_tp channels() const {return LegacyShape(1);}
   /// @brief Deprecated legacy shape accessor height: use shape(2) instead.
-  inline int height() const {return LegacyShape(2);}
+  inline int_tp height() const {return LegacyShape(2);}
   /// @brief Deprecated legacy shape accessor width: use shape(3) instead.
-  inline int width() const {return LegacyShape(3);}
-  inline int LegacyShape(int index) const {
+  inline int_tp width() const {return LegacyShape(3);}
+  inline int_tp LegacyShape(int_tp index) const {
     CHECK_LE(num_axes(), 4)
     << "Cannot use legacy accessors on Blobs with > 4 axes.";
     CHECK_LT(index, 4);
@@ -179,8 +180,8 @@ class Blob {
     }
     return shape(index);
   }
-  inline int offset(const int n, const int c = 0, const int h = 0,
-      const int w = 0) const {
+  inline int_tp offset(const int_tp n, const int_tp c = 0, const int_tp h = 0,
+      const int_tp w = 0) const {
     CHECK_GE(n, 0);
     CHECK_LE(n, num());
     CHECK_GE(channels(), 0);
@@ -192,10 +193,10 @@ class Blob {
     return ((n * channels() + c) * height() + h) * width() + w;
   }
 
-  inline int offset(const vector<int>& indices) const {
+  inline int_tp offset(const vector<int_tp>& indices) const {
     CHECK_LE(indices.size(), num_axes());
-    int offset = 0;
-    for (int i = 0; i < num_axes(); ++i) {
+    int_tp offset = 0;
+    for (int_tp i = 0; i < num_axes(); ++i) {
       offset *= shape(i);
       if (indices.size() > i) {
         CHECK_GE(indices[i], 0);
@@ -217,21 +218,21 @@ class Blob {
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
-  inline Dtype data_at(const int n, const int c, const int h,
-      const int w) const {
+  inline Dtype data_at(const int_tp n, const int_tp c, const int_tp h,
+      const int_tp w) const {
     return cpu_data()[offset(n, c, h, w)];
   }
 
-  inline Dtype diff_at(const int n, const int c, const int h,
-      const int w) const {
+  inline Dtype diff_at(const int_tp n, const int_tp c, const int_tp h,
+      const int_tp w) const {
     return cpu_diff()[offset(n, c, h, w)];
   }
 
-  inline Dtype data_at(const vector<int>& index) const {
+  inline Dtype data_at(const vector<int_tp>& index) const {
     return cpu_data()[offset(index)];
   }
 
-  inline Dtype diff_at(const vector<int>& index) const {
+  inline Dtype diff_at(const vector<int_tp>& index) const {
     return cpu_diff()[offset(index)];
   }
 
@@ -247,7 +248,7 @@ class Blob {
 
   const Dtype* cpu_data() const;
   void set_cpu_data(Dtype* data);
-  const int* gpu_shape() const;
+  const int_tp* gpu_shape() const;
   const Dtype* gpu_data() const;
   const Dtype* cpu_diff() const;
   const Dtype* gpu_diff() const;
@@ -303,9 +304,9 @@ class Blob {
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
   shared_ptr<SyncedMemory> shape_data_;
-  vector<int> shape_;
-  int count_;
-  int capacity_;
+  vector<int_tp> shape_;
+  uint_tp count_;
+  uint_tp capacity_;
   device *device_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);

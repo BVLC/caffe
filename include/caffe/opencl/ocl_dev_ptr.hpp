@@ -16,11 +16,11 @@ template<typename Type> class ocl_dev_ptr : public dev_ptr<Type> {
  public:
   explicit ocl_dev_ptr(cl_mem ocl_mem);
   Type* get();
-  std::ptrdiff_t off();
+  std::size_t off();
 
  private:
   cl_mem ocl_mem_;
-  std::ptrdiff_t off_;
+  std::size_t off_;
 };
 
 }  // namespace caffe

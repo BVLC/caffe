@@ -39,14 +39,14 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
   }
 
   void TestForward() {
-    int a_h = blob_bottom_a_->height();
-    int a_w = blob_bottom_a_->width();
-    int a_c = blob_bottom_a_->channels();
+    int_tp a_h = blob_bottom_a_->height();
+    int_tp a_w = blob_bottom_a_->width();
+    int_tp a_c = blob_bottom_a_->channels();
 
-    for (int n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int c = 0; c < a_c; ++c) {
-        for (int h = 0; h < a_h; ++h) {
-          for (int w = 0; w < a_w; ++w) {
+    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
+      for (int_tp c = 0; c < a_c; ++c) {
+        for (int_tp h = 0; h < a_h; ++h) {
+          for (int_tp w = 0; w < a_w; ++w) {
             blob_bottom_a_->mutable_cpu_data()[w + h * a_w + c * a_h * a_w
                 + n * a_h * a_w * a_c] = (w + h * 10 + c * 100 + n * 1000
                 + 10000);
@@ -55,14 +55,14 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
       }
     }
 
-    int b_h = blob_bottom_b_->height();
-    int b_w = blob_bottom_b_->width();
-    int b_c = blob_bottom_b_->channels();
+    int_tp b_h = blob_bottom_b_->height();
+    int_tp b_w = blob_bottom_b_->width();
+    int_tp b_c = blob_bottom_b_->channels();
 
-    for (int n = 0; n < blob_bottom_b_->num(); ++n) {
-      for (int c = 0; c < b_c; ++c) {
-        for (int h = 0; h < b_h; ++h) {
-          for (int w = 0; w < b_w; ++w) {
+    for (int_tp n = 0; n < blob_bottom_b_->num(); ++n) {
+      for (int_tp c = 0; c < b_c; ++c) {
+        for (int_tp h = 0; h < b_h; ++h) {
+          for (int_tp w = 0; w < b_w; ++w) {
             blob_bottom_b_->mutable_cpu_data()[w + h * b_w + c * b_h * b_w
                 + n * b_h * b_w * b_c] = -(w + h * 10 + c * 100 + n * 1000
                 + 10000);
@@ -85,11 +85,11 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
 
     // Test copy from A
-    int offset = 0;
-    for (int n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int c = 0; c < a_c; ++c) {
-        for (int h = 0; h < a_h; ++h) {
-          for (int w = 0; w < a_w; ++w) {
+    int_tp offset = 0;
+    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
+      for (int_tp c = 0; c < a_c; ++c) {
+        for (int_tp h = 0; h < a_h; ++h) {
+          for (int_tp w = 0; w < a_w; ++w) {
             EXPECT_EQ(
                 (w + h * 10 + c * 100 + n * 1000 + 10000),
                 blob_top_->cpu_data()[offset + w + h * a_w + c * a_h * a_w]);
@@ -101,10 +101,10 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
 
     // Test copy from B
     offset = a_h * a_w * a_c;
-    for (int n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int c = 0; c < b_c; ++c) {
-        for (int h = 0; h < b_h; ++h) {
-          for (int w = 0; w < b_w; ++w) {
+    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
+      for (int_tp c = 0; c < b_c; ++c) {
+        for (int_tp h = 0; h < b_h; ++h) {
+          for (int_tp w = 0; w < b_w; ++w) {
             if (h >= (b_h - a_h) / 2 && h < a_h && w >= (b_w - a_w) / 2
                 && w < a_w) {
               EXPECT_EQ(
@@ -120,14 +120,14 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
   }
 
   void TestBackward() {
-    int a_h = blob_bottom_a_->height();
-    int a_w = blob_bottom_a_->width();
-    int a_c = blob_bottom_a_->channels();
+    int_tp a_h = blob_bottom_a_->height();
+    int_tp a_w = blob_bottom_a_->width();
+    int_tp a_c = blob_bottom_a_->channels();
 
-    for (int n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int c = 0; c < a_c; ++c) {
-        for (int h = 0; h < a_h; ++h) {
-          for (int w = 0; w < a_w; ++w) {
+    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
+      for (int_tp c = 0; c < a_c; ++c) {
+        for (int_tp h = 0; h < a_h; ++h) {
+          for (int_tp w = 0; w < a_w; ++w) {
             blob_bottom_a_->mutable_cpu_data()[w + h * a_w + c * a_h * a_w
                 + n * a_h * a_w * a_c] = (w + h * 10 + c * 100 + n * 1000
                 + 10000);
@@ -136,14 +136,14 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
       }
     }
 
-    int b_h = blob_bottom_b_->height();
-    int b_w = blob_bottom_b_->width();
-    int b_c = blob_bottom_b_->channels();
+    int_tp b_h = blob_bottom_b_->height();
+    int_tp b_w = blob_bottom_b_->width();
+    int_tp b_c = blob_bottom_b_->channels();
 
-    for (int n = 0; n < blob_bottom_b_->num(); ++n) {
-      for (int c = 0; c < b_c; ++c) {
-        for (int h = 0; h < b_h; ++h) {
-          for (int w = 0; w < b_w; ++w) {
+    for (int_tp n = 0; n < blob_bottom_b_->num(); ++n) {
+      for (int_tp c = 0; c < b_c; ++c) {
+        for (int_tp h = 0; h < b_h; ++h) {
+          for (int_tp w = 0; w < b_w; ++w) {
             blob_bottom_b_->mutable_cpu_data()[w + h * b_w + c * b_h * b_w
                 + n * b_h * b_w * b_c] = -(w + h * 10 + c * 100 + n * 1000
                 + 10000);
@@ -164,10 +164,10 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     layer.Backward(blob_top_vec_, propagate_down, blob_bottom_vec_);
 
     // Test copy to A
-    for (int n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int c = 0; c < a_c; ++c) {
-        for (int h = 0; h < a_h; ++h) {
-          for (int w = 0; w < a_w; ++w) {
+    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
+      for (int_tp c = 0; c < a_c; ++c) {
+        for (int_tp h = 0; h < a_h; ++h) {
+          for (int_tp w = 0; w < a_w; ++w) {
             EXPECT_EQ(
                 (w + h * 10 + c * 100 + n * 1000 + 10000),
                 blob_bottom_a_->cpu_diff()[w + h * a_w + c * a_h * a_w
