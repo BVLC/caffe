@@ -1,15 +1,13 @@
-#include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/neuron_layers.hpp"
 
 namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void SigmoidForward(const int n, const Dtype* in, Dtype* out) {
+__global__ void SigmoidForward(const int_tp n, const Dtype* in, Dtype* out) {
   CUDA_KERNEL_LOOP(index, n) {
     out[index] = 1. / (1. + exp(-in[index]));
   }
@@ -21,7 +19,7 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                       const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -56,7 +54,7 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void SigmoidBackward(const int n, const Dtype* in_diff,
+__global__ void SigmoidBackward(const int_tp n, const Dtype* in_diff,
                                 const Dtype* out_data, Dtype* out_diff) {
   CUDA_KERNEL_LOOP(index, n) {
     const Dtype sigmoid_x = out_data[index];
@@ -73,7 +71,7 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_data = top[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    const int count = bottom[0]->count();
+    const int_tp count = bottom[0]->count();
 
     if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

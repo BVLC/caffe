@@ -3,11 +3,8 @@
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
-#include "caffe/layer.hpp"
+#include "caffe/data_layers.hpp"
 #include "caffe/util/hdf5.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -49,10 +46,10 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                      bottom[0]->height(), bottom[0]->width());
   label_blob_.Reshape(bottom[1]->num(), bottom[1]->channels(),
                      bottom[1]->height(), bottom[1]->width());
-  const int data_datum_dim = bottom[0]->count() / bottom[0]->num();
-  const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
+  const int_tp data_datum_dim = bottom[0]->count() / bottom[0]->num();
+  const int_tp label_datum_dim = bottom[1]->count() / bottom[1]->num();
 
-  for (int i = 0; i < bottom[0]->num(); ++i) {
+  for (int_tp i = 0; i < bottom[0]->num(); ++i) {
     caffe_cpu_copy(data_datum_dim, &bottom[0]->cpu_data()[i * data_datum_dim],
         &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
     caffe_cpu_copy(label_datum_dim, &bottom[1]->cpu_data()[i * label_datum_dim],

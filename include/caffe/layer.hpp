@@ -7,9 +7,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/definitions.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/device_alternate.hpp"
+#include "caffe/util/math_functions.hpp"
 
 #include "caffe/greentea/greentea.hpp"
 #include "device.hpp"
@@ -48,7 +49,7 @@ class Layer {
     phase_ = param.phase();
     if (layer_param_.blobs_size() > 0) {
       blobs_.resize(layer_param_.blobs_size());
-      for (int i = 0; i < layer_param_.blobs_size(); ++i) {
+      for (int_tp i = 0; i < layer_param_.blobs_size(); ++i) {
         blobs_[i].reset(new Blob<Dtype>());
         blobs_[i]->FromProto(layer_param_.blobs(i));
       }
@@ -206,14 +207,14 @@ class Layer {
   /**
    * @brief Returns the scalar loss associated with a top blob at a given index.
    */
-  inline Dtype loss(const int top_index) const {
+  inline Dtype loss(const int_tp top_index) const {
     return (loss_.size() > top_index) ? loss_[top_index] : Dtype(0);
   }
 
   /**
    * @brief Sets the loss associated with a top blob at a given index.
    */
-  inline void set_loss(const int top_index, const Dtype value) {
+  inline void set_loss(const int_tp top_index, const Dtype value) {
     if (loss_.size() <= top_index) {
       loss_.resize(top_index + 1, Dtype(0));
     }
@@ -234,7 +235,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some exact number of bottom blobs.
    */
-  virtual inline int ExactNumBottomBlobs() const {
+  virtual inline int_tp ExactNumBottomBlobs() const {
     return -1;
   }
   /**
@@ -244,7 +245,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some minimum number of bottom blobs.
    */
-  virtual inline int MinBottomBlobs() const {
+  virtual inline int_tp MinBottomBlobs() const {
     return -1;
   }
   /**
@@ -254,7 +255,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some maximum number of bottom blobs.
    */
-  virtual inline int MaxBottomBlobs() const {
+  virtual inline int_tp MaxBottomBlobs() const {
     return -1;
   }
   /**
@@ -264,7 +265,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some exact number of top blobs.
    */
-  virtual inline int ExactNumTopBlobs() const {
+  virtual inline int_tp ExactNumTopBlobs() const {
     return -1;
   }
   /**
@@ -274,7 +275,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some minimum number of top blobs.
    */
-  virtual inline int MinTopBlobs() const {
+  virtual inline int_tp MinTopBlobs() const {
     return -1;
   }
   /**
@@ -284,7 +285,7 @@ class Layer {
    * This method should be overridden to return a non-negative value if your
    * layer expects some maximum number of top blobs.
    */
-  virtual inline int MaxTopBlobs() const {
+  virtual inline int_tp MaxTopBlobs() const {
     return -1;
   }
   /**
@@ -318,7 +319,7 @@ class Layer {
    * setting and backpropagate to blob i only if it needs gradient information
    * (as is done when force_backward == false).
    */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
+  virtual inline bool AllowForceBackward(const int_tp bottom_index) const {
     return true;
   }
 
@@ -329,7 +330,7 @@ class Layer {
    * You can safely ignore false values and always compute gradients
    * for all parameters, but possibly with wasteful computation.
    */
-  inline bool param_propagate_down(const int param_id) {
+  inline bool param_propagate_down(const int_tp param_id) {
     return
         (param_propagate_down_.size() > param_id) ?
             param_propagate_down_[param_id] : false;
@@ -338,7 +339,8 @@ class Layer {
    * @brief Sets whether the layer should compute gradients w.r.t. a
    *        parameter at a particular index given by param_id.
    */
-  inline void set_param_propagate_down(const int param_id, const bool value) {
+  inline void set_param_propagate_down(const int_tp param_id,
+                                       const bool value) {
     if (param_propagate_down_.size() <= param_id) {
       param_propagate_down_.resize(param_id + 1, true);
     }
@@ -355,11 +357,11 @@ class Layer {
   /**
    * @brief Returns the estimated floating point operations of this layer
    */
-  virtual size_t ForwardFlops() {
+  virtual uint_tp ForwardFlops() {
     return 0;
   }
 
-  virtual size_t BackwardFlops() {
+  virtual uint_tp BackwardFlops() {
     return 0;
   }
 
@@ -461,15 +463,15 @@ class Layer {
    * the loss function. Store non-zero loss weights in the diff blob.
    */
   inline void SetLossWeights(const vector<Blob<Dtype>*>& top) {
-    const int num_loss_weights = layer_param_.loss_weight_size();
+    const int_tp num_loss_weights = layer_param_.loss_weight_size();
     if (num_loss_weights) {
       CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
       "unspecified or specified once per top blob.";
-      for (int top_id = 0; top_id < top.size(); ++top_id) {
+      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
         const Dtype loss_weight = layer_param_.loss_weight(top_id);
         if (loss_weight == Dtype(0)) {continue;}
         this->set_loss(top_id, loss_weight);
-        const int count = top[top_id]->count();
+        const int_tp count = top[top_id]->count();
         Dtype* loss_multiplier = top[top_id]->mutable_cpu_diff();
         caffe_set(count, loss_weight, loss_multiplier);
       }
@@ -506,11 +508,11 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   switch (Caffe::mode()) {
     case Caffe::CPU:
       Forward_cpu(bottom, top);
-      for (int top_id = 0; top_id < top.size(); ++top_id) {
+      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
         if (!this->loss(top_id)) {
           continue;
         }
-        const int count = top[top_id]->count();
+        const int_tp count = top[top_id]->count();
         const Dtype* data = top[top_id]->cpu_data();
         const Dtype* loss_weights = top[top_id]->cpu_diff();
         loss += caffe_cpu_dot(count, data, loss_weights);
@@ -521,11 +523,11 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 #ifndef CPU_ONLY
       if (device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-        for (int top_id = 0; top_id < top.size(); ++top_id) {
+        for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
           if (!this->loss(top_id)) {
             continue;
           }
-          const int count = top[top_id]->count();
+          const int_tp count = top[top_id]->count();
           const Dtype* data = top[top_id]->gpu_data();
           const Dtype* loss_weights = top[top_id]->gpu_diff();
           Dtype blob_loss = 0;
@@ -535,11 +537,11 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        for (int top_id = 0; top_id < top.size(); ++top_id) {
+        for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
           if (!this->loss(top_id)) {
             continue;
           }
-          const int count = top[top_id]->count();
+          const int_tp count = top[top_id]->count();
           cl_mem data = (cl_mem) (top[top_id]->gpu_data());
           cl_mem loss_weights = (cl_mem) (top[top_id]->gpu_diff());
           Dtype blob_loss = 0;
@@ -580,7 +582,7 @@ void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
   param->Clear();
   param->CopyFrom(layer_param_);
   param->clear_blobs();
-  for (int i = 0; i < blobs_.size(); ++i) {
+  for (int_tp i = 0; i < blobs_.size(); ++i) {
     blobs_[i]->ToProto(param->add_blobs(), write_diff);
   }
 }

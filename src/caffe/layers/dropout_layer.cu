@@ -1,20 +1,15 @@
-#include <algorithm>
-#include <limits>
 #include <vector>
 
-#include "caffe/common.hpp"
-#include "caffe/layer.hpp"
-#include "caffe/syncedmem.hpp"
+#include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void DropoutForward(const int n, const Dtype* in,
-                               const unsigned int* mask,
-                               const unsigned int threshold, const float scale,
+__global__ void DropoutForward(const int_tp n, const Dtype* in,
+                               const uint_tp* mask,
+                               const uint_tp threshold, const float scale,
                                Dtype* out) {
   CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] * (mask[index] > threshold) * scale;
@@ -27,14 +22,14 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                       const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int count = bottom[0]->count();
+  const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     if (this->phase_ == TRAIN) {
-      unsigned int* mask =
-          static_cast<unsigned int*>(rand_vec_.mutable_gpu_data());
-      caffe_gpu_rng_uniform(count, mask);
+      uint_tp* mask =
+          static_cast<uint_tp*>(rand_vec_.mutable_gpu_data());
+      caffe_gpu_rng_uniform(count, (uint_tpc*) (mask));  // NOLINT
       // set thresholds
       // NOLINT_NEXT_LINE(whitespace/operators)
       DropoutForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
@@ -72,9 +67,9 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void DropoutBackward(const int n, const Dtype* in_diff,
-                                const unsigned int* mask,
-                                const unsigned int threshold, const float scale,
+__global__ void DropoutBackward(const int_tp n, const Dtype* in_diff,
+                                const uint_tp* mask,
+                                const uint_tp threshold, const float scale,
                                 Dtype* out_diff) {
   CUDA_KERNEL_LOOP(index, n) {
     out_diff[index] = in_diff[index] * scale * (mask[index] > threshold);
@@ -93,9 +88,9 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       if (this->phase_ == TRAIN) {
-        const unsigned int* mask = static_cast<const unsigned int*>(rand_vec_
+        const uint_tp* mask = static_cast<const uint_tp*>(rand_vec_
             .gpu_data());
-        const int count = bottom[0]->count();
+        const int_tp count = bottom[0]->count();
         // NOLINT_NEXT_LINE(whitespace/operators)
         DropoutBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
             CAFFE_CUDA_NUM_THREADS)(
@@ -114,7 +109,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       if (this->phase_ == TRAIN) {
         cl_mem mask = (cl_mem) (rand_vec_.gpu_data());
-        const int count = bottom[0]->count();
+        const int_tp count = bottom[0]->count();
         viennacl::ocl::kernel &oclk_dropout = program.get_kernel(
             CL_KERNEL_SELECT("dropout_backward"));
         viennacl::ocl::enqueue(

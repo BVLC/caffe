@@ -1,5 +1,3 @@
-#include <cstring>
-
 #include "caffe/common.hpp"
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/syncedmem.hpp"
@@ -20,7 +18,7 @@ namespace caffe {
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
 
-void CaffeMallocHost(void** ptr, size_t size) {
+void CaffeMallocHost(void** ptr, int_tp size) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
     if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
@@ -32,7 +30,8 @@ void CaffeMallocHost(void** ptr, size_t size) {
       // Make sure the memory is zero-copy usable in OpenCL
       CHECK_EQ(0, posix_memalign(ptr, OPENCL_PAGE_ALIGN,
               ((size - 1)/OPENCL_CACHE_ALIGN + 1) * OPENCL_CACHE_ALIGN))
-                  << "Host memory allocation error";
+                  << "Host memory allocation error of size: "
+                  << size << " B";
       return;
     }
   }
@@ -163,7 +162,7 @@ inline void SyncedMemory::to_gpu() {
         CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                         << size_ << " failed.";
         device_->IncreaseMemoryUsage(size_);
-        int alpha = 0;
+        int_tp alpha = 0;
         greentea_memset(device_->id(), size_, alpha, cl_gpu_mem_, 0);
         gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
         ctx.get_queue().finish();

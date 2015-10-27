@@ -75,7 +75,7 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 
 // CUDA: grid stride looping
 #define CUDA_KERNEL_LOOP(i, n) \
-  for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
+  for (int_tp i = blockIdx.x * blockDim.x + threadIdx.x; \
        i < (n); \
        i += blockDim.x * gridDim.x)
 
@@ -106,7 +106,7 @@ const char* curandGetErrorString(curandStatus_t error);
 #endif
 
 // CUDA: number of blocks for threads.
-inline int CAFFE_GET_BLOCKS(const int N) {
+inline int_tp CAFFE_GET_BLOCKS(const int_tp N) {
   return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
 }
 

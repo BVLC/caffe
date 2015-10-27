@@ -12,7 +12,7 @@
 
 namespace caffe {
 
-void CaffeMallocHost(void** ptr, size_t size);
+void CaffeMallocHost(void** ptr, int_tp size);
 
 void CaffeFreeHost(void* ptr);
 
@@ -45,7 +45,7 @@ class SyncedMemory {
         device_(device_context),
         cl_gpu_mem_(NULL) {
   }
-  explicit SyncedMemory(size_t size, device *device_context)
+  explicit SyncedMemory(uint_tp size, device *device_context)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
         size_(size),
@@ -74,7 +74,7 @@ class SyncedMemory {
         own_gpu_data_(false),
         device_(device_context) {
   }
-  explicit SyncedMemory(size_t size, device *device_context)
+  explicit SyncedMemory(uint_tp size, device *device_context)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
         size_(size),
@@ -101,7 +101,7 @@ class SyncedMemory {
   SyncedHead head() {
     return head_;
   }
-  size_t size() {
+  uint_tp size() {
     return size_;
   }
 
@@ -117,7 +117,7 @@ class SyncedMemory {
   void* cpu_ptr_;
   void* gpu_ptr_;
 
-  size_t size_;
+  uint_tp size_;
   SyncedHead head_;
   bool own_cpu_data_;
   bool own_gpu_data_;

@@ -1,7 +1,6 @@
 #include <vector>
 
 #include "caffe/common_layers.hpp"
-#include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #ifdef USE_GREENTEA
@@ -13,15 +12,15 @@
 namespace caffe {
 
 #ifdef USE_CUDA
-template <typename Dtype>
-__global__ void Tile(const int nthreads, const Dtype* bottom_data,
-    const int tile_size, const int num_tiles, const int bottom_tile_axis,
-    Dtype* top_data) {
+template<typename Dtype>
+__global__ void Tile(const int_tp nthreads, const Dtype* bottom_data,
+                     const int_tp tile_size, const int_tp num_tiles,
+                     const int_tp bottom_tile_axis, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    const int d = index % tile_size;
-    const int b = (index / tile_size / num_tiles) % bottom_tile_axis;
-    const int n = index / tile_size / num_tiles / bottom_tile_axis;
-    const int bottom_index = (n * bottom_tile_axis + b) * tile_size + d;
+    const int_tp d = index % tile_size;
+    const int_tp b = (index / tile_size / num_tiles) % bottom_tile_axis;
+    const int_tp n = index / tile_size / num_tiles / bottom_tile_axis;
+    const int_tp bottom_index = (n * bottom_tile_axis + b) * tile_size + d;
     top_data[index] = bottom_data[bottom_index];
   }
 }
@@ -32,8 +31,8 @@ void TileLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int bottom_tile_axis = bottom[0]->shape(axis_);
-  const int nthreads = top[0]->count();
+  const int_tp bottom_tile_axis = bottom[0]->shape(axis_);
+  const int_tp nthreads = top[0]->count();
   if (this->get_device()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     Tile<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
@@ -60,16 +59,17 @@ void TileLayer<Dtype>::Forward_gpu(
 
 #ifdef USE_CUDA
 template <typename Dtype>
-__global__ void TileBackward(const int nthreads, const Dtype* top_diff,
-    const int tile_size, const int num_tiles, const int bottom_tile_axis,
+__global__ void TileBackward(const int_tp nthreads, const Dtype* top_diff,
+                             const int_tp tile_size, const int_tp num_tiles,
+                             const int_tp bottom_tile_axis,
     Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    const int d = index % tile_size;
-    const int b = (index / tile_size) % bottom_tile_axis;
-    const int n = index / tile_size / bottom_tile_axis;
+    const int_tp d = index % tile_size;
+    const int_tp b = (index / tile_size) % bottom_tile_axis;
+    const int_tp n = index / tile_size / bottom_tile_axis;
     bottom_diff[index] = 0;
-    int top_index = (n * num_tiles * bottom_tile_axis + b) * tile_size + d;
-    for (int t = 0; t < num_tiles; ++t) {
+    int_tp top_index = (n * num_tiles * bottom_tile_axis + b) * tile_size + d;
+    for (int_tp t = 0; t < num_tiles; ++t) {
       bottom_diff[index] += top_diff[top_index];
       top_index += bottom_tile_axis * tile_size;
     }
@@ -83,9 +83,9 @@ void TileLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (!propagate_down[0]) { return; }
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-  const int bottom_tile_axis = bottom[0]->shape(axis_);
-  const int tile_size = inner_dim_ / bottom_tile_axis;
-  const int nthreads = bottom[0]->count();
+  const int_tp bottom_tile_axis = bottom[0]->shape(axis_);
+  const int_tp tile_size = inner_dim_ / bottom_tile_axis;
+  const int_tp nthreads = bottom[0]->count();
 
   if (this->get_device()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

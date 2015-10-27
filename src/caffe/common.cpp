@@ -145,7 +145,7 @@ root_solver_(true) {}
 
 Caffe::~Caffe() {}
 
-void Caffe::set_random_seed(const unsigned int seed) {
+void Caffe::set_random_seed(const size_t seed) {
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
 }
@@ -168,7 +168,7 @@ int Caffe::EnumerateDevices(bool silent) {
 class Caffe::RNG::Generator {
  public:
   Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
-  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
+  explicit Generator(size_t seed) : rng_(new caffe::rng_t(seed)) {}
   caffe::rng_t* rng() {return rng_.get();}
  private:
   shared_ptr<caffe::rng_t> rng_;
@@ -176,7 +176,7 @@ class Caffe::RNG::Generator {
 
 Caffe::RNG::RNG() : generator_(new Generator()) {}
 
-Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) {}
+Caffe::RNG::RNG(size_t seed) : generator_(new Generator(seed)) {}
 
 Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
   generator_ = other.generator_;
@@ -213,6 +213,12 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+  if (curandCreateGenerator(&curand_generator64_, CURAND_RNG_QUASI_SOBOL64)
+      != CURAND_STATUS_SUCCESS ||
+      curandSetPseudoRandomGeneratorSeed(curand_generator64_, cluster_seedgen())
+      != CURAND_STATUS_SUCCESS) {
+    LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
+  }
 #endif  // USE_CUDA
 }
 
@@ -233,7 +239,7 @@ Caffe::~Caffe() {
 #endif  // USE_CUDA
 }
 
-void Caffe::set_random_seed(const unsigned int seed) {
+void Caffe::set_random_seed(const size_t seed) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Curand seed
@@ -393,13 +399,13 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
       viennacl::ocl::device> > platform_devices;
 
   // Loop through devices
-  for (std::size_t platform_id = 0; platform_id < platforms.size();
+  for (int platform_id = 0; platform_id < platforms.size();
       ++platform_id) {
     typedef std::vector<viennacl::ocl::device> devices_type;
     try {
       devices_type devices = platforms[platform_id].devices(
       CL_DEVICE_TYPE_ALL);
-      for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
+      for (int device_id = 0; device_id < devices.size(); ++device_id) {
         platform_devices.push_back(
             std::make_tuple(platforms[platform_id], devices[device_id]));
         // Check if this device is really used and initialize
@@ -536,7 +542,7 @@ class Caffe::RNG::Generator {
   Generator()
       : rng_(new caffe::rng_t(cluster_seedgen())) {
   }
-  explicit Generator(unsigned int seed)
+  explicit Generator(size_t seed)
       : rng_(new caffe::rng_t(seed)) {
   }
   caffe::rng_t* rng() {
@@ -550,7 +556,7 @@ Caffe::RNG::RNG()
     : generator_(new Generator()) {
 }
 
-Caffe::RNG::RNG(unsigned int seed)
+Caffe::RNG::RNG(size_t seed)
     : generator_(new Generator(seed)) {
 }
 

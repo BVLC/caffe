@@ -1,21 +1,19 @@
 #include <vector>
 
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
 template<typename Dtype>
 void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                           const vector<Blob<Dtype>*>& top) {
-  const int num_output = this->layer_param_.inner_product_param().num_output();
+  const int_tp num_output =
+      this->layer_param_.inner_product_param().num_output();
   bias_term_ = this->layer_param_.inner_product_param().bias_term();
   N_ = num_output;
-  const int axis = bottom[0]->CanonicalAxisIndex(
+  const int_tp axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
   // Dimensions starting from "axis" are "flattened" into a single
   // length K_ vector. For example, if bottom[0]'s shape is (N, C, H, W),
@@ -31,7 +29,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->blobs_.resize(1);
     }
     // Intialize the weight
-    vector<int> weight_shape(2);
+    vector<int_tp> weight_shape(2);
     weight_shape[0] = N_;
     weight_shape[1] = K_;
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape,
@@ -42,7 +40,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, intiialize and fill the bias term
     if (bias_term_) {
-      vector<int> bias_shape(1, N_);
+      vector<int_tp> bias_shape(1, N_);
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape, this->device_));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
               this->layer_param_.inner_product_param().bias_filler()));
@@ -56,9 +54,9 @@ template<typename Dtype>
 void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
   // Figure out the dimensions
-  const int axis = bottom[0]->CanonicalAxisIndex(
+  const int_tp axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
-  const int new_K = bottom[0]->count(axis);
+  const int_tp new_K = bottom[0]->count(axis);
   CHECK_EQ(K_, new_K)
       << "Input size incompatible with inner product parameters.";
   // The first "axis" dimensions are independent inner products; the total
@@ -66,13 +64,13 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   M_ = bottom[0]->count(0, axis);
   // The top shape will be the bottom shape with the flattened axes dropped,
   // and replaced by a single axis with dimension num_output (N_).
-  vector<int> top_shape = bottom[0]->shape();
+  vector<int_tp> top_shape = bottom[0]->shape();
   top_shape.resize(axis + 1);
   top_shape[axis] = N_;
   top[0]->Reshape(top_shape);
   // Set up the bias multiplier
   if (bias_term_) {
-    vector<int> bias_shape(1, M_);
+    vector<int_tp> bias_shape(1, M_);
     bias_multiplier_.Reshape(bias_shape);
     caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }

@@ -1,7 +1,5 @@
 #include <vector>
 
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
 #include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
@@ -20,27 +18,27 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template <typename Dtype>
-__global__ void EmbedForward(const int nthreads, const Dtype* bottom_data,
-    const Dtype* weight, const int M, const int N, const int K,
+__global__ void EmbedForward(const int_tp nthreads, const Dtype* bottom_data,
+    const Dtype* weight, const int_tp M, const int_tp N, const int_tp K,
     Dtype* top_data) {
   CUDA_KERNEL_LOOP(top_index, nthreads) {
-    const int n = top_index / N;
-    const int d = top_index % N;
-    const int index = static_cast<int>(bottom_data[n]);
-    const int weight_index = index * N + d;
+    const int_tp n = top_index / N;
+    const int_tp d = top_index % N;
+    const int_tp index = static_cast<int_tp>(bottom_data[n]);
+    const int_tp weight_index = index * N + d;
     top_data[top_index] = weight[weight_index];
   }
 }
 
 template <typename Dtype>
-__global__ void EmbedBackward(const int nthreads, const Dtype* bottom_data,
-    const Dtype* top_diff, const int M, const int N, const int K,
+__global__ void EmbedBackward(const int_tp nthreads, const Dtype* bottom_data,
+    const Dtype* top_diff, const int_tp M, const int_tp N, const int_tp K,
     Dtype* weight_diff) {
   CUDA_KERNEL_LOOP(top_index, nthreads) {
-    const int n = top_index / N;
-    const int d = top_index % N;
-    const int index = static_cast<int>(bottom_data[n]);
-    const int weight_index = index * N + d;
+    const int_tp n = top_index / N;
+    const int_tp d = top_index % N;
+    const int_tp index = static_cast<int_tp>(bottom_data[n]);
+    const int_tp weight_index = index * N + d;
     caffe_gpu_atomic_add(top_diff[top_index], weight_diff + weight_index);
   }
 }
@@ -52,7 +50,7 @@ void EmbedLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
-  const int count = top[0]->count();
+  const int_tp count = top[0]->count();
   if (this->get_device()->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
 
@@ -97,7 +95,7 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   CHECK(!propagate_down[0]) << "Can't backpropagate to EmbedLayer input.";
   if (this->param_propagate_down_[0]) {
-    const int top_count = top[0]->count();
+    const int_tp top_count = top[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();
     const Dtype* bottom_data = bottom[0]->gpu_data();
     Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();

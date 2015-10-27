@@ -39,10 +39,10 @@ void device::Init() {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
-    std::vector<size_t> temp(3);
+    std::vector<uint_tp> temp(3);
     clGetDeviceInfo(ctx.devices()[0].id(),
     CL_DEVICE_MAX_WORK_ITEM_SIZES,
-                    sizeof(size_t), &temp[0], NULL);
+                    sizeof(uint_tp), &temp[0], NULL);
     workgroup_sizes_[0] = temp[0];
     workgroup_sizes_[1] = temp[1];
     workgroup_sizes_[2] = temp[2];
@@ -140,22 +140,22 @@ void device::FinishQueues() {
   }
 }
 
-size_t device::memory_usage() {
+uint_tp device::memory_usage() {
   return memory_usage_;
 }
 
-size_t device::peak_memory_usage() {
+uint_tp device::peak_memory_usage() {
   return peak_memory_usage_;
 }
 
-void device::IncreaseMemoryUsage(size_t bytes) {
+void device::IncreaseMemoryUsage(uint_tp bytes) {
   memory_usage_ += bytes;
   if (memory_usage_ > peak_memory_usage_) {
     peak_memory_usage_ = memory_usage_;
   }
 }
 
-void device::DecreaseMemoryUsage(size_t bytes) {
+void device::DecreaseMemoryUsage(uint_tp bytes) {
   memory_usage_ -= bytes;
 }
 

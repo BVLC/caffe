@@ -1,8 +1,6 @@
 #include <stdint.h>  // for uint32_t & uint64_t
 #include <time.h>
-#include <climits>
 #include <cmath>  // for std::fabs
-#include <cstdlib>  // for rand_r
 
 #include "gtest/gtest.h"
 
@@ -47,10 +45,11 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
   }
 
   // http://en.wikipedia.org/wiki/Hamming_distance
-  int ReferenceHammingDistance(const int n, const Dtype* x, const Dtype* y) {
-    int dist = 0;
+  int_tp ReferenceHammingDistance(const int_tp n, const Dtype* x,
+                                  const Dtype* y) {
+    int_tp dist = 0;
     uint64_t val;
-    for (int i = 0; i < n; ++i) {
+    for (int_tp i = 0; i < n; ++i) {
       if (sizeof(Dtype) == 8) {
         val = static_cast<uint64_t>(x[i]) ^ static_cast<uint64_t>(y[i]);
       } else if (sizeof(Dtype) == 4) {
@@ -84,7 +83,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
   EXPECT_EQ(this->ReferenceHammingDistance(n, x, y),
@@ -92,10 +91,10 @@ TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     std_asum += std::fabs(x[i]);
   }
   TypeParam cpu_asum = caffe_cpu_asum<TypeParam>(n, x);
@@ -103,54 +102,54 @@ TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSign) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   caffe_cpu_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSgnbit) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   caffe_cpu_sgnbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(signbits[i], x[i] < 0 ? 1 : 0);
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   caffe_abs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestScale) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
   caffe_cpu_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
                              this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(scaled[i], x[i] * alpha);
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
-  const int n = this->blob_bottom_->count();
+  const int_tp n = this->blob_bottom_->count();
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   TypeParam* top_data = this->blob_top_->mutable_cpu_data();
   caffe_cpu_copy(n, bottom_data, top_data);
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
   }
 }
@@ -166,22 +165,22 @@ TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
 TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
 #ifdef USE_CUDA
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
-  int reference_distance = this->ReferenceHammingDistance(n, x, y);
+  int_tp reference_distance = this->ReferenceHammingDistance(n, x, y);
   x = this->blob_bottom_->gpu_data();
   y = this->blob_top_->gpu_data();
-  int computed_distance = caffe_gpu_hamming_distance<TypeParam>(n, x, y);
+  int_tp computed_distance = caffe_gpu_hamming_distance<TypeParam>(n, x, y);
   EXPECT_EQ(reference_distance, computed_distance);
 #endif  // USE_CUDA
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     std_asum += std::fabs(x[i]);
   }
   TypeParam gpu_asum;
@@ -202,7 +201,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestSign) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
 
   device *dc = Caffe::GetDefaultDevice();
 
@@ -221,13 +220,13 @@ TYPED_TEST(GPUMathFunctionsTest, TestSign) {
 
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
   }
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
 
   device *dc = Caffe::GetDefaultDevice();
 
@@ -246,13 +245,13 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
 
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(signbits[i], x[i] < 0 ? 1 : 0);
   }
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
 
   device *dc = Caffe::GetDefaultDevice();
 
@@ -271,13 +270,13 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
 
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
   }
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestScale) {
-  int n = this->blob_bottom_->count();
+  int_tp n = this->blob_bottom_->count();
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
 
@@ -297,13 +296,13 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
 
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(scaled[i], x[i] * alpha);
   }
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
-  const int n = this->blob_bottom_->count();
+  const int_tp n = this->blob_bottom_->count();
   const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
   TypeParam* top_data = this->blob_top_->mutable_gpu_data();
 
@@ -324,7 +323,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
 
   bottom_data = this->blob_bottom_->cpu_data();
   top_data = this->blob_top_->mutable_cpu_data();
-  for (int i = 0; i < n; ++i) {
+  for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
   }
 }

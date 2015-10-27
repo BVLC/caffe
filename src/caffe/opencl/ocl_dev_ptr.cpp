@@ -15,7 +15,7 @@ Type* ocl_dev_ptr<Type>::get() {
 }
 
 template<typename Type>
-std::ptrdiff_t ocl_dev_ptr<Type>::off() {
+std::size_t ocl_dev_ptr<Type>::off() {
   return 0;
 }
 

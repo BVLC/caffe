@@ -17,6 +17,9 @@
 #include "caffe/util/blocking_queue.hpp"
 #include "caffe/util/db.hpp"
 
+#define HDF5_DATA_DATASET_NAME "data"
+#define HDF5_DATA_LABEL_NAME "label"
+
 namespace caffe {
 
 /**
@@ -75,7 +78,7 @@ class BasePrefetchingDataLayer :
       const vector<Blob<Dtype>*>& top);
 
   // Prefetches batches (asynchronously if to GPU memory)
-  static const int PREFETCH_COUNT = 3;
+  static const int_tp PREFETCH_COUNT = 3;
 
  protected:
   virtual void InternalThreadEntry();
@@ -98,9 +101,9 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   // DataLayer uses DataReader instead for sharing for parallelism
   virtual inline bool ShareInParallel() const { return false; }
   virtual inline const char* type() const { return "Data"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
@@ -127,8 +130,8 @@ class DummyDataLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "DummyData"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -162,8 +165,8 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "HDF5Data"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -177,12 +180,12 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual void LoadHDF5FileData(const char* filename);
 
   std::vector<std::string> hdf_filenames_;
-  unsigned int num_files_;
-  unsigned int current_file_;
+  uint_tp num_files_;
+  uint_tp current_file_;
   hsize_t current_row_;
   std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
-  std::vector<unsigned int> data_permutation_;
-  std::vector<unsigned int> file_permutation_;
+  std::vector<uint_tp> data_permutation_;
+  std::vector<uint_tp> file_permutation_;
 };
 
 /**
@@ -206,8 +209,8 @@ class HDF5OutputLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "HDF5Output"; }
   // TODO: no limit on the number of blobs
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 0; }
 
   inline std::string file_name() const { return file_name_; }
 
@@ -244,16 +247,16 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "ImageData"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
   virtual void ShuffleImages();
   virtual void load_batch(Batch<Dtype>* batch);
 
-  vector<std::pair<std::string, int> > lines_;
-  int lines_id_;
+  vector<std::pair<std::string, int_tp> > lines_;
+  int_tp lines_id_;
 };
 
 /**
@@ -270,39 +273,39 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MemoryData"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
 #ifdef USE_OPENCV
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
-      const vector<int>& labels);
+      const vector<int_tp>& labels);
 #endif  // USE_OPENCV
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
-  void Reset(Dtype* data, Dtype* label, int n);
-  void set_batch_size(int new_size);
+  void Reset(Dtype* data, Dtype* label, int_tp n);
+  void set_batch_size(int_tp new_size);
 
-  vector<int> shape() { return shape_; }
-  vector<int> label_shape() { return label_shape_; }
-  int batch_size() { return shape_[0]; }
-  int channels() { return shape_[1]; }
-  int height() { return shape_[2]; }
-  int width() { return shape_[3]; }
+  vector<int_tp> shape() { return shape_; }
+  vector<int_tp> label_shape() { return label_shape_; }
+  int_tp batch_size() { return shape_[0]; }
+  int_tp channels() { return shape_[1]; }
+  int_tp height() { return shape_[2]; }
+  int_tp width() { return shape_[3]; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  vector<int> shape_;
-  vector<int> label_shape_;
-  int size_;
+  vector<int_tp> shape_;
+  vector<int_tp> label_shape_;
+  int_tp size_;
 
   Dtype* data_;
   Dtype* labels_;
-  int n_;
-  size_t pos_;
+  int_tp n_;
+  uint_tp pos_;
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
@@ -324,15 +327,15 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "WindowData"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual unsigned int PrefetchRand();
+  virtual uint_tp PrefetchRand();
   virtual void load_batch(Batch<Dtype>* batch);
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
-  vector<std::pair<std::string, vector<int> > > image_database_;
+  vector<std::pair<std::string, vector<int_tp> > > image_database_;
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;

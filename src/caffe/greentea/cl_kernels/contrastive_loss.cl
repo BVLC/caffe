@@ -2,15 +2,15 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(cll_backward,Dtype)(const int count, const int channels,
+__kernel void TEMPLATE(cll_backward,Dtype)(const int_tp count, const int_tp channels,
                             const Dtype margin, const int legacy_version,
                             const Dtype alpha, __global const Dtype* y,
                             __global const Dtype* diff, __global const Dtype* dist_sq,
                             __global Dtype *bottom_diff) {
-  for (int i = get_global_id(0); i < count;
+  for (int_tp i = get_global_id(0); i < count;
       i += get_global_size(0)) {
-    int n = i / channels;  // the num index, to access y and dist_sq
-    if ((int)(y[n])) {  // similar pairs
+    int_tp n = i / channels;  // the num index, to access y and dist_sq
+    if ((int_tp)(y[n])) {  // similar pairs
       bottom_diff[i] = alpha * diff[i];
     } else {  // dissimilar pairs
       Dtype mdist = 0.0;

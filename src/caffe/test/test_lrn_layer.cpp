@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -58,18 +57,18 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
   LRNParameter lrn_param = layer_param.lrn_param();
   Dtype alpha = lrn_param.alpha();
   Dtype beta = lrn_param.beta();
-  int size = lrn_param.local_size();
+  int_tp size = lrn_param.local_size();
   switch (lrn_param.norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    for (int n = 0; n < blob_bottom.num(); ++n) {
-      for (int c = 0; c < blob_bottom.channels(); ++c) {
-        for (int h = 0; h < blob_bottom.height(); ++h) {
-          for (int w = 0; w < blob_bottom.width(); ++w) {
-            int c_start = c - (size - 1) / 2;
-            int c_end = min(c_start + size, blob_bottom.channels());
-            c_start = max(c_start, 0);
+    for (int_tp n = 0; n < blob_bottom.num(); ++n) {
+      for (int_tp c = 0; c < blob_bottom.channels(); ++c) {
+        for (int_tp h = 0; h < blob_bottom.height(); ++h) {
+          for (int_tp w = 0; w < blob_bottom.width(); ++w) {
+            int_tp c_start = c - (size - 1) / 2;
+            int_tp c_end = min(c_start + size, blob_bottom.channels());
+            c_start = max(c_start, 0L);
             Dtype scale = 1.;
-            for (int i = c_start; i < c_end; ++i) {
+            for (int_tp i = c_start; i < c_end; ++i) {
               Dtype value = blob_bottom.data_at(n, i, h, w);
               scale += value * value * alpha / size;
             }
@@ -81,19 +80,19 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
     }
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    for (int n = 0; n < blob_bottom.num(); ++n) {
-      for (int c = 0; c < blob_bottom.channels(); ++c) {
-        for (int h = 0; h < blob_bottom.height(); ++h) {
-          int h_start = h - (size - 1) / 2;
-          int h_end = min(h_start + size, blob_bottom.height());
-          h_start = max(h_start, 0);
-          for (int w = 0; w < blob_bottom.width(); ++w) {
+    for (int_tp n = 0; n < blob_bottom.num(); ++n) {
+      for (int_tp c = 0; c < blob_bottom.channels(); ++c) {
+        for (int_tp h = 0; h < blob_bottom.height(); ++h) {
+          int_tp h_start = h - (size - 1) / 2;
+          int_tp h_end = min(h_start + size, blob_bottom.height());
+          h_start = max(h_start, 0L);
+          for (int_tp w = 0; w < blob_bottom.width(); ++w) {
             Dtype scale = 1.;
-            int w_start = w - (size - 1) / 2;
-            int w_end = min(w_start + size, blob_bottom.width());
-            w_start = max(w_start, 0);
-            for (int nh = h_start; nh < h_end; ++nh) {
-              for (int nw = w_start; nw < w_end; ++nw) {
+            int_tp w_start = w - (size - 1) / 2;
+            int_tp w_end = min(w_start + size, blob_bottom.width());
+            w_start = max(w_start, 0L);
+            for (int_tp nh = h_start; nh < h_end; ++nh) {
+              for (int_tp nw = w_start; nw < w_end; ++nw) {
                 Dtype value = blob_bottom.data_at(n, c, nh, nw);
                 scale += value * value * alpha / (size * size);
               }
@@ -132,7 +131,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannels) {
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                 this->epsilon_);
   }
@@ -148,7 +147,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                 this->epsilon_);
   }
@@ -161,13 +160,13 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannels) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
   layer.Backward(this->blob_top_vec_, propagate_down,
                  this->blob_bottom_vec_);
-  // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  // for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
   //   std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i]
   //       << std::endl;
   // }
@@ -183,13 +182,13 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
   layer.Backward(this->blob_top_vec_, propagate_down,
                  this->blob_bottom_vec_);
-  // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  // for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
   //   std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i]
   //       << std::endl;
   // }
@@ -223,7 +222,7 @@ TYPED_TEST(LRNLayerTest, TestForwardWithinChannel) {
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                 this->epsilon_);
   }
@@ -239,7 +238,7 @@ TYPED_TEST(LRNLayerTest, TestGradientWithinChannel) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
@@ -286,18 +285,18 @@ void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
   LRNParameter lrn_param = layer_param.lrn_param();
   Dtype alpha = lrn_param.alpha();
   Dtype beta = lrn_param.beta();
-  int size = lrn_param.local_size();
+  int_tp size = lrn_param.local_size();
   switch (lrn_param.norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    for (int n = 0; n < blob_bottom.num(); ++n) {
-      for (int c = 0; c < blob_bottom.channels(); ++c) {
-        for (int h = 0; h < blob_bottom.height(); ++h) {
-          for (int w = 0; w < blob_bottom.width(); ++w) {
-            int c_start = c - (size - 1) / 2;
-            int c_end = min(c_start + size, blob_bottom.channels());
-            c_start = max(c_start, 0);
+    for (int_tp n = 0; n < blob_bottom.num(); ++n) {
+      for (int_tp c = 0; c < blob_bottom.channels(); ++c) {
+        for (int_tp h = 0; h < blob_bottom.height(); ++h) {
+          for (int_tp w = 0; w < blob_bottom.width(); ++w) {
+            int_tp c_start = c - (size - 1) / 2;
+            int_tp c_end = min(c_start + size, blob_bottom.channels());
+            c_start = max(c_start, 0L);
             Dtype scale = 1.;
-            for (int i = c_start; i < c_end; ++i) {
+            for (int_tp i = c_start; i < c_end; ++i) {
               Dtype value = blob_bottom.data_at(n, i, h, w);
               scale += value * value * alpha / size;
             }
@@ -309,19 +308,19 @@ void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
     }
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    for (int n = 0; n < blob_bottom.num(); ++n) {
-      for (int c = 0; c < blob_bottom.channels(); ++c) {
-        for (int h = 0; h < blob_bottom.height(); ++h) {
-          int h_start = h - (size - 1) / 2;
-          int h_end = min(h_start + size, blob_bottom.height());
-          h_start = max(h_start, 0);
-          for (int w = 0; w < blob_bottom.width(); ++w) {
+    for (int_tp n = 0; n < blob_bottom.num(); ++n) {
+      for (int_tp c = 0; c < blob_bottom.channels(); ++c) {
+        for (int_tp h = 0; h < blob_bottom.height(); ++h) {
+          int_tp h_start = h - (size - 1) / 2;
+          int_tp h_end = min(h_start + size, blob_bottom.height());
+          h_start = max(h_start, 0L);
+          for (int_tp w = 0; w < blob_bottom.width(); ++w) {
             Dtype scale = 1.;
-            int w_start = w - (size - 1) / 2;
-            int w_end = min(w_start + size, blob_bottom.width());
-            w_start = max(w_start, 0);
-            for (int nh = h_start; nh < h_end; ++nh) {
-              for (int nw = w_start; nw < w_end; ++nw) {
+            int_tp w_start = w - (size - 1) / 2;
+            int_tp w_end = min(w_start + size, blob_bottom.width());
+            w_start = max(w_start, 0L);
+            for (int_tp nh = h_start; nh < h_end; ++nh) {
+              for (int_tp nw = w_start; nw < w_end; ++nw) {
                 Dtype value = blob_bottom.data_at(n, c, nh, nw);
                 scale += value * value * alpha / (size * size);
               }
@@ -349,7 +348,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
   Blob<TypeParam> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                 this->epsilon_);
   }
@@ -365,7 +364,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsLargeRegionCuDNN) {
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                 this->epsilon_);
   }
@@ -378,7 +377,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
@@ -400,7 +399,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardWithinChannel) {
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
                 this->epsilon_);
   }
@@ -416,7 +415,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientWithinChannel) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
@@ -431,7 +430,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);

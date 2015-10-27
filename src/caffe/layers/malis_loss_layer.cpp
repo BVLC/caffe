@@ -45,30 +45,36 @@ class MalisAffinityGraphCompare {
 // margin:      sq-sq loss margin [0.3]
 template<typename Dtype>
 void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
-                                  const int conn_num_dims,
-                                  const int* conn_dims, const int* nhood_data,
-                                  const int* nhood_dims, const Dtype* seg_data,
-                                  const bool pos,
+                                  const int_tp conn_num_dims,
+                                  const int_tp* conn_dims,
+                                  const int_tp* nhood_data,
+                                  const int_tp* nhood_dims,
+                                  const Dtype* seg_data, const bool pos,
                                   Dtype* dloss_data, Dtype* loss_out,
                                   Dtype *classerr_out, Dtype *rand_index_out,
                                   Dtype margin, Dtype threshold) {
   if ((nhood_dims[1] != (conn_num_dims - 1))
-      || (nhood_dims[0] != conn_dims[conn_num_dims - 1])) {
-    LOG(FATAL) << "nhood and conn dimensions don't match";
+      || (nhood_dims[0] != conn_dims[0])) {
+    LOG(FATAL) << "nhood and conn dimensions don't match"
+        << " (" << nhood_dims[1] << " vs. " << (conn_num_dims - 1)
+        << " and " << nhood_dims[0] << " vs. "
+        << conn_dims[conn_num_dims - 1] <<")";
   }
 
   /* Cache for speed to access neighbors */
   // nVert stores (x * y * z)
   int64_t nVert = 1;
-  for (int64_t i = 0; i < conn_num_dims - 1; ++i) {
-    nVert = nVert * conn_dims[i];
+  for (int64_t i = 1; i < conn_num_dims; ++i) {
+    nVert *= conn_dims[i];
+    // std::cout << i << " nVert: " << nVert << std::endl;
   }
 
   // prodDims stores x, x*y, x*y*z offsets
   std::vector<int64_t> prodDims(conn_num_dims - 1);
   prodDims[0] = 1;
   for (int64_t i = 1; i < conn_num_dims - 1; ++i) {
-    prodDims[i] = prodDims[i - 1] * conn_dims[i - 1];
+    prodDims[i] = prodDims[i - 1] * conn_dims[i];
+    // std::cout << i << " prodDims: " << prodDims[i] << std::endl;
   }
 
   /* convert n-d offset vectors into linear array offset scalars */
@@ -79,6 +85,7 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
     for (int64_t j = 0; j < nhood_dims[1]; ++j) {
       nHood[i] += (int32_t) nhood_data[j + i * nhood_dims[1]] * prodDims[j];
     }
+    // std::cout << i << " nHood: " << nHood[i] << std::endl;
   }
 
   /* Disjoint sets and sparse overlap vectors */
@@ -108,12 +115,8 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
     nPairNorm = nPairNeg;
   }
 
-  /* Sort all the edges in increasing order of weight */
-  std::vector<int64_t> pqueue(
-      conn_dims[3] * std::max((conn_dims[0] - 1), 1)
-                   * std::max((conn_dims[1] - 1), 1)
-                   * std::max((conn_dims[2] - 1), 1));
-  int64_t j = 0;
+
+  int64_t edgeCount = 0;
   // Loop over #edges
   for (int64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
     // Loop over Z
@@ -123,12 +126,37 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
         // Loop over X
         for (int64_t x = 0; x < conn_dims[3]; ++x, ++i) {
           // Out-of-bounds check:
-          if (!((z + nhood_data[d * 3 + 0] < 0)
-              ||(z + nhood_data[d * 3 + 0] >= conn_dims[1])
-              ||(y + nhood_data[d * 3 + 1] < 0)
-              ||(y + nhood_data[d * 3 + 1] >= conn_dims[2])
-              ||(x + nhood_data[d * 3 + 2] < 0)
-              ||(x + nhood_data[d * 3 + 2] >= conn_dims[3]))) {
+          if (!((z + nhood_data[d * conn_dims[0] + 0] < 0)
+              ||(z + nhood_data[d * conn_dims[0] + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * conn_dims[0] + 1] < 0)
+              ||(y + nhood_data[d * conn_dims[0] + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * conn_dims[0] + 2] < 0)
+              ||(x + nhood_data[d * conn_dims[0] + 2] >= conn_dims[3]))) {
+            ++edgeCount;
+          }
+        }
+      }
+    }
+  }
+
+  /* Sort all the edges in increasing order of weight */
+  std::vector<int64_t> pqueue(edgeCount);
+  int64_t j = 0;
+  // Loop over #edges
+  for (int64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
+    // Loop over Z
+    for (int64_t x = 0; x < conn_dims[3]; ++x) {
+      // Loop over Y
+      for (int64_t y = 0; y < conn_dims[2]; ++y) {
+        // Loop over X
+        for (int64_t z = 0; z < conn_dims[1]; ++z, ++i) {
+          // Out-of-bounds check:
+          if (!((z + nhood_data[d * conn_dims[0] + 0] < 0)
+              ||(z + nhood_data[d * conn_dims[0] + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * conn_dims[0] + 1] < 0)
+              ||(y + nhood_data[d * conn_dims[0] + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * conn_dims[0] + 2] < 0)
+              ||(x + nhood_data[d * conn_dims[0] + 2] >= conn_dims[3]))) {
             pqueue[j++] = i;
           }
         }
@@ -274,7 +302,7 @@ void MalisLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // batch, channels (edges), Z, Y, X    => 3D affinity
   // batch, channels (edges), Y, X       => 2D affinity
   // batch, channels (edges), X          => 1D affinity
-  vector<int> shape = bottom[0]->shape();
+  vector<int_tp> shape = bottom[0]->shape();
 
   conn_dims_.clear();
   nhood_dims_.clear();
@@ -312,12 +340,12 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef CAFFE_MALIS_DEBUG
   // This is for debugging only:
   {
-    std::vector<int> labels;
+    std::vector<int_tp> labels;
     const Dtype* seg_data = bottom[2]->cpu_data();
-    for (int i = 0; i < bottom[2]->height() * bottom[2]->width(); ++i) {
-      int val = static_cast<int>(seg_data[i]);
+    for (int_tp i = 0; i < bottom[2]->height() * bottom[2]->width(); ++i) {
+      int_tp val = static_cast<int_tp>(seg_data[i]);
       bool found = false;
-      for (int j = 0; j < labels.size(); ++j) {
+      for (int_tp j = 0; j < labels.size(); ++j) {
         if (val == labels[j]) {
           found = true;
         }
@@ -329,7 +357,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     std::vector<cv::Vec3b> colors;
 
-    for (int i = 0; i < labels.size(); ++i) {
+    for (int_tp i = 0; i < labels.size(); ++i) {
       unsigned char r = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
       unsigned char g = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
       unsigned char b = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
@@ -343,13 +371,13 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     const Dtype* imgdata = bottom[2]->cpu_data();
 
-    for (int i = 0; i < bottom[1]->height() * bottom[1]->width(); ++i) {
-      int val = imgdata[i];
+    for (int_tp i = 0; i < bottom[1]->height() * bottom[1]->width(); ++i) {
+      int_tp val = imgdata[i];
       if (val == 0) {
         output.at<cv::Vec3b>(i) = cv::Vec3b(0, 0, 0);
         continue;
       }
-      for (int j = 0; j < labels.size(); ++j) {
+      for (int_tp j = 0; j < labels.size(); ++j) {
         if (val == labels[j]) {
           output.at<cv::Vec3b>(i) = colors[j];
         }
@@ -363,7 +391,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   nhood_data_.clear();
   if (bottom.size() == 4) {
     // Custom edges
-    for (int i = 0; i < nedges_; ++i) {
+    for (int_tp i = 0; i < nedges_; ++i) {
       // Z edge direction
       nhood_data_.push_back(bottom[3]->cpu_data()[i * 3 + 0]);
       // Y edge direction
@@ -376,7 +404,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // 1 edge:    +X          (0,0,1)
     // 2 edges:   +Y, +X      (0,1,0); (0,0,1)
     // 3 edges:   +Z, +Y, +X  (1,0,0); (0,1,0); (0,0,1)
-    for (int i = 3 - nedges_; i < 3; ++i) {
+    for (int_tp i = 3 - nedges_; i < 3; ++i) {
       nhood_data_.push_back((i + 0) % 3 == 0 ? 1 : 0);
       nhood_data_.push_back((i + 1) % 3 == 0 ? 1 : 0);
       nhood_data_.push_back((i + 2) % 3 == 0 ? 1 : 0);
@@ -393,20 +421,20 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* affinity_data_neg = affinity_neg_.mutable_cpu_data();
 
 #pragma omp parallel for
-  for (int i = 0; i < bottom[0]->count(); ++i) {
+  for (int_tp i = 0; i < bottom[0]->count(); ++i) {
     affinity_data_pos[i] = std::min(affinity_prob[i], affinity[i]);
     affinity_data_neg[i] = std::max(affinity_prob[i], affinity[i]);
   }
 
-  size_t batch_offset = 1;
-  for (int i = 1; i < bottom[0]->shape().size(); ++i) {
+  uint_tp batch_offset = 1;
+  for (int_tp i = 1; i < bottom[0]->shape().size(); ++i) {
     batch_offset *= bottom[0]->shape()[i];
   }
 
   Dtype loss = 0;
 
 #pragma omp parallel for reduction(+:loss)
-  for (int batch = 0; batch < bottom[0]->shape()[0]; ++batch) {
+  for (int_tp batch = 0; batch < bottom[0]->shape()[0]; ++batch) {
     Dtype loss_out = 0;
     Dtype classerr_out = 0;
     Dtype rand_index_out = 0;
@@ -421,6 +449,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &classerr_out, &rand_index_out, 0.3, 0.5);
 
     loss += loss_out;
+    std::cout << loss << std::endl;
 
     Malis(&affinity_data_pos[batch_offset * batch], conn_num_dims_,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
@@ -429,6 +458,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &classerr_out, &rand_index_out, 0.3, 0.5);
 
     loss += loss_out;
+    std::cout << loss << std::endl;
   }
 
   // Normalized loss over batch size
@@ -453,7 +483,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_set(bottom[0]->count(), Dtype(0.0), bottom_diff);
 
 #pragma omp parallel for
-    for (int i = 0; i < bottom[0]->count(); ++i) {
+    for (int_tp i = 0; i < bottom[0]->count(); ++i) {
       bottom_diff[i] = dloss_pos_data[i] + dloss_neg_data[i];
     }
   }
