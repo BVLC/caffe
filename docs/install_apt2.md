@@ -177,7 +177,7 @@ Install OpenBLAS
 
 * Clone OpenBLAS:
 
-         git clone git://github.com/xianyi/OpenBLAS
+         git clone https://github.com/xianyi/OpenBLAS.git
 
 * Go to the OpenBLAS directory:
 
