@@ -8,7 +8,20 @@ namespace caffe {
 
 class gpu_memory {
  public:
-  enum PoolMode { NoPool, CnMemPool, CubPool };
+  enum PoolMode {
+    NoPool,     // Straight CUDA malllc/free. May be very expensive
+    CnMemPool,  // CNMEM arena allocator
+    CubPool,     // CUB caching allocator
+#ifdef CPU_ONLY
+    DefaultPool = NoPool
+#else
+#  if (USE_CNMEM) && !defined (__arm__)
+    DefaultPool = CnMemPool   // CNMEM pool only uses dedicated video memory.
+# else
+    DefaultPool = CubPool     // CUB pool is able to use unified memory properly
+# endif
+#endif
+  };
 
   static const char* getPoolName();
   static bool usingPool() {
@@ -17,8 +30,9 @@ class gpu_memory {
 
   class arena {
    public:
-    arena(const std::vector<int>& gpus, PoolMode m = CnMemPool) {
-      init(gpus, m);
+    arena(const std::vector<int>& gpus,
+          PoolMode m = DefaultPool, bool debug = false) {
+      init(gpus, m, debug);
     }
     ~arena() {
       destroy();
@@ -26,12 +40,13 @@ class gpu_memory {
   };
 
  private:
-    static void init(const std::vector<int>&, PoolMode);
+  static void init(const std::vector<int>&, PoolMode, bool);
     static void destroy();
 
-    static bool initialized_;
+    static bool     initialized_;
     static PoolMode mode_;
-
+    static size_t   poolsize_;
+  static bool       debug_;
 #ifndef CPU_ONLY
 
  public:
@@ -42,7 +57,8 @@ class gpu_memory {
   static void getInfo(size_t *free_mem, size_t *used_mem);
 
  private:
-    static void initCNMEM(const std::vector<int>& gpus);
+  static void initMEM(const std::vector<int>& gpus, PoolMode m);
+
 #endif
 };
 
