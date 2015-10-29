@@ -78,6 +78,8 @@ cdef class Tensor:
         return self.thisptr.get().count()
     def dot(self, other):
         return self.DotPFrom(other)
+    def norm(self):
+        return self.dot(self) ** 0.5
     def cosine(self, other):
         num = self.dot(other) 
         denom = (self.dot(self) * other.dot(other)) ** 0.5
@@ -320,6 +322,14 @@ cdef class ApolloNet:
     def backward(self):
         for layer_name in self.active_layer_names()[::-1]:
             self.backward_layer(layer_name)
+    def print_norm(self, param_set=None, label=None):
+        if label != None:
+            print label
+        params = self.params
+        if param_set is None:
+            param_set = self.active_param_names()
+        for param_name in param_set:
+            print "  ", param_name, ", data=", params[param_name].data_tensor.norm(), ", diff=", params[param_name].diff_tensor.norm() 
     def update(self, lr, momentum=0., clip_gradients=-1, weight_decay=0., param_set=None):
         diffnorm = self.diff_l2_norm() 
         clip_scale = 1.
