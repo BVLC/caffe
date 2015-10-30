@@ -170,7 +170,7 @@ void Caffe::SetDevice(const int device_id) {
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
 #ifdef USE_CUDNN
-  if (Get().cublas_handle_) CUDNN_CHECK(cudnnDestroy(Get().cudnn_handle_));
+  if (Get().cudnn_handle_) CUDNN_CHECK(cudnnDestroy(Get().cudnn_handle_));
   CUDNN_CHECK(cudnnCreate(&Get().cudnn_handle_));
 #endif
 }
