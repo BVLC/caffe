@@ -79,7 +79,7 @@ cdef class Tensor:
     def dot(self, other):
         return self.DotPFrom(other)
     def norm(self):
-        return self.dot(self) ** 0.5
+        return self.dot(self) ** 0.5 / reduce(lambda x, y: x * y, self.shape)
     def cosine(self, other):
         num = self.dot(other) 
         denom = (self.dot(self) * other.dot(other)) ** 0.5
@@ -330,20 +330,19 @@ cdef class ApolloNet:
             param_set = self.active_param_names()
         for param_name in param_set:
             print "  ", param_name, ", data=", params[param_name].data_tensor.norm(), ", diff=", params[param_name].diff_tensor.norm() 
-    def update(self, lr, momentum=0., clip_gradients=-1, weight_decay=0., param_set=None):
+    def update(self, lr, momentum=0., clip_gradients=-1, weight_decay=0.):
         diffnorm = self.diff_l2_norm() 
         clip_scale = 1.
         if clip_gradients > 0:
             if diffnorm > clip_gradients:
                 clip_scale = clip_gradients / diffnorm
         params = self.params
-        if param_set is None:
-            param_set = self.active_param_names()
-        for param_name in param_set:
+        for param_name in self.active_param_names():
             self.update_param(params[param_name],
                               lr * clip_scale * self.param_lr_mults(param_name),
                               momentum,
                               weight_decay * self.param_decay_mults(param_name))
+        return diffnorm
     def update_param(self, param, lr, momentum, weight_decay):
         param.diff_tensor.axpy(param.data_tensor, weight_decay)
         param.data_tensor.axpy(param.diff_tensor, -lr)
@@ -368,6 +367,11 @@ cdef class ApolloNet:
             param_names.append(dereference(it))
             postincrement(it)
         return param_names
+    def set_active_param_names(self, param_names):
+        cdef vector[string] c_param_names
+        for param_name in param_names:
+            c_param_names.push_back(param_name)
+        self.thisptr.set_active_param_names(c_param_names)
     def param_lr_mults(self, name):
         cdef map[string, float] lr_mults
         (&lr_mults)[0] = self.thisptr.param_lr_mults()

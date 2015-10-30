@@ -92,6 +92,7 @@ cdef extern from "caffe/apollonet.hpp" namespace "caffe":
         void SaveTrainedLayersTo(string trained_filename) except + 
         vector[string]& active_layer_names()
         set[string]& active_param_names()
+        void set_active_param_names(vector[string]&)
 
 cdef extern from "caffe/layer_factory.hpp" namespace "caffe::LayerRegistry<float>":
     cdef shared_ptr[Layer] CreateLayer(LayerParameter& param)
