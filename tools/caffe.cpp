@@ -197,8 +197,6 @@ int train() {
     Caffe::set_solver_count(gpus.size());
   }
 
-  caffe::gpu_memory::arena arena(gpus);
-
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
@@ -246,6 +244,7 @@ int test() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TEST);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
@@ -313,6 +312,7 @@ int time() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
 
@@ -402,6 +402,13 @@ int main(int argc, char** argv) {
       "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+
+
+  // initialize gpu memory arena
+  vector<int> gpus;
+  get_gpus(&gpus);
+  caffe::gpu_memory::arena arena(gpus);
+
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {
