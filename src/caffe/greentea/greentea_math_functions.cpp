@@ -195,11 +195,11 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
                           Cptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A, Aptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), B, Bptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), C, Cptr, 0, NULL,
-                            NULL);
+    NULL);
   } else {
     int_tp lda = (TransA == CblasNoTrans) ? K : M;
     int_tp ldb = (TransB == CblasNoTrans) ? N : K;
@@ -207,38 +207,44 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::matrix_base<Dtype>::size_type
-        size_type;
-    typedef typename viennacl::matrix_base<Dtype>::size_type
-        difference_type;
+    typedef typename viennacl::matrix_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::matrix_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    size_type A_size1 = static_cast<size_type>(
-        (TransA == CblasTrans) ? K : M);
-    size_type A_size2 = static_cast<size_type>(
-        (TransA == CblasTrans) ? M : K);
+    size_type A_size1 = static_cast<size_type>((TransA == CblasTrans) ? K : M);
+    size_type A_size2 = static_cast<size_type>((TransA == CblasTrans) ? M : K);
 
-    size_type B_size1 = static_cast<size_type>(
-        (TransB == CblasTrans) ? N : K);
-    size_type B_size2 = static_cast<size_type>(
-        (TransB == CblasTrans) ? K : N);
+    size_type B_size1 = static_cast<size_type>((TransB == CblasTrans) ? N : K);
+    size_type B_size2 = static_cast<size_type>((TransB == CblasTrans) ? K : N);
 
-    viennacl::matrix_base<Dtype> matA(A, ctx, A_size1, size_type(0),
-                                      difference_type(1), size_type(M),
-                                      A_size2, size_type(offA),
-                                      difference_type(1), size_type(lda)
-                                      VCL_ROW_MAJOR);
+    viennacl::matrix_base<Dtype, uint_tp, int_tp> matA(A, ctx, A_size1,
+                                                       size_type(0),
+                                                       difference_type(1),
+                                                       size_type(M), A_size2,
+                                                       size_type(offA),
+                                                       difference_type(1),
+                                                       size_type(lda)
+                                                       VCL_ROW_MAJOR);
 
-    viennacl::matrix_base<Dtype> matB(B, ctx, B_size1, size_type(0),
-                                      difference_type(1), size_type(K),
-                                      B_size2, size_type(offB),
-                                      difference_type(1), size_type(ldb)
-                                      VCL_ROW_MAJOR);
+    viennacl::matrix_base<Dtype, uint_tp, int_tp> matB(B, ctx, B_size1,
+                                                       size_type(0),
+                                                       difference_type(1),
+                                                       size_type(K), B_size2,
+                                                       size_type(offB),
+                                                       difference_type(1),
+                                                       size_type(ldb)
+                                                       VCL_ROW_MAJOR);
 
-    viennacl::matrix_base<Dtype> matC(C, ctx, size_type(M), size_type(0),
-                                      difference_type(1), size_type(M),
-                                      size_type(N), size_type(offC),
-                                      difference_type(1), size_type(ldc)
-                                      VCL_ROW_MAJOR);
+    viennacl::matrix_base<Dtype, uint_tp, int_tp> matC(C, ctx, size_type(M),
+                                                       size_type(0),
+                                                       difference_type(1),
+                                                       size_type(M),
+                                                       size_type(N),
+                                                       size_type(offC),
+                                                       difference_type(1),
+                                                       size_type(ldc)
+                                                       VCL_ROW_MAJOR);
 
     if (TransA == CblasTrans && TransB == CblasTrans)
       viennacl::linalg::prod_impl(viennacl::trans(matA), viennacl::trans(matB),
@@ -310,37 +316,45 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     Dtype* xptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), x, true, CL_MAP_READ,
         sizeof(Dtype) * offx, sizeof(Dtype) * (TransA == CblasTrans) ? M : N, 0,
-        NULL, NULL, NULL));
+        NULL,
+        NULL, NULL));
     Dtype* yptr = reinterpret_cast<Dtype*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), y, true, CL_MAP_READ | CL_MAP_WRITE,
         sizeof(Dtype) * offy, sizeof(Dtype) * (TransA == CblasTrans) ? N : M, 0,
-        NULL, NULL, NULL));
+        NULL,
+        NULL, NULL));
 
     caffe_cpu_gemv<Dtype>(TransA, M, N, alpha, Aptr, xptr, beta, yptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A, Aptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x, xptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), y, yptr, 0, NULL,
-                            NULL);
+    NULL);
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    viennacl::vector_base<Dtype> v1(x,
-                                    size_type((TransA == CblasTrans) ? M : N),
-                                    size_type(offx), difference_type(1), ctx);
-    viennacl::vector_base<Dtype> v2(y,
-                                    size_type((TransA == CblasTrans) ? N : M),
-                                    size_type(offy), difference_type(1), ctx);
-    viennacl::matrix_base<Dtype> mat(A, ctx, size_type(M), size_type(0),
-                                     difference_type(1), size_type(M),
-                                     size_type(N), size_type(offA),
-                                     difference_type(1), size_type(N)
-                                     VCL_ROW_MAJOR);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(
+        x, size_type((TransA == CblasTrans) ? M : N), size_type(offx),
+        difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(
+        y, size_type((TransA == CblasTrans) ? N : M), size_type(offy),
+        difference_type(1), ctx);
+    viennacl::matrix_base<Dtype, uint_tp, int_tp> mat(A, ctx, size_type(M),
+                                                      size_type(0),
+                                                      difference_type(1),
+                                                      size_type(M),
+                                                      size_type(N),
+                                                      size_type(offA),
+                                                      difference_type(1),
+                                                      size_type(N)
+                                                      VCL_ROW_MAJOR);
     v2 *= beta;
     if (TransA == CblasTrans)
       v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
@@ -400,19 +414,23 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     caffe_axpy<Dtype>(N, alpha, Xptr, Yptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
-                            NULL);
+    NULL);
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, size_type(N), size_type(offX),
-                                    difference_type(1), ctx);
-    viennacl::vector_base<Dtype> v2(Y, size_type(N), size_type(offY),
-                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(N),
+                                                     size_type(offX),
+                                                     difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(Y, size_type(N),
+                                                     size_type(offY),
+                                                     difference_type(1), ctx);
 
     v2 += alpha * v1;
 
@@ -500,15 +518,18 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     caffe_scal<Dtype>(N, alpha, xptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x, xptr, 0, NULL,
-                            NULL);
+    NULL);
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    viennacl::vector_base<Dtype> v1(x, size_type(N), size_type(offx),
-                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(x, size_type(N),
+                                                     size_type(offx),
+                                                     difference_type(1), ctx);
 
     v1 *= alpha;
 
@@ -568,19 +589,23 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     *out = caffe_cpu_dot<Dtype>(n, Xptr, Yptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
-                            NULL);
+    NULL);
 
   } else {
 #ifndef USE_CLBLAS
-    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, size_type(n), size_type(offX),
-                                    difference_type(1), ctx);
-    viennacl::vector_base<Dtype> v2(Y, size_type(n), size_type(offY),
-                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
+                                                     size_type(offX),
+                                                     difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(Y, size_type(n),
+                                                     size_type(offY),
+                                                     difference_type(1), ctx);
 
     *out = viennacl::linalg::inner_prod(v1, v2);
 
@@ -634,15 +659,18 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
     *Y = caffe_cpu_asum<Dtype>(n, Xptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
-                            NULL);
+    NULL);
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, size_type(n), size_type(offX),
-                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
+                                                     size_type(offX),
+                                                     difference_type(1), ctx);
 
     *Y = viennacl::linalg::norm_1(v1);
 
@@ -697,19 +725,23 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
     caffe_cpu_scale<Dtype>(n, alpha, Xptr, Yptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), X, Xptr, 0, NULL,
-                            NULL);
+    NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), Y, Yptr, 0, NULL,
-                            NULL);
+    NULL);
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype>::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype>::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
+        ::size_type difference_type;
 
-    viennacl::vector_base<Dtype> v1(X, size_type(n), size_type(offX),
-                                    difference_type(1), ctx);
-    viennacl::vector_base<Dtype> v2(Y, size_type(n), size_type(offY),
-                                    difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
+                                                     size_type(offX),
+                                                     difference_type(1), ctx);
+    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(Y, size_type(n),
+                                                     size_type(offY),
+                                                     difference_type(1), ctx);
 
     v2 = v1 * alpha;
 
@@ -918,7 +950,8 @@ template void greentea_gpu_log<double>(const int_tp ctx_id, const int_tp N,
 
 template<typename Dtype>
 void greentea_gpu_sign(const int_tp ctx_id, const int_tp n, const cl_mem x,
-                       int_tp offx, cl_mem y, const int_tp offy) {
+int_tp offx,
+                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 

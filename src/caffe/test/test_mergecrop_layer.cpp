@@ -24,8 +24,22 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
   }
 
   virtual void SetUp() {
-    blob_bottom_a_->Reshape(2, 3, 4, 2);
-    blob_bottom_b_->Reshape(2, 3, 6, 4);
+    vector<int_tp> shape_a;
+    shape_a.push_back(1);
+    shape_a.push_back(3);
+    shape_a.push_back(3);
+    shape_a.push_back(2);
+    shape_a.push_back(6);
+
+    vector<int_tp> shape_b;
+    shape_b.push_back(1);
+    shape_b.push_back(3);
+    shape_b.push_back(5);
+    shape_b.push_back(4);
+    shape_b.push_back(8);
+
+    blob_bottom_a_->Reshape(shape_a);
+    blob_bottom_b_->Reshape(shape_b);
     // fill the values
     blob_bottom_vec_.push_back(blob_bottom_a_);
     blob_bottom_vec_.push_back(blob_bottom_b_);
@@ -39,117 +53,101 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
   }
 
   void TestForward() {
-    int_tp a_h = blob_bottom_a_->height();
-    int_tp a_w = blob_bottom_a_->width();
-    int_tp a_c = blob_bottom_a_->channels();
+    vector<int_tp> shape_a = blob_bottom_a_->shape();
+    vector<int_tp> shape_b = blob_bottom_b_->shape();
 
-    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int_tp c = 0; c < a_c; ++c) {
-        for (int_tp h = 0; h < a_h; ++h) {
-          for (int_tp w = 0; w < a_w; ++w) {
-            blob_bottom_a_->mutable_cpu_data()[w + h * a_w + c * a_h * a_w
-                + n * a_h * a_w * a_c] = (w + h * 10 + c * 100 + n * 1000
-                + 10000);
-          }
-        }
+    for (int_tp i = 0; i < blob_bottom_a_->count(); ++i) {
+      int val = i;
+      int out = 0;
+      int dec = 1;
+      for (int_tp d = shape_a.size() - 1; d  >= 0; --d) {
+        out += (val % shape_a[d]) * dec;
+        val /= shape_a[d];
+        dec *= 10;
       }
+      blob_bottom_a_->mutable_cpu_data()[i] = out;
+      // std::cout << i << " - " << out << std::endl;
     }
 
-    int_tp b_h = blob_bottom_b_->height();
-    int_tp b_w = blob_bottom_b_->width();
-    int_tp b_c = blob_bottom_b_->channels();
-
-    for (int_tp n = 0; n < blob_bottom_b_->num(); ++n) {
-      for (int_tp c = 0; c < b_c; ++c) {
-        for (int_tp h = 0; h < b_h; ++h) {
-          for (int_tp w = 0; w < b_w; ++w) {
-            blob_bottom_b_->mutable_cpu_data()[w + h * b_w + c * b_h * b_w
-                + n * b_h * b_w * b_c] = -(w + h * 10 + c * 100 + n * 1000
-                + 10000);
-          }
-        }
+    for (int_tp i = 0; i < blob_bottom_b_->count(); ++i) {
+      int val = i;
+      int out = 0;
+      int dec = 1;
+      for (int_tp d = shape_b.size() - 1; d  >= 0; --d) {
+        out += (val % shape_b[d]) * dec;
+        val /= shape_b[d];
+        dec *= 10;
       }
+      blob_bottom_b_->mutable_cpu_data()[i] = out;
+      // std::cout << i << " - " << out << std::endl;
     }
+
 
     LayerParameter layer_param;
     MergeCropLayer<TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
-    EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_a_->num());
-    EXPECT_EQ(
-        this->blob_top_->channels(),
-        this->blob_bottom_a_->channels() + this->blob_bottom_b_->channels());
-    EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_a_->height());
-    EXPECT_EQ(this->blob_top_->width(), 2);
+    EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_a_->shape(0));
+    EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_a_->shape(1)
+              + this->blob_bottom_b_->shape(1));
+
+    for (int i = 2; i < this->blob_top_->shape().size(); ++i) {
+      EXPECT_EQ(this->blob_top_->shape(i), this->blob_bottom_a_->shape(i));
+    }
+    vector<int_tp> shape_top = blob_top_->shape();
 
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
 
-    // Test copy from A
-    int_tp offset = 0;
-    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int_tp c = 0; c < a_c; ++c) {
-        for (int_tp h = 0; h < a_h; ++h) {
-          for (int_tp w = 0; w < a_w; ++w) {
-            EXPECT_EQ(
-                (w + h * 10 + c * 100 + n * 1000 + 10000),
-                blob_top_->cpu_data()[offset + w + h * a_w + c * a_h * a_w]);
-          }
+    // Test copy from A & B
+    for (int_tp i = 0; i < blob_top_->count(); ++i) {
+      int val = i < blob_bottom_a_->count() ? i : i - blob_bottom_a_->count();
+      int out = 0;
+      int dec = 1;
+      for (int_tp d = shape_top.size() - 1; d  >= 0; --d) {
+        if (i < blob_bottom_a_->count()) {
+          out += (val % shape_a[d]) * dec;
+          val /= shape_a[d];
+          dec *= 10;
+        } else {
+          out += ((val % shape_a[d]) + (shape_b[d] - shape_a[d]) / 2) * dec;
+          val /= shape_a[d];
+          dec *= 10;
         }
       }
-      offset += a_h * a_w * (a_c + b_c);
-    }
-
-    // Test copy from B
-    offset = a_h * a_w * a_c;
-    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int_tp c = 0; c < b_c; ++c) {
-        for (int_tp h = 0; h < b_h; ++h) {
-          for (int_tp w = 0; w < b_w; ++w) {
-            if (h >= (b_h - a_h) / 2 && h < a_h && w >= (b_w - a_w) / 2
-                && w < a_w) {
-              EXPECT_EQ(
-                  -(w + h * 10 + c * 100 + n * 1000 + 10000),
-                  blob_top_->cpu_data()[offset + (w - (b_h - a_h) / 2)
-                      + (h - (b_h - a_h) / 2) * a_w + c * a_h * a_w]);
-            }
-          }
-        }
-      }
-      offset += a_h * a_w * (a_c + b_c);
+      EXPECT_EQ(out, blob_top_->mutable_cpu_data()[i]);
+      // std::cout << i << " - " << out << std::endl;
     }
   }
 
   void TestBackward() {
-    int_tp a_h = blob_bottom_a_->height();
-    int_tp a_w = blob_bottom_a_->width();
-    int_tp a_c = blob_bottom_a_->channels();
+    vector<int_tp> shape_a = blob_bottom_a_->shape();
+    vector<int_tp> shape_b = blob_bottom_b_->shape();
+    vector<int_tp> shape_top = blob_top_->shape();
 
-    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int_tp c = 0; c < a_c; ++c) {
-        for (int_tp h = 0; h < a_h; ++h) {
-          for (int_tp w = 0; w < a_w; ++w) {
-            blob_bottom_a_->mutable_cpu_data()[w + h * a_w + c * a_h * a_w
-                + n * a_h * a_w * a_c] = (w + h * 10 + c * 100 + n * 1000
-                + 10000);
-          }
-        }
+    for (int_tp i = 0; i < blob_bottom_a_->count(); ++i) {
+      int val = i;
+      int out = 0;
+      int dec = 1;
+      for (int_tp d = shape_a.size() - 1; d  >= 0; --d) {
+        out += (val % shape_a[d]) * dec;
+        val /= shape_a[d];
+        dec *= 10;
       }
+      blob_bottom_a_->mutable_cpu_data()[i] = out;
+      // std::cout << i << " - " << out << std::endl;
     }
 
-    int_tp b_h = blob_bottom_b_->height();
-    int_tp b_w = blob_bottom_b_->width();
-    int_tp b_c = blob_bottom_b_->channels();
-
-    for (int_tp n = 0; n < blob_bottom_b_->num(); ++n) {
-      for (int_tp c = 0; c < b_c; ++c) {
-        for (int_tp h = 0; h < b_h; ++h) {
-          for (int_tp w = 0; w < b_w; ++w) {
-            blob_bottom_b_->mutable_cpu_data()[w + h * b_w + c * b_h * b_w
-                + n * b_h * b_w * b_c] = -(w + h * 10 + c * 100 + n * 1000
-                + 10000);
-          }
-        }
+    for (int_tp i = 0; i < blob_bottom_b_->count(); ++i) {
+      int val = i;
+      int out = 0;
+      int dec = 1;
+      for (int_tp d = shape_b.size() - 1; d  >= 0; --d) {
+        out += (val % shape_b[d]) * dec;
+        val /= shape_b[d];
+        dec *= 10;
       }
+      blob_bottom_b_->mutable_cpu_data()[i] = out;
+      // std::cout << i << " - " << out << std::endl;
     }
 
     LayerParameter layer_param;
@@ -164,17 +162,17 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     layer.Backward(blob_top_vec_, propagate_down, blob_bottom_vec_);
 
     // Test copy to A
-    for (int_tp n = 0; n < blob_bottom_a_->num(); ++n) {
-      for (int_tp c = 0; c < a_c; ++c) {
-        for (int_tp h = 0; h < a_h; ++h) {
-          for (int_tp w = 0; w < a_w; ++w) {
-            EXPECT_EQ(
-                (w + h * 10 + c * 100 + n * 1000 + 10000),
-                blob_bottom_a_->cpu_diff()[w + h * a_w + c * a_h * a_w
-                    + n * a_h * a_w * a_c]);
-          }
-        }
+    for (int_tp i = 0; i < blob_bottom_a_->count(); ++i) {
+      int val = i;
+      int out = 0;
+      int dec = 1;
+      for (int_tp d = shape_a.size() - 1; d  >= 0; --d) {
+        out += (val % shape_a[d]) * dec;
+        val /= shape_a[d];
+        dec *= 10;
       }
+      EXPECT_EQ(out, blob_bottom_a_->mutable_cpu_data()[i]);
+      // std::cout << i << " - " << out << std::endl;
     }
   }
 
@@ -193,11 +191,13 @@ TYPED_TEST(MergeCropLayerTest, TestSetup) {
   MergeCropLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_a_->num());
-  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_a_->channels()
-            + this->blob_bottom_b_->channels());
-  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_a_->height());
-  EXPECT_EQ(this->blob_top_->width(), 2);
+  EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_a_->shape(0));
+  EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_a_->shape(1)
+            + this->blob_bottom_b_->shape(1));
+
+  for (int i = 2; i < this->blob_top_->shape().size(); ++i) {
+    EXPECT_EQ(this->blob_top_->shape(i), this->blob_bottom_a_->shape(i));
+  }
 }
 
 TYPED_TEST(MergeCropLayerTest, TestForward) {
