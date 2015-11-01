@@ -37,13 +37,12 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
-  label_num_ = softmax_axis_ < bottom[1]->num_axes() ? 
+  label_num_ = softmax_axis_ < bottom[1]->num_axes() ?
       bottom[1]->shape(softmax_axis_) : 1;
   CHECK_EQ(outer_num_, bottom[1]->count(0, softmax_axis_));
   if (softmax_axis_ < bottom[1]->num_axes()) {
     CHECK_EQ(inner_num_, bottom[1]->count(softmax_axis_ + 1));
-  }
-  else {
+  } else {
     CHECK_EQ(inner_num_, 1);
   }
 //  CHECK_EQ(outer_num_ * inner_num_, bottom[1]->count())
