@@ -16,7 +16,9 @@
 
 namespace caffe {
 
+#ifndef CPU_ONLY  // CPU-only Caffe.
   static cub::CachingDeviceAllocator* cubAlloc = 0;
+#endif
 
   gpu_memory::PoolMode gpu_memory::mode_   = gpu_memory::NoPool;
   size_t               gpu_memory::poolsize_ = 0;
