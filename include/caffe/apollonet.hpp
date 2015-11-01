@@ -93,6 +93,12 @@ class ApolloNet {
   inline const set<string>& active_param_names() const {
     return active_params_set_;
   }
+  inline void set_active_param_names(const vector<string>& active_params_vec) {
+    active_params_set_.clear();
+    for (int i = 0; i < active_params_vec.size(); ++i) {
+      active_params_set_.insert(active_params_vec[i]);
+    }
+  }
 
  protected:
   /// @brief The phase: TRAIN or TEST
