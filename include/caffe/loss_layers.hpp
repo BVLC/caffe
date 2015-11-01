@@ -764,7 +764,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// (otherwise just by the batch size).
   bool normalize_;
 
-  int softmax_axis_, outer_num_, inner_num_;
+  int softmax_axis_, outer_num_, inner_num_, label_num_;
 };
 
 }  // namespace caffe
