@@ -43,7 +43,8 @@ void LstmUnitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "lstm_unit_param.has_output_gate_weight_filler()";
 
   channels_ = lstm_unit_param.num_cells();
-  CHECK_EQ(channels_, bottom[1]->shape(1)) << "Number of input memory channels must match the number of lstm mem_cells";
+  CHECK_EQ(channels_, bottom[1]->shape(1)) <<
+    "Number of input memory channels must match the number of lstm mem_cells";
   input_data_size_ = bottom[0]->shape(1);
   num_ = bottom[0]->shape(0);
   M_ = num_;
@@ -281,7 +282,8 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       (Dtype)1., input_diff);
   }
 
-  caffe_mul(num_ * channels_, output_gates_diff, tanh_next_memory_state, dldg_data);
+  caffe_mul(num_ * channels_, output_gates_diff, tanh_next_memory_state,
+      dldg_data);
   caffe_mul(num_ * channels_, next_hidden_state_diff, dldg_data, dldg_data);
   caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
     channels_, input_data_size_, num_,
