@@ -10,14 +10,6 @@ include $(CONFIG_FILE)
 # Rectify input parameters
 ifeq ($(CPU_ONLY),1)
   USE_CUDNN=0
-  USE_CNMEM=0
-endif
-
-ifeq ($(USE_CUDNN),1)
-# CNMEM is ON by default in CUDNN is ON
-  ifeq ($(USE_CNMEM),)
-    USE_CNMEM=1
-  endif
 endif
 
 PROJECT_DIR=$(PWD)
@@ -40,7 +32,6 @@ else
 endif
 
 THIRDPARTY_DIR=$(PROJECT_DIR)/3rdparty
-THIRDPARTY=$(BUILD_DIR)/.3rdparty_done
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -189,7 +180,7 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include $(THIRDPARTY_DIR)
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
@@ -334,16 +325,6 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-# CNMEM integration
-ifeq ($(USE_CNMEM), 1)
-	THIRDPARTY_TARGETS+=cnmem
-	LIBRARIES += cnmem
-	CNMEM_DIR=${THIRDPARTY_DIR}/cnmem
-        LIBRARY_DIRS += ${CNMEM_DIR}/build
-        INCLUDE_DIRS += ${CNMEM_DIR}/include
-	COMMON_FLAGS += -DUSE_CNMEM
-endif
-
 # configure IO libraries
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV
@@ -366,6 +347,14 @@ ifeq ($(CPU_ONLY), 1)
 	ALL_WARNS := $(ALL_CXX_WARNS)
 	TEST_FILTER := --gtest_filter="-*GPU*"
 	COMMON_FLAGS += -DCPU_ONLY
+endif
+
+# Benchmarks
+ifeq ($(BENCHMARK_DATA), 1)
+	COMMON_FLAGS += -DBENCHMARK_DATA
+endif
+ifeq ($(BENCHMARK_SOLVER), 1)
+	COMMON_FLAGS += -DBENCHMARK_SOLVER
 endif
 
 # Python layer support
@@ -417,6 +406,7 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 CXXFLAGS += -MMD -MP
 
 # Complete build flags.
+
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
@@ -462,14 +452,6 @@ endif
 all: lib tools examples
 
 lib:  $(STATIC_NAME) $(DYNAMIC_NAME)
-
-$(THIRDPARTY): Makefile Makefile.config | $(LIB_BUILD_DIR) 
-ifneq ($(THIRDPARTY_TARGETS),)
-	echo "Building third-party libraries ..."
-	@$(MAKE) -C $(THIRDPARTY_DIR) DEBUG=$(DEBUG) INSTALLDIR=$(BUILD_DIR) $(THIRDPARTY_TARGETS)
-endif
-	@touch $(THIRDPARTY)
-
 
 everything: $(EVERYTHING_TARGETS)
 
@@ -583,13 +565,13 @@ $(BUILD_DIR)/.linked:
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
-$(DYNAMIC_NAME): $(THIRDPARTY) $(OBJS)| $(LIB_BUILD_DIR)
+$(DYNAMIC_NAME): $(OBJS)| $(LIB_BUILD_DIR)
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_SONAME_SHORT); ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_SONAME_SHORT)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_SONAME_SHORT) $(DYNAMIC_NAME_SHORT)
 
-$(STATIC_NAME): $(THIRDPARTY) $(OBJS) | $(LIB_BUILD_DIR) 
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR) 
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
