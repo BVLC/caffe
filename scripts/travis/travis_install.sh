@@ -23,7 +23,7 @@ apt-get install \
 # Caffe requires a minimum CMake version of 2.8.8.
 if $WITH_CMAKE; then
   # cmake 3 will make sure that the python interpreter and libraries match
-  wget http://www.cmake.org/files/v3.2/cmake-3.2.3-Linux-x86_64.sh -O cmake3.sh
+  wget --no-check-certificate http://www.cmake.org/files/v3.2/cmake-3.2.3-Linux-x86_64.sh -O cmake3.sh
   chmod +x cmake3.sh
   ./cmake3.sh --prefix=/usr/ --skip-license --exclude-subdir
 fi
