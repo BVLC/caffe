@@ -6,7 +6,7 @@ set -e
 MAKE="make --jobs=$NUM_THREADS --keep-going"
 
 if $WITH_CMAKE; then
-  mkdir build
+  mkdir -p build
   cd build
   CPU_ONLY=" -DCPU_ONLY=ON"
   if ! $WITH_CUDA; then
