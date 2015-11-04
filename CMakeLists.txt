@@ -42,6 +42,11 @@ if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
 endif()
 
+if(USE_CNMEM)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_CNMEM -lcnmem")
+  message("-- Info: Using CNMEM memory pool configuration") 
+endif()
+
 if(USE_libstdcpp)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
