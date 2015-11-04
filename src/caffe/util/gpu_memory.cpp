@@ -136,15 +136,15 @@ namespace caffe {
                   << " Total= " << total_mem << std::endl;
       }
 
-      // just in case, make sure total mem reported is not less than free
+      // make sure we don't ask for more that total device memory
       free_mem = std::min(total_mem, free_mem);
-      free_mem = size_t(0.8*std::min(props.totalGlobalMem, free_mem));
+      free_mem = size_t(0.95*std::min(props.totalGlobalMem, free_mem));
       // find out the smallest GPU size
       if (poolsize_ == 0 || poolsize_ > free_mem)
         poolsize_ = free_mem;
 #if USE_CNMEM
       devs[i].device = gpus[i];
-      devs[i].size = poolsize_;
+      devs[i].size = free_mem;
       devs[i].numStreams = 0;
       devs[i].streams = NULL;
 #endif
