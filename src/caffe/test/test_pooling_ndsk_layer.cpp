@@ -16,9 +16,9 @@
 namespace caffe {
 
 template<typename TypeParam>
-class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
+class PoolingNDSKLayerTest : public GPUDeviceTest<TypeParam> {
  protected:
-  PoolingNDLayerTest()
+  PoolingNDSKLayerTest()
       : blob_bottom_(new Blob<TypeParam>()),
         blob_top_(new Blob<TypeParam>()) {
   }
@@ -27,16 +27,16 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     BlobShape shape;
     shape.add_dim(1);  // Batch
     shape.add_dim(1);  // Channels
-    shape.add_dim(4);  // Depth
-    shape.add_dim(4);  // Height
-    shape.add_dim(4);  // Width
+    shape.add_dim(5);  // Depth
+    shape.add_dim(5);  // Height
+    shape.add_dim(5);  // Width
     blob_bottom_->Reshape(shape);
 
     shape.add_dim(1);  // Batch
     shape.add_dim(1);  // Channels
-    shape.add_dim(2);  // Depth
-    shape.add_dim(2);  // Height
-    shape.add_dim(2);  // Width
+    shape.add_dim(1);  // Depth
+    shape.add_dim(1);  // Height
+    shape.add_dim(1);  // Width
     blob_top_->Reshape(shape);
 
     // fill the values
@@ -44,7 +44,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_);
   }
 
-  virtual ~PoolingNDLayerTest() {
+  virtual ~PoolingNDSKLayerTest() {
     delete blob_bottom_;
     delete blob_top_;
   }
@@ -54,13 +54,13 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     PoolingParameter* pooling_param =
         layer_param.mutable_pooling_param();
 
-    pooling_param->add_kernel_size(2);
-    pooling_param->add_kernel_size(2);
-    pooling_param->add_kernel_size(2);
+    pooling_param->add_kernel_size(3);
+    pooling_param->add_kernel_size(3);
+    pooling_param->add_kernel_size(3);
 
-    pooling_param->add_stride(2);
-    pooling_param->add_stride(2);
-    pooling_param->add_stride(2);
+    pooling_param->add_kstride(2);
+    pooling_param->add_kstride(2);
+    pooling_param->add_kstride(2);
 
     pooling_param->set_axis(1);
 
@@ -73,16 +73,16 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8);
+    TypeParam maxval = 0;
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
         for (int_tp cw = 0; cw < w; ++cw) {
           bottom_data[cw + ch * w + cd * w * h] =
               cw + ch * w + cd * w * h;
-          maxval[cw/2 + (ch/2)*2 + (cd/2)*4] =
-                std::max(bottom_data[cw + ch * w + cd * w * h],
-                         maxval[cw/2 + (ch/2)*2 + (cd/2)*4]);
+          if (cw % 2 == 0 && ch % 2 == 0 && cd % 2 == 0) {
+            maxval = std::max((TypeParam)(cw + ch * w + cd * w * h), maxval);
+          }
         }
       }
     }
@@ -91,10 +91,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     const TypeParam *top_data = blob_top_->cpu_data();
 
-    for (int i = 0; i < 2*2*2; ++i) {
-      EXPECT_EQ(maxval[i], top_data[i]);
-    }
-
+    EXPECT_EQ(maxval, top_data[0]);
   }
 
   void TestBackward() {
@@ -102,13 +99,13 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     PoolingParameter* pooling_param =
         layer_param.mutable_pooling_param();
 
-    pooling_param->add_kernel_size(2);
-    pooling_param->add_kernel_size(2);
-    pooling_param->add_kernel_size(2);
+    pooling_param->add_kernel_size(3);
+    pooling_param->add_kernel_size(3);
+    pooling_param->add_kernel_size(3);
 
-    pooling_param->add_stride(2);
-    pooling_param->add_stride(2);
-    pooling_param->add_stride(2);
+    pooling_param->add_kstride(2);
+    pooling_param->add_kstride(2);
+    pooling_param->add_kstride(2);
 
     pooling_param->set_axis(1);
 
@@ -121,16 +118,16 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8);
+    TypeParam maxval = 0;
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
         for (int_tp cw = 0; cw < w; ++cw) {
           bottom_data[cw + ch * w + cd * w * h] =
               cw + ch * w + cd * w * h;
-            maxval[cw/2 + (ch/2)*2 + (cd/2)*4] =
-                std::max(bottom_data[cw + ch * w + cd * w * h],
-                         maxval[cw/2 + (ch/2)*2 + (cd/2)*4]);
+          if (cw % 2 == 0 && ch % 2 == 0 && cd % 2 == 0) {
+            maxval = std::max((TypeParam)(cw + ch * w + cd * w * h), maxval);
+          }
         }
       }
     }
@@ -138,9 +135,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     TypeParam *top_diff = blob_top_->mutable_cpu_diff();
-    for (int i = 0; i < 2*2*2; ++i) {
-      top_diff[i] = maxval[i];
-    }
+    top_diff[0] = maxval;
 
     std::vector<bool> prop_down;
     prop_down.push_back(true);
@@ -152,10 +147,8 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
         for (int_tp cw = 0; cw < w; ++cw) {
-          if (maxval[cw/2 + (ch/2)*2 + (cd/2)*4] == cw + ch * w + cd * w * h) {
-            EXPECT_EQ(maxval[cw/2 + (ch/2)*2 + (cd/2)*4], bottom_diff[cw + ch * w + cd * w * h]);
-          } else {
-            EXPECT_EQ(0, bottom_diff[cw + ch * w + cd * w * h]);
+          if (maxval == cw + ch * w + cd * w * h) {
+            EXPECT_EQ(maxval, bottom_diff[cw + ch * w + cd * w * h]);
           }
         }
       }
@@ -169,20 +162,20 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(PoolingNDLayerTest, TestDtypes);
+TYPED_TEST_CASE(PoolingNDSKLayerTest, TestDtypes);
 
-TYPED_TEST(PoolingNDLayerTest, TestSetup) {
+TYPED_TEST(PoolingNDSKLayerTest, TestSetup) {
   LayerParameter layer_param;
   PoolingParameter* pooling_param =
       layer_param.mutable_pooling_param();
 
-  pooling_param->add_kernel_size(2);
-  pooling_param->add_kernel_size(2);
-  pooling_param->add_kernel_size(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
 
-  pooling_param->add_stride(2);
-  pooling_param->add_stride(2);
-  pooling_param->add_stride(2);
+  pooling_param->add_kstride(2);
+  pooling_param->add_kstride(2);
+  pooling_param->add_kstride(2);
 
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
 
@@ -190,16 +183,16 @@ TYPED_TEST(PoolingNDLayerTest, TestSetup) {
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-  EXPECT_EQ(2, this->blob_top_->shape(2));
-  EXPECT_EQ(2, this->blob_top_->shape(3));
-  EXPECT_EQ(2, this->blob_top_->shape(4));
+  EXPECT_EQ(1, this->blob_top_->shape(2));
+  EXPECT_EQ(1, this->blob_top_->shape(3));
+  EXPECT_EQ(1, this->blob_top_->shape(4));
 }
 
-TYPED_TEST(PoolingNDLayerTest, TestForward) {
+TYPED_TEST(PoolingNDSKLayerTest, TestForward) {
   this->TestForward();
 }
 
-TYPED_TEST(PoolingNDLayerTest, TestBackward) {
+TYPED_TEST(PoolingNDSKLayerTest, TestBackward) {
   this->TestBackward();
 }
 
