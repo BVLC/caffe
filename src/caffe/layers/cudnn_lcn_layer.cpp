@@ -38,9 +38,9 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       this->channels_, this->height_, this->width_);
   CUDNN_CHECK(cudnnSetLRNDescriptor(norm_desc_, size_, alpha_, beta_, k_));
 
-  // size for tempData buffers
-  tempDataSize = sizeof(Dtype)*bottom[0]->num()* \
-                            this->channels_*this->height_*this->width_;
+  // size for temp buffers
+  tempDataSize_ = sizeof(Dtype)*bottom[0]->num()* \
+    this->channels_*this->height_*this->width_;
 }
 
 template <typename Dtype>

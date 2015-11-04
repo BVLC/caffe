@@ -13,6 +13,9 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#ifndef CPU_ONLY
+#include "caffe/util/gpu_memory.hpp"
+#endif
 
 namespace caffe {
 
@@ -318,8 +321,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
-  size_t workspaceSizeInBytes;  // size of underlying storage
-  void *workspaceData;  // underlying storage
+  gpu_memory::buffer workspace;
 };
 #endif
 
@@ -482,8 +484,7 @@ template <typename Dtype>
 class CuDNNLCNLayer : public LRNLayer<Dtype> {
  public:
   explicit CuDNNLCNLayer(const LayerParameter& param)
-      : LRNLayer<Dtype>(param), handles_setup_(false), tempDataSize(0),
-        tempData1(NULL), tempData2(NULL) {}
+    : LRNLayer<Dtype>(param), handles_setup_(false), tempDataSize_(0) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -503,8 +504,8 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   int size_, pre_pad_;
   Dtype alpha_, beta_, k_;
 
-  size_t tempDataSize;
-  void *tempData1, *tempData2;
+  size_t             tempDataSize_;
+  gpu_memory::buffer temp1_, temp2_;
 };
 
 #endif

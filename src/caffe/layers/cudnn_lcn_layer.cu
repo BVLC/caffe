@@ -15,20 +15,20 @@ void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
 
-  gpu_memory::allocate(&this->tempData1, this->tempDataSize);
-  gpu_memory::allocate(&this->tempData2, this->tempDataSize);
+  temp1_.reserve(tempDataSize_);
+  temp2_.reserve(tempDataSize_);
 
   CUDNN_CHECK(cudnnDivisiveNormalizationForward(
         Caffe::cudnn_handle(), norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
         cudnn::dataType<Dtype>::one,
         bottom_desc_, bottom_data,
         NULL,  // srcMeansData
-        this->tempData1, this->tempData2,
+        temp1_.data(), temp2_.data(),
         cudnn::dataType<Dtype>::zero,
         top_desc_, top_data) );
 
-  gpu_memory::deallocate(this->tempData1);
-  gpu_memory::deallocate(this->tempData2);
+  temp1_.release();
+  temp2_.release();
 }
 
 template <typename Dtype>
@@ -39,21 +39,22 @@ void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-  gpu_memory::allocate(&this->tempData1, this->tempDataSize);
-  gpu_memory::allocate(&this->tempData2, this->tempDataSize);
+  temp1_.reserve(tempDataSize_);
+  temp2_.reserve(tempDataSize_);
 
   CUDNN_CHECK(cudnnDivisiveNormalizationBackward(
-        Caffe::cudnn_handle(), norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
+        Caffe::cudnn_handle(), norm_desc_,
+        CUDNN_DIVNORM_PRECOMPUTED_MEANS,
         cudnn::dataType<Dtype>::one,
         bottom_desc_, bottom_data,
         NULL, top_diff,  // NULL - srcMeansData
-        this->tempData1, this->tempData2,
+        temp1_.data(), temp2_.data(),
         cudnn::dataType<Dtype>::zero,
         bottom_desc_, bottom_diff,
         NULL) );
 
-  gpu_memory::deallocate(this->tempData1);
-  gpu_memory::deallocate(this->tempData2);
+  temp1_.release();
+  temp2_.release();
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNLCNLayer);
