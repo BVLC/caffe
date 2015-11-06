@@ -51,8 +51,7 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
                                   const int_tp* nhood_dims,
                                   const Dtype* seg_data, const bool pos,
                                   Dtype* dloss_data, Dtype* loss_out,
-                                  Dtype *classerr_out, Dtype *rand_index_out,
-                                  Dtype margin, Dtype threshold) {
+                                  Dtype *classerr_out, Dtype *rand_index_out) {
   if ((nhood_dims[1] != (conn_num_dims - 1))
       || (nhood_dims[0] != conn_dims[0])) {
     LOG(FATAL) << "nhood and conn dimensions don't match"
@@ -206,21 +205,21 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
 
           if (pos && (it1->first == it2->first)) {
             // +ve example pairs
-            dl = std::max(Dtype(0.0), threshold + margin - conn_data[minEdge]);
+            dl = (Dtype(1.0) - conn_data[minEdge]);
             loss += dl * nPair;
             // Use hinge loss
             dloss_data[minEdge] -= dl * nPair;
-            if (conn_data[minEdge] <= threshold) {  // an error
+            if (conn_data[minEdge] <= Dtype(0.5)) {  // an error
               nPairIncorrect += nPair;
             }
 
           } else if ((!pos) && (it1->first != it2->first)) {
             // -ve example pairs
-            dl = std::max(Dtype(0.0), conn_data[minEdge] - threshold + margin);
+            dl = (conn_data[minEdge]);
             loss += dl * nPair;
             // Use hinge loss
             dloss_data[minEdge] += dl * nPair;
-            if (conn_data[minEdge] > threshold) {  // an error
+            if (conn_data[minEdge] > Dtype(0.5)) {  // an error
               nPairIncorrect += nPair;
             }
           }
@@ -420,6 +419,8 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* affinity_data_pos = affinity_pos_.mutable_cpu_data();
   Dtype* affinity_data_neg = affinity_neg_.mutable_cpu_data();
 
+// Affinity graph must be in the range (0,1)
+// square loss (euclidean) is used by MALIS
 #pragma omp parallel for
   for (int_tp i = 0; i < bottom[0]->count(); ++i) {
     affinity_data_pos[i] = std::min(affinity_prob[i], affinity[i]);
@@ -446,7 +447,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
           bottom[2]->cpu_data() + batch_offset * batch, false,
           dloss_neg_.mutable_cpu_data() + batch_offset * batch, &loss_out,
-          &classerr_out, &rand_index_out, 0.3, 0.5);
+          &classerr_out, &rand_index_out);
 
     loss += loss_out;
     std::cout << loss << std::endl;
@@ -455,7 +456,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
           bottom[2]->cpu_data() + batch_offset * batch, true,
           dloss_pos_.mutable_cpu_data() + batch_offset * batch, &loss_out,
-          &classerr_out, &rand_index_out, 0.3, 0.5);
+          &classerr_out, &rand_index_out);
 
     loss += loss_out;
     std::cout << loss << std::endl;
