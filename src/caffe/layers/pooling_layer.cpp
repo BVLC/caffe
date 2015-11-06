@@ -165,6 +165,8 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       break;
     }
   }
+
+  Reshape(bottom, top);
 }
 
 
