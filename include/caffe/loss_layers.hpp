@@ -803,8 +803,7 @@ class MalisLossLayer : public LossLayer<Dtype> {
              const int_tp* nhood_data, const int_tp* nhood_dims,
              const Dtype* seg_data,
              const bool pos, Dtype* dloss_data, Dtype* loss_out,
-             Dtype *classerr_out, Dtype *rand_index_out,
-             Dtype margin, Dtype threshold);
+             Dtype *classerr_out, Dtype *rand_index_out);
 
   int_tp nedges_;
   int_tp conn_num_dims_;
