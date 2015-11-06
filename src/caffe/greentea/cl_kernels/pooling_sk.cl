@@ -21,7 +21,7 @@ __global Dtype* bottom_data,
                                                   const int_tp pad_h,
                                                   const int_tp pad_w,
                                                   __global Dtype* top_data,
-                                                  const int_tp use_mask,
+                                                  const int use_mask,
                                                   __global int_tp* mask,
                                                   __global Dtype* top_mask) {
   for (int_tp index = get_global_id(0); index < nthreads;
@@ -58,7 +58,7 @@ __global Dtype* bottom_data,
 }
 
 __kernel void TEMPLATE(max_pool_backward_sk,Dtype)(
-    const int_tp nthreads, __global const Dtype* top_diff, const int_tp use_mask,
+    const int_tp nthreads, __global const Dtype* top_diff, const int use_mask,
     __global const int_tp* mask, __global const Dtype* top_mask, const int_tp num,
     const int_tp channels, const int_tp height, const int_tp width,
     const int_tp pooled_height, const int_tp pooled_width, const int_tp kernel_h,
