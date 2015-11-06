@@ -53,8 +53,8 @@ class ArgMaxLayer : public Layer<Dtype> {
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the inputs @f$ x @f$
    * @param top output Blob vector (length 1)
-   *   -# @f$ (N \times 1 \times K \times 1) @f$ or, if out_max_val
-   *      @f$ (N \times 2 \times K \times 1) @f$ unless axis set than e.g.
+   *   -# @f$ (N \times 1 \times K) @f$ or, if out_max_val
+   *      @f$ (N \times 2 \times K) @f$ unless axis set than e.g.
    *      @f$ (N \times K \times H \times W) @f$ if axis == 1
    *      the computed outputs @f$
    *       y_n = \arg\max\limits_i x_{ni}
@@ -81,13 +81,13 @@ class ArgMaxLayer : public Layer<Dtype> {
  * each channel in the data (i.e. axis 1), it subtracts the mean and divides
  * by the variance, where both statistics are computed across both spatial
  * dimensions and across the different examples in the batch.
- * 
+ *
  * By default, during training time, the network is computing global mean/
  * variance statistics via a running average, which is then used at test
  * time to allow deterministic outputs for each input.  You can manually
  * toggle whether the network is accumulating or using the statistics via the
  * use_global_stats option.  IMPORTANT: for this feature to work, you MUST
- * set the learning rate to zero for all three parameter blobs, i.e., 
+ * set the learning rate to zero for all three parameter blobs, i.e.,
  * param {lr_mult: 0} three times in the layer definition.
  *
  * Note that the original paper also included a per-channel learned bias and
@@ -96,10 +96,10 @@ class ArgMaxLayer : public Layer<Dtype> {
  * followed by a Convolution layer with output the same size as the current.
  * This produces a channel-specific value that can be added or multiplied by
  * the BatchNorm layer's output.
- * 
+ *
  * [1] S. Ioffe and C. Szegedy, "Batch Normalization: Accelerating Deep Network
- *     Training by Reducing Internal Covariate Shift." arXiv preprint 
- *     arXiv:1502.03167 (2015).  
+ *     Training by Reducing Internal Covariate Shift." arXiv preprint
+ *     arXiv:1502.03167 (2015).
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
