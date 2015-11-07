@@ -26,14 +26,14 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
   virtual void SetUp() {
     BlobShape shape;
     shape.add_dim(1);  // Batch
-    shape.add_dim(1);  // Channels
+    shape.add_dim(8);  // Channels
     shape.add_dim(4);  // Depth
     shape.add_dim(4);  // Height
     shape.add_dim(4);  // Width
     blob_bottom_->Reshape(shape);
 
     shape.add_dim(1);  // Batch
-    shape.add_dim(1);  // Channels
+    shape.add_dim(8);  // Channels
     shape.add_dim(2);  // Depth
     shape.add_dim(2);  // Height
     shape.add_dim(2);  // Width
@@ -73,13 +73,15 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8);
+    std::vector<TypeParam> maxval(8 * 8);
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
         for (int_tp cw = 0; cw < w; ++cw) {
-          bottom_data[cw + ch * w + cd * w * h] =
+          for (int batch = 0; batch < 8; batch ++) {
+            bottom_data[batch * 64 + cw + ch * w + cd * w * h] =
               cw + ch * w + cd * w * h;
+          }
           maxval[cw/2 + (ch/2)*2 + (cd/2)*4] =
                 std::max(bottom_data[cw + ch * w + cd * w * h],
                          maxval[cw/2 + (ch/2)*2 + (cd/2)*4]);
@@ -91,10 +93,9 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     const TypeParam *top_data = blob_top_->cpu_data();
 
-    for (int i = 0; i < 2*2*2; ++i) {
-      EXPECT_EQ(maxval[i], top_data[i]);
+    for (int i = 0; i < 2*2*2 * 8; ++i) {
+      EXPECT_EQ(maxval[i % 8], top_data[i]);
     }
-
   }
 
   void TestBackward() {
@@ -153,7 +154,8 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
       for (int_tp ch = 0; ch < h; ++ch) {
         for (int_tp cw = 0; cw < w; ++cw) {
           if (maxval[cw/2 + (ch/2)*2 + (cd/2)*4] == cw + ch * w + cd * w * h) {
-            EXPECT_EQ(maxval[cw/2 + (ch/2)*2 + (cd/2)*4], bottom_diff[cw + ch * w + cd * w * h]);
+            EXPECT_EQ(maxval[cw/2 + (ch/2)*2 + (cd/2)*4],
+                      bottom_diff[cw + ch * w + cd * w * h]);
           } else {
             EXPECT_EQ(0, bottom_diff[cw + ch * w + cd * w * h]);
           }
