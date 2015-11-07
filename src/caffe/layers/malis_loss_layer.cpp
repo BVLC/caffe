@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <functional>
+#include <iomanip>
 #include <iterator>
 #include <map>
 #include <numeric>
@@ -18,8 +19,6 @@
 #include "caffe/layer_factory.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
-
-// #define CAFFE_MALIS_DEBUG
 
 namespace caffe {
 
@@ -105,15 +104,16 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
       nPairPos += (segSizes[seg_data[i]] - 1);
     }
   }
+
   int64_t nPairTot = (nLabeledVert * (nLabeledVert - 1)) / 2;
   int64_t nPairNeg = nPairTot - nPairPos;
   int64_t nPairNorm;
+
   if (pos) {
     nPairNorm = nPairPos;
   } else {
     nPairNorm = nPairNeg;
   }
-
 
   int64_t edgeCount = 0;
   // Loop over #edges
@@ -216,7 +216,7 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
           } else if ((!pos) && (it1->first != it2->first)) {
             // -ve example pairs
             dl = (conn_data[minEdge]);
-            loss += dl * nPair;
+            loss += dl * dl * nPair;
             // Use hinge loss
             dloss_data[minEdge] += dl * nPair;
             if (conn_data[minEdge] > Dtype(0.5)) {  // an error
@@ -281,11 +281,6 @@ void MalisLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Optional (bottom 3):
   // Bottom 3: Edge connectivity, size #edges * 3, shaped (Z,Y,X);(Z,Y,X);...
   // (this means pairs of 3 per edge)
-
-#ifdef CAFFE_MALIS_DEBUG
-  cv::namedWindow("labelled");
-  cv::namedWindow("test");
-#endif
 }
 
 template<typename Dtype>
@@ -336,56 +331,6 @@ void MalisLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
-#ifdef CAFFE_MALIS_DEBUG
-  // This is for debugging only:
-  {
-    std::vector<int_tp> labels;
-    const Dtype* seg_data = bottom[2]->cpu_data();
-    for (int_tp i = 0; i < bottom[2]->height() * bottom[2]->width(); ++i) {
-      int_tp val = static_cast<int_tp>(seg_data[i]);
-      bool found = false;
-      for (int_tp j = 0; j < labels.size(); ++j) {
-        if (val == labels[j]) {
-          found = true;
-        }
-      }
-      if (found == false) {
-        labels.push_back(val);
-      }
-    }
-
-    std::vector<cv::Vec3b> colors;
-
-    for (int_tp i = 0; i < labels.size(); ++i) {
-      unsigned char r = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
-      unsigned char g = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
-      unsigned char b = 255 * (rand() / (1.0 + RAND_MAX));  // NOLINT
-
-      cv::Vec3b color(r, g, b);
-      colors.push_back(color);
-    }
-
-    cv::Mat output = cv::Mat::zeros(cv::Size(bottom[1]->height(),
-                                             bottom[1]->width()), CV_8UC3);
-
-    const Dtype* imgdata = bottom[2]->cpu_data();
-
-    for (int_tp i = 0; i < bottom[1]->height() * bottom[1]->width(); ++i) {
-      int_tp val = imgdata[i];
-      if (val == 0) {
-        output.at<cv::Vec3b>(i) = cv::Vec3b(0, 0, 0);
-        continue;
-      }
-      for (int_tp j = 0; j < labels.size(); ++j) {
-        if (val == labels[j]) {
-          output.at<cv::Vec3b>(i) = colors[j];
-        }
-      }
-    }
-    cv::imshow("labelled", output);
-  }
-#endif
-
   // Set up the neighborhood
   nhood_data_.clear();
   if (bottom.size() == 4) {
@@ -450,7 +395,6 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &classerr_out, &rand_index_out);
 
     loss += loss_out;
-    std::cout << loss << std::endl;
 
     Malis(&affinity_data_pos[batch_offset * batch], conn_num_dims_,
           &conn_dims_[0], &nhood_data_[0], &nhood_dims_[0],
@@ -459,7 +403,6 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &classerr_out, &rand_index_out);
 
     loss += loss_out;
-    std::cout << loss << std::endl;
   }
 
   // Normalized loss over batch size

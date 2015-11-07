@@ -25,6 +25,9 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     int_tp offset = 1;
     int_tp num = index;
+
+    bool do_continue = false;
+
     for (i = num_axes - 1; i >= 0; --i) {
       d_idx[i] = num % pooled_size[i];
       d_start[i] = d_idx[i] * stride[i] - pad[i];
@@ -41,9 +44,14 @@ __kernel void TEMPLATE(max_pool_forward_nd, Dtype)(const int_tp n,
         } else {
           top_mask[index] = -1;
         }
-        return;
+        do_continue = true;
       }
     }
+
+    if(do_continue) {
+      continue;
+    }
+
     int_tp chan = num % channels;
     num /= channels;
     offset *= (num * channels + chan);
