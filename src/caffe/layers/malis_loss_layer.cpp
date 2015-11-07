@@ -428,7 +428,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 #pragma omp parallel for
     for (int_tp i = 0; i < bottom[0]->count(); ++i) {
-      bottom_diff[i] = dloss_neg_data[i] - dloss_pos_data[i];
+      bottom_diff[i] = -(dloss_neg_data[i] + dloss_pos_data[i]);
     }
   }
 }
