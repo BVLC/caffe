@@ -206,16 +206,16 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
           if (pos && (it1->first == it2->first)) {
             // +ve example pairs
             dl = (Dtype(1.0) - conn_data[minEdge]);
-            loss += dl * nPair;
+            loss += dl * dl * nPair;
             // Use hinge loss
-            dloss_data[minEdge] -= dl * nPair;
+            dloss_data[minEdge] += dl * nPair;
             if (conn_data[minEdge] <= Dtype(0.5)) {  // an error
               nPairIncorrect += nPair;
             }
 
           } else if ((!pos) && (it1->first != it2->first)) {
             // -ve example pairs
-            dl = (conn_data[minEdge]);
+            dl = (-conn_data[minEdge]);
             loss += dl * dl * nPair;
             // Use hinge loss
             dloss_data[minEdge] += dl * nPair;
@@ -428,7 +428,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 #pragma omp parallel for
     for (int_tp i = 0; i < bottom[0]->count(); ++i) {
-      bottom_diff[i] = dloss_pos_data[i] + dloss_neg_data[i];
+      bottom_diff[i] = dloss_neg_data[i] - dloss_pos_data[i];
     }
   }
 }
