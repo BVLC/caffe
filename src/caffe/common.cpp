@@ -1,3 +1,5 @@
+#include <boost/random/random_device.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 #include <boost/thread.hpp>
 #include <glog/logging.h>
 #include <cmath>
@@ -21,24 +23,10 @@ Caffe& Caffe::Get() {
 
 // random seeding
 int64_t cluster_seedgen(void) {
-  int64_t s, seed, pid;
-  FILE* f = fopen("/dev/urandom", "rb");
-  if (f && fread(&seed, 1, sizeof(seed), f) == sizeof(seed)) {
-    fclose(f);
-    return seed;
-  }
-
-  LOG(INFO) << "System entropy source not available, "
-              "using fallback algorithm to generate seed instead.";
-  if (f)
-    fclose(f);
-
-  pid = getpid();
-  s = time(NULL);
-  seed = std::abs(((s * 181) * ((pid - 83) * 359)) % 104729);
-  return seed;
+  boost::random::random_device rng;
+  boost::random::uniform_int_distribution<int64_t> dist;
+  return dist(rng);
 }
-
 
 void GlobalInit(int* pargc, char*** pargv) {
   // Google flags.
