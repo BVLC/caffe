@@ -162,9 +162,9 @@ namespace caffe {
           // if you are paranoid, that doesn't mean they are not after you :)
           delete cubAlloc;
 
-          cubAlloc = new cub::CachingDeviceAllocator( 8,   // defaults
-                                                      3,
-                                                      7,
+          cubAlloc = new cub::CachingDeviceAllocator( 2,   // defaults
+                                                      6,
+                                                      16,
                                                       poolsize_,
                                                       false,
                                                       debug_);
