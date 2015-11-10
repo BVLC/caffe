@@ -133,7 +133,12 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template<typename Dtype>
-void PReLULayer<Dtype>::ConstrainNegSlopeCPU() {
+void PReLULayer<Dtype>::PostUpdateProcessing_cpu() {
+  if (!this->constrain_neg_slope_) {
+    return;
+  }
+
+  // Constrain the slopes to be between the limits.
   Dtype* slopes = this->blobs_[0]->mutable_cpu_data();
   int slope_count = this->blobs_[0]->count();
   for (int i = 0; i < slope_count; ++i) {
@@ -147,26 +152,9 @@ void PReLULayer<Dtype>::ConstrainNegSlopeCPU() {
   }
 }
 
-template <typename Dtype>
-void PReLULayer<Dtype>::PostUpdateProcessing() {
-  if (!this->constrain_neg_slope_) {
-    return;
-  }
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    ConstrainNegSlopeCPU();
-    break;
-  case Caffe::GPU:
-    ConstrainNegSlopeGPU();
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
-  }
-}
-
-
 #ifdef CPU_ONLY
 STUB_GPU(PReLULayer);
+STUB_GPU_POSTUPDATEPROCESSING(PReLULayer);
 #endif
 
 INSTANTIATE_CLASS(PReLULayer);

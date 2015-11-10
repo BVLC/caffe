@@ -746,8 +746,6 @@ class PReLULayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "PReLU"; }
 
-  virtual void PostUpdateProcessing();
-
  protected:
   /**
    * @param bottom input Blob vector (length 1)
@@ -797,8 +795,12 @@ class PReLULayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  void ConstrainNegSlopeCPU();
-  void ConstrainNegSlopeGPU();
+  /*********
+   * @brief Perform the post-update processing to constrain the negative slopes
+   *        of the Prelu.
+   *********/
+  virtual void PostUpdateProcessing_cpu();
+  virtual void PostUpdateProcessing_gpu();
 
   bool channel_shared_;
   bool constrain_neg_slope_;

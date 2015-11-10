@@ -135,7 +135,11 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 template<typename Dtype>
-void PReLULayer<Dtype>::ConstrainNegSlopeGPU() {
+void PReLULayer<Dtype>::PostUpdateProcessing_gpu() {
+  if (!this->constrain_neg_slope_) {
+    return;
+  }
+
   Dtype* slopes = this->blobs_[0]->mutable_gpu_data();
   int slope_count = this->blobs_[0]->count();
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -145,7 +149,7 @@ void PReLULayer<Dtype>::ConstrainNegSlopeGPU() {
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(PReLULayer);
-template void PReLULayer<float>::ConstrainNegSlopeGPU();
-template void PReLULayer<double>::ConstrainNegSlopeGPU();
+template void PReLULayer<float>::PostUpdateProcessing_gpu();
+template void PReLULayer<double>::PostUpdateProcessing_gpu();
 
 }  // namespace caffe
