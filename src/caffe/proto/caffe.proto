@@ -1233,7 +1233,7 @@ message PReLUParameter {
   optional bool channel_shared = 2 [default = false];
   // Whether or not to constrain the negative slope between min_neg_slope and
   // max_neg_slope.
-  optional bool constrain_neg_slope = 3;
+  optional bool constrain_neg_slope = 3 [default = true];
   // limits on the value that the negative slope is allowed to acquire.
   // Enforced only if constrain_neg_slope = true.
   optional float min_neg_slope = 4 [default = 0.0];
