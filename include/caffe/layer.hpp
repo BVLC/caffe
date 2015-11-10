@@ -315,7 +315,11 @@ class Layer {
     }
     param_propagate_down_[param_id] = value;
   }
-
+  /**
+   * @brief Called after net's parameters have been updated. May be overridden
+   *        by a layer to apply constraints to parameters.
+   */
+  virtual void PostUpdateProcessing() {}
 
  protected:
   /** The protobuf that stores the layer parameters */
@@ -512,6 +516,9 @@ void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
     blobs_[i]->ToProto(param->add_blobs(), write_diff);
   }
 }
+
+
+
 
 }  // namespace caffe
 

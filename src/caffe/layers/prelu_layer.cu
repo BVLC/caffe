@@ -5,6 +5,20 @@
 
 namespace caffe {
 
+// CUDA kernel for constraining negative slope.
+template <typename Dtype>
+__global__ void ConstrainNegSlope(Dtype* slopes, int slope_count,
+                                         Dtype min_slope, Dtype max_slope) {
+  CUDA_KERNEL_LOOP(index, slope_count) {
+    Dtype slope = slopes[index];
+    if (slope < min_slope) {
+      slopes[index] = min_slope;
+    } else if (slope > max_slope) {
+      slopes[index] = max_slope;
+    }
+  }
+}
+
 // CUDA kernele for forward
 template <typename Dtype>
 __global__ void PReLUForward(const int n, const int channels, const int dim,
@@ -120,8 +134,18 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+template<typename Dtype>
+void PReLULayer<Dtype>::ConstrainNegSlopeGPU() {
+  Dtype* slopes = this->blobs_[0]->mutable_gpu_data();
+  int slope_count = this->blobs_[0]->count();
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  ConstrainNegSlope<Dtype><<<CAFFE_GET_BLOCKS(slope_count),
+      CAFFE_CUDA_NUM_THREADS>>>(
+      slopes, slope_count, this->min_neg_slope_, this->max_neg_slope_);
+}
 
 INSTANTIATE_LAYER_GPU_FUNCS(PReLULayer);
-
+template void PReLULayer<float>::ConstrainNegSlopeGPU();
+template void PReLULayer<double>::ConstrainNegSlopeGPU();
 
 }  // namespace caffe
