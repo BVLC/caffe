@@ -9,6 +9,10 @@ endif()
 # ---[ Caffe project
 project(Caffe C CXX)
 
+# ---[ Caffe version
+set(CAFFE_TARGET_VERSION "0")
+set(CAFFE_TARGET_SOVERSION "0")
+
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
