@@ -139,7 +139,8 @@ class Blob {
   inline int LegacyShape(int index) const {
     if (index >= num_axes() || index < -num_axes()) {
       // Assuming num_axes is the blob dimension (generaly 4),
-      // axis is out of range, but still in [0, num_axes[ (or [-num_axes, -1] for reverse
+      // axis is out of range, but still in [0, num_axes[
+      // (or [-num_axes, -1] for reverse
       // indexing) -- this special case simulates the one-padding used to fill
       // extraneous axes of legacy blobs.
       return 1;
