@@ -84,8 +84,7 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   if (use_global_stats_) {
-    // use the stored mean/variance estimates.  TODO(cdoersch): allow an option
-    // to use an unbiased variance estimate, like the paper does.
+    // use the stored mean/variance estimates.
     const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
         0 : 1 / this->blobs_[2]->cpu_data()[0];
     caffe_cpu_scale(variance_.count(), scale_factor,
@@ -158,7 +157,6 @@ template <typename Dtype>
 void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  CHECK(!use_global_stats_);
   const Dtype* top_diff;
   if (bottom[0] != top[0]) {
     top_diff = top[0]->cpu_diff();
@@ -166,8 +164,12 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_copy(x_norm_.count(), top[0]->cpu_diff(), x_norm_.mutable_cpu_diff());
     top_diff = x_norm_.cpu_diff();
   }
-  const Dtype* top_data = x_norm_.cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  if (use_global_stats_) {
+    caffe_div(temp_.count(), top_diff, temp_.cpu_data(), bottom_diff);
+    return;
+  }
+  const Dtype* top_data = x_norm_.cpu_data();
   int num = bottom[0]->shape()[0];
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
   // if Y = (X-mean(X))/(sqrt(var(X)+eps)), then
