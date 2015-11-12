@@ -1,4 +1,8 @@
 # Collect source files
+
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+
 file(GLOB_RECURSE srcs ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # Build each source file independently
@@ -12,7 +16,7 @@ foreach(source ${srcs})
 
   # target
   add_executable(${name} ${source})
-  target_link_libraries(${name} ${Caffe_LINK})
+  target_link_libraries(${name} ${Caffe_LINK} datagenerator autovelox ${VTK_LIBRARIES})
   caffe_default_properties(${name})
 
   # set back RUNTIME_OUTPUT_DIRECTORY

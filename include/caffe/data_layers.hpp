@@ -280,6 +280,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 #ifdef USE_OPENCV
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
       const vector<int>& labels);
+  virtual void AddMatVectorMultilabel(const vector<cv::Mat>& mat_vector,
+      const vector< vector < int > >& labels);
 #endif  // USE_OPENCV
 
   // Reset should accept const pointers, but can't, because the memory
@@ -296,7 +298,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int batch_size_, channels_, height_, width_, size_;
+  int batch_size_, channels_, height_, width_, data_size_, num_labels_;
   Dtype* data_;
   Dtype* labels_;
   int n_;

@@ -190,7 +190,10 @@ TYPED_TEST(MemoryDataLayerTest, AddMatVectorDefaultTransform) {
     label_vector[i] = i;
     cv::randu(mat_vector[i], cv::Scalar::all(0), cv::Scalar::all(255));
   }
-  layer.AddMatVector(mat_vector, label_vector);
+  vector < vector < int > > multilabel_vector;
+  for(int i = 0; i< mat_vector.size(); ++i)
+    multilabel_vector.push_back(label_vector);
+  layer.AddMatVectorMultilabel(mat_vector, multilabel_vector);
 
   int data_index;
   const size_t count = this->channels_ * this->height_ * this->width_;
@@ -235,7 +238,10 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
     label_vector[i] = i;
     cv::randu(mat_vector[i], cv::Scalar::all(0), cv::Scalar::all(255));
   }
-  layer.AddMatVector(mat_vector, label_vector);
+  vector < vector < int > > multilabel_vector;
+  for(int i = 0; i< mat_vector.size(); ++i)
+      multilabel_vector.push_back(label_vector);
+  layer.AddMatVectorMultilabel(mat_vector, multilabel_vector);
   // then consume the data
   int data_index;
   const size_t count = this->channels_ * this->height_ * this->width_;
@@ -270,7 +276,10 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
     label_vector[i] = i;
     cv::randu(mat_vector[i], cv::Scalar::all(0), cv::Scalar::all(255));
   }
-  layer.AddMatVector(mat_vector, label_vector);
+  multilabel_vector.clear();
+  for(int i = 0; i< mat_vector.size(); ++i)
+      multilabel_vector.push_back(label_vector);
+  layer.AddMatVectorMultilabel(mat_vector, multilabel_vector);
 
   // finally consume new data and check if everything is fine
   for (int iter = 0; iter < num_iter; ++iter) {

@@ -683,6 +683,10 @@ class SoftmaxLayer : public Layer<Dtype> {
   Blob<Dtype> sum_multiplier_;
   /// scale is an intermediate Blob to hold temporary results.
   Blob<Dtype> scale_;
+  /// su quante fette di bottom deve essere applicato il softmax
+  /// esempio: se l'innerproduct ha num_output:200 e step_ del softmax = 10
+  /// il softmax verrà applicato indipendentemente sugli elementi 0-19, 20-39, ..., 180-199 
+  int slice_;
 };
 
 #ifdef USE_CUDNN
