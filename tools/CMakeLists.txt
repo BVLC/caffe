@@ -1,8 +1,4 @@
 # Collect source files
-
-find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
-
 file(GLOB_RECURSE srcs ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # Build each source file independently
