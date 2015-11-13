@@ -525,7 +525,7 @@ namespace caffe {
         &_cl_conv_layer_spatial_start, &_cl_conv_layer_spatial_end, options,
         true);
 
-    if (err != CL_SUCCESS && err != true) {
+    if (err != true) {
       dbgPrint(
           std::cout << "Verification kernel generation failed" << std::endl);
       return false;
