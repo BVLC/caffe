@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "caffe/common_layers.hpp"
-#include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -15,20 +14,21 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int num = bottom[0]->shape(0);
   int spatial_dim = bottom[0]->count()/(channels_*bottom[0]->shape(0));
 
-  // elementwise square
-  caffe_gpu_powx(bottom[0]->count(), bottom_data, Dtype(2),
-      temp_.mutable_gpu_data());
+  if (bottom[0] != top[0]) {
+    caffe_copy(bottom[0]->count(), bottom_data, top_data);
+  }
+
 
   if (use_global_stats_) {
-    // use the stored mean/variance estimates.  TODO(cdoersch): allow an option
-    // to use an unbiased variance estimate, like the paper does.
-    const Dtype scale_factor = 1 / this->blobs_[2]->cpu_data()[0];
+    // use the stored mean/variance estimates.
+    const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
+        0 : 1 / this->blobs_[2]->cpu_data()[0];
     caffe_gpu_scale(variance_.count(), scale_factor,
         this->blobs_[0]->gpu_data(), mean_.mutable_gpu_data());
     caffe_gpu_scale(variance_.count(), scale_factor,
         this->blobs_[1]->gpu_data(), variance_.mutable_gpu_data());
   } else {
-    // computes variance using var(X) = E(X^2) - (EX)^2
+    // compute mean
     caffe_gpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
         1. / (num * spatial_dim), bottom_data,
         spatial_sum_multiplier_.gpu_data(), 0.,
@@ -36,37 +36,8 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     caffe_gpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
         num_by_chans_.gpu_data(), batch_sum_multiplier_.gpu_data(), 0.,
         mean_.mutable_gpu_data());
-    caffe_gpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
-        1. / (num * spatial_dim), temp_.gpu_data(),
-        spatial_sum_multiplier_.gpu_data(), 0.,
-        num_by_chans_.mutable_gpu_data());
-    caffe_gpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
-        num_by_chans_.gpu_data(), batch_sum_multiplier_.gpu_data(), 0.,
-        variance_.mutable_gpu_data());
-    this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
-    this->blobs_[2]->mutable_cpu_data()[0] += 1;
-    caffe_gpu_axpby(mean_.count(), Dtype(1), mean_.gpu_data(),
-        moving_average_fraction_, this->blobs_[0]->mutable_gpu_data());
-    Dtype m = Dtype(bottom[0]->count()/channels_);
-    caffe_gpu_axpby(variance_.count(), m/(m-1), variance_.gpu_data(),
-        moving_average_fraction_, this->blobs_[1]->mutable_gpu_data());
   }
-  // elementwise square of mean
-  caffe_gpu_powx(mean_.count(), mean_.gpu_data(), Dtype(2),
-                 temp_.mutable_gpu_data());
 
-  caffe_gpu_sub(mean_.count(), variance_.gpu_data(), temp_.gpu_data(),
-                variance_.mutable_gpu_data());  // variance
-
-  // normalize variance
-  caffe_gpu_add_scalar(variance_.count(), eps_, variance_.mutable_gpu_data());
-  caffe_gpu_powx(variance_.count(), variance_.gpu_data(), Dtype(0.5),
-      variance_.mutable_gpu_data());
-
-  // do mean and variance normalization
-  if (bottom[0] != top[0]) {
-    caffe_copy(bottom[0]->count(), bottom_data, top_data);
-  }
   // subtract mean
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
       batch_sum_multiplier_.gpu_data(), mean_.gpu_data(), 0.,
@@ -74,6 +45,36 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, -1, num_by_chans_.gpu_data(),
       spatial_sum_multiplier_.gpu_data(), 1., top_data);
+
+  if (!use_global_stats_) {
+    // compute variance using var(X) = E((X-EX)^2)
+    caffe_gpu_powx(top[0]->count(), top_data, Dtype(2),
+        temp_.mutable_gpu_data());  // (X-EX)^2
+    caffe_gpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
+        1. / (num * spatial_dim), temp_.gpu_data(),
+        spatial_sum_multiplier_.gpu_data(), 0.,
+        num_by_chans_.mutable_gpu_data());
+    caffe_gpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
+        num_by_chans_.gpu_data(), batch_sum_multiplier_.gpu_data(), 0.,
+        variance_.mutable_gpu_data());  // E((X_EX)^2)
+
+    // compute and save moving average
+    this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
+    this->blobs_[2]->mutable_cpu_data()[0] += 1;
+    caffe_gpu_axpby(mean_.count(), Dtype(1), mean_.gpu_data(),
+        moving_average_fraction_, this->blobs_[0]->mutable_gpu_data());
+    int m = bottom[0]->count()/channels_;
+    Dtype bias_correction_factor = m > 1 ? Dtype(m)/(m-1) : 1;
+    caffe_gpu_axpby(variance_.count(), bias_correction_factor,
+        variance_.gpu_data(), moving_average_fraction_,
+        this->blobs_[1]->mutable_gpu_data());
+  }
+
+  // normalize variance
+  caffe_gpu_add_scalar(variance_.count(), eps_, variance_.mutable_gpu_data());
+  caffe_gpu_powx(variance_.count(), variance_.gpu_data(), Dtype(0.5),
+      variance_.mutable_gpu_data());
+
   // replicate variance to input size
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
       batch_sum_multiplier_.gpu_data(), variance_.gpu_data(), 0.,
@@ -92,7 +93,6 @@ template <typename Dtype>
 void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  CHECK(!use_global_stats_);
   const Dtype* top_diff;
   if (bottom[0] != top[0]) {
     top_diff = top[0]->gpu_diff();
@@ -100,8 +100,12 @@ void BatchNormLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     caffe_copy(x_norm_.count(), top[0]->gpu_diff(), x_norm_.mutable_gpu_diff());
     top_diff = x_norm_.gpu_diff();
   }
-  const Dtype* top_data = x_norm_.gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  if (use_global_stats_) {
+    caffe_gpu_div(temp_.count(), top_diff, temp_.gpu_data(), bottom_diff);
+    return;
+  }
+  const Dtype* top_data = x_norm_.gpu_data();
   int num = bottom[0]->shape()[0];
   int spatial_dim = bottom[0]->count()/(channels_*bottom[0]->shape(0));
   // if Y = (X-mean(X))/(sqrt(var(X)+eps)), then
