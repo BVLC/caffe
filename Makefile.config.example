@@ -4,9 +4,6 @@
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 # USE_CUDNN := 1
 
-# CNMeM memory pool switch (experimental, may go away)
-# USE_CNMEM := 1
-
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 

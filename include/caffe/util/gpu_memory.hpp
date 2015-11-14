@@ -10,16 +10,11 @@ class gpu_memory {
  public:
   enum PoolMode {
     NoPool,     // Straight CUDA malllc/free. May be very expensive
-    CnMemPool,  // CNMEM arena allocator
     CubPool,     // CUB caching allocator
 #ifdef CPU_ONLY
     DefaultPool = NoPool
 #else
-#  if (USE_CNMEM) && !defined (__arm__)
-    DefaultPool = CnMemPool   // CNMEM pool only uses dedicated video memory.
-# else
     DefaultPool = CubPool     // CUB pool is able to use unified memory properly
-# endif
 #endif
   };
 

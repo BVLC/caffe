@@ -189,33 +189,6 @@ function(detect_cuDNN)
 endfunction()
 
 ################################################################################################
-# Short command for cuDNN detection. Believe it soon will be a part of CUDA toolkit distribution.
-# That's why not FindcuDNN.cmake file, but just the macro
-# Usage:
-#   detect_cuDNN()
-function(detect_CNMeM)
-  set(CNMEM_ROOT "" CACHE PATH "CNMeM root folder")
-
-  find_path(CNMEM_INCLUDE cnmem.h
-    PATHS ${CNMEM_ROOT} $ENV{CNMEM_ROOT} ${CUDA_TOOLKIT_INCLUDE}
-    DOC "Path to CNMeM include directory." )
-
-  get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
-  find_library(CNMEM_LIBRARY NAMES libcnmem.so # libcudnn_static.a
-                             PATHS ${CNMEM_ROOT} $ENV{CNMEM_ROOT} ${CNMEM_INCLUDE} ${__libpath_hist}
-                             DOC "Path to CNMeM library.")
-
-  if(CNMEM_INCLUDE AND CNMEM_LIBRARY)
-    set(HAVE_CNMEM  TRUE PARENT_SCOPE)
-    set(CNMEM_FOUND TRUE PARENT_SCOPE)
-
-    mark_as_advanced(CNMEM_INCLUDE CNMEM_LIBRARY CNMEM_ROOT)
-    message(STATUS "Found CNMeM (include: ${CNMEM_INCLUDE}, library: ${CNMEM_LIBRARY})")
-  endif()
-endfunction()
-
-
-################################################################################################
 ###  Non macro section
 ################################################################################################
 
@@ -239,15 +212,6 @@ if(USE_CUDNN)
     add_definitions(-DUSE_CUDNN)
     include_directories(SYSTEM ${CUDNN_INCLUDE})
     list(APPEND Caffe_LINKER_LIBS ${CUDNN_LIBRARY})
-  endif()
-endif()
-
-if(USE_CNMEM)
-  detect_CNMeM()
-  if(HAVE_CNMEM)
-    add_definitions(-DUSE_CNMEM)
-    include_directories(SYSTEM ${CNMEM_INCLUDE})
-    list(APPEND Caffe_LINKER_LIBS ${CNMEM_LIBRARY})
   endif()
 endif()
 
