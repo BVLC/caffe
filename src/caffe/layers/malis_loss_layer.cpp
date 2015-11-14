@@ -36,12 +36,6 @@ class MalisAffinityGraphCompare {
 };
 
 // Derived from https://github.com/srinituraga/malis/blob/master/matlab/malis_loss_mex.cpp
-// conn_data:   4d connectivity graph [y * x * z * #edges]
-// nhood_data:  graph neighborhood descriptor [3 * #edges]
-// seg_data:    true target segmentation [y * x * z]
-// pos:         is this a positive example pass [true] or
-//              a negative example pass [false] ?
-// margin:      sq-sq loss margin [0.3]
 template<typename Dtype>
 void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
                                   const int_tp conn_num_dims,
@@ -69,9 +63,9 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
 
   // prodDims stores x, x*y, x*y*z offsets
   std::vector<int64_t> prodDims(conn_num_dims - 1);
-  prodDims[0] = 1;
+  prodDims[conn_num_dims - 2] = 1;
   for (int64_t i = 1; i < conn_num_dims - 1; ++i) {
-    prodDims[i] = prodDims[i - 1] * conn_dims[i];
+    prodDims[conn_num_dims - 2 - i] = prodDims[conn_num_dims - 1 - i] * conn_dims[i];
     // std::cout << i << " prodDims: " << prodDims[i] << std::endl;
   }
 
@@ -125,12 +119,12 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
         // Loop over X
         for (int64_t x = 0; x < conn_dims[3]; ++x, ++i) {
           // Out-of-bounds check:
-          if (!((z + nhood_data[d * conn_dims[0] + 0] < 0)
-              ||(z + nhood_data[d * conn_dims[0] + 0] >= conn_dims[1])
-              ||(y + nhood_data[d * conn_dims[0] + 1] < 0)
-              ||(y + nhood_data[d * conn_dims[0] + 1] >= conn_dims[2])
-              ||(x + nhood_data[d * conn_dims[0] + 2] < 0)
-              ||(x + nhood_data[d * conn_dims[0] + 2] >= conn_dims[3]))) {
+          if (!((z + nhood_data[d * 3 + 0] < 0)
+              ||(z + nhood_data[d * 3 + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * 3 + 1] < 0)
+              ||(y + nhood_data[d * 3 + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * 3 + 2] < 0)
+              ||(x + nhood_data[d * 3 + 2] >= conn_dims[3]))) {
             ++edgeCount;
           }
         }
@@ -144,18 +138,18 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
   // Loop over #edges
   for (int64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
     // Loop over Z
-    for (int64_t x = 0; x < conn_dims[3]; ++x) {
+    for (int64_t z = 0; z < conn_dims[1]; ++z) {
       // Loop over Y
       for (int64_t y = 0; y < conn_dims[2]; ++y) {
         // Loop over X
-        for (int64_t z = 0; z < conn_dims[1]; ++z, ++i) {
+        for (int64_t x = 0; x < conn_dims[3]; ++x, ++i) {
           // Out-of-bounds check:
-          if (!((z + nhood_data[d * conn_dims[0] + 0] < 0)
-              ||(z + nhood_data[d * conn_dims[0] + 0] >= conn_dims[1])
-              ||(y + nhood_data[d * conn_dims[0] + 1] < 0)
-              ||(y + nhood_data[d * conn_dims[0] + 1] >= conn_dims[2])
-              ||(x + nhood_data[d * conn_dims[0] + 2] < 0)
-              ||(x + nhood_data[d * conn_dims[0] + 2] >= conn_dims[3]))) {
+          if (!((z + nhood_data[d * 3 + 0] < 0)
+              ||(z + nhood_data[d * 3 + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * 3 + 1] < 0)
+              ||(y + nhood_data[d * 3 + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * 3 + 2] < 0)
+              ||(x + nhood_data[d * 3 + 2] >= conn_dims[3]))) {
             pqueue[j++] = i;
           }
         }
@@ -182,7 +176,7 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
     minEdge = pqueue[i];
     // nVert = x * y * z, minEdge in [0, x * y * z * #edges]
 
-    // e: edge dimension (0: X, 1: Y, 2: Z)
+    // e: edge dimension
     e = minEdge / nVert;
 
     // v1: node at edge beginning
@@ -190,6 +184,8 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
 
     // v2: neighborhood node at edge e
     v2 = v1 + nHood[e];
+
+    // std::cout << "V1: " << v1 << ", V2: " << v2 << std::endl;
 
     set1 = dsets.find_set(v1);
     set2 = dsets.find_set(v2);
