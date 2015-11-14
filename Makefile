@@ -246,7 +246,7 @@ ifeq ($(USE_CUDA), 1)
 	LIBRARIES += cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf boost_system m hdf5_hl hdf5
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
@@ -749,7 +749,7 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	cp $(EXAMPLE_BINS) $(DISTRIBUTE_DIR)/bin
 	# add libraries
 	cp $(STATIC_NAME) $(DISTRIBUTE_DIR)/lib
-	cp $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
+	install -m 644 $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
 	# add python - it's not the standard way, indeed...
 	cp -r python $(DISTRIBUTE_DIR)/python
 

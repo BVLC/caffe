@@ -794,7 +794,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
       ++target_layer_id;
     }
     if (target_layer_id == layer_names_.size()) {
-      DLOG(INFO)<< "Ignoring source layer " << source_layer_name;
+      LOG(INFO) << "Ignoring source layer " << source_layer_name;
       continue;
     }
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
@@ -862,7 +862,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       ++target_layer_id;
     }
     if (target_layer_id == layer_names_.size()) {
-      DLOG(INFO)<< "Ignoring source layer " << source_layer_name;
+      LOG(INFO) << "Ignoring source layer " << source_layer_name;
       continue;
     }
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
@@ -917,7 +917,7 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
   for (int_tp i = 0; i < num_layers; ++i) {
     string source_layer_name = hdf5_get_name_by_idx(data_hid, i);
     if (!layer_names_index_.count(source_layer_name)) {
-      DLOG(INFO) << "Ignoring source layer " << source_layer_name;
+      LOG(INFO) << "Ignoring source layer " << source_layer_name;
       continue;
     }
     int_tp target_layer_id = layer_names_index_[source_layer_name];
