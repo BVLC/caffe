@@ -14,7 +14,7 @@
     <ProjectGuid>{7F271127-D68A-4B9B-ACCE-1369394ED6E5}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>caffe</RootNamespace>
-    <ProjectName>CaffeLib</ProjectName>
+    <ProjectName>caffe.lib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -45,7 +45,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>lib\$(Configuration)\</OutDir>
     <TargetExt>.lib</TargetExt>
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>caffe</TargetName>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -53,6 +53,7 @@
     <OutDir>lib\$(Configuration)\</OutDir>
     <TargetExt>.lib</TargetExt>
     <IntDir>obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>caffe</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

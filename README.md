@@ -1,5 +1,8 @@
 # Caffe
 
+[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
 
@@ -12,10 +15,22 @@ Check out the [project site](http://caffe.berkeleyvision.org) for all the detail
 
 and step-by-step examples.
 
-## Setup
-`git clone git@github.com:MSRDL/caffe.git`
+## Windows Setup
+**Requirements**: Visual Studio 2013 and CUDA 7.5
 
-For development in Windows, also run `git clone git@github.com:MSRDL/wincaffe-3rdparty.git 3rdparty` from the `caffe` folder.
+Once the requirements are satisfied, run these commands
+```
+git clone git@github.com:MSRDL/caffe.git
+cd caffe
+git clone git@github.com:MSRDL/wincaffe-3rdparty.git 3rdparty
+```
+Now, you should be able to build `caffe.sln` 
+
+## Development
+
+### Common issues when pulling new commits from BVLC's branch
+- If compilation fails: regenerate `caffe.pb.h` and `caffe.pb.cc` files. This can be done by removing `src\caffe\proto\caffe.pb.h` file. The build process will regenerate if this file is missing.
+- If linking fails: it's likely that there are new `cpp` files that need to be added to the `caffelib` project.
 
 ## License and Citation
 
