@@ -1018,6 +1018,8 @@ message WindowDataParameter {
   optional bool cache_images = 12 [default = false];
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
+  // Specify if the images are color or gray
+  optional bool is_color = 14 [default = true];
 }
 
 message SPPParameter {
