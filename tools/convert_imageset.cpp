@@ -43,6 +43,7 @@ DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 
 int main(int argc, char** argv) {
+#ifdef USE_OPENCV
   ::google::InitGoogleLogging(argv[0]);
   // Print output to stderr (while still logging)
   FLAGS_alsologtostderr = 1;
@@ -150,5 +151,8 @@ int main(int argc, char** argv) {
     txn->Commit();
     LOG(INFO) << "Processed " << count << " files.";
   }
+#else
+  LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
+#endif  // USE_OPENCV
   return 0;
 }

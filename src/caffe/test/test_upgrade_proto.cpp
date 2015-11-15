@@ -1,4 +1,3 @@
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -2906,15 +2905,84 @@ TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
     layer_param.set_type(v2_layer_type);
     // Data layers expect a DB
     if (v2_layer_type == "Data") {
+      #ifdef USE_LEVELDB
       string tmp;
       MakeTempDir(&tmp);
       boost::scoped_ptr<db::DB> db(db::GetDB(DataParameter_DB_LEVELDB));
       db->Open(tmp, db::NEW);
       db->Close();
       layer_param.mutable_data_param()->set_source(tmp);
+      #else
+      continue;
+      #endif  // USE_LEVELDB
     }
+    #ifndef USE_OPENCV
+    if (v2_layer_type == "ImageData" || v2_layer_type == "WindowData") {
+     continue;
+    }
+    #endif  // !USE_OPENCV
     layer = LayerRegistry<float>::CreateLayer(layer_param);
     EXPECT_EQ(v2_layer_type, layer->type());
+  }
+}
+
+class SolverTypeUpgradeTest : public ::testing::Test {
+ protected:
+  void RunSolverTypeUpgradeTest(
+      const string& input_param_string, const string& output_param_string) {
+    // Test upgrading old solver_type field (enum) to new type field (string)
+    SolverParameter input_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        input_param_string, &input_param));
+    SolverParameter expected_output_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        output_param_string, &expected_output_param));
+    SolverParameter actual_output_param = input_param;
+    UpgradeSolverType(&actual_output_param);
+    EXPECT_EQ(expected_output_param.DebugString(),
+        actual_output_param.DebugString());
+  }
+};
+
+TEST_F(SolverTypeUpgradeTest, TestSimple) {
+  const char* old_type_vec[6] = { "SGD", "ADAGRAD", "NESTEROV", "RMSPROP",
+      "ADADELTA", "ADAM" };
+  const char* new_type_vec[6] = { "SGD", "AdaGrad", "Nesterov", "RMSProp",
+      "AdaDelta", "Adam" };
+  for (int i = 0; i < 6; ++i) {
+    const string& input_proto =
+        "net: 'examples/mnist/lenet_train_test.prototxt' "
+        "test_iter: 100 "
+        "test_interval: 500 "
+        "base_lr: 0.01 "
+        "momentum: 0.0 "
+        "weight_decay: 0.0005 "
+        "lr_policy: 'inv' "
+        "gamma: 0.0001 "
+        "power: 0.75 "
+        "display: 100 "
+        "max_iter: 10000 "
+        "snapshot: 5000 "
+        "snapshot_prefix: 'examples/mnist/lenet_rmsprop' "
+        "solver_mode: GPU "
+        "solver_type: " + std::string(old_type_vec[i]) + " ";
+    const string& expected_output_proto =
+        "net: 'examples/mnist/lenet_train_test.prototxt' "
+        "test_iter: 100 "
+        "test_interval: 500 "
+        "base_lr: 0.01 "
+        "momentum: 0.0 "
+        "weight_decay: 0.0005 "
+        "lr_policy: 'inv' "
+        "gamma: 0.0001 "
+        "power: 0.75 "
+        "display: 100 "
+        "max_iter: 10000 "
+        "snapshot: 5000 "
+        "snapshot_prefix: 'examples/mnist/lenet_rmsprop' "
+        "solver_mode: GPU "
+        "type: '" + std::string(new_type_vec[i]) + "' ";
+    this->RunSolverTypeUpgradeTest(input_proto, expected_output_proto);
   }
 }
 

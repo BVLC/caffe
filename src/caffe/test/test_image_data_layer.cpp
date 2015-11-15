@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #include <map>
 #include <string>
 #include <vector>
@@ -6,10 +7,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
-#include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -177,3 +178,4 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
 }
 
 }  // namespace caffe
+#endif  // USE_OPENCV

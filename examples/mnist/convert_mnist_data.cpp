@@ -9,9 +9,13 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
+
+#if defined(USE_LEVELDB) && defined(USE_LMDB)
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <lmdb.h>
+#endif
+
 #include <stdint.h>
 #include <sys/stat.h>
 
@@ -19,6 +23,8 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
+
+#if defined(USE_LEVELDB) && defined(USE_LMDB)
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
@@ -196,3 +202,9 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
+#else
+int main(int argc, char** argv) {
+  LOG(FATAL) << "This example requires LevelDB and LMDB; " <<
+  "compile with USE_LEVELDB and USE_LMDB.";
+}
+#endif  // USE_LEVELDB and USE_LMDB
