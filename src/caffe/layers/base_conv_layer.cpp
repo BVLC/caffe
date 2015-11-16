@@ -244,19 +244,20 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   // ---- openmp ------------------------------------------
   num_of_threads_ = 1;
-#ifdef _OPENMP  //TODO: omp_get_max_threads
+#ifdef _OPENMP
   num_of_threads_ = omp_get_max_threads();
   if (num_of_threads_ < 1) {
-     LOG(WARNING) << "Base Conv layer: omp_get_max_threads() =" << num_of_threads_;
+     LOG(WARNING) << "Base Conv layer: omp_get_max_threads() ="
+                  << num_of_threads_;
      num_of_threads_ = 1;
   }
 #endif
 
   int col_buffer_mt_size = num_of_threads_ * col_buffer_.count();
-  int weight_diff_mt_size = num_of_threads_ * this->blobs_[0]->count();  
- 
-  col_buffer_mt_.resize( col_buffer_mt_size );
-  weight_diff_mt_.resize( weight_diff_mt_size );
+  int weight_diff_mt_size = num_of_threads_ * this->blobs_[0]->count();
+
+  col_buffer_mt_.resize(col_buffer_mt_size);
+  weight_diff_mt_.resize(weight_diff_mt_size);
 }
 
 template <typename Dtype>
@@ -272,15 +273,15 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
   }
   tid = tid % num_of_threads_;  //  just to be sure
 #endif
-  int col_data_buffer_size = col_buffer_mt_.size()/num_of_threads_ ;
+  int col_data_buffer_size = col_buffer_mt_.size()/num_of_threads_;
 
   Dtype* col_buff = const_cast<Dtype*>(input);
   if (!is_1x1_) {
     col_buff = & col_buffer_mt_[ tid* col_data_buffer_size];
     if (!skip_im2col) {
-      conv_im2col_cpu(input, col_buff );
-    } 
-  } 
+      conv_im2col_cpu(input, col_buff);
+    }
+  }
 
   for (int g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
@@ -330,30 +331,42 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype* output,
 
 
 template <typename Dtype>
-void BaseConvolutionLayer<Dtype>::clear_weight_mt(void)
-{    
-  // TODO:  make it more optimal
-  unsigned int weight_diff_size = weight_diff_mt_.size() / num_of_threads_;  
-  caffe_memset( num_of_threads_ * weight_diff_size * sizeof(Dtype), 0., & weight_diff_mt_[0]);
+void BaseConvolutionLayer<Dtype>::clear_weight_mt(void) {
+  unsigned int weight_diff_size = weight_diff_mt_.size() / num_of_threads_;
+  caffe_memset(num_of_threads_*weight_diff_size*sizeof(Dtype),
+               0.,
+               &weight_diff_mt_[0]);
 }
 
 
 template <typename Dtype>
-void BaseConvolutionLayer<Dtype>::sum_weight_mt(Dtype* weight_diff)
-{
-  //TODO: Optimize
-  // sum weight_diff over all threads
-  unsigned int weight_diff_size =  weight_diff_mt_.size() / num_of_threads_; 
-  for (int t = 0; t < num_of_threads_ ; ++t) {
-    for (int j = 0; j < weight_diff_size ; ++j) {
-      weight_diff[j] += weight_diff_mt_[t * weight_diff_size + j];
+void BaseConvolutionLayer<Dtype>::sum_weight_mt(Dtype* weight_diff) {
+  unsigned int weight_diff_size =  weight_diff_mt_.size() / num_of_threads_;
+  unsigned int col_per_thread = weight_diff_size/num_of_threads_;
+  int tid = 0;
+#ifdef _OPENMP
+    if (omp_in_parallel()) {
+        tid = omp_get_thread_num();
     }
-  }
+#endif
+    for (unsigned int j = 0; j < col_per_thread; ++j) {
+      for (unsigned int t = 0; t < num_of_threads_ ; ++t) {
+          weight_diff[tid*col_per_thread + j] +=
+            weight_diff_mt_[t*weight_diff_size + tid*col_per_thread + j];
+      }
+    }
+
+    unsigned int j = col_per_thread*num_of_threads_ + tid;
+    if (j < weight_diff_size) {
+      for (unsigned int t = 0; t < num_of_threads_ ; ++t) {
+        weight_diff[j] += weight_diff_mt_[t * weight_diff_size + j];
+      }
+    }
 }
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
-    const Dtype* output) {
+    const Dtype* output, Dtype* weights) {
   int tid = 0;
 #ifdef _OPENMP
   tid = omp_get_thread_num();
@@ -362,14 +375,17 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
                << " > OMP_num_THREADS = " << num_of_threads_;
   }
   tid = tid % num_of_threads_;  //  just to be sure
+  Dtype* weight_diff_data =
+    & weight_diff_mt_[tid * (weight_diff_mt_.size()/num_of_threads_)];
+#else
+  Dtype* weight_diff_data = weights;
 #endif
   Dtype* col_buff = const_cast<Dtype*>(input);
-  Dtype* weight_diff_data= & weight_diff_mt_[tid * (weight_diff_mt_.size()/num_of_threads_ )];
 
   if (!is_1x1_) {
     int col_data_buffer_size = col_buffer_mt_.size()/num_of_threads_;
     col_buff = & col_buffer_mt_[ tid* col_data_buffer_size];
-    conv_im2col_cpu(input, col_buff );
+    conv_im2col_cpu(input, col_buff);
   }
   for (int g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
