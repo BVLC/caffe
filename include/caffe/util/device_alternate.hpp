@@ -30,7 +30,6 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     const vector<Blob<Dtype>*>& bottom) { NO_GPU; } \
 
 #elif defined(USE_OCL)  // OCL GPU + CPU
-
 #ifdef USE_FFT
 #include "caffe/util/cl_fft_state.hpp"
 #endif
@@ -55,22 +54,22 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 #define STUB_GPU(classname) \
 template <typename Dtype> \
 void classname<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, \
-    vector<Blob<Dtype>*>* top) { NOT_DEFINED; } \
+    const vector<Blob<Dtype>*>& top) { NOT_DEFINED; } \
 template <typename Dtype> \
 void classname<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, \
     const vector<bool>& propagate_down, \
-    vector<Blob<Dtype>*>* bottom) { NOT_DEFINED; } \
+    const vector<Blob<Dtype>*>& bottom) { NOT_DEFINED; } \
 
 #define STUB_GPU_FORWARD(classname, funcname) \
 template <typename Dtype> \
 void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
-    vector<Blob<Dtype>*>* top) { NOT_DEFINED; } \
+    const vector<Blob<Dtype>*>& top) { NOT_DEFINED; } \
 
 #define STUB_GPU_BACKWARD(classname, funcname) \
 template <typename Dtype> \
 void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     const vector<bool>& propagate_down, \
-    vector<Blob<Dtype>*>* bottom) { NOT_DEFINED; } \
+    const vector<Blob<Dtype>*>& bottom) { NOT_DEFINED; } \
 
 namespace caffe {
 

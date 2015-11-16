@@ -263,7 +263,7 @@ namespace caffe {
     << " -D OUTPUT_H=" << output_h_
     << " -D OUTPUT_Z=" << M_
     << " -D IMG_OFFSET=" << padded_width_*padded_height_*channels_
-    << " -D OUTPUT_OFFSET=" << top[0]->offset(1)
+    << " -D OUTPUT_OFFSET=" << this->top_dim_
     << " -D WIDTH=" << padded_width_
     << " -D HEIGHT=" << padded_height_
     << " -D " << multiplication_func.c_str()
@@ -549,8 +549,8 @@ namespace caffe {
     for (int n = 0; n < numImages; ++n) {
       for (int g = 0; g < group_; ++g) {
         bias_offset_ = M_*g;
-        int image_offset = bottom[index]->offset(n) + width_ * height_*(channels_/group_)* g;
-        int output_image_offset = top[index]->offset(n) + output_w_ * output_h_ * M_ * g;
+        int image_offset = n * this->bottom_dim_ + width_ * height_*(channels_/group_)* g;
+        int output_image_offset = n * this->top_dim_ + output_w_ * output_h_ * M_ * g;
 
         cl_uint argIdx = 0;
         int kernel_offset = kernel_h_*kernel_w_*(channels_/group_) * M_ * g;
@@ -696,8 +696,8 @@ namespace caffe {
       for (int g = 0; g < group_; ++g) {
         cl_uint argIdx = 0;
         bias_offset_ = M_*g;
-        int image_offset = bottom[index]->offset(n) + width_ * height_*(channels_/group_)* g;
-        int output_image_offset = top[index]->offset(n) + output_w_ * output_h_ * M_ * g;
+        int image_offset = n * this->bottom_dim_ + width_ * height_*(channels_/group_)* g;
+        int output_image_offset = n * this->top_dim_ + output_w_ * output_h_ * M_ * g;
         int kernel_offset = kernel_h_*kernel_w_*(channels_/group_) * M_ * g;
 
         if (pad_w_ > 0 || pad_h_ > 0) {
@@ -941,10 +941,23 @@ namespace caffe {
   void ConvolutionLayerSpatial<float>::setup_convolution(
       const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
     // Calculate variables used for kernel generation
+    const int* kernel_shape_data = this->kernel_shape_.cpu_data();
+    kernel_h_ = kernel_shape_data[0];
+    kernel_w_ = kernel_shape_data[1];
+    height_ = bottom[0]->shape(this->channel_axis_ + 1);
+    width_ = bottom[0]->shape(this->channel_axis_ + 2);
+    const int* pad_data = this->pad_.cpu_data();
+    pad_h_ = pad_data[0];
+    pad_w_ = pad_data[1];
+    const int* stride_data = this->stride_.cpu_data();
+    stride_h_ = stride_data[0];
+    stride_w_ = stride_data[1];
+
     output_h_ = (height_ + 2*pad_h_ - kernel_h_)/stride_h_ +1;
     output_w_ = (width_ + 2*pad_w_ - kernel_w_)/stride_w_ +1;
     padded_width_ = width_ + 2*pad_w_;
     padded_height_ = height_ + 2*pad_h_;
+
     // Generates static key_
     generate_key();
     // Initializes unique kernel ID
@@ -1147,7 +1160,7 @@ namespace caffe {
         top_diff = top[i]->gpu_diff();
         for (int n = 0; n < num_; ++n) {
           caffe_gpu_gemv<float>(CblasNoTrans, num_output_, N_,
-              1., top_diff + top[0]->offset(n),
+              1., top_diff + n * this->top_dim_,
               bias_multiplier_.gpu_data(), 1.,
               bias_diff);
         }
@@ -1163,7 +1176,7 @@ namespace caffe {
         for (int n = 0; n < num_; ++n) {
           // Since we saved memory in the forward pass by not storing all col
           // data, we will need to recompute them.
-          im2col_gpu(bottom_data + bottom[i]->offset(n),
+          im2col_gpu(bottom_data + n * this->bottom_dim_,
               channels_, height_,
               width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
               stride_h_, stride_w_, col_data);
@@ -1171,7 +1184,7 @@ namespace caffe {
           if (this->param_propagate_down_[0]) {
             for (int g = 0; g < group_; ++g) {
               caffe_gpu_gemm<float>(CblasNoTrans, CblasTrans, M_, K_, N_,
-                  1.f, top_diff + top[i]->offset(n) + top_offset * g,
+                  1.f, top_diff + n * this->top_dim_ + top_offset * g,
                   col_data + col_offset * g, 1.f,
                   weight_diff + weight_offset * g);
             }
@@ -1184,13 +1197,13 @@ namespace caffe {
             for (int g = 0; g < group_; ++g) {
               caffe_gpu_gemm<float>(CblasTrans, CblasNoTrans, K_, N_, M_,
                   1.f, weight + weight_offset * g,
-                  top_diff + top[i]->offset(n) + top_offset * g,
+                  top_diff + n * this->top_dim_ + top_offset * g,
                   0.f, col_diff + col_offset * g);
             }
             // col2im back to the data
             col2im_gpu(col_diff, channels_, height_, width_,
                 kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-                bottom_diff + bottom[i]->offset(n));
+                bottom_diff + n * this->bottom_dim_);
           }
         }
       }

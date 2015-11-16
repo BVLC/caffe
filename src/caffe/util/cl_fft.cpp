@@ -90,10 +90,6 @@ void fft_gpu_copy2buffer(Dtype* fft_gpu_weights_real, const Dtype* weight,
   ClState& state = Caffe::cl_state();
   submit_program(&state);
 
-  ClMemOff<Dtype> buf_fft_gpu_weights_real =
-      state.get_buffer_mem(fft_gpu_weights_real);
-  ClMemOff<Dtype> buf_weight = state.get_buffer_mem(weight);
-
   size_t aligned_offset_fft_gpu_weights_real;
   int offset_offset_fft_gpu_weights_real;
   get_aligned_offset(&aligned_offset_fft_gpu_weights_real,
@@ -224,9 +220,6 @@ void fft_gpu_copy2buffer_in_2D(Dtype* map_out, const Dtype* map_in,
   ClState& state = Caffe::cl_state();
   submit_program(&state);
 
-  ClMemOff<Dtype> buf_map_out = state.get_buffer_mem(map_out);
-  ClMemOff<Dtype> buf_map_in = state.get_buffer_mem(map_in);
-
   size_t aligned_offset_map_out;
   int offset_offset_map_out;
   get_aligned_offset(&aligned_offset_map_out, &offset_offset_map_out, map_out);
@@ -240,7 +233,7 @@ void fft_gpu_copy2buffer_in_2D(Dtype* map_out, const Dtype* map_in,
   int map_out_size = height_out * width_out;
   int size = height * width;
   int count = size >> 2;
-  const size_t global_work_size[2] = { size, channels };
+  const size_t global_work_size[2] = { (size_t)size, (size_t)channels };
   ClKernel kernel;
   if (width < 4) {
     kernel = state.get_kernel("copy2buffer_left_top_in_naive_2d");
@@ -373,9 +366,6 @@ void fft_gpu_copy2buffer_out_forward_2D(Dtype* map_out, const Dtype* map_in,
   ClState& state = Caffe::cl_state();
   submit_program(&state);
 
-  ClMemOff<Dtype> buf_map_out = state.get_buffer_mem(map_out);
-  ClMemOff<Dtype> buf_map_in = state.get_buffer_mem(map_in);
-
   size_t aligned_offset_map_out;
   int offset_offset_map_out;
   get_aligned_offset(&aligned_offset_map_out, &offset_offset_map_out, map_out);
@@ -389,7 +379,7 @@ void fft_gpu_copy2buffer_out_forward_2D(Dtype* map_out, const Dtype* map_in,
   int size = height_out * width_out;
   int count = size >> 2;
   int map_in_size = fft_height * fft_width;
-  const size_t global_work_size[2] = { size, num_output };
+  const size_t global_work_size[2] = { (size_t)size, (size_t)num_output };
   ClKernel kernel;
   if (width_out < 4) {
     kernel = state.get_kernel("copy2buffer_left_top_out_naive_2d");
@@ -449,9 +439,6 @@ void fft_gpu_copy2buffer_out_backward(Dtype* map_out, const Dtype* map_in,
   ClState& state = Caffe::cl_state();
   submit_program(&state);
 
-  ClMemOff<Dtype> buf_map_out = state.get_buffer_mem(map_out);
-  ClMemOff<Dtype> buf_map_in = state.get_buffer_mem(map_in);
-
   size_t aligned_offset_map_out;
   int offset_offset_map_out;
   get_aligned_offset(&aligned_offset_map_out, &offset_offset_map_out, map_out);
@@ -510,9 +497,6 @@ void fft_gpu_copy2buffer_out_backward_2D(Dtype* map_out, const Dtype* map_in,
   ClState& state = Caffe::cl_state();
   submit_program(&state);
 
-  ClMemOff<Dtype> buf_map_out = state.get_buffer_mem(map_out);
-  ClMemOff<Dtype> buf_map_in = state.get_buffer_mem(map_in);
-
   size_t aligned_offset_map_out;
   int offset_offset_map_out;
   get_aligned_offset(&aligned_offset_map_out, &offset_offset_map_out, map_out);
@@ -525,7 +509,7 @@ void fft_gpu_copy2buffer_out_backward_2D(Dtype* map_out, const Dtype* map_in,
 
   int map_out_size = height_out * width_out;
   int map_in_size = fft_height * fft_width;
-  const size_t global_work_size[2] = { map_out_size, channels };
+  const size_t global_work_size[2] = { (size_t)map_out_size, (size_t)channels };
   ClKernel kernel = state.get_kernel("copy2buffer_cyclic_shift_out_2d");
   int argIdx = 0;
   kernel.set_arg_mem(argIdx++, mem_map_out);
@@ -667,7 +651,7 @@ void caffe_gpu_elementMulConj_Reshape(DtypeComplex<Dtype>* dst,
 
   ClKernel kernel_batchedCdotc = state.get_kernel("batchedCdotc");
   // Batched complex number dot product
-  size_t global_work_size2[2] = { map_size, out_gr };
+  size_t global_work_size2[2] = { (size_t)map_size, (size_t)out_gr };
   argIdx = 0;
   kernel_batchedCdotc.set_arg_mem(argIdx++, mem_dst);
   kernel_batchedCdotc.set_arg_mem(argIdx++, src1_vec);
@@ -720,7 +704,7 @@ void caffe_gpu_elementMulConj_2D(DtypeComplex<Dtype>* dst,
   get_aligned_offset(&aligned_offset_src2, &offset_offset_src2, src2);
   cl_mem mem_src2 = state.create_subbuffer(src2, aligned_offset_src2);
 
-  const size_t global_work_size[2] = { map_size >> 1, out_gr };
+  const size_t global_work_size[2] = { (size_t)map_size >> 1, (size_t)out_gr };
   ClKernel kernel = state.get_kernel("complex_conjugate_multiplication_2d");
   int argIdx = 0;
   kernel.set_arg_mem(argIdx++, mem_dst);
@@ -787,12 +771,12 @@ void caffe_gpu_elementMulConj_2D_SLM(DtypeComplex<Dtype>* dst,
       state.get_properties().device_max_work_group_size < 512) {
     local_work_size_y = 8;
   }
-  const size_t local_work_size[2] = { local_work_size_x, local_work_size_y };
+  const size_t local_work_size[2] = { (size_t)local_work_size_x, (size_t)local_work_size_y };
   int global_work_size_x =
       CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(map_float4_size, local_work_size_x);
   int global_work_size_y =
       CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(out_gr, local_work_size_y);
-  const size_t global_work_size[2] = { global_work_size_x, global_work_size_y };
+  const size_t global_work_size[2] = { (size_t)global_work_size_x, (size_t)global_work_size_y };
   ClKernel kernel = state.get_kernel(
       "complex_conjugate_multiplication_2d_SLM");
   int argIdx = 0;
@@ -851,7 +835,7 @@ void caffe_gpu_elementMulConj_3D(DtypeComplex<Dtype>* dst,
   get_aligned_offset(&aligned_offset_src2, &offset_offset_src2, src2);
   cl_mem mem_src2 = state.create_subbuffer(src2, aligned_offset_src2);
 
-  const size_t global_work_size[3] = { map_size >> 1, out_gr, ch_gr };
+  const size_t global_work_size[3] = { (size_t)map_size >> 1, (size_t)out_gr, (size_t)ch_gr };
   ClKernel kernel = state.get_kernel("complex_conjugate_multiplication_3d");
   int argIdx = 0;
   kernel.set_arg_mem(argIdx++, mem_dst);
@@ -916,7 +900,7 @@ void caffe_gpu_elementMulConj_3D_SLM(DtypeComplex<Dtype>* dst,
   int local_work_size_y = (out_gr < 16) ? 1 : 2;  // TODO: Temporary
   int local_work_size_z = 1;
   const size_t local_work_size[3] = {
-      local_work_size_x, local_work_size_y, local_work_size_z };
+      (size_t)local_work_size_x, (size_t)local_work_size_y, (size_t)local_work_size_z };
   int global_work_size_x =
       CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(map_float4_size, local_work_size_x);
   int global_work_size_y =
@@ -924,7 +908,7 @@ void caffe_gpu_elementMulConj_3D_SLM(DtypeComplex<Dtype>* dst,
   int global_work_size_z =
       CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(ch_gr, local_work_size_z);
   const size_t global_work_size[3] = {
-      global_work_size_x, global_work_size_y, global_work_size_z };
+      (size_t)global_work_size_x, (size_t)global_work_size_y, (size_t)global_work_size_z };
   ClKernel kernel = state.get_kernel(
       "complex_conjugate_multiplication_3d_SLM");
   int argIdx = 0;
@@ -1042,14 +1026,14 @@ void caffe_gpu_elementMul_2D_SLM(DtypeComplex<Dtype>* dst,
   // (128, 4) is perf hint recommended
   int local_work_size_x = 16;  // TODO: what is the best number?
   int local_work_size_y = 2;   // TODO: what is the best number?
-  const size_t local_work_size[2] = { local_work_size_x, local_work_size_y };
+  const size_t local_work_size[2] = { (size_t)local_work_size_x, (size_t)local_work_size_y };
 
   int map_size_in_dtype4 = size >> 1;  // # of Dtype4
   int global_work_size_x =
       CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(map_size_in_dtype4, local_work_size_x);
   int global_work_size_y =
       CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(num_output, local_work_size_y);
-  const size_t global_work_size[2] = { global_work_size_x, global_work_size_y };
+  const size_t global_work_size[2] = { (size_t)global_work_size_x, (size_t)global_work_size_y };
   const size_t local_mem_size_in_bytes =
       ch_gr * local_work_size_x * local_work_size_y * sizeof(Dtype) * 4;
 
@@ -1109,7 +1093,7 @@ void caffe_gpu_elementMul_3D(DtypeComplex<Dtype>* dst,
   cl_mem mem_src2 = state.create_subbuffer(src2, aligned_offset_src2);
 
   // Dim 1: # of Dtype2
-  const size_t global_work_size[3] = { size, ch_gr, num_output };
+  const size_t global_work_size[3] = { (size_t)size, (size_t)ch_gr, (size_t)num_output };
   ClKernel kernel = state.get_kernel("complex_multiplication_3d");
   int argIdx = 0;
   kernel.set_arg_mem(argIdx++, mem_dst);
@@ -1247,7 +1231,7 @@ void reshape_weights(DtypeComplex<Dtype>* dst, DtypeComplex<Dtype>* src,
   cl_command_queue queue = state.get_command_queue();
   ClKernel kernel = state.get_kernel("convert_weight_to_channel_major");
   int argIdx = 0;
-  size_t global_work_size[2] = { size, num_output };
+  size_t global_work_size[2] = { (size_t)size, (size_t)num_output };
   kernel.set_arg_mem(argIdx++, mem_dst);
   kernel.set_arg_mem(argIdx++, mem_src);
   kernel.set_arg(argIdx++, size);

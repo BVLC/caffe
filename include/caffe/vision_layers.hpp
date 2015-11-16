@@ -402,6 +402,15 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   int bias_offset_;
   int bottom_index_;
 
+  int kernel_h_;
+  int kernel_w_;
+  int height_;
+  int width_;
+  int pad_h_;
+  int pad_w_;
+  int stride_h_;
+  int stride_w_;
+
   /// M_ is the channel dimension of the output for a single group, which is the
   /// leading dimension of the filter matrix.
   int M_;
@@ -480,7 +489,8 @@ class ConvolutionLayerFFT : public BaseConvolutionLayer<Dtype> {
       int ch_gr, int out_gr);
 
   // fft setup function for CPU and GPU
-  virtual void fft_setup();
+  virtual void fft_setup(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top);
   virtual void fft_cpu_setup();
   virtual void fft_gpu_setup();
   virtual void fft_clean();
@@ -499,6 +509,16 @@ class ConvolutionLayerFFT : public BaseConvolutionLayer<Dtype> {
   int map_out_size_;
   int kernel_center_h_;
   int kernel_center_w_;
+  int kernel_h_;
+  int kernel_w_;
+  int height_;
+  int width_;
+  int height_out_;
+  int width_out_;
+  int pad_w_;
+  int pad_h_;
+  int stride_w_;
+  int stride_h_;
 
   // CPU buffers and handles
   Dtype* fft_weights_real_;

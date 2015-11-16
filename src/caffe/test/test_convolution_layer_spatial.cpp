@@ -24,52 +24,66 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     Blob<Dtype>* out) {
   // Kernel size, stride, and pad
   int kernel_h, kernel_w;
-  if (conv_param->has_kernel_size()) {
-    kernel_h = kernel_w = conv_param->kernel_size();
-  } else {
+  if (conv_param->has_kernel_w() || conv_param->has_kernel_h()) {
     kernel_h = conv_param->kernel_h();
     kernel_w = conv_param->kernel_w();
+  } else {
+    kernel_h = kernel_w = conv_param->kernel_size(0);
   }
   int pad_h, pad_w;
-  if (!conv_param->has_pad_h()) {
-    pad_h = pad_w = conv_param->pad();
-  } else {
+  if (conv_param->has_pad_h() || conv_param->has_pad_w()) {
     pad_h = conv_param->pad_h();
     pad_w = conv_param->pad_w();
+  } else {
+    pad_h = pad_w = conv_param->pad_size() ? conv_param->pad(0) : 0;
   }
   int stride_h, stride_w;
-  if (!conv_param->has_stride_h()) {
-    stride_h = stride_w = conv_param->stride();
-  } else {
+  if (conv_param->has_stride_h() || conv_param->has_stride_w()) {
     stride_h = conv_param->stride_h();
     stride_w = conv_param->stride_w();
+  } else {
+    stride_h = stride_w = conv_param->stride_size() ? conv_param->stride(0) : 1;
   }
   // Groups
   int groups = conv_param->group();
-  int o_g = out->channels() / groups;
-  int k_g = in->channels() / groups;
+  int o_g = out->shape(1) / groups;
+  int k_g = in->shape(1) / groups;
   int o_head, k_head;
   // Convolution
-  const Dtype* in_data = in->cpu_data();
-  const Dtype* weight_data = weights[0]->cpu_data();
+  vector<int> weight_offset(4);
+  vector<int> in_offset(4);
+  vector<int> out_offset(4);
+
   Dtype* out_data = out->mutable_cpu_data();
-  for (int n = 0; n < out->num(); n++) {
+  for (int n = 0; n < out->shape(0); n++) {
     for (int g = 0; g < groups; g++) {
       o_head = o_g * g;
       k_head = k_g * g;
       for (int o = 0; o < o_g; o++) {
         for (int k = 0; k < k_g; k++) {
-          for (int y = 0; y < out->height(); y++) {
-            for (int x = 0; x < out->width(); x++) {
+          for (int y = 0; y < out->shape(2); y++) {
+            for (int x = 0; x < out->shape(3); x++) {
               for (int p = 0; p < kernel_h; p++) {
                 for (int q = 0; q < kernel_w; q++) {
                   int in_y = y * stride_h - pad_h + p;
                   int in_x = x * stride_w - pad_w + q;
                   if (in_y >= 0 && in_y < in->height()
                     && in_x >= 0 && in_x < in->width()) {
-                    out_data[out->offset(n, o + o_head, y, x)] +=
-                        in_data[in->offset(n, k + k_head, in_y, in_x)]
-                        * weight_data[weights[0]->offset(o + o_head, k, p, q)];
+                    weight_offset[0] = o + o_head;
+                    weight_offset[1] = k;
+                    weight_offset[2] = p;
+                    weight_offset[3] = q;
+                    in_offset[0] = n;
+                    in_offset[1] = k + k_head;
+                    in_offset[2] = in_y;
+                    in_offset[3] = in_x;
+                    out_offset[0] = n;
+                    out_offset[1] = o + o_head;
+                    out_offset[2] = y;
+                    out_offset[3] = x;
+                    out_data[out->offset(out_offset)] +=
+                        in->data_at(in_offset)
+                        * weights[0]->data_at(weight_offset);
                   }
                 }
               }
@@ -82,11 +96,15 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
   // Bias
   if (conv_param->bias_term()) {
     const Dtype* bias_data = weights[1]->cpu_data();
-    for (int n = 0; n < out->num(); n++) {
-      for (int o = 0; o < out->channels(); o++) {
-        for (int y = 0; y < out->height(); y++) {
-          for (int x = 0; x < out->width(); x++) {
-            out_data[out->offset(n, o, y, x)] += bias_data[o];
+    for (int n = 0; n < out->shape(0); n++) {
+      for (int o = 0; o < out->shape(1); o++) {
+        for (int y = 0; y < out->shape(2); y++) {
+          for (int x = 0; x < out->shape(3); x++) {
+              out_offset[0] = n;
+              out_offset[1] = o;
+              out_offset[2] = y;
+              out_offset[3] = x;
+              out_data[out->offset(out_offset)] += bias_data[o];
           }
         }
       }
@@ -153,8 +171,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -191,8 +209,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(256);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -227,8 +245,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(1);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(1);
   convolution_param->set_num_output(1024);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -265,9 +283,9 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(1);
-  convolution_param->set_pad(3);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(1);
+  convolution_param->add_pad(3);
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -303,10 +321,10 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(11);
+  convolution_param->add_kernel_size(11);
   convolution_param->set_group(1);
-  convolution_param->set_stride(4);
-  convolution_param->set_pad(9);
+  convolution_param->add_stride(4);
+  convolution_param->add_pad(9);
   convolution_param->set_num_output(96);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -343,10 +361,10 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(5);
+  convolution_param->add_kernel_size(5);
   convolution_param->set_group(1);
-  convolution_param->set_stride(1);
-  convolution_param->set_pad(3);
+  convolution_param->add_stride(1);
+  convolution_param->add_pad(3);
   convolution_param->set_num_output(96);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -382,10 +400,10 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
+  convolution_param->add_kernel_size(3);
   convolution_param->set_group(1);
-  convolution_param->set_stride(1);
-  convolution_param->set_pad(1);
+  convolution_param->add_stride(1);
+  convolution_param->add_pad(1);
   convolution_param->set_num_output(384);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -421,10 +439,10 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
+  convolution_param->add_kernel_size(3);
   convolution_param->set_group(3);
-  convolution_param->set_stride(1);
-  convolution_param->set_pad(1);
+  convolution_param->add_stride(1);
+  convolution_param->add_pad(1);
   convolution_param->set_num_output(384);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -460,10 +478,10 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
+  convolution_param->add_kernel_size(3);
   convolution_param->set_group(1);
-  convolution_param->set_stride(2);
-  convolution_param->set_pad(1);
+  convolution_param->add_stride(2);
+  convolution_param->add_pad(1);
   convolution_param->set_num_output(256);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -498,10 +516,10 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(5);
+  convolution_param->add_kernel_size(5);
   convolution_param->set_group(1);
-  convolution_param->set_stride(2);
-  convolution_param->set_pad(5);
+  convolution_param->add_stride(2);
+  convolution_param->add_pad(5);
   convolution_param->set_num_output(1024);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -534,8 +552,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(1);
-  convolution_param->set_stride(1);
+  convolution_param->add_kernel_size(1);
+  convolution_param->add_stride(1);
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -561,8 +579,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
@@ -600,8 +618,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
   shared_ptr<Layer<Dtype> > layer(
@@ -621,6 +639,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
     weights[i +  7] =  0;
     weights[i +  8] =  1;
   }
+
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
@@ -662,14 +681,11 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
   convolution_param->set_bias_term(false);
   layer.reset(new ConvolutionLayerSpatial<Dtype>(layer_param));
   layer->blobs().resize(1);
-  layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 1, 3));
+  layer->blobs()[0].reset(new Blob<Dtype>(1, 1, 1, 3));
   Dtype* weights_2 = layer->blobs()[0]->mutable_cpu_data();
-  for (int c = 0; c < 3; ++c) {
-    int i = c * 3;  // 1 x 3 filter
-    weights_2[i +  0] = -1;
-    weights_2[i +  1] =  0;
-    weights_2[i +  2] =  1;
-  }
+  weights_2[0] = -1;
+  weights_2[1] =  0;
+  weights_2[2] =  1;
   layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
   layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
   // Test equivalence of full and separable filters.
@@ -687,8 +703,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradient_Spatial) {
       layer_param.mutable_convolution_param();
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
@@ -705,8 +721,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Gradient_Spatial) {
       layer_param.mutable_convolution_param();
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  convolution_param->set_kernel_size(1);
-  convolution_param->set_stride(1);
+  convolution_param->add_kernel_size(1);
+  convolution_param->add_stride(1);
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
@@ -721,8 +737,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradientGroup_Spatial) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
   convolution_param->mutable_weight_filler()->set_type("gaussian");

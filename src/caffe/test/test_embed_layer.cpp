@@ -13,7 +13,9 @@
 namespace caffe {
 
 #ifndef CPU_ONLY
+#ifndef USE_OCL
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
 #endif
 
 template <typename TypeParam>

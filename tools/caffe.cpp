@@ -127,7 +127,7 @@ int device_query() {
     caffe::Caffe::DeviceQuery();
   }
 #ifdef USE_OCL
-  if (gpus.size() > 0 && gpus[0] > = 0) {
+  if (gpus.size() > 0 && gpus[0] >= 0) {
     // Explicitly call for OCL + FFT
     caffe::Caffe::TeardownDevice(gpus[0]);
   }
@@ -232,7 +232,7 @@ int train() {
   LOG(INFO) << "Optimization Done.";
 
 #ifdef USE_OCL
-  if (gpus.size() > 0 && gpus[0] > = 0) {
+  if (gpus.size() > 0 && gpus[0] >= 0) {
     // Explicitly call for OCL + FFT
     caffe::Caffe::TeardownDevice(gpus[0]);
   }
@@ -307,7 +307,7 @@ int test() {
   }
 
 #ifdef USE_OCL
-  if (gpus.size() > 0 && gpus[0] > = 0) {
+  if (gpus.size() > 0 && gpus[0] >= 0) {
     // Explicitly call for OCL + FFT
     caffe::Caffe::TeardownDevice(gpus[0]);
   }
@@ -405,7 +405,7 @@ int time() {
   LOG(INFO) << "*** Benchmark ends ***";
 
 #ifdef USE_OCL
-  if (gpus.size() > 0 && gpus[0] > = 0) {
+  if (gpus.size() > 0 && gpus[0] >= 0) {
     // Explicitly call for OCL + FFT
     caffe::Caffe::TeardownDevice(gpus[0]);
   }

@@ -112,7 +112,8 @@ void* Caffe::RNG::generator() {
 #elif defined(USE_OCL)  // OCL GPU + CPU
 
 Caffe::Caffe()
-  : random_generator_(), mode_(Caffe::CPU) { }
+    : random_generator_(), mode_(Caffe::CPU), solver_count_(1), root_solver_(true) {
+}
 
 Caffe::~Caffe() { }
 
@@ -146,7 +147,6 @@ void Caffe::TeardownDevice(const int device_id) {
   Get().cl_fft_state_.teardown();
 #endif
 }
-
 
 class Caffe::RNG::Generator {
  public:

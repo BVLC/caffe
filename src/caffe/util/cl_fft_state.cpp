@@ -66,7 +66,7 @@ clfftPlanHandle ClFFTState::getForwardInPlaceFFTManyPlanHandle(
     const int height, const int width, const int batch_size) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   std::map<KeyType, clfftPlanHandle>::iterator it =
       forward_fft_inplace_many_handle_map_.find(KeyType(FFTSize(height, width),
@@ -87,7 +87,7 @@ clfftPlanHandle ClFFTState::getForwardOutOfPlaceFFTManyPlanHandle(
     const int height, const int width, const int batch_size) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   std::map<KeyType, clfftPlanHandle>::iterator it =
       forward_fft_many_handle_map_.find(KeyType(FFTSize(height, width),
@@ -108,7 +108,7 @@ clfftPlanHandle ClFFTState::getBackwardOutOfPlaceFFTManyPlanHandle(
     const int height, const int width, const int batch_size) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   std::map<KeyType, clfftPlanHandle>::iterator it =
       backward_fft_many_handle_map_.find(KeyType(FFTSize(height, width),
@@ -129,7 +129,7 @@ clfftPlanHandle ClFFTState::getForwardOutOfPlaceIFFTManyPlanHandle(
     const int height, const int width, const int batch_size) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   std::map<KeyType, clfftPlanHandle>::iterator it =
       forward_ifft_many_handle_map_.find(KeyType(FFTSize(height, width),
@@ -150,7 +150,7 @@ clfftPlanHandle ClFFTState::getBackwardOutOfPlaceIFFTManyPlanHandle(
     const int height, const int width, const int batch_size) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   std::map<KeyType, clfftPlanHandle>::iterator it =
       backward_ifft_many_handle_map_.find(KeyType(FFTSize(height, width),
@@ -171,7 +171,7 @@ clfftPlanHandle ClFFTState::createOutOfPlaceManyPlanHandle(int height,
     int width, int batch_size, clfftDirection dir) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   ClState& state = Caffe::cl_state();
   cl_context ctx = state.get_context();
@@ -181,7 +181,7 @@ clfftPlanHandle ClFFTState::createOutOfPlaceManyPlanHandle(int height,
   float scale = 1.f;
   int idist, odist;
   size_t instrides[2], outstrides[2];
-  size_t lengths[2] = { width, height };
+  size_t lengths[2] = { (size_t)width, (size_t)height };
   CLFFT_CHECK(clfftCreateDefaultPlan(&handle, ctx, CLFFT_2D, lengths));
 
   if (CLFFT_FORWARD == dir) {  // FFT plan handle
@@ -206,7 +206,7 @@ clfftPlanHandle ClFFTState::createOutOfPlaceManyPlanHandle(int height,
   } else {
     CLFFT_CHECK(clfftDestroyPlan(&handle));
     LOG(ERROR) << "Not implemented";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
 
   CLFFT_CHECK(clfftSetResultLocation(handle, CLFFT_OUTOFPLACE));
@@ -225,7 +225,7 @@ clfftPlanHandle ClFFTState::createInPlaceManyPlanHandle(int height, int width,
     int batch_size, clfftDirection dir) {
   if (!initialized_) {
     LOG(INFO) << "clfft does not setup.";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
   ClState& state = Caffe::cl_state();
   cl_context ctx = state.get_context();
@@ -235,7 +235,7 @@ clfftPlanHandle ClFFTState::createInPlaceManyPlanHandle(int height, int width,
   float scale = 1.f;
   int idist, odist;
   size_t instrides[2], outstrides[2];
-  size_t lengths[2] = { width, height };
+  size_t lengths[2] = { (size_t)width, (size_t)height };
   CLFFT_CHECK(clfftCreateDefaultPlan(&handle, ctx, CLFFT_2D, lengths));
 
   if (CLFFT_FORWARD == dir) {  // FFT plan handle
@@ -250,7 +250,7 @@ clfftPlanHandle ClFFTState::createInPlaceManyPlanHandle(int height, int width,
   } else {
     CLFFT_CHECK(clfftDestroyPlan(&handle));
     LOG(ERROR) << "Not implemented";
-    return NULL;
+    return (clfftPlanHandle)NULL;
   }
 
   CLFFT_CHECK(clfftSetResultLocation(handle, CLFFT_INPLACE));

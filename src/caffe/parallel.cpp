@@ -97,6 +97,7 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 
   CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
+  printf("call into gpu params\n");
 #else
   NO_GPU;
 #endif
@@ -250,6 +251,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
 
   CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
+  printf("call into gpu params 2\n");
 #else
   NO_GPU;
 #endif
@@ -284,6 +286,7 @@ void P2PSync<Dtype>::InternalThreadEntry() {
   Caffe::SetDevice(solver_->param().device_id());
   CHECK(Caffe::root_solver());
   Caffe::set_root_solver(false);
+  printf("call into gpu params 3\n");
   // See if there is a defined seed and reset random state if so
   if (solver_->param().random_seed() >= 0) {
     // Fetch random seed and modulate by device ID to make sure
@@ -332,6 +335,7 @@ void P2PSync<Dtype>::on_start() {
     children_[i]->queue_.push(this);
   }
 #endif
+  printf("call into gpu params 4\n");
 #endif
 }
 

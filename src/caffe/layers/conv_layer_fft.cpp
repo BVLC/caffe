@@ -14,10 +14,17 @@ namespace caffe {
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::compute_output_shape() {
-  this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
-      / this->stride_h_ + 1;
-  this->width_out_ = (this->width_ + 2 * this->pad_w_ - this->kernel_w_)
-      / this->stride_w_ + 1;
+  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
+  const int* stride_data = this->stride_.cpu_data();
+  const int* pad_data = this->pad_.cpu_data();
+  this->output_shape_.clear();
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
+    // i + 1 to skip channel axis
+    const int input_dim = this->input_shape(i + 1);
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+        / stride_data[i] + 1;
+    this->output_shape_.push_back(output_dim);
+  }
 }
 
 template <typename Dtype>
@@ -29,11 +36,12 @@ template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
-  fft_setup();
+  fft_setup(bottom, top);
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::fft_setup() {
+void ConvolutionLayerFFT<Dtype>::fft_setup(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   // TODO: Temporary speed-up trick
   /*if (this->group_ == 1) {
     if (this->num_output_ % 2 == 0 && this->channels_ % 2 == 0)
@@ -41,16 +49,29 @@ void ConvolutionLayerFFT<Dtype>::fft_setup() {
     else if (this->num_output_ % 3 == 0 && this->channels_ % 3 == 0)
       this->group_ = 3;
   }*/
+  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
+  kernel_h_ = kernel_shape_data[0];
+  kernel_w_ = kernel_shape_data[1];
+  height_ = bottom[0]->shape(this->channel_axis_ + 1);
+  width_ = bottom[0]->shape(this->channel_axis_ + 2);
+  height_out_ = top[0]->shape(this->channel_axis_ + 1);
+  width_out_ = top[0]->shape(this->channel_axis_ + 2);
+  const int* pad_data = this->pad_.cpu_data();
+  pad_h_ = pad_data[0];
+  pad_w_ = pad_data[1];
+  const int* stride_data = this->stride_.cpu_data();
+  stride_h_ = stride_data[0];
+  stride_w_ = stride_data[1];
 
   kernel_center_h_ = static_cast<int>(
-      static_cast<float>(this->kernel_h_) / 2.f - 0.5f);
+      static_cast<float>(kernel_h_) / 2.f - 0.5f);
   kernel_center_w_ = static_cast<int>(
-      static_cast<float>(this->kernel_w_) / 2.f - 0.5f);
+      static_cast<float>(kernel_w_) / 2.f - 0.5f);
   // Pad this size due to circular convolution of FFT
-  fft_height_ = this->height_ +
-      std::max(2 * this->pad_h_, (this->kernel_h_ - 1));
-  fft_width_ = this->width_ +
-      std::max(2 * this->pad_w_, (this->kernel_w_ - 1));
+  fft_height_ = height_ +
+      std::max(2 * pad_h_, (kernel_h_ - 1));
+  fft_width_ = width_ +
+      std::max(2 * pad_w_, (kernel_w_ - 1));
   // FFT size should be power of 2
   fft_height_ = next_mix_of_235(fft_height_);
   fft_width_  = next_mix_of_235(fft_width_);
@@ -62,10 +83,10 @@ void ConvolutionLayerFFT<Dtype>::fft_setup() {
     fft_width_ = fft_width_ + (m - (fft_width_ % m));
   fft_complex_width_ = fft_width_/2 + 1;
 
-  map_size_ = this->height_ * this->width_;
+  map_size_ = height_ * width_;
   fft_map_real_size_ = fft_height_ * fft_width_;
   fft_map_complex_size_ = fft_height_ * fft_complex_width_;
-  map_out_size_ = this->height_out_ * this->width_out_;
+  map_out_size_ = height_out_ * width_out_;
 
   switch (Caffe::mode()) {
     case Caffe::CPU:
@@ -152,13 +173,14 @@ void ConvolutionLayerFFT<Dtype>::fft_compute_weights() {
   caffe_memset(num_weights*fft_map_complex_size_*sizeof(std::complex<Dtype>),
       0., fft_weights_complex_);
   // Left-top 0-padding of weights
+
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int n = 0; n < this->num_output_; n++) {
     for (int c = 0; c < ch_gr; c++) {
-      for (int h = 0; h < this->kernel_h_; h++) {
-        for (int w = 0; w < this->kernel_w_; w++) {
+      for (int h = 0; h < kernel_h_; h++) {
+        for (int w = 0; w < kernel_w_; w++) {
           int map_offset = n * ch_gr + c;
-          int src_idx = (map_offset*this->kernel_h_ + h)*this->kernel_w_ + w;
+          int src_idx = (map_offset*kernel_h_ + h)*kernel_w_ + w;
           int dst_idx = (map_offset*fft_height_ + h)*2*fft_complex_width_ + w;
           (reinterpret_cast<Dtype*>(fft_weights_complex_))[dst_idx] =
               weight[src_idx];
@@ -179,7 +201,7 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
 
   int ch_gr = this->channels_ / this->group_;
   int out_gr = this->num_output_ / this->group_;
-  int map_in_size = this->height_ * this->width_;
+  int map_in_size = height_ * width_;
   for (int c = 0; c < this->channels_; c++) {
     caffe_memset(fft_map_real_size_ * sizeof(Dtype), 0., fft_map_in_real_);
 
@@ -187,10 +209,10 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
     const Dtype* map_in = const_cast<Dtype*>(bottom_data + bottom_data_offset +
         c * map_in_size);
     // Left-top 0-padding of bottom data
-    for (int h = 0; h < this->height_; h++) {
-      for (int w = 0; w < this->width_; w++) {
-        int src_idx = h * this->width_ + w;
-        int dst_idx = (h + this->pad_h_) * fft_width_ + (w + this->pad_w_);
+    for (int h = 0; h < height_; h++) {
+      for (int w = 0; w < width_; w++) {
+        int src_idx = h * width_ + w;
+        int dst_idx = (h + pad_h_) * fft_width_ + (w + pad_w_);
         fft_map_in_real_[dst_idx] = map_in[src_idx];
       }
     }
@@ -234,13 +256,13 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
 
     // Mapping from IFFT result to top data
     Dtype* map_out = top_data + top_data_offset + out * map_out_size_;
-    for (int h_out = 0; h_out < this->height_out_; h_out++) {
-      for (int w_out = 0; w_out < this->width_out_; w_out++) {
-        int h = h_out  * this->stride_h_;
-        int w = w_out  * this->stride_w_;
+    for (int h_out = 0; h_out < height_out_; h_out++) {
+      for (int w_out = 0; w_out < width_out_; w_out++) {
+        int h = h_out  * stride_h_;
+        int w = w_out  * stride_w_;
         if ((h < fft_height_) &&  (w < fft_width_)) {
           int src_idx = h * fft_width_ + w;
-          int dst_idx = h_out * this->width_out_ + w_out;
+          int dst_idx = h_out * width_out_ + w_out;
           map_out[dst_idx] = ifft_scale * map_out_real[src_idx];
         }
       }
@@ -262,8 +284,8 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft(
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data= top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      Forward_cpu_fft_task(bottom_data, bottom[i]->offset(n), top_data,
-          top[i]->offset(n), n);
+      Forward_cpu_fft_task(bottom_data, n * this->bottom_dim_, top_data,
+          n * this->top_dim_, n);
     }
   }
 }
@@ -288,17 +310,17 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(
 
   int ch_gr = this->channels_ / this->group_;
   int out_gr = this->num_output_ / this->group_;
-  int map_in_size = this->height_out_ * this->width_out_;
+  int map_in_size = height_out_ * width_out_;
   for (int out = 0; out < this->num_output_; out++) {
-    const Dtype* map_in = const_cast<Dtype*>(top_diff + top[i]->offset(n) +
+    const Dtype* map_in = const_cast<Dtype*>(top_diff + n * this->top_dim_ +
         out * map_in_size);
     // Left-top 0-padding of top data
-    for (int h = 0; h < this->height_out_; h++) {
-      for (int w = 0; w < this->width_out_; w++) {
-        int h_pad = h * this->stride_h_;
-        int w_pad = w * this->stride_w_;
+    for (int h = 0; h < height_out_; h++) {
+      for (int w = 0; w < width_out_; w++) {
+        int h_pad = h * stride_h_;
+        int w_pad = w * stride_w_;
         fft_map_in_real_[h_pad * fft_width_ + w_pad] =
-              map_in[h * this->width_out_ + w];
+              map_in[h * width_out_ + w];
       }
     }
 
@@ -339,12 +361,12 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(
 
     // Mapping from IFFT result to bottom data
     Dtype* map_out = reinterpret_cast<Dtype*>(bottom_diff +
-        bottom[i]->offset(n) + c * map_size_);
-    for (int h_out = 0; h_out < this->height_; h_out++) {
-      for (int w_out = 0; w_out < this->width_; w_out++) {
-        int h = h_out + this->pad_h_;
-        int w = w_out + this->pad_w_;
-        map_out[h_out * this->width_ + w_out] =
+        n * this->bottom_dim_ + c * map_size_);
+    for (int h_out = 0; h_out < height_; h_out++) {
+      for (int w_out = 0; w_out < width_; w_out++) {
+        int h = h_out + pad_h_;
+        int w = w_out + pad_w_;
+        map_out[h_out * width_ + w_out] =
             ifft_scale * fft_map_out_real_[h * fft_width_ + w];
       }
     }
@@ -370,15 +392,15 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
       for (int n = 0; n < this->num_; ++n) {
-        this->backward_cpu_bias(bias_diff, top_diff + top[i]->offset(n));
+        this->backward_cpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->cpu_data();
       if (this->param_propagate_down_[0]) {
         for (int n = 0; n < this->num_; ++n) {
-          this->weight_cpu_gemm(bottom_data + bottom[i]->offset(n),
-              top_diff + top[i]->offset(n), weight_diff);
+          this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
+              top_diff + n * this->top_dim_, weight_diff);
         }
       }
       if (propagate_down[i]) {

@@ -297,8 +297,8 @@ void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft(
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      Forward_gpu_fft_task(bottom_data, bottom[i]->offset(n), top_data,
-          top[i]->offset(n), n, ch_gr, out_gr);
+      Forward_gpu_fft_task(bottom_data, n * this->bottom_dim_, top_data,
+          n * this->top_dim_, n, ch_gr, out_gr);
     }
   }
 }
@@ -325,7 +325,7 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
   // Left-top 0-padding of top data
   fft_gpu_copy2buffer_in_2D(
       reinterpret_cast<Dtype*>(fft_gpu_map_in_real_all_num_output_),
-      top_diff + top[i]->offset(n),
+      top_diff + n * this->top_dim_,
       this->num_output_, fft_height_, fft_width_, this->height_out_,
       this->width_out_, this->stride_h_, this->stride_w_, 0, 0);
 
@@ -379,7 +379,7 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
 /*
   for (int c = 0; c < this->channels_; c++) {
     fft_gpu_copy2buffer_out_backward(
-        bottom_diff + bottom[i]->offset(n) + c * map_size_,
+        bottom_diff + n * this->bottom_dim_ + c * map_size_,
         reinterpret_cast<Dtype*>(fft_gpu_map_out_real_) +
             c * fft_map_real_size_,
         this->height_, this->width_, fft_height_, fft_width_,
@@ -387,7 +387,7 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
   }
 */
   fft_gpu_copy2buffer_out_backward_2D(
-      bottom_diff + bottom[i]->offset(n),
+      bottom_diff + n * this->bottom_dim_,
       reinterpret_cast<Dtype*>(fft_gpu_map_out_real_),
       this->channels_,
       this->height_, this->width_, fft_height_, fft_width_,
@@ -408,24 +408,24 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->blobs_[1]->mutable_gpu_diff());
   }
 
-  int ch_gr = this->channels_ / this->group_;
-  int out_gr = this->num_output_ / this->group_;
 
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {
-        this->backward_gpu_bias(bias_diff, top_diff + top[i]->offset(n));
+        this->backward_gpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
 #ifdef FFT_BACKWARD
+      int ch_gr = this->channels_ / this->group_;
+      int out_gr = this->num_output_ / this->group_;
       if (this->param_propagate_down_[0]) {
         for (int n = 0; n < this->num_; ++n) {
-          this->weight_gpu_gemm(bottom_data + bottom[i]->offset(n),
-              top_diff + top[i]->offset(n), weight_diff);
+          this->weight_gpu_gemm(bottom_data + n * this->bottom_dim_,
+              top_diff + n * this->top_dim_, weight_diff);
         }
       }
       if (propagate_down[i]) {
@@ -437,12 +437,12 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {
         if (this->param_propagate_down_[0]) {
-          this->weight_gpu_gemm(bottom_data + bottom[i]->offset(n),
-              top_diff + top[i]->offset(n), weight_diff);
+          this->weight_gpu_gemm(bottom_data + n * this->bottom_dim_,
+              top_diff + n * this->top_dim_, weight_diff);
         }
         if (propagate_down[i]) {
-          this->backward_gpu_gemm(top_diff + top[i]->offset(n),
-              weight, bottom_diff + bottom[i]->offset(n));
+          this->backward_gpu_gemm(top_diff + n * this->top_dim_,
+              weight, bottom_diff + n * this->bottom_dim_);
         }
       }
 #endif
