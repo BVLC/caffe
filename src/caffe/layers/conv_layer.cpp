@@ -1,5 +1,4 @@
 #include <vector>
-#include <algorithm>  // for max
 
 #include "caffe/layers/conv_layer.hpp"
 
@@ -30,10 +29,12 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 #ifdef _OPENMP
-#pragma omp parallel for  //  shared(bottom,top)
+    #pragma omp parallel for  //  shared(bottom,top)
 #endif
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight, top_data + n * this->top_dim_);
+      this->forward_cpu_gemm(bottom_data + n*this->bottom_dim_,
+                             weight,
+                             top_data + n*this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
@@ -45,7 +46,6 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   for (int i = 0; i < top.size(); ++i) {
@@ -55,37 +55,42 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
-        // TODO: make bias for openmp
       for (int n = 0; n < this->num_; ++n) {
         this->backward_cpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
     }
 
-    this->clear_weight_mt();
+    // OpenMP path is using bigger separate buffer to accumulate
+    // weight diffs, which are lateron add to weight_diff
+    // so bigger buffer (weight_diff_mt) hase to be cleared out
+    // before GEMM ops and results has to be summed up after GEMM ops.
 
-    if (this->param_propagate_down_[0] )
-    {
+    if (this->param_propagate_down_[0]) {
 #ifdef _OPENMP
-#pragma omp parallel for  //  shared(bottom,top)
+      this->clear_weight_mt();
+      #pragma omp parallel
 #endif
-      for (int n = 0; n < this->num_; ++n)
       {
-        // gradient w.r.t. weight. Note that we will accumulate diffs.
-        this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
-              top_diff + n * this->top_dim_);
+#ifdef _OPENMP
+        #pragma omp for
+#endif
+        for (int n = 0; n < this->num_; ++n) {
+          // gradient w.r.t. weight. Note that we will accumulate diffs.
+          this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
+                top_diff + n * this->top_dim_, weight_diff);
+        }
+
+#ifdef _OPENMP
+        this->sum_weight_mt(weight_diff);
+#endif
       }
-
-      this->sum_weight_mt(weight_diff);
-
     }
 
-    if (propagate_down[i])
-    {
+    if (propagate_down[i]) {
 #ifdef _OPENMP
-#pragma omp parallel for  //  shared(bottom,top)
+      #pragma omp parallel for
 #endif
-      for (int n = 0; n < this->num_; ++n)
-      {
+      for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. bottom data, if necessary.
         this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
             bottom_diff + n * this->bottom_dim_);

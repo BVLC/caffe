@@ -29,7 +29,7 @@ void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 #ifdef _OPENMP
-#pragma omp parallel for  //  shared(bottom,top)
+    #pragma omp parallel for
 #endif
     for (int n = 0; n < this->num_; ++n) {
       this->backward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
@@ -53,7 +53,7 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
-      Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();       
+      Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
       for (int n = 0; n < this->num_; ++n) {
         this->backward_cpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
@@ -61,32 +61,35 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 
     if (this->param_propagate_down_[0] || propagate_down[i]) {
-
-      this->clear_weight_mt();
-
 #ifdef _OPENMP
-#pragma omp parallel for  //  shared(bottom,top)
+      this->clear_weight_mt();
+      #pragma omp parallel
 #endif
-      for (int n = 0; n < this->num_; ++n)
       {
+#ifdef _OPENMP
+        #pragma omp for
+#endif
+        for (int n = 0; n < this->num_; ++n) {
+          if (this->param_propagate_down_[0]) {
+              // Gradient w.r.t. weight. Note that we will accumulate diffs.
+              this->weight_cpu_gemm(top_diff + n * this->top_dim_,
+                bottom_data + n * this->bottom_dim_, weight_diff);
+          }
 
-        if (this->param_propagate_down_[0]) {
-            // Gradient w.r.t. weight. Note that we will accumulate diffs.
-            this->weight_cpu_gemm(top_diff + n * this->top_dim_,
-              bottom_data + n * this->bottom_dim_);
+          if (propagate_down[i]) {
+            // Gradient w.r.t. bottom data, if necessary, reusing
+            // the column buffer. we might have just computed above.
+            this->forward_cpu_gemm(top_diff + n*this->top_dim_,
+                                   weight,
+                                   bottom_diff + n*this->bottom_dim_,
+                                   this->param_propagate_down_[0]);
+          }
         }
-
-        if (propagate_down[i]) {
-          // Gradient w.r.t. bottom data, if necessary, reusing the column buffer
-          // we might have just computed above.
-          this->forward_cpu_gemm(top_diff + n * this->top_dim_, weight,
-            bottom_diff + n * this->bottom_dim_, this->param_propagate_down_[0]);
-        }
-
+#ifdef _OPENMP
+        this->sum_weight_mt(weight_diff);
+#endif
       }
-      this->sum_weight_mt(weight_diff);
     }
-
   }
 }
 
