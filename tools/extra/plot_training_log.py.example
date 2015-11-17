@@ -150,7 +150,7 @@ Be warned that the fields in the training log may change in the future.
 You had better check the data files and change the mapping from field name to
  field index in create_field_index before designing your own plots.
 Usage:
-    ./plot_log.sh chart_type[0-%s] /where/to/save.png /path/to/first.log ...
+    ./plot_training_log.py chart_type[0-%s] /where/to/save.png /path/to/first.log ...
 Notes:
     1. Supporting multiple logs.
     2. Log file name must end with the lower-cased "%s".
