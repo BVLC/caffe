@@ -37,7 +37,6 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const int count = bottom[0]->count();
 
       cl_uint argIdx = 0;
-      cl_int err;
       ClState& state = Caffe::cl_state();
       state.submit_program("sigmoid", &_cl_sigmoid_layer_start,
           &_cl_sigmoid_layer_end);

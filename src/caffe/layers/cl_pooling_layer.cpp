@@ -138,7 +138,6 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int num = top[0]->num();
   caffe_gpu_set(count, Dtype(0.), bottom_diff);
   cl_uint argIdx = 0;
-  cl_int err;
   ClState& state = Caffe::cl_state();
   state.submit_program("pooling", &_cl_pooling_layer_start,
       &_cl_pooling_layer_end);

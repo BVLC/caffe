@@ -1,4 +1,3 @@
-#define USE_OCL
 #ifdef USE_OCL
 
 #include <iostream>
@@ -77,7 +76,6 @@ namespace caffe {
     int workItemOutput[3];
     int yDim = blockHeight;
     int zDim = blockDepth;
-    int xDim = blockWidth;
 
     std::string kernelUKey = generate_specific_key(1,blockWidth,blockHeight,blockDepth);
     std::stringstream multFunctionBuilder;
@@ -1115,7 +1113,6 @@ namespace caffe {
       if (bias_term_) {
         bias_ = this->blobs_[1]->gpu_data();
       }
-      ClState& state = Caffe::cl_state();
 
       if (!tuned_)
         setup_convolution(bottom, top);

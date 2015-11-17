@@ -138,6 +138,8 @@ inline void SyncedMemory::to_gpu_with_zero_copy(const size_t size,
         // No this case
       }
       break;
+    default:
+      break;
     }
   }
 #endif  // USE_OCL
@@ -185,8 +187,8 @@ void SyncedMemory::set_gpu_data(void* data) {
 #ifndef CPU_ONLY
   CHECK(data);
   if (own_gpu_data_) {
-    int initial_device;
 #ifndef USE_OCL
+    int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
       CUDA_CHECK(cudaSetDevice(gpu_device_));

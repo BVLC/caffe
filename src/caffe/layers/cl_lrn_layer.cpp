@@ -70,7 +70,6 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   cl_uint argIdx = 0;
-  cl_int err;
   int n_threads = num_ * height_ * width_;
 
   ClState& state = Caffe::cl_state();
