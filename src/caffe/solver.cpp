@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "caffe/solver.hpp"
+#include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
@@ -448,11 +449,8 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 
 template <typename Dtype>
 string Solver<Dtype>::SnapshotFilename(const string extension) {
-  string filename(param_.snapshot_prefix());
-  const int kBufferSize = 20;
-  char iter_str_buffer[kBufferSize];
-  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
-  return filename + iter_str_buffer + extension;
+  return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
+    + extension;
 }
 
 template <typename Dtype>
