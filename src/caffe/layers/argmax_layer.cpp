@@ -32,9 +32,9 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  int num_top_axes = bottom[0]->num_axes();
+  int_tp num_top_axes = bottom[0]->num_axes();
   if ( num_top_axes < 3 ) num_top_axes = 3;
-  std::vector<int> shape(num_top_axes, 1);
+  std::vector<int_tp> shape(num_top_axes, 1);
   if (has_axis_) {
     // Produces max_ind or max_val per axis
     shape = bottom[0]->shape();
