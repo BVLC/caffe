@@ -18,7 +18,7 @@ namespace caffe {
 
 // Reference convolution for checking results:
 // accumulate through explicit loops over input, output, and filters.
-template <typename Dtype>
+template <typename Dtype> static
 void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     const vector<shared_ptr<Blob<Dtype> > >& weights,
     Blob<Dtype>* out) {
