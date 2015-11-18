@@ -9,9 +9,6 @@
 #endif  // !CPU_ONLY
 #include <glog/logging.h>
 #include <stdio.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 #include <sstream>
 #include <string>
@@ -36,7 +33,7 @@ static void apply_buffers(const vector<Blob<Dtype>*>& blobs, Dtype* buffer,
                           uint_tp total_size, Op op) {
   Dtype* ptr = buffer;
   for (int i = 0; i < blobs.size(); ++i) {
-    int size = blobs[i]->count();
+    int_tp size = blobs[i]->count();
     switch (op) {
       case copy: {
         // Init buffer to current values of blobs

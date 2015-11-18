@@ -65,7 +65,8 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
   std::vector<int64_t> prodDims(conn_num_dims - 1);
   prodDims[conn_num_dims - 2] = 1;
   for (int64_t i = 1; i < conn_num_dims - 1; ++i) {
-    prodDims[conn_num_dims - 2 - i] = prodDims[conn_num_dims - 1 - i] * conn_dims[i];
+    prodDims[conn_num_dims - 2 - i] = prodDims[conn_num_dims - 1 - i]
+                                               * conn_dims[i];
     // std::cout << i << " prodDims: " << prodDims[i] << std::endl;
   }
 
