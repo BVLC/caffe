@@ -44,8 +44,8 @@ void LstmUnitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   channels_ = lstm_unit_param.num_cells();
   input_data_size_ = bottom[0]->shape(1);
-  num_ = bottom[0]->shape(0);
-  M_ = num_;
+  //num_ = bottom[0]->shape(0);
+  //M_ = num_;
   N_ = channels_;
   K_ = input_data_size_;
 
@@ -96,6 +96,10 @@ void LstmUnitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK((this->layer_param_.top_size() == 2
       || this->layer_param_.top_size() == 0))
       << "LstmUnit must have a data and cell top";
+      
+  num_ = bottom[0]->shape(0);
+  M_ = num_;
+  
   input_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
   forget_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
   output_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
