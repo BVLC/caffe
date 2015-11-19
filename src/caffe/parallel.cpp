@@ -318,6 +318,15 @@ void P2PSync<Dtype>::on_start() {
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
     children_[i]->queue_.push(this);
   }
+
+  // Move syncedmem head to HEAD_AT_GPU
+  const vector<Blob<Dtype>*>& params = solver_->net()->learnable_params();
+  Dtype* mutable_gpu_data;
+  for (int i = 0; i < params.size(); ++i) {
+    mutable_gpu_data = params[i]->mutable_gpu_data();
+    mutable_gpu_data++; // added to prevent the warning message of compilers
+                        // warning: statement has no effect [-Wunused-value]
+  }
 #endif
 }
 
