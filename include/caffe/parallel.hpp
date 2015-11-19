@@ -97,6 +97,9 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 
   void run(const vector<int>& gpus);
 
+  // Divide the batch size by the number of solvers
+  static void divide_batch_size(NetParameter* net);
+
  protected:
   void on_start();
   void on_gradients_ready();

@@ -46,6 +46,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // the current NetState.
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
+  if (phase_ == TRAIN) {
+    caffe::P2PSync<Dtype>::divide_batch_size(&filtered_param);
+  }
   LOG_IF(INFO, Caffe::root_solver())
       << "Initializing net from parameters: " << std::endl
       << filtered_param.DebugString();
