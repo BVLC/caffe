@@ -747,6 +747,12 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /**
+   * @brief Checks that all labels are within the correct range.
+   *
+   * @param label CPU pointer to labels
+   */
+  void CheckLabels(const Dtype* label);
 
   /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
