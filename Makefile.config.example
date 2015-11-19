@@ -22,7 +22,7 @@
 
 # uncomment to enable OCL backend.
 # OCL switch
-USE_OCL := 1
+# USE_OCL := 1
 
 # Uncomment for FFT
 # USE_FFT := 1
