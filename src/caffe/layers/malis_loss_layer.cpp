@@ -67,7 +67,8 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
   for (int64_t i = 1; i < conn_num_dims - 1; ++i) {
     prodDims[conn_num_dims - 2 - i] = prodDims[conn_num_dims - 1 - i]
                                                * conn_dims[i];
-    // std::cout << i << " prodDims: " << prodDims[i] << std::endl;
+    // std::cout << conn_num_dims - 2 - i << " prodnhood_dims[1]Dims: "
+    // << prodDims[conn_num_dims - 2 - i] << std::endl;
   }
 
   /* convert n-d offset vectors into linear array offset scalars */
@@ -120,12 +121,12 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
         // Loop over X
         for (int64_t x = 0; x < conn_dims[3]; ++x, ++i) {
           // Out-of-bounds check:
-          if (!((z + nhood_data[d * 3 + 0] < 0)
-              ||(z + nhood_data[d * 3 + 0] >= conn_dims[1])
-              ||(y + nhood_data[d * 3 + 1] < 0)
-              ||(y + nhood_data[d * 3 + 1] >= conn_dims[2])
-              ||(x + nhood_data[d * 3 + 2] < 0)
-              ||(x + nhood_data[d * 3 + 2] >= conn_dims[3]))) {
+          if (!((z + nhood_data[d * nhood_dims[1] + 0] < 0)
+              ||(z + nhood_data[d * nhood_dims[1] + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * nhood_dims[1] + 1] < 0)
+              ||(y + nhood_data[d * nhood_dims[1] + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * nhood_dims[1] + 2] < 0)
+              ||(x + nhood_data[d * nhood_dims[1] + 2] >= conn_dims[3]))) {
             ++edgeCount;
           }
         }
@@ -145,12 +146,12 @@ void MalisLossLayer<Dtype>::Malis(const Dtype* conn_data,
         // Loop over X
         for (int64_t x = 0; x < conn_dims[3]; ++x, ++i) {
           // Out-of-bounds check:
-          if (!((z + nhood_data[d * 3 + 0] < 0)
-              ||(z + nhood_data[d * 3 + 0] >= conn_dims[1])
-              ||(y + nhood_data[d * 3 + 1] < 0)
-              ||(y + nhood_data[d * 3 + 1] >= conn_dims[2])
-              ||(x + nhood_data[d * 3 + 2] < 0)
-              ||(x + nhood_data[d * 3 + 2] >= conn_dims[3]))) {
+          if (!((z + nhood_data[d * nhood_dims[1] + 0] < 0)
+              ||(z + nhood_data[d * nhood_dims[1] + 0] >= conn_dims[1])
+              ||(y + nhood_data[d * nhood_dims[1] + 1] < 0)
+              ||(y + nhood_data[d * nhood_dims[1] + 1] >= conn_dims[2])
+              ||(x + nhood_data[d * nhood_dims[1] + 2] < 0)
+              ||(x + nhood_data[d * nhood_dims[1] + 2] >= conn_dims[3]))) {
             pqueue[j++] = i;
           }
         }
