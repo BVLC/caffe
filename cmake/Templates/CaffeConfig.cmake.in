@@ -15,7 +15,6 @@
 #
 #   Caffe_HAVE_CUDA    - signals about CUDA support
 #   Caffe_HAVE_CUDNN   - signals about cuDNN support
-#   Caffe_HAVE_CNMEM   - signals about CNMeM support
 # 
 #
 #
@@ -60,4 +59,4 @@ set(Caffe_DEFINITIONS "@Caffe_DEFINITIONS@")
 set(Caffe_CPU_ONLY @CPU_ONLY@)
 set(Caffe_HAVE_CUDA @HAVE_CUDA@)
 set(Caffe_HAVE_CUDNN @HAVE_CUDNN@)
-set(Caffe_HAVE_CNMEM @HAVE_CNMEM@)
+

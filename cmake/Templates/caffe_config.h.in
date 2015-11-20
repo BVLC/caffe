@@ -10,10 +10,6 @@
 /* NVIDA cuDNN */
 #cmakedefine HAVE_CUDNN
 #cmakedefine USE_CUDNN
-
-/* NVIDIA CNMeM */
-#cmakedefine HAVE_CNMEM
-#cmakedefine USE_CNMEM
  
 /* NVIDA cuDNN */
 #cmakedefine CPU_ONLY

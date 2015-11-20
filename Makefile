@@ -325,12 +325,6 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-# CNMEM integration
-ifeq ($(USE_CNMEM), 1)
-	LIBRARIES += cnmem
-	COMMON_FLAGS += -DUSE_CNMEM
-endif
-
 # configure IO libraries
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV
