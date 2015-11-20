@@ -1,7 +1,7 @@
 /*************************************************************************
 	> File Name: unpooling_layer.cpp
-	> Author: 
-	> Mail: 
+	> Author:
+	> Mail:
 	> Created Time: 2015年11月16日 星期一 15时42分28秒
  ************************************************************************/
 
@@ -111,14 +111,14 @@ void UnpoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype *bottom_data = bottom[0]->cpu_data();
   const Dtype *mask = bottom[1]->cpu_data();
   Dtype *top_data = top[0]->mutable_cpu_data();
-  
-  // Init the top blob to be all zero since only special places 
+
+  // Init the top blob to be all zero since only special places
   // wouldn't be zero then.
   caffe_set(top[0]->count(), Dtype(0), top_data);
-  
+
   switch (this->layer_param_.pooling_param().pool()) {
-  case PoolingParameter_PoolMethod_MAX:          
-      for (int n = 0; n < bottom[0]->num; ++n) {
+  case PoolingParameter_PoolMethod_MAX:
+      for (int n = 0; n < bottom[0]->num(); ++n) {
           for (int c = 0; c < channels_; ++c) {
               for (int ph = 0; ph < height_; ++ph) {
                   for (int pw = 0; pw < width_; ++pw) {
@@ -126,7 +126,7 @@ void UnpoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                       const int top_index = mask[index];
                       top_data[top_index] = bottom_data[index];
                   }
-              } 
+              }
               //switch to next channel
               top_data += top[0]->offset(0, 1);
               bottom_data += bottom[0]->offset(0, 1);
@@ -144,8 +144,8 @@ void UnpoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 }
 //We need only CPU version.
-STUB_GPU(UnPoolingLayer);
+// STUB_GPU(UnPoolingLayer);
 
-INSTANTIATE_CLASS(UnPoolingLayer);
+INSTANTIATE_CLASS(UnpoolingLayer);
 REGISTER_LAYER_CLASS(Unpooling);
 } //namespace caffe
