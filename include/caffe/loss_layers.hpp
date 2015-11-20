@@ -42,7 +42,7 @@ class AccuracyLayer : public Layer<Dtype> {
   // If there are two top blobs, then the second blob will contain
   // accuracies per class.
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlos() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
   /**
@@ -132,7 +132,7 @@ class LossLayer : public Layer<Dtype> {
 
 /**
  * @brief Computes the contrastive loss @f$
- *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
+ *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 +
  *              \left(1-y\right) \max \left(margin-d, 0\right)^2
  *          @f$ where @f$
  *          d = \left| \left| a_n - b_n \right| \right|_2 @f$. This can be
@@ -148,7 +148,7 @@ class LossLayer : public Layer<Dtype> {
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed contrastive loss: @f$ E =
- *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
+ *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 +
  *          \left(1-y\right) \max \left(margin-d, 0\right)^2
  *          @f$ where @f$
  *          d = \left| \left| a_n - b_n \right| \right|_2 @f$.
