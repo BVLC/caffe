@@ -23,7 +23,7 @@ class SoftmaxWithLossLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   SoftmaxWithLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 2, 3)),
-        blob_bottom_label_(new Blob<Dtype>(10, 1, 2, 3)),
+        blob_bottom_label_(new Blob<Dtype>(10, 2, 2, 3)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -81,7 +81,7 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestForwardIgnoreLabel) {
     accum_loss += this->blob_top_loss_->cpu_data()[0];
   }
   // Check that each label was included all but once.
-  EXPECT_NEAR(4 * full_loss, accum_loss, 1e-4);
+  EXPECT_NEAR(4 * full_loss, accum_loss, 2e-4);
 }
 
 TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientIgnoreLabel) {
