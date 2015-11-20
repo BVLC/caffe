@@ -298,6 +298,13 @@ void P2PSync<Dtype>::on_start() {
   if (parent_) {
     P2PSync<Dtype> *parent = queue_.pop();
     CHECK(parent == parent_);
+
+    // jhlim
+    Dtype* src = parent->data_;
+    Dtype* dst = data_;
+    CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),  //
+        cudaMemcpyDeviceToDevice, cudaStreamDefault));
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
   }
 
   // Update children
