@@ -1,5 +1,7 @@
+#ifndef USE_OCL
+#define CPU_ONLY 1
+#endif
 #include <vector>
-
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"

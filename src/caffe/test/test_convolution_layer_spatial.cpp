@@ -1,3 +1,4 @@
+#ifdef USE_OCL
 #include <cstring>
 #include <vector>
 
@@ -753,3 +754,4 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestGradientGroup_Spatial) {
 #endif
 
 }  // namespace caffe
+#endif
