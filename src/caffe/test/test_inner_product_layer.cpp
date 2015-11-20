@@ -65,19 +65,19 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
 TYPED_TEST(InnerProductLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
-  bool IS_VALID_CUDA = false;
 #ifndef CPU_ONLY
 #ifndef USE_OCL
+  bool IS_VALID_CUDA = false;
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
 #endif
 #endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 ||
+      sizeof(Dtype) == 4
 #ifndef CPU_ONLY
 #ifndef USE_OCL
-      IS_VALID_CUDA
+      || IS_VALID_CUDA
 #else
-      Caffe::cl_state().fp64_supported()
+      || Caffe::cl_state().fp64_supported()
 #endif
 #endif
       ) {
@@ -106,19 +106,19 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
 TYPED_TEST(InnerProductLayerTest, TestForwardNoBatch) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_nobatch_);
-  bool IS_VALID_CUDA = false;
 #ifndef CPU_ONLY
 #ifndef USE_OCL
+  bool IS_VALID_CUDA = false;
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
 #endif
 #endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 ||
+      sizeof(Dtype) == 4
 #ifndef CPU_ONLY
 #ifndef USE_OCL
-      IS_VALID_CUDA
+      || IS_VALID_CUDA
 #else
-      Caffe::cl_state().fp64_supported()
+      || Caffe::cl_state().fp64_supported()
 #endif
 #endif
       ) {
@@ -147,19 +147,19 @@ TYPED_TEST(InnerProductLayerTest, TestForwardNoBatch) {
 TYPED_TEST(InnerProductLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_);
-  bool IS_VALID_CUDA = false;
 #ifndef CPU_ONLY
 #ifndef USE_OCL
+  bool IS_VALID_CUDA = false;
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
 #endif
 #endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 ||
+      sizeof(Dtype) == 4
 #ifndef CPU_ONLY
 #ifndef USE_OCL
-      IS_VALID_CUDA
+      || IS_VALID_CUDA
 #else
-      Caffe::cl_state().fp64_supported()
+      || Caffe::cl_state().fp64_supported()
 #endif
 #endif
       ) {
