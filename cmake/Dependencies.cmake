@@ -64,7 +64,9 @@ if(NOT HAVE_CUDA)
   endif()
 
   # TODO: remove this not cross platform define in future. Use caffe_config.h instead.
+  if(NOT USE_OCL)
   add_definitions(-DCPU_ONLY)
+  endif()
 endif()
 
 # ---[ OpenCV
