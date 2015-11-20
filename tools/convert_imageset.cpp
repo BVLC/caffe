@@ -131,12 +131,11 @@ int main(int argc, char** argv) {
       }
     }
     // sequential
-    int length;
 #ifdef WIN32
-    _snprintf_s(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+    int length = _snprintf_s(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
       lines[line_id].first.c_str());
 #else
-    snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+    int length = snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
       lines[line_id].first.c_str());
 #endif
 
