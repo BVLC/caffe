@@ -479,7 +479,10 @@ cdef class ApolloNet:
                 f.visit(names.append)
                 for name in names:
                     if name in params:
-                        params[name].data[:] = f[name]
+                        if params[name].data.shape == f[name].shape:
+                            params[name].data[:] = f[name]
+                        else:
+                            print 'WARNING: %s was ignored due to shape mismatch' % name
                     else:
                         print 'WARNING: %s could not be loaded' % name
         elif extension == '.caffemodel':
