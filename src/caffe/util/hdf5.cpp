@@ -29,10 +29,10 @@ void hdf5_load_nd_dataset_helper(
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
   switch (class_) {
   case H5T_FLOAT:
-    LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_FLOAT";
+    { LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_FLOAT"; }
     break;
   case H5T_INTEGER:
-    LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_INTEGER";
+    { LOG_FIRST_N(INFO, 1) << "Datatype class: H5T_INTEGER"; }
     break;
   case H5T_TIME:
     LOG(FATAL) << "Unsupported datatype class: H5T_TIME";
