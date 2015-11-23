@@ -8,7 +8,9 @@ Currently Multi-GPU is only supported via the C/C++ paths and only for training.
 
 The GPUs to be used for training can be set with the "-gpu" flag on the command line to the 'caffe' tool.  e.g. "build/tools/caffe train --solver=models/bvlc_alexnet/solver.prototxt --gpu=0,1" will train on GPUs 0 and 1.
 
-**NOTE**: each GPU runs the batchsize specified in your train_val.prototxt.  So if you go from 1 GPU to 2 GPU, your effective batchsize will double.  e.g. if your train_val.prototxt specified a batchsize of 256, if you run 2 GPUs your effective batch size is now 512.  So you need to adjust the batchsize when running multiple GPUs and/or adjust your solver params, specifically learning rate.
+**NOTE**: There is a difference between the Nvidia and BVLC branches.  On BVLC Master each GPU runs the batchsize specified in your train_val.prototxt.  So if you go from 1 GPU to 2 GPU, your effective batchsize will double.  e.g. if your train_val.prototxt specified a batchsize of 256, if you run 2 GPUs your effective batch size is now 512.  So you need to adjust the batchsize when running multiple GPUs and/or adjust your solver params, specifically learning rate.
+
+In contrast, this branch divides the batchsize in train_val.prototxt by the number of GPUs to keep the total batchsize the same as specified.
 
 # Hardware Configuration Assumptions
 
@@ -17,7 +19,7 @@ updated model, 0\-\>2, and then 0\-\>1, 2\-\>3.
 
 For best performance, P2P DMA access between devices is needed. Without P2P access, for example crossing PCIe root complex, data is copied through host and effective exchange bandwidth is greatly reduced.
 
-Current implementation has a "soft" assumption that the devices being used are homogeneous.  In practice, any devices of the same general class should work together, but performance and total size is limited by the smallest device being used.  e.g. if you combine a TitanX and a GTX980, peformance will be limited by the 980.  Mixing vastly different levels of boards, e.g. Kepler and Fermi, is not supported.
+Current implementation has a "soft" assumption that the devices being used are homogeneous.  In practice, any devices of the same general class should work together, but performance and total size is limited by the smallest device being used.  e.g. if you combine a TitanX and a GTX980, peformance will be limited by the 980.  Mixing vastly different levels of boards, e.g. Kepler and Fermi, is not supported.  Also, if you use different devices, the fast RDMA paths may fail to trigger.
 
 "nvidia-smi topo -m" will show you the connectivity matrix.  You can do P2P through PCIe bridges, but not across socket level links at this time, e.g. across CPU sockets on a multi-socket motherboard.
 
