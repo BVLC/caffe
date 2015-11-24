@@ -156,8 +156,6 @@ void Timer::Init() {
       ClState& state = Caffe::cl_state();
       state.submit_program("benchmark", &_cl_benchmark_start,
           &_cl_benchmark_end);
-      cl_context ctx = state.get_context();
-      cl_int errcode;
       start_gpu_ = 0;
       stop_gpu_ = 0;
 #else
