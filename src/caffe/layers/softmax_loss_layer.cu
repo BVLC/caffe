@@ -43,13 +43,12 @@ template<typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
-
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     const Dtype* prob_data = prob_.gpu_data();
     const Dtype* label = bottom[1]->gpu_data();
-    const int dim = prob_.count() / outer_num_;
-    const int nthreads = outer_num_ * inner_num_;
+    const int_tp dim = prob_.count() / outer_num_;
+    const int_tp nthreads = outer_num_ * inner_num_;
     // Since this memory is not used for anything until it is overwritten
     // on the backward pass, we use it here to avoid having to allocate new GPU
     // memory to accumulate intermediate results in the kernel.
@@ -59,25 +58,24 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     Dtype* counts = prob_.mutable_gpu_diff();
     // NOLINT_NEXT_LINE(whitespace/operators)
     SoftmaxLossForwardGPU<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
-        CAFFE_CUDA_NUM_THREADS)(nthreads, prob_data, label, loss_data,
-        outer_num_, dim, inner_num_, has_ignore_label_, ignore_label_, counts);
+        CAFFE_CUDA_NUM_THREADS)(nthreads, prob_data,
+            label, loss_data, outer_num_,
+            dim, inner_num_, has_ignore_label_, ignore_label_, counts);
     Dtype loss;
     caffe_gpu_asum(nthreads, loss_data, &loss);
-    if (normalize_) {
-      Dtype count;
-      caffe_gpu_asum(nthreads, counts, &count);
-      if (count == 0) {
-        loss = 0;
-      } else {
-        loss /= count;
-      }
-    } else {
-      loss /= outer_num_;
+    Dtype valid_count = -1;
+    // Only launch another CUDA kernel if we actually need the count of valid
+    // outputs.
+    if (normalization_ == LossParameter_NormalizationMode_VALID
+        && has_ignore_label_) {
+      caffe_gpu_asum(nthreads, counts, &valid_count);
     }
-    top[0]->mutable_cpu_data()[0] = loss;
+    top[0]->mutable_cpu_data()[0] = loss
+        / get_normalizer(normalization_, valid_count);
     if (top.size() == 2) {
       top[1]->ShareData(prob_);
     }
+
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -104,20 +102,18 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
         ctx.get_queue());
 
     Dtype loss;
-
-    greentea_gpu_asum(this->device_->id(), nthreads, loss_data, 0, &loss);
-    if (normalize_) {
-      Dtype count;
-      greentea_gpu_asum(this->device_->id(), nthreads, counts, 0, &count);
-      if (count == 0) {
-        loss = 0;
-      } else {
-        loss /= count;
-      }
-    } else {
-      loss /= outer_num_;
+    greentea_gpu_asum<Dtype>(this->device_->id(), nthreads, loss_data, 0,
+                             &loss);
+    Dtype valid_count = -1;
+    // Only launch another CUDA kernel if we actually need the count of valid
+    // outputs.
+    if (normalization_ == LossParameter_NormalizationMode_VALID
+        && has_ignore_label_) {
+      greentea_gpu_asum<Dtype>(this->device_->id(), nthreads, counts, 0,
+                               &valid_count);
     }
-    top[0]->mutable_cpu_data()[0] = loss;
+    top[0]->mutable_cpu_data()[0] = loss
+        / get_normalizer(normalization_, valid_count);
     if (top.size() == 2) {
       top[1]->ShareData(prob_);
     }
@@ -159,8 +155,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
-    LOG(FATAL)<< this->type()
-    << " Layer cannot backpropagate to label inputs.";
+    LOG(FATAL) <<
+        this->type() << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
     if (this->device_->backend() == BACKEND_CUDA) {
@@ -180,20 +176,17 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
           CAFFE_CUDA_NUM_THREADS) (nthreads, top_data, label, bottom_diff,
           outer_num_, dim, inner_num_, has_ignore_label_,
           ignore_label_, counts);
-      const Dtype loss_weight = top[0]->cpu_diff()[0];
-      if (normalize_) {
-        Dtype count;
-        caffe_gpu_asum(nthreads, counts, &count);
-        caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
-      } else {
-        caffe_gpu_scal(prob_.count(), loss_weight / outer_num_, bottom_diff);
+
+      Dtype valid_count = -1;
+      // Only launch another CUDA kernel if we actually need the count of valid
+      // outputs.
+      if (normalization_ == LossParameter_NormalizationMode_VALID &&
+          has_ignore_label_) {
+        caffe_gpu_asum(nthreads, counts, &valid_count);
       }
-      if (bottom.size() == 3) {
-        // TODO: Correct this for easy diff scaling
-        // std::cout << "Size: " << bottom[0]->count() << std::endl;
-        const Dtype* weight = bottom[2]->gpu_data();
-        caffe_gpu_mul(bottom[2]->count(), bottom_diff, weight, bottom_diff);
-      }
+      const Dtype loss_weight = top[0]->cpu_diff()[0] /
+      get_normalizer(normalization_, valid_count);
+      caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
 #endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
@@ -206,7 +199,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       cl_mem prob_data = (cl_mem)(prob_.gpu_data());
       cl_mem top_data = (cl_mem)(top[0]->gpu_data());
       greentea_gpu_memcpy(prob_.count() * sizeof(Dtype),
-                          prob_data, 0, bottom_diff, 0, &ctx);
+          prob_data, 0, bottom_diff, 0, &ctx);
       cl_mem label = (cl_mem)(bottom[1]->gpu_data());
       const int_tp dim = prob_.count() / outer_num_;
       const int_tp nthreads = outer_num_ * inner_num_;
@@ -216,34 +209,23 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
           CL_KERNEL_SELECT("softmax_loss_backward"));
       viennacl::ocl::enqueue(
           oclk_softmax_loss_backward(nthreads, WrapHandle(top_data, &ctx),
-                    WrapHandle(label, &ctx), WrapHandle(bottom_diff, &ctx),
-                    outer_num_, dim, inner_num_, has_ignore_label_ ? 1 : 0,
-                    ignore_label_, WrapHandle(counts, &ctx)),
+              WrapHandle(label, &ctx), WrapHandle(bottom_diff, &ctx),
+              outer_num_, dim, inner_num_, has_ignore_label_ ? 1 : 0,
+              ignore_label_, WrapHandle(counts, &ctx)),
           ctx.get_queue());
 
-      const Dtype loss_weight = top[0]->cpu_diff()[0];
-      if (normalize_) {
-        Dtype count;
+      Dtype valid_count = -1;
+      // Only launch another CUDA kernel if we actually need the count of valid
+      // outputs.
+      if (normalization_ == LossParameter_NormalizationMode_VALID &&
+          has_ignore_label_) {
         greentea_gpu_asum<Dtype>(this->device_->id(),
-            nthreads, counts, 0, &count);
-        if (count == 0) {
-          greentea_gpu_set<Dtype>(this->device_->id(),
-                           prob_.count(), 0.0, bottom_diff, 0);
-        } else {
-          greentea_gpu_scal<Dtype>(this->device_->id(),
-            prob_.count(), loss_weight / count, bottom_diff, 0);
-        }
-      } else {
-        greentea_gpu_scal<Dtype>(this->device_->id(),
-            prob_.count(), loss_weight / outer_num_, bottom_diff, 0);
+            nthreads, counts, 0, &valid_count);
       }
-      if (bottom.size() == 3) {
-        // TODO: Correct this for easy diff scaling
-        // std::cout << "Size: " << bottom[0]->count() << std::endl;
-        const cl_mem weight = (cl_mem)(bottom[2]->gpu_data());
-        greentea_gpu_mul<Dtype>(this->device_->id(),
-             bottom[2]->count(), bottom_diff, 0, weight, 0, bottom_diff, 0);
-      }
+      const Dtype loss_weight = top[0]->cpu_diff()[0] /
+      get_normalizer(normalization_, valid_count);
+      greentea_gpu_scal<Dtype>(this->device_->id(),
+          prob_.count(), loss_weight, bottom_diff, 0);
 #endif  // USE_GREENTEA
     }
   }

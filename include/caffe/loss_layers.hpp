@@ -752,6 +752,12 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /// Read the normalization mode parameter and compute the normalizer based
+  /// on the blob size.  If normalization_mode is VALID, the count of valid
+  /// outputs will be read from valid_count, unless it is -1 in which case
+  /// all outputs are assumed to be valid.
+  virtual Dtype get_normalizer(
+      LossParameter_NormalizationMode normalization_mode, int valid_count);
 
   /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
@@ -765,9 +771,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int_tp ignore_label_;
-  /// Whether to normalize the loss by the total number of values present
-  /// (otherwise just by the batch size).
-  bool normalize_;
+  /// How to normalize the output loss.
+  LossParameter_NormalizationMode normalization_;
 
   int_tp softmax_axis_, outer_num_, inner_num_;
 };
