@@ -9,6 +9,10 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#ifndef CAFFE_TMP_DIR_RETRIES
+#define CAFFE_TMP_DIR_RETRIES 100
+#endif
+
 namespace caffe {
 
 using ::google::protobuf::Message;
@@ -23,12 +27,17 @@ inline void MakeTempFilename(string* temp_filename) {
 
 inline void MakeTempDir(string* temp_dirname) {
   temp_dirname->clear();
-  const path& model = boost::filesystem::temp_directory_path()
-    /"caffe_test.%%%%%%";
-  const path& dir = boost::filesystem::unique_path(model).string();
-  bool directoryCreated = boost::filesystem::create_directory(dir);
-  CHECK(directoryCreated);
-  *temp_dirname = dir.string();
+  const path& model =
+    boost::filesystem::temp_directory_path()/"caffe_test.%%%%-%%%%";
+  for ( int i = 0; i < CAFFE_TMP_DIR_RETRIES; i++ ) {
+    const path& dir = boost::filesystem::unique_path(model).string();
+    bool done = boost::filesystem::create_directory(dir);
+    if ( done ) {
+      *temp_dirname = dir.string();
+      return;
+    }
+  }
+  LOG(FATAL) << "Failed to create a temporary directory.";
 }
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
