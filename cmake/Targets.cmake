@@ -66,16 +66,25 @@ function(caffe_pickup_caffe_sources root)
   caffe_source_group("Source"       GLOB "${root}/src/caffe/test/test_*.cpp")
   caffe_source_group("Source\\Cuda" GLOB "${root}/src/caffe/test/test_*.cu")
 
+  # source groups for OCL
+  caffe_source_group("Source\\Ocl" GLOB "${root}/src/caffe/layers/*.cl")
+  caffe_source_group("Source\\Ocl" GLOB "${root}/src/caffe/util/*.cl")
+
+  file(GLOB ocl_srcs ${root}/src/caffe/*.cl)
+  file(GLOB oclcpp_srcs   ${root}/src/caffe/layers/cl_*.cpp)
+  file(GLOB_RECURSE ocl_srcs ${root}/src/caffe/*.cl)
+  file(GLOB_RECURSE oclcpp_srcs   ${root}/src/caffe/layers/cl_*.cpp)
+  set(ocl_hdrs ${root}/include/Random123/threefry.h)
+
   # collect files
   file(GLOB test_hdrs    ${root}/include/caffe/test/test_*.h*)
   file(GLOB test_srcs    ${root}/src/caffe/test/test_*.cpp)
-  file(GLOB clcpp_srcs    ${root}/src/caffe/layers/cl_*.cpp)
   file(GLOB_RECURSE hdrs ${root}/include/caffe/*.h*)
   file(GLOB_RECURSE srcs ${root}/src/caffe/*.cpp)
   list(REMOVE_ITEM  hdrs ${test_hdrs})
   list(REMOVE_ITEM  srcs ${test_srcs})
   IF (NOT USE_OCL)
-    list(REMOVE_ITEM  srcs ${clcpp_srcs})
+    list(REMOVE_ITEM  srcs ${oclcpp_srcs})
   ENDIF ()
   # adding headers to make the visible in some IDEs (Qt, VS, Xcode)
   list(APPEND srcs ${hdrs} ${PROJECT_BINARY_DIR}/caffe_config.h)
@@ -101,6 +110,9 @@ function(caffe_pickup_caffe_sources root)
   set(cuda ${cuda} PARENT_SCOPE)
   set(test_srcs ${test_srcs} PARENT_SCOPE)
   set(test_cuda ${test_cuda} PARENT_SCOPE)
+  set(ocl_hdrs ${ocl_hdrs} PARENT_SCOPE)
+  set(oclcpp_srcs ${oclcpp_srcs} PARENT_SCOPE)
+  set(ocl_srcs ${ocl_srcs} PARENT_SCOPE)
 endfunction()
 
 ################################################################################################

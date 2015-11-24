@@ -1,8 +1,7 @@
 #!/bin/bash
 
 objcopy -I binary -B i386 -O elf64-x86-64 $1 $2
-
-sym="_binary_$(echo $1 | sed 's|[./]|\_|g')"
+sym="_binary_$(echo $1 | sed 's|[./-]|\_|g')"
 name="_$(basename ${1%.*})"
 
 if [[ $name != "_cl"* ]]; then
