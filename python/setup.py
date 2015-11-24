@@ -62,39 +62,30 @@ setup(
     ''',
     license = 'BSD',
     ext_modules = [caffe_module]
+    packages = find_packages(),
+    scripts = ['classify.py', 'detect.py', 'draw_net.py'],
+    ext_modules = [caffe_module],
+    platforms = ['Linux', 'MacOS X', 'Windows'],
+    long_description = ('Caffe is a deep learning framework made with '
+                        'expression,  speed, and modularity in mind. It is '
+                        'developed by the Berkeley Vision and Learning '
+                        'Center (BVLC) and community contributors.'),
+    install_requires = reqs,
+    keywords = ['caffe', 'deep learning'],
+    download_url = 'https://github.com/BVLC/caffe',
+    classifiers = ['Development Status :: 3 - Alpha',
+                   'Environment :: Console',
+                   'Intended Audience :: Developers',
+                   'Intended Audience :: Science/Research',
+                   'License :: OSI Approved :: BSD License',
+                   'Natural Language :: English',
+                   'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.3',
+                   'Programming Language :: Python :: 3.4',
+                   'Topic :: Scientific/Engineering :: Artificial Intelligence',
+                   'Topic :: Software Development',
+                   'Topic :: Utilities'],
+    zip_safe = False,
 )
 
-#print(caffe_module)
-#config = {
-#    'name': 'caffe',
-#    'version': '0.1.0',
-#    'author': 'BVLC members and the open-source community',
-#    'packages': find_packages(),
-#    'scripts': ['classify.py', 'detect.py',
-#                'draw_net.py'],
-#    'ext_modules': [caffe_module],
-#    'platforms': ['Linux', 'MacOS X', 'Windows'],
-#    'long_description': ('Caffe is a deep learning framework made with '
-#                         'expression,  speed, and modularity in mind. It is '
-#                         'developed by the Berkeley Vision and Learning '
-#                         'Center (BVLC) and community contributors.'),
-#    'install_requires': reqs,
-#    'keywords': ['caffe', 'deep learning'],
-#    'download_url': 'https://github.com/BVLC/caffe',
-#    'classifiers': ['Development Status :: 3 - Alpha',
-#                    'Environment :: Console',
-#                    'Intended Audience :: Developers',
-#                    'Intended Audience :: Science/Research',
-#                    'License :: OSI Approved :: BSD License',
-#                    'Natural Language :: English',
-#                    'Programming Language :: Python :: 2.7',
-#                    'Programming Language :: Python :: 3',
-#                    'Programming Language :: Python :: 3.3',
-#                    'Programming Language :: Python :: 3.4',
-#                    'Topic :: Scientific/Engineering :: Artificial Intelligence',
-#                    'Topic :: Software Development',
-#                    'Topic :: Utilities'],
-#    'zip_safe': False
-#}
-#
-#setup(**config)
