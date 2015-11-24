@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+// LayerParameter next available layer-specific ID: 141 (last added: cpmdata_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -391,6 +391,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional CPMDataParameter cpmdata_param = 140;
 }
 
 // Message that stores parameters used to apply transformation
@@ -410,11 +411,34 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+  optional uint32 stride = 6 [default = 4];
+  optional float scale_cvg = 7 [default = 0.5];
+  optional uint32 max_cvg_len = 8 [default = 50];
+  optional uint32 min_cvg_len = 9 [default = 50];
+  optional bool opaque_coverage = 10 [default = true];
+  optional string coverage = 11 [default = "gridbox_max"];
+  optional float flip_prob = 12 [default = 0.5];
+  optional float max_rotate_degree = 13 [default = 5.0];
+  optional bool visualize = 14 [default = false];
+  optional uint32 crop_size_x = 15 [default = 368];
+  optional uint32 crop_size_y = 16 [default = 368];
+  optional float scale_prob = 17 [default = 0.5];
+  optional float scale_min = 18 [default = 0.9];
+  optional float scale_max = 19 [default = 1.1];
+  optional float bbox_norm_factor = 20 [default = 300];
+  optional string img_header = 21 [default = "."];
   // Force the decoded image to have 3 color channels.
-  optional bool force_color = 6 [default = false];
+  optional bool force_color = 22 [default = false];
   // Force the decoded image to have 1 color channels.
-  optional bool force_gray = 7 [default = false];
+  optional bool force_gray = 23 [default = false];
+  optional float target_dist = 24 [default = 1.0];
+  optional float center_perterb_max = 25 [default = 10.0];
+  optional float sigma = 26 [default = 7.0];
+  optional float sigma_center = 27 [default = 21.0];
+  optional float clahe_tile_size = 28 [default = 8.0];
+  optional float clahe_clip_limit = 29 [default = 4.0];
 }
+
 
 // Message that stores parameters shared by loss layers
 message LossParameter {
@@ -1035,6 +1059,43 @@ message SPPParameter {
   }
   optional Engine engine = 6 [default = DEFAULT];
 }
+
+message CPMDataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
+  // Specify the image data source.
+  optional string source = 1;
+  // Specify the label data source.
+  optional string lbl_source = 11;
+  // Specify the batch size.
+  optional uint32 batch_size = 4;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  // DEPRECATED. Each solver accesses a different subset of the database.
+  optional uint32 rand_skip = 7 [default = 0];
+  optional DB backend = 8 [default = LEVELDB];
+  // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformationParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror data.
+  optional bool mirror = 6 [default = false];
+  // Force the encoded image to have 3 color channels
+  optional bool force_encoded_color = 9 [default = false];
+  // Prefetch queue (Number of batches to prefetch to host memory, increase if
+  // data access bandwidth varies).
+  optional uint32 prefetch = 10 [default = 4];
+}
+
+
 
 // DEPRECATED: use LayerParameter.
 message V1LayerParameter {

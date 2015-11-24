@@ -2,6 +2,9 @@
 #define CAFFE_DATA_TRANSFORMER_HPP
 
 #include <vector>
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
+using namespace cv;
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -36,7 +39,7 @@ class DataTransformer {
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
-
+  void Transform_nv(const Datum& datum, Blob<Dtype>* transformed_blob, Blob<Dtype>* transformed_label_blob, int cnt); //image and label
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Datum.
@@ -127,6 +130,45 @@ class DataTransformer {
   vector<int> InferBlobShape(const cv::Mat& cv_img);
 #endif  // USE_OPENCV
 
+  struct AugmentSelection {
+    bool flip;
+    float degree;
+    Size crop;
+    float scale;
+  };
+
+  struct Joints {
+    vector<Point2f> joints;
+    vector<int> isVisible;
+  };
+
+  struct MetaData {
+    bool isValidation;
+    int numOtherPeople;
+    int people_index;
+    int annolist_index;
+    Point2f objpos; //objpos_x(float), objpos_y (float)
+    float scale_self;
+    Joints joint_self; //(3*16)
+
+    vector<Point2f> objpos_other; //length is numOtherPeople
+    vector<float> scale_other; //length is numOtherPeople
+    vector<Joints> joint_others; //length is numOtherPeople
+  };
+
+  void generateLabelMap(Dtype*, Mat&, MetaData meta);
+  void visualize(Mat& img, MetaData meta, AugmentSelection as);
+
+  bool augmentation_flip(Mat& img, Mat& img_aug, MetaData& meta);
+  float augmentation_rotate(Mat& img_src, Mat& img_aug, MetaData& meta);
+  float augmentation_scale(Mat& img, Mat& img_temp, MetaData& meta);
+  Size augmentation_croppad(Mat& img_temp, Mat& img_aug, MetaData& meta);
+  void RotatePoint(Point2f& p, Mat R);
+  bool onPlane(Point p, Size img_size);
+  void swapLeftRight(Joints& j);
+
+  int np;
+
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
@@ -139,9 +181,13 @@ class DataTransformer {
   virtual int Rand(int n);
 
   void Transform(const Datum& datum, Dtype* transformed_data);
+  void Transform_nv(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt);
+  void ReadMetaData(MetaData& meta, const string& data, size_t offset3, size_t offset1);
+  void clahe(Mat& img, int, int);
+  void putGaussianMaps(Dtype* entry, Point2f center, int stride, int grid_x, int grid_y, float sigma);
+
   // Tranformation parameters
   TransformationParameter param_;
-
 
   shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
