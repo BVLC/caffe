@@ -1,4 +1,5 @@
 import os
+from os.path import join, exists, abspath, dirname
 import subprocess
 from distutils.core import setup
 from distutils.core import Extension
@@ -13,31 +14,36 @@ install_reqs = parse_requirements('requirements.txt',
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
 reqs = [str(ir.req) for ir in install_reqs]
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-SRC_DIR = os.path.join(BASE_DIR, 'src', 'caffe')
-INC_DIR = os.path.join(BASE_DIR, 'include')
+BASE_DIR = abspath(join(dirname(__file__), '..'))
+PROTO_DIR = join(BASE_DIR, 'src', 'caffe', 'proto')
+SRC_DIR = join(BASE_DIR, 'src')
+INC_DIR = join(BASE_DIR, 'include')
+SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
+           join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
 
-subprocess.call(['protoc', '--proto_path', os.path.join(SRC_DIR, 'proto'),
-                 os.path.join(SRC_DIR, 'proto', 'caffe.proto'),
-                 '--cpp_out', SRC_DIR])
+if not exists(SRC_GEN[0]) or not exists(SRC_GEN[1]):
+    print("Generating {}".format(SRC_GEN))
+    subprocess.call(['protoc',
+                     join(PROTO_DIR, 'caffe.proto'),
+                     '--proto_path', PROTO_DIR,
+                     '--cpp_out', PROTO_DIR])
 
 def get_sources():
     sources = []
     for dirName, subdirList, fileList in os.walk(SRC_DIR):
         for fname in fileList:
             if fname.endswith('.cpp'):
-                sources.append(os.path.join(dirName, fname))
+                sources.append(join(dirName, fname))
 
     return sources
 
-print(get_sources())
 caffe_module = Extension(
     'caffe',
     define_macros = [('CPU_ONLY', '1')],
     libraries = ['openblas'],
     include_dirs = [
-        INC_DIR,
         SRC_DIR,
+        INC_DIR,
         '/usr/include/python2.7',
         '/usr/lib/python2.7/dist-packages/numpy/core/include'
     ],
