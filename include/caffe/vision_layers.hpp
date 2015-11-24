@@ -659,7 +659,7 @@ class SPPLayer : public Layer<Dtype> {
 
 /*
  * @brief Does unpooling operation on the network like Zeiler's paper in ECCV 2014
- * TODO(mariolew) Through documentation on the useage of unpooling layer. 
+ * TODO(mariolew) Through documentation on the useage of unpooling layer.
  */
  template <typename Dtype>
  class UnpoolingLayer : public Layer <Dtype> {
@@ -670,12 +670,12 @@ class SPPLayer : public Layer<Dtype> {
                              const vector<Blob<Dtype>*>& top);
      virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
                          const vector<Blob<Dtype>*>& top);
-     virtual inline const char* type() const { return "UnPooling";  }
+     virtual inline const char* type() const { return "Unpooling";  }
      //virtual inline int MinBottomBlobs() const { return 1;  }
      //virtual inline int MaxBottomBlobs() const { return 2;  }
      virtual inline int ExactNumBottomBlobs() const { return 2; }
      virtual inline int ExactNumTopBlobs() const { return 1;  }
-     
+
      protected:
      virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                               const vector<Blob<Dtype>*>& top);
@@ -683,7 +683,7 @@ class SPPLayer : public Layer<Dtype> {
     //                          const vector<Blob<Dtype>*>& top);
      virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
                                const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-        NOT_IMPLEMENTED;                               
+        NOT_IMPLEMENTED;
     }
     // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
     //                                  const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
@@ -695,7 +695,7 @@ class SPPLayer : public Layer<Dtype> {
      int height_, width_;
      int unpooled_height_, unpooled_width_;
      bool global_pooling_;
-    
+
 
  };
 

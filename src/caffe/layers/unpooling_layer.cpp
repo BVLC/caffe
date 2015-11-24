@@ -9,6 +9,7 @@
 #include <cfloat>
 #include <vector>
 
+
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -111,7 +112,6 @@ void UnpoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype *bottom_data = bottom[0]->cpu_data();
   const Dtype *mask = bottom[1]->cpu_data();
   Dtype *top_data = top[0]->mutable_cpu_data();
-
   // Init the top blob to be all zero since only special places
   // wouldn't be zero then.
   caffe_set(top[0]->count(), Dtype(0), top_data);
@@ -122,9 +122,12 @@ void UnpoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           for (int c = 0; c < channels_; ++c) {
               for (int ph = 0; ph < height_; ++ph) {
                   for (int pw = 0; pw < width_; ++pw) {
-                      const int index = ph * height_ + pw;
+                      const int index = ph * width_ + pw;
                       const int top_index = mask[index];
                       top_data[top_index] = bottom_data[index];
+                      /*if (mask[19] == 34) {
+                        top_data[34] = 18;
+                      }*/
                   }
               }
               //switch to next channel

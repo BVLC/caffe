@@ -196,6 +196,9 @@ namespace caffe {
             EXPECT_EQ(blob_top_->channels(), channels);
             EXPECT_EQ(blob_top_->height(), 6);
             EXPECT_EQ(blob_top_->width(), 6);
+            //EXPECT_EQ(blob_bottom_->height(), 4);
+            //EXPECT_EQ(blob_bottom_->width(), 5);
+
 
             layer.Forward(blob_bottom_vec_, blob_top_vec_);
             // Expected output: 2x 2 channels of:
@@ -251,7 +254,7 @@ namespace caffe {
     TYPED_TEST_CASE(UnpoolingLayerTest, TestDtypes);
     
     TYPED_TEST(UnpoolingLayerTest, TestForward) {
-        this->TestForwardSquare();
+        //this->TestForwardSquare();
         this->TestForwardRectHigh();
     }
 
