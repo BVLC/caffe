@@ -236,10 +236,10 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   //const int lb_width = transformed_label->width();
   const int lb_num = transformed_label->num();
 
-  LOG(INFO) << "image shape: " << transformed_data->num() << " " << transformed_data->channels() << " " 
-                               << transformed_data->height() << " " << transformed_data->width();
-  LOG(INFO) << "label shape: " << transformed_label->num() << " " << transformed_label->channels() << " " 
-                               << transformed_label->height() << " " << transformed_label->width();
+  //LOG(INFO) << "image shape: " << transformed_data->num() << " " << transformed_data->channels() << " " 
+  //                             << transformed_data->height() << " " << transformed_data->width();
+  //LOG(INFO) << "label shape: " << transformed_label->num() << " " << transformed_label->channels() << " " 
+  //                             << transformed_label->height() << " " << transformed_label->width();
 
   CHECK_EQ(datum_channels, 4);
   CHECK_EQ(im_channels, 4);
