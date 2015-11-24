@@ -192,7 +192,7 @@ void Classifier::Preprocess(const cv::Mat& img,
   /* Convert the input image to the input image format of the network. */
   cv::Mat sample;
   /* OpenCV 2 preprocess*/
-  #if (defined(CV_VERSION_EPOCH) && CV_VERSION_EPOCH == 2) 
+  #if (defined(CV_VERSION_EPOCH) && CV_VERSION_EPOCH == 2)
     if (img.channels() == 3 && num_channels_ == 1)
       cv::cvtColor(img, sample, CV_BGR2GRAY);
     else if (img.channels() == 4 && num_channels_ == 1)
