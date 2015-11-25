@@ -17,9 +17,8 @@ SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
            join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-#install_reqs = parse_requirements(join(BASE_DIR, 'python', 'requirements.txt'),
-#                                  session=pip.download.PipSession())
-install_reqs = []
+install_reqs = parse_requirements('requirements.txt',
+                                  session=pip.download.PipSession())
 
 # reqs is a list of requirement
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
