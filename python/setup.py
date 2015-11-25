@@ -25,21 +25,36 @@ install_reqs = parse_requirements('requirements.txt',
 reqs = [str(ir.req) for ir in install_reqs]
 
 def make_caffe_proto_module():
+    """
+    Creates the
+    """
     module_dir = join(PYTHON_DIR, 'caffe', 'proto')
     module_file = join(module_dir, '__init__.py')
-    if exists(module_file):
-        return
-
     try:
         os.makedirs(module_dir)
     except OSError:
         pass
 
+    # Makes an empty __init__ file for the caffe.proto module
     with open(module_file, 'w') as f:
         f.write('')
 
+    # Converts the caffe.proto protocol buffer into a python format
+    subprocess.call(['protoc',
+                     join(PROTO_DIR, 'caffe.proto'),
+                     '--proto_path', PROTO_DIR,
+                     '--python_out', join(PYTHON_DIR, 'caffe', 'proto')])
+
+
 def get_sources():
     sources = []
+
+    # Generates cc files from proto buffer
+    subprocess.call(['protoc',
+                     join(PROTO_DIR, 'caffe.proto'),
+                     '--proto_path', PROTO_DIR,
+                     '--cpp_out', PROTO_DIR])
+
     for dirName, subdirList, fileList in os.walk(SRC_DIR):
         if os.path.basename(dirName) in ('test'):
             # Skip tests, utils
@@ -57,11 +72,6 @@ def get_sources():
 
 
 make_caffe_proto_module()
-subprocess.call(['protoc',
-                 join(PROTO_DIR, 'caffe.proto'),
-                 '--proto_path', PROTO_DIR,
-                 '--cpp_out', PROTO_DIR,
-                 '--python_out', join(PYTHON_DIR, 'caffe', 'proto')])
 
 caffe_module = Extension(
     join('caffe', '_caffe'),
