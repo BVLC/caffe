@@ -8,7 +8,7 @@ from distutils.core import Extension
 import pip.download
 from pip.req import parse_requirements
 
-BASE_DIR = abspath(dirname(__file__))
+BASE_DIR = abspath(join(dirname(__file__), '..'))
 PROTO_DIR = join(BASE_DIR, 'src', 'caffe', 'proto')
 SRC_DIR = join(BASE_DIR, 'src')
 PYTHON_DIR = join(BASE_DIR, 'python')
@@ -25,12 +25,16 @@ install_reqs = []
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
 reqs = [str(ir.req) for ir in install_reqs]
 
-if not exists(SRC_GEN[0]) or not exists(SRC_GEN[1]):
-    print("Generating {}".format(SRC_GEN))
-    subprocess.call(['protoc',
-                     join(PROTO_DIR, 'caffe.proto'),
-                     '--proto_path', PROTO_DIR,
-                     '--cpp_out', PROTO_DIR])
+try:
+    os.makedirs(join(PYTHON_DIR, 'caffe', 'proto'))
+except OSError:
+    pass
+
+subprocess.call(['protoc',
+                 join(PROTO_DIR, 'caffe.proto'),
+                 '--proto_path', PROTO_DIR,
+                 '--cpp_out', PROTO_DIR,
+                 '--python_out', join(PYTHON_DIR, 'caffe', 'proto')])
 
 def get_sources():
     sources = []
@@ -39,15 +43,22 @@ def get_sources():
             # Skip tests, utils
             continue
         for fname in fileList:
-            if fname.endswith('.cpp'):
+            if fname.endswith('.cpp') or fname.endswith('.cc'):
+                sources.append(join(dirName, fname))
+
+    for dirName, subdirList, fileList in os.walk(PYTHON_DIR):
+        for fname in fileList:
+            if fname.endswith('.cpp') or fname.endswith('.cc'):
                 sources.append(join(dirName, fname))
 
     return sources
 
 caffe_module = Extension(
-    '_caffe',
+    join('caffe', '_caffe'),
     define_macros = [('CPU_ONLY', '1')],
-    libraries = ['blas'],
+    libraries = ['cblas', 'blas', 'boost_thread', 'glog', 'gflags', 'protobuf',
+                 'boost_python', 'boost_system', 'boost_filesystem', 'm',
+                 'hdf5_hl', 'hdf5'],
     include_dirs = [
         SRC_DIR,
         INC_DIR,
@@ -67,8 +78,8 @@ setup(
     url = 'https://github.com/BVLC/caffe',
     license = 'BSD',
     ext_modules = [caffe_module],
-    packages = ['python/caffe'],
-    scripts = ['python/classify.py', 'python/detect.py', 'python/draw_net.py'],
+    packages = ['caffe'],
+    scripts = ['classify.py', 'detect.py', 'draw_net.py'],
     platforms = ['Linux', 'MacOS X', 'Windows'],
     long_description = ('Caffe is a deep learning framework made with '
                         'expression,  speed, and modularity in mind. It is '
