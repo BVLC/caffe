@@ -25,16 +25,19 @@ install_reqs = []
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
 reqs = [str(ir.req) for ir in install_reqs]
 
-try:
-    os.makedirs(join(PYTHON_DIR, 'caffe', 'proto'))
-except OSError:
-    pass
+def make_caffe_proto_module():
+    module_dir = join(PYTHON_DIR, 'caffe', 'proto')
+    module_file = join(module_dir, '__init__.py')
+    if exists(module_file):
+        return
 
-subprocess.call(['protoc',
-                 join(PROTO_DIR, 'caffe.proto'),
-                 '--proto_path', PROTO_DIR,
-                 '--cpp_out', PROTO_DIR,
-                 '--python_out', join(PYTHON_DIR, 'caffe', 'proto')])
+    try:
+        os.makedirs(module_dir)
+    except OSError:
+        pass
+
+    with open(module_file, 'w') as f:
+        f.write('')
 
 def get_sources():
     sources = []
@@ -52,6 +55,14 @@ def get_sources():
                 sources.append(join(dirName, fname))
 
     return sources
+
+
+make_caffe_proto_module()
+subprocess.call(['protoc',
+                 join(PROTO_DIR, 'caffe.proto'),
+                 '--proto_path', PROTO_DIR,
+                 '--cpp_out', PROTO_DIR,
+                 '--python_out', join(PYTHON_DIR, 'caffe', 'proto')])
 
 caffe_module = Extension(
     join('caffe', '_caffe'),
