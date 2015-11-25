@@ -437,6 +437,7 @@ message TransformationParameter {
   optional float sigma_center = 27 [default = 21.0];
   optional float clahe_tile_size = 28 [default = 8.0];
   optional float clahe_clip_limit = 29 [default = 4.0];
+  optional bool do_clahe = 30 [default = true];
 }
 
 

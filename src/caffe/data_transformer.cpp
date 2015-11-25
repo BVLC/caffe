@@ -316,7 +316,8 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   }
 
   //color, contract
-  clahe(img, clahe_tileSize, clahe_clipLimit);
+  if(param_.do_clahe())
+    clahe(img, clahe_tileSize, clahe_clipLimit);
 
   int offset3 = 3 * offset;
   int offset1 = datum_width;
@@ -369,9 +370,9 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   for (int i = 0; i < img_aug.rows; ++i) {
     for (int j = 0; j < img_aug.cols; ++j) {
       Vec3b& rgb = img_aug.at<Vec3b>(i, j);
-      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/128.0;
-      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/128.0;
-      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/128.0;
+      transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
+      transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
+      transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
     }
   }
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
