@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 import os
 from os.path import join, exists, abspath, dirname
 import subprocess
@@ -15,8 +17,9 @@ SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
            join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-install_reqs = parse_requirements(join(BASE_DIR, 'python', 'requirements.txt'),
-                                  session=pip.download.PipSession())
+#install_reqs = parse_requirements(join(BASE_DIR, 'python', 'requirements.txt'),
+#                                  session=pip.download.PipSession())
+install_reqs = []
 
 # reqs is a list of requirement
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
@@ -32,14 +35,9 @@ if not exists(SRC_GEN[0]) or not exists(SRC_GEN[1]):
 def get_sources():
     sources = []
     for dirName, subdirList, fileList in os.walk(SRC_DIR):
-        if os.path.basename(dirName) == 'test':
-            # Skip tests
+        if os.path.basename(dirName) in ('test'):
+            # Skip tests, utils
             continue
-        for fname in fileList:
-            if fname.endswith('.cpp'):
-                sources.append(join(dirName, fname))
-
-    for dirName, subdirList, fileList in os.walk(PYTHON_DIR):
         for fname in fileList:
             if fname.endswith('.cpp'):
                 sources.append(join(dirName, fname))
@@ -47,9 +45,9 @@ def get_sources():
     return sources
 
 caffe_module = Extension(
-    'caffe',
+    '_caffe',
     define_macros = [('CPU_ONLY', '1')],
-    libraries = ['openblas'],
+    libraries = ['blas'],
     include_dirs = [
         SRC_DIR,
         INC_DIR,
@@ -69,8 +67,8 @@ setup(
     url = 'https://github.com/BVLC/caffe',
     license = 'BSD',
     ext_modules = [caffe_module],
-    #packages = find_packages(),
-    scripts = ['classify.py', 'detect.py', 'draw_net.py'],
+    packages = ['python/caffe'],
+    scripts = ['python/classify.py', 'python/detect.py', 'python/draw_net.py'],
     platforms = ['Linux', 'MacOS X', 'Windows'],
     long_description = ('Caffe is a deep learning framework made with '
                         'expression,  speed, and modularity in mind. It is '
@@ -92,6 +90,6 @@ setup(
                    'Topic :: Scientific/Engineering :: Artificial Intelligence',
                    'Topic :: Software Development',
                    'Topic :: Utilities'],
-    zip_safe = False,
+    provides = ['caffe'],
 )
 
