@@ -32,6 +32,9 @@ if not exists(SRC_GEN[0]) or not exists(SRC_GEN[1]):
 def get_sources():
     sources = []
     for dirName, subdirList, fileList in os.walk(SRC_DIR):
+        if os.path.basename(dirName) == 'test':
+            # Skip tests
+            continue
         for fname in fileList:
             if fname.endswith('.cpp'):
                 sources.append(join(dirName, fname))
@@ -54,6 +57,7 @@ caffe_module = Extension(
         '/usr/lib/python2.7/dist-packages/numpy/core/include'
     ],
     sources = get_sources(),
+    extra_compile_args = ['-Wno-sign-compare'],
 )
 
 setup(
