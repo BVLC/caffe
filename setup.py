@@ -8,7 +8,7 @@ from distutils.core import Extension
 import pip.download
 from pip.req import parse_requirements
 
-BASE_DIR = abspath(join(dirname(__file__), '..'))
+BASE_DIR = abspath(dirname(__file__))
 PROTO_DIR = join(BASE_DIR, 'src', 'caffe', 'proto')
 SRC_DIR = join(BASE_DIR, 'src')
 INC_DIR = join(BASE_DIR, 'include')
@@ -16,7 +16,7 @@ SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
            join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
 
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-install_reqs = parse_requirements('requirements.txt',
+install_reqs = parse_requirements(join('python', 'requirements.txt'),
                                   session=pip.download.PipSession())
 
 # reqs is a list of requirement
@@ -27,7 +27,7 @@ def make_caffe_proto_module():
     """
     Creates the
     """
-    module_dir = join('caffe', 'proto')
+    module_dir = join(BASE_DIR, 'python', 'caffe', 'proto')
     module_file = join(module_dir, '__init__.py')
     try:
         os.makedirs(module_dir)
@@ -42,7 +42,7 @@ def make_caffe_proto_module():
     subprocess.call(['protoc',
                      join(PROTO_DIR, 'caffe.proto'),
                      '--proto_path', PROTO_DIR,
-                     '--python_out', join('caffe', 'proto')])
+                     '--python_out', join(BASE_DIR, 'caffe', 'proto')])
 
 
 def get_sources():
@@ -97,6 +97,7 @@ setup(
     url = 'https://github.com/BVLC/caffe',
     license = 'BSD',
     ext_modules = [caffe_module],
+    package_dir = {'': 'python'},
     packages = ['caffe', join('caffe', 'proto')],
     scripts = ['classify.py', 'detect.py', 'draw_net.py'],
     platforms = ['Linux', 'MacOS X', 'Windows'],
