@@ -35,7 +35,7 @@ master |4438ms                    |8164ms|8644ms |323ms
 
 #### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (OpenBLAS 0.2.14, GCC 4.8.3):
 Branch | googlenet(speedup: 2.4) | caffenet (speedup: 3.7) | alexnet(speedup: 1.1)| ciphar10-sigmoid-bn(speedup: 6.6) 
-----------|-----------------------|-------------------------------|-----------------------------
+----------|-----------------------|-------------------------------|----------|-------------------
 openmp (using OMP_NUM_THREADS=36)| 7033ms|7076ms |57980ms|81ms  
 master |16848ms 	|26130ms 	|62091ms|538ms
 
