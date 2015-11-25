@@ -6,20 +6,21 @@ from distutils.core import Extension
 import pip.download
 from pip.req import parse_requirements
 
+BASE_DIR = abspath(dirname(__file__))
+PROTO_DIR = join(BASE_DIR, 'src', 'caffe', 'proto')
+SRC_DIR = join(BASE_DIR, 'src')
+PYTHON_DIR = join(BASE_DIR, 'python')
+INC_DIR = join(BASE_DIR, 'include')
+SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
+           join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
+
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
-install_reqs = parse_requirements('requirements.txt',
+install_reqs = parse_requirements(join(BASE_DIR, 'python', 'requirements.txt'),
                                   session=pip.download.PipSession())
 
 # reqs is a list of requirement
 # e.g. ['django==1.5.1', 'mezzanine==1.4.6']
 reqs = [str(ir.req) for ir in install_reqs]
-
-BASE_DIR = abspath(join(dirname(__file__), '..'))
-PROTO_DIR = join(BASE_DIR, 'src', 'caffe', 'proto')
-SRC_DIR = join(BASE_DIR, 'src')
-INC_DIR = join(BASE_DIR, 'include')
-SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
-           join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
 
 if not exists(SRC_GEN[0]) or not exists(SRC_GEN[1]):
     print("Generating {}".format(SRC_GEN))
@@ -31,6 +32,11 @@ if not exists(SRC_GEN[0]) or not exists(SRC_GEN[1]):
 def get_sources():
     sources = []
     for dirName, subdirList, fileList in os.walk(SRC_DIR):
+        for fname in fileList:
+            if fname.endswith('.cpp'):
+                sources.append(join(dirName, fname))
+
+    for dirName, subdirList, fileList in os.walk(PYTHON_DIR):
         for fname in fileList:
             if fname.endswith('.cpp'):
                 sources.append(join(dirName, fname))
@@ -57,14 +63,10 @@ setup(
                     'speed, and modularity in mind.'),
     author = 'BVLC members and the open-source community',
     url = 'https://github.com/BVLC/caffe',
-    long_description = '''
-    This is really just a demo package.
-    ''',
     license = 'BSD',
-    ext_modules = [caffe_module]
-    packages = find_packages(),
-    scripts = ['classify.py', 'detect.py', 'draw_net.py'],
     ext_modules = [caffe_module],
+    #packages = find_packages(),
+    scripts = ['classify.py', 'detect.py', 'draw_net.py'],
     platforms = ['Linux', 'MacOS X', 'Windows'],
     long_description = ('Caffe is a deep learning framework made with '
                         'expression,  speed, and modularity in mind. It is '
