@@ -11,7 +11,6 @@ from pip.req import parse_requirements
 BASE_DIR = abspath(join(dirname(__file__), '..'))
 PROTO_DIR = join(BASE_DIR, 'src', 'caffe', 'proto')
 SRC_DIR = join(BASE_DIR, 'src')
-PYTHON_DIR = join(BASE_DIR, 'python')
 INC_DIR = join(BASE_DIR, 'include')
 SRC_GEN = [join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.h'),
            join(SRC_DIR, 'caffe', 'proto', 'caffe.pb.cc')]
@@ -28,7 +27,7 @@ def make_caffe_proto_module():
     """
     Creates the
     """
-    module_dir = join(PYTHON_DIR, 'caffe', 'proto')
+    module_dir = join('caffe', 'proto')
     module_file = join(module_dir, '__init__.py')
     try:
         os.makedirs(module_dir)
@@ -43,7 +42,7 @@ def make_caffe_proto_module():
     subprocess.call(['protoc',
                      join(PROTO_DIR, 'caffe.proto'),
                      '--proto_path', PROTO_DIR,
-                     '--python_out', join(PYTHON_DIR, 'caffe', 'proto')])
+                     '--python_out', join('caffe', 'proto')])
 
 
 def get_sources():
@@ -63,7 +62,7 @@ def get_sources():
             if fname.endswith('.cpp') or fname.endswith('.cc'):
                 sources.append(join(dirName, fname))
 
-    for dirName, subdirList, fileList in os.walk(PYTHON_DIR):
+    for dirName, subdirList, fileList in os.walk('.'):
         for fname in fileList:
             if fname.endswith('.cpp') or fname.endswith('.cc'):
                 sources.append(join(dirName, fname))
