@@ -18,64 +18,53 @@ SRC_GEN = [join(SRC_DIR, 'caffe/proto/caffe.pb.h'),
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 install_reqs = parse_requirements('python/requirements.txt',
                                   session=pip.download.PipSession())
-
-# reqs is a list of requirement
-# e.g. ['django==1.5.1', 'mezzanine==1.4.6']
 reqs = [str(ir.req) for ir in install_reqs]
 
-def make_caffe_proto_module():
-    """
-    Creates the
-    """
-    module_dir = join(BASE_DIR, 'python/caffe/proto')
+# Create the proto module in python/caffe, from the caffe proto buffer
+module_dir = join(BASE_DIR, 'python/caffe/proto')
 
-    try:
-        os.makedirs(module_dir)
-    except OSError:
-        pass
+try:
+    os.makedirs(module_dir)
+except OSError:
+    pass
 
-    # Makes an empty __init__ file for the caffe.proto module
-    if not exists(join(module_dir, '__init__.py')):
-        with open(join(module_dir, '__init__.py'), 'w') as f:
-            f.write('')
+# Makes an empty __init__ file for the caffe.proto module
+if not exists(join(module_dir, '__init__.py')):
+    with open(join(module_dir, '__init__.py'), 'w') as f:
+        f.write('')
 
-    if not exists(join(module_dir, 'caffe_pb2.py')):
-        # Converts the caffe.proto protocol buffer into a python format
-        subprocess.call(['protoc',
-                         join(PROTO_DIR, 'caffe.proto'),
-                         '--proto_path', PROTO_DIR,
-                         '--python_out', join(BASE_DIR, 'python/caffe/proto')])
+if not exists(join(module_dir, 'caffe_pb2.py')):
+    # Converts the caffe.proto protocol buffer into a python format
+    subprocess.call(['protoc',
+                     join(PROTO_DIR, 'caffe.proto'),
+                     '--proto_path', PROTO_DIR,
+                     '--python_out', join(BASE_DIR, 'python/caffe/proto')])
 
+# Find source files in src/* and python/*
+sources = []
 
-def get_sources():
-    sources = []
+# Generates cc files from proto buffer
+if (not exists(join(PROTO_DIR, 'caffe.pb.cc')) or
+        not exists(join(PROTO_DIR, 'caffe.pb.h'))):
+    # Converts the caffe.proto protocol buffer into a python format
+    subprocess.call(['protoc',
+                     join(PROTO_DIR, 'caffe.proto'),
+                     '--proto_path', PROTO_DIR,
+                     '--cpp_out', PROTO_DIR])
 
-    # Generates cc files from proto buffer
-    if (not exists(join(PROTO_DIR, 'caffe.pb.cc')) or
-            not exists(join(PROTO_DIR, 'caffe.pb.h'))):
-        # Converts the caffe.proto protocol buffer into a python format
-        subprocess.call(['protoc',
-                         join(PROTO_DIR, 'caffe.proto'),
-                         '--proto_path', PROTO_DIR,
-                         '--cpp_out', PROTO_DIR])
+for dirName, subdirList, fileList in os.walk(SRC_DIR):
+    if os.path.basename(dirName) in ('test'):
+        # Skip tests, utils
+        continue
+    for fname in fileList:
+        if fname.endswith('.cpp') or fname.endswith('.cc'):
+            sources.append(join(dirName, fname))
 
-    for dirName, subdirList, fileList in os.walk(SRC_DIR):
-        if os.path.basename(dirName) in ('test'):
-            # Skip tests, utils
-            continue
-        for fname in fileList:
-            if fname.endswith('.cpp') or fname.endswith('.cc'):
-                sources.append(join(dirName, fname))
+for dirName, subdirList, fileList in os.walk('python'):
+    for fname in fileList:
+        if fname.endswith('.cpp') or fname.endswith('.cc'):
+            sources.append(join(dirName, fname))
 
-    for dirName, subdirList, fileList in os.walk('python'):
-        for fname in fileList:
-            if fname.endswith('.cpp') or fname.endswith('.cc'):
-                sources.append(join(dirName, fname))
-
-    return sources
-
-
-make_caffe_proto_module()
 
 caffe_module = Extension(
     'caffe/_caffe',
@@ -89,7 +78,7 @@ caffe_module = Extension(
         '/usr/include/python2.7',
         '/usr/lib/python2.7/dist-packages/numpy/core/include'
     ],
-    sources = get_sources(),
+    sources = sources,
     extra_compile_args = ['-Wno-sign-compare'],
 )
 
