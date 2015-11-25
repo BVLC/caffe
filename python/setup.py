@@ -89,7 +89,7 @@ setup(
     url = 'https://github.com/BVLC/caffe',
     license = 'BSD',
     ext_modules = [caffe_module],
-    packages = ['caffe'],
+    packages = ['caffe', join('caffe', 'proto')],
     scripts = ['classify.py', 'detect.py', 'draw_net.py'],
     platforms = ['Linux', 'MacOS X', 'Windows'],
     long_description = ('Caffe is a deep learning framework made with '
