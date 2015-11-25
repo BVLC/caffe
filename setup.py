@@ -57,7 +57,7 @@ def get_sources():
         subprocess.call(['protoc',
                          join(PROTO_DIR, 'caffe.proto'),
                          '--proto_path', PROTO_DIR,
-                         '--python_out', join(BASE_DIR, 'python/caffe/proto')])
+                         '--cpp_out', PROTO_DIR])
 
     for dirName, subdirList, fileList in os.walk(SRC_DIR):
         if os.path.basename(dirName) in ('test'):
