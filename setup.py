@@ -62,7 +62,7 @@ def get_sources():
             if fname.endswith('.cpp') or fname.endswith('.cc'):
                 sources.append(join(dirName, fname))
 
-    for dirName, subdirList, fileList in os.walk('.'):
+    for dirName, subdirList, fileList in os.walk('python'):
         for fname in fileList:
             if fname.endswith('.cpp') or fname.endswith('.cc'):
                 sources.append(join(dirName, fname))
@@ -99,7 +99,8 @@ setup(
     ext_modules = [caffe_module],
     package_dir = {'': 'python'},
     packages = ['caffe', join('caffe', 'proto')],
-    scripts = ['classify.py', 'detect.py', 'draw_net.py'],
+    scripts = [join('python/classify.py'), join('python', 'detect.py'),
+               join('python', 'draw_net.py')],
     platforms = ['Linux', 'MacOS X', 'Windows'],
     long_description = ('Caffe is a deep learning framework made with '
                         'expression,  speed, and modularity in mind. It is '
