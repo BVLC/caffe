@@ -7,6 +7,26 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#if defined(__GNUC__)
+  #define popcount __builtin_popcount
+  #define popcountl __builtin_popcountl
+#elif defined(_MSC_VER)
+  #define popcount __popcnt
+  #define popcountl __popcnt64
+#else
+  #warning Builtin popcount may not be available on your platform.
+  int popcount(uint32_t x) {
+    uint32_t c = 0;
+    for (; x > 0; x &= x -1) c++;
+    return c;
+  }
+  uint64_t popcountl(uint64_t x) {
+    uint64_t c = 0;
+    for (; x > 0; x &= x -1) c++;
+    return c;
+  }
+#endif
+
 namespace caffe {
 
 template<>
@@ -353,8 +373,8 @@ int caffe_cpu_hamming_distance<float>(const int n, const float* x,
                                   const float* y) {
   int dist = 0;
   for (int i = 0; i < n; ++i) {
-    dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
-                               static_cast<uint32_t>(y[i]));
+    dist += popcount(static_cast<uint32_t>(x[i]) ^
+                     static_cast<uint32_t>(y[i]));
   }
   return dist;
 }
@@ -364,8 +384,8 @@ int caffe_cpu_hamming_distance<double>(const int n, const double* x,
                                    const double* y) {
   int dist = 0;
   for (int i = 0; i < n; ++i) {
-    dist += __builtin_popcountl(static_cast<uint64_t>(x[i]) ^
-                                static_cast<uint64_t>(y[i]));
+    dist += popcountl(static_cast<uint64_t>(x[i]) ^
+                      static_cast<uint64_t>(y[i]));
   }
   return dist;
 }
