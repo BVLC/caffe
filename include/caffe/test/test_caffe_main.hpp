@@ -38,7 +38,11 @@ class MultiDeviceTest : public ::testing::Test {
   virtual ~MultiDeviceTest() {}
 };
 
+#ifdef USE_OCL
+typedef ::testing::Types<float> TestDtypes;
+#else
 typedef ::testing::Types<float, double> TestDtypes;
+#endif
 
 template <typename TypeParam>
 struct CPUDevice {
@@ -66,10 +70,14 @@ struct GPUDevice {
 template <typename Dtype>
 class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 };
-
+#ifdef USE_OCL
+typedef ::testing::Types<GPUDevice<float> >
+                         TestDtypesAndDevices;
+#else
 typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
                          GPUDevice<float>, GPUDevice<double> >
                          TestDtypesAndDevices;
+#endif
 
 #endif
 

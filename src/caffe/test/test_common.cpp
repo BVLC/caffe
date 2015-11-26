@@ -1,3 +1,6 @@
+#ifdef USE_OCL
+#include <clBLAS.h>
+#endif
 #include "gtest/gtest.h"
 
 #include "caffe/common.hpp"
@@ -12,11 +15,21 @@ class CommonTest : public ::testing::Test {};
 
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
+#ifdef USE_OCL
+TEST_F(CommonTest, TestClblasHandlerGPU) {
+  EXPECT_EQ(clblasSetup(), clblasSuccess);
+  // Commenting out teardown as it causes test_all to fail
+  // since tests depend on clBlasSetup
+  // to be called during clState creation.
+  // clblasTeardown();
+}
+#else
 TEST_F(CommonTest, TestCublasHandlerGPU) {
   int cuda_device_id;
   CUDA_CHECK(cudaGetDevice(&cuda_device_id));
   EXPECT_TRUE(Caffe::cublas_handle());
 }
+#endif
 
 #endif
 
@@ -44,6 +57,24 @@ TEST_F(CommonTest, TestRandSeedCPU) {
 
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
+#ifdef USE_OCL
+TEST_F(CommonTest, TestRandSeedGPU) {
+  SyncedMemory data_a(10 * sizeof(unsigned int));
+  SyncedMemory data_b(10 * sizeof(unsigned int));
+  Caffe::set_random_seed(1701);
+  caffe_gpu_rng_uniform(10,
+      static_cast<unsigned int*>(data_a.mutable_gpu_data()));
+  Caffe::set_random_seed(1701);
+  caffe_gpu_rng_uniform(10,
+      static_cast<unsigned int*>(data_b.mutable_gpu_data()));
+
+
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(((const unsigned int*)(data_a.cpu_data()))[i],
+        ((const unsigned int*)(data_b.cpu_data()))[i]);
+  }
+}
+#else
 TEST_F(CommonTest, TestRandSeedGPU) {
   SyncedMemory data_a(10 * sizeof(unsigned int));
   SyncedMemory data_b(10 * sizeof(unsigned int));
@@ -58,6 +89,7 @@ TEST_F(CommonTest, TestRandSeedGPU) {
         ((const unsigned int*)(data_b.cpu_data()))[i]);
   }
 }
+#endif
 
 #endif
 

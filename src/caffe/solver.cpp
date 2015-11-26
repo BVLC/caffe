@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "caffe/common.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
@@ -451,7 +452,12 @@ string Solver<Dtype>::SnapshotFilename(const string extension) {
   string filename(param_.snapshot_prefix());
   const int kBufferSize = 20;
   char iter_str_buffer[kBufferSize];
+  // Add one to iter_ to get the number of iterations that have completed.
+#ifdef _MSC_VER
+  _snprintf_s(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
+#else
   snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
+#endif
   return filename + iter_str_buffer + extension;
 }
 

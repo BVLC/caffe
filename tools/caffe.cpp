@@ -82,7 +82,11 @@ static void get_gpus(vector<int>* gpus) {
   if (FLAGS_gpu == "all") {
     int count = 0;
 #ifndef CPU_ONLY
+#ifndef USE_OCL
     CUDA_CHECK(cudaGetDeviceCount(&count));
+#else
+    gpus->push_back(0);
+#endif
 #else
     NO_GPU;
 #endif
@@ -92,7 +96,14 @@ static void get_gpus(vector<int>* gpus) {
   } else if (FLAGS_gpu.size()) {
     vector<string> strings;
     boost::split(strings, FLAGS_gpu, boost::is_any_of(","));
-    for (int i = 0; i < strings.size(); ++i) {
+    int gpu_count =strings.size();
+#ifndef CPU_ONLY
+#ifdef USE_OCL
+    // OCL backend only support 1 device currently.
+    gpu_count = gpu_count > 0 ? 1 : gpu_count;
+#endif
+#endif
+    for (int i = 0; i < gpu_count; ++i) {
       gpus->push_back(boost::lexical_cast<int>(strings[i]));
     }
   } else {
@@ -115,6 +126,12 @@ int device_query() {
     caffe::Caffe::SetDevice(gpus[i]);
     caffe::Caffe::DeviceQuery();
   }
+#ifdef USE_OCL
+  if (gpus.size() > 0 && gpus[0] >= 0) {
+    // Explicitly call for OCL + FFT
+    caffe::Caffe::TeardownDevice(gpus[0]);
+  }
+#endif
   return 0;
 }
 RegisterBrewFunction(device_query);
@@ -213,6 +230,14 @@ int train() {
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+#ifdef USE_OCL
+  if (gpus.size() > 0 && gpus[0] >= 0) {
+    // Explicitly call for OCL + FFT
+    caffe::Caffe::TeardownDevice(gpus[0]);
+  }
+#endif
+
   return 0;
 }
 RegisterBrewFunction(train);
@@ -280,6 +305,13 @@ int test() {
     }
     LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
+
+#ifdef USE_OCL
+  if (gpus.size() > 0 && gpus[0] >= 0) {
+    // Explicitly call for OCL + FFT
+    caffe::Caffe::TeardownDevice(gpus[0]);
+  }
+#endif
 
   return 0;
 }
@@ -371,6 +403,14 @@ int time() {
     FLAGS_iterations << " ms.";
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
+
+#ifdef USE_OCL
+  if (gpus.size() > 0 && gpus[0] >= 0) {
+    // Explicitly call for OCL + FFT
+    caffe::Caffe::TeardownDevice(gpus[0]);
+  }
+#endif
+
   return 0;
 }
 RegisterBrewFunction(time);

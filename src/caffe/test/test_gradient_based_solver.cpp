@@ -75,7 +75,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     int device_id = 0;
 #ifndef CPU_ONLY
     if (Caffe::mode() == Caffe::GPU) {
+#ifndef USE_OCL
       CUDA_CHECK(cudaGetDevice(&device_id));
+#endif
     }
 #endif
     proto <<
@@ -461,7 +463,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     int available_devices = 1;
 #ifndef CPU_ONLY
     if (Caffe::mode() == Caffe::GPU) {
+#ifndef USE_OCL
       CUDA_CHECK(cudaGetDeviceCount(&available_devices));
+#endif
     }
 #endif
     for (int devices = 1; devices <= available_devices; ++devices) {

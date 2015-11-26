@@ -89,12 +89,17 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
+#ifdef WIN32
+  typedef unsigned int uint;
+#endif
+
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.
 void GlobalInit(int* pargc, char*** pargv);
 
 // A singleton class to hold common caffe stuff, such as the handler that
-// caffe is going to use for cublas, curand, etc.
+// caffe is going to use for cublas, curand (for CUDA), clblas, clfft (for OCL),
+// etc.
 class Caffe {
  public:
   ~Caffe();
@@ -128,10 +133,17 @@ class Caffe {
     return *(Get().random_generator_);
   }
 #ifndef CPU_ONLY
+#ifdef USE_OCL
+  inline static ClState& cl_state() { return Get().cl_state_; }
+#ifdef USE_FFT
+  inline static ClFFTState& cl_fft_state() { return Get().cl_fft_state_; }
+#endif
+#else
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
+#endif
 #endif
 
   // Returns the mode: running on CPU or GPU.
@@ -154,11 +166,20 @@ class Caffe {
   inline static void set_solver_count(int val) { Get().solver_count_ = val; }
   inline static bool root_solver() { return Get().root_solver_; }
   inline static void set_root_solver(bool val) { Get().root_solver_ = val; }
+  // Teardown the device
+  static void TeardownDevice(const int device_id);
 
  protected:
 #ifndef CPU_ONLY
+#ifdef USE_OCL
+  ClState cl_state_;
+#ifdef USE_FFT
+  ClFFTState cl_fft_state_;
+#endif
+#else
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
+#endif
 #endif
   shared_ptr<RNG> random_generator_;
 

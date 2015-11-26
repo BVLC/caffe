@@ -97,6 +97,12 @@ const Dtype* Blob<Dtype>::gpu_data() const {
 }
 
 template <typename Dtype>
+const Dtype* Blob<Dtype>::gpu_data_with_zero_copy() const {
+  CHECK(data_);
+  return (const Dtype*)data_->gpu_data_with_zero_copy();
+}
+
+template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
   return (const Dtype*)diff_->cpu_data();
@@ -118,6 +124,14 @@ template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_gpu_data());
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_gpu_data_with_zero_copy(const int N,
+    Dtype* host_ptr) {
+  CHECK(data_);
+  return static_cast<Dtype*>(
+      data_->mutable_gpu_data_with_zero_copy(N*sizeof(Dtype), host_ptr));
 }
 
 template <typename Dtype>

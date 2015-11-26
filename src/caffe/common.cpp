@@ -3,6 +3,11 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+#include <iterator>
+
+#ifdef _MSC_VER
+  #include <process.h>
+#endif
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
@@ -33,7 +38,12 @@ int64_t cluster_seedgen(void) {
   if (f)
     fclose(f);
 
+#ifdef _MSC_VER 
+  pid = _getpid();
+#else
   pid = getpid();
+#endif
+
   s = time(NULL);
   seed = std::abs(((s * 181) * ((pid - 83) * 359)) % 104729);
   return seed;
@@ -46,7 +56,9 @@ void GlobalInit(int* pargc, char*** pargv) {
   // Google logging.
   ::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
+#ifndef _MSC_VER
   ::google::InstallFailureSignalHandler();
+#endif
 }
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
@@ -70,6 +82,71 @@ void Caffe::DeviceQuery() {
   NO_GPU;
 }
 
+void Caffe::TeardownDevice(const int device_id) {
+  NO_GPU;
+}
+
+
+class Caffe::RNG::Generator {
+ public:
+  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
+  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
+  caffe::rng_t* rng() { return rng_.get(); }
+ private:
+  shared_ptr<caffe::rng_t> rng_;
+};
+
+Caffe::RNG::RNG() : generator_(new Generator()) { }
+
+Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
+
+Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
+  generator_ = other.generator_;
+  return *this;
+}
+
+void* Caffe::RNG::generator() {
+  return static_cast<void*>(generator_->rng());
+}
+
+#elif defined(USE_OCL)  // OCL GPU + CPU
+
+Caffe::Caffe()
+    : random_generator_(), mode_(Caffe::CPU), solver_count_(1), root_solver_(true) {
+}
+
+Caffe::~Caffe() { }
+
+void Caffe::set_random_seed(const unsigned int seed) {
+  // RNG seed
+  srand(seed);
+
+  // RNG seed
+  Get().random_generator_.reset(new RNG(seed));
+}
+
+void Caffe::SetDevice(const int device_id) {
+  Get().cl_state_.set_device(device_id);
+#ifdef USE_FFT  // OCL + FFT
+  Get().cl_fft_state_.setup();
+#endif
+}
+
+void Caffe::DeviceQuery() {
+  if (!Get().cl_state_.is_device_set()) {
+    printf("No OCL device present.\n");
+    return;
+  }
+
+  Get().cl_state_.print_properties(LOG(INFO));
+}
+
+// Should call explicitly for OCL + FFT
+void Caffe::TeardownDevice(const int device_id) {
+#ifdef USE_FFT
+  Get().cl_fft_state_.teardown();
+#endif
+}
 
 class Caffe::RNG::Generator {
  public:
@@ -190,6 +267,10 @@ void Caffe::DeviceQuery() {
   LOG(INFO) << "Kernel execution timeout:      "
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
   return;
+}
+
+void Caffe::TeardownDevice(const int device_id) {
+  // Nothing to do
 }
 
 

@@ -1,0 +1,111 @@
+This directory contains a set of tools intended to facilidate testing, benchmark by developers. The following tools are available currently:
+
+***** collect_benchmark *****
+
+Description: script to collect benchmark results from network models, store the output in csv format and log files will be saved in in ./tools/benchmark_tools/ directory.
+
+Usage: run collect_benchmark.py from the caffe_root folder with below command:
+        
+        By default runs in CPU mode. To collect benchmark results for GPU add "gpu" as the last argument
+ 
+        1. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark.py [gpu]"to run in GPU mode"
+                All the net models will be executed
+        2. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark.py [iteration number] [gpu]"to run in GPU mode"
+                All the net models will be executed and the output will have iteration number along with it     
+        3. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark.py [benchmark name] [iteration number] [gpu]"to run in GPU mode"
+                Specified net models will be executed and the output will have iteration number along with it
+        4. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark.py [benchmark name] [gpu]"to run in GPU mode"
+                Specified net model will be executed]
+
+benchmark_name = optional argument which can be one of the following:
+1. alexnet
+2. caffenet
+3. lenet
+ 
+iteration_number = optional argument which represents the number of iteration as mentioned in the .prototxt file or as per user requirement
+
+***** collect_benchmark_excel *****
+
+Description: script to collect benchmark results from network models, and store the output in excel (xlxs) formation in ./tools/benchmark_tools/ directory.
+
+Required installation: install Xlxs writer for writing into excel
+        Steps for Installation:
+                $ tar -zxvf XlsxWriter-1.2.3.tar.gz
+                $ cd XlsxWriter-1.2.3
+                $ sudo python setup.py install
+
+Usage: run collect_benchmark_excel.py from the caffe_root folder with below command:
+
+                1. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark_excel.py [gpu]"to run in GPU mode"
+                        All the net models will be executed
+                2. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark_excel.py [iteration number] [gpu]"to run in GPU mode"
+                        All the net models will be executed and the output will have iteration number along with it     
+                3. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark_excel.py [benchmark name] [iteration number] [gpu]"to run in GPU mode"
+                        Specified net models will be executed and the output will have iteration number along with it
+                4. From Caffe_root -> $ python ./tools/benchmark_tools/collect_benchmark_excel.py [benchmark name] [gpu]"to run in GPU mode"
+                        Specified net model will be executed 
+
+Please follow the below syntax for benchmark_name:
+1. alexnet
+2. caffenet
+3. lenet
+
+iteration_number = number of iteration as mentioned in the .prototxt file or as per user requirement
+
+***** compare_benchmark *****
+
+Description: script to collect the benchmark from the latest source code in repository, compare the variation with a previous stable version, and send out report in excel scpreadsheet to subscribers. The excel file is color encoded if the variation is above 1%.
+
+Required installation: install Xlrd for reading excel
+        Steps for Installation:
+                $ tar -zxvf xlrd-0.9.3.tar.gz
+                $ cd xlrd-0.9.3
+                $ sudo python setup.py install
+
+
+Setup: e-mail ID of the user has to be updated in compare_benchmarks.py:
+        1. From Caffe_root open to ./tools/benchmark_tools/compare_benchmarks.py
+        2. Add your e-mail ID and save the file.
+                "sender = your_mail@intel.com"
+
+Usage: unce you have the results of the benchmarks whose results are to be compared, from the caffe_root folder with below command:
+
+        "$ python ./tools/benchmark_tools/compare_benchmark.py [previous benchmark results]
+
+Output of the script will be mailed to all the users of the group and will also be available in excel sheet, saved in the folder: caffe_root/tools/benchmark_tools
+
+
+****** benchmark_report **************
+
+benchmark_report: this is a script with no argument by default.
+
+benchmark_report [no argument] will perform the following steps:
+        1.  check if benchmark_previous.csv is present; 
+                a. if not present:
+                        *       Update the caffe directory for the latest in Perforce, re-build caffe 
+                        *       Call collect_benchmark_excel.py and collect the latest benchmark results 
+                        *       Rename benchmark_results.xlsx to benchmark_previous.xlsx.
+                b. if present:
+                        *       Update the caffe directory for the latest in Perforce, re-build caffe
+                        *       Call collect_benchmark_excel.py and collect the latest benchmark results
+                        *       Call compare_benchmark benchmark_previous.csv
+                        *       Send the output of compare_benchmark, which is comparison_result.xlsx, to the subscribers by email
+                        *       Rename benchmark_results.xlsx to benchmark_previous.xlsx.
+
+Note: this script is currently set as a cronjob at 10pm in one dedicated machine  (Deepak's Brixbox). It is not intended to run individually by developers.
+
+
+********CronJob **********
+
+How to set up CronJob for daily job:
+        $ crontab mins hours * * * "file to be executed along with the path"
+        example: crontab 00 13 * * * /home/root/test.py  
+
+        In the above example: test.py will be executed daily at 1pm
+        Note: The system has to be running for the cronjob to be executed
+
+To check the number of cronjobs in your system:
+        $ crontab -l
+
+To remove cronjobs from the system:
+        $ crontab -r                 

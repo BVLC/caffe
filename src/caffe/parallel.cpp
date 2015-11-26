@@ -1,5 +1,7 @@
 #ifndef CPU_ONLY
+#ifndef USE_OCL
 #include <cuda_runtime.h>
+#endif
 #endif
 #include <glog/logging.h>
 #include <stdio.h>
@@ -77,6 +79,7 @@ template<typename Dtype>
 GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
     : Params<Dtype>(root_solver) {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
 
@@ -93,6 +96,8 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   caffe_gpu_set(size_, Dtype(0), diff_);
 
   CUDA_CHECK(cudaSetDevice(initial_device));
+#endif
+  printf("call into gpu params\n");
 #else
   NO_GPU;
 #endif
@@ -101,8 +106,10 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 template<typename Dtype>
 GPUParams<Dtype>::~GPUParams() {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   CUDA_CHECK(cudaFree(data_));
   CUDA_CHECK(cudaFree(diff_));
+#endif
 #endif
 }
 
@@ -116,6 +123,7 @@ void GPUParams<Dtype>::configure(Solver<Dtype>* solver) const {
 
 void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   vector<int> remaining(devices);
 
   // Depth for reduction tree
@@ -191,6 +199,7 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
       CHECK((*pairs)[i].device() != (*pairs)[j].device());
     }
   }
+#endif
 #else
   NO_GPU;
 #endif
@@ -208,6 +217,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
       initial_iter_(root_solver->iter()),
       solver_() {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
   const int self = param.device_id();
@@ -240,6 +250,8 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
   }
 
   CUDA_CHECK(cudaSetDevice(initial_device));
+#endif
+  printf("call into gpu params 2\n");
 #else
   NO_GPU;
 #endif
@@ -248,6 +260,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
 template<typename Dtype>
 P2PSync<Dtype>::~P2PSync() {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
   int initial_device;
   CUDA_CHECK(cudaGetDevice(&initial_device));
   const int self = solver_->param().device_id();
@@ -265,6 +278,7 @@ P2PSync<Dtype>::~P2PSync() {
 
   CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
+#endif
 }
 
 template<typename Dtype>
@@ -272,6 +286,7 @@ void P2PSync<Dtype>::InternalThreadEntry() {
   Caffe::SetDevice(solver_->param().device_id());
   CHECK(Caffe::root_solver());
   Caffe::set_root_solver(false);
+  printf("call into gpu params 3\n");
   // See if there is a defined seed and reset random state if so
   if (solver_->param().random_seed() >= 0) {
     // Fetch random seed and modulate by device ID to make sure
@@ -286,6 +301,7 @@ void P2PSync<Dtype>::InternalThreadEntry() {
 template<typename Dtype>
 void P2PSync<Dtype>::on_start() {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
 #ifdef DEBUG
   int device;
   CUDA_CHECK(cudaGetDevice(&device));
@@ -319,11 +335,14 @@ void P2PSync<Dtype>::on_start() {
     children_[i]->queue_.push(this);
   }
 #endif
+  printf("call into gpu params 4\n");
+#endif
 }
 
 template<typename Dtype>
 void P2PSync<Dtype>::on_gradients_ready() {
 #ifndef CPU_ONLY
+#ifndef USE_OCL
 #ifdef DEBUG
   int device;
   CUDA_CHECK(cudaGetDevice(&device));
@@ -376,6 +395,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
     // for split batch, the root solver divides by number of solvers.
     caffe_gpu_scal(size_, Dtype(1.0 / Caffe::solver_count()), diff_);
   }
+#endif
 #endif
 }
 

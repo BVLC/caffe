@@ -10,7 +10,9 @@
 
 namespace caffe {
 
+#ifndef USE_OCL
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
 
 template <typename TypeParam>
 class GemmTest : public ::testing::Test {};
@@ -28,7 +30,11 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
   caffe_copy(6, data, A.mutable_cpu_data());
   caffe_copy(12, data, B.mutable_cpu_data());
 
+#ifdef USE_OCL
+  if (sizeof(TypeParam) == 4 || Caffe::cl_state().fp64_supported()) {
+#else
   if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+#endif
     // [1, 2, 3; 4 5 6] * [1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12];
     caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
@@ -98,7 +104,11 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
   caffe_copy(6, data, A.mutable_cpu_data());
   caffe_copy(3, data, x.mutable_cpu_data());
 
+#ifdef USE_OCL
+  if (sizeof(TypeParam) == 4 || Caffe::cl_state().fp64_supported()) {
+#else
   if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+#endif
     caffe_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
         x.cpu_data(), 0., y.mutable_cpu_data());
     for (int i = 0; i < 2; ++i) {

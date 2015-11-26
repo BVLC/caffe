@@ -1,0 +1,2 @@
+__kernel void null() {
+}

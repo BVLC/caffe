@@ -36,10 +36,16 @@ DYNAMIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
 ##############################
 # Get all source files
 ##############################
-# CXX_SRCS are the source files excluding the test ones.
-CXX_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cpp" -name "*.cpp")
+# CXX_SRCS are the source files excluding test and OCL.
+CXX_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cpp" ! -name "cl_*.cpp" -name "*.cpp")
 # CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cu" -name "*.cu")
+# CXX_CL_SRCS are the OCL host source files
+CXX_CL_SRCS := $(shell find src/$(PROJECT) -name "cl_*.cpp")
+# CL_SRCS are the OCL kernel files
+CL_INCS := include/Random123/threefry.h
+CLI_SRCS := include/Random123/threefry.cli
+CL_SRCS := $(shell find src/$(PROJECT) -name "*.cl")
 # TEST_SRCS are the test source files
 TEST_MAIN_SRC := src/$(PROJECT)/test/test_caffe_main.cpp
 TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
@@ -104,7 +110,12 @@ PROTO_GEN_PY := $(foreach file,${PROTO_SRCS:.proto=_pb2.py}, \
 # exclude the tool, example, and test objects.
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/cuda/, ${CU_SRCS:.cu=.o})
+CL_INTS := $(addprefix $(BUILD_DIR)/opencl/, ${CL_INCS:.h=.cli})
+CLI_OBJS := $(addprefix $(BUILD_DIR)/opencl/, ${CLI_SRCS:.cli=.clo})
+CL_OBJS := $(addprefix $(BUILD_DIR)/opencl/, ${CL_SRCS:.cl=.clo})
+CXX_CL_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_CL_SRCS:.cpp=.o})
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
+INCS :=
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -140,12 +151,17 @@ TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 WARNS_EXT := warnings.txt
 CXX_WARNS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o.$(WARNS_EXT)})
 CU_WARNS := $(addprefix $(BUILD_DIR)/cuda/, ${CU_SRCS:.cu=.o.$(WARNS_EXT)})
+CLH_WARNS := $(addprefix $(BUILD_DIR)/opencl/, ${CL_INCS:.h=.cli.$(WARNS_EXT)})
+CLI_WARNS := $(addprefix $(BUILD_DIR)/opencl/, ${CL_SRCS:.cli=.clo.$(WARNS_EXT)})
+CL_WARNS := $(addprefix $(BUILD_DIR)/opencl/, ${CL_SRCS:.cl=.clo.$(WARNS_EXT)})
+CXX_CL_WARNS := $(addprefix $(BUILD_DIR)/, ${CXX_CL_SRCS:.cpp=.o.$(WARNS_EXT)})
 TOOL_WARNS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o.$(WARNS_EXT)})
 EXAMPLE_WARNS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o.$(WARNS_EXT)})
 TEST_WARNS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o.$(WARNS_EXT)})
 TEST_CU_WARNS := $(addprefix $(BUILD_DIR)/cuda/, ${TEST_CU_SRCS:.cu=.o.$(WARNS_EXT)})
 ALL_CXX_WARNS := $(CXX_WARNS) $(TOOL_WARNS) $(EXAMPLE_WARNS) $(TEST_WARNS)
 ALL_CU_WARNS := $(CU_WARNS) $(TEST_CU_WARNS)
+ALL_CXX_CL_WARNS := $(CXX_CL_WARNS)
 ALL_WARNS := $(ALL_CXX_WARNS) $(ALL_CU_WARNS)
 
 EMPTY_WARN_REPORT := $(BUILD_DIR)/.$(WARNS_EXT)
@@ -163,11 +179,27 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include /usr/include/python2.7/
 ifneq ($(CPU_ONLY), 1)
-	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
-	LIBRARY_DIRS += $(CUDA_LIB_DIR)
-	LIBRARIES := cudart cublas curand
+  ifneq ($(USE_OCL), 1)
+		INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
+		LIBRARY_DIRS += $(CUDA_LIB_DIR)
+		LIBRARIES := cudart cublas curand
+	else
+		CLBLAS_INCLUDE_DIR := /usr/include
+		CLBLAS_LIB_DIR := /usr/lib64/clblas
+		CLFFT_INCLUDE_DIR := /usr/include
+		CLFFT_LIB_DIR := /usr/lib64/clfft
+
+		INCLUDE_DIRS += $(CLBLAS_INCLUDE_DIR)
+		LIBRARY_DIRS += $(CLBLAS_LIB_DIR)
+		LIBRARIES := OpenCL clBLAS
+		ifeq ($(USE_FFT), 1)
+			INCLUDE_DIRS += $(CLFFT_INCLUDE_DIR)
+			LIBRARY_DIRS += $(CLFFT_LIB_DIR)
+			LIBRARIES += clFFT
+		endif		
+	endif
 endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
@@ -207,6 +239,7 @@ endif
 
 ALL_BUILD_DIRS := $(sort $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SRC_DIRS)) \
 	$(addprefix $(BUILD_DIR)/cuda/, $(SRC_DIRS)) \
+	$(addprefix $(BUILD_DIR)/opencl/, $(SRC_DIRS)) \
 	$(LIB_BUILD_DIR) $(TEST_BIN_DIR) $(PY_PROTO_BUILD_DIR) $(LINT_OUTPUT_DIR) \
 	$(DISTRIBUTE_SUBDIRS) $(PROTO_BUILD_INCLUDE_DIR))
 
@@ -333,6 +366,21 @@ ifeq ($(CPU_ONLY), 1)
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
+# OCL configuration
+ifeq ($(USE_OCL), 1)
+	CL_INC_DIRS := $(shell find ./include/Random123/* -type d -exec bash \
+	  -c "find {} -maxdepth 1 \( -name '*.h' -o -name '*.hpp' \) \
+	  | grep -q ." \; -print)
+  ALL_BUILD_DIRS += $(addprefix $(BUILD_DIR)/opencl/, $(CL_INC_DIRS))
+
+  INCS := $(CL_INTS)
+	OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CXX_CL_OBJS) $(CL_OBJS) $(CLI_OBJS)
+	TEST_OBJS := $(TEST_CXX_OBJS)
+	TEST_BINS := $(TEST_CXX_BINS)
+	ALL_WARNS := $(ALL_CXX_WARNS) $(ALL_CXX_CL_WARNS)
+	COMMON_FLAGS += -DUSE_OCL
+endif
+
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -373,6 +421,16 @@ else
 		endif
 	endif
 endif
+
+# FFT
+USE_FFT ?= 0
+ifeq ($(USE_FFT), 1)
+	ifneq ($(BLAS), mkl)
+		LIBRARIES += fftw3f fftw3
+	endif
+	COMMON_FLAGS += -DUSE_FFT
+endif
+
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
@@ -389,7 +447,7 @@ NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 
-USE_PKG_CONFIG ?= 0
+USE_PKG_CONFIG ?= 1
 ifeq ($(USE_PKG_CONFIG), 1)
 	PKG_CONFIG := $(shell pkg-config opencv --libs)
 else
@@ -408,7 +466,7 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 #
 # * Recursive with the exception that symbolic links are never followed, per the
 # default behavior of 'find'.
-SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
+SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo .cli .clo
 
 # Set the sub-targets of the 'everything' target.
 EVERYTHING_TARGETS := all py$(PROJECT) test warn lint
@@ -525,6 +583,12 @@ $(EMPTY_WARN_REPORT): $(ALL_WARNS) | $(BUILD_DIR)
 
 $(ALL_WARNS): %.o.$(WARNS_EXT) : %.o
 
+ifeq ($(USE_OCL), 1)
+	$(CLH_WARNS): %.cli.$(WARNS_EXT) : %.cli
+	$(CLI_WARNS): %.clo.$(WARNS_EXT) : %.clo
+  $(CL_WARNS): %.clo.$(WARNS_EXT) : %.clo
+endif
+
 $(BUILD_DIR_LINK): $(BUILD_DIR)/.linked
 
 # Create a target ".linked" in this BUILD_DIR to tell Make that the "build" link
@@ -539,12 +603,13 @@ $(BUILD_DIR)/.linked:
 
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
+	@ chmod a+x scripts/*.sh
 
-$(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+$(DYNAMIC_NAME): $(INCS) $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
 
-$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+$(STATIC_NAME): $(INCS) $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
@@ -567,6 +632,19 @@ $(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
 		-odir $(@D)
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+
+$(BUILD_DIR)/opencl/%.cli: %.h | $(ALL_BUILD_DIRS)
+	CC=g++ CPPFLAGS="-Iinclude" scripts/gencl.sh $< $@ 2> $@.$(WARNS_EXT) \
+    || (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+
+$(BUILD_DIR)/opencl/%.clo: $(BUILD_DIR)/opencl/%.cli | $(ALL_BUILD_DIRS)
+	scripts/file_obj.sh $< $@ 2> $@.$(WARNS_EXT) || (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+
+$(BUILD_DIR)/opencl/%.clo: %.cl | $(ALL_BUILD_DIRS)
+	scripts/file_obj.sh $< $@ 2> $@.$(WARNS_EXT) || (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \

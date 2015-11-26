@@ -17,7 +17,12 @@ if(HAVE_CUDA)
   list(APPEND srcs ${cuda_objs} ${cuda})
 endif()
 
-add_library(caffe ${srcs})
+if(USE_OCL)
+  caffe_ocl_compile_hdrs(${PROJECT_SOURCE_DIR} ocl_objs ${ocl_hdrs})
+  caffe_ocl_compile_cls(${PROJECT_SOURCE_DIR} ocl_objs ${ocl_srcs})
+endif()
+
+add_library(caffe ${srcs} ${ocl_objs})
 target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
 caffe_default_properties(caffe)
 

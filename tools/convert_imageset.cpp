@@ -131,8 +131,13 @@ int main(int argc, char** argv) {
       }
     }
     // sequential
+#ifdef WIN32
+    int length = _snprintf_s(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+      lines[line_id].first.c_str());
+#else
     int length = snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
-        lines[line_id].first.c_str());
+      lines[line_id].first.c_str());
+#endif
 
     // Put in db
     string out;
