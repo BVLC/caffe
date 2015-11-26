@@ -80,15 +80,15 @@ void AffinityLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         Dtype p2 = bottom_data[offsets_[bidx] * inner_num
                              + (i + 1) * bottom[bidx]->width() + j];
 
-        // X edge
-        top_data[i * bottom[bidx]->width() + j] = std::min(p0, p1);
-        xmin = p0 < p1 ? 0 : 1;
+        // Y edge
+        top_data[i * bottom[bidx]->width() + j] = std::min(p0, p2);
+        xmin = p0 < p2 ? 0 : 1;
         min_data[i * bottom[bidx]->width() + j] = xmin;
 
-        // Y edge
+        // X edge
         top_data[inner_num
-            + i * bottom[bidx]->width() + j] = std::min(p0, p2);
-        ymin = p0 < p2 ? 0 : 1;
+            + i * bottom[bidx]->width() + j] = std::min(p0, p1);
+        ymin = p0 < p1 ? 0 : 1;
         min_data[inner_num
             + i * bottom[bidx]->width() + j] = ymin;
       }
@@ -114,11 +114,11 @@ void AffinityLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       // Spread out the affinity losses to pixels
       for (int_tp i = 0; i < bottom[0]->height() - 1; ++i) {
         for (int_tp j = 0; j < bottom[0]->width() - 1; ++j) {
-          Dtype lx = top_diff[i * bottom[0]->width() + j];
-          Dtype ly = top_diff[inner_num + i * bottom[0]->width() + j];
+          Dtype ly = top_diff[i * bottom[0]->width() + j];
+          Dtype lx = top_diff[inner_num + i * bottom[0]->width() + j];
 
-          int_tp mx = min_data[i * bottom[0]->width() + j];
-          int_tp my = min_data[bottom[0]->width()
+          int_tp my = min_data[i * bottom[0]->width() + j];
+          int_tp mx = min_data[bottom[0]->width()
               * bottom[0]->height() + i * bottom[0]->width() + j];
 
           // Only propagate to min index contributor of affinity graph
@@ -128,45 +128,6 @@ void AffinityLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           bottom_diff[1 * inner_num + (i + my) * bottom[0]->width() + j] += ly;
         }
       }
-#ifdef CAFFE_AFFINITY_DEBUG
-      {
-        cv::Mat tmp;
-
-        Dtype* prob_rd = bottom[bidx]->mutable_cpu_data();
-
-        cv::Mat wrapped_prob(bottom[0]->height(), bottom[0]->width(),
-                          cv::DataType<Dtype>::type,
-                        prob_rd, sizeof(Dtype) * bottom[0]->width());
-        cv::imshow("prob", wrapped_prob);
-
-        cv::Mat wrapped_diff(bottom[0]->height(), bottom[0]->width(),
-                          cv::DataType<Dtype>::type,
-                        bottom_diff, sizeof(Dtype) * bottom[0]->width());
-
-        Dtype sum = std::accumulate(bottom_diff,
-                                    bottom_diff
-                                    + bottom[0]->height() * bottom[0]->width(),
-                                    0.0);
-
-        Dtype mean = sum / (bottom[0]->width()*bottom[0]->height());
-
-        std::vector<Dtype> msd(bottom[0]->height() * bottom[0]->width());
-        std::transform(bottom_diff,
-                       bottom_diff + (bottom[0]->height()*bottom[0]->width()),
-                       msd.begin(), std::bind2nd(std::minus<Dtype>(), mean));
-
-        Dtype sqsum = std::inner_product(msd.begin(),
-                                         msd.end(), msd.begin(), 0.0);
-        Dtype stdev = std::sqrt(sqsum / (bottom[0]->width()
-            * bottom[0]->height()));
-
-        wrapped_diff.convertTo(tmp, CV_32FC1, 1.0 / (2.0 * stdev),
-            (stdev - mean) * 1.0 / (2.0 * stdev));
-
-        cv::imshow("diff", tmp);
-        cv::waitKey(2);
-      }
-#endif
     }
   }
 }
