@@ -82,15 +82,15 @@ void AffinityLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
         // Y edge
         top_data[i * bottom[bidx]->width() + j] = std::min(p0, p2);
-        xmin = p0 < p2 ? 0 : 1;
-        min_data[i * bottom[bidx]->width() + j] = xmin;
+        ymin = p0 < p2 ? 0 : 1;
+        min_data[i * bottom[bidx]->width() + j] = ymin;
 
         // X edge
         top_data[inner_num
             + i * bottom[bidx]->width() + j] = std::min(p0, p1);
-        ymin = p0 < p1 ? 0 : 1;
+        xmin = p0 < p1 ? 0 : 1;
         min_data[inner_num
-            + i * bottom[bidx]->width() + j] = ymin;
+            + i * bottom[bidx]->width() + j] = xmin;
       }
     }
   }

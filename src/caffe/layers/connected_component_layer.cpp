@@ -13,18 +13,18 @@ namespace caffe {
 // Derived from
 // http://nghiaho.com/uploads/code/opencv_connected_component/blob.cpp
 template<typename Dtype>
-cv::Mat ConnectedComponentLayer<Dtype>::FindBlobs(int_tp maxlabel,
+cv::Mat ConnectedComponentLayer<Dtype>::FindBlobs(int maxlabel,
                                                   const cv::Mat &input) {
   // Fill the label_image with the blobs
   cv::Mat label_image;
   input.convertTo(label_image, CV_32SC1);
 
-  int_tp label_count = maxlabel + 1;
+  int label_count = maxlabel + 1;
 
   // Segment into label numbers higher than the original label numbers
-  for (int_tp y = 0; y < label_image.rows; y++) {
-    int_tp *row = reinterpret_cast<int_tp*>(label_image.ptr(y));
-    for (int_tp x = 0; x < label_image.cols; x++) {
+  for (int y = 0; y < label_image.rows; y++) {
+    int *row = reinterpret_cast<int*>(label_image.ptr(y));
+    for (int x = 0; x < label_image.cols; x++) {
       // Skip background and already labeled areas
       if (row[x] > maxlabel || row[x] == 0) {
         continue;
@@ -60,10 +60,10 @@ void ConnectedComponentLayer<Dtype>::Forward_cpu(
   cv::Mat img(bottom[0]->height(), bottom[0]->width(), CV_8SC1);
 
   for (int_tp nc = 0; nc < bottom[0]->num() * bottom[0]->channels(); ++nc) {
-    int_tp maxlabel = 0;
+    int maxlabel = 0;
     for (int_tp y = 0; y < bottom[0]->height(); ++y) {
       for (int_tp x = 0; x < bottom[0]->width(); ++x) {
-        int_tp val = bottom_data[nc * bottom[0]->width() * bottom[0]->height()
+        int val = bottom_data[nc * bottom[0]->width() * bottom[0]->height()
                                           + bottom[0]->width() * y + x];
         if (val > maxlabel) {
           maxlabel = val;
@@ -76,7 +76,7 @@ void ConnectedComponentLayer<Dtype>::Forward_cpu(
     for (int_tp y = 0; y < seg.rows; ++y) {
       for (int_tp x = 0; x < seg.cols; ++x) {
         top_data[nc * bottom[0]->width() * bottom[0]->height()
-            + bottom[0]->width() * y + x] = seg.at<int_tp>(y, x);
+            + bottom[0]->width() * y + x] = seg.at<int>(y, x);
       }
     }
   }
