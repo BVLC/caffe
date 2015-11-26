@@ -90,7 +90,7 @@ class ConnectedComponentLayer : public Layer<Dtype> {
                               const vector<Blob<Dtype>*>& bottom);
 
  private:
-     cv::Mat FindBlobs(const int_tp maxlabel, const cv::Mat &input);
+     cv::Mat FindBlobs(const int maxlabel, const cv::Mat &input);
 };
 
 /**
