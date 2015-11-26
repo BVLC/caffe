@@ -21,6 +21,10 @@ if(HAVE_CUDA)
 endif()
 
 add_library(caffe ${srcs})
+target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
+
+SET_PROPERTY(TARGET caffe APPEND PROPERTY LINK_FLAGS "${CMAKE_SOURCE_DIR}/halide/plip.so")
+
 caffe_default_properties(caffe)
 target_link_libraries(caffe ${Caffe_LINKER_LIBS})
 target_include_directories(caffe ${Caffe_INCLUDE_DIRS}

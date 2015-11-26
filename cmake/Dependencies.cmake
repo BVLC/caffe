@@ -201,3 +201,21 @@ endif()
 if(BUILD_docs)
   find_package(Doxygen)
 endif()
+
+# ---[ Halide
+if(BUILD_halide)
+    # Add the halide libary
+
+    #by default look for halide folder next to caffe
+    set(HALIDE_REL_DIR ../halide)
+    get_filename_component(HALIDE_DIR "${HALIDE_REL_DIR}" ABSOLUTE)
+
+    set(HALIDE_INCLUDE_DIR ${HALIDE_DIR}/include)
+    set(HALIDE_BIN_DIR ${HALIDE_DIR}/bin)
+
+    include_directories(SYSTEM ${HALIDE_INCLUDE_DIR})
+
+    link_directories(halide)
+    include_directories(SYSTEM ${HALIDE_GEN_INCLUDE_DIR})
+    list(APPEND Caffe_LINKER_LIBS_singular ${HALIDE_GEN_LIBS})
+endif()
