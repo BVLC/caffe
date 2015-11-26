@@ -9,7 +9,15 @@
 
 #include "caffe/common.hpp"
 
+struct buffer_t;
+typedef struct buffer_t buffer_t;
+
 namespace caffe {
+
+// forward declare halide friend func and types
+template <typename> class Blob;
+template <typename Dtype>
+void HalideSyncBlob(const buffer_t& buf, Blob<Dtype>* blob, bool data = true);
 
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
@@ -47,6 +55,8 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #endif
 }
 
+// XXX need to forward declare Blob for Halide friend decl
+template <typename Dtype> class Blob;
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
@@ -87,6 +97,9 @@ class SyncedMemory {
   bool own_gpu_data_;
   int device_;
 
+  template <typename Dtype>
+  friend void HalideSyncBlob(const buffer_t& buf, Blob<Dtype>* blob,
+      bool data);
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
 
