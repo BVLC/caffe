@@ -327,20 +327,6 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   if(param_.visualize()) 
     visualize(img, meta, as);
 
-  //and a list of bbox
-  float bboxDims[2];
-  DecodeFloats(data, offset3, bboxDims, 2);
-  size_t numOfBbox = static_cast<size_t>(bboxDims[0]);
-  size_t bboxLen = static_cast<size_t>(bboxDims[1]);
-  offset3 += 2 * sizeof(float);
-
-  vector<vector<Dtype> > bboxlist(numOfBbox);
-  for(int i = 0; i < numOfBbox; ++i) {
-    vector<Dtype> bbox(bboxLen);
-    DecodeFloats(data, offset3 + i * bboxLen * sizeof(float), &bbox.front(), bbox.size());
-    bboxlist[i] = bbox;
-  }
-
   //Start transforming
   Mat img_aug = Mat::zeros(crop_y, crop_x, CV_8UC3);
   Mat img_temp, img_temp2, img_temp3; //size determined by scale
