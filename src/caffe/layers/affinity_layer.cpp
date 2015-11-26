@@ -122,10 +122,14 @@ void AffinityLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               * bottom[0]->height() + i * bottom[0]->width() + j];
 
           // Only propagate to min index contributor of affinity graph
-          bottom_diff[0 * inner_num + i * bottom[0]->width() + (j + mx)] -= lx;
-          bottom_diff[0 * inner_num + (i + my) * bottom[0]->width() + j] -= ly;
-          bottom_diff[1 * inner_num + i * bottom[0]->width() + (j + mx)] += lx;
-          bottom_diff[1 * inner_num + (i + my) * bottom[0]->width() + j] += ly;
+          bottom_diff[offsets_[bidx]
+                     * inner_num + i * bottom[0]->width() + (j + mx)] += lx;
+          bottom_diff[offsets_[bidx]
+                     * inner_num + (i + my) * bottom[0]->width() + j] += ly;
+          bottom_diff[((offsets_[bidx] + 1) % 2)
+                     * inner_num + i * bottom[0]->width() + (j + mx)] -= lx;
+          bottom_diff[((offsets_[bidx] + 1) % 2)
+                     * inner_num + (i + my) * bottom[0]->width() + j] -= ly;
         }
       }
     }
