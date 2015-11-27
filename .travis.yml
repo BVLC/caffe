@@ -1,0 +1,55 @@
+# Use a build matrix to do two builds in parallel:
+# one using CMake, and one using make.
+env:
+  matrix:
+    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true
+    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3
+    - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true
+    - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
+    - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
+    - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+
+language: cpp
+
+# Cache Ubuntu apt packages.
+cache:
+  apt: true
+  directories:
+  - /home/travis/miniconda
+  - /home/travis/miniconda2
+  - /home/travis/miniconda3
+
+compiler: gcc
+
+before_install:
+  - export NUM_THREADS=4
+  - export SCRIPTS=./scripts/travis
+  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+
+install:
+  - sudo -E $SCRIPTS/travis_install.sh
+
+before_script:
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export PATH=$CONDA_DIR/bin:$PATH
+  - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
+
+script: $SCRIPTS/travis_build_and_test.sh
+
+notifications:
+# Emails are sent to the committer's git-configured email address by default,
+# but only if they have access to the repository.  To enable Travis on your
+# public fork of Caffe, just go to travis-ci.org and flip the switch on for
+# your Caffe fork.  To configure your git email address, use:
+#     git config --global user.email me@example.com
+  email:
+    on_success: always
+    on_failure: always
+
+# IRC notifications disabled by default.
+# Uncomment next 5 lines to send notifications to chat.freenode.net#caffe
+#   irc:
+#     channels:
+#       - "chat.freenode.net#caffe"
+#     template:
+#       - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
