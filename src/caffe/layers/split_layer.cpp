@@ -1,7 +1,12 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -23,14 +28,22 @@ void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < top.size(); ++i) {
     top[i]->ShareData(*bottom[0]);
+=======
+Dtype SplitLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  for (int i = 0; i < top->size(); ++i) {
+    (*top)[i]->ShareData(*bottom[0]);
+>>>>>>> BVLC/device-abstraction
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) { return; }
@@ -45,13 +58,20 @@ void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[i]->cpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+=======
+void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (propagate_down[0]) {
+    (*bottom)[0]->ShareDiff(*top[0]);
+    // Add remaining top blob diffs.
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    for (int i = 1; i < top.size(); ++i) {
+      const Dtype* top_diff = top[i]->const_diff();
+      this->device_->axpy(count_, Dtype(1.), top_diff, bottom_diff);
+    }
+>>>>>>> BVLC/device-abstraction
   }
 }
-
-
-#ifdef CPU_ONLY
-STUB_GPU(SplitLayer);
-#endif
 
 INSTANTIATE_CLASS(SplitLayer);
 REGISTER_LAYER_CLASS(Split);

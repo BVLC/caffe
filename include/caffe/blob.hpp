@@ -8,8 +8,11 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
+<<<<<<< HEAD
 
 const int kMaxBlobAxes = 32;
+=======
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -226,6 +229,12 @@ class Blob {
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
+
+  const Dtype* const_data() const;
+  const Dtype* const_diff() const;
+  Dtype* mutable_data();
+  Dtype* mutable_diff();
+
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;

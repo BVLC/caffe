@@ -2,8 +2,14 @@
 #include <utility>
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -45,8 +51,13 @@ void AccuracyLayer<Dtype>::Reshape(
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+=======
+Dtype AccuracyLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
   Dtype accuracy = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();

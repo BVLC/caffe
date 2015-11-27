@@ -108,7 +108,7 @@ class Caffe {
     }
     return *(thread_instance_.get());
   }
-  enum Brew { CPU, GPU };
+  enum Brew { UNSPECIFIED = -1, CPU, GPU };
   enum Phase { TRAIN, TEST };
 >>>>>>> origin/BVLC/parallel
 

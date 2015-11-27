@@ -9,7 +9,13 @@
 
 #include "caffe/data_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+<<<<<<< HEAD
 #include "caffe/util/benchmark.hpp"
+=======
+#include "caffe/util/io.hpp"
+#include "caffe/util/rng.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -213,6 +219,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 =======
 template <typename Dtype>
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
@@ -245,6 +252,20 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
+=======
+Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  // First, join the thread
+  JoinPrefetchThread();
+  // Copy the data
+  this->device_->copy(
+      prefetch_data_.count(), prefetch_data_.cpu_data(),
+      (*top)[0]->mutable_data());
+  if (output_labels_) {
+    this->device_->copy(
+        prefetch_label_.count(), prefetch_label_.cpu_data(),
+        (*top)[1]->mutable_data());
+>>>>>>> BVLC/device-abstraction
   }
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
@@ -256,6 +277,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     const Datum& datum = *(loaders_full_->pop("Waiting on data loader"));
 
+<<<<<<< HEAD
     cv::Mat cv_img;
     if (datum.encoded()) {
        cv_img = DecodeDatumToCVMat(datum);
@@ -286,6 +308,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 //  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(DataLayer);
 REGISTER_LAYER_CLASS(Data);
 

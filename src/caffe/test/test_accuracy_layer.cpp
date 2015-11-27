@@ -72,6 +72,7 @@ class AccuracyLayerTest : public CPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(AccuracyLayerTest, TestDtypes);
 
 TYPED_TEST(AccuracyLayerTest, TestSetup) {
+  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -82,6 +83,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetup) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
+  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   AccuracyParameter* accuracy_param =
       layer_param.mutable_accuracy_param();
@@ -109,6 +111,10 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::CPU);
+>>>>>>> BVLC/device-abstraction
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -216,6 +222,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
+  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   AccuracyParameter* accuracy_param = layer_param.mutable_accuracy_param();
   accuracy_param->set_top_k(this->top_k_);

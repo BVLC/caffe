@@ -1,8 +1,14 @@
 #include <algorithm>
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -29,10 +35,17 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
+<<<<<<< HEAD
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
   caffe_copy(bottom[0]->count(), bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
+=======
+  int num = bottom[0]->num();
+  int dim = bottom[0]->count() / bottom[0]->num();
+  GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data, top_data);
+  // we need to subtract the max to avoid numerical issues, compute the exp,
+>>>>>>> BVLC/device-abstraction
   // and then normalize.
   for (int i = 0; i < outer_num_; ++i) {
     // initialize scale_data to the first plane
@@ -57,6 +70,25 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data += inner_num_;
     }
   }
+<<<<<<< HEAD
+=======
+  // subtraction
+  GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
+                                     -1., scale_data,
+                                     sum_multiplier_.cpu_data(), 1., top_data);
+  // Perform exponentiation
+  GetDevice<Dtype>(Caffe::CPU)->exp(num * dim, top_data, top_data);
+  // sum after exp
+  GetDevice<Dtype>(Caffe::CPU)->gemv(CblasNoTrans, num, dim, 1., top_data,
+                                     sum_multiplier_.cpu_data(), 0.,
+                                     scale_data);
+  // Do division
+  for (int i = 0; i < num; ++i) {
+    GetDevice<Dtype>(Caffe::CPU)->scal(dim, Dtype(1.) / scale_data[i],
+                                       top_data + i * dim);
+  }
+  return Dtype(0);
+>>>>>>> BVLC/device-abstraction
 }
 
 template <typename Dtype>
@@ -67,6 +99,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   Dtype* scale_data = scale_.mutable_cpu_data();
+<<<<<<< HEAD
   int channels = top[0]->shape(softmax_axis_);
   int dim = top[0]->count() / outer_num_;
   caffe_copy(top[0]->count(), top_diff, bottom_diff);
@@ -83,6 +116,24 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   // elementwise multiplication
   caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+=======
+  int num = top[0]->num();
+  int dim = top[0]->count() / top[0]->num();
+  GetDevice<Dtype>(Caffe::CPU)->copy(top[0]->count(), top_diff, bottom_diff);
+  // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
+  for (int i = 0; i < num; ++i) {
+    GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,
+                                      top_data + i * dim, scale_data + i);
+  }
+  // subtraction
+  GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
+                                     -1., scale_data,
+                                     sum_multiplier_.cpu_data(), 1.,
+                                     bottom_diff);
+  // elementwise multiplication
+  GetDevice<Dtype>(Caffe::CPU)->mul(top[0]->count(), bottom_diff, top_data,
+                                    bottom_diff);
+>>>>>>> BVLC/device-abstraction
 }
 
 

@@ -12,10 +12,14 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+<<<<<<< HEAD
 #include "caffe/data_layers.hpp"
 #include "caffe/util/benchmark.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
 // caffe.proto > LayerParameter > WindowDataParameter
@@ -240,6 +244,7 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
+<<<<<<< HEAD
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
@@ -247,6 +252,10 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
+=======
+  Dtype* top_data = prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = prefetch_label_.mutable_cpu_data();
+>>>>>>> BVLC/device-abstraction
   const Dtype scale = this->layer_param_.window_data_param().scale();
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   const int context_pad = this->layer_param_.window_data_param().context_pad();
@@ -270,7 +279,11 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
+<<<<<<< HEAD
   caffe_set(batch->data_.count(), Dtype(0), top_data);
+=======
+  GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
+>>>>>>> BVLC/device-abstraction
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -478,6 +491,209 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
+<<<<<<< HEAD
+=======
+template <typename Dtype>
+WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
+  JoinPrefetchThread();
+}
+
+template <typename Dtype>
+void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  Layer<Dtype>::SetUp(bottom, top);
+  // SetUp runs through the window_file and creates two structures
+  // that hold windows: one for foreground (object) windows and one
+  // for background (non-object) windows. We use an overlap threshold
+  // to decide which is which.
+
+  // window_file format
+  // repeated:
+  //    # image_index
+  //    img_path (abs path)
+  //    channels
+  //    height
+  //    width
+  //    num_windows
+  //    class_index overlap x1 y1 x2 y2
+
+  LOG(INFO) << "Window data layer:" << std::endl
+      << "  foreground (object) overlap threshold: "
+      << this->layer_param_.window_data_param().fg_threshold() << std::endl
+      << "  background (non-object) overlap threshold: "
+      << this->layer_param_.window_data_param().bg_threshold() << std::endl
+      << "  foreground sampling fraction: "
+      << this->layer_param_.window_data_param().fg_fraction();
+
+  std::ifstream infile(this->layer_param_.window_data_param().source().c_str());
+  CHECK(infile.good()) << "Failed to open window file "
+      << this->layer_param_.window_data_param().source() << std::endl;
+
+  map<int, int> label_hist;
+  label_hist.insert(std::make_pair(0, 0));
+
+  string hashtag;
+  int image_index, channels;
+  if (!(infile >> hashtag >> image_index)) {
+    LOG(FATAL) << "Window file is empty";
+  }
+  do {
+    CHECK_EQ(hashtag, "#");
+    // read image path
+    string image_path;
+    infile >> image_path;
+    // read image dimensions
+    vector<int> image_size(3);
+    infile >> image_size[0] >> image_size[1] >> image_size[2];
+    channels = image_size[0];
+    image_database_.push_back(std::make_pair(image_path, image_size));
+
+    // read each box
+    int num_windows;
+    infile >> num_windows;
+    const float fg_threshold =
+        this->layer_param_.window_data_param().fg_threshold();
+    const float bg_threshold =
+        this->layer_param_.window_data_param().bg_threshold();
+    for (int i = 0; i < num_windows; ++i) {
+      int label, x1, y1, x2, y2;
+      float overlap;
+      infile >> label >> overlap >> x1 >> y1 >> x2 >> y2;
+
+      vector<float> window(WindowDataLayer::NUM);
+      window[WindowDataLayer::IMAGE_INDEX] = image_index;
+      window[WindowDataLayer::LABEL] = label;
+      window[WindowDataLayer::OVERLAP] = overlap;
+      window[WindowDataLayer::X1] = x1;
+      window[WindowDataLayer::Y1] = y1;
+      window[WindowDataLayer::X2] = x2;
+      window[WindowDataLayer::Y2] = y2;
+
+      // add window to foreground list or background list
+      if (overlap >= fg_threshold) {
+        int label = window[WindowDataLayer::LABEL];
+        CHECK_GT(label, 0);
+        fg_windows_.push_back(window);
+        label_hist.insert(std::make_pair(label, 0));
+        label_hist[label]++;
+      } else if (overlap < bg_threshold) {
+        // background window, force label and overlap to 0
+        window[WindowDataLayer::LABEL] = 0;
+        window[WindowDataLayer::OVERLAP] = 0;
+        bg_windows_.push_back(window);
+        label_hist[0]++;
+      }
+    }
+
+    if (image_index % 100 == 0) {
+      LOG(INFO) << "num: " << image_index << " "
+          << image_path << " "
+          << image_size[0] << " "
+          << image_size[1] << " "
+          << image_size[2] << " "
+          << "windows to process: " << num_windows;
+    }
+  } while (infile >> hashtag >> image_index);
+
+  LOG(INFO) << "Number of images: " << image_index+1;
+
+  for (map<int, int>::iterator it = label_hist.begin();
+      it != label_hist.end(); ++it) {
+    LOG(INFO) << "class " << it->first << " has " << label_hist[it->first]
+              << " samples";
+  }
+
+  LOG(INFO) << "Amount of context padding: "
+      << this->layer_param_.window_data_param().context_pad();
+
+  LOG(INFO) << "Crop mode: "
+      << this->layer_param_.window_data_param().crop_mode();
+
+  // image
+  int crop_size = this->layer_param_.window_data_param().crop_size();
+  CHECK_GT(crop_size, 0);
+  const int batch_size = this->layer_param_.window_data_param().batch_size();
+  (*top)[0]->Reshape(batch_size, channels, crop_size, crop_size);
+  prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
+
+  LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
+      << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
+      << (*top)[0]->width();
+  // label
+  (*top)[1]->Reshape(batch_size, 1, 1, 1);
+  prefetch_label_.Reshape(batch_size, 1, 1, 1);
+
+  // check if we want to have mean
+  if (this->layer_param_.window_data_param().has_mean_file()) {
+    const string& mean_file =
+        this->layer_param_.window_data_param().mean_file();
+    LOG(INFO) << "Loading mean file from" << mean_file;
+    BlobProto blob_proto;
+    ReadProtoFromBinaryFileOrDie(mean_file, &blob_proto);
+    data_mean_.FromProto(blob_proto);
+    CHECK_EQ(data_mean_.num(), 1);
+    CHECK_EQ(data_mean_.width(), data_mean_.height());
+    CHECK_EQ(data_mean_.channels(), channels);
+  } else {
+    // Simply initialize an all-empty mean.
+    data_mean_.Reshape(1, channels, crop_size, crop_size);
+  }
+  // Now, start the prefetch thread. Before calling prefetch, we make two
+  // cpu_data calls so that the prefetch thread does not accidentally make
+  // simultaneous cudaMalloc calls when the main thread is running. In some
+  // GPUs this seems to cause failures if we do not so.
+  prefetch_data_.mutable_cpu_data();
+  prefetch_label_.mutable_cpu_data();
+  data_mean_.cpu_data();
+  DLOG(INFO) << "Initializing prefetch";
+  CreatePrefetchThread();
+  DLOG(INFO) << "Prefetch initialized.";
+}
+
+template <typename Dtype>
+void WindowDataLayer<Dtype>::CreatePrefetchThread() {
+  const bool prefetch_needs_rand =
+      this->layer_param_.window_data_param().mirror() ||
+      this->layer_param_.window_data_param().crop_size();
+  if (prefetch_needs_rand) {
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+  } else {
+    prefetch_rng_.reset();
+  }
+  // Create the thread.
+  CHECK(!StartInternalThread()) << "Pthread execution failed.";
+}
+
+template <typename Dtype>
+void WindowDataLayer<Dtype>::JoinPrefetchThread() {
+  CHECK(!WaitForInternalThreadToExit()) << "Pthread joining failed.";
+}
+
+template <typename Dtype>
+unsigned int WindowDataLayer<Dtype>::PrefetchRand() {
+  CHECK(prefetch_rng_);
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  return (*prefetch_rng)();
+}
+
+template <typename Dtype>
+Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  // First, join the thread
+  JoinPrefetchThread();
+  // Copy the data
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+      (*top)[0]->mutable_data());
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+      (*top)[1]->mutable_data());
+  // Start a new prefetch thread
+  CreatePrefetchThread();
+  return Dtype(0.);
+}
+
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(WindowDataLayer);
 REGISTER_LAYER_CLASS(WindowData);
 

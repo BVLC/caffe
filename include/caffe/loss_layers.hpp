@@ -31,10 +31,24 @@ class AccuracyLayer : public Layer<Dtype> {
    */
   explicit AccuracyLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+                        vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+                        const vector<bool>& propagate_down,
+                        vector<Blob<Dtype>*>* bottom) { NOT_IMPLEMENTED; }
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_ACCURACY;
+  }
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Accuracy"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
@@ -45,6 +59,7 @@ class AccuracyLayer : public Layer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
   /**
    * @param bottom input Blob vector (length 2)
    *   -# @f$ (N \times C \times H \times W) @f$
@@ -83,6 +98,8 @@ class AccuracyLayer : public Layer<Dtype> {
 
   int label_axis_, outer_num_, inner_num_;
 
+=======
+>>>>>>> BVLC/device-abstraction
   int top_k_;
 
   /// Whether to ignore instances with a certain label.
@@ -246,6 +263,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
  public:
   explicit EuclideanLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), diff_() {}
+<<<<<<< HEAD
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -254,11 +272,26 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    * Unlike most loss layers, in the EuclideanLossLayer we can backpropagate
    * to both inputs -- override to return true and always allow force_backward.
    */
+=======
+  virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_EUCLIDEAN_LOSS;
+  }
+  // Unlike most loss layers, in the EuclideanLossLayer we can backpropagate
+  // to both inputs.
+>>>>>>> BVLC/device-abstraction
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     return true;
   }
 
  protected:
+<<<<<<< HEAD
   /// @copydoc EuclideanLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -303,6 +336,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> diff_;
 };
 
@@ -355,6 +390,7 @@ class HingeLossLayer : public LossLayer<Dtype> {
   explicit HingeLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
 
+<<<<<<< HEAD
   virtual inline const char* type() const { return "HingeLoss"; }
 
  protected:
@@ -391,6 +427,16 @@ class HingeLossLayer : public LossLayer<Dtype> {
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+=======
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_HINGE_LOSS;
+  }
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -430,10 +476,19 @@ class InfogainLossLayer : public LossLayer<Dtype> {
  public:
   explicit InfogainLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), infogain_() {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+     vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
@@ -445,6 +500,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   virtual inline const char* type() const { return "InfogainLoss"; }
 
  protected:
+<<<<<<< HEAD
   /// @copydoc InfogainLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -484,6 +540,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> infogain_;
 };
 
@@ -521,6 +579,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
  public:
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -561,6 +620,18 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+=======
+  virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS;
+  }
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -599,14 +670,24 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
       : LossLayer<Dtype>(param),
           sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
           sigmoid_output_(new Blob<Dtype>()) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "SigmoidCrossEntropyLoss"; }
 
  protected:
+<<<<<<< HEAD
   /// @copydoc SigmoidCrossEntropyLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -647,6 +728,8 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   /// The internal SigmoidLayer used to map predictions to probabilities.
+=======
+>>>>>>> BVLC/device-abstraction
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
   /// sigmoid_output stores the output of the SigmoidLayer.
   shared_ptr<Blob<Dtype> > sigmoid_output_;
@@ -699,6 +782,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
     *    present; otherwise the loss is simply summed over spatial locations.
     */
   explicit SoftmaxWithLossLayer(const LayerParameter& param)
+<<<<<<< HEAD
       : LossLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -708,9 +792,23 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return 1; }
+=======
+      : Layer<Dtype>(param), softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_SOFTMAX_LOSS;
+  }
+>>>>>>> BVLC/device-abstraction
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -757,6 +855,10 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
+=======
+  shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
+  // prob stores the output probability of the layer.
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> prob_;
   /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
   vector<Blob<Dtype>*> softmax_bottom_vec_;

@@ -8,13 +8,18 @@
 #include "hdf5.h"
 
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/util/io.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -981,6 +986,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 
 template <typename Dtype>
 void Net<Dtype>::Update() {
+<<<<<<< HEAD
   for (int i = 0; i < learnable_params_.size(); ++i) {
     learnable_params_[i]->Update();
   }
@@ -1004,6 +1010,18 @@ void Net<Dtype>::ClearParamDiffs() {
 #endif
       break;
     }
+=======
+  // First, accumulate the diffs of any shared parameters into their owner's
+  // diff. (Assumes that the learning rate, weight decay, etc. have already been
+  // accounted for in the current diff.)
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+    if (debug_info_) { UpdateDebugInfo(i); }
+    const int count = params_[i]->count();
+    const Dtype* this_diff = params_[i]->const_diff();
+    Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
+    GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
+>>>>>>> BVLC/device-abstraction
   }
 }
 

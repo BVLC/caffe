@@ -96,6 +96,7 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
   CHECK(!has_new_data_) <<
       "Can't change batch_size until current data has been consumed.";
@@ -107,6 +108,10 @@ void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+=======
+Dtype MemoryDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
   top[0]->Reshape(batch_size_, channels_, height_, width_);
   top[1]->Reshape(batch_size_, 1, 1, 1);

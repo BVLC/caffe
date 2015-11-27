@@ -1,7 +1,13 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -54,6 +60,7 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   if (bottom.size() == 1) { return; }
@@ -88,15 +95,68 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_copy(bottom_concat_axis * concat_input_size_, top_diff +
             (n * top_concat_axis + offset_concat_axis) * concat_input_size_,
             bottom_diff + n * bottom_concat_axis * concat_input_size_);
+=======
+Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+  if (concat_dim_== 0) {
+    int offset_num = 0;
+    for (int i = 0; i < bottom.size(); ++i) {
+      const Dtype* bottom_data = bottom[i]->const_data();
+      int num_elem = bottom[i]->count();
+      this->device_->copy(num_elem, bottom_data,
+                        top_data+(*top)[0]->offset(offset_num));
+      offset_num += bottom[i]->num();
+    }
+  } else if (concat_dim_ == 1) {
+    int offset_channel = 0;
+    for (int i = 0; i < bottom.size(); ++i) {
+      const Dtype* bottom_data = bottom[i]->const_data();
+      int num_elem =
+        bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
+      for (int n = 0; n < num_; ++n) {
+        this->device_->copy(num_elem, bottom_data+bottom[i]->offset(n),
+          top_data+(*top)[0]->offset(n, offset_channel));
+      }
+      offset_channel += bottom[i]->channels();
+    }
+  }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
+  return Dtype(0.);
+}
+
+template <typename Dtype>
+void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* top_diff = top[0]->const_diff();
+  if (concat_dim_ == 0) {
+    int offset_num = 0;
+    for (int i = 0; i < bottom->size(); ++i) {
+      Blob<Dtype>* blob = (*bottom)[i];
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_diff();
+        this->device_->copy(blob->count(),
+            top_diff + top[0]->offset(offset_num), bottom_diff);
+      }
+      offset_num += blob->num();
+    }
+  } else if (concat_dim_ == 1) {
+    int offset_channel = 0;
+    for (int i = 0; i < bottom->size(); ++i) {
+      Blob<Dtype>* blob = (*bottom)[i];
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_diff();
+        int num_elem = blob->channels() * blob->height() * blob->width();
+        for (int n = 0; n < num_; ++n) {
+          this->device_->copy(num_elem,
+              top_diff + top[0]->offset(n, offset_channel),
+              bottom_diff + blob->offset(n));
+        }
+>>>>>>> BVLC/device-abstraction
       }
     }
     offset_concat_axis += bottom_concat_axis;
   }
 }
-
-#ifdef CPU_ONLY
-STUB_GPU(ConcatLayer);
-#endif
 
 INSTANTIATE_CLASS(ConcatLayer);
 REGISTER_LAYER_CLASS(Concat);

@@ -1,5 +1,11 @@
 #include <vector>
 
+<<<<<<< HEAD
+=======
+#include "caffe/device.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -17,9 +23,94 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
         / stride_data[i] + 1;
     this->output_shape_.push_back(output_dim);
   }
+<<<<<<< HEAD
+=======
+  CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
+  CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
+  if (!conv_param.has_pad_h()) {
+    pad_h_ = pad_w_ = conv_param.pad();
+  } else {
+    pad_h_ = conv_param.pad_h();
+    pad_w_ = conv_param.pad_w();
+  }
+  if (!conv_param.has_stride_h()) {
+    stride_h_ = stride_w_ = conv_param.stride();
+  } else {
+    stride_h_ = conv_param.stride_h();
+    stride_w_ = conv_param.stride_w();
+  }
+  group_ = this->layer_param_.convolution_param().group();
+  num_ = bottom[0]->num();
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+  // TODO: generalize to handle inputs of different shapes.
+  for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
+    CHECK_EQ(num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
+    CHECK_EQ(channels_, bottom[bottom_id]->channels())
+        << "Inputs must have same channels.";
+    CHECK_EQ(height_, bottom[bottom_id]->height())
+        << "Inputs must have same height.";
+    CHECK_EQ(width_, bottom[bottom_id]->width())
+        << "Inputs must have same width.";
+  }
+  num_output_ = this->layer_param_.convolution_param().num_output();
+  CHECK_GT(num_output_, 0);
+  CHECK_EQ(channels_ % group_, 0);
+  // The im2col result buffer would only hold one image at a time to avoid
+  // overly large memory usage.
+  int height_out =
+      (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
+  int width_out = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  col_buffer_.Reshape(
+      1, channels_ * kernel_h_ * kernel_w_, height_out, width_out);
+  // Set the parameters
+  CHECK_EQ(num_output_ % group_, 0)
+      << "Number of output should be multiples of group.";
+  bias_term_ = this->layer_param_.convolution_param().bias_term();
+  // Figure out the dimensions for individual gemms.
+  M_ = num_output_ / group_;
+  K_ = channels_ * kernel_h_ * kernel_w_ / group_;
+  N_ = height_out * width_out;
+  for (int top_id = 0; top_id < top->size(); ++top_id) {
+    (*top)[top_id]->Reshape(num_, num_output_, height_out, width_out);
+  }
+  // Check if we need to set up the weights
+  if (this->blobs_.size() > 0) {
+    LOG(INFO) << "Skipping parameter initialization";
+  } else {
+    if (bias_term_) {
+      this->blobs_.resize(2);
+    } else {
+      this->blobs_.resize(1);
+    }
+    // Intialize the weight
+    this->blobs_[0].reset(new Blob<Dtype>(
+        num_output_, channels_ / group_, kernel_h_, kernel_w_));
+    // fill the weights
+    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+        this->layer_param_.convolution_param().weight_filler()));
+    weight_filler->Fill(this->blobs_[0].get());
+    // If necessary, initialize and fill the bias term
+    if (bias_term_) {
+      this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, num_output_));
+      shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
+          this->layer_param_.convolution_param().bias_filler()));
+      bias_filler->Fill(this->blobs_[1].get());
+    }
+  }
+  // Set up the all ones "bias multiplier" for adding bias using blas
+  if (bias_term_) {
+    bias_multiplier_.Reshape(1, 1, 1, N_);
+    GetDevice<Dtype>(Caffe::CPU)->set(N_, Dtype(1),
+                                      bias_multiplier_.mutable_cpu_data());
+  }
+  this->param_propagate_down_.resize(this->blobs_.size(), true);
+>>>>>>> BVLC/device-abstraction
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
@@ -32,21 +123,71 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
+=======
+Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->const_data();
+    Dtype* top_data = (*top)[i]->mutable_data();
+    Dtype* col_data = col_buffer_.mutable_data();
+    const Dtype* weight = this->blobs_[0]->const_data();
+    int weight_offset = M_ * K_;
+    int col_offset = K_ * N_;
+    int top_offset = M_ * N_;
+    for (int n = 0; n < num_; ++n) {
+      // First, im2col
+      this->device_->im2col(bottom_data + bottom[i]->offset(n), channels_,
+          height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+          stride_h_, stride_w_, col_data);
+      // Second, innerproduct with groups
+      for (int g = 0; g < group_; ++g) {
+        this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, K_,
+            (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+            (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
+      }
+      // third, add bias
+      if (bias_term_) {
+        this->device_->gemm(CblasNoTrans, CblasNoTrans, num_output_,
+            N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
+            bias_multiplier_.const_data(),
+            (Dtype)1., top_data + (*top)[i]->offset(n));
+>>>>>>> BVLC/device-abstraction
       }
     }
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
+=======
+void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* weight = NULL;
+  Dtype* weight_diff = NULL;
+  if (this->param_propagate_down_[0]) {
+    weight = this->blobs_[0]->const_data();
+    weight_diff = this->blobs_[0]->mutable_diff();
+    this->device_->set(this->blobs_[0]->count(), Dtype(0), weight_diff);
+  }
+  Dtype* bias_diff = NULL;
+  if (bias_term_ && this->param_propagate_down_[1]) {
+    bias_diff = this->blobs_[1]->mutable_diff();
+    this->device_->set(this->blobs_[1]->count(), Dtype(0), bias_diff);
+  }
+  const int weight_offset = M_ * K_;
+  const int col_offset = K_ * N_;
+  const int top_offset = M_ * N_;
+>>>>>>> BVLC/device-abstraction
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
     // Bias gradient, if necessary.
+<<<<<<< HEAD
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
       for (int n = 0; n < this->num_; ++n) {
@@ -59,20 +200,62 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         if (this->param_propagate_down_[0]) {
           this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
               top_diff + n * this->top_dim_, weight_diff);
+=======
+    if (bias_term_ && this->param_propagate_down_[1]) {
+      top_diff = top[i]->const_diff();
+      for (int n = 0; n < num_; ++n) {
+        this->device_->gemv(CblasNoTrans, num_output_, N_,
+            1., top_diff + top[0]->offset(n),
+            bias_multiplier_.const_data(), 1.,
+            bias_diff);
+      }
+    }
+    if (this->param_propagate_down_[0] || propagate_down[i]) {
+      if (!top_diff) {
+        top_diff = top[i]->const_diff();
+      }
+      Dtype* col_data = col_buffer_.mutable_data();
+      Dtype* col_diff = col_buffer_.mutable_diff();
+      const Dtype* bottom_data = (*bottom)[i]->const_data();
+      Dtype* bottom_diff = (*bottom)[i]->mutable_diff();
+      for (int n = 0; n < num_; ++n) {
+        // Since we saved memory in the forward pass by not storing all col
+        // data, we will need to recompute them.
+        this->device_->im2col(bottom_data + (*bottom)[i]->offset(n), channels_,
+            height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+            stride_h_, stride_w_, col_data);
+        // gradient w.r.t. weight. Note that we will accumulate diffs.
+        if (this->param_propagate_down_[0]) {
+          for (int g = 0; g < group_; ++g) {
+            this->device_->gemm(CblasNoTrans, CblasTrans, M_, K_, N_,
+                (Dtype)1., top_diff + top[i]->offset(n) + top_offset * g,
+                col_data + col_offset * g, (Dtype)1.,
+                weight_diff + weight_offset * g);
+          }
+>>>>>>> BVLC/device-abstraction
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
+<<<<<<< HEAD
           this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
               bottom_diff + n * this->bottom_dim_);
+=======
+          for (int g = 0; g < group_; ++g) {
+            this->device_->gemm(CblasTrans, CblasNoTrans, K_, N_, M_,
+                (Dtype)1., weight + weight_offset * g,
+                top_diff + top[i]->offset(n) + top_offset * g,
+                (Dtype)0., col_diff + col_offset * g);
+          }
+          // col2im back to the data
+          this->device_->col2im(col_diff, channels_, height_, width_,
+              kernel_h_, kernel_w_, pad_h_, pad_w_,
+              stride_h_, stride_w_, bottom_diff + (*bottom)[i]->offset(n));
+>>>>>>> BVLC/device-abstraction
         }
       }
     }
   }
 }
-
-#ifdef CPU_ONLY
-STUB_GPU(ConvolutionLayer);
-#endif
 
 INSTANTIATE_CLASS(ConvolutionLayer);
 

@@ -1,6 +1,11 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
+=======
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -25,6 +30,7 @@ void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   top[0]->ShareData(*bottom[0]);
@@ -34,6 +40,18 @@ template <typename Dtype>
 void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   bottom[0]->ShareDiff(*top[0]);
+=======
+Dtype FlattenLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  (*top)[0]->ShareData(*bottom[0]);
+  return Dtype(0.);
+}
+
+template <typename Dtype>
+void FlattenLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  (*bottom)[0]->ShareDiff(*top[0]);
+>>>>>>> BVLC/device-abstraction
 }
 
 INSTANTIATE_CLASS(FlattenLayer);

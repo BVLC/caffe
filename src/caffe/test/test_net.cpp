@@ -7,9 +7,12 @@
 #include "gtest/gtest.h"
 
 #include "caffe/common.hpp"
+<<<<<<< HEAD
 #include "caffe/filler.hpp"
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/net.hpp"
-#include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -1124,8 +1127,15 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   for (int i = 0; i < count; ++i) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
   }
+<<<<<<< HEAD
   caffe_axpy(count, Dtype(-1), shared_params.cpu_diff(),
              shared_params.mutable_cpu_data());
+=======
+  GetDevice<Dtype>()->axpy(count, Dtype(1), ip2_weights->const_diff(),
+                           shared_params.mutable_diff());
+  GetDevice<Dtype>()->axpy(count, Dtype(-1), shared_params.const_diff(),
+                           shared_params.mutable_data());
+>>>>>>> BVLC/device-abstraction
   const Dtype* expected_updated_params = shared_params.cpu_data();
   this->net_->Update();
   const Dtype* actual_updated_params = ip1_weights->cpu_data();
@@ -1163,10 +1173,10 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
     EXPECT_FLOAT_EQ(ip1_weights->cpu_diff()[i] + ip2_weights->cpu_diff()[i],
                     shared_params.cpu_diff()[i]);
   }
-  caffe_axpy(count, Dtype(-1), ip1_weights->cpu_diff(),
-             unshared_params1.mutable_cpu_data());
-  caffe_axpy(count, Dtype(-1), ip2_weights->cpu_diff(),
-             unshared_params2.mutable_cpu_data());
+  GetDevice<Dtype>()->axpy(count, Dtype(-1), ip1_weights->const_diff(),
+                           unshared_params1.mutable_data());
+  GetDevice<Dtype>()->axpy(count, Dtype(-1), ip2_weights->const_diff(),
+                           unshared_params2.mutable_data());
   const Dtype* expected_updated_params1 = unshared_params1.cpu_data();
   const Dtype* expected_updated_params2 = unshared_params2.cpu_data();
   this->net_->Update();
@@ -1246,8 +1256,9 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   const Dtype kNonZeroTestMin = 1e-3;
   vector<Dtype> param_asums(params.size());
   for (int i = 0; i < num_params; ++i) {
-    const Dtype param_asum =
-       caffe_cpu_asum(params[i]->count(), params[i]->cpu_diff());
+    Dtype param_asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(params[i]->count(),
+                                       params[i]->cpu_diff(), &param_asum);
     param_asums[i] = param_asum;
     EXPECT_GT(param_asum, kNonZeroTestMin);
   }
@@ -1263,9 +1274,16 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   const vector<shared_ptr<Blob<Dtype> > >& params2 = this->net_->params();
   ASSERT_EQ(num_params, params2.size());
   for (int i = 0; i < num_params; ++i) {
+<<<<<<< HEAD
     const Dtype param_asum =
        caffe_cpu_asum(params2[i]->count(), params2[i]->cpu_diff());
     EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
+=======
+    Dtype param_asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(params2[i]->count(),
+                                       params2[i]->cpu_diff(), &param_asum);
+    EXPECT_EQ(param_asum, param_asums[i]);
+>>>>>>> BVLC/device-abstraction
   }
 
   // Change a subset of the learning rates to zero; check that we see zero
@@ -1279,8 +1297,9 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   const vector<shared_ptr<Blob<Dtype> > >& params3 = this->net_->params();
   ASSERT_EQ(num_params, params3.size());
   for (int i = 0; i < num_params; ++i) {
-    const Dtype param_asum =
-       caffe_cpu_asum(params3[i]->count(), params3[i]->cpu_diff());
+    Dtype param_asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(params3[i]->count(),
+                                       params3[i]->cpu_diff(), &param_asum);
     if (i == 1 || i == 2) {
       EXPECT_FLOAT_EQ(0, param_asum);
     } else {
@@ -1298,8 +1317,9 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   const vector<shared_ptr<Blob<Dtype> > >& params4 = this->net_->params();
   ASSERT_EQ(num_params, params4.size());
   for (int i = 0; i < num_params; ++i) {
-    const Dtype param_asum =
-       caffe_cpu_asum(params4[i]->count(), params4[i]->cpu_diff());
+    Dtype param_asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(params4[i]->count(),
+                                       params4[i]->cpu_diff(), &param_asum);
     if (i == 0 || i == 3) {
       EXPECT_FLOAT_EQ(0, param_asum);
     } else {

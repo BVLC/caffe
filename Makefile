@@ -109,6 +109,13 @@ PROTO_GEN_PY := $(foreach file,${PROTO_SRCS:.proto=_pb2.py}, \
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/cuda/, ${CU_SRCS:.cu=.o})
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
+<<<<<<< HEAD
+=======
+OBJ_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)
+LAYER_BUILD_DIR := $(OBJ_BUILD_DIR)/layers
+UTIL_BUILD_DIR := $(OBJ_BUILD_DIR)/util
+DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
+>>>>>>> BVLC/device-abstraction
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -209,6 +216,7 @@ ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
 		DIST_ALIASES += distribute
 endif
 
+<<<<<<< HEAD
 ALL_BUILD_DIRS := $(sort $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SRC_DIRS)) \
 	$(addprefix $(BUILD_DIR)/cuda/, $(SRC_DIRS)) \
 	$(LIB_BUILD_DIR) $(TEST_BIN_DIR) $(PY_PROTO_BUILD_DIR) $(LINT_OUTPUT_DIR) \
@@ -233,6 +241,17 @@ DOXYGEN_SOURCES := $(shell find \
         -name "*.py" -or -name "*.m")
 DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
 
+=======
+ALL_BUILD_DIRS := $(sort \
+		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
+		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(DEVICE_BUILD_DIR) \
+		$(TOOL_BUILD_DIR) \
+		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
+		$(EXAMPLE_BUILD_DIRS) \
+		$(LINT_OUTPUT_DIR) \
+		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) $(PY_PROTO_BUILD_DIR) \
+		$(DISTRIBUTE_SUBDIRS))
+>>>>>>> BVLC/device-abstraction
 
 ##############################
 # Configure build
@@ -564,6 +583,12 @@ $(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 
+$(DEVICE_BUILD_DIR)/%.o: src/$(PROJECT)/devices/%.cpp $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ echo
+
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		| $(PROTO_BUILD_DIR)
 	@ echo CXX $<
@@ -607,11 +632,25 @@ $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 	@ echo
 >>>>>>> origin/BVLC/parallel
 
+<<<<<<< HEAD
 $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo LD $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+=======
+$(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ echo
+
+$(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+>>>>>>> BVLC/device-abstraction
 
 # Target for extension-less symlinks to tool binaries with extension '*.bin'.
 $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)

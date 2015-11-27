@@ -30,7 +30,45 @@
 
 namespace caffe {
 
+<<<<<<< HEAD
 using boost::weak_ptr;
+=======
+template <typename Dtype>
+class HDF5OutputLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5OutputLayer(const LayerParameter& param);
+  virtual ~HDF5OutputLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_HDF5_OUTPUT;
+  }
+  // TODO: no limit on the number of blobs
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 0; }
+
+  inline std::string file_name() const { return file_name_; }
+
+ protected:
+  virtual void SaveBlobs();
+
+  std::string file_name_;
+  hid_t file_id_;
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
+};
+
+
+// TODO: DataLayer, ImageDataLayer, and WindowDataLayer all have the
+// same basic structure and a lot of duplicated code.
+>>>>>>> BVLC/device-abstraction
 
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
@@ -40,6 +78,7 @@ using boost::weak_ptr;
 template <typename Dtype>
 class BaseDataLayer : public Layer<Dtype> {
  public:
+<<<<<<< HEAD
   explicit BaseDataLayer(const LayerParameter& param);
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
@@ -125,6 +164,19 @@ class DataLoader {
              blocking_queue<Datum*>* free = NULL,
              blocking_queue<Datum*>* full = NULL);
   ~DataLoader();
+=======
+  explicit DataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~DataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+>>>>>>> BVLC/device-abstraction
 
   inline blocking_queue<Datum*>* free() {
     return body_.get()->free_;
@@ -182,12 +234,22 @@ class DataLayer: public BasePrefetchingDataLayer<Dtype> {
 
  protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void load_batch(Batch<Dtype>* batch);
 
   DataReader reader_;
 =======
   blocking_queue<Datum*>* loaders_free_;
   blocking_queue<Datum*>* loaders_full_;
+=======
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+  virtual unsigned int PrefetchRand();
+  // The thread's function
+  virtual void InternalThreadEntry();
+
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+>>>>>>> BVLC/device-abstraction
 
   virtual void load_batch(Batch<Dtype>* batch);
   vector<shared_ptr<DataLoader> > loaders_;
@@ -204,6 +266,7 @@ class DummyDataLayer : public Layer<Dtype> {
  public:
   explicit DummyDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers should be shared by multiple solvers in parallel
@@ -213,10 +276,23 @@ class DummyDataLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "DummyData"; }
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+     vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_DUMMY_DATA;
+  }
+>>>>>>> BVLC/device-abstraction
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -224,6 +300,8 @@ class DummyDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
+=======
+>>>>>>> BVLC/device-abstraction
   vector<shared_ptr<Filler<Dtype> > > fillers_;
   vector<bool> refill_;
 };
@@ -239,6 +317,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   explicit HDF5DataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual ~HDF5DataLayer();
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers should be shared by multiple solvers in parallel
@@ -248,10 +327,25 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
 
   virtual inline const char* type() const { return "HDF5Data"; }
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_HDF5_DATA;
+  }
+>>>>>>> BVLC/device-abstraction
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -260,6 +354,8 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+=======
+>>>>>>> BVLC/device-abstraction
   virtual void LoadHDF5FileData(const char* filename);
 
   std::vector<std::string> hdf_filenames_;
@@ -277,6 +373,7 @@ class HDF5DataLayer : public Layer<Dtype> {
  * TODO(dox): thorough documentation for Forward and proto params.
  */
 template <typename Dtype>
+<<<<<<< HEAD
 class HDF5OutputLayer : public Layer<Dtype> {
  public:
   explicit HDF5OutputLayer(const LayerParameter& param)
@@ -322,19 +419,36 @@ class HDF5OutputLayer : public Layer<Dtype> {
  */
 template <typename Dtype>
 class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
+=======
+class ImageDataLayer : public Layer<Dtype>, public InternalThread {
+>>>>>>> BVLC/device-abstraction
  public:
   explicit ImageDataLayer(const LayerParameter& param)
       : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~ImageDataLayer();
+<<<<<<< HEAD
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "ImageData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
   shared_ptr<Caffe::RNG> prefetch_rng_;
+=======
+>>>>>>> BVLC/device-abstraction
   virtual void ShuffleImages();
   virtual void load_batch(Batch<Dtype>* batch);
 
@@ -351,9 +465,19 @@ template <typename Dtype>
 class MemoryDataLayer : public BaseDataLayer<Dtype> {
  public:
   explicit MemoryDataLayer(const LayerParameter& param)
+<<<<<<< HEAD
       : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "MemoryData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
@@ -376,10 +500,13 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int width() { return width_; }
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
   int batch_size_, channels_, height_, width_, size_;
+=======
+>>>>>>> BVLC/device-abstraction
   Dtype* data_;
   Dtype* labels_;
   int n_;
@@ -401,14 +528,30 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   explicit WindowDataLayer(const LayerParameter& param)
       : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~WindowDataLayer();
+<<<<<<< HEAD
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "WindowData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
+=======
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+>>>>>>> BVLC/device-abstraction
   virtual unsigned int PrefetchRand();
   virtual void load_batch(Batch<Dtype>* batch);
 

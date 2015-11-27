@@ -125,8 +125,13 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+=======
+Dtype HDF5DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -153,12 +158,17 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }
+<<<<<<< HEAD
+=======
+    this->device_->copy(data_count,
+        &data_blob_.cpu_data()[current_row_ * data_count],
+        &(*top)[0]->mutable_data()[i * data_count]);
+    this->device_->copy(label_data_count,
+        &label_blob_.cpu_data()[current_row_ * label_data_count],
+        &(*top)[1]->mutable_data()[i * label_data_count]);
+>>>>>>> BVLC/device-abstraction
   }
 }
-
-#ifdef CPU_ONLY
-STUB_GPU_FORWARD(HDF5DataLayer, Forward);
-#endif
 
 INSTANTIATE_CLASS(HDF5DataLayer);
 REGISTER_LAYER_CLASS(HDF5Data);

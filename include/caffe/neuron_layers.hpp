@@ -347,12 +347,22 @@ class PowerLayer : public NeuronLayer<Dtype> {
    */
   explicit PowerLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Power"; }
 
  protected:
+<<<<<<< HEAD
   /**
    * @param bottom input Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
@@ -394,6 +404,8 @@ class PowerLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   /// @brief @f$ \gamma @f$ from layer_param_.power_param()
+=======
+>>>>>>> BVLC/device-abstraction
   Dtype power_;
   /// @brief @f$ \alpha @f$ from layer_param_.power_param()
   Dtype scale_;

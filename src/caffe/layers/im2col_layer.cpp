@@ -1,6 +1,11 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/util/im2col.hpp"
+=======
+#include "caffe/common.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -112,6 +117,7 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -137,10 +143,22 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
           top_data + n * top_dim_);
     }
+=======
+Dtype Im2colLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+  for (int n = 0; n < bottom[0]->num(); ++n) {
+    this->device_->im2col(
+        bottom_data + bottom[0]->offset(n), channels_, height_,
+        width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+        stride_h_, stride_w_, top_data + (*top)[0]->offset(n));
+>>>>>>> BVLC/device-abstraction
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -161,12 +179,19 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
           bottom_diff + n * bottom_dim_);
     }
+=======
+void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* top_diff = top[0]->const_diff();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+  for (int n = 0; n < top[0]->num(); ++n) {
+    this->device_->col2im(
+        top_diff + top[0]->offset(n), channels_, height_, width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_,
+        stride_h_, stride_w_, bottom_diff + (*bottom)[0]->offset(n));
+>>>>>>> BVLC/device-abstraction
   }
 }
-
-#ifdef CPU_ONLY
-STUB_GPU(Im2colLayer);
-#endif
 
 INSTANTIATE_CLASS(Im2colLayer);
 REGISTER_LAYER_CLASS(Im2col);

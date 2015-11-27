@@ -4,8 +4,14 @@
 
 #include "thrust/device_vector.h"
 
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -88,10 +94,17 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
+<<<<<<< HEAD
   int count = bottom[0]->count();
   int channels = top[0]->shape(softmax_axis_);
   caffe_copy(count, bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
+=======
+  int num = bottom[0]->num();
+  int dim = bottom[0]->count() / bottom[0]->num();
+  GetDevice<Dtype>(Caffe::GPU)->copy(bottom[0]->count(), bottom_data, top_data);
+  // we need to subtract the max to avoid numerical issues, compute the exp,
+>>>>>>> BVLC/device-abstraction
   // and then normalize.
   // compute max
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -100,14 +113,31 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       scale_data);
   // subtract
   // NOLINT_NEXT_LINE(whitespace/operators)
+<<<<<<< HEAD
   kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
       CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, top_data);
   // exponentiate
+=======
+  kernel_get_max<Dtype><<<CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS>>>(
+      num, dim, bottom_data, scale_data);
+  // subtraction
+  GetDevice<Dtype>(Caffe::GPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
+                                     -1., scale_data,
+                                     sum_multiplier_.gpu_data(), 1., top_data);
+  // Perform exponentiation
+>>>>>>> BVLC/device-abstraction
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, top_data, top_data);
   // sum after exp
+<<<<<<< HEAD
+=======
+  GetDevice<Dtype>(Caffe::GPU)->gemv(CblasNoTrans, num, dim, 1., top_data,
+                                     sum_multiplier_.gpu_data(), 0.,
+                                     scale_data);
+  // Do division
+>>>>>>> BVLC/device-abstraction
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
       CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
@@ -124,6 +154,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
+<<<<<<< HEAD
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   Dtype* scale_data = scale_.mutable_gpu_data();
   int count = top[0]->count();
@@ -138,8 +169,32 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
       CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, bottom_diff);
+=======
+  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+  int num = top[0]->num();
+  int dim = top[0]->count() / top[0]->num();
+  GetDevice<Dtype>(Caffe::GPU)->copy(top[0]->count(), top_diff, bottom_diff);
+  // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
+  // cuda dot returns the result to cpu, so we temporarily change the pointer
+  // mode
+  CUBLAS_CHECK(cublasSetPointerMode(Caffe::cublas_handle(),
+      CUBLAS_POINTER_MODE_DEVICE));
+  Dtype* scale_data = scale_.mutable_gpu_data();
+  for (int i = 0; i < num; ++i) {
+    GetDevice<Dtype>(Caffe::GPU)->dot(dim, top_diff + i * dim,
+                                      top_data + i * dim, scale_data + i);
+  }
+  CUBLAS_CHECK(cublasSetPointerMode(Caffe::cublas_handle(),
+      CUBLAS_POINTER_MODE_HOST));
+  // subtraction
+  GetDevice<Dtype>(Caffe::GPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
+                                     -1., scale_.gpu_data(),
+                                     sum_multiplier_.gpu_data(), 1.,
+                                     bottom_diff);
+>>>>>>> BVLC/device-abstraction
   // elementwise multiplication
-  caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
+  GetDevice<Dtype>(Caffe::GPU)->mul(top[0]->count(), bottom_diff, top_data,
+                                    bottom_diff);
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(SoftmaxLayer);

@@ -2,8 +2,16 @@
 
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/common.hpp"
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/syncedmem.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -36,12 +44,13 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int count = bottom[0]->count();
   if (this->phase_ == TRAIN) {
     // Create random numbers
-    caffe_rng_bernoulli(count, 1. - threshold_, mask);
+    GetDevice<Dtype>(Caffe::CPU)->rng_bernoulli(count, 1. - threshold_, mask);
     for (int i = 0; i < count; ++i) {
       top_data[i] = bottom_data[i] * mask[i] * scale_;
     }
   } else {
-    caffe_copy(bottom[0]->count(), bottom_data, top_data);
+    GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data,
+                                       top_data);
   }
 }
 
@@ -59,7 +68,8 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         bottom_diff[i] = top_diff[i] * mask[i] * scale_;
       }
     } else {
-      caffe_copy(top[0]->count(), top_diff, bottom_diff);
+      GetDevice<Dtype>(Caffe::CPU)->copy(top[0]->count(), top_diff,
+                                         bottom_diff);
     }
   }
 }

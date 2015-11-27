@@ -1,8 +1,19 @@
-#include <cstdio>
+#include <math.h>
 
+<<<<<<< HEAD
 #include <string>
 #include <vector>
 
+=======
+#include <algorithm>
+#include <cstdio>
+#include <string>
+#include <vector>
+
+#include "caffe/device.hpp"
+#include "caffe/net.hpp"
+#include "caffe/proto/caffe.pb.h"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -578,6 +589,7 @@ string Solver<Dtype>::SnapshotFilename(const string extension) {
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 string Solver<Dtype>::SnapshotToBinaryProto() {
   string model_filename = SnapshotFilename(".caffemodel");
   LOG(INFO) << "Snapshotting to binary proto file " << model_filename;
@@ -585,6 +597,38 @@ string Solver<Dtype>::SnapshotToBinaryProto() {
   net_->ToProto(&net_param, param_.snapshot_diff());
   WriteProtoToBinaryFile(net_param, model_filename);
   return model_filename;
+=======
+void SGDSolver<Dtype>::ComputeUpdateValue() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  // get the learning rate
+  Dtype rate = GetLearningRate();
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+  }
+  Dtype momentum = this->param_.momentum();
+  Dtype weight_decay = this->param_.weight_decay();
+  Device<Dtype>* device = GetDevice<Dtype>();
+  for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+    // Compute the value to history, and then copy them to the blob's diff.
+    Dtype local_rate = rate * net_params_lr[param_id];
+    Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+    device->axpby(net_params[param_id]->count(), local_rate,
+        net_params[param_id]->const_diff(), momentum,
+        history_[param_id]->mutable_data());
+    if (local_decay) {
+      // add weight decay
+      device->axpy(net_params[param_id]->count(), local_decay * local_rate,
+          net_params[param_id]->const_data(),
+          history_[param_id]->mutable_data());
+    }
+    // copy
+    device->copy(net_params[param_id]->count(),
+        history_[param_id]->const_data(),
+        net_params[param_id]->mutable_diff());
+  }
+>>>>>>> BVLC/device-abstraction
 }
 
 template <typename Dtype>

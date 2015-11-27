@@ -1,6 +1,12 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
+=======
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 

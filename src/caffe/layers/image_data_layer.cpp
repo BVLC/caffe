@@ -10,7 +10,6 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
 namespace caffe {
@@ -154,6 +153,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
+<<<<<<< HEAD
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
@@ -192,6 +192,21 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+=======
+template <typename Dtype>
+Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  // First, join the thread
+  JoinPrefetchThread();
+  // Copy the data
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+                      (*top)[0]->mutable_data());
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+                      (*top)[1]->mutable_data());
+  // Start a new prefetch thread
+  CreatePrefetchThread();
+  return Dtype(0.);
+>>>>>>> BVLC/device-abstraction
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);

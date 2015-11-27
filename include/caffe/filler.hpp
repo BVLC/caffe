@@ -5,12 +5,18 @@
 #ifndef CAFFE_FILLER_HPP
 #define CAFFE_FILLER_HPP
 
+#include <math.h>
+
 #include <string>
 
 #include "caffe/blob.hpp"
+<<<<<<< HEAD
+=======
+#include "caffe/common.hpp"
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -53,8 +59,9 @@ class UniformFiller : public Filler<Dtype> {
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    caffe_rng_uniform<Dtype>(blob->count(), Dtype(this->filler_param_.min()),
-        Dtype(this->filler_param_.max()), blob->mutable_cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(),
+        Dtype(this->filler_param_.min()), Dtype(this->filler_param_.max()),
+        blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
@@ -69,8 +76,9 @@ class GaussianFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     CHECK(blob->count());
-    caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
-        Dtype(this->filler_param_.std()), blob->mutable_cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->rng_gaussian(blob->count(),
+        Dtype(this->filler_param_.mean()), Dtype(this->filler_param_.std()),
+        blob->mutable_cpu_data());
     int sparse = this->filler_param_.sparse();
     CHECK_GE(sparse, -1);
     if (sparse >= 0) {
@@ -83,7 +91,8 @@ class GaussianFiller : public Filler<Dtype> {
       Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
       rand_vec_.reset(new SyncedMemory(blob->count() * sizeof(int)));
       int* mask = reinterpret_cast<int*>(rand_vec_->mutable_cpu_data());
-      caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);
+      GetDevice<Dtype>(Caffe::CPU)->rng_bernoulli(blob->count(),
+                                                  non_zero_probability, mask);
       for (int i = 0; i < blob->count(); ++i) {
         data[i] *= mask[i];
       }
@@ -105,7 +114,8 @@ class PositiveUnitballFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     DCHECK(blob->count());
-    caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), 0, 1,
+                                              blob->mutable_cpu_data());
     // We expect the filler to not be called very frequently, so we will
     // just use a simple implementation
     int dim = blob->count() / blob->num();
@@ -148,6 +158,7 @@ class XavierFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
     int fan_in = blob->count() / blob->num();
+<<<<<<< HEAD
     int fan_out = blob->count() / blob->channels();
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm() ==
@@ -160,6 +171,11 @@ class XavierFiller : public Filler<Dtype> {
     Dtype scale = sqrt(Dtype(3) / n);
     caffe_rng_uniform<Dtype>(blob->count(), -scale, scale,
         blob->mutable_cpu_data());
+=======
+    Dtype scale = sqrt(Dtype(3) / fan_in);
+    GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
+                                              blob->mutable_cpu_data());
+>>>>>>> BVLC/device-abstraction
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
