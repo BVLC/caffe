@@ -42,10 +42,16 @@ class Solver {
  public:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   explicit Solver(const SolverParameter& param,
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
   void Init(const SolverParameter& param);
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
 =======
   explicit Solver(const SolverParameter& param, bool skip_test_nets);
   explicit Solver(const string& param_file);
@@ -88,6 +94,7 @@ class Solver {
   inline int *iter_total() { return iter_total_; }
   inline void iter_total(int *value) { iter_total_ = value; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -108,6 +115,8 @@ class Solver {
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
+=======
+>>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 

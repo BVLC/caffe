@@ -55,11 +55,24 @@ BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
 }
 
 template <typename Dtype>
+BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
+    const LayerParameter& param)
+    : BaseDataLayer<Dtype>(param),
+      prefetch_free_(), prefetch_full_(), device_() {
+  for(int i = 0; i < PREFETCH_COUNT; ++i)
+    prefetch_free_.push(&prefetch_[i]);
+}
+
+template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   BaseDataLayer<Dtype>::LayerSetUp(bottom, top);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/BVLC/parallel
 =======
 
 >>>>>>> origin/BVLC/parallel
@@ -72,7 +85,11 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   // seems to cause failures if we do not so.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   for (int i = 0; i < PREFETCH_COUNT; ++i) {
+=======
+  for(int i = 0; i < PREFETCH_COUNT; ++i) {
+>>>>>>> origin/BVLC/parallel
 =======
   for(int i = 0; i < PREFETCH_COUNT; ++i) {
 >>>>>>> origin/BVLC/parallel
@@ -83,6 +100,7 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
     if (this->output_labels_) {
       prefetch_[i].label_.mutable_cpu_data();
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   }
@@ -101,6 +119,9 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   StartInternalThread();
 =======
   }
+=======
+  }
+>>>>>>> origin/BVLC/parallel
   switch (Caffe::mode()) {
     case Caffe::CPU:
       device_ = -1;
@@ -122,11 +143,15 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   this->phase_ = Caffe::phase();
   this->data_transformer_.InitRand();
   CHECK(StartInternalThread()) << "Thread execution failed";
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
   DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
@@ -195,6 +220,13 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
 
 template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
+=======
+BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
+  CHECK(StopInternalThread()) << "Stop thread failed";
+}
+
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
 void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   cudaStream_t stream;
@@ -216,6 +248,9 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
     prefetch_full_.push(batch);
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -225,6 +260,7 @@ template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   // Reshape to loaded data.
@@ -237,6 +273,12 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     // Reshape to loaded labels.
     top[1]->ReshapeLike(batch->label_);
     // Copy the labels.
+=======
+
+  caffe_copy(batch->data_.count(), batch->data_.cpu_data(),
+      top[0]->mutable_cpu_data());
+  if (this->output_labels_) {
+>>>>>>> origin/BVLC/parallel
 =======
 
   caffe_copy(batch->data_.count(), batch->data_.cpu_data(),

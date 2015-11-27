@@ -9,6 +9,7 @@ namespace caffe {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
 // The improvement in performance seems negligible in the single GPU case,
@@ -37,6 +38,8 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 =======
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
 inline void CaffeMallocHost(void** ptr, size_t size) {
 #ifndef CPU_ONLY
   cudaMallocHost(ptr, size);
@@ -50,6 +53,9 @@ inline void CaffeFreeHost(void* ptr) {
   cudaFreeHost(ptr);
 #else
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -69,6 +75,7 @@ class SyncedMemory {
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
         gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
@@ -82,10 +89,15 @@ class SyncedMemory {
         own_cpu_data_(false), own_gpu_data_(false) {}
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> origin/BVLC/parallel
         own_cpu_data_(false), own_gpu_data_(false) {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), own_gpu_data_(false) {}
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
   ~SyncedMemory();
   const void* cpu_data();
@@ -100,6 +112,7 @@ class SyncedMemory {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifndef CPU_ONLY
   void async_gpu_push(const cudaStream_t& stream);
 #endif
@@ -107,6 +120,11 @@ class SyncedMemory {
   const void* const_data();
   void* mutable_data();
 >>>>>>> BVLC/device-abstraction
+=======
+#ifndef CPU_ONLY
+  void async_gpu_push(const cudaStream_t& stream);
+#endif
+>>>>>>> origin/BVLC/parallel
 =======
 #ifndef CPU_ONLY
   void async_gpu_push(const cudaStream_t& stream);
@@ -123,9 +141,13 @@ class SyncedMemory {
   bool own_cpu_data_;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
+=======
+  bool own_gpu_data_;
+>>>>>>> origin/BVLC/parallel
 =======
   bool own_gpu_data_;
 >>>>>>> origin/BVLC/parallel

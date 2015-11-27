@@ -10,6 +10,7 @@ InternalThread::~InternalThread() {
   StopInternalThread();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 bool InternalThread::is_started() const {
@@ -35,6 +36,8 @@ void InternalThread::StartInternalThread() {
 =======
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
   if (thread_ != NULL) {
     delete thread_;
   }
@@ -46,6 +49,9 @@ bool InternalThread::StartInternalThread() {
   }
   must_stop_ = false;
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -77,6 +83,9 @@ void InternalThread::StopInternalThread() {
 bool InternalThread::StopInternalThread() {
   must_stop_ = true;
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel

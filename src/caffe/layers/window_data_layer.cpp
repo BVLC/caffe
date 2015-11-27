@@ -32,7 +32,11 @@ template <typename Dtype>
 WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   this->StopInternalThread();
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 =======
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
@@ -184,9 +188,14 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(batch_size, channels, crop_size, crop_size);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   for (int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].data_.Reshape(
         batch_size, channels, crop_size, crop_size);
+=======
+  for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+    this->prefetch_[i].data_.Reshape(batch_size, channels, crop_size, crop_size);
+>>>>>>> origin/BVLC/parallel
 =======
   for(int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].data_.Reshape(batch_size, channels, crop_size, crop_size);
@@ -211,6 +220,9 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for(int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -265,10 +277,13 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -296,10 +311,14 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // zero out batch
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 =======
   GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
 >>>>>>> BVLC/device-abstraction
+=======
+  caffe_set(batch->data_.count(), Dtype(0), top_data);
+>>>>>>> origin/BVLC/parallel
 =======
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 >>>>>>> origin/BVLC/parallel

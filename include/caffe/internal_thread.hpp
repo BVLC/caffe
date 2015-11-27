@@ -20,7 +20,11 @@ class InternalThread {
  public:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   InternalThread() : thread_() {}
+=======
+  InternalThread() : thread_(NULL), must_stop_() {}
+>>>>>>> origin/BVLC/parallel
 =======
   InternalThread() : thread_(NULL), must_stop_() {}
 >>>>>>> origin/BVLC/parallel
@@ -39,12 +43,20 @@ class InternalThread {
   /** Will not return until the internal thread has exited. */
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   void StopInternalThread();
 =======
   bool StopInternalThread();
 >>>>>>> origin/BVLC/parallel
 
   bool is_started() const;
+=======
+  bool StopInternalThread();
+>>>>>>> origin/BVLC/parallel
+
+  bool must_stop() {
+    return must_stop_;
+  }
 =======
   bool StopInternalThread();
 >>>>>>> origin/BVLC/parallel
@@ -75,6 +87,9 @@ class InternalThread {
   caffe::Thread* thread_;
   bool must_stop_;
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel

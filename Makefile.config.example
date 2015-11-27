@@ -9,6 +9,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
@@ -21,6 +22,10 @@
 
 # Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
+=======
+# Parallelization over InfiniBand or RoCE
+# RDMA := 1
+>>>>>>> origin/BVLC/parallel
 =======
 # Parallelization over InfiniBand or RoCE
 # RDMA := 1
