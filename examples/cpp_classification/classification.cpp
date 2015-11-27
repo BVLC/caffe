@@ -1,6 +1,7 @@
 #include <caffe/caffe.hpp>
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/version.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #endif  // USE_OPENCV
@@ -190,16 +191,31 @@ void Classifier::Preprocess(const cv::Mat& img,
                             std::vector<cv::Mat>* input_channels) {
   /* Convert the input image to the input image format of the network. */
   cv::Mat sample;
-  if (img.channels() == 3 && num_channels_ == 1)
-    cv::cvtColor(img, sample, CV_BGR2GRAY);
-  else if (img.channels() == 4 && num_channels_ == 1)
-    cv::cvtColor(img, sample, CV_BGRA2GRAY);
-  else if (img.channels() == 4 && num_channels_ == 3)
-    cv::cvtColor(img, sample, CV_BGRA2BGR);
-  else if (img.channels() == 1 && num_channels_ == 3)
-    cv::cvtColor(img, sample, CV_GRAY2BGR);
-  else
-    sample = img;
+  /* OpenCV 2 preprocess*/
+  #if (defined(CV_VERSION_EPOCH) && CV_VERSION_EPOCH == 2)
+    if (img.channels() == 3 && num_channels_ == 1)
+      cv::cvtColor(img, sample, CV_BGR2GRAY);
+    else if (img.channels() == 4 && num_channels_ == 1)
+      cv::cvtColor(img, sample, CV_BGRA2GRAY);
+    else if (img.channels() == 4 && num_channels_ == 3)
+      cv::cvtColor(img, sample, CV_BGRA2BGR);
+    else if (img.channels() == 1 && num_channels_ == 3)
+      cv::cvtColor(img, sample, CV_GRAY2BGR);
+    else
+      sample = img;
+  /* OpenCV 3 preprocess*/
+  #else
+    if (img.channels() == 3 && num_channels_ == 1)
+      cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
+    else if (img.channels() == 4 && num_channels_ == 1)
+      cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
+    else if (img.channels() == 4 && num_channels_ == 3)
+      cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
+    else if (img.channels() == 1 && num_channels_ == 3)
+      cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
+    else
+      sample = img;
+  #endif
 
   cv::Mat sample_resized;
   if (sample.size() != input_geometry_)
