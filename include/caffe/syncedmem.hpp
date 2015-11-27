@@ -7,6 +7,7 @@
 
 namespace caffe {
 
+<<<<<<< HEAD
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
 // The improvement in performance seems negligible in the single GPU case,
@@ -32,9 +33,23 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
     return;
   }
 #endif
-  free(ptr);
+=======
+inline void CaffeMallocHost(void** ptr, size_t size) {
+#ifndef CPU_ONLY
+  cudaMallocHost(ptr, size);
+#else
+  *ptr = malloc(size);
+#endif
 }
 
+inline void CaffeFreeHost(void* ptr) {
+#ifndef CPU_ONLY
+  cudaFreeHost(ptr);
+#else
+>>>>>>> origin/BVLC/parallel
+  free(ptr);
+#endif
+}
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
@@ -46,12 +61,19 @@ class SyncedMemory {
  public:
   SyncedMemory()
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+<<<<<<< HEAD
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
         gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
         gpu_device_(-1) {}
+=======
+        own_cpu_data_(false), own_gpu_data_(false) {}
+  explicit SyncedMemory(size_t size)
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
+        own_cpu_data_(false), own_gpu_data_(false) {}
+>>>>>>> origin/BVLC/parallel
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -75,9 +97,13 @@ class SyncedMemory {
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
+<<<<<<< HEAD
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
+=======
+  bool own_gpu_data_;
+>>>>>>> origin/BVLC/parallel
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

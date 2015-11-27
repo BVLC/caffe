@@ -26,6 +26,7 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
@@ -51,16 +52,48 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
   if (Caffe::root_solver() && param_.random_seed() >= 0) {
+=======
+Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
+    : iter_(), iter_total_(&iter_), net_() {
+  Init(param, skip_test_nets);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file)
+    : iter_(), iter_total_(&iter_), net_() {
+  SolverParameter param;
+  ReadProtoFromTextFileOrDie(param_file, &param);
+  Init(param, false);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
+  LOG(INFO) << "Initializing solver from parameters: " << std::endl
+            << param.DebugString();
+  param_ = param;
+  if (param_.solver_mode() == SolverParameter::GPU &&
+      param_.has_device_id()) {
+    Caffe::SetDevice(param_.device_id());
+  }
+  Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
+  if (param_.random_seed() >= 0) {
+>>>>>>> origin/BVLC/parallel
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
   InitTrainNet();
+<<<<<<< HEAD
   if (Caffe::root_solver()) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
   }
   iter_ = 0;
   current_step_ = 0;
+=======
+  if(!skip_test_nets)
+    InitTestNets();
+  LOG(INFO) << "Solver scaffolding done.";
+>>>>>>> origin/BVLC/parallel
 }
 
 template <typename Dtype>
@@ -413,6 +446,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
+<<<<<<< HEAD
   CHECK(Caffe::root_solver());
   string model_filename;
   switch (param_.snapshot_format()) {
@@ -424,6 +458,96 @@ void Solver<Dtype>::Snapshot() {
     break;
   default:
     LOG(FATAL) << "Unsupported snapshot format.";
+=======
+  NetParameter net_param;
+  // For intermediate results, we will also dump the gradient values.
+  net_->ToProto(&net_param, param_.snapshot_diff());
+  string filename(param_.snapshot_prefix());
+  string model_filename, snapshot_filename;
+  const int kBufferSize = 20;
+  char iter_str_buffer[kBufferSize];
+  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
+  filename += iter_str_buffer;
+  model_filename = filename + ".caffemodel";
+  LOG(INFO) << "Snapshotting to " << model_filename;
+  WriteProtoToBinaryFile(net_param, model_filename.c_str());
+  SolverState state;
+  SnapshotSolverState(&state);
+  state.set_iter(iter_);
+  state.set_learned_net(model_filename);
+  state.set_current_step(current_step_);
+  snapshot_filename = filename + ".solverstate";
+  LOG(INFO) << "Snapshotting solver state to " << snapshot_filename;
+  WriteProtoToBinaryFile(state, snapshot_filename.c_str());
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Restore(const char* state_file) {
+  SolverState state;
+  NetParameter net_param;
+  ReadProtoFromBinaryFile(state_file, &state);
+  if (state.has_learned_net()) {
+    ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
+    net_->CopyTrainedLayersFrom(net_param);
+  }
+  iter_ = state.iter();
+  current_step_ = state.current_step();
+  RestoreSolverState(state);
+}
+
+
+// Return the current learning rate. The currently implemented learning rate
+// policies are as follows:
+//    - fixed: always return base_lr.
+//    - step: return base_lr * gamma ^ (floor(iter / step))
+//    - exp: return base_lr * gamma ^ iter
+//    - inv: return base_lr * (1 + gamma * iter) ^ (- power)
+//    - multistep: similar to step but it allows non uniform steps defined by
+//      stepvalue
+//    - poly: the effective learning rate follows a polynomial decay, to be
+//      zero by the max_iter. return base_lr (1 - iter/max_iter) ^ (power)
+//    - sigmoid: the effective learning rate follows a sigmod decay
+//      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
+//
+// where base_lr, max_iter, gamma, step, stepvalue and power are defined
+// in the solver parameter protocol buffer, and iter is the current iteration.
+template <typename Dtype>
+Dtype SGDSolver<Dtype>::GetLearningRate() {
+  Dtype rate;
+  const string& lr_policy = this->param_.lr_policy();
+  int iter = *(this->iter_total_);
+  if (lr_policy == "fixed") {
+    rate = this->param_.base_lr();
+  } else if (lr_policy == "step") {
+    this->current_step_ = iter / this->param_.stepsize();
+    rate = this->param_.base_lr() *
+        pow(this->param_.gamma(), this->current_step_);
+  } else if (lr_policy == "exp") {
+    rate = this->param_.base_lr() * pow(this->param_.gamma(), iter);
+  } else if (lr_policy == "inv") {
+    rate = this->param_.base_lr() *
+        pow(Dtype(1) + this->param_.gamma() * iter,
+            - this->param_.power());
+  } else if (lr_policy == "multistep") {
+    if (this->current_step_ < this->param_.stepvalue_size() &&
+          iter >= this->param_.stepvalue(this->current_step_)) {
+      this->current_step_++;
+      LOG(INFO) << "MultiStep Status: Iteration " <<
+      iter << ", step = " << this->current_step_;
+    }
+    rate = this->param_.base_lr() *
+        pow(this->param_.gamma(), this->current_step_);
+  } else if (lr_policy == "poly") {
+    rate = this->param_.base_lr() * pow(Dtype(1.) -
+        (Dtype(iter) / Dtype(this->param_.max_iter())),
+        this->param_.power());
+  } else if (lr_policy == "sigmoid") {
+    rate = this->param_.base_lr() * (Dtype(1.) /
+        (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(iter) -
+          Dtype(this->param_.stepsize())))));
+  } else {
+    LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
+>>>>>>> origin/BVLC/parallel
   }
 
   SnapshotSolverState(model_filename);

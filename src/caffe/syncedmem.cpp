@@ -11,11 +11,14 @@ SyncedMemory::~SyncedMemory() {
 
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
+<<<<<<< HEAD
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
       CUDA_CHECK(cudaSetDevice(gpu_device_));
     }
+=======
+>>>>>>> origin/BVLC/parallel
     CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
@@ -121,6 +124,20 @@ void SyncedMemory::set_gpu_data(void* data) {
 #endif
 }
 
+void SyncedMemory::set_gpu_data(void* data) {
+#ifndef CPU_ONLY
+  CHECK(data);
+  if (own_gpu_data_) {
+    CUDA_CHECK(cudaFree(gpu_ptr_));
+  }
+  gpu_ptr_ = data;
+  head_ = HEAD_AT_GPU;
+  own_gpu_data_ = false;
+#else
+  NO_GPU;
+#endif
+}
+
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
@@ -142,12 +159,19 @@ void* SyncedMemory::mutable_gpu_data() {
 void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
+<<<<<<< HEAD
     CUDA_CHECK(cudaGetDevice(&gpu_device_));
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     own_gpu_data_ = true;
   }
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;
   CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+=======
+    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    own_gpu_data_ = true;
+  }
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice, stream));
+>>>>>>> origin/BVLC/parallel
   // Assume caller will synchronize on the stream before use
   head_ = SYNCED;
 }

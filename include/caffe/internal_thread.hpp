@@ -18,7 +18,11 @@ namespace caffe {
  */
 class InternalThread {
  public:
+<<<<<<< HEAD
   InternalThread() : thread_() {}
+=======
+  InternalThread() : thread_(NULL), must_stop_() {}
+>>>>>>> origin/BVLC/parallel
   virtual ~InternalThread();
 
   /**
@@ -29,15 +33,24 @@ class InternalThread {
   void StartInternalThread();
 
   /** Will not return until the internal thread has exited. */
+<<<<<<< HEAD
   void StopInternalThread();
+=======
+  bool StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 
   bool is_started() const;
+
+  bool must_stop() {
+    return must_stop_;
+  }
 
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
   virtual void InternalThreadEntry() {}
 
+<<<<<<< HEAD
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
@@ -46,6 +59,10 @@ class InternalThread {
       bool root_solver);
 
   shared_ptr<boost::thread> thread_;
+=======
+  caffe::Thread* thread_;
+  bool must_stop_;
+>>>>>>> origin/BVLC/parallel
 };
 
 }  // namespace caffe
