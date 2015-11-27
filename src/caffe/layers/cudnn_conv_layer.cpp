@@ -191,7 +191,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
   // this is the total amount of storage needed over all groups + streams
   if (total_max_workspace > workspaceSizeInBytes) {
-    LOG(INFO) << "Reallocating workspace storage: " << total_max_workspace;
+    DLOG(INFO) << "Reallocating workspace storage: " << total_max_workspace;
     workspaceSizeInBytes = total_max_workspace;
 
     // free the existing workspace and allocate a new (larger) one
