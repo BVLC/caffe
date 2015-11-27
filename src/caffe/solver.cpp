@@ -38,6 +38,7 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
@@ -78,6 +79,22 @@ Solver<Dtype>::Solver(const string& param_file)
 }
 
 template <typename Dtype>
+=======
+Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
+    : iter_(), iter_total_(&iter_), net_() {
+  Init(param, skip_test_nets);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file)
+    : iter_(), iter_total_(&iter_), net_() {
+  SolverParameter param;
+  ReadProtoFromTextFileOrDie(param_file, &param);
+  Init(param, false);
+}
+
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
 void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
@@ -94,6 +111,7 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   // Scaffolding code
   InitTrainNet();
 <<<<<<< HEAD
+<<<<<<< HEAD
   if (Caffe::root_solver()) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
@@ -101,6 +119,8 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   iter_ = 0;
   current_step_ = 0;
 =======
+=======
+>>>>>>> origin/BVLC/parallel
   if(!skip_test_nets)
     InitTestNets();
   LOG(INFO) << "Solver scaffolding done.";

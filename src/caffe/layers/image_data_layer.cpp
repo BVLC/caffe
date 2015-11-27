@@ -17,7 +17,11 @@ namespace caffe {
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 <<<<<<< HEAD
+<<<<<<< HEAD
   this->StopInternalThread();
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 =======
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
@@ -106,6 +110,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[1]->Reshape(batch_size, 1, 1, 1);
   for(int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 }
 
@@ -127,6 +134,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
 =======
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
@@ -168,9 +180,12 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // Apply transformations (mirror, crop...) to the image
     int offset = batch->data_.offset(item_id);
 <<<<<<< HEAD
+<<<<<<< HEAD
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
 =======
+=======
+>>>>>>> origin/BVLC/parallel
     this->transformed_data_.set_cpu_data(top_data + offset);
     this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
 >>>>>>> origin/BVLC/parallel

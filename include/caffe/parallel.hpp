@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
@@ -42,6 +43,8 @@ class Params {
   Dtype* data_;                 // Network parameters
   Dtype* diff_;                 // Gradient
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 #ifndef CAFFE_PARALLEL_H_
 #define CAFFE_PARALLEL_H_
 
@@ -174,11 +177,15 @@ class Params {
 
   template<typename U>
   friend class GPUParams;
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 
 DISABLE_COPY_AND_ASSIGN(Params);
 };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 // Params stored in GPU memory.
 template<typename Dtype>
@@ -251,6 +258,8 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 
 }  // namespace caffe
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 #ifndef CPU_ONLY
 
 // Params on a GPU
@@ -670,6 +679,9 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 
 #endif // __linux__
 }
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 
 #endif

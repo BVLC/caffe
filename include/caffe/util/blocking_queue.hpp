@@ -1,20 +1,27 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifndef CAFFE_UTIL_BLOCKING_QUEUE_HPP_
 #define CAFFE_UTIL_BLOCKING_QUEUE_HPP_
 
 #include <queue>
 #include <string>
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 #ifndef CAFFE_UTIL_BLOCKING_QUEUE_H_
 #define CAFFE_UTIL_BLOCKING_QUEUE_H_
 
 #include <queue>
 #include "boost/thread.hpp"
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 
 namespace caffe {
 
 template<typename T>
+<<<<<<< HEAD
 <<<<<<< HEAD
 class BlockingQueue {
  public:
@@ -48,6 +55,8 @@ class BlockingQueue {
 
 DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 class blocking_queue {
 public:
   void push(const T& t) {
@@ -107,6 +116,9 @@ private:
   mutable boost::mutex mutex_;
   boost::condition_variable condition_;
   time_t last_wait_log_;
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 };
 

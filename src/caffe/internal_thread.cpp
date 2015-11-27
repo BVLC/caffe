@@ -9,6 +9,7 @@ namespace caffe {
 InternalThread::~InternalThread() {
   StopInternalThread();
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 bool InternalThread::is_started() const {
@@ -32,6 +33,8 @@ void InternalThread::StartInternalThread() {
   bool root_solver = Caffe::root_solver();
 
 =======
+=======
+>>>>>>> origin/BVLC/parallel
   if (thread_ != NULL) {
     delete thread_;
   }
@@ -42,6 +45,9 @@ bool InternalThread::StartInternalThread() {
     return false;
   }
   must_stop_ = false;
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
   try {
     thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
@@ -70,6 +76,9 @@ void InternalThread::StopInternalThread() {
 /** Will not return until the internal thread has exited. */
 bool InternalThread::StopInternalThread() {
   must_stop_ = true;
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
   if (is_started()) {
     thread_->interrupt();

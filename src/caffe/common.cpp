@@ -10,6 +10,7 @@
 namespace caffe {
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
@@ -19,6 +20,9 @@ Caffe& Caffe::Get() {
   }
   return *(thread_instance_.get());
 }
+=======
+thread_specific_ptr<Caffe> Caffe::thread_instance_;
+>>>>>>> origin/BVLC/parallel
 =======
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel

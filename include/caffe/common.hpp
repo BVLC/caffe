@@ -184,6 +184,9 @@ class Caffe {
 
   // Make sure each thread can have different values.
   static thread_specific_ptr<Caffe> thread_instance_;
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 
  private:

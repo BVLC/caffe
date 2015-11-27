@@ -8,6 +8,9 @@
 =======
 
 #include "boost/weak_ptr.hpp"
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 #include "hdf5.h"
 
@@ -20,6 +23,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/blocking_queue.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 #include "caffe/util/db.hpp"
 
@@ -69,6 +73,12 @@ class HDF5OutputLayer : public Layer<Dtype> {
 // TODO: DataLayer, ImageDataLayer, and WindowDataLayer all have the
 // same basic structure and a lot of duplicated code.
 >>>>>>> BVLC/device-abstraction
+=======
+
+namespace caffe {
+
+using boost::weak_ptr;
+>>>>>>> origin/BVLC/parallel
 
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
@@ -116,6 +126,10 @@ class BasePrefetchingDataLayer :
  public:
   explicit BasePrefetchingDataLayer(const LayerParameter& param);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  virtual ~BasePrefetchingDataLayer();
+>>>>>>> origin/BVLC/parallel
 =======
   virtual ~BasePrefetchingDataLayer();
 >>>>>>> origin/BVLC/parallel
@@ -131,9 +145,12 @@ class BasePrefetchingDataLayer :
       const vector<Blob<Dtype>*>& top);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Prefetches batches (asynchronously if to GPU memory)
   static const int PREFETCH_COUNT = 3;
 
+=======
+>>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
  protected:
@@ -141,16 +158,22 @@ class BasePrefetchingDataLayer :
   virtual void load_batch(Batch<Dtype>* batch) = 0;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   Batch<Dtype> prefetch_[PREFETCH_COUNT];
   BlockingQueue<Batch<Dtype>*> prefetch_free_;
   BlockingQueue<Batch<Dtype>*> prefetch_full_;
 =======
+=======
+>>>>>>> origin/BVLC/parallel
   // Prefetches batches (asynchronously if to GPU memory)
   static const int PREFETCH_COUNT = 4;
   Batch<Dtype> prefetch_[PREFETCH_COUNT];
   blocking_queue<Batch<Dtype>*> prefetch_free_;
   blocking_queue<Batch<Dtype>*> prefetch_full_;
   int device_;
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 
   Blob<Dtype> transformed_data_;
@@ -159,6 +182,7 @@ class BasePrefetchingDataLayer :
 // Single database context per file, prefetches datums to host memory that
 // can be read by multiple data layers.
 class DataLoader {
+<<<<<<< HEAD
  public:
   DataLoader(const DataParameter& param, int index,
              blocking_queue<Datum*>* free = NULL,
@@ -177,6 +201,57 @@ class DataLoader {
     return;
   }
 >>>>>>> BVLC/device-abstraction
+=======
+ public:
+  DataLoader(const DataParameter& param, int index,
+             blocking_queue<Datum*>* free = NULL,
+             blocking_queue<Datum*>* full = NULL);
+  ~DataLoader();
+
+  inline blocking_queue<Datum*>* free() {
+    return body_.get()->free_;
+  }
+  inline blocking_queue<Datum*>* full() {
+    return body_.get()->full_;
+  }
+
+ protected:
+  class Body: public InternalThread {
+   public:
+    Body(const DataParameter& param, int index,
+         blocking_queue<Datum*>* free,
+         blocking_queue<Datum*>* full);
+    ~Body();
+
+    void InternalThreadEntry();
+
+    shared_ptr<Dataset<string, Datum> > dataset_;
+    Dataset<string, Datum>::const_iterator iter_;
+
+    blocking_queue<Datum*>* free_;
+    blocking_queue<Datum*>* full_;
+    bool own_free_full_;
+
+    DISABLE_COPY_AND_ASSIGN(Body);
+  };
+
+  static map<string, weak_ptr<Body> > instances_;
+  static boost::mutex instances_mutex_;
+
+  const string source_;
+  shared_ptr<Body> body_;
+
+  DISABLE_COPY_AND_ASSIGN(DataLoader);
+};
+
+template <typename Dtype>
+class DataLayer: public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit DataLayer(const LayerParameter& param);
+  virtual ~DataLayer() {}
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> origin/BVLC/parallel
 
   inline blocking_queue<Datum*>* free() {
     return body_.get()->free_;
@@ -235,6 +310,7 @@ class DataLayer: public BasePrefetchingDataLayer<Dtype> {
  protected:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void load_batch(Batch<Dtype>* batch);
 
   DataReader reader_;
@@ -250,6 +326,13 @@ class DataLayer: public BasePrefetchingDataLayer<Dtype> {
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
 >>>>>>> BVLC/device-abstraction
+
+  virtual void load_batch(Batch<Dtype>* batch);
+  vector<shared_ptr<DataLoader> > loaders_;
+>>>>>>> origin/BVLC/parallel
+=======
+  blocking_queue<Datum*>* loaders_free_;
+  blocking_queue<Datum*>* loaders_full_;
 
   virtual void load_batch(Batch<Dtype>* batch);
   vector<shared_ptr<DataLoader> > loaders_;

@@ -1,11 +1,15 @@
 PROJECT := caffe
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
 $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
+=======
+CONFIG_FILE ?= Makefile.config
+>>>>>>> origin/BVLC/parallel
 =======
 CONFIG_FILE ?= Makefile.config
 >>>>>>> origin/BVLC/parallel
@@ -357,10 +361,16 @@ ifeq ($(CPU_ONLY), 1)
 endif
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
 	LIBRARIES += $(PYTHON_LIBRARIES)
+=======
+ifeq ($(RDMA), 1)
+	COMMON_FLAGS += -DRDMA
+	LIBRARIES += ibverbs ibumad
+>>>>>>> origin/BVLC/parallel
 =======
 ifeq ($(RDMA), 1)
 	COMMON_FLAGS += -DRDMA
@@ -617,6 +627,13 @@ $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
 =======
+$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
+		| $(LAYER_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+
 $(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \

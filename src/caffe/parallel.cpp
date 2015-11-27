@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifndef CPU_ONLY
 #include <cuda_runtime.h>
 #endif
@@ -196,6 +197,8 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   NO_GPU;
 #endif
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 #include <cstdlib>
 #include <string>
 #include <stdio.h>
@@ -771,12 +774,16 @@ void IBChannel::poll() const {
       recv_queue_.push_back(msg);
     }
   }
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 }
 
 //
 
 template<typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
                         P2PSync<Dtype>* parent, const SolverParameter& param)
@@ -1015,6 +1022,8 @@ INSTANTIATE_CLASS(P2PSync);
 
 }  // namespace caffe
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 IBSync<Dtype>::IBSync(const Params<Dtype>& params, int rank,
                       const IBChannel& ucast, const IBChannel& mcast,
                       const vector<ib_addr>& ucast_addrs,
@@ -1712,4 +1721,7 @@ INSTANTIATE_CLASS(RawSync);
 
 #endif
 }
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel

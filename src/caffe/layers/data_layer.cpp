@@ -20,6 +20,7 @@
 namespace caffe {
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 template <typename Dtype>
 DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),
@@ -66,6 +67,27 @@ DataLoader::DataLoader(const DataParameter& param, int index,
   }
 }
 
+=======
+map<string, weak_ptr<DataLoader::Body> > DataLoader::instances_;
+boost::mutex DataLoader::instances_mutex_;
+
+DataLoader::DataLoader(const DataParameter& param, int index,
+                       blocking_queue<Datum*>* free,
+                       blocking_queue<Datum*>* full):
+    source_(param.source(index)) {
+  boost::mutex::scoped_lock lock(instances_mutex_);
+  weak_ptr<Body> body = instances_[source_];
+  body_ = body.lock();
+  if (body_) {
+    CHECK(!free || free == body_.get()->free_);
+    CHECK(!full || full == body_.get()->full_);
+  } else {
+    body_.reset(new Body(param, index, free, full));
+    instances_[source_] = weak_ptr<Body>(body_);
+  }
+}
+
+>>>>>>> origin/BVLC/parallel
 DataLoader::~DataLoader() {
   boost::mutex::scoped_lock lock(instances_mutex_);
   body_.reset();
@@ -145,6 +167,7 @@ void DataLoader::Body::InternalThreadEntry() {
     if (iter_ == dataset_->end()) {
       iter_ = dataset_->begin();
     }
+<<<<<<< HEAD
   }
 }
 
@@ -160,10 +183,30 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   for(int i = 1; i < param.data_param().source().size(); ++i) {
     ld = new DataLoader(param.data_param(), i, loaders_free_, loaders_full_);
     loaders_.push_back(shared_ptr<DataLoader>(ld));
+=======
+>>>>>>> origin/BVLC/parallel
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
+=======
+DataLayer<Dtype>::DataLayer(const LayerParameter& param)
+  : BasePrefetchingDataLayer<Dtype>(param) {
+  DataLoader* ld = new DataLoader(param.data_param(), 0);
+  loaders_.push_back(shared_ptr<DataLoader>(ld));
+  loaders_free_ = ld->free();
+  loaders_full_ = ld->full();
+
+  // Loaders share queues in case of multiple sources
+  for(int i = 1; i < param.data_param().source().size(); ++i) {
+    ld = new DataLoader(param.data_param(), i, loaders_free_, loaders_full_);
+    loaders_.push_back(shared_ptr<DataLoader>(ld));
+  }
+}
+
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
@@ -193,6 +236,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     this->transformed_data_.Reshape(1, datum->channels(),
         datum->height(), datum->width());
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -201,10 +247,16 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   if (this->output_labels_) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     vector<int> label_shape(1, batch_size);
     top[1]->Reshape(label_shape);
     for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
       this->prefetch_[i].label_.Reshape(label_shape);
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
 =======
     top[1]->Reshape(batch_size, 1, 1, 1);
     for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
@@ -216,10 +268,14 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 // This function is called on prefetch thread
 <<<<<<< HEAD
+<<<<<<< HEAD
 template<typename Dtype>
 =======
 template <typename Dtype>
 <<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
@@ -229,6 +285,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
+<<<<<<< HEAD
 <<<<<<< HEAD
 
   // Reshape according to the first datum of each batch
@@ -244,11 +301,14 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
   if (this->output_labels_)
     top_label = batch->label_.mutable_cpu_data();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
@@ -272,6 +332,8 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     // get a datum
     Datum& datum = *(reader_.full().pop("Waiting for data"));
 =======
+=======
+>>>>>>> origin/BVLC/parallel
   const int batch_size = this->layer_param_.data_param().batch_size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
@@ -296,7 +358,11 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     trans_time += timer.MicroSeconds();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     reader_.free().push(const_cast<Datum*>(&datum));
+=======
+    loaders_free_->push((Datum*) &datum);
+>>>>>>> origin/BVLC/parallel
 =======
     loaders_free_->push((Datum*) &datum);
 >>>>>>> origin/BVLC/parallel

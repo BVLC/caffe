@@ -31,7 +31,11 @@ namespace caffe {
 template <typename Dtype>
 WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 <<<<<<< HEAD
+<<<<<<< HEAD
   this->StopInternalThread();
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 =======
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
@@ -179,9 +183,14 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   top[0]->Reshape(batch_size, channels, crop_size, crop_size);
 <<<<<<< HEAD
+<<<<<<< HEAD
   for (int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].data_.Reshape(
         batch_size, channels, crop_size, crop_size);
+=======
+  for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+    this->prefetch_[i].data_.Reshape(batch_size, channels, crop_size, crop_size);
+>>>>>>> origin/BVLC/parallel
 =======
   for(int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].data_.Reshape(batch_size, channels, crop_size, crop_size);
@@ -201,6 +210,9 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[1]->Reshape(batch_size, 1, 1, 1);
   for(int i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 
   // data mean
@@ -252,10 +264,13 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
+<<<<<<< HEAD
 =======
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> origin/BVLC/parallel
   const Dtype scale = this->layer_param_.window_data_param().scale();
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   const int context_pad = this->layer_param_.window_data_param().context_pad();
@@ -280,10 +295,14 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
   // zero out batch
 <<<<<<< HEAD
+<<<<<<< HEAD
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 =======
   GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
 >>>>>>> BVLC/device-abstraction
+=======
+  caffe_set(batch->data_.count(), Dtype(0), top_data);
+>>>>>>> origin/BVLC/parallel
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);

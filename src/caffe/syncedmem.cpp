@@ -12,11 +12,14 @@ SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
       CUDA_CHECK(cudaSetDevice(gpu_device_));
     }
+=======
+>>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
     CUDA_CHECK(cudaFree(gpu_ptr_));
@@ -143,6 +146,20 @@ void SyncedMemory::set_gpu_data(void* data) {
 #endif
 }
 
+void SyncedMemory::set_gpu_data(void* data) {
+#ifndef CPU_ONLY
+  CHECK(data);
+  if (own_gpu_data_) {
+    CUDA_CHECK(cudaFree(gpu_ptr_));
+  }
+  gpu_ptr_ = data;
+  head_ = HEAD_AT_GPU;
+  own_gpu_data_ = false;
+#else
+  NO_GPU;
+#endif
+}
+
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
@@ -161,10 +178,14 @@ void* SyncedMemory::mutable_gpu_data() {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
 #ifndef CPU_ONLY
 void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
+<<<<<<< HEAD
 <<<<<<< HEAD
     CUDA_CHECK(cudaGetDevice(&gpu_device_));
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
@@ -173,15 +194,21 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;
   CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
 =======
+=======
+>>>>>>> origin/BVLC/parallel
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     own_gpu_data_ = true;
   }
   CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice, stream));
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
   // Assume caller will synchronize on the stream before use
   head_ = SYNCED;
 }
 #endif
+<<<<<<< HEAD
 =======
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
@@ -195,6 +222,8 @@ const void* SyncedMemory::const_data() {
   }
 }
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> origin/BVLC/parallel
 
 void* SyncedMemory::mutable_data() {
   switch (Caffe::mode()) {
