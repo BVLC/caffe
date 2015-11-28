@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -28,6 +29,8 @@
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 # The option allows to include in build only selected test files and exclude all others
 # Usage example:
 #  cmake -DBUILD_only_tests="common,net,blob,im2col_kernel"
@@ -64,6 +67,7 @@ caffe_set_runtime_directory(${the_target} "${PROJECT_BINARY_DIR}/test")
 # ---[ Adding runtest
 add_custom_target(runtest COMMAND ${the_target} ${test_args}
                           WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -203,3 +207,5 @@ add_custom_target(${RUN_TEST} COMMAND ${ALL_TEST} ${TEST_ARGS})
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction

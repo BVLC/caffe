@@ -12,9 +12,15 @@ The official Makefile and `Makefile.config` build are complemented by an automat
 - [Compilation](#compilation)
 - [Hardware](#hardware)
 - Platforms: [Ubuntu guide](install_apt.html), [OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html)
+<<<<<<< HEAD
+=======
+
+When updating Caffe, it's best to `make clean` before re-compiling.
+>>>>>>> device-abstraction
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 
+<<<<<<< HEAD
 ## Prerequisites
 
 Caffe has several dependencies:
@@ -103,10 +109,30 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+Caffe has several dependencies:
+
+* [CUDA](https://developer.nvidia.com/cuda-zone) is required for GPU mode.
+    * library version 7.0 and the latest driver version are recommended, but 6.* is fine too
+    * 5.5, and 5.0 are compatible but considered legacy
+* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
+* [Boost](http://www.boost.org/) >= 1.55
+* `protobuf`, `glog`, `gflags`, `hdf5`
+
+Optional dependencies:
+
+* [OpenCV](http://opencv.org/) >= 2.4 including 3.0
+* IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
+* cuDNN for GPU acceleration (v3)
+
+Pycaffe and Matcaffe interfaces have their own natural needs.
+
+>>>>>>> device-abstraction
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
 **cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -129,6 +155,8 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 **CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
@@ -143,6 +171,7 @@ Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library. The choice is yours:
 
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -184,6 +213,8 @@ There are several implementations of this library. The choice is yours:
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
     1. Install MKL.
     2. Set `BLAS := mkl` in `Makefile.config`
@@ -199,6 +230,7 @@ The main requirements are `numpy` and `boost.python` (provided by boost). `panda
 
 You can install the dependencies with
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -257,6 +289,11 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    for req in $(cat requirements.txt); do pip install $req; done
+
+but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+>>>>>>> device-abstraction
 
 To import the `caffe` Python module after completing the installation, add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like. You should not import the module in the `caffe/python/caffe` directory!
 
@@ -266,6 +303,7 @@ To import the `caffe` Python module after completing the installation, add the m
 
 Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -472,6 +510,9 @@ At this point, you should be running the latest Homebrew packages and your Caffe
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
+>>>>>>> device-abstraction
 
 #### Windows
 
@@ -479,6 +520,7 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 
 ## Compilation
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -523,6 +565,9 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+>>>>>>> device-abstraction
 
     cp Makefile.config.example Makefile.config
     # Adjust Makefile.config (for example, if using Anaconda Python)
@@ -533,6 +578,7 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 - For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
@@ -584,11 +630,16 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
+>>>>>>> device-abstraction
 
 To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
 Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 **Distribution**: run `make distribute` to create a `distribute` directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 <<<<<<< HEAD
@@ -769,6 +820,28 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 ## Hardware
 
+=======
+
+**Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
+
+Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+
+### CMake Compilation
+
+In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
+The basic steps are as follows:
+
+    mkdir build
+    cd build
+    cmake ..
+    make all
+    make runtest
+
+See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
+
+## Hardware
+
+>>>>>>> device-abstraction
 **Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
 **CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.

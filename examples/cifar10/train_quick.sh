@@ -11,6 +11,7 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
@@ -51,3 +52,6 @@ $TOOLS/caffe train \
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
+>>>>>>> device-abstraction

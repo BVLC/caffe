@@ -67,6 +67,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       LayerParameter* split_layer_param = param_split->add_layer();
@@ -107,6 +108,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+      LayerParameter* split_layer_param = param_split->add_layer();
+>>>>>>> device-abstraction
       const float kZeroLossWeight = 0;
       ConfigureSplitLayer(layer_name, blob_name, i, split_count,
           kZeroLossWeight, split_layer_param);
@@ -135,6 +139,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[i];
         const string& blob_name = layer_param->top(j);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -178,6 +183,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+        LayerParameter* split_layer_param = param_split->add_layer();
+>>>>>>> device-abstraction
         const float loss_weight = top_idx_to_loss_weight[top_idx];
         ConfigureSplitLayer(layer_name, blob_name, j, split_count,
             loss_weight, split_layer_param);

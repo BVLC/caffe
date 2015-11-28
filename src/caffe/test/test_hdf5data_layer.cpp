@@ -76,6 +76,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -166,6 +167,14 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+
+  // Test that the layer setup got the correct parameters.
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);
@@ -178,6 +187,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
@@ -236,6 +246,11 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
+>>>>>>> device-abstraction
 
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 

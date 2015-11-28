@@ -581,6 +581,7 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     LOG(FATAL) << "Unknown layer name: " << type;
     return V1LayerParameter_LayerType_NONE;
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 }
 
@@ -1238,6 +1239,277 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+
+bool NetNeedsDataUpgrade(const NetParameter& net_param) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
+      DataParameter layer_param = net_param.layers(i).data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_IMAGE_DATA) {
+      ImageDataParameter layer_param = net_param.layers(i).image_data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_WINDOW_DATA) {
+      WindowDataParameter layer_param = net_param.layers(i).window_data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+  }
+  return false;
+}
+
+#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE, Name, param_name) \
+  do { \
+    if (net_param->layers(i).type() == V1LayerParameter_LayerType_##TYPE) { \
+      Name##Parameter* layer_param = \
+          net_param->mutable_layers(i)->mutable_##param_name##_param(); \
+      TransformationParameter* transform_param = \
+          net_param->mutable_layers(i)->mutable_transform_param(); \
+      if (layer_param->has_scale()) { \
+        transform_param->set_scale(layer_param->scale()); \
+        layer_param->clear_scale(); \
+      } \
+      if (layer_param->has_mean_file()) { \
+        transform_param->set_mean_file(layer_param->mean_file()); \
+        layer_param->clear_mean_file(); \
+      } \
+      if (layer_param->has_crop_size()) { \
+        transform_param->set_crop_size(layer_param->crop_size()); \
+        layer_param->clear_crop_size(); \
+      } \
+      if (layer_param->has_mirror()) { \
+        transform_param->set_mirror(layer_param->mirror()); \
+        layer_param->clear_mirror(); \
+      } \
+    } \
+  } while (0)
+
+void UpgradeNetDataTransformation(NetParameter* net_param) {
+  for (int i = 0; i < net_param->layers_size(); ++i) {
+    CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
+    CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
+    CONVERT_LAYER_TRANSFORM_PARAM(WINDOW_DATA, WindowData, window_data);
+  }
+}
+
+bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
+  bool is_fully_compatible = true;
+  if (v1_net_param.layer_size() > 0) {
+    LOG(ERROR) << "Input NetParameter to be upgraded already specifies 'layer' "
+               << "fields; these will be ignored for the upgrade.";
+    is_fully_compatible = false;
+  }
+  net_param->CopyFrom(v1_net_param);
+  net_param->clear_layers();
+  net_param->clear_layer();
+  for (int i = 0; i < v1_net_param.layers_size(); ++i) {
+    if (!UpgradeV1LayerParameter(v1_net_param.layers(i),
+                                 net_param->add_layer())) {
+      LOG(ERROR) << "Upgrade of input layer " << i << " failed.";
+      is_fully_compatible = false;
+    }
+  }
+  return is_fully_compatible;
+}
+
+bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
+                             LayerParameter* layer_param) {
+  layer_param->Clear();
+  bool is_fully_compatible = true;
+  for (int i = 0; i < v1_layer_param.bottom_size(); ++i) {
+    layer_param->add_bottom(v1_layer_param.bottom(i));
+  }
+  for (int i = 0; i < v1_layer_param.top_size(); ++i) {
+    layer_param->add_top(v1_layer_param.top(i));
+  }
+  if (v1_layer_param.has_name()) {
+    layer_param->set_name(v1_layer_param.name());
+  }
+  for (int i = 0; i < v1_layer_param.include_size(); ++i) {
+    layer_param->add_include()->CopyFrom(v1_layer_param.include(i));
+  }
+  for (int i = 0; i < v1_layer_param.exclude_size(); ++i) {
+    layer_param->add_exclude()->CopyFrom(v1_layer_param.exclude(i));
+  }
+  if (v1_layer_param.has_type()) {
+    layer_param->set_type(UpgradeV1LayerType(v1_layer_param.type()));
+  }
+  for (int i = 0; i < v1_layer_param.blobs_size(); ++i) {
+    layer_param->add_blobs()->CopyFrom(v1_layer_param.blobs(i));
+  }
+  for (int i = 0; i < v1_layer_param.param_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_name(v1_layer_param.param(i));
+  }
+  ParamSpec_DimCheckMode mode;
+  for (int i = 0; i < v1_layer_param.blob_share_mode_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    switch (v1_layer_param.blob_share_mode(i)) {
+    case V1LayerParameter_DimCheckMode_STRICT:
+      mode = ParamSpec_DimCheckMode_STRICT;
+      break;
+    case V1LayerParameter_DimCheckMode_PERMISSIVE:
+      mode = ParamSpec_DimCheckMode_PERMISSIVE;
+      break;
+    default:
+      LOG(FATAL) << "Unknown blob_share_mode: "
+                 << v1_layer_param.blob_share_mode(i);
+      break;
+    }
+    layer_param->mutable_param(i)->set_share_mode(mode);
+  }
+  for (int i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_lr_mult(v1_layer_param.blobs_lr(i));
+  }
+  for (int i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_decay_mult(
+        v1_layer_param.weight_decay(i));
+  }
+  for (int i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
+    layer_param->add_loss_weight(v1_layer_param.loss_weight(i));
+  }
+  if (v1_layer_param.has_accuracy_param()) {
+    layer_param->mutable_accuracy_param()->CopyFrom(
+        v1_layer_param.accuracy_param());
+  }
+  if (v1_layer_param.has_argmax_param()) {
+    layer_param->mutable_argmax_param()->CopyFrom(
+        v1_layer_param.argmax_param());
+  }
+  if (v1_layer_param.has_concat_param()) {
+    layer_param->mutable_concat_param()->CopyFrom(
+        v1_layer_param.concat_param());
+  }
+  if (v1_layer_param.has_contrastive_loss_param()) {
+    layer_param->mutable_contrastive_loss_param()->CopyFrom(
+        v1_layer_param.contrastive_loss_param());
+  }
+  if (v1_layer_param.has_convolution_param()) {
+    layer_param->mutable_convolution_param()->CopyFrom(
+        v1_layer_param.convolution_param());
+  }
+  if (v1_layer_param.has_data_param()) {
+    layer_param->mutable_data_param()->CopyFrom(
+        v1_layer_param.data_param());
+  }
+  if (v1_layer_param.has_dropout_param()) {
+    layer_param->mutable_dropout_param()->CopyFrom(
+        v1_layer_param.dropout_param());
+  }
+  if (v1_layer_param.has_dummy_data_param()) {
+    layer_param->mutable_dummy_data_param()->CopyFrom(
+        v1_layer_param.dummy_data_param());
+  }
+  if (v1_layer_param.has_eltwise_param()) {
+    layer_param->mutable_eltwise_param()->CopyFrom(
+        v1_layer_param.eltwise_param());
+  }
+  if (v1_layer_param.has_exp_param()) {
+    layer_param->mutable_exp_param()->CopyFrom(
+        v1_layer_param.exp_param());
+  }
+  if (v1_layer_param.has_hdf5_data_param()) {
+    layer_param->mutable_hdf5_data_param()->CopyFrom(
+        v1_layer_param.hdf5_data_param());
+  }
+  if (v1_layer_param.has_hdf5_output_param()) {
+    layer_param->mutable_hdf5_output_param()->CopyFrom(
+        v1_layer_param.hdf5_output_param());
+  }
+  if (v1_layer_param.has_hinge_loss_param()) {
+    layer_param->mutable_hinge_loss_param()->CopyFrom(
+        v1_layer_param.hinge_loss_param());
+  }
+  if (v1_layer_param.has_image_data_param()) {
+    layer_param->mutable_image_data_param()->CopyFrom(
+        v1_layer_param.image_data_param());
+  }
+  if (v1_layer_param.has_infogain_loss_param()) {
+    layer_param->mutable_infogain_loss_param()->CopyFrom(
+        v1_layer_param.infogain_loss_param());
+  }
+  if (v1_layer_param.has_inner_product_param()) {
+    layer_param->mutable_inner_product_param()->CopyFrom(
+        v1_layer_param.inner_product_param());
+  }
+  if (v1_layer_param.has_lrn_param()) {
+    layer_param->mutable_lrn_param()->CopyFrom(
+        v1_layer_param.lrn_param());
+  }
+  if (v1_layer_param.has_memory_data_param()) {
+    layer_param->mutable_memory_data_param()->CopyFrom(
+        v1_layer_param.memory_data_param());
+  }
+  if (v1_layer_param.has_mvn_param()) {
+    layer_param->mutable_mvn_param()->CopyFrom(
+        v1_layer_param.mvn_param());
+  }
+  if (v1_layer_param.has_pooling_param()) {
+    layer_param->mutable_pooling_param()->CopyFrom(
+        v1_layer_param.pooling_param());
+  }
+  if (v1_layer_param.has_power_param()) {
+    layer_param->mutable_power_param()->CopyFrom(
+        v1_layer_param.power_param());
+  }
+  if (v1_layer_param.has_relu_param()) {
+    layer_param->mutable_relu_param()->CopyFrom(
+        v1_layer_param.relu_param());
+  }
+  if (v1_layer_param.has_sigmoid_param()) {
+    layer_param->mutable_sigmoid_param()->CopyFrom(
+        v1_layer_param.sigmoid_param());
+  }
+  if (v1_layer_param.has_softmax_param()) {
+    layer_param->mutable_softmax_param()->CopyFrom(
+        v1_layer_param.softmax_param());
+  }
+  if (v1_layer_param.has_slice_param()) {
+    layer_param->mutable_slice_param()->CopyFrom(
+        v1_layer_param.slice_param());
+  }
+  if (v1_layer_param.has_tanh_param()) {
+    layer_param->mutable_tanh_param()->CopyFrom(
+        v1_layer_param.tanh_param());
+  }
+  if (v1_layer_param.has_threshold_param()) {
+    layer_param->mutable_threshold_param()->CopyFrom(
+        v1_layer_param.threshold_param());
+  }
+  if (v1_layer_param.has_window_data_param()) {
+    layer_param->mutable_window_data_param()->CopyFrom(
+        v1_layer_param.window_data_param());
+  }
+  if (v1_layer_param.has_transform_param()) {
+    layer_param->mutable_transform_param()->CopyFrom(
+        v1_layer_param.transform_param());
+  }
+  if (v1_layer_param.has_loss_param()) {
+    layer_param->mutable_loss_param()->CopyFrom(
+        v1_layer_param.loss_param());
+  }
+  if (v1_layer_param.has_layer()) {
+    LOG(ERROR) << "Input NetParameter has V0 layer -- ignoring.";
+    is_fully_compatible = false;
+  }
+  return is_fully_compatible;
+}
+
+>>>>>>> device-abstraction
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   switch (type) {
   case V1LayerParameter_LayerType_NONE:
@@ -1323,6 +1595,7 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   default:
     LOG(FATAL) << "Unknown V1LayerParameter layer type: " << type;
     return "";
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1741,6 +2014,73 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
+  if (solver_param.has_solver_type()) {
+    return true;
+  }
+  return false;
+}
+
+bool UpgradeSolverType(SolverParameter* solver_param) {
+  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
+      << "Failed to upgrade solver: old solver_type field (enum) and new type "
+      << "field (string) cannot be both specified in solver proto text.";
+  if (solver_param->has_solver_type()) {
+    string type;
+    switch (solver_param->solver_type()) {
+    case SolverParameter_SolverType_SGD:
+      type = "SGD";
+      break;
+    case SolverParameter_SolverType_NESTEROV:
+      type = "Nesterov";
+      break;
+    case SolverParameter_SolverType_ADAGRAD:
+      type = "AdaGrad";
+      break;
+    case SolverParameter_SolverType_RMSPROP:
+      type = "RMSProp";
+      break;
+    case SolverParameter_SolverType_ADADELTA:
+      type = "AdaDelta";
+      break;
+    case SolverParameter_SolverType_ADAM:
+      type = "Adam";
+      break;
+    default:
+      LOG(FATAL) << "Unknown SolverParameter solver_type: " << type;
+    }
+    solver_param->set_type(type);
+    solver_param->clear_solver_type();
+  } else {
+    LOG(ERROR) << "Warning: solver type already up to date. ";
+    return false;
+  }
+  return true;
+}
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
+  bool success = true;
+  // Try to upgrade old style solver_type enum fields into new string type
+  if (SolverNeedsTypeUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "'solver_type' field (enum)': " << param_file;
+    if (!UpgradeSolverType(param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+                 << "SolverType (see above).";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "'solver_type' field (enum) to 'type' field (string).";
+      LOG(WARNING) << "Note that future Caffe releases will only support "
+                   << "'type' field (string) for a solver's type.";
+    }
+>>>>>>> device-abstraction
   }
   return success;
 }
@@ -1751,6 +2091,7 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse SolverParameter file: " << param_file;
   UpgradeSolverAsNeeded(param_file, param);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1773,6 +2114,8 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 }
 
 }  // namespace caffe

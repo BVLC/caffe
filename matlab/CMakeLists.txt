@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -28,6 +29,8 @@
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 # Builds Matlab (or Octave) interface. In case of Matlab caffe must be
 # compield as shared library. Octave can link static or shared caffe library
 # To install octave run: sudo apt-get install liboctave-dev
@@ -101,6 +104,7 @@ file(GLOB mfiles caffe/*.m)
 install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -135,3 +139,5 @@ project( Matlab )
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction

@@ -7,6 +7,7 @@ title: Deep Learning Framework
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
@@ -55,6 +56,11 @@ It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.e
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+Caffe is a deep learning framework made with expression, speed, and modularity in mind.
+It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
+[Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
+>>>>>>> device-abstraction
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
 Check out our web image classification [demo](http://demo.caffe.berkeleyvision.org)!
@@ -88,6 +94,7 @@ Consult performance [details](/performance_hardware.html).
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -115,11 +122,14 @@ Consult performance [details](/performance_hardware.html).
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 Tutorial presentation.
 - [Tutorial Documentation](/tutorial)<br>
 Practical guide and framework reference.
 - [arXiv / ACM MM '14 paper](http://arxiv.org/abs/1408.5093)<br>
 A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v1).
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -159,12 +169,15 @@ DIY deep learning with this hands-on tutorial to Caffe.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 - [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/model_zoo.html)<br>
 BVLC suggests a standard distribution format for Caffe models, and provides trained models.
 * [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -208,6 +221,9 @@ Guidelines for development and contributing to Caffe.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+* [API Documentation](/doxygen/annotated.html)<br>
+>>>>>>> device-abstraction
 Developer documentation automagically generated from code comments.
 
 ### Examples
@@ -228,6 +244,7 @@ Developer documentation automagically generated from code comments.
 
 Please cite Caffe in your publications if it helps your research:
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -258,11 +275,14 @@ Please cite Caffe in your publications if it helps your research:
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     @article{jia2014caffe,
       Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
       Journal = {arXiv preprint arXiv:1408.5093},
       Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
       Year = {2014}
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -302,6 +322,8 @@ Please cite Caffe in your publications if it helps your research:
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     }
 
 If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).

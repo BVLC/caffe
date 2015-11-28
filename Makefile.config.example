@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 =======
 <<<<<<< HEAD
@@ -87,6 +88,9 @@
 =======
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> caffe-aulait
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> device-abstraction
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
@@ -103,6 +107,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -128,6 +133,8 @@
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
@@ -145,6 +152,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Uncomment if you're using OpenCV 3
 =======
  Uncomment if you're using OpenCV 3
@@ -292,6 +300,10 @@
 # Parallelization over InfiniBand or RoCE
 # RDMA := 1
 >>>>>>> origin/BVLC/parallel
+=======
+# Uncomment if you're using OpenCV 3
+# OPENCV_VERSION := 3
+>>>>>>> device-abstraction
 
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
@@ -349,6 +361,7 @@ PYTHON_LIB := /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -376,6 +389,8 @@ PYTHON_LIB := /usr/lib
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 # Homebrew installs numpy in a non standard path (keg only)
 # PYTHON_INCLUDE += $(dir $(shell python -c 'import numpy.core; print(numpy.core.__file__)'))/include
@@ -384,6 +399,7 @@ PYTHON_LIB := /usr/lib
 # Uncomment to support layers written in Python (will link against Python libs)
 # WITH_PYTHON_LAYER := 1
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -415,6 +431,8 @@ PYTHON_LIB := /usr/lib
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
@@ -423,6 +441,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -450,10 +469,13 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
 # INCLUDE_DIRS += $(shell brew --prefix)/include
 # LIBRARY_DIRS += $(shell brew --prefix)/lib
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -543,6 +565,9 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> caffe-aulait
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> device-abstraction
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 

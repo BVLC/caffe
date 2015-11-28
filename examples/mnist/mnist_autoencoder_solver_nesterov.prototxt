@@ -20,6 +20,7 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 type: "Nesterov"
@@ -60,3 +61,6 @@ type: "Nesterov"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+type: "Nesterov"
+>>>>>>> device-abstraction

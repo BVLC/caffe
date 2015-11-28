@@ -21,6 +21,7 @@ mkdir -p $MODEL_DIR
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.zip
@@ -70,4 +71,9 @@ rm $MODEL_DIR/gist.zip
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.zip
+unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
+rm $MODEL_DIR/gist.zip
+>>>>>>> device-abstraction
 echo "Done"

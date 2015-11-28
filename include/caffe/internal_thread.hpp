@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -32,6 +33,8 @@
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
@@ -39,6 +42,7 @@
  */
 namespace boost { class thread; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -70,6 +74,8 @@ namespace boost { class thread; }
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -77,6 +83,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
  * Virtual class encapsulate boost::thread for use in base class
@@ -437,6 +444,17 @@ class InternalThread {
   InternalThread() : thread_() {}
   virtual ~InternalThread();
 
+=======
+ * Virtual class encapsulate boost::thread for use in base class
+ * The child class will acquire the ability to run a single thread,
+ * by reimplementing the virtual function InternalThreadEntry.
+ */
+class InternalThread {
+ public:
+  InternalThread() : thread_() {}
+  virtual ~InternalThread();
+
+>>>>>>> device-abstraction
   /**
    * Caffe's thread local state will be initialized using the current
    * thread values, e.g. device id, solver index etc. The random seed
@@ -448,11 +466,14 @@ class InternalThread {
   void StopInternalThread();
 
   bool is_started() const;
+<<<<<<< HEAD
 >>>>>>> caffe
 
   bool must_stop() {
     return must_stop_;
   }
+=======
+>>>>>>> device-abstraction
 
  protected:
   /* Implement this method in your subclass
@@ -463,6 +484,7 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 
@@ -496,12 +518,16 @@ class InternalThread {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+
+>>>>>>> device-abstraction
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
  private:
   void entry(int device, Caffe::Brew mode, int rand_seed, int solver_count,
       bool root_solver);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
   shared_ptr<boost::thread> thread_;
@@ -568,6 +594,10 @@ class InternalThread {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+
+  shared_ptr<boost::thread> thread_;
+>>>>>>> device-abstraction
 };
 
 }  // namespace caffe

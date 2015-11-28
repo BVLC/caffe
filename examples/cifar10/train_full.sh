@@ -11,6 +11,7 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
@@ -51,10 +52,14 @@ $TOOLS/caffe train \
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
+>>>>>>> device-abstraction
 
 # reduce learning rate by factor of 10
 $TOOLS/caffe train \
     --solver=examples/cifar10/cifar10_full_solver_lr2.prototxt \
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -98,3 +103,6 @@ $TOOLS/caffe train \
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate.h5
+>>>>>>> device-abstraction

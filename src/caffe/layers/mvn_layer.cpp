@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
@@ -84,6 +85,13 @@
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+=======
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -104,6 +112,7 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -126,11 +135,16 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
   sum_multiplier_.Reshape(1, 1,
       bottom[0]->height(), bottom[0]->width());
   Dtype* multiplier_data = sum_multiplier_.mutable_data();
   this->device_->set(sum_multiplier_.count(), Dtype(1), multiplier_data);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -139,6 +153,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->const_data();
   Dtype* top_data = (*top)[0]->mutable_data();
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
@@ -173,6 +188,8 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   if ( this->layer_param_.mvn_param().across_channels() ) {
     sum_multiplier_.Reshape(1, bottom[0]->channels(), bottom[0]->height(),
                             bottom[0]->width());
@@ -189,6 +206,7 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -289,6 +307,9 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
   int num;
   if (this->layer_param_.mvn_param().across_channels()) {
     num = bottom[0]->num();
@@ -297,6 +318,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
 
   int dim = bottom[0]->count() / num;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -366,6 +388,10 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+
+<<<<<<< HEAD
+>>>>>>> device-abstraction
   if (this->layer_param_.mvn_param().normalize_variance()) {
     // put the squares of bottom into temp_
     this->device_->powx(bottom[0]->count(), bottom_data, Dtype(2),
@@ -381,6 +407,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
         temp_.mutable_data());  // (EX)^2
     this->device_->sub(mean_.count(), variance_.const_data(),
         temp_.const_data(), variance_.mutable_data());  // variance
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -566,18 +593,24 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
 
     // subtract mean
     this->device_->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
         mean_.const_data(), sum_multiplier_.const_data(), 0.,
         temp_.mutable_data());
 
     this->device_->add(temp_.count(), bottom_data, temp_.const_data(),
         top_data);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -602,6 +635,8 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 
 =======
+>>>>>>> device-abstraction
+=======
   // subtract mean
   caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
       sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());  // EX
@@ -610,6 +645,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       temp_.mutable_cpu_data());
   caffe_add(temp_.count(), bottom_data, temp_.cpu_data(), top_data);  // X-EX
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
@@ -1033,6 +1069,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   caffe_add(temp_.count(), bottom_data, temp_.cpu_data(), top_data);  // X-EX
 
 >>>>>>> caffe
+=======
+>>>>>>> device-abstraction
   if (this->layer_param_.mvn_param().normalize_variance()) {
     // compute variance using var(X) = E((X-EX)^2)
     caffe_powx(bottom[0]->count(), top_data, Dtype(2),
@@ -1040,6 +1078,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, temp_.cpu_data(),
         sum_multiplier_.cpu_data(), 0.,
         variance_.mutable_cpu_data());  // E((X-EX)^2)
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1170,9 +1209,15 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 
     // normalize variance
+=======
+>>>>>>> BVLC/master
+
+    // normalize variance
+>>>>>>> device-abstraction
     this->device_->powx(variance_.count(), variance_.const_data(), Dtype(0.5),
           variance_.mutable_data());
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     caffe_add_scalar(variance_.count(), eps_, variance_.mutable_cpu_data());
@@ -1183,17 +1228,27 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
     caffe_add_scalar(variance_.count(), eps_, variance_.mutable_cpu_data());
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    this->device_->add_scalar(variance_.count(), eps,
+        variance_.mutable_data());
+=======
+    caffe_add_scalar(variance_.count(), eps_, variance_.mutable_cpu_data());
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 
     this->device_->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
           variance_.const_data(), sum_multiplier_.const_data(), 0.,
           temp_.mutable_data());
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> device-abstraction
     this->device_->div(temp_.count(), top_data, temp_.const_data(), top_data);
   } else {
     this->device_->gemv(CblasNoTrans, num, dim, 1. / dim, bottom_data,
@@ -1203,6 +1258,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     this->device_->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
             mean_.const_data(), sum_multiplier_.const_data(), 0.,
             temp_.mutable_data());
+<<<<<<< HEAD
 =======
     this->device_->div(temp_.count(), top_data, temp_.const_data(), top_data);
   } else {
@@ -1270,6 +1326,15 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/caffe-merge
   }
+=======
+
+    this->device_->add(temp_.count(), bottom_data, temp_.const_data(),
+        top_data);
+=======
+    caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
+>>>>>>> BVLC/master
+  }
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -1280,6 +1345,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1298,12 +1364,17 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->const_diff();
   const Dtype* top_data = top[0]->const_data();
   const Dtype* bottom_data = (*bottom)[0]->const_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
 
   int num;
   if (this->layer_param_.mvn_param().across_channels()) {
@@ -1312,6 +1383,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     num = (*bottom)[0]->num() * (*bottom)[0]->channels();
   }
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
@@ -1344,6 +1416,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> device-abstraction
     const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* top_data = top[0]->cpu_data();
@@ -1355,6 +1429,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1508,6 +1583,11 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/master
+
+  int dim = bottom[0]->count() / num;
+>>>>>>> device-abstraction
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
     this->device_->mul(temp_.count(), top_data, top_diff, bottom_diff);
@@ -1528,6 +1608,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
         bottom_diff);
 
     // put the squares of bottom into temp_
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1581,6 +1662,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
     this->device_->powx(temp_.count(), bottom_data, Dtype(2),
         temp_.mutable_data());
 
@@ -1610,6 +1693,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -1645,6 +1729,9 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> master
 =======
 >>>>>>> caffe
+=======
+=======
+>>>>>>> device-abstraction
     caffe_powx(temp_.count(), bottom_data, Dtype(2),
         temp_.mutable_cpu_data());
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
@@ -1655,6 +1742,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1667,6 +1755,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
 
     this->device_->div(temp_.count(), bottom_diff, temp_.const_data(),
         bottom_diff);
@@ -1678,6 +1768,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1736,6 +1827,10 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    this->device_->copy(temp_.count(), top_diff, bottom_diff);
+=======
+>>>>>>> device-abstraction
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
       sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
@@ -1747,6 +1842,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1816,11 +1912,15 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
     this->device_->copy(temp_.count(), top_diff, bottom_diff);
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
   }
 }
 
 
 INSTANTIATE_CLASS(MVNLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1860,6 +1960,8 @@ REGISTER_LAYER_CLASS(MVN, MVNLayer);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(MVN);
 
 >>>>>>> caffe

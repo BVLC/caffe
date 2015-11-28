@@ -65,6 +65,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
@@ -105,6 +106,9 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
+>>>>>>> device-abstraction
   EXPECT_EQ(this->blob_top_->num(),
       this->blob_bottom_0_->num() + this->blob_bottom_2_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_0_->channels());
@@ -116,6 +120,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConcatLayer<Dtype> layer(layer_param);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -164,6 +169,10 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
+>>>>>>> device-abstraction
   EXPECT_EQ(this->blob_top_->channels(),
       this->blob_bottom_0_->channels() + this->blob_bottom_1_->channels());
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_0_->height());
@@ -207,6 +216,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -234,6 +244,8 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_1_, this->blob_top_vec_);
   for (int n = 0; n < this->blob_bottom_vec_1_[0]->num(); ++n) {
@@ -264,6 +276,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
   ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -300,6 +313,8 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   for (int n = 0; n < this->blob_top_->num(); ++n) {
     for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
@@ -357,6 +372,7 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
@@ -402,6 +418,10 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
+    this->blob_top_vec_, 1);
+>>>>>>> device-abstraction
 }
 
 }  // namespace caffe

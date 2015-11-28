@@ -23,6 +23,7 @@ snapshot: 5000
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 snapshot_format: HDF5
@@ -62,6 +63,9 @@ snapshot_format: HDF5
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+snapshot_format: HDF5
+>>>>>>> device-abstraction
 snapshot_prefix: "examples/cifar10/cifar10_quick"
 # solver mode: CPU or GPU
 solver_mode: GPU

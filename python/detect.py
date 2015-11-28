@@ -49,6 +49,7 @@ def main(argv):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
@@ -89,6 +90,9 @@ def main(argv):
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+                "../models/bvlc_reference_caffenet/deploy.prototxt"),
+>>>>>>> device-abstraction
         help="Model definition file."
     )
     parser.add_argument(

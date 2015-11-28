@@ -16,6 +16,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -89,6 +90,12 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+#include "caffe/common.hpp"
+#include "caffe/device.hpp"
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
@@ -212,6 +219,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -239,6 +247,8 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
  * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$ is
  *        set inversely proportional to number of incoming nodes, outgoing
  *        nodes, or their average.
@@ -251,6 +261,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
  * average, depending on the variance_norm option. You should make sure the
  * input blob has shape (num, a, b, c) where a * b * c = fan_in and num * b * c
  * = fan_out. Note that this is currently not the case for inner product layers.
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -296,6 +307,8 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
  *
  * TODO(dox): make notation in above comment consistent with rest & use LaTeX.
  */
@@ -313,6 +326,7 @@ class XavierFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -374,6 +388,12 @@ class XavierFiller : public Filler<Dtype> {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    Dtype scale = sqrt(Dtype(3) / fan_in);
+    GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
+                                              blob->mutable_cpu_data());
+=======
+>>>>>>> device-abstraction
     int fan_out = blob->count() / blob->channels();
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm() ==
@@ -391,6 +411,7 @@ class XavierFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -406,6 +427,9 @@ class XavierFiller : public Filler<Dtype> {
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
@@ -448,6 +472,7 @@ class MSRAFiller : public Filler<Dtype> {
     Dtype std = sqrt(Dtype(2) / n);
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
         blob->mutable_cpu_data());
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -458,11 +483,14 @@ class MSRAFiller : public Filler<Dtype> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
 };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -660,6 +688,8 @@ class MSRAFiller : public Filler<Dtype> {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 /*!
 @brief Fills a Blob with coefficients for bilinear interpolation.
 

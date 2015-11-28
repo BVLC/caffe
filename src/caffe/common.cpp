@@ -20,6 +20,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -45,6 +46,8 @@ namespace caffe {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
@@ -55,6 +58,7 @@ Caffe& Caffe::Get() {
   return *(thread_instance_.get());
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -117,6 +121,8 @@ thread_specific_ptr<Caffe> Caffe::thread_instance_;
 =======
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> device-abstraction
 
 // random seeding
 int64_t cluster_seedgen(void) {

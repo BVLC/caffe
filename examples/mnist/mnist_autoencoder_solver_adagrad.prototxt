@@ -17,6 +17,7 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 type: "AdaGrad"
@@ -57,3 +58,6 @@ type: "AdaGrad"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+type: "AdaGrad"
+>>>>>>> device-abstraction
