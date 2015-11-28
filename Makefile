@@ -10,6 +10,7 @@ PROJECT := caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -98,6 +99,8 @@ ifeq ($(DEBUG_BUILD_DIR),)
 endif
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 CONFIG_FILE ?= Makefile.config
 include $(CONFIG_FILE)
 
@@ -1070,6 +1073,7 @@ ifeq ($(DEBUG), 1)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	COMMON_FLAGS += -DDEBUG -g -O0 -DBOOST_NOINLINE='__attribute__ ((noinline))'
 =======
 <<<<<<< HEAD
@@ -1105,6 +1109,9 @@ ifeq ($(DEBUG), 1)
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+	COMMON_FLAGS += -DDEBUG -g -O0 -DBOOST_NOINLINE='__attribute__ ((noinline))'
+>>>>>>> origin/BVLC/parallel
 	NVCCFLAGS += -G
 else
 	COMMON_FLAGS += -DNDEBUG -O2
@@ -1202,6 +1209,7 @@ ifeq ($(CPU_ONLY), 1)
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1312,6 +1320,11 @@ ifeq ($(RDMA), 1)
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+ifeq ($(RDMA), 1)
+	COMMON_FLAGS += -DRDMA
+	LIBRARIES += ibverbs ibumad
+>>>>>>> origin/BVLC/parallel
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -2601,6 +2614,16 @@ $(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
 	@ cat $@.$(WARNS_EXT)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
+		| $(LAYER_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+
+>>>>>>> origin/BVLC/parallel
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 <<<<<<< HEAD
 <<<<<<< HEAD

@@ -180,6 +180,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -356,6 +357,22 @@ template <typename Dtype>
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
+    : iter_(), iter_total_(&iter_), net_() {
+  Init(param, skip_test_nets);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file)
+    : iter_(), iter_total_(&iter_), net_() {
+  SolverParameter param;
+  ReadProtoFromTextFileOrDie(param_file, &param);
+  Init(param, false);
+}
+
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
 void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
@@ -406,6 +423,7 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   }
   // Scaffolding code
   InitTrainNet();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -487,6 +505,8 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> origin/BVLC/parallel
   if(!skip_test_nets)
     InitTestNets();
   LOG(INFO) << "Solver scaffolding done.";

@@ -19,6 +19,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -113,6 +114,9 @@ thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+thread_specific_ptr<Caffe> Caffe::thread_instance_;
+>>>>>>> origin/BVLC/parallel
 
 // random seeding
 int64_t cluster_seedgen(void) {

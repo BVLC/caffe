@@ -1635,6 +1635,7 @@ message ConvolutionParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 =======
@@ -1680,6 +1681,8 @@ message ConvolutionParameter {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> origin/BVLC/parallel
 message DataParameter {
   enum DB {
     LEVELDB = 0;
@@ -1691,6 +1694,7 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   repeated string source = 1;
 =======
 <<<<<<< HEAD
@@ -1730,6 +1734,9 @@ message DataParameter {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  repeated string source = 1;
+>>>>>>> origin/BVLC/parallel
   // Specify the batch size.
   optional uint32 batch_size = 4;
   // The rand_skip variable is for the data layer to skip a few data points
@@ -1793,6 +1800,7 @@ message DataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1901,6 +1909,10 @@ message DataParameter {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  // Prefetch queue (Number of batches to prefetch).
+  optional uint32 prefetch = 9 [default = 4];
+>>>>>>> origin/BVLC/parallel
 }
 
 message DropoutParameter {

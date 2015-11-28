@@ -450,6 +450,10 @@ class InternalThread {
   bool is_started() const;
 >>>>>>> caffe
 
+  bool must_stop() {
+    return must_stop_;
+  }
+
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
@@ -510,6 +514,7 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
@@ -561,6 +566,8 @@ class InternalThread {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> origin/BVLC/parallel
 };
 
 }  // namespace caffe
