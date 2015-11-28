@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 =======
 <<<<<<< HEAD
@@ -83,6 +84,9 @@
 =======
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> caffe
+=======
+ cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> caffe-aulait
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
@@ -140,6 +144,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Uncomment if you're using OpenCV 3
 =======
  Uncomment if you're using OpenCV 3
@@ -147,6 +152,9 @@
 =======
  Uncomment if you're using OpenCV 3
 >>>>>>> caffe
+=======
+ Uncomment if you're using OpenCV 3
+>>>>>>> caffe-aulait
 # OPENCV_VERSION := 3
 =======
 # Parallelization over InfiniBand or RoCE
@@ -452,6 +460,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 =======
 <<<<<<< HEAD
@@ -531,6 +540,9 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> caffe
+=======
+ Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> caffe-aulait
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 
