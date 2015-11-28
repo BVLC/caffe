@@ -4,8 +4,12 @@ caffemodel: bvlc_reference_rcnn_ilsvrc13.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.caffemodel
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 license: unrestricted
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -18,6 +22,10 @@ license: unrestricted
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+license: unrestricted
+=======
+>>>>>>> pod/device/blob.hpp
 license: non-commercial
 >>>>>>> origin/BVLC/parallel
 =======
@@ -26,6 +34,7 @@ license: unrestricted
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -33,6 +42,9 @@ license: unrestricted
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 sha1: bdd8abb885819cba5e2fe1eb36235f2319477e64
 caffe_commit: a7e397abbda52c0b90323c23ab95bdeabee90a98
 ---
@@ -49,8 +61,12 @@ This model was trained by Ross Girshick @rbgirshick
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 This model is released for unrestricted use.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -63,6 +79,10 @@ This model is released for unrestricted use.
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+This model is released for unrestricted use.
+=======
+>>>>>>> pod/device/blob.hpp
 The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
 "Researcher shall use the Database only for non-commercial research and educational purposes."
 Accordingly, this model is distributed under a non-commercial license.
@@ -73,6 +93,7 @@ This model is released for unrestricted use.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -80,3 +101,6 @@ This model is released for unrestricted use.
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

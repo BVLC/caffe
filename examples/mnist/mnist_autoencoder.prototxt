@@ -3,6 +3,7 @@ layer {
   name: "data"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22,6 +23,14 @@ layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   type: "Data"
   top: "data"
   include {
@@ -32,6 +41,7 @@ layer {
   }
   data_param {
     source: "examples/mnist/mnist_train_lmdb"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -279,9 +289,31 @@ layer {
 >>>>>>> origin/BVLC/parallel
 =======
     source: "examples/mnist/mnist_train_lmdb"
+=======
+>>>>>>> pod/device/blob.hpp
     batch_size: 100
     backend: LMDB
   }
+}
+layer {
+=======
+<<<<<<< HEAD
+=======
+  type: DATA
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    backend: LMDB
+>>>>>>> origin/BVLC/parallel
+    batch_size: 100
+    backend: LMDB
+  }
+<<<<<<< HEAD
+=======
+  transform_param {
+    scale: 0.0039215684
+  }
+  include: { phase: TRAIN }
+>>>>>>> origin/BVLC/parallel
 }
 layer {
   name: "data"
@@ -353,12 +385,113 @@ layer {
 >>>>>>> origin/BVLC/parallel
 =======
     source: "examples/mnist/mnist_train_lmdb"
+<<<<<<< HEAD
     batch_size: 100
     backend: LMDB
   }
 }
 layer {
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+<<<<<<< HEAD
+    stage: "test-on-train"
+=======
+    stage: "test-on-test"
+=======
+    backend: LMDB
+    batch_size: 100
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+<<<<<<< HEAD
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+=======
+<<<<<<< HEAD
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+=======
+  include: {
+    phase: TEST
+    stage: 'test-on-train'
+  }
+=======
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> caffe
+<<<<<<< HEAD
+}
+layer {
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+<<<<<<< HEAD
+    stage: "test-on-test"
+=======
+    stage: "test-on-train"
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+<<<<<<< HEAD
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+}
+layer {
+=======
+<<<<<<< HEAD
+    source: "examples/mnist/mnist_test_lmdb"
+    backend: LMDB
+>>>>>>> origin/BVLC/parallel
+    batch_size: 100
+    backend: LMDB
+  }
+<<<<<<< HEAD
+=======
+  transform_param {
+    scale: 0.0039215684
+  }
+  include: {
+    phase: TEST
+    stage: 'test-on-test'
+  }
+>>>>>>> origin/BVLC/parallel
+=======
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+}
+layer {
   name: "data"
   type: "Data"
   top: "data"
@@ -377,10 +510,8 @@ layer {
 >>>>>>> caffe
 }
 layer {
-<<<<<<< HEAD
->>>>>>> pod/caffe-merge
-=======
->>>>>>> pod/caffe-merge
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   name: "flatdata"
   type: "Flatten"
   bottom: "data"
@@ -638,6 +769,7 @@ layer {
   top: "cross_entropy_loss"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -650,6 +782,12 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   name: "loss"
   type: SIGMOID_CROSS_ENTROPY_LOSS
 >>>>>>> origin/BVLC/parallel
@@ -658,6 +796,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -665,6 +804,9 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   loss_weight: 1
 }
 layer {
@@ -674,6 +816,7 @@ layer {
   top: "decode1neuron"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -686,6 +829,12 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   name: "decode1neuron"
   type: SIGMOID
 >>>>>>> origin/BVLC/parallel
@@ -694,6 +843,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -701,6 +851,9 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 layer {
   name: "loss"
@@ -710,6 +863,7 @@ layer {
   top: "l2_error"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -722,6 +876,12 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   name: "loss"
   type: EUCLIDEAN_LOSS
 >>>>>>> origin/BVLC/parallel
@@ -730,6 +890,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -737,5 +898,8 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   loss_weight: 0
 }

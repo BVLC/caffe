@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19,6 +20,14 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 # The option allows to include in build only selected test files and exclude all others
 # Usage example:
 #  cmake -DBUILD_only_tests="common,net,blob,im2col_kernel"
@@ -61,6 +70,7 @@ add_custom_target(runtest COMMAND ${the_target} ${test_args}
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -68,6 +78,9 @@ add_custom_target(runtest COMMAND ${the_target} ${test_args}
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 #
 #
 #    All test files' names must begin with a "test_" prefix
@@ -179,6 +192,7 @@ add_custom_target(${RUN_TEST} COMMAND ${ALL_TEST} ${TEST_ARGS})
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -186,3 +200,6 @@ add_custom_target(${RUN_TEST} COMMAND ${ALL_TEST} ${TEST_ARGS})
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

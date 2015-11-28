@@ -180,8 +180,12 @@ Layer definitions can include rules for whether and when they are included in th
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     layer {
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -194,6 +198,10 @@ Layer definitions can include rules for whether and when they are included in th
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    layer {
+=======
+>>>>>>> pod/device/blob.hpp
     layers {
 >>>>>>> origin/BVLC/parallel
 =======
@@ -202,6 +210,7 @@ Layer definitions can include rules for whether and when they are included in th
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -209,6 +218,9 @@ Layer definitions can include rules for whether and when they are included in th
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       // ...layer definition...
       include: { phase: TRAIN }
     }
@@ -222,8 +234,12 @@ By default, that is without layer rules, a layer is always included in the netwo
 Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -236,6 +252,10 @@ Also, there is an `Accuracy` layer which is included only in `TEST` phase for re
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
+=======
+>>>>>>> pod/device/blob.hpp
 Also, there is an `ACCURACY` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 >>>>>>> origin/BVLC/parallel
 =======
@@ -244,6 +264,7 @@ Also, there is an `Accuracy` layer which is included only in `TEST` phase for re
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -251,6 +272,9 @@ Also, there is an `Accuracy` layer which is included only in `TEST` phase for re
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ## Define the MNIST Solver
 
@@ -345,8 +369,12 @@ MNIST is a small dataset, so training with GPU does not really introduce too muc
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 ### How to reduce the learning rate at fixed steps?
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -359,6 +387,10 @@ MNIST is a small dataset, so training with GPU does not really introduce too muc
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+### How to reduce the learning rate at fixed steps?
+=======
+>>>>>>> pod/device/blob.hpp
 ### How to reduce the learning rate a fixed steps?
 >>>>>>> origin/BVLC/parallel
 =======
@@ -367,6 +399,7 @@ MNIST is a small dataset, so training with GPU does not really introduce too muc
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -374,4 +407,7 @@ MNIST is a small dataset, so training with GPU does not really introduce too muc
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 Look at lenet_multistep_solver.prototxt

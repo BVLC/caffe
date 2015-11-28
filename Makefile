@@ -9,6 +9,7 @@ PROJECT := caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -21,6 +22,10 @@ PROJECT := caffe
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
@@ -30,6 +35,9 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 CONFIG_FILE ?= Makefile.config
 >>>>>>> origin/BVLC/parallel
@@ -42,9 +50,12 @@ CONFIG_FILE ?= Makefile.config
 =======
 CONFIG_FILE ?= Makefile.config
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 =======
 CONFIG_FILE ?= Makefile.config
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
@@ -70,6 +81,7 @@ CONFIG_FILE ?= Makefile.config
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/caffe-merge
@@ -97,6 +109,8 @@ BUILD_DIR_LINK := $(BUILD_DIR)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 RELEASE_BUILD_DIR ?= .$(BUILD_DIR)_release
 DEBUG_BUILD_DIR ?= .$(BUILD_DIR)_debug
 >>>>>>> origin/BVLC/parallel
@@ -105,6 +119,7 @@ DEBUG_BUILD_DIR ?= .$(BUILD_DIR)_debug
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -112,6 +127,9 @@ DEBUG_BUILD_DIR ?= .$(BUILD_DIR)_debug
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
@@ -124,6 +142,7 @@ endif
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -143,6 +162,14 @@ endif
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
 	\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)
@@ -153,16 +180,20 @@ SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -173,6 +204,8 @@ SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 # The target shared library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
 STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
@@ -256,6 +289,7 @@ PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -284,10 +318,26 @@ PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 OBJ_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)
 LAYER_BUILD_DIR := $(OBJ_BUILD_DIR)/layers
 UTIL_BUILD_DIR := $(OBJ_BUILD_DIR)/util
 DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -301,6 +351,13 @@ DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -325,6 +382,7 @@ DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -332,6 +390,9 @@ DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -360,8 +421,12 @@ TEST_CXX_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
 TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 # TEST_ALL_BIN is the test binary that links caffe dynamically.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -374,6 +439,10 @@ TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+# TEST_ALL_BIN is the test binary that links caffe dynamically.
+=======
+>>>>>>> pod/device/blob.hpp
 # TEST_ALL_BIN is the test binary that links caffe statically.
 >>>>>>> origin/BVLC/parallel
 =======
@@ -382,6 +451,7 @@ TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -389,6 +459,9 @@ TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 # TEST_ALL_DYNINK_BIN is the test binary that links caffe as a dynamic library.
 TEST_ALL_DYNLINK_BIN := $(TEST_BIN_DIR)/test_all_dynamic_link.testbin
@@ -430,6 +503,7 @@ ifneq ($(CPU_ONLY), 1)
 endif
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -449,6 +523,14 @@ endif
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 
@@ -477,6 +559,7 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -484,6 +567,9 @@ endif
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 LIBRARIES += glog gflags protobuf leveldb snappy \
 	lmdb boost_system hdf5_hl hdf5 m \
 	opencv_core opencv_highgui opencv_imgproc
@@ -493,6 +579,7 @@ LIBRARIES += glog gflags protobuf leveldb snappy \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -500,6 +587,9 @@ LIBRARIES += glog gflags protobuf leveldb snappy \
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -519,6 +609,9 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 ALL_BUILD_DIRS := $(sort $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SRC_DIRS)) \
 	$(addprefix $(BUILD_DIR)/cuda/, $(SRC_DIRS)) \
 	$(LIB_BUILD_DIR) $(TEST_BIN_DIR) $(PY_PROTO_BUILD_DIR) $(LINT_OUTPUT_DIR) \
@@ -545,6 +638,7 @@ DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
 
 =======
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -553,6 +647,9 @@ DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -571,6 +668,9 @@ DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 ALL_BUILD_DIRS := $(sort \
 		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
 		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(DEVICE_BUILD_DIR) \
@@ -584,6 +684,7 @@ ALL_BUILD_DIRS := $(sort \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -593,6 +694,11 @@ ALL_BUILD_DIRS := $(sort \
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/master
 =======
@@ -617,6 +723,81 @@ ALL_BUILD_DIRS := $(sort $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SRC_DIRS)) \
 	$(addprefix $(BUILD_DIR)/cuda/, $(SRC_DIRS)) \
 	$(LIB_BUILD_DIR) $(TEST_BIN_DIR) $(PY_PROTO_BUILD_DIR) $(LINT_OUTPUT_DIR) \
 	$(DISTRIBUTE_SUBDIRS) $(PROTO_BUILD_INCLUDE_DIR))
+<<<<<<< HEAD
+=======
+
+##############################
+# Set directory for Doxygen-generated documentation
+##############################
+DOXYGEN_CONFIG_FILE ?= ./.Doxyfile
+# should be the same as OUTPUT_DIRECTORY in the .Doxyfile
+DOXYGEN_OUTPUT_DIR ?= ./doxygen
+DOXYGEN_COMMAND ?= doxygen
+# All the files that might have Doxygen documentation.
+DOXYGEN_SOURCES := $(shell find \
+	src/$(PROJECT) \
+	include/$(PROJECT) \
+	python/ \
+	matlab/ \
+	examples \
+	tools \
+	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh" -or \
+        -name "*.py" -or -name "*.m")
+DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+
+##############################
+# Set directory for Doxygen-generated documentation
+##############################
+DOXYGEN_CONFIG_FILE ?= ./.Doxyfile
+# should be the same as OUTPUT_DIRECTORY in the .Doxyfile
+DOXYGEN_OUTPUT_DIR ?= ./doxygen
+DOXYGEN_COMMAND ?= doxygen
+# All the files that might have Doxygen documentation.
+DOXYGEN_SOURCES := $(shell find \
+	src/$(PROJECT) \
+	include/$(PROJECT) \
+	python/ \
+	matlab/ \
+	examples \
+	tools \
+	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh" -or \
+        -name "*.py" -or -name "*.m")
+DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
+
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ##############################
 # Set directory for Doxygen-generated documentation
@@ -740,6 +921,7 @@ ifeq ($(OSX), 1)
 	endif
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -759,6 +941,14 @@ ifeq ($(OSX), 1)
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
@@ -774,6 +964,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -781,6 +972,9 @@ else
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
         NVCCFLAGS += -DOSX
@@ -790,6 +984,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -797,6 +992,9 @@ else
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 endif
 
 # Custom compiler
@@ -812,9 +1010,13 @@ else ifneq (,$(findstring g++,$(CXX)))
 else
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   # The following line must not be indented with a tab, since we are not inside a target
   $(error Cannot static link with the $(CXX) compiler)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -844,10 +1046,23 @@ else
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  # The following line must not be indented with a tab, since we are not inside a target
+  $(error Cannot static link with the $(CXX) compiler)
+=======
+	$(error Cannot static link with the $(CXX) compiler.)
+>>>>>>> origin/BVLC/parallel
+=======
+  # The following line must not be indented with a tab, since we are not inside a target
+  $(error Cannot static link with the $(CXX) compiler)
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -861,6 +1076,11 @@ ifeq ($(DEBUG), 1)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+	COMMON_FLAGS += -DDEBUG -g -O0 -DBOOST_NOINLINE='__attribute__ ((noinline))'
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 	COMMON_FLAGS += -DDEBUG -g -O0
 <<<<<<< HEAD
 =======
@@ -871,6 +1091,7 @@ ifeq ($(DEBUG), 1)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -878,6 +1099,9 @@ ifeq ($(DEBUG), 1)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 	NVCCFLAGS += -G
 else
 	COMMON_FLAGS += -DNDEBUG -O2
@@ -891,6 +1115,7 @@ endif
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -910,6 +1135,14 @@ endif
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 # configure IO libraries
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV
@@ -930,16 +1163,20 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -950,6 +1187,8 @@ endif
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
@@ -969,14 +1208,18 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -989,6 +1232,8 @@ endif
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -999,10 +1244,15 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 ifeq ($(RDMA), 1)
 	COMMON_FLAGS += -DRDMA
 	LIBRARIES += ibverbs ibumad
@@ -1010,6 +1260,7 @@ ifeq ($(RDMA), 1)
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ifeq ($(RDMA), 1)
 	COMMON_FLAGS += -DRDMA
 	LIBRARIES += ibverbs ibumad
@@ -1019,6 +1270,8 @@ ifeq ($(RDMA), 1)
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 ifeq ($(RDMA), 1)
 	COMMON_FLAGS += -DRDMA
 	LIBRARIES += ibverbs ibumad
@@ -1049,7 +1302,13 @@ ifeq ($(RDMA), 1)
 	COMMON_FLAGS += -DRDMA
 	LIBRARIES += ibverbs ibumad
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -1093,24 +1352,33 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 # Automatic dependency generation (nvcc is handled separately)
@@ -1120,6 +1388,7 @@ CXXFLAGS += -MMD -MP
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1127,6 +1396,9 @@ CXXFLAGS += -MMD -MP
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
@@ -1170,6 +1442,9 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
@@ -1182,6 +1457,7 @@ lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
@@ -1242,10 +1518,13 @@ all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
+<<<<<<< HEAD
 
 all: lib tools examples
 <<<<<<< HEAD
@@ -1345,6 +1624,76 @@ lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 everything: $(EVERYTHING_TARGETS)
+=======
+>>>>>>> pod/device/blob.hpp
+
+all: lib tools examples
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> BVLC/master
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> master
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> caffe
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> master
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> master
+=======
+=======
+.PHONY: all test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
+	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
+	superclean supercleanlist supercleanfiles warn everything
+
+all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
+>>>>>>> origin/BVLC/parallel
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> BVLC/master
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> master
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> master
+=======
+
+lib: $(STATIC_NAME) $(DYNAMIC_NAME)
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+everything: $(EVERYTHING_TARGETS)
 
 linecount:
 	cloc --read-lang-def=$(PROJECT).cloc \
@@ -1393,6 +1742,7 @@ py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1412,6 +1762,14 @@ py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 $(PY$(PROJECT)_SO): $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX) | $(DYNAMIC_NAME)
 	@ echo CXX/LD -o $@ $<
 	$(Q)$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
@@ -1423,6 +1781,7 @@ $(PY$(PROJECT)_SO): $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX) | $(DYNAMIC_NAME)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1430,6 +1789,9 @@ $(PY$(PROJECT)_SO): $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX) | $(DYNAMIC_NAME)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 $(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX_SRC)
 	$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
 		$(STATIC_LINK_COMMAND) $(LINKFLAGS) $(PYTHON_LDFLAGS)
@@ -1440,6 +1802,7 @@ $(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX_SRC)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1447,6 +1810,9 @@ $(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX_SRC)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 mat$(PROJECT): mat
 
@@ -1465,6 +1831,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1484,6 +1851,14 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 	@ if [ -f "$(PROJECT)_.d" ]; then \
 		mv -f $(PROJECT)_.d $(BUILD_DIR)/${MAT$(PROJECT)_SO:.$(MAT_SO_EXT)=.d}; \
 	fi
@@ -1513,6 +1888,9 @@ mattest: mat
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 
 pytest: py
 	cd python; python -m unittest discover -s caffe/test
@@ -1559,10 +1937,10 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 $(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
@@ -1584,8 +1962,6 @@ $(DEVICE_BUILD_DIR)/%.o: src/$(PROJECT)/devices/%.cpp $(HXX_SRCS) \
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
 <<<<<<< HEAD
-=======
->>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1602,11 +1978,235 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	ar rcs $@ $(OBJS)
+	@ echo
+>>>>>>> origin/BVLC/parallel
+
+=======
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+>>>>>>> caffe
+=======
+=======
+$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
+		| $(TEST_BIN_DIR)
+	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS)
+	@ echo
+
+$(TEST_ALL_DYNLINK_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(DYNAMIC_NAME) \
+		| $(TEST_BIN_DIR)
+	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(LIB_BUILD_DIR)
+	@ echo
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.cuo $(GTEST_OBJ) $(STATIC_NAME) \
+		| $(TEST_BIN_DIR)
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS)
+	@ echo
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
+		| $(TEST_BIN_DIR)
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS)
+>>>>>>> pod-caffe-pod.hpp-merge
+	@ echo
+>>>>>>> origin/BVLC/parallel
+
+<<<<<<< HEAD
+$(DEVICE_BUILD_DIR)/%.o: src/$(PROJECT)/devices/%.cpp $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+=======
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+=======
+$(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
+	$(CXX) $< $(STATIC_LINK_COMMAND) -o $@ $(LINKFLAGS) $(LDFLAGS)
+	@ echo
+
+$(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
+	$(CXX) $< $(STATIC_LINK_COMMAND) -o $@ $(LINKFLAGS) $(LDFLAGS)
+	@ echo
+>>>>>>> origin/BVLC/parallel
+
+>>>>>>> master
+=======
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+>>>>>>> BVLC/master
+=======
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+>>>>>>> master
+=======
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+>>>>>>> master
+=======
+>>>>>>> pod/device/blob.hpp
+	@ echo LD -o $@
+	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+
+>>>>>>> caffe
+$(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
+	@ echo CXX $<
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+$(DEVICE_BUILD_DIR)/%.o: src/$(PROJECT)/devices/%.cpp $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+	@ echo LD -o $@
+	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_FLAGS)
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	@ echo AR -o $@
+	$(Q)ar rcs $@ $(OBJS)
+=======
+	$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+	@ echo
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+
+<<<<<<< HEAD
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	ar rcs $@ $(OBJS)
 <<<<<<< HEAD
 	@ echo
 >>>>>>> origin/BVLC/parallel
 
 =======
+=======
+$(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
+		| $(PROTO_BUILD_DIR)
+	@ echo CXX $<
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+
+$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
+	@ echo NVCC $<
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+		-odir $(@D)
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+<<<<<<< HEAD
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+>>>>>>> pod/device/blob.hpp
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
@@ -2276,17 +2876,31 @@ $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
 >>>>>>> pod/common.hpp
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 		|| (cat $@.$(WARNS_EXT); exit 1)
+<<<<<<< HEAD
 	@ echo
 
 <<<<<<< HEAD
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 >>>>>>> origin/BVLC/parallel
+=======
+	@ cat $@.$(WARNS_EXT)
+
+<<<<<<< HEAD
+$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 		| $(LAYER_BUILD_DIR)
 =======
 $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
 >>>>>>> pod/caffe-merge
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+<<<<<<< HEAD
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 	@ echo
@@ -2295,10 +2909,103 @@ $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
 
 >>>>>>> BVLC/master
 $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+=======
+=======
+$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
+		| $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo CXX/LD -o $@ $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+>>>>>>> origin/BVLC/parallel
+=======
+$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
+	@ echo NVCC $<
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+		-odir $(@D)
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+=======
+$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
+>>>>>>> pod-caffe-pod.hpp-merge
+		| $(LAYER_BUILD_DIR)
+=======
+$(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ echo
+
+<<<<<<< HEAD
+$(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
+>>>>>>> BVLC/device-abstraction
+=======
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+		| $(LAYER_BUILD_DIR)
+>>>>>>> pod-caffe-pod.hpp-merge
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+>>>>>>> origin/BVLC/parallel
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+
+<<<<<<< HEAD
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+>>>>>>> origin/BVLC/parallel
+		| $(LAYER_BUILD_DIR)
+=======
+$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
+		| $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo CXX/LD -o $@ $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> BVLC/master
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo LD $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> BVLC/master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+>>>>>>> pod/device/blob.hpp
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
@@ -2311,11 +3018,93 @@ $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
+=======
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> caffe
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> BVLC/master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+>>>>>>> master
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+<<<<<<< HEAD
+$(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+>>>>>>> pod-caffe-pod.hpp-merge
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+>>>>>>> pod/device/blob.hpp
 	@ echo
 
+<<<<<<< HEAD
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+$(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ echo
@@ -2323,11 +3112,18 @@ $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 >>>>>>> origin/BVLC/parallel
 
 <<<<<<< HEAD
+=======
+=======
+=======
+
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
 $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
 	@ echo LD $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+<<<<<<< HEAD
 =======
 $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
 		| $(DEVICE_BUILD_DIR)
@@ -2368,6 +3164,7 @@ $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
 	@ echo
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -2511,6 +3308,12 @@ $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/device/blob.hpp
 
 # Target for extension-less symlinks to tool binaries with extension '*.bin'.
 $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
@@ -2526,6 +3329,7 @@ $(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2538,6 +3342,141 @@ $(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> BVLC/master
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> master
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> caffe
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> master
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> master
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> BVLC/master
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> master
+=======
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+>>>>>>> master
+=======
+
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
+	$(GTEST_OBJ) | $(DYNAMIC_NAME) $(TEST_BIN_DIR)
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(ORIGIN)/../lib
+>>>>>>> pod-caffe-pod.hpp-merge
+
+# Target for extension-less symlinks to tool binaries with extension '*.bin'.
+$(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
+	@ $(RM) $@
+	@ ln -s $(abspath $<) $@
+
+$(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
+	@ echo CXX/LD -o $@
+	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
+		-Wl,-rpath,$(ORIGIN)/../lib
+
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 $(EXAMPLE_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 	@ echo CXX/LD -o $@
 	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(PROJECT) $(LDFLAGS) \
@@ -2549,6 +3488,9 @@ $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 	@ echo PROTOC $<
 	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=$(PROTO_BUILD_DIR) $<
 
@@ -2557,12 +3499,15 @@ $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 	@ echo PROTOC \(python\) $<
 	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --python_out=$(PY_PROTO_BUILD_DIR) $<
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 	@ echo PROTOC $<
 	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=$(PROTO_BUILD_DIR) $<
 
@@ -2571,10 +3516,13 @@ $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 	@ echo PROTOC \(python\) $<
 	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --python_out=$(PY_PROTO_BUILD_DIR) $<
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 	protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=$(PROTO_BUILD_DIR) $<
 	@ echo
 
@@ -2595,6 +3543,7 @@ $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2602,6 +3551,9 @@ $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
@@ -2651,8 +3603,12 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 	cp $(STATIC_NAME) $(DISTRIBUTE_DIR)/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 	install -m 644 $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2665,6 +3621,10 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+	install -m 644 $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
+=======
+>>>>>>> pod/device/blob.hpp
 	cp $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
 >>>>>>> origin/BVLC/parallel
 =======
@@ -2673,6 +3633,7 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2680,6 +3641,9 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 	# add python - it's not the standard way, indeed...
 	cp -r python $(DISTRIBUTE_DIR)/python
 

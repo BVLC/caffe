@@ -4,9 +4,13 @@ scipy>=0.13.2
 scikit-image>=0.9.3
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 matplotlib>=1.3.1
 ipython>=3.0.0
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20,6 +24,11 @@ ipython>=3.0.0
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+matplotlib>=1.3.1
+ipython>=3.0.0
+=======
+>>>>>>> pod/device/blob.hpp
 scikit-learn>=0.14.1
 matplotlib>=1.3.1
 ipython>=1.1.0
@@ -31,6 +40,7 @@ ipython>=3.0.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -38,6 +48,9 @@ ipython>=3.0.0
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 h5py>=2.2.0
 leveldb>=0.191
 networkx>=1.8.1
@@ -48,24 +61,33 @@ protobuf>=2.5.0
 python-gflags>=2.0
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 pyyaml>=3.10
 Pillow>=2.3.0
 six>=1.1.0
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 pyyaml>=3.10
 Pillow>=2.3.0
 six>=1.1.0
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 pyyaml>=3.10
@@ -75,6 +97,7 @@ six>=1.1.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -82,3 +105,6 @@ six>=1.1.0
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

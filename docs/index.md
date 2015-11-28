@@ -6,24 +6,33 @@ title: Deep Learning Framework
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 [Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 [Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 Caffe is a deep learning framework developed with cleanliness, readability, and speed in mind.
 It was created by [Yangqing Jia](http://daggerfs.com) during his PhD at UC Berkeley, and is in active development by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 >>>>>>> origin/BVLC/parallel
@@ -35,6 +44,7 @@ It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.e
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -42,6 +52,9 @@ It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.e
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
 Check out our web image classification [demo](http://demo.caffe.berkeleyvision.org)!
@@ -74,6 +87,7 @@ Consult performance [details](/performance_hardware.html).
 - [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -93,6 +107,14 @@ Consult performance [details](/performance_hardware.html).
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 Tutorial presentation.
 - [Tutorial Documentation](/tutorial)<br>
 Practical guide and framework reference.
@@ -104,6 +126,7 @@ A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -111,6 +134,9 @@ A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 Caffe tutorial slides.
 - [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br>
 A 4-page report for the ACM Multimedia Open Source competition.
@@ -122,6 +148,7 @@ DIY deep learning with this hands-on tutorial to Caffe.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -129,6 +156,9 @@ DIY deep learning with this hands-on tutorial to Caffe.
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 - [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/model_zoo.html)<br>
@@ -137,8 +167,12 @@ BVLC suggests a standard distribution format for Caffe models, and provides trai
 Guidelines for development and contributing to Caffe.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 * [API Documentation](/doxygen/annotated.html)<br>
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -151,6 +185,10 @@ Guidelines for development and contributing to Caffe.
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+* [API Documentation](/doxygen/annotated.html)<br>
+=======
+>>>>>>> pod/device/blob.hpp
 * [API Documentation](/doxygen/)<br>
 >>>>>>> origin/BVLC/parallel
 =======
@@ -159,6 +197,7 @@ Guidelines for development and contributing to Caffe.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -166,6 +205,9 @@ Guidelines for development and contributing to Caffe.
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 Developer documentation automagically generated from code comments.
 
 ### Examples
@@ -188,6 +230,7 @@ Please cite Caffe in your publications if it helps your research:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -207,6 +250,14 @@ Please cite Caffe in your publications if it helps your research:
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     @article{jia2014caffe,
       Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
       Journal = {arXiv preprint arXiv:1408.5093},
@@ -218,6 +269,7 @@ Please cite Caffe in your publications if it helps your research:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -225,6 +277,9 @@ Please cite Caffe in your publications if it helps your research:
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
     @misc{Jia13caffe,
        Author = {Yangqing Jia},
        Title = { {Caffe}: An Open Source Convolutional Architecture for Fast Feature Embedding},
@@ -236,6 +291,7 @@ Please cite Caffe in your publications if it helps your research:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -243,6 +299,9 @@ Please cite Caffe in your publications if it helps your research:
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     }
 
 If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).

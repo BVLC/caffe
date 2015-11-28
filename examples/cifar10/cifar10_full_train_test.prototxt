@@ -13,6 +13,9 @@ layer {
   data_param {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     source: "examples/cifar10/cifar10_train_lmdb"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20,6 +23,7 @@ layer {
     backend: LMDB
   }
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -30,6 +34,11 @@ layer {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+    source: "examples/cifar10/cifar10_train_lmdb"
+=======
+>>>>>>> pod/device/blob.hpp
     source: "examples/cifar10/cifar10_train_leveldb"
 >>>>>>> origin/BVLC/parallel
     batch_size: 100
@@ -51,6 +60,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -58,6 +68,9 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 layer {
   name: "cifar"
@@ -73,13 +86,18 @@ layer {
   data_param {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+    source: "examples/cifar10/cifar10_test_lmdb"
+>>>>>>> pod/device/blob.hpp
     batch_size: 100
     backend: LMDB
   }
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -90,6 +108,11 @@ layer {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+    source: "examples/cifar10/cifar10_test_lmdb"
+=======
+>>>>>>> pod/device/blob.hpp
     source: "examples/cifar10/cifar10_test_leveldb"
 >>>>>>> origin/BVLC/parallel
     batch_size: 100
@@ -111,6 +134,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -118,6 +142,9 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 layer {
   name: "conv1"

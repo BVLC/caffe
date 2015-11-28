@@ -5,11 +5,13 @@
 <<<<<<< HEAD
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <string>
 #include <vector>
 
 =======
 =======
+<<<<<<< HEAD
 
 =======
 
@@ -22,6 +24,9 @@
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -41,6 +46,9 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include <algorithm>
 #include <cstdio>
 #include <string>
@@ -49,6 +57,7 @@
 #include "caffe/device.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -62,6 +71,11 @@
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 #include <string>
 #include <vector>
 
@@ -119,6 +133,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -126,6 +141,9 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -158,14 +176,18 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -178,6 +200,8 @@ template <typename Dtype>
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
@@ -203,6 +227,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -212,6 +237,11 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
@@ -235,6 +265,9 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
     : iter_(), iter_total_(&iter_), net_() {
@@ -251,6 +284,7 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 =======
 Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
     : iter_(), iter_total_(&iter_), net_() {
@@ -274,6 +308,8 @@ template <typename Dtype>
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
     : iter_(), iter_total_(&iter_), net_() {
@@ -311,7 +347,12 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
@@ -327,6 +368,7 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -334,6 +376,9 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
@@ -343,6 +388,7 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -350,6 +396,9 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
@@ -363,14 +412,18 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -383,6 +436,8 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   if (Caffe::root_solver()) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
@@ -394,6 +449,7 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -408,6 +464,10 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
@@ -416,7 +476,14 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 =======
 =======
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   if(!skip_test_nets)
     InitTestNets();
   LOG(INFO) << "Solver scaffolding done.";
@@ -425,14 +492,18 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -441,6 +512,8 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -562,17 +635,23 @@ void Solver<Dtype>::InitTestNets() {
         << "Creating test net (#" << i << ") specified by " << sources[i];
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     if (Caffe::root_solver()) {
       test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     } else {
@@ -582,10 +661,15 @@ void Solver<Dtype>::InitTestNets() {
     test_nets_[i]->set_debug_info(param_.debug_info());
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -708,6 +792,7 @@ void Solver<Dtype>::Step(int iters) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -2827,6 +2912,608 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       // Break out of training loop.
       break;
     }
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+<<<<<<< HEAD
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+<<<<<<< HEAD
+>>>>>>> master
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+
+=======
+
+>>>>>>> pod/caffe-merge
+=======
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> caffe
+=======
+=======
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+=======
+  PreSolve();
+
+  iter_ = 0;
+  current_step_ = 0;
+>>>>>>> pod/device/blob.hpp
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+  // Remember the initial iter_ value; will be non-zero if we loaded from a
+  // resume_file above.
+  const int start_iter = iter_;
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/caffe-merge
+  // For a network that is trained by the solver, no bottom or top vecs
+  // should be given, and we will just provide dummy vecs.
+  Step(param_.max_iter() - iter_);
+  // If we haven't already, save a snapshot after optimization, unless
+  // overridden by setting snapshot_after_train := false
+  if (param_.snapshot_after_train()
+      && (!param_.snapshot() || iter_ % param_.snapshot() != 0)) {
+    Snapshot();
+  }
+  if (requested_early_exit_) {
+    LOG(INFO) << "Optimization stopped early.";
+    return;
+  }
+  // After the optimization is done, run an additional train and test pass to
+  // display the train and test loss/outputs if appropriate (based on the
+  // display and test_interval settings, respectively).  Unlike in the rest of
+  // training, for the train net we only run a forward pass as we've already
+  // updated the parameters "max_iter" times -- this final pass is only done to
+  // display the loss, which is computed in the forward pass.
+  if (param_.display() && iter_ % param_.display() == 0) {
+    Dtype loss;
+    net_->ForwardPrefilled(&loss);
+    LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
+  }
+  if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
+    TestAll();
+  }
+  LOG(INFO) << "Optimization Done.";
+}
+=======
+  int average_loss = this->param_.average_loss();
+>>>>>>> pod/device/blob.hpp
+
+  CHECK_GE(average_loss, 1) << "average_loss should be non-negative.";
+
+  vector<Dtype> losses;
+  Dtype smoothed_loss = 0;
+
+  // For a network that is trained by the solver, no bottom or top vecs
+  // should be given, and we will just provide dummy vecs.
+  vector<Blob<Dtype>*> bottom_vec;
+  for (; iter_ < param_.max_iter(); ++iter_) {
+>>>>>>> origin/BVLC/parallel
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+=======
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
+=======
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  const int start_iter = iter_;
+  const int stop_iter = iter_ + iters;
+  int average_loss = this->param_.average_loss();
+  vector<Dtype> losses;
+  Dtype smoothed_loss = 0;
+<<<<<<< HEAD
+
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+
+<<<<<<< HEAD
+=======
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  while (iter_ < stop_iter) {
+    // zero-init the params
+    net_->ClearParamDiffs();
+    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+        && (iter_ > 0 || param_.test_initialization())
+        && Caffe::root_solver()) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+        && (iter_ > 0 || param_.test_initialization())) {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+      TestAll();
+      if (requested_early_exit_) {
+        // Break out of the while loop because stop was requested while testing.
+        break;
+      }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    }
+  }
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+<<<<<<< HEAD
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+
+<<<<<<< HEAD
+=======
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+=======
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_start();
+    }
+    const bool display = param_.display() && iter_ % param_.display() == 0;
+    net_->set_debug_info(display && param_.debug_info());
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    // accumulate the loss and gradient
+    Dtype loss = 0;
+    for (int i = 0; i < param_.iter_size(); ++i) {
+      loss += net_->ForwardBackward(bottom_vec);
+    }
+    loss /= param_.iter_size();
+    // average the loss across iterations for smoothed reporting
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    Dtype loss = net_->ForwardBackward(bottom_vec);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    if (losses.size() < average_loss) {
+      losses.push_back(loss);
+      int size = losses.size();
+      smoothed_loss = (smoothed_loss * (size - 1) + loss) / size;
+    } else {
+      int idx = (iter_ - start_iter) % average_loss;
+      smoothed_loss += (loss - losses[idx]) / average_loss;
+      losses[idx] = loss;
+    }
+    if (display) {
+<<<<<<< HEAD
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+=======
+      LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
+>>>>>>> origin/BVLC/parallel
+=======
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+      const vector<Blob<Dtype>*>& result = net_->output_blobs();
+      int score_index = 0;
+      for (int j = 0; j < result.size(); ++j) {
+        const Dtype* result_vec = result[j]->cpu_data();
+        const string& output_name =
+            net_->blob_names()[net_->output_blob_indices()[j]];
+        const Dtype loss_weight =
+            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
+        for (int k = 0; k < result[j]->count(); ++k) {
+          ostringstream loss_msg_stream;
+          if (loss_weight) {
+            loss_msg_stream << " (* " << loss_weight
+                            << " = " << loss_weight * result_vec[k] << " loss)";
+          }
+<<<<<<< HEAD
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+=======
+          LOG(INFO) << "    Train net output #"
+>>>>>>> origin/BVLC/parallel
+=======
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+              << score_index++ << ": " << output_name << " = "
+              << result_vec[k] << loss_msg_stream.str();
+        }
+      }
+<<<<<<< HEAD
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+=======
+>>>>>>> origin/BVLC/parallel
+    }
+    ApplyUpdate();
+>>>>>>> master
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+    SolverAction::Enum request = GetRequestedAction();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+
+    SolverAction::Enum request = GetRequestedAction();
+>>>>>>> master
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> master
+=======
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+=======
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+>>>>>>> caffe
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+<<<<<<< HEAD
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+
+>>>>>>> master
+=======
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> BVLC/master
+=======
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
   }
 }
 
@@ -2847,26 +3534,25 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 =======
 
->>>>>>> pod/caffe-merge
 =======
 
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;
 
 >>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
   }
 
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 >>>>>>> master
 =======
 >>>>>>> caffe
-<<<<<<< HEAD
->>>>>>> pod/caffe-merge
-=======
->>>>>>> pod/caffe-merge
+>>>>>>> pod-caffe-pod.hpp-merge
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   Step(param_.max_iter() - iter_);
@@ -2980,8 +3666,12 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
               << mean_score << loss_msg_stream.str();
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2994,6 +3684,10 @@ void Solver<Dtype>::Test(const int test_net_id) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+              << mean_score << loss_msg_stream.str();
+=======
+>>>>>>> pod/device/blob.hpp
         << mean_score << loss_msg_stream.str();
 >>>>>>> origin/BVLC/parallel
 =======
@@ -3002,6 +3696,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3009,6 +3704,9 @@ void Solver<Dtype>::Test(const int test_net_id) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 }
 
@@ -3021,6 +3719,7 @@ void Solver<Dtype>::Snapshot() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3033,6 +3732,11 @@ void Solver<Dtype>::Snapshot() {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   CHECK(Caffe::root_solver());
   string model_filename;
   switch (param_.snapshot_format()) {
@@ -3048,10 +3752,14 @@ void Solver<Dtype>::Snapshot() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
   }
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
   }
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3061,6 +3769,8 @@ void Solver<Dtype>::Snapshot() {
 =======
   }
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   NetParameter net_param;
   // For intermediate results, we will also dump the gradient values.
@@ -3179,6 +3889,9 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   }
 
   SnapshotSolverState(model_filename);
@@ -3201,10 +3914,13 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
     }
 =======
 =======
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 template <typename Dtype>
 void Solver<Dtype>::CheckSnapshotWritePermissions() {
   if (Caffe::root_solver() && param_.snapshot()) {
@@ -3224,6 +3940,7 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
   }
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -3252,6 +3969,8 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3279,6 +3998,7 @@ void SGDSolver<Dtype>::PreSolve() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3286,6 +4006,9 @@ void SGDSolver<Dtype>::PreSolve() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 >>>>>>> origin/BVLC/parallel
 }
@@ -3294,6 +4017,9 @@ void SGDSolver<Dtype>::PreSolve() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 template <typename Dtype>
 string Solver<Dtype>::SnapshotFilename(const string extension) {
   return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
@@ -3312,6 +4038,7 @@ string Solver<Dtype>::SnapshotToBinaryProto() {
 =======
 =======
 template <typename Dtype>
+<<<<<<< HEAD
 =======
 template <typename Dtype>
 <<<<<<< HEAD
@@ -3328,6 +4055,12 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3348,6 +4081,9 @@ template <typename Dtype>
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 void SGDSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
@@ -3363,6 +4099,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3372,6 +4109,11 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   Device<Dtype>* device = GetDevice<Dtype>();
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     // Compute the value to history, and then copy them to the blob's diff.
@@ -3389,18 +4131,24 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     }
     // copy
     device->copy(net_params[param_id]->count(),
         history_[param_id]->const_data(),
         net_params[param_id]->mutable_diff());
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
     }
     // copy
     device->copy(net_params[param_id]->count(),
@@ -3690,6 +4438,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3697,6 +4446,9 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 >>>>>>> BVLC/device-abstraction
 }
@@ -3706,18 +4458,24 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 string Solver<Dtype>::SnapshotToHDF5() {
   string model_filename = SnapshotFilename(".caffemodel.h5");
   LOG(INFO) << "Snapshotting to HDF5 file " << model_filename;
   net_->ToHDF5(model_filename, param_.snapshot_diff());
   return model_filename;
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 void AdaGradSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
@@ -3851,6 +4609,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3858,6 +4617,9 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -3873,6 +4635,7 @@ void Solver<Dtype>::Restore(const char* state_file) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3885,12 +4648,18 @@ void Solver<Dtype>::Restore(const char* state_file) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 }
 
 INSTANTIATE_CLASS(Solver);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3903,6 +4672,12 @@ INSTANTIATE_CLASS(Solver);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 INSTANTIATE_CLASS(SGDSolver);
 INSTANTIATE_CLASS(NesterovSolver);
 INSTANTIATE_CLASS(AdaGradSolver);
@@ -3912,6 +4687,7 @@ INSTANTIATE_CLASS(AdaGradSolver);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3919,5 +4695,8 @@ INSTANTIATE_CLASS(AdaGradSolver);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 }  // namespace caffe

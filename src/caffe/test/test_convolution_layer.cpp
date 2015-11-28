@@ -20,6 +20,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     Blob<Dtype>* out) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -39,6 +40,14 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   const bool has_depth = (out->num_axes() == 5);
   if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
   // Kernel size, stride, and pad
@@ -89,6 +98,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -96,6 +106,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
   // Kernel size, stride, and pad
   int kernel_h, kernel_w;
   if (conv_param->has_kernel_size()) {
@@ -134,6 +147,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -141,6 +155,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     for (int g = 0; g < groups; g++) {
       o_head = o_g * g;
       k_head = k_g * g;
@@ -148,6 +165,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
         for (int k = 0; k < k_g; k++) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -167,6 +185,14 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
           for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
             for (int y = 0; y < out->shape(2 + has_depth); y++) {
               for (int x = 0; x < out->shape(3 + has_depth); x++) {
@@ -205,6 +231,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -212,6 +239,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
           for (int y = 0; y < out->height(); y++) {
             for (int x = 0; x < out->width(); x++) {
               for (int p = 0; p < kernel_h; p++) {
@@ -229,6 +259,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -236,6 +267,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
                   }
                 }
               }
@@ -250,6 +284,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     const Dtype* bias_data = weights[1]->cpu_data();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -269,6 +304,14 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     for (int n = 0; n < out->shape(0); n++) {
       for (int o = 0; o < out->shape(1); o++) {
         for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
@@ -287,6 +330,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -294,6 +338,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
     for (int n = 0; n < out->num(); n++) {
       for (int o = 0; o < out->channels(); o++) {
         for (int y = 0; y < out->height(); y++) {
@@ -305,6 +352,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -312,6 +360,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
           }
         }
       }
@@ -447,8 +498,12 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -461,6 +516,10 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
+=======
+>>>>>>> pod/device/blob.hpp
 TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 >>>>>>> origin/BVLC/parallel
 =======
@@ -469,6 +528,7 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -476,12 +536,16 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -501,6 +565,14 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   const int kNumOutput = 3;
   convolution_param->set_num_output(kNumOutput);
   convolution_param->set_axis(3);
@@ -586,6 +658,9 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -625,12 +700,15 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 
 TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   convolution_param->set_kernel_size(1);
   convolution_param->set_stride(1);
   convolution_param->set_num_output(4);
@@ -700,6 +778,7 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -707,6 +786,9 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   convolution_param->add_kernel_size(1);
   convolution_param->add_stride(1);
   convolution_param->set_num_output(4);
@@ -839,24 +921,33 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   Dtype* weights_2 = layer->blobs()[0]->mutable_cpu_data();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   weights_2[0] = -1;
   weights_2[1] =  0;
   weights_2[2] =  1;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   weights_2[0] = -1;
   weights_2[1] =  0;
   weights_2[2] =  1;
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   for (int c = 0; c < 3; ++c) {
     int i = c * 3;  // 1 x 3 filter
     weights_2[i +  0] = -1;
@@ -872,6 +963,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -879,6 +971,9 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
   layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
   // Test equivalence of full and separable filters.
@@ -1050,6 +1145,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient3D) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1058,6 +1154,10 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient3D) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
@@ -1080,6 +1180,7 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1087,6 +1188,9 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
@@ -1110,6 +1214,9 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
@@ -1133,6 +1240,7 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
   this->blob_top_vec_.push_back(this->blob_top_2_);
   convolution_param->set_kernel_size(1);
   convolution_param->set_stride(1);
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1171,6 +1279,8 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
   this->blob_top_vec_.push_back(this->blob_top_2_);
   convolution_param->set_kernel_size(1);
   convolution_param->set_stride(1);
+=======
+>>>>>>> pod/device/blob.hpp
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
@@ -1183,11 +1293,15 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestGradientGroup) {
@@ -1209,6 +1323,9 @@ TYPED_TEST(ConvolutionLayerTest, TestGradientGroup) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 #ifdef USE_CUDNN
@@ -1952,6 +2069,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 }
 
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 }
 
@@ -3362,6 +3480,8 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 }
 
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #endif
 
 }  // namespace caffe

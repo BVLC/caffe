@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19,6 +20,14 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 // Make sure we include Python.h before any system header
 // to avoid _POSIX_C_SOURCE redefinition
 #ifdef WITH_PYTHON_LAYER
@@ -30,16 +39,20 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -50,6 +63,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include <string>
 
 #include "caffe/layer.hpp"
@@ -67,8 +82,12 @@ namespace caffe {
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -81,6 +100,10 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+shared_ptr<Layer<Dtype> > GetConvolutionLayer(
+=======
+>>>>>>> pod/device/blob.hpp
 Layer<Dtype>* GetConvolutionLayer(
 >>>>>>> origin/BVLC/parallel
 =======
@@ -89,6 +112,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -96,6 +120,9 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
@@ -107,6 +134,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   if (engine == ConvolutionParameter_Engine_CAFFE) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -126,6 +154,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
@@ -136,6 +172,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -143,6 +180,9 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
     return new ConvolutionLayer<Dtype>(param);
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
@@ -246,12 +286,43 @@ Layer<Dtype>* GetSoftmaxLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
   } else if (engine == SoftmaxParameter_Engine_CUDNN) {
     return new CuDNNSoftmaxLayer<Dtype>(param);
+<<<<<<< HEAD
+=======
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
 }
 
+REGISTER_LAYER_CREATOR(SOFTMAX, GetSoftmaxLayer);
+
+// Get tanh layer according to engine.
+template <typename Dtype>
+Layer<Dtype>* GetTanHLayer(const LayerParameter& param) {
+  TanHParameter_Engine engine = param.tanh_param().engine();
+  if (engine == TanHParameter_Engine_DEFAULT) {
+    engine = TanHParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = TanHParameter_Engine_CUDNN;
+#endif
+  }
+  if (engine == TanHParameter_Engine_CAFFE) {
+    return new TanHLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == TanHParameter_Engine_CUDNN) {
+    return new CuDNNTanHLayer<Dtype>(param);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+<<<<<<< HEAD
 REGISTER_LAYER_CREATOR(SOFTMAX, GetSoftmaxLayer);
 
 // Get tanh layer according to engine.
@@ -289,8 +360,11 @@ Layer<Dtype>* GetTanHLayer(const LayerParameter& param) {
 }
 
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -309,6 +383,11 @@ Layer<Dtype>* GetTanHLayer(const LayerParameter& param) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
 // Get pooling layer according to engine.
@@ -342,6 +421,7 @@ REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -351,6 +431,11 @@ REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 // Get LRN layer according to engine
 template <typename Dtype>
@@ -390,6 +475,9 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 
 REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
 
@@ -416,6 +504,105 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
 
 REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 
+=======
+<<<<<<< HEAD
+
+=======
+=======
+>>>>>>> pod/device/blob.hpp
+
+>>>>>>> pod/caffe-merge
+REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
+
+// Get relu layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
+  ReLUParameter_Engine engine = param.relu_param().engine();
+  if (engine == ReLUParameter_Engine_DEFAULT) {
+    engine = ReLUParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = ReLUParameter_Engine_CUDNN;
+#endif
+  }
+  if (engine == ReLUParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == ReLUParameter_Engine_CUDNN) {
+    return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
+
+=======
+
+// Get LRN layer according to engine
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
+  LRNParameter_Engine engine = param.lrn_param().engine();
+
+  if (engine == LRNParameter_Engine_DEFAULT) {
+#ifdef USE_CUDNN
+    engine = LRNParameter_Engine_CUDNN;
+#else
+    engine = LRNParameter_Engine_CAFFE;
+#endif
+  }
+
+  if (engine == LRNParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == LRNParameter_Engine_CUDNN) {
+    LRNParameter lrn_param = param.lrn_param();
+
+    if (lrn_param.norm_region() ==LRNParameter_NormRegion_WITHIN_CHANNEL) {
+      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
+    } else {
+      // local size is too big to be handled through cuDNN
+      if (param.lrn_param().local_size() > CUDNN_LRN_MAX_N) {
+        return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+      } else {
+        return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
+      }
+    }
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
+
+// Get relu layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
+  ReLUParameter_Engine engine = param.relu_param().engine();
+  if (engine == ReLUParameter_Engine_DEFAULT) {
+    engine = ReLUParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = ReLUParameter_Engine_CUDNN;
+#endif
+  }
+  if (engine == ReLUParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == ReLUParameter_Engine_CUDNN) {
+    return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
+
+>>>>>>> caffe
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 
 =======
@@ -512,104 +699,12 @@ REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
-
-=======
-
 >>>>>>> pod/caffe-merge
-REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
-
-// Get relu layer according to engine.
-template <typename Dtype>
-shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
-  ReLUParameter_Engine engine = param.relu_param().engine();
-  if (engine == ReLUParameter_Engine_DEFAULT) {
-    engine = ReLUParameter_Engine_CAFFE;
-#ifdef USE_CUDNN
-    engine = ReLUParameter_Engine_CUDNN;
-#endif
-  }
-  if (engine == ReLUParameter_Engine_CAFFE) {
-    return shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
-#ifdef USE_CUDNN
-  } else if (engine == ReLUParameter_Engine_CUDNN) {
-    return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
-#endif
-  } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
-  }
-}
-
-REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
-
 =======
-
-// Get LRN layer according to engine
-template <typename Dtype>
-shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
-  LRNParameter_Engine engine = param.lrn_param().engine();
-
-  if (engine == LRNParameter_Engine_DEFAULT) {
-#ifdef USE_CUDNN
-    engine = LRNParameter_Engine_CUDNN;
-#else
-    engine = LRNParameter_Engine_CAFFE;
-#endif
-  }
-
-  if (engine == LRNParameter_Engine_CAFFE) {
-    return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
-#ifdef USE_CUDNN
-  } else if (engine == LRNParameter_Engine_CUDNN) {
-    LRNParameter lrn_param = param.lrn_param();
-
-    if (lrn_param.norm_region() ==LRNParameter_NormRegion_WITHIN_CHANNEL) {
-      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
-    } else {
-      // local size is too big to be handled through cuDNN
-      if (param.lrn_param().local_size() > CUDNN_LRN_MAX_N) {
-        return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
-      } else {
-        return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
-      }
-    }
-#endif
-  } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
-  }
-}
-
-REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
-
-// Get relu layer according to engine.
-template <typename Dtype>
-shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
-  ReLUParameter_Engine engine = param.relu_param().engine();
-  if (engine == ReLUParameter_Engine_DEFAULT) {
-    engine = ReLUParameter_Engine_CAFFE;
-#ifdef USE_CUDNN
-    engine = ReLUParameter_Engine_CUDNN;
-#endif
-  }
-  if (engine == ReLUParameter_Engine_CAFFE) {
-    return shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
-#ifdef USE_CUDNN
-  } else if (engine == ReLUParameter_Engine_CUDNN) {
-    return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
-#endif
-  } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
-  }
-}
-
-REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
-
->>>>>>> caffe
-<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
-=======
->>>>>>> pod/caffe-merge
-=======
->>>>>>> pod/caffe-merge
+>>>>>>> pod/device/blob.hpp
 // Get sigmoid layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
@@ -704,6 +799,7 @@ REGISTER_LAYER_CREATOR(Python, GetPythonLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -711,6 +807,9 @@ REGISTER_LAYER_CREATOR(Python, GetPythonLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CREATOR(TANH, GetTanHLayer);
 
 // Layers that use their constructor as their default creator should be
@@ -721,6 +820,7 @@ REGISTER_LAYER_CREATOR(TANH, GetTanHLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -728,4 +828,7 @@ REGISTER_LAYER_CREATOR(TANH, GetTanHLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }  // namespace caffe

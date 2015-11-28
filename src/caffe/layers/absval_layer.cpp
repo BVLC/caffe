@@ -2,6 +2,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14,6 +15,12 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
@@ -21,6 +28,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -28,6 +36,9 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -39,8 +50,12 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   NeuronLayer<Dtype>::LayerSetUp(bottom, top);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -53,6 +68,10 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+=======
+>>>>>>> pod/device/blob.hpp
   CHECK_NE(top[0], bottom[0]) << this->type_name() << " Layer does not "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -61,6 +80,7 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -68,6 +88,9 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     "allow in-place computation.";
 }
 
@@ -99,9 +122,13 @@ STUB_GPU(AbsValLayer);
 INSTANTIATE_CLASS(AbsValLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(AbsVal);
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -115,6 +142,11 @@ REGISTER_LAYER_CLASS(AbsVal);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+REGISTER_LAYER_CLASS(AbsVal);
+
+=======
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(ABSVAL, AbsValLayer);
 >>>>>>> origin/BVLC/parallel
 =======
@@ -124,6 +156,7 @@ REGISTER_LAYER_CLASS(AbsVal);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -131,4 +164,7 @@ REGISTER_LAYER_CLASS(AbsVal);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }  // namespace caffe

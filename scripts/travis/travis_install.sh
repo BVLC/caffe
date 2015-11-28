@@ -6,6 +6,7 @@ set -e
 MAKE="make --jobs=$NUM_THREADS"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -18,6 +19,12 @@ MAKE="make --jobs=$NUM_THREADS"
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 
 >>>>>>> origin/BVLC/parallel
 =======
@@ -25,6 +32,7 @@ MAKE="make --jobs=$NUM_THREADS"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -32,6 +40,9 @@ MAKE="make --jobs=$NUM_THREADS"
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
 # This ppa is for gflags and glog
@@ -41,9 +52,13 @@ apt-get install \
     wget git curl \
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     python-dev python-numpy python3-dev\
     libleveldb-dev libsnappy-dev libopencv-dev \
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -57,6 +72,11 @@ apt-get install \
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    python-dev python-numpy python3-dev\
+    libleveldb-dev libsnappy-dev libopencv-dev \
+=======
+>>>>>>> pod/device/blob.hpp
     python-dev python-numpy \
     libleveldb-dev libsnappy-dev libopencv-dev \
     libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev \
@@ -68,6 +88,7 @@ apt-get install \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -75,6 +96,9 @@ apt-get install \
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
@@ -86,6 +110,7 @@ apt-get install \
 if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -105,6 +130,14 @@ if $WITH_CMAKE; then
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   # cmake 3 will make sure that the python interpreter and libraries match
   wget --no-check-certificate http://www.cmake.org/files/v3.2/cmake-3.2.3-Linux-x86_64.sh -O cmake3.sh
   chmod +x cmake3.sh
@@ -115,6 +148,7 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -122,6 +156,9 @@ if $WITH_CMAKE; then
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
   add-apt-repository -y ppa:ubuntu-sdk-team/ppa
   apt-get -y update
   apt-get -y install cmake
@@ -131,6 +168,7 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -138,6 +176,9 @@ if $WITH_CMAKE; then
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 fi
 
 # Install CUDA, if needed
@@ -160,6 +201,7 @@ fi
 # Install LMDB
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -179,6 +221,14 @@ fi
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 LMDB_URL=https://github.com/LMDB/lmdb/archive/LMDB_0.9.14.tar.gz
 LMDB_FILE=/tmp/lmdb.tar.gz
 pushd .
@@ -191,6 +241,7 @@ cd /tmp/lmdb*/libraries/liblmdb/
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -198,6 +249,9 @@ cd /tmp/lmdb*/libraries/liblmdb/
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 LMDB_URL=ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.39.tgz
 LMDB_FILE=/tmp/openldap.tgz
 pushd .
@@ -210,6 +264,7 @@ cd /tmp/openldap*/libraries/liblmdb/
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -217,12 +272,16 @@ cd /tmp/openldap*/libraries/liblmdb/
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 $MAKE
 $MAKE install
 popd
 rm -f $LMDB_FILE
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -242,6 +301,14 @@ rm -f $LMDB_FILE
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 # Install the Python runtime dependencies via miniconda (this is much faster
 # than using pip for everything).
@@ -289,16 +356,20 @@ fi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -309,3 +380,5 @@ fi
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp

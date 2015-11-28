@@ -46,6 +46,7 @@ INSTANTIATE_CLASS(BNLLLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -55,6 +56,11 @@ INSTANTIATE_CLASS(BNLLLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(BNLL);
 
 =======
@@ -64,6 +70,7 @@ REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -71,6 +78,9 @@ REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(BNLL);
 
 >>>>>>> caffe

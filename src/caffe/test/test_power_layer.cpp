@@ -76,8 +76,12 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -90,6 +94,10 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
+=======
+>>>>>>> pod/device/blob.hpp
     GradientChecker<Dtype> checker(1e-2, 1e-2, 1701, 0., 0.01);
 >>>>>>> origin/BVLC/parallel
 =======
@@ -98,6 +106,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -105,6 +114,9 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);
   }

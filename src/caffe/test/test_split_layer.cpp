@@ -562,24 +562,33 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "force_backward: true "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'data' "
       "  type: 'DummyData' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'data' "
       "  type: 'DummyData' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'data' "
       "  type: DUMMY_DATA "
@@ -592,6 +601,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -599,6 +609,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  dummy_data_param { "
       "    num: 5 "
       "    channels: 2 "
@@ -613,24 +626,33 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "} "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct1' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct1' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'innerproduct1' "
       "  type: INNER_PRODUCT "
@@ -643,6 +665,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -650,6 +673,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  inner_product_param { "
       "    num_output: 10 "
       "    bias_term: false "
@@ -660,8 +686,12 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "  } "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  param { name: 'unsharedweights1' } "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -674,6 +704,10 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  param { name: 'unsharedweights1' } "
+=======
+>>>>>>> pod/device/blob.hpp
       "  param: 'unsharedweights1' "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -682,6 +716,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -689,30 +724,42 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'data' "
       "  top: 'innerproduct1' "
       "  loss_weight: 2.5 "
       "} "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct2' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct2' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'innerproduct2' "
       "  type: INNER_PRODUCT "
@@ -725,6 +772,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -732,6 +780,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  inner_product_param { "
       "    num_output: 10 "
       "    bias_term: false "
@@ -742,6 +793,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "  } "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -761,6 +813,14 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  param { name: 'unsharedweights2' } "
       "  bottom: 'data' "
       "  top: 'innerproduct2' "
@@ -774,6 +834,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -781,6 +842,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
       "  param: 'unsharedweights2' "
       "  bottom: 'data' "
       "  top: 'innerproduct2' "
@@ -794,6 +858,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -801,6 +866,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'innerproduct1' "
       "  bottom: 'innerproduct2' "
       "} ";
@@ -809,24 +877,33 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "force_backward: true "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'data' "
       "  type: 'DummyData' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'data' "
       "  type: 'DummyData' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'data' "
       "  type: DUMMY_DATA "
@@ -839,6 +916,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -846,6 +924,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  dummy_data_param { "
       "    num: 5 "
       "    channels: 2 "
@@ -860,24 +941,33 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "} "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'data_data_0_split' "
       "  type: 'Split' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'data_data_0_split' "
       "  type: 'Split' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'data_data_0_split' "
       "  type: SPLIT "
@@ -890,6 +980,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -897,30 +988,42 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'data' "
       "  top: 'data_data_0_split_0' "
       "  top: 'data_data_0_split_1' "
       "} "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct1' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct1' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'innerproduct1' "
       "  type: INNER_PRODUCT "
@@ -933,6 +1036,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -940,6 +1044,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  inner_product_param { "
       "    num_output: 10 "
       "    bias_term: false "
@@ -950,6 +1057,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "  } "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -969,6 +1077,14 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  param { name: 'unsharedweights1' } "
       "  bottom: 'data_data_0_split_0' "
       "  top: 'innerproduct1' "
@@ -982,6 +1098,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -989,6 +1106,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
       "  param: 'unsharedweights1' "
       "  bottom: 'data_data_0_split_0' "
       "  top: 'innerproduct1' "
@@ -1002,6 +1122,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1009,6 +1130,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'innerproduct1' "
       "  top: 'innerproduct1_innerproduct1_0_split_0' "
       "  top: 'innerproduct1_innerproduct1_0_split_1' "
@@ -1017,24 +1141,33 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "} "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct2' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "layer { "
       "  name: 'innerproduct2' "
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       "layers: { "
       "  name: 'innerproduct2' "
       "  type: INNER_PRODUCT "
@@ -1047,6 +1180,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1054,6 +1188,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  inner_product_param { "
       "    num_output: 10 "
       "    bias_term: false "
@@ -1064,6 +1201,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
       "  } "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1083,6 +1221,14 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  param { name: 'unsharedweights2' } "
       "  bottom: 'data_data_0_split_1' "
       "  top: 'innerproduct2' "
@@ -1096,6 +1242,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1103,6 +1250,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
       "  param: 'unsharedweights2' "
       "  bottom: 'data_data_0_split_1' "
       "  top: 'innerproduct2' "
@@ -1116,6 +1266,7 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1123,6 +1274,9 @@ TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'innerproduct1_innerproduct1_0_split_1' "
       "  bottom: 'innerproduct2' "
       "} ";
@@ -1188,8 +1342,12 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
       "  name: 'innerprod1' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1202,6 +1360,10 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: INNER_PRODUCT "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1210,6 +1372,7 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1217,6 +1380,9 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'data_data_0_split_0' "
       "  top: 'innerprod1' "
       "} "
@@ -1325,8 +1491,12 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
       "  name: 'innerprod1' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1339,6 +1509,10 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: INNER_PRODUCT "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1347,6 +1521,7 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1354,6 +1529,9 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'data_data_0_split_0' "
       "  top: 'innerprod1' "
       "} "
@@ -1361,8 +1539,12 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
       "  name: 'innerprod2' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1375,6 +1557,10 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: INNER_PRODUCT "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1383,6 +1569,7 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1390,6 +1577,9 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'label_data_1_split_0' "
       "  top: 'innerprod2' "
       "} "
@@ -1464,8 +1654,12 @@ TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
       "  name: 'innerprod1' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1478,6 +1672,10 @@ TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: INNER_PRODUCT "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1486,6 +1684,7 @@ TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1493,6 +1692,9 @@ TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'data_input_0_split_0' "
       "  top: 'innerprod1' "
       "} "
@@ -1569,8 +1771,12 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
       "  name: 'innerprod1' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1583,6 +1789,10 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: INNER_PRODUCT "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1591,6 +1801,7 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1598,6 +1809,9 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'data_data_0_split_0' "
       "  top: 'innerprod1' "
       "} "
@@ -1618,8 +1832,12 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
       "  name: 'innerprod2' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: 'InnerProduct' "
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1632,6 +1850,10 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/device/blob.hpp
       "  type: INNER_PRODUCT "
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1640,6 +1862,7 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1647,6 +1870,9 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       "  bottom: 'innerprod1_relu1_0_split_0' "
       "  top: 'innerprod2' "
       "} "

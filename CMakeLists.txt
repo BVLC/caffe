@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14,6 +15,13 @@
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> master
 =======
 >>>>>>> caffe
@@ -108,6 +116,7 @@ caffe_generate_export_configs()
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -115,6 +124,9 @@ caffe_generate_export_configs()
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 # Building docs script
 # Requirements:
 #   sudo apt-get install doxygen texlive ruby-dev
@@ -225,6 +237,9 @@ add_custom_target(jekyll COMMAND jekyll serve -w -s . -d _site --port=4000
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 cmake_minimum_required(VERSION 2.8.7)
 if(POLICY CMP0046)
@@ -313,12 +328,15 @@ caffe_print_configuration_summary()
 caffe_generate_export_configs()
 >>>>>>> BVLC/master
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/gh-pages
 =======
 >>>>>>> master
@@ -506,6 +524,7 @@ install(DIRECTORY ${folders} DESTINATION include)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -513,3 +532,6 @@ install(DIRECTORY ${folders} DESTINATION include)
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

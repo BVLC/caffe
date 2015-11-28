@@ -97,6 +97,7 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
     EXPECT_EQ(layer.file_name(), this->output_file_name_);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,6 +110,12 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> origin/BVLC/parallel
 =======
@@ -116,6 +123,7 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -123,6 +131,9 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   file_id = H5Fopen(this->output_file_name_.c_str(), H5F_ACC_RDONLY,

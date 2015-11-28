@@ -19,8 +19,12 @@ momentum: 0.95
 solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 type: "Nesterov"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -33,6 +37,10 @@ type: "Nesterov"
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+type: "Nesterov"
+=======
+>>>>>>> pod/device/blob.hpp
 solver_type: NESTEROV
 >>>>>>> origin/BVLC/parallel
 =======
@@ -41,6 +49,7 @@ type: "Nesterov"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -48,3 +57,6 @@ type: "Nesterov"
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

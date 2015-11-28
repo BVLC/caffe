@@ -10,8 +10,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
@@ -26,6 +31,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 =======
@@ -64,6 +70,10 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod/caffe-merge
+=======
+#include "caffe/util/rng.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/device/blob.hpp
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
@@ -100,6 +110,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -107,6 +118,9 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
