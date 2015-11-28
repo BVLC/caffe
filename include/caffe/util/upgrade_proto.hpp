@@ -43,6 +43,7 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
 // Return true iff any layer contains deprecated data transformation parameters.
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
@@ -51,6 +52,8 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
 // Return true iff any layer contains deprecated data transformation parameters.
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 
 // Perform all necessary transformations to upgrade old transformation fields
@@ -59,6 +62,7 @@ void UpgradeNetDataTransformation(NetParameter* net_param);
 
 // Return true iff the Net contains any layers specified as V1LayerParameters.
 bool NetNeedsV1ToV2Upgrade(const NetParameter& net_param);
+<<<<<<< HEAD
 
 // Perform all necessary transformations to upgrade a NetParameter with
 // deprecated V1LayerParameters.
@@ -69,6 +73,18 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 
+=======
+
+// Perform all necessary transformations to upgrade a NetParameter with
+// deprecated V1LayerParameters.
+bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param);
+
+bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
+                             LayerParameter* layer_param);
+
+const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
+
+>>>>>>> pod-caffe-pod.hpp-merge
 // Return true iff the solver contains any old solver_type specified as enums
 bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param);
 
@@ -104,6 +120,9 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
                                       NetParameter* param);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 // Perform all necessary transformations to upgrade old transformation fields
 // into a TransformationParameter.
@@ -133,6 +152,10 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param);
 void ReadSolverParamsFromTextFileOrDie(const string& param_file,
                                        SolverParameter* param);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge

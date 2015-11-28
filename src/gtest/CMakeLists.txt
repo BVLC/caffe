@@ -1,6 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -13,7 +19,10 @@ caffe_default_properties(gtest)
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 project(gtest CXX C)
 cmake_minimum_required(VERSION 2.6.2)
 
@@ -23,4 +32,7 @@ target_link_libraries(gtest_main gtest)
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

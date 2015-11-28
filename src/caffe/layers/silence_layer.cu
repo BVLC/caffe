@@ -2,14 +2,20 @@
 
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/math_functions.hpp"
 
@@ -28,9 +34,12 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (propagate_down[i]) {
       caffe_gpu_set(bottom[i]->count(), Dtype(0),
 <<<<<<< HEAD
+<<<<<<< HEAD
                     bottom[i]->mutable_gpu_diff());
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
                     bottom[i]->mutable_gpu_diff());
 =======
@@ -39,6 +48,9 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
                     bottom[i]->mutable_gpu_diff());
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
   }

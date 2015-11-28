@@ -21,9 +21,12 @@
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
 =======
@@ -32,6 +35,9 @@
 =======
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
 // TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
@@ -79,8 +85,14 @@ private:\
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -123,8 +135,11 @@ class Caffe {
   ~Caffe();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -135,6 +150,9 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   inline static Caffe& Get() {
     if (!thread_instance_.get()) {
@@ -145,9 +163,12 @@ class Caffe {
   enum Brew { UNSPECIFIED = -1, CPU, GPU };
   enum Phase { TRAIN, TEST };
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> caffe
@@ -163,6 +184,9 @@ class Caffe {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
   // Thread local context for Caffe. Moved to common.cpp instead of
@@ -171,8 +195,11 @@ class Caffe {
   static Caffe& Get();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -214,6 +241,9 @@ class Caffe {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   enum Brew { CPU, GPU };
 
@@ -276,8 +306,11 @@ class Caffe {
   Brew mode_;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   int solver_count_;
   bool root_solver_;
@@ -289,17 +322,23 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
   int solver_count_;
   bool root_solver_;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
  private:

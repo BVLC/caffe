@@ -90,6 +90,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
   accuracy_param->set_top_k(5);
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+<<<<<<< HEAD
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
   EXPECT_EQ(this->blob_top_->height(), 1);
@@ -113,6 +114,8 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
   EXPECT_EQ(this->blob_top_->height(), 1);
@@ -123,6 +126,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
   EXPECT_EQ(this->blob_top_per_class_->width(), 1);
 }
 
+<<<<<<< HEAD
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -132,6 +136,34 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
 =======
+=======
+TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   Caffe::set_mode(Caffe::CPU);
 =======
 >>>>>>> BVLC/master
@@ -187,6 +219,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
+<<<<<<< HEAD
+=======
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
 =======
@@ -278,6 +312,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
+>>>>>>> pod-caffe-pod.hpp-merge
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
 =======
@@ -297,6 +332,100 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
+<<<<<<< HEAD
+>>>>>>> caffe
+=======
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+>>>>>>> master
+=======
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+<<<<<<< HEAD
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+>>>>>>> master
+=======
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+>>>>>>> BVLC/master
+=======
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+>>>>>>> master
+=======
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+  LayerParameter layer_param;
+  AccuracyLayer<TypeParam> layer(layer_param);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> master
 =======
 >>>>>>> origin/BVLC/parallel
@@ -318,6 +447,9 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);

@@ -11,8 +11,14 @@ namespace caffe {
 
 /**
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -45,13 +51,19 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
  * @brief An interface for classes that perform optimization on Net%s.
  *
  * Requires implementation of ComputeUpdateValue to compute a parameter update
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
  * given the current state of the Net parameters.
  */
@@ -62,6 +74,11 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
 >>>>>>> caffe
@@ -76,6 +93,7 @@ class Solver {
   void Init(const SolverParameter& param, bool skip_test_nets);
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   explicit Solver(const SolverParameter& param, bool skip_test_nets);
   explicit Solver(const string& param_file);
@@ -86,6 +104,8 @@ class Solver {
   explicit Solver(const string& param_file);
   void Init(const SolverParameter& param, bool skip_test_nets);
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   void InitTrainNet();
@@ -117,6 +137,7 @@ class Solver {
     return test_nets_;
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
   inline int iter() { return iter_; }
   inline int *iter_total() { return iter_total_; }
   inline void iter_total(int *value) { iter_total_ = value; }
@@ -124,10 +145,15 @@ class Solver {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
   int iter() { return iter_; }
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
   // Invoked at specific points during an iteration
@@ -151,18 +177,24 @@ class Solver {
   virtual inline const char* type() const { return ""; }
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   inline int iter() { return iter_; }
   inline int *iter_total() { return iter_total_; }
   inline void iter_total(int *value) { iter_total_ = value; }
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
  protected:
@@ -175,11 +207,14 @@ class Solver {
   void TestAll();
   void Test(const int test_net_id = 0);
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void SnapshotSolverState(const string& model_filename) = 0;
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   virtual void SnapshotSolverState(const string& model_filename) = 0;
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
@@ -197,17 +232,23 @@ class Solver {
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
   int iter_;
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Points to iter_ by default, but can be overriden, e.g. to a global
   // counter if multiple solvers contribute iterations to the same model.
   int *iter_total_;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
   // Points to iter_ by default, but can be overriden, e.g. to a global
@@ -216,13 +257,19 @@ class Solver {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
@@ -234,6 +281,9 @@ class Solver {
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 <<<<<<< HEAD
@@ -255,25 +305,37 @@ class Solver {
  * @brief Optimizes the parameters of a Net using
  *        stochastic gradient descent (SGD) with momentum.
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 /**
  * @brief Solver that only computes gradients, used as worker
  *        for multi-GPU training.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class WorkerSolver : public Solver<Dtype> {
  public:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   explicit WorkerSolver(const SolverParameter& param,
       const Solver<Dtype>* root_solver = NULL)
       : Solver<Dtype>(param, root_solver) {}
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   explicit SGDSolver(const SolverParameter& param, bool skip_test_nets = false)
@@ -290,6 +352,7 @@ class WorkerSolver : public Solver<Dtype> {
   explicit WorkerSolver(const SolverParameter& param,
       const Solver<Dtype>* root_solver = NULL)
       : Solver<Dtype>(param, root_solver) {}
+<<<<<<< HEAD
 
 <<<<<<< HEAD
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
@@ -329,6 +392,10 @@ class WorkerSolver : public Solver<Dtype> {
   }
 =======
  protected:
+=======
+
+ protected:
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> caffe
   void ApplyUpdate() {}
   void SnapshotSolverState(const string& model_filename) {
@@ -408,6 +475,9 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
 }
 
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 };

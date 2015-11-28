@@ -19,11 +19,14 @@ fi
 echo "Downloading Caffe model info to $MODEL_DIR ..."
 mkdir -p $MODEL_DIR
 <<<<<<< HEAD
+<<<<<<< HEAD
 wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.zip
 unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
 rm $MODEL_DIR/gist.zip
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.zip
 unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
@@ -38,5 +41,8 @@ wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.zip
 unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
 rm $MODEL_DIR/gist.zip
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 echo "Done"

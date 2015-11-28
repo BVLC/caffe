@@ -3,9 +3,12 @@ name: BVLC AlexNet Model
 caffemodel: bvlc_alexnet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel
 <<<<<<< HEAD
+<<<<<<< HEAD
 license: unrestricted
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 license: unrestricted
 =======
@@ -14,6 +17,9 @@ license: non-commercial
 =======
 license: unrestricted
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 sha1: 9116a64c0fbe4459d18f4bb6b56d647b63920377
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
@@ -35,9 +41,12 @@ This model was trained by Evan Shelhamer @shelhamer
 ## License
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 This model is released for unrestricted use.
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 This model is released for unrestricted use.
 =======
@@ -48,4 +57,7 @@ Accordingly, this model is distributed under a non-commercial license.
 =======
 This model is released for unrestricted use.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

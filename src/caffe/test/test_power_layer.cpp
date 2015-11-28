@@ -75,9 +75,12 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
       }
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
     GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
 =======
@@ -86,6 +89,9 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 =======
     GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);

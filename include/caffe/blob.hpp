@@ -10,12 +10,15 @@
 #include "caffe/syncedmem.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 const int kMaxBlobAxes = 32;
 =======
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -69,6 +72,9 @@ const int kMaxBlobAxes = 32;
 
 const int kMaxBlobAxes = 32;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
@@ -85,12 +91,15 @@ class Blob {
  public:
   Blob()
 <<<<<<< HEAD
+<<<<<<< HEAD
        : data_(), diff_(), count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
        : data_(), diff_(), count_(0), capacity_(0) {}
 
@@ -125,12 +134,19 @@ class Blob {
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       const int width);
   explicit Blob(const vector<int>& shape);
 
   /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -256,8 +272,14 @@ class Blob {
       const int w = 0) const {
     CHECK_GE(n, 0);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -271,8 +293,11 @@ class Blob {
     CHECK_LE(w, width());
     return ((n * channels() + c) * height() + h) * width() + w;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -298,6 +323,9 @@ class Blob {
 >>>>>>> master
 =======
 >>>>>>> master
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 
@@ -314,8 +342,11 @@ class Blob {
     }
     return offset;
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -386,6 +417,9 @@ class Blob {
     return offset;
   }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief Copy from a source Blob.
@@ -456,9 +490,12 @@ class Blob {
   /// @brief Compute the sum of squares (L2 norm squared) of the diff.
   Dtype sumsq_diff() const;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -472,17 +509,23 @@ class Blob {
 >>>>>>> master
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
   void scale_diff(Dtype scale_factor);
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
    *        data_ of Blob other -- useful in Layer%s which simply perform a copy
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 <<<<<<< HEAD
 =======
@@ -554,6 +597,9 @@ class Blob {
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
    *        data_ of Blob other -- useful in Layer%s which simply perform a copy
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
    *        in their Forward pass.
    *
@@ -564,9 +610,12 @@ class Blob {
   /**
    * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
 <<<<<<< HEAD
+<<<<<<< HEAD
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
 =======
@@ -575,6 +624,9 @@ class Blob {
 =======
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
    *        in their Forward pass.
    *

@@ -5,11 +5,14 @@ title: Deep Learning Framework
 # Caffe
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 [Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
@@ -23,6 +26,9 @@ Caffe is a deep learning framework made with expression, speed, and modularity i
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 [Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
@@ -55,8 +61,14 @@ Consult performance [details](/performance_hardware.html).
 
 - [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -69,7 +81,10 @@ A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 Caffe tutorial slides.
 - [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br>
 A 4-page report for the ACM Multimedia Open Source competition.
@@ -78,6 +93,9 @@ DIY deep learning with this hands-on tutorial to Caffe.
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 - [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
@@ -86,9 +104,12 @@ BVLC suggests a standard distribution format for Caffe models, and provides trai
 * [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
 <<<<<<< HEAD
+<<<<<<< HEAD
 * [API Documentation](/doxygen/annotated.html)<br>
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 * [API Documentation](/doxygen/annotated.html)<br>
 =======
@@ -97,6 +118,9 @@ Guidelines for development and contributing to Caffe.
 =======
 * [API Documentation](/doxygen/annotated.html)<br>
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 Developer documentation automagically generated from code comments.
 
@@ -119,8 +143,14 @@ Developer documentation automagically generated from code comments.
 Please cite Caffe in your publications if it helps your research:
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -133,7 +163,10 @@ Please cite Caffe in your publications if it helps your research:
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     @misc{Jia13caffe,
        Author = {Yangqing Jia},
        Title = { {Caffe}: An Open Source Convolutional Architecture for Fast Feature Embedding},
@@ -142,6 +175,9 @@ Please cite Caffe in your publications if it helps your research:
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
 

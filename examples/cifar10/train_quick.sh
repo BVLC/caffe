@@ -9,9 +9,12 @@ $TOOLS/caffe train \
 $TOOLS/caffe train \
   --solver=examples/cifar10/cifar10_quick_solver_lr1.prototxt \
 <<<<<<< HEAD
+<<<<<<< HEAD
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 =======
@@ -20,4 +23,7 @@ $TOOLS/caffe train \
 =======
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

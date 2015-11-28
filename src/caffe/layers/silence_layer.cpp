@@ -2,14 +2,20 @@
 
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/math_functions.hpp"
 
@@ -22,9 +28,12 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (propagate_down[i]) {
       caffe_set(bottom[i]->count(), Dtype(0),
 <<<<<<< HEAD
+<<<<<<< HEAD
                 bottom[i]->mutable_cpu_diff());
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
                 bottom[i]->mutable_cpu_diff());
 =======
@@ -33,6 +42,9 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
                 bottom[i]->mutable_cpu_diff());
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
   }
@@ -44,10 +56,13 @@ STUB_GPU(SilenceLayer);
 
 INSTANTIATE_CLASS(SilenceLayer);
 <<<<<<< HEAD
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(Silence);
 
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 REGISTER_LAYER_CLASS(Silence);
 
@@ -58,5 +73,8 @@ REGISTER_LAYER_CLASS(SILENCE, SilenceLayer);
 REGISTER_LAYER_CLASS(Silence);
 
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

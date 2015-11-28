@@ -4,9 +4,12 @@
 Parse training log
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Evolved from parse_log.sh
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Evolved from parse_log.sh
 =======
@@ -15,6 +18,9 @@ Competitor to parse_log.sh
 =======
 Evolved from parse_log.sh
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 """
 
@@ -24,9 +30,12 @@ import extract_seconds
 import argparse
 import csv
 <<<<<<< HEAD
+<<<<<<< HEAD
 from collections import OrderedDict
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 from collections import OrderedDict
 =======
@@ -46,6 +55,9 @@ def get_line_type(line):
 =======
 from collections import OrderedDict
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 
@@ -61,8 +73,14 @@ def parse_log(path_to_log):
     """
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -82,7 +100,10 @@ def parse_log(path_to_log):
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     re_iteration = re.compile('Iteration (\d+)')
     re_accuracy = re.compile('output #\d+: accuracy = ([\.\d]+)')
     re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
@@ -100,6 +121,9 @@ def parse_log(path_to_log):
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
@@ -108,8 +132,14 @@ def parse_log(path_to_log):
 
         for line in f:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -123,7 +153,10 @@ def parse_log(path_to_log):
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
             iteration_match = re_iteration.search(line)
             if iteration_match:
                 iteration = float(iteration_match.group(1))
@@ -132,6 +165,9 @@ def parse_log(path_to_log):
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
                 continue
 
@@ -140,8 +176,14 @@ def parse_log(path_to_log):
             seconds = (time - start_time).total_seconds()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -225,7 +267,10 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
             lr_match = re_lr.search(line)
             if lr_match:
                 learning_rate = float(lr_match.group(1))
@@ -262,6 +307,9 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     """Save CSV files to output_dir
 
@@ -272,8 +320,14 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
     log_basename = os.path.basename(logfile_path)
     train_filename = os.path.join(output_dir, log_basename + '.train')
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -297,7 +351,10 @@ def write_csv(output_filename, dict_list, delimiter, verbose=False):
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     write_csv(train_filename, train_dict_list, train_dict_names, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
@@ -313,6 +370,9 @@ def write_csv(output_filename, dict_list, header_names, verbose=False):
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
         dict_writer.writeheader()
         dict_writer.writerows(dict_list)
@@ -336,8 +396,14 @@ def parse_args():
                         help='Print some extra info (e.g., output filenames)')
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -350,6 +416,12 @@ def parse_args():
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -362,11 +434,14 @@ def parse_args():
 def main():
     args = parse_args()
 <<<<<<< HEAD
+<<<<<<< HEAD
     train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
                    test_dict_list, delimiter=args.delimiter)
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
@@ -382,6 +457,9 @@ def main():
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
                    test_dict_list, delimiter=args.delimiter)
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 

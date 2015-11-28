@@ -9,8 +9,14 @@ namespace caffe {
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -95,6 +101,7 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
   }
 }
 
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 }
@@ -158,6 +165,8 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
   }
 }
 
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -270,6 +279,9 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
   }
 }
 
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -307,6 +319,10 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge

@@ -47,8 +47,11 @@ int main(int argc, char** argv) {
     UpgradeNetDataTransformation(&net_param);
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 
@@ -59,6 +62,9 @@ int main(int argc, char** argv) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
   // Save new format prototxt.

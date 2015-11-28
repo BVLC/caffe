@@ -10,9 +10,12 @@ import argparse
 import numpy as np
 import pandas as pd
 <<<<<<< HEAD
+<<<<<<< HEAD
 from skimage import io
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 from skimage import io
 =======
@@ -20,6 +23,9 @@ from skimage import io
 =======
 from skimage import io
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 import multiprocessing
 
@@ -40,9 +46,12 @@ def download_image(args_tuple):
         with open(filename) as f:
             assert hashlib.sha1(f.read()).hexdigest() != MISSING_IMAGE_SHA1
 <<<<<<< HEAD
+<<<<<<< HEAD
         test_read_image = io.imread(filename)
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
         test_read_image = io.imread(filename)
 =======
@@ -50,6 +59,9 @@ def download_image(args_tuple):
 =======
         test_read_image = io.imread(filename)
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
         return True
     except KeyboardInterrupt:
@@ -73,8 +85,14 @@ if __name__ == '__main__':
         help="num workers used to download images. -x uses (all - x) cores [-1 default]."
     )
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -86,6 +104,12 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -100,10 +124,13 @@ if __name__ == '__main__':
     df = pd.read_csv(csv_filename, index_col=0, compression='gzip')
     df = df.iloc[np.random.permutation(df.shape[0])]
 <<<<<<< HEAD
+<<<<<<< HEAD
     if args.labels > 0:
         df = df.loc[df['label'] < args.labels]
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     if args.labels > 0:
         df = df.loc[df['label'] < args.labels]
@@ -113,6 +140,9 @@ if __name__ == '__main__':
     if args.labels > 0:
         df = df.loc[df['label'] < args.labels]
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     if args.images > 0 and args.images < df.shape[0]:
         df = df.iloc[:args.images]

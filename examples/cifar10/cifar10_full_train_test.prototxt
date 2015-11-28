@@ -12,12 +12,15 @@ layer {
   }
   data_param {
 <<<<<<< HEAD
+<<<<<<< HEAD
     source: "examples/cifar10/cifar10_train_lmdb"
     batch_size: 100
     backend: LMDB
   }
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     source: "examples/cifar10/cifar10_train_lmdb"
 =======
@@ -39,6 +42,9 @@ layer {
     backend: LMDB
   }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
@@ -54,12 +60,15 @@ layer {
   }
   data_param {
 <<<<<<< HEAD
+<<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
     batch_size: 100
     backend: LMDB
   }
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
 =======
@@ -81,6 +90,9 @@ layer {
     backend: LMDB
   }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {

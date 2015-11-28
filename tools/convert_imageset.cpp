@@ -8,8 +8,11 @@
 //   subfolder1/file1.JPEG 7
 //   ....
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 
@@ -18,6 +21,9 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 #include <algorithm>
@@ -27,8 +33,14 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -40,11 +52,17 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/dataset_factory.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
@@ -55,9 +73,12 @@
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 <<<<<<< HEAD
+<<<<<<< HEAD
 using boost::scoped_ptr;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 using boost::scoped_ptr;
 =======
@@ -65,6 +86,9 @@ using boost::scoped_ptr;
 =======
 using boost::scoped_ptr;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 DEFINE_bool(gray, false,
@@ -72,10 +96,13 @@ DEFINE_bool(gray, false,
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
 <<<<<<< HEAD
+<<<<<<< HEAD
 DEFINE_string(backend, "lmdb",
         "The backend {lmdb, leveldb} for storing the result");
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 DEFINE_string(backend, "lmdb",
         "The backend {lmdb, leveldb} for storing the result");
@@ -86,6 +113,9 @@ DEFINE_string(backend, "lmdb", "The backend for storing the result");
 DEFINE_string(backend, "lmdb",
         "The backend {lmdb, leveldb} for storing the result");
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
@@ -94,10 +124,13 @@ DEFINE_bool(check_size, false,
 DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
 <<<<<<< HEAD
+<<<<<<< HEAD
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
@@ -107,16 +140,22 @@ DEFINE_string(encode_type, "",
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
   ::google::InitGoogleLogging(argv[0]);
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Print output to stderr (while still logging)
   FLAGS_alsologtostderr = 1;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   // Print output to stderr (while still logging)
   FLAGS_alsologtostderr = 1;
@@ -126,6 +165,9 @@ int main(int argc, char** argv) {
   // Print output to stderr (while still logging)
   FLAGS_alsologtostderr = 1;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 #ifndef GFLAGS_GFLAGS_H_
@@ -141,9 +183,12 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   if (argc < 4) {
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   if (argc < 4) {
 =======
@@ -152,6 +197,9 @@ int main(int argc, char** argv) {
 =======
   if (argc < 4) {
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/convert_imageset");
     return 1;
@@ -161,9 +209,12 @@ int main(int argc, char** argv) {
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
 <<<<<<< HEAD
+<<<<<<< HEAD
   const string encode_type = FLAGS_encode_type;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   const string encode_type = FLAGS_encode_type;
 =======
@@ -171,6 +222,9 @@ int main(int argc, char** argv) {
 =======
   const string encode_type = FLAGS_encode_type;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
   std::ifstream infile(argv[2]);
@@ -188,8 +242,14 @@ int main(int argc, char** argv) {
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -201,9 +261,12 @@ int main(int argc, char** argv) {
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   // Create new DB
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
   db->Open(argv[3], db::NEW);
@@ -230,12 +293,19 @@ int main(int argc, char** argv) {
 >>>>>>> origin/BVLC/parallel
 =======
 
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   // Create new DB
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
   db->Open(argv[3], db::NEW);
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -250,8 +320,14 @@ int main(int argc, char** argv) {
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     bool status;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -272,7 +348,10 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     if (encoded) {
       status = ReadFileToDatum(root_folder + lines[line_id].first,
         lines[line_id].second, &datum);
@@ -283,6 +362,9 @@ int main(int argc, char** argv) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     if (status == false) continue;
     if (check_size) {
@@ -297,6 +379,7 @@ int main(int argc, char** argv) {
     }
     // sequential
 <<<<<<< HEAD
+<<<<<<< HEAD
     string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
 
     // Put in db
@@ -307,6 +390,8 @@ int main(int argc, char** argv) {
     if (++count % 1000 == 0) {
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
 
@@ -341,12 +426,19 @@ int main(int argc, char** argv) {
     txn->Put(key_str, out);
 
     if (++count % 1000 == 0) {
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       // Commit db
       txn->Commit();
       txn.reset(db->NewTransaction());
       LOG(INFO) << "Processed " << count << " files.";
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -354,6 +446,7 @@ int main(int argc, char** argv) {
   }
   // write the last batch
   if (count % 1000 != 0) {
+<<<<<<< HEAD
 <<<<<<< HEAD
     txn->Commit();
     LOG(INFO) << "Processed " << count << " files.";
@@ -363,6 +456,8 @@ int main(int argc, char** argv) {
 #endif  // USE_OPENCV
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     txn->Commit();
     LOG(INFO) << "Processed " << count << " files.";
@@ -384,6 +479,9 @@ int main(int argc, char** argv) {
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   return 0;
 }

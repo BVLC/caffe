@@ -3,9 +3,12 @@ name: BVLC Reference RCNN ILSVRC13 Model
 caffemodel: bvlc_reference_rcnn_ilsvrc13.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.caffemodel
 <<<<<<< HEAD
+<<<<<<< HEAD
 license: unrestricted
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 license: unrestricted
 =======
@@ -14,6 +17,9 @@ license: non-commercial
 =======
 license: unrestricted
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 sha1: bdd8abb885819cba5e2fe1eb36235f2319477e64
 caffe_commit: a7e397abbda52c0b90323c23ab95bdeabee90a98
@@ -30,9 +36,12 @@ This model was trained by Ross Girshick @rbgirshick
 ## License
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 This model is released for unrestricted use.
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 This model is released for unrestricted use.
 =======
@@ -43,4 +52,7 @@ Accordingly, this model is distributed under a non-commercial license.
 =======
 This model is released for unrestricted use.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

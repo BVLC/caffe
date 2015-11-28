@@ -15,8 +15,14 @@
 #include "caffe/vision_layers.hpp"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -31,7 +37,10 @@ namespace db = caffe::db;
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 using boost::shared_ptr;
 using caffe::Blob;
 using caffe::Caffe;
@@ -42,6 +51,9 @@ using caffe::Net;
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 template<typename Dtype>
@@ -66,9 +78,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
     "  [CPU/GPU] [DEVICE_ID=0]\n"
     "Note: you can extract multiple features in one pass by specifying"
 <<<<<<< HEAD
+<<<<<<< HEAD
     " multiple feature blob names and dataset names separated by ','."
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     " multiple feature blob names and dataset names separated by ','."
 =======
@@ -77,6 +92,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
     " multiple feature blob names and dataset names separated by ','."
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     " The names cannot contain white space characters and the number of blobs"
     " and datasets must be equal.";
@@ -156,8 +174,11 @@ int feature_extraction_pipeline(int argc, char** argv) {
   int num_mini_batches = atoi(argv[++arg_pos]);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   std::vector<shared_ptr<db::DB> > feature_dbs;
   std::vector<shared_ptr<db::Transaction> > txns;
@@ -171,6 +192,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     txns.push_back(txn);
 =======
   std::vector<shared_ptr<Dataset<std::string, Datum> > > feature_dbs;
+<<<<<<< HEAD
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
     shared_ptr<Dataset<std::string, Datum> > dataset =
@@ -185,12 +207,31 @@ int feature_extraction_pipeline(int argc, char** argv) {
   const char* db_type = argv[++arg_pos];
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
+=======
+  for (size_t i = 0; i < num_features; ++i) {
+    LOG(INFO)<< "Opening dataset " << dataset_names[i];
+    shared_ptr<Dataset<std::string, Datum> > dataset =
+        DatasetFactory<std::string, Datum>(argv[++arg_pos]);
+    CHECK(dataset->open(dataset_names.at(i), Dataset<std::string, Datum>::New));
+    feature_dbs.push_back(dataset);
+>>>>>>> origin/BVLC/parallel
+=======
+  std::vector<shared_ptr<db::DB> > feature_dbs;
+  std::vector<shared_ptr<db::Transaction> > txns;
+  const char* db_type = argv[++arg_pos];
+  for (size_t i = 0; i < num_features; ++i) {
+    LOG(INFO)<< "Opening dataset " << dataset_names[i];
+>>>>>>> pod-caffe-pod.hpp-merge
     shared_ptr<db::DB> db(db::GetDB(db_type));
     db->Open(dataset_names.at(i), db::NEW);
     feature_dbs.push_back(db);
     shared_ptr<db::Transaction> txn(db->NewTransaction());
     txns.push_back(txn);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -200,8 +241,11 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   Datum datum;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
   const int kMaxKeyStrLength = 100;
@@ -209,6 +253,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   std::vector<Blob<float>*> input_vec;
   std::vector<int> image_indices(num_features, 0);
@@ -232,8 +279,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
           datum.add_float_data(feature_blob_data[d]);
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -244,11 +297,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
         CHECK(datum.SerializeToString(&out));
         txns.at(i)->Put(key_str, out);
 <<<<<<< HEAD
+<<<<<<< HEAD
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           txns.at(i)->Commit();
           txns.at(i).reset(feature_dbs.at(i)->NewTransaction());
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           txns.at(i)->Commit();
@@ -264,6 +320,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
@@ -274,6 +333,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {
+<<<<<<< HEAD
 <<<<<<< HEAD
       txns.at(i)->Commit();
     }
@@ -293,6 +353,19 @@ int feature_extraction_pipeline(int argc, char** argv) {
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
         " query images for feature blob " << blob_names[i];
+=======
+<<<<<<< HEAD
+      txns.at(i)->Commit();
+    }
+    LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+        " query images for feature blob " << blob_names[i];
+    feature_dbs.at(i)->Close();
+=======
+      CHECK(feature_dbs.at(i)->commit());
+    }
+    LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+        " query images for feature blob " << blob_names[i];
+>>>>>>> pod-caffe-pod.hpp-merge
     feature_dbs.at(i)->close();
 >>>>>>> origin/BVLC/parallel
 =======
@@ -302,6 +375,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
         " query images for feature blob " << blob_names[i];
     feature_dbs.at(i)->Close();
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 

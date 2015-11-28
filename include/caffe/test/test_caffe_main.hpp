@@ -16,9 +16,12 @@ using std::endl;
 
 #ifdef CMAKE_BUILD
 <<<<<<< HEAD
+<<<<<<< HEAD
   #include "caffe_config.h"
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   #include "caffe_config.h"
 =======
@@ -27,6 +30,9 @@ using std::endl;
 =======
   #include "caffe_config.h"
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 #else
   #define CUDA_TEST_DEVICE -1

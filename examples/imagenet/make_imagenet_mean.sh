@@ -3,8 +3,14 @@
 # N.B. this is available in data/ilsvrc12
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -18,12 +24,18 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 ./build/tools/compute_image_mean examples/imagenet/ilsvrc12_train_leveldb \
   data/ilsvrc12/imagenet_mean.binaryproto
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 echo "Done."

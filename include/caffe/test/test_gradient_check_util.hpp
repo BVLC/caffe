@@ -47,8 +47,14 @@ class GradientChecker {
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -60,6 +66,12 @@ class GradientChecker {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -104,9 +116,12 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   // parameter blobs.
   vector<Blob<Dtype>*> blobs_to_check;
 <<<<<<< HEAD
+<<<<<<< HEAD
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
@@ -115,12 +130,16 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 =======
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < layer->blobs().size(); ++i) {
     Blob<Dtype>* blob = layer->blobs()[i].get();
     caffe_set(blob->count(), static_cast<Dtype>(0), blob->mutable_cpu_diff());
     blobs_to_check.push_back(blob);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
   if (check_bottom == -1) {
     for (int i = 0; i < bottom.size(); ++i) {
@@ -129,6 +148,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   } else if (check_bottom >= 0) {
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   if (check_bottom == -1) {
     for (int i = 0; i < bottom.size(); ++i) {
@@ -149,6 +170,9 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     }
   } else if (check_bottom >= 0) {
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     CHECK_LT(check_bottom, bottom.size());
     blobs_to_check.push_back(bottom[check_bottom]);

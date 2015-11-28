@@ -90,11 +90,14 @@ void caffe_exp(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 void caffe_log(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 void caffe_log(const int n, const Dtype* a, Dtype* y);
 
@@ -106,6 +109,9 @@ void caffe_log(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 void caffe_abs(const int n, const Dtype* a, Dtype* y);
 
@@ -223,11 +229,14 @@ void caffe_gpu_exp(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 void caffe_gpu_log(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 void caffe_gpu_log(const int n, const Dtype* a, Dtype* y);
 
@@ -239,6 +248,9 @@ void caffe_gpu_log(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 

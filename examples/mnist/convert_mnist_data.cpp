@@ -10,8 +10,14 @@
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -26,13 +32,19 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <lmdb.h>
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 #include <stdint.h>
 #include <sys/stat.h>
@@ -50,8 +62,11 @@ using std::string;
 
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
@@ -59,6 +74,9 @@ using std::string;
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 uint32_t swap_endian(uint32_t val) {
@@ -109,8 +127,11 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   options.write_buffer_size = 268435456;
   leveldb::WriteBatch* batch = NULL;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 
   // Open db
@@ -141,6 +162,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 =======
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
   // Open db
@@ -169,8 +193,14 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -180,8 +210,11 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char* pixels = new char[rows * cols];
   int count = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
   const int kMaxKeyLength = 10;
@@ -189,6 +222,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   string value;
 
@@ -204,8 +240,14 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     datum.set_data(pixels, rows*cols);
     datum.set_label(label);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -224,7 +266,10 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     snprintf(key_cstr, kMaxKeyLength, "%08d", item_id);
     datum.SerializeToString(&value);
     string keystr(key_cstr);
@@ -240,6 +285,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
@@ -279,9 +327,12 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     LOG(ERROR) << "Processed " << count << " files.";
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
   delete[] pixels;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   delete[] pixels;
 =======
@@ -290,6 +341,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 =======
   delete[] pixels;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 

@@ -11,8 +11,14 @@ The loss in Caffe is computed by the Forward pass of the network.
 Each layer takes a set of input (`bottom`) blobs and produces a set of output (`top`) blobs.
 Some of these layers' outputs may be used in the loss function.
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -25,7 +31,10 @@ A typical choice of loss function for one-versus-all classification tasks is the
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 A typical choice of loss function for one-versus-all classification tasks is the `SOFTMAX_LOSS` function, used in a network definition as follows, for example:
 
     layers {
@@ -34,6 +43,9 @@ A typical choice of loss function for one-versus-all classification tasks is the
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       bottom: "pred"
       bottom: "label"
@@ -41,8 +53,14 @@ A typical choice of loss function for one-versus-all classification tasks is the
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -64,7 +82,10 @@ So, the above `SoftmaxWithLoss` layer could be equivalently written as:
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 In a `SOFTMAX_LOSS` function, the `top` blob is a scalar (dimensions $$1 \times 1 \times 1 \times 1$$) which averages the loss (computed from predicted labels `pred` and actuals labels `label`) over the entire mini-batch.
 
 ### Loss weights
@@ -82,6 +103,9 @@ So, the above `SOFTMAX_LOSS` layer could be equivalently written as:
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       bottom: "pred"
       bottom: "label"

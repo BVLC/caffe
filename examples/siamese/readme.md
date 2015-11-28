@@ -40,8 +40,14 @@ we have replaced the top layers that produced probabilities over the 10 digit
 classes with a linear "feature" layer that produces a 2 dimensional vector.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -62,7 +68,10 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layers {
       name: "feat"
       type: INNER_PRODUCT
@@ -73,6 +82,9 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       inner_product_param {
         num_output: 2
@@ -93,8 +105,14 @@ images (`pair_data`) and a binary label saying if they belong to the same class
 or different classes (`sim`).
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -115,7 +133,10 @@ or different classes (`sim`).
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layers {
       name: "pair_data"
       type: DATA
@@ -130,6 +151,9 @@ or different classes (`sim`).
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
 
@@ -140,8 +164,14 @@ slices it along the channel dimension so that we have a single image in `data`
 and its paired image in `data_p.`
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -159,7 +189,10 @@ and its paired image in `data_p.`
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layers {
         name: "slice_pair"
         type: SLICE
@@ -173,6 +206,9 @@ and its paired image in `data_p.`
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
 
@@ -187,8 +223,14 @@ the siamese net. In the definition this looks like:
 
     ...
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -207,7 +249,10 @@ the siamese net. In the definition this looks like:
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     param: "conv1_w"
     param: "conv1_b"
     ...
@@ -222,6 +267,9 @@ the siamese net. In the definition this looks like:
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     ...
 
@@ -241,11 +289,14 @@ together in feature space while pushing non-matching pairs apart. This cost
 function is implemented with the `CONTRASTIVE_LOSS` layer:
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     layer {
         name: "loss"
         type: "ContrastiveLoss"
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     layer {
         name: "loss"
@@ -260,6 +311,9 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
         name: "loss"
         type: "ContrastiveLoss"
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
         contrastive_loss_param {
             margin: 1.0

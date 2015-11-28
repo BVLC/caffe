@@ -3,11 +3,14 @@ name: BVLC GoogleNet Model
 caffemodel: bvlc_googlenet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel
 <<<<<<< HEAD
+<<<<<<< HEAD
 license: unrestricted
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
 caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 license: unrestricted
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
@@ -23,6 +26,9 @@ license: unrestricted
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
 caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 ---
 
@@ -49,9 +55,12 @@ This model was trained by Sergio Guadarrama @sguada
 ## License
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 This model is released for unrestricted use.
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 This model is released for unrestricted use.
 =======
@@ -62,4 +71,7 @@ Accordingly, this model is distributed under a non-commercial license.
 =======
 This model is released for unrestricted use.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

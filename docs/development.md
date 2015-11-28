@@ -5,9 +5,12 @@ title: Developing and Contributing
 
 Caffe is developed with active participation of the community.<br>
 <<<<<<< HEAD
+<<<<<<< HEAD
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
@@ -16,6 +19,9 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions
 =======
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).
@@ -54,10 +60,13 @@ BVLC maintainers will periodically make releases by marking stable checkpoints a
 #### Issues & Pull Request Protocol
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
@@ -69,6 +78,9 @@ Large-scale development work is guided by [milestones], which are sets of Issues
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 Please note that since the core developers are largely researchers, we may work on a feature in isolation for some time before releasing it to the community, so as to claim honest academic contribution.
@@ -77,8 +89,14 @@ We do release things as soon as a reasonable technical report may be written, an
 **When you are ready to develop a feature or fixing a bug, follow this protocol**:
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -90,7 +108,10 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 - Develop in [feature branches] with descriptive names.
     - For new development branch off `dev`.
     - For documentation and fixes for `master` branch off `master`.
@@ -100,6 +121,9 @@ We do release things as soon as a reasonable technical report may be written, an
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   - Make PRs *as soon as development begins*, to let discussion guide development.
   - A PR is only ready for merge review when it is a fast-forward merge, and all code is documented, linted, and tested -- that means your PR must include tests!

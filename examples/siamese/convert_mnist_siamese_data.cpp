@@ -11,8 +11,14 @@
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -29,7 +35,10 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "leveldb/db.h"
 #include "stdint.h"
 
@@ -39,6 +48,9 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -61,9 +73,12 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   std::ifstream label_file(label_filename, std::ios::in | std::ios::binary);
   CHECK(image_file) << "Unable to open file " << image_filename;
 <<<<<<< HEAD
+<<<<<<< HEAD
   CHECK(label_file) << "Unable to open file " << label_filename;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   CHECK(label_file) << "Unable to open file " << label_filename;
 =======
@@ -72,6 +87,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 =======
   CHECK(label_file) << "Unable to open file " << label_filename;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   // Read the magic and the meta data
   uint32_t magic;
@@ -110,8 +128,11 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char label_j;
   char* pixels = new char[2 * rows * cols];
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
   const int kMaxKeyLength = 10;
@@ -119,6 +140,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   std::string value;
 
@@ -143,8 +167,14 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     }
     datum.SerializeToString(&value);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -158,7 +188,10 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     snprintf(key, kMaxKeyLength, "%08d", itemid);
     db->Put(leveldb::WriteOptions(), std::string(key), value);
   }
@@ -168,6 +201,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 
@@ -188,8 +224,14 @@ int main(int argc, char** argv) {
   return 0;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -202,6 +244,12 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======

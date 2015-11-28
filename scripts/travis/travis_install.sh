@@ -5,14 +5,20 @@ set -e
 
 MAKE="make --jobs=$NUM_THREADS"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
@@ -22,10 +28,13 @@ apt-get -y update
 apt-get install \
     wget git curl \
 <<<<<<< HEAD
+<<<<<<< HEAD
     python-dev python-numpy python3-dev\
     libleveldb-dev libsnappy-dev libopencv-dev \
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     python-dev python-numpy python3-dev\
     libleveldb-dev libsnappy-dev libopencv-dev \
@@ -38,6 +47,9 @@ apt-get install \
     python-dev python-numpy python3-dev\
     libleveldb-dev libsnappy-dev libopencv-dev \
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
@@ -49,8 +61,14 @@ apt-get install \
 # Caffe requires a minimum CMake version of 2.8.8.
 if $WITH_CMAKE; then
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -62,13 +80,19 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   add-apt-repository -y ppa:ubuntu-sdk-team/ppa
   apt-get -y update
   apt-get -y install cmake
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 fi
 
@@ -91,8 +115,14 @@ fi
 
 # Install LMDB
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -106,7 +136,10 @@ cd /tmp/lmdb*/libraries/liblmdb/
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 LMDB_URL=ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.39.tgz
 LMDB_FILE=/tmp/openldap.tgz
 pushd .
@@ -116,14 +149,23 @@ cd /tmp/openldap*/libraries/liblmdb/
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 $MAKE
 $MAKE install
 popd
 rm -f $LMDB_FILE
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -172,6 +214,12 @@ fi
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======

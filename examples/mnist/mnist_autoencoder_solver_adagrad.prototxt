@@ -15,9 +15,12 @@ snapshot_prefix: "examples/mnist/mnist_autoencoder_adagrad_train"
 # solver mode: CPU or GPU
 solver_mode: GPU
 <<<<<<< HEAD
+<<<<<<< HEAD
 type: "AdaGrad"
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 type: "AdaGrad"
 =======
@@ -26,4 +29,7 @@ solver_type: ADAGRAD
 =======
 type: "AdaGrad"
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

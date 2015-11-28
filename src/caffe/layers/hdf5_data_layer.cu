@@ -19,9 +19,12 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
 =======
@@ -30,14 +33,23 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       if (num_files_ > 1) {
         current_file_ += 1;
         if (current_file_ == num_files_) {
           current_file_ = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -53,10 +65,13 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             hdf_filenames_[file_permutation_[current_file_]].c_str());
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
         }
         LoadHDF5FileData(
             hdf_filenames_[file_permutation_[current_file_]].c_str());
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
           DLOG(INFO) << "Looping around to first file.";
         }
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
@@ -66,6 +81,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LoadHDF5FileData(
             hdf_filenames_[file_permutation_[current_file_]].c_str());
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       }
       current_row_ = 0;
@@ -79,9 +97,12 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
 <<<<<<< HEAD
     }
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
     }
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
@@ -94,6 +115,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
     }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }

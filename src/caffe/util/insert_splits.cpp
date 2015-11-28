@@ -65,9 +65,12 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       const string& layer_name = layer_idx_to_layer_name[-1];
       const string& blob_name = param.input(i);
 <<<<<<< HEAD
+<<<<<<< HEAD
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
@@ -76,6 +79,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
       LayerParameter* split_layer_param = param_split->add_layer();
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
       const float kZeroLossWeight = 0;
       ConfigureSplitLayer(layer_name, blob_name, i, split_count,
@@ -106,9 +112,12 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
         const string& layer_name = layer_idx_to_layer_name[i];
         const string& blob_name = layer_param->top(j);
 <<<<<<< HEAD
+<<<<<<< HEAD
         LayerParameter* split_layer_param = param_split->add_layer();
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
         LayerParameter* split_layer_param = param_split->add_layer();
 =======
@@ -117,6 +126,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
         LayerParameter* split_layer_param = param_split->add_layer();
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
         const float loss_weight = top_idx_to_loss_weight[top_idx];
         ConfigureSplitLayer(layer_name, blob_name, j, split_count,

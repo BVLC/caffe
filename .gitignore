@@ -29,8 +29,11 @@
 # IPython notebook checkpoints
 .ipynb_checkpoints
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 
@@ -39,6 +42,9 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 # Editor temporaries
@@ -54,8 +60,14 @@
 .settings
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -69,6 +81,12 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -89,11 +107,14 @@ data/*
 models/*
 *.caffemodel
 <<<<<<< HEAD
+<<<<<<< HEAD
 *.caffemodel.h5
 *.solverstate
 *.solverstate.h5
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 *.caffemodel.h5
 *.solverstate
@@ -106,6 +127,9 @@ models/*
 *.solverstate
 *.solverstate.h5
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 *.binaryproto
 *leveldb
@@ -120,10 +144,13 @@ distribute/*
 *.bin
 python/caffe/proto/
 <<<<<<< HEAD
+<<<<<<< HEAD
 cmake_build
 .cmake_build
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 cmake_build
 .cmake_build
@@ -133,6 +160,9 @@ cmake_build
 cmake_build
 .cmake_build
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 # Generated documentation

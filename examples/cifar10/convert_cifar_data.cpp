@@ -24,8 +24,11 @@ using boost::scoped_ptr;
 using std::string;
 namespace db = caffe::db;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 using caffe::Dataset;
 using caffe::DatasetFactory;
@@ -33,6 +36,9 @@ using caffe::Datum;
 using caffe::shared_ptr;
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 const int kCIFARSize = 32;
@@ -51,11 +57,14 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
 void convert_dataset(const string& input_folder, const string& output_folder,
     const string& db_type) {
 <<<<<<< HEAD
+<<<<<<< HEAD
   scoped_ptr<db::DB> train_db(db::GetDB(db_type));
   train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
   scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   scoped_ptr<db::DB> train_db(db::GetDB(db_type));
   train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
@@ -71,6 +80,9 @@ void convert_dataset(const string& input_folder, const string& output_folder,
   train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
   scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   // Data buffer
   int label;
@@ -94,6 +106,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       datum.set_label(label);
       datum.set_data(str_buffer, kCIFARImageNBytes);
 <<<<<<< HEAD
+<<<<<<< HEAD
       string out;
       CHECK(datum.SerializeToString(&out));
       txn->Put(caffe::format_int(fileid * kCIFARBatchSize + itemid, 5), out);
@@ -108,6 +121,8 @@ void convert_dataset(const string& input_folder, const string& output_folder,
   txn.reset(test_db->NewTransaction());
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       string out;
       CHECK(datum.SerializeToString(&out));
@@ -150,6 +165,9 @@ void convert_dataset(const string& input_folder, const string& output_folder,
   test_db->Open(output_folder + "/cifar10_test_" + db_type, db::NEW);
   txn.reset(test_db->NewTransaction());
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
@@ -160,8 +178,14 @@ void convert_dataset(const string& input_folder, const string& output_folder,
     datum.set_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -175,7 +199,10 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
     CHECK(test_dataset->put(string(str_buffer, length), datum));
   }
@@ -184,6 +211,9 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 

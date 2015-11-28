@@ -33,9 +33,12 @@ def parse_readme_frontmatter(dirname):
         lines = [line.strip() for line in f.readlines()]
     top = lines.index('---')
 <<<<<<< HEAD
+<<<<<<< HEAD
     bottom = lines.index('---', top + 1)
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     bottom = lines.index('---', top + 1)
 =======
@@ -44,6 +47,9 @@ def parse_readme_frontmatter(dirname):
 =======
     bottom = lines.index('---', top + 1)
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))
     assert all(key in frontmatter for key in required_keys)

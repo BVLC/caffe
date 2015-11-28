@@ -1,7 +1,10 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifdef USE_OPENCV
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #ifdef USE_OPENCV
 =======
@@ -9,6 +12,9 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -302,10 +308,13 @@ TEST_F(IOTest, TestDecodeDatum) {
   Datum datum;
   EXPECT_TRUE(ReadFileToDatum(filename, &datum));
 <<<<<<< HEAD
+<<<<<<< HEAD
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
@@ -317,6 +326,9 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   Datum datum_ref;
   ReadImageToDatumReference(filename, 0, 0, 0, true, &datum_ref);
@@ -337,8 +349,14 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
   Datum datum;
   EXPECT_TRUE(ReadFileToDatum(filename, &datum));
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -441,7 +459,10 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img = DecodeDatumToCVMat(datum);
   EXPECT_EQ(cv_img.channels(), 3);
   EXPECT_EQ(cv_img.rows, 360);
@@ -477,6 +498,9 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img_ref = ReadImageToCVMat(filename);
   EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());
@@ -495,9 +519,12 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 
 }  // namespace caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 #endif  // USE_OPENCV
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #endif  // USE_OPENCV
 =======
@@ -505,4 +532,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 =======
 #endif  // USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

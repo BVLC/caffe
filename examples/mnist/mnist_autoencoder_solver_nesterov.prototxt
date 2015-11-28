@@ -18,9 +18,12 @@ momentum: 0.95
 # solver mode: CPU or GPU
 solver_mode: GPU
 <<<<<<< HEAD
+<<<<<<< HEAD
 type: "Nesterov"
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 type: "Nesterov"
 =======
@@ -29,4 +32,7 @@ solver_type: NESTEROV
 =======
 type: "Nesterov"
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge

@@ -8,9 +8,12 @@ if [ ! -f $DIRNAME/readme.md ]; then
 fi
 cd $DIRNAME
 <<<<<<< HEAD
+<<<<<<< HEAD
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
@@ -19,6 +22,9 @@ FILES=`find . -type f -maxdepth 1 ! -name "*.caffemodel*" | xargs echo`
 =======
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 # Check for gist tool.

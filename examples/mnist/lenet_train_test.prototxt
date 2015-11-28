@@ -5,8 +5,14 @@ layer {
   top: "data"
   top: "label"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -20,6 +26,7 @@ layer {
   data_param {
     source: "examples/mnist/mnist_train_lmdb"
 <<<<<<< HEAD
+<<<<<<< HEAD
     batch_size: 64
     backend: LMDB
   }
@@ -33,6 +40,16 @@ layer {
     batch_size: 64
     backend: LMDB
   }
+=======
+=======
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    backend: LMDB
+>>>>>>> origin/BVLC/parallel
+    batch_size: 64
+    backend: LMDB
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
   transform_param {
@@ -45,6 +62,9 @@ layer {
     backend: LMDB
   }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
@@ -53,8 +73,14 @@ layer {
   top: "data"
   top: "label"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -68,11 +94,14 @@ layer {
   data_param {
     source: "examples/mnist/mnist_test_lmdb"
 <<<<<<< HEAD
+<<<<<<< HEAD
     batch_size: 100
     backend: LMDB
   }
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   data_param {
     source: "examples/mnist/mnist_test_lmdb"
@@ -93,6 +122,9 @@ layer {
     backend: LMDB
   }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {

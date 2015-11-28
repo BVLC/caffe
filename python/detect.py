@@ -47,9 +47,12 @@ def main(argv):
         "--model_def",
         default=os.path.join(pycaffe_dir,
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
@@ -58,6 +61,9 @@ def main(argv):
 =======
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
         help="Model definition file."
     )

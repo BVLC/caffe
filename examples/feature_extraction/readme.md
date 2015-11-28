@@ -11,9 +11,12 @@ Extracting Features
 
 In this tutorial, we will extract features using a pre-trained model with the included C++ utility.
 <<<<<<< HEAD
+<<<<<<< HEAD
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
@@ -22,6 +25,9 @@ Note that we recommend using the Python interface for this task, as for example 
 =======
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 
 Follow instructions for [installing Caffe](../../installation.html) and run `scripts/download_model_binary.py models/bvlc_reference_caffenet` from caffe root directory.

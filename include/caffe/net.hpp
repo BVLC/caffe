@@ -60,8 +60,14 @@ class Net {
 
   /**
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -75,6 +81,12 @@ class Net {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -119,9 +131,12 @@ class Net {
    *        additional memory) the pre-trained layers from another Net.
    */
 <<<<<<< HEAD
+<<<<<<< HEAD
   void ShareTrainedLayersWith(const Net* other);
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   void ShareTrainedLayersWith(const Net* other);
 =======
@@ -130,6 +145,9 @@ class Net {
 =======
   void ShareTrainedLayersWith(const Net* other);
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
@@ -140,8 +158,14 @@ class Net {
   void CopyTrainedLayersFrom(const NetParameter& param);
   void CopyTrainedLayersFrom(const string trained_filename);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -172,7 +196,10 @@ class Net {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
 
@@ -189,17 +216,23 @@ class Net {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
    */
 <<<<<<< HEAD
+<<<<<<< HEAD
   inline const vector<vector<Blob<Dtype>*> >& bottom_vecs() const {
     return bottom_vecs_;
   }
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   inline const vector<vector<Blob<Dtype>*> >& bottom_vecs() const {
     return bottom_vecs_;
@@ -212,14 +245,23 @@ class Net {
     return bottom_vecs_;
   }
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief returns the top vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
    */
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -231,10 +273,13 @@ class Net {
 <<<<<<< HEAD
     return bottom_need_backward_;
   }
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
     return bottom_need_backward_;
   }
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   inline const vector<Dtype>& blob_loss_weights() const {
     return blob_loss_weights_;
   }
@@ -310,6 +355,9 @@ class Net {
 =======
     return bottom_need_backward_;
   }
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   inline const vector<Dtype>& blob_loss_weights() const {
     return blob_loss_weights_;
@@ -358,6 +406,10 @@ class Net {
   bool has_layer(const string& layer_name) const;
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -390,10 +442,13 @@ class Net {
                    const int param_id);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
@@ -403,6 +458,9 @@ class Net {
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Helper for displaying debug info in Forward.
   void ForwardDebugInfo(const int layer_id);
@@ -412,8 +470,14 @@ class Net {
   void UpdateDebugInfo(const int param_id);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
@@ -425,13 +489,19 @@ class Net {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Get misc parameters, e.g. the LR multiplier and weight decay.
   void GetLearningRateAndWeightDecay();
 
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
@@ -456,9 +526,12 @@ class Net {
   /// indexed by blob_id.
   vector<Dtype> blob_loss_weights_;
 <<<<<<< HEAD
+<<<<<<< HEAD
   vector<vector<int> > param_id_vecs_;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   vector<vector<int> > param_id_vecs_;
 =======
@@ -466,6 +539,9 @@ class Net {
 =======
   vector<vector<int> > param_id_vecs_;
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   vector<int> param_owners_;
   vector<string> param_display_names_;
@@ -476,6 +552,7 @@ class Net {
   vector<int> net_output_blob_indices_;
   vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
+<<<<<<< HEAD
 <<<<<<< HEAD
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
@@ -496,6 +573,8 @@ class Net {
   vector<bool> has_params_decay_;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
@@ -517,6 +596,34 @@ class Net {
 =======
   string name_;
   /// The parameters in the network.
+<<<<<<< HEAD
+  vector<shared_ptr<Blob<Dtype> > > params_;
+  /// the learning rate multipliers
+  vector<float> params_lr_;
+  /// the weight decay multipliers
+  vector<float> params_weight_decay_;
+>>>>>>> origin/BVLC/parallel
+=======
+  /// The parameters in the network.
+  vector<shared_ptr<Blob<Dtype> > > params_;
+  vector<Blob<Dtype>*> learnable_params_;
+  /**
+   * The mapping from params_ -> learnable_params_: we have
+   * learnable_param_ids_.size() == params_.size(),
+   * and learnable_params_[learnable_param_ids_[i]] == params_[i].get()
+   * if and only if params_[i] is an "owner"; otherwise, params_[i] is a sharer
+   * and learnable_params_[learnable_param_ids_[i]] gives its owner.
+   */
+  vector<int> learnable_param_ids_;
+  /// the learning rate multipliers for learnable_params_
+  vector<float> params_lr_;
+  vector<bool> has_params_lr_;
+  /// the weight decay multipliers for learnable_params_
+  vector<float> params_weight_decay_;
+  vector<bool> has_params_decay_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
   vector<shared_ptr<Blob<Dtype> > > params_;
   /// the learning rate multipliers
   vector<float> params_lr_;
