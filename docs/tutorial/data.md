@@ -16,6 +16,7 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -24,6 +25,9 @@ This data layer definition
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -36,9 +40,12 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layers {
@@ -50,9 +57,12 @@ This data layer definition
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       # the 1st top is the data itself: the name is only convention
@@ -65,11 +75,14 @@ This data layer definition
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       # the Data layer configuration
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       # the DATA layer configuration
@@ -79,9 +92,12 @@ This data layer definition
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       data_param {
@@ -119,6 +135,7 @@ The (data, label) pairing is a convenience for classification models.
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -126,6 +143,8 @@ The (data, label) pairing is a convenience for classification models.
       name: "data"
       type: "Data"
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layers {
@@ -139,9 +158,12 @@ The (data, label) pairing is a convenience for classification models.
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       [...]

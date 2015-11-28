@@ -6,12 +6,15 @@
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #include <vector>
 
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include <algorithm>
@@ -25,9 +28,12 @@
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include "caffe/vision_layers.hpp"
@@ -48,11 +54,14 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   handles_setup_ = true;
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
@@ -61,9 +70,12 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -88,6 +100,7 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -96,6 +109,9 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -109,9 +125,12 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
@@ -121,9 +140,12 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   cudnnDestroy(this->handle_);

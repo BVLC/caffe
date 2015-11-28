@@ -19,6 +19,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/util/io.hpp"
@@ -40,6 +41,16 @@
 <<<<<<< HEAD
 #include "caffe/util/io.hpp"
 =======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/util/io.hpp"
+>>>>>>> pod/caffe-merge
+=======
 =======
 >>>>>>> BVLC/master
 =======
@@ -64,9 +75,12 @@
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include "caffe/util/upgrade_proto.hpp"
@@ -194,6 +208,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -202,6 +217,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -222,6 +240,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         << "Setting up " << layer_names_[layer_id];
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
@@ -247,6 +266,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/caffe-merge
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
@@ -257,6 +278,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> pod/caffe-merge
       }
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
@@ -288,9 +312,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       }
@@ -338,6 +365,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -346,6 +374,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -362,9 +393,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   set<string> blobs_under_loss;
@@ -375,9 +409,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
@@ -391,6 +428,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -399,6 +437,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -446,9 +487,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         break;
@@ -475,9 +519,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     }
@@ -600,6 +647,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -607,6 +655,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
           << "The NetState did not contain stage '" << rule.stage(i)
           << "' specified by a rule in layer " << layer_name;
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       LOG(INFO) << "The NetState did not contain stage '" << rule.stage(i)
@@ -619,9 +669,12 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       return false;
@@ -644,6 +697,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -651,6 +705,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
           << "The NetState contained a not_stage '" << rule.not_stage(i)
           << "' specified by a rule in layer " << layer_name;
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       LOG(INFO) << "The NetState contained a not_stage '" << rule.not_stage(i)
@@ -663,9 +719,12 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       return false;
@@ -873,10 +932,13 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
@@ -885,9 +947,12 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
@@ -1119,10 +1184,13 @@ void Net<Dtype>::Reshape() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -1136,9 +1204,12 @@ void Net<Dtype>::Reshape() {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -1295,6 +1366,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1303,6 +1375,8 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1322,7 +1396,10 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 >>>>>>> master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     }
@@ -1341,6 +1418,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
         hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
             *params_[net_param_id], true);
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     }
@@ -1473,6 +1551,56 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+    }
+=======
+    }
+    int num_params = layers_[layer_id]->blobs().size();
+    for (int param_id = 0; param_id < num_params; ++param_id) {
+      ostringstream dataset_name;
+      dataset_name << param_id;
+      const int net_param_id = param_id_vecs_[layer_id][param_id];
+      if (param_owners_[net_param_id] == -1) {
+        // Only save params that own themselves
+        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+            *params_[net_param_id]);
+      }
+      if (write_diff) {
+        // Write diffs regardless of weight-sharing
+        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+            *params_[net_param_id], true);
+      }
+    }
+>>>>>>> caffe
+    H5Gclose(layer_data_hid);
+    if (write_diff) {
+      H5Gclose(layer_diff_hid);
+    }
+  }
+  H5Gclose(data_hid);
+  if (write_diff) {
+    H5Gclose(diff_hid);
+  }
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1542,9 +1670,12 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   H5Fclose(file_hid);
@@ -1556,6 +1687,7 @@ void Net<Dtype>::Update() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1564,6 +1696,8 @@ void Net<Dtype>::Update() {
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1604,9 +1738,12 @@ void Net<Dtype>::Update() {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   for (int i = 0; i < learnable_params_.size(); ++i) {
@@ -1632,6 +1769,7 @@ void Net<Dtype>::ClearParamDiffs() {
 #endif
       break;
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1674,6 +1812,16 @@ void Net<Dtype>::ShareWeights() {
   for (int i = 0; i < params_.size(); ++i) {
     if (param_owners_[i] < 0) { continue; }
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/master
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ShareWeights() {
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> BVLC/master
   }

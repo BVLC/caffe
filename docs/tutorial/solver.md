@@ -12,6 +12,7 @@ The responsibilities of learning are divided between the Solver for overseeing t
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -20,6 +21,9 @@ The responsibilities of learning are divided between the Solver for overseeing t
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -36,9 +40,12 @@ The Caffe solvers are:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov's Accelerated Gradient (NAG).
@@ -47,9 +54,12 @@ The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAG
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -95,11 +105,14 @@ The parameter update $$\Delta W$$ is formed by the solver from the error gradien
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 **Stochastic gradient descent** (`type: "SGD"`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 **Stochastic gradient descent** (`solver_type: SGD`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
@@ -109,9 +122,12 @@ The parameter update $$\Delta W$$ is formed by the solver from the error gradien
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 The **learning rate** $$ \alpha $$ is the weight of the negative gradient.
@@ -179,6 +195,7 @@ If learning diverges (e.g., you start to see very large or `NaN` or `inf` loss v
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -187,6 +204,9 @@ If learning diverges (e.g., you start to see very large or `NaN` or `inf` loss v
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -224,9 +244,12 @@ The **adaptive gradient** (`type: "AdaGrad"`) method (Duchi et al. [1]) is a gra
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 ### AdaGrad
@@ -237,9 +260,12 @@ The **adaptive gradient** (`solver_type: ADAGRAD`) method (Duchi et al. [1]) is 
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 Given the update information from all previous iterations $$ \left( \nabla L(W) \right)_{t'} $$ for $$ t' \in \{1, 2, ..., t\} $$,
@@ -265,6 +291,7 @@ Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementa
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -273,6 +300,9 @@ Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementa
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -306,9 +336,12 @@ Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 ### NAG
@@ -319,9 +352,12 @@ Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon 
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 Though the required assumptions to achieve the $$ \mathcal{O}(1/t^2) $$ convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].
@@ -352,6 +388,7 @@ What distinguishes the method from SGD is the weight setting $$ W $$ on which we
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -360,6 +397,9 @@ What distinguishes the method from SGD is the weight setting $$ W $$ on which we
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -390,6 +430,7 @@ If the gradient updates results in oscillations the gradient is reduced by times
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -400,6 +441,11 @@ If the gradient updates results in oscillations the gradient is reduced by times
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======

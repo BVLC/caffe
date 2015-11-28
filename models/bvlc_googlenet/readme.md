@@ -10,6 +10,7 @@ caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -17,6 +18,8 @@ license: unrestricted
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
 caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 license: non-commercial
@@ -31,9 +34,12 @@ caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 ---
@@ -66,11 +72,14 @@ This model is released for unrestricted use.
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 This model is released for unrestricted use.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
@@ -82,8 +91,11 @@ This model is released for unrestricted use.
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge

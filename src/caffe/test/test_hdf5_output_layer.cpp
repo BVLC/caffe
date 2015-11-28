@@ -100,10 +100,13 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -112,9 +115,12 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);

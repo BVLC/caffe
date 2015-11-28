@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/filler.hpp"
 =======
 #include "caffe/device.hpp"
@@ -23,6 +24,8 @@
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -70,9 +73,12 @@
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include "caffe/net.hpp"
@@ -192,6 +198,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -199,6 +206,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
           "  name: 'loss' "
           "  type: 'Accuracy' "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
           "layers: { "
@@ -212,9 +221,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
           "  bottom: 'innerproduct' "
@@ -373,11 +385,14 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
         "  type: 'SoftmaxWithLoss' " +
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  type: SOFTMAX_LOSS " +
@@ -387,9 +402,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         loss_weight_stream.str() +
@@ -406,12 +424,15 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   // loss_weight is the loss weight for the 'EuclideanLoss' layer output.
   // midnet_loss_weight is the loss weight for the first 'InnerProduct' layer
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // loss_weight is the loss weight for the EUCLIDEAN_LOSS layer output.
@@ -423,9 +444,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // output.  Should both default to 0.0 if unspecified (i.e., if NULL is
@@ -448,11 +472,14 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
         "layer { "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "layers: { "
@@ -462,9 +489,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  name: 'data' "
@@ -511,10 +541,13 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  bottom: 'data' "
@@ -528,9 +561,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "} "
@@ -564,11 +600,14 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
         "  type: 'EuclideanLoss' ";
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  type: EUCLIDEAN_LOSS ";
@@ -578,9 +617,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     if (loss_weight) {
@@ -790,6 +832,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -797,6 +840,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "  name: 'conv1' "
         "  type: 'Convolution' "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "layers: { "
@@ -810,9 +855,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  bottom: 'data' "
@@ -837,6 +885,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -845,6 +894,9 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -862,9 +914,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "layers: { "
@@ -881,9 +936,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  bottom: 'conv1' "
@@ -902,6 +960,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -909,6 +968,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "  name: 'norm1' "
         "  type: 'LRN' "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "layers: { "
@@ -922,9 +983,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  bottom: 'pool1' "
@@ -941,6 +1005,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -948,6 +1013,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "  name: 'softmax' "
         "  type: 'Softmax' "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "layers: { "
@@ -961,9 +1028,12 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         "  bottom: 'norm1' "
@@ -978,6 +1048,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -986,6 +1057,9 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -1093,6 +1167,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1103,6 +1178,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1216,11 +1296,14 @@ TYPED_TEST(NetTest, TestLossWeight) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   // In this case, the loss weight for the 'EuclideanLoss' layer should default
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // In this case, the loss weight for the EUCLIDEAN_LOSS layer should default
@@ -1230,9 +1313,12 @@ TYPED_TEST(NetTest, TestLossWeight) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // to 1.
@@ -1335,12 +1421,15 @@ TYPED_TEST(NetTest, TestComboLossWeight) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   // Get the loss and gradients with 'EuclideanLoss' weight 1,
   // 'InnerProduct' weight 1.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // Get the loss and gradients with EUCLIDEAN_LOSS weight 1,
@@ -1352,9 +1441,12 @@ TYPED_TEST(NetTest, TestComboLossWeight) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   loss_weight = 1;
@@ -1490,11 +1582,14 @@ TYPED_TEST(NetTest, TestBackwardWithAccuracyLayer) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   // Test that we can do Backward even though we have an 'Accuracy' layer.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // Test that we can do Backward even though we have an ACCURACY layer.
@@ -1504,9 +1599,12 @@ TYPED_TEST(NetTest, TestBackwardWithAccuracyLayer) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   this->net_->ForwardBackward(bottom);
@@ -1586,11 +1684,14 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   EXPECT_EQ(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // Check that diff blobs of shared weights are at different locations in
@@ -1602,9 +1703,12 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   this->net_->Forward(bottom);
@@ -1620,6 +1724,7 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   for (int i = 0; i < count; ++i) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1640,6 +1745,8 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1677,9 +1784,12 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   const Dtype* expected_updated_params = shared_params.cpu_data();
@@ -1753,6 +1863,7 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1761,6 +1872,9 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -1773,9 +1887,12 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // Check that data blobs of shared weights share the same location in memory.
@@ -1788,9 +1905,12 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   this->net_->ForwardBackward(bottom);
@@ -1821,6 +1941,7 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1829,6 +1950,9 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -1844,9 +1968,12 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // Check that data blobs of shared weights share the same location in memory.
@@ -1862,9 +1989,12 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -1911,6 +2041,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     const Dtype param_asum =
        caffe_cpu_asum(params2[i]->count(), params2[i]->cpu_diff());
     EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
@@ -1939,6 +2070,16 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
        caffe_cpu_asum(params2[i]->count(), params2[i]->cpu_diff());
     EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    Dtype param_asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(params2[i]->count(),
+                                       params2[i]->cpu_diff(), &param_asum);
+    EXPECT_EQ(param_asum, param_asums[i]);
+=======
+    const Dtype param_asum =
+       caffe_cpu_asum(params2[i]->count(), params2[i]->cpu_diff());
+    EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
+>>>>>>> pod/caffe-merge
 =======
     Dtype param_asum;
     GetDevice<Dtype>(Caffe::CPU)->asum(params2[i]->count(),
@@ -1985,9 +2126,12 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   }
@@ -2566,6 +2710,7 @@ TEST_F(FilterNetTest, TestFilterInByMultipleStage2) {
       "  type: 'Data' "
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
       "  name: 'data' "
@@ -2573,6 +2718,8 @@ TEST_F(FilterNetTest, TestFilterInByMultipleStage2) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/caffe-merge
       "  top: 'data' "
       "  top: 'label' "
       "} "
@@ -2601,6 +2748,7 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
       "layer { "
       "  name: 'data' "
       "  type: 'Data' "
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
       "  top: 'data' "
       "  top: 'label' "
@@ -2635,10 +2783,13 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       "  top: 'data' "
       "  top: 'label' "
       "} "
       "layer { "
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
       "  name: 'innerprod' "
@@ -2651,6 +2802,11 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+      "  name: 'innerprod' "
+      "  type: 'InnerProduct' "
+=======
+>>>>>>> pod/caffe-merge
       "layers: { "
 =======
 >>>>>>> caffe
@@ -2669,9 +2825,12 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  bottom: 'data' "
@@ -2686,6 +2845,7 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -2693,6 +2853,8 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
       "  name: 'loss' "
       "  type: 'SoftmaxWithLoss' "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "layers: { "
@@ -2706,9 +2868,12 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  bottom: 'innerprod' "
@@ -2745,6 +2910,7 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
       "  bottom: 'label' "
       "  include: { not_stage: 'myotherstage' } "
 <<<<<<< HEAD
+<<<<<<< HEAD
       "} ";
   this->RunFilterNetTest(input_proto, input_proto);
 }
@@ -2776,15 +2942,20 @@ TEST_F(FilterNetTest, TestFilterInByNotStage) {
       "  include: { not_stage: 'myotherstage' } "
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/caffe-merge
       "} ";
   this->RunFilterNetTest(input_proto, input_proto);
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 TEST_F(FilterNetTest, TestFilterOutByNotStage) {
@@ -2831,6 +3002,7 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2838,6 +3010,8 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "layer { "
@@ -2850,11 +3024,14 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       "  name: 'innerprod' "
       "  type: 'InnerProduct' "
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  name: 'innerprod' "
@@ -2879,9 +3056,12 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  bottom: 'data' "
@@ -2896,6 +3076,7 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -2903,6 +3084,8 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
       "  name: 'loss' "
       "  type: 'SoftmaxWithLoss' "
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "layers: { "
@@ -2916,9 +3099,12 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  bottom: 'innerprod' "
@@ -2933,6 +3119,7 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
       "layer { "
       "  name: 'data' "
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -2940,6 +3127,8 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 <<<<<<< HEAD
       "layer { "
       "  name: 'data' "
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  type: 'Data' "
@@ -2965,9 +3154,12 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  type: 'Data' "
@@ -2978,6 +3170,7 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       "  name: 'loss' "
       "  type: 'SoftmaxWithLoss' "
 =======
@@ -3002,6 +3195,17 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
       "  name: 'loss' "
       "  type: 'SoftmaxWithLoss' "
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      "  name: 'innerprod' "
+      "  type: 'InnerProduct' "
+      "  bottom: 'data' "
+      "  top: 'innerprod' "
+      "  include: { min_level: 3 } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+>>>>>>> pod/caffe-merge
 =======
       "  name: 'innerprod' "
       "  type: 'InnerProduct' "
@@ -3033,9 +3237,12 @@ TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       "  bottom: 'innerprod' "
@@ -3354,12 +3561,15 @@ TYPED_TEST(NetTest, TestReshape) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   // them, check that forward and backward both run and the results
   // are the same, and check that the output shapes change.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // them, and check that forward and backward both run and the results
@@ -3371,9 +3581,12 @@ TYPED_TEST(NetTest, TestReshape) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   Caffe::set_random_seed(this->seed_);
@@ -3387,6 +3600,7 @@ TYPED_TEST(NetTest, TestReshape) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3395,6 +3609,9 @@ TYPED_TEST(NetTest, TestReshape) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -3407,9 +3624,12 @@ TYPED_TEST(NetTest, TestReshape) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   Blob<Dtype> blob1(4, 3, 9, 11);
@@ -3419,9 +3639,12 @@ TYPED_TEST(NetTest, TestReshape) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   filler.Fill(&blob1);
@@ -3463,11 +3686,14 @@ TYPED_TEST(NetTest, TestReshape) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     EXPECT_FLOAT_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     CHECK_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
@@ -3477,9 +3703,12 @@ TYPED_TEST(NetTest, TestReshape) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   }
@@ -3496,6 +3725,7 @@ TYPED_TEST(NetTest, TestReshape) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3504,6 +3734,9 @@ TYPED_TEST(NetTest, TestReshape) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -3573,9 +3806,12 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     CHECK_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
@@ -3584,9 +3820,12 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   }

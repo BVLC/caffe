@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -16,6 +17,9 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -30,6 +34,7 @@ namespace boost { class thread; }
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -40,6 +45,11 @@ namespace boost { class thread; }
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -55,6 +65,7 @@ namespace caffe {
  * The child class will acquire the ability to run a single thread,
  * by reimplementing the virtual function InternalThreadEntry.
 <<<<<<< HEAD
+<<<<<<< HEAD
  */
 class InternalThread {
  public:
@@ -118,6 +129,8 @@ class InternalThread {
  * Virtual class encapsulate boost::thread for use in base class
  * The child class will acquire the ability to run a single thread,
  * by reimplementing the virtual function InternalThreadEntry.
+=======
+>>>>>>> pod/caffe-merge
  */
 class InternalThread {
  public:
@@ -158,6 +171,7 @@ class InternalThread {
  public:
   InternalThread() : thread_(NULL), must_stop_() {}
   virtual ~InternalThread();
+<<<<<<< HEAD
 
   /** Returns true if the thread was successfully started. **/
   bool StartInternalThread();
@@ -294,10 +308,43 @@ class InternalThread {
 
   bool is_started() const;
 >>>>>>> caffe
+=======
+
+  /** Returns true if the thread was successfully started. **/
+  bool StartInternalThread();
+
+  /** Will not return until the internal thread has exited. */
+  bool StopInternalThread();
+
+  bool is_started() const { return thread_ != NULL && thread_->joinable(); }
+>>>>>>> pod/caffe-merge
 
   bool must_stop() {
     return must_stop_;
   }
+>>>>>>> origin/BVLC/parallel
+=======
+ * Virtual class encapsulate boost::thread for use in base class
+ * The child class will acquire the ability to run a single thread,
+ * by reimplementing the virtual function InternalThreadEntry.
+ */
+class InternalThread {
+ public:
+  InternalThread() : thread_() {}
+  virtual ~InternalThread();
+
+  /**
+   * Caffe's thread local state will be initialized using the current
+   * thread values, e.g. device id, solver index etc. The random seed
+   * is initialized using caffe_rng_rand.
+   */
+  void StartInternalThread();
+
+  /** Will not return until the internal thread has exited. */
+  void StopInternalThread();
+
+  bool is_started() const;
+>>>>>>> caffe
 
  protected:
   /* Implement this method in your subclass
@@ -306,6 +353,7 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 =======
@@ -320,6 +368,11 @@ class InternalThread {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+
+>>>>>>> pod/caffe-merge
 =======
 =======
 >>>>>>> caffe
@@ -337,6 +390,7 @@ class InternalThread {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   caffe::Thread* thread_;
   bool must_stop_;
 <<<<<<< HEAD
@@ -358,6 +412,8 @@ class InternalThread {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/caffe-merge
 
   caffe::Thread* thread_;
   bool must_stop_;
@@ -368,9 +424,12 @@ class InternalThread {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 };

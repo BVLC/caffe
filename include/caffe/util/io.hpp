@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 #include <boost/filesystem.hpp>
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <iomanip>
 #include <iostream>  // NOLINT(readability/streams)
 =======
@@ -13,6 +14,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #include <boost/filesystem.hpp>
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -27,9 +30,12 @@
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include <string>
@@ -47,10 +53,13 @@
 #endif
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 =======
 #define HDF5_NUM_DIMS 4
@@ -58,6 +67,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -69,6 +79,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 namespace caffe {
@@ -76,6 +88,7 @@ namespace caffe {
 using ::google::protobuf::Message;
 using ::boost::filesystem::path;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,6 +122,8 @@ inline void MakeTempFilename(string* temp_filename) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 inline void MakeTempFilename(string* temp_filename) {
@@ -158,9 +173,12 @@ inline void MakeTempDir(string* temp_dirname) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -237,10 +255,13 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -248,6 +269,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 inline bool ReadImageToDatum(const string& filename, const int label,
     const std::string & encoding, Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, true, encoding, datum);
+<<<<<<< HEAD
 <<<<<<< HEAD
 }
 
@@ -335,6 +357,49 @@ inline cv::Mat ReadImageToCVMat(const string& filename,
   return ReadImageToCVMat(filename, height, width, true);
 }
 
+=======
+}
+
+bool DecodeDatumNative(Datum* datum);
+bool DecodeDatum(Datum* datum, bool is_color);
+
+#ifdef USE_OPENCV
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width, const bool is_color);
+
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width);
+
+cv::Mat ReadImageToCVMat(const string& filename,
+    const bool is_color);
+=======
+}
+
+bool DecodeDatum(const int height, const int width, const bool is_color,
+  Datum* datum);
+
+inline bool DecodeDatum(const int height, const int width, Datum* datum) {
+  return DecodeDatum(height, width, true, datum);
+}
+
+inline bool DecodeDatum(const bool is_color, Datum* datum) {
+  return DecodeDatum(0, 0, is_color, datum);
+}
+
+inline bool DecodeDatum(Datum* datum) {
+  return DecodeDatum(0, 0, true, datum);
+}
+
+#ifndef OSX
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width, const bool is_color);
+
+inline cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width) {
+  return ReadImageToCVMat(filename, height, width, true);
+}
+
+>>>>>>> pod/caffe-merge
 inline cv::Mat ReadImageToCVMat(const string& filename,
     const bool is_color) {
   return ReadImageToCVMat(filename, 0, 0, is_color);
@@ -387,9 +452,12 @@ cv::Mat ReadImageToCVMat(const string& filename,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 

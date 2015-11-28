@@ -38,11 +38,14 @@ def parse_readme_frontmatter(dirname):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     bottom = lines.index('---', top + 1)
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     bottom = lines[top + 1:].index('---')
@@ -52,9 +55,12 @@ def parse_readme_frontmatter(dirname):
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))

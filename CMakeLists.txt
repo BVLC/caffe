@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -11,6 +12,8 @@
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> master
 =======
 >>>>>>> caffe
@@ -104,9 +107,12 @@ caffe_generate_export_configs()
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 # Building docs script
@@ -218,6 +224,7 @@ add_custom_target(jekyll COMMAND jekyll serve -w -s . -d _site --port=4000
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 cmake_minimum_required(VERSION 2.8.7)
 if(POLICY CMP0046)
@@ -308,6 +315,8 @@ caffe_generate_export_configs()
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/gh-pages
@@ -496,8 +505,11 @@ install(DIRECTORY ${folders} DESTINATION include)
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge

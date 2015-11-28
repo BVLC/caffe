@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/device.hpp"
@@ -17,6 +18,8 @@
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -51,9 +54,12 @@
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include "caffe/vision_layers.hpp"
@@ -130,12 +136,15 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
@@ -145,9 +154,12 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   num_ = bottom[0]->num();
@@ -232,6 +244,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 =======
@@ -260,6 +273,16 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
+                                     top_data);
+  GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,
+                                    top_data);
+  return Dtype(0.);
+=======
+  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
+  caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
+>>>>>>> pod/caffe-merge
 =======
   GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
                                      top_data);
@@ -306,9 +329,12 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -431,9 +457,12 @@ INSTANTIATE_CLASS(LRNLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(LRN, LRNLayer);
@@ -442,9 +471,12 @@ REGISTER_LAYER_CLASS(LRN, LRNLayer);
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }  // namespace caffe

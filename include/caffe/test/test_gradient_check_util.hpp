@@ -52,6 +52,7 @@ class GradientChecker {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -60,6 +61,9 @@ class GradientChecker {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -72,6 +76,7 @@ class GradientChecker {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -82,6 +87,11 @@ class GradientChecker {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -131,11 +141,14 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   vector<bool> propagate_down(bottom.size(), check_bottom < 0);
@@ -145,9 +158,12 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   for (int i = 0; i < layer->blobs().size(); ++i) {
@@ -165,6 +181,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -174,6 +191,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     }
   } else if (check_bottom >= 0) {
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   if (check_bottom < 0) {
@@ -191,9 +210,12 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     CHECK_LT(check_bottom, bottom.size());

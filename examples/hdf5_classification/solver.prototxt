@@ -6,6 +6,7 @@ test_iter: 250
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -13,6 +14,8 @@ train_net: "examples/hdf5_classification/logreg_auto_train.prototxt"
 test_net: "examples/hdf5_classification/logreg_auto_test.prototxt"
 test_iter: 250
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 net: "examples/hdf5_classification/train_val.prototxt"
@@ -25,9 +28,12 @@ test_iter: 250
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 test_interval: 1000

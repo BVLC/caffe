@@ -14,11 +14,14 @@ $TOOLS/caffe train \
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate
@@ -28,8 +31,11 @@ $TOOLS/caffe train \
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge

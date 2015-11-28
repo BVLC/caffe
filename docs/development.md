@@ -10,11 +10,14 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions!
@@ -24,9 +27,12 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -72,12 +78,15 @@ Large-scale development work is guided by [milestones], which are sets of Issues
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 Use Github Issues to report [bugs], propose features, and ask development [questions].
@@ -89,9 +98,12 @@ Large-scale development work is guided by [milestones], which are sets of Issues
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -106,6 +118,7 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -114,6 +127,9 @@ We do release things as soon as a reasonable technical report may be written, an
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -126,9 +142,12 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 - Develop in [feature branches] with descriptive names.
@@ -142,9 +161,12 @@ We do release things as soon as a reasonable technical report may be written, an
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   - Make PRs *as soon as development begins*, to let discussion guide development.

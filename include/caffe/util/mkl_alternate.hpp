@@ -39,11 +39,14 @@ DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
@@ -52,9 +55,12 @@ DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));

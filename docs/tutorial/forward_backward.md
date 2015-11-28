@@ -21,11 +21,14 @@ The data $$x$$ is passed through an inner product layer for $$g(x)$$ then throug
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 The data $$x$$ is passed through an inner product layer for $$g(x)$$ then through a softmax for $$h(g(x))$$ and softmax loss to give $$f_W(x)$$.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 The data $x$ is passed through an inner product layer for $g(x)$ then through a softmax for $h(g(x))$ and softmax loss to give $f_W(x)$.
@@ -35,9 +38,12 @@ The data $$x$$ is passed through an inner product layer for $$g(x)$$ then throug
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -54,11 +60,14 @@ The backward pass begins with the loss and computes the gradient with respect to
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 The backward pass begins with the loss and computes the gradient with respect to the output $$\frac{\partial f_W}{\partial h}$$. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the `INNER_PRODUCT` layer, compute the gradient with respect to their parameters $$\frac{\partial f_W}{\partial W_{\text{ip}}}$$ during the backward step.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 The backward pass begins with the loss and computes the gradient with respect to the output $\frac{\partial f_W}{\partial h}$. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the `INNER_PRODUCT` layer, compute the gradient with respect to their parameters $\frac{\partial f_W}{\partial W_{\text{ip}}}$ during the backward step.
@@ -68,9 +77,12 @@ The backward pass begins with the loss and computes the gradient with respect to
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -83,11 +95,14 @@ These computations follow immediately from defining the model: Caffe plans and c
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 - Every layer type has `forward_{cpu,gpu}()` and `backward_{cpu,gpu}()` methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 - Every layer type has `forward_{cpu,gpu}()` and `backward_{cpu,gpu}` methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.
@@ -97,9 +112,12 @@ These computations follow immediately from defining the model: Caffe plans and c
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 

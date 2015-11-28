@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/device.hpp"
@@ -18,6 +19,8 @@
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -52,9 +55,12 @@
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -75,6 +81,7 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -83,6 +90,8 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -124,9 +133,12 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   if ( this->layer_param_.mvn_param().across_channels() ) {
@@ -148,6 +160,7 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   sum_multiplier_.Reshape(1, 1,
       bottom[0]->height(), bottom[0]->width());
@@ -169,6 +182,8 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -202,9 +217,12 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   int num;
@@ -215,6 +233,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
 
   int dim = bottom[0]->count() / num;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -232,6 +251,12 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/caffe-merge
 
+=======
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -266,6 +291,8 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/caffe-merge
   if (this->layer_param_.mvn_param().normalize_variance()) {
     // put the squares of bottom into temp_
     this->device_->powx(bottom[0]->count(), bottom_data, Dtype(2),
@@ -284,8 +311,11 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -446,6 +476,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     this->device_->gemv(CblasNoTrans, num, dim, 1. / dim, bottom_data,
             sum_multiplier_.const_data(), 0., mean_.mutable_data());  // EX
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 
     // subtract mean
@@ -621,6 +652,16 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
         top_data);
 >>>>>>> pod/caffe-merge
 =======
+
+    // subtract mean
+    this->device_->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
+            mean_.const_data(), sum_multiplier_.const_data(), 0.,
+            temp_.mutable_data());
+
+    this->device_->add(temp_.count(), bottom_data, temp_.const_data(),
+        top_data);
+>>>>>>> pod/caffe-merge
+=======
     caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
 >>>>>>> BVLC/master
 =======
@@ -649,7 +690,10 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
     caffe_add_scalar(variance_.count(), eps_, variance_.mutable_cpu_data());
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -670,6 +714,7 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
         top_data);
 =======
     caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
 =======
@@ -737,6 +782,10 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -765,9 +814,12 @@ Dtype MVNLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   }
@@ -780,6 +832,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -788,6 +841,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -833,9 +888,12 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     const vector<Blob<Dtype>*>& bottom) {
@@ -849,6 +907,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -874,6 +933,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -901,6 +962,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> master
 =======
 >>>>>>> master
+<<<<<<< HEAD
 
   int dim = bottom[0]->count() / num;
 =======
@@ -941,6 +1003,13 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 
   int dim = bottom[0]->count() / num;
 >>>>>>> pod/caffe-merge
+=======
+
+  int dim = bottom[0]->count() / num;
+=======
+
+  int dim = bottom[0]->count() / num;
+>>>>>>> pod/caffe-merge
   Dtype eps = 1e-10;
 >>>>>>> origin/BVLC/parallel
 =======
@@ -949,9 +1018,12 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -978,6 +1050,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     caffe_powx(temp_.count(), bottom_data, Dtype(2),
         temp_.mutable_cpu_data());
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
@@ -987,6 +1060,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
@@ -1001,9 +1076,12 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     this->device_->powx(temp_.count(), bottom_data, Dtype(2),
@@ -1032,10 +1110,13 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -1067,9 +1148,12 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -1080,6 +1164,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1088,6 +1173,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1119,9 +1206,12 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
@@ -1130,6 +1220,7 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       mean_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
       temp_.mutable_cpu_data());
     caffe_add(temp_.count(), top_diff, temp_.cpu_data(), bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1144,6 +1235,8 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1174,9 +1267,12 @@ void MVNLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   }
@@ -1187,11 +1283,14 @@ INSTANTIATE_CLASS(MVNLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(MVN);
@@ -1202,9 +1301,12 @@ REGISTER_LAYER_CLASS(MVN, MVNLayer);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(MVN);

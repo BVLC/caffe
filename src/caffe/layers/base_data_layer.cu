@@ -15,6 +15,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -29,6 +30,10 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
   // Copy the data
@@ -49,6 +54,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 
@@ -62,6 +68,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 
   caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
       top[0]->mutable_gpu_data());
@@ -72,6 +80,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -106,6 +115,9 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   prefetch_free_.push(batch);
 }
 

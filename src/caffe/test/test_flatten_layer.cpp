@@ -49,6 +49,7 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -56,6 +57,8 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->shape(0), 2);
   EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -70,9 +73,12 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -89,6 +95,7 @@ TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -97,6 +104,9 @@ TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -140,6 +150,7 @@ TYPED_TEST(FlattenLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -150,6 +161,11 @@ TYPED_TEST(FlattenLayerTest, TestForward) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======

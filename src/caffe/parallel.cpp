@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -19,6 +20,10 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 #ifndef CPU_ONLY
 #include <cuda_runtime.h>
 #endif
@@ -219,6 +224,7 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -235,6 +241,8 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/caffe-merge
 #include <cstdlib>
 #include <string>
 #include <stdio.h>
@@ -816,6 +824,7 @@ void IBChannel::poll() const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -833,6 +842,11 @@ void IBChannel::poll() const {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -850,6 +864,7 @@ template<typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -864,6 +879,10 @@ template<typename Dtype>
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
                         P2PSync<Dtype>* parent, const SolverParameter& param)
     : GPUParams<Dtype>(root_solver, param.device_id()),
@@ -1104,6 +1123,7 @@ INSTANTIATE_CLASS(P2PSync);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1120,6 +1140,8 @@ INSTANTIATE_CLASS(P2PSync);
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/caffe-merge
 IBSync<Dtype>::IBSync(const Params<Dtype>& params, int rank,
                       const IBChannel& ucast, const IBChannel& mcast,
                       const vector<ib_addr>& ucast_addrs,
@@ -1823,6 +1845,7 @@ INSTANTIATE_CLASS(RawSync);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -1840,6 +1863,11 @@ INSTANTIATE_CLASS(RawSync);
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======

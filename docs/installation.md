@@ -37,6 +37,7 @@ Optional dependencies:
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 
@@ -54,6 +55,11 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+* For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
+* For MATLAB Caffe: MATLAB with the `mex` compiler.
+
+>>>>>>> pod/caffe-merge
 =======
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
@@ -79,9 +85,12 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
@@ -91,12 +100,16 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -119,10 +132,13 @@ There are several implementations of this library. The choice is yours:
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     + Ubuntu: `sudo apt-get install libatlas-base-dev`
@@ -133,9 +149,12 @@ There are several implementations of this library. The choice is yours:
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
@@ -161,6 +180,7 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -168,6 +188,8 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 
 but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     for req in $(cat requirements.txt); do sudo pip install $req; done
@@ -187,9 +209,12 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -207,11 +232,14 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 *Caffe's MATLAB interface works with versions 2012b, 2013a/b, and 2014a.*
@@ -384,9 +412,12 @@ At this point, you should be running the latest Homebrew packages and your Caffe
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -402,11 +433,14 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup (you should especially uncomment and set `BLAS_LIB` accordingly on distributions like **CentOS / RHEL / Fedora** where ATLAS is installed under `/usr/lib[64]/atlas`)
@@ -417,9 +451,12 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -436,12 +473,15 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 - For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 To compile with cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
@@ -454,9 +494,12 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -466,6 +509,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 **Distribution**: run `make distribute` to create a `distribute` directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -497,12 +541,35 @@ Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examp
 <<<<<<< HEAD
 <<<<<<< HEAD
 
+=======
+**Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
+
+Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+
+### CMake Compilation
+
+In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
+The basic steps are as follows:
+
+    mkdir build
+    cd build
+    cmake ..
+    make all
+    make runtest
+
+<<<<<<< HEAD
+See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
+=======
+Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+
+>>>>>>> pod/caffe-merge
 ### Compilation using CMake (beta)
 
 In lieu of manually editing `Makefile.config` to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in "beta").
 It requires CMake version >= 2.8.8.
 The basic installation steps are as follows:
 
+<<<<<<< HEAD
 =======
 
 ### Compilation using CMake (beta)
@@ -518,6 +585,8 @@ The basic installation steps are as follows:
 
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     mkdir build
@@ -539,9 +608,12 @@ As a workaround, if you are using Ubuntu 12.04 you can try the following steps t
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 **Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
@@ -563,12 +635,16 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge

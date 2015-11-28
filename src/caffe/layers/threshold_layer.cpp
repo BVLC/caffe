@@ -31,6 +31,7 @@ INSTANTIATE_CLASS(ThresholdLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(Threshold);
 
 =======
@@ -38,6 +39,8 @@ REGISTER_LAYER_CLASS(Threshold);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -49,9 +52,12 @@ REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }  // namespace caffe

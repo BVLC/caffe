@@ -17,6 +17,7 @@ We will go over the details of these components in more detail.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -25,6 +26,9 @@ We will go over the details of these components in more detail.
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -47,9 +51,12 @@ Parameter blob dimensions vary according to the type and configuration of the la
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is a 4-dimensional array that stores things in the order of (Num, Channels, Height and Width), from major to minor, and stored in a C-contiguous fashion.  The main reason for putting Num (the name is due to legacy reasons, and is equivalent to the notation of "batch" as in minibatch SGD).
@@ -73,9 +80,12 @@ Parameter blob dimensions vary according to the type and configuration of the la
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -154,6 +164,7 @@ is defined by
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -161,6 +172,8 @@ is defined by
       name: "mnist"
       type: "Data"
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layers {
@@ -174,9 +187,12 @@ is defined by
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       top: "data"
@@ -194,6 +210,7 @@ is defined by
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -201,6 +218,8 @@ is defined by
       name: "ip"
       type: "InnerProduct"
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layers {
@@ -214,9 +233,12 @@ is defined by
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       bottom: "data"
@@ -233,6 +255,7 @@ is defined by
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -240,6 +263,8 @@ is defined by
       name: "loss"
       type: "SoftmaxWithLoss"
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     layers {
@@ -253,9 +278,12 @@ is defined by
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       bottom: "ip"
@@ -282,11 +310,14 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 1 1 1 (64)
@@ -296,9 +327,12 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     I0902 22:52:17.938611 2079114000 net.cpp:67] Creating Layer ip
@@ -311,11 +345,14 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 1 1 (128)
@@ -325,9 +362,12 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     I0902 22:52:17.941270 2079114000 net.cpp:67] Creating Layer loss
@@ -342,11 +382,14 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: 1 1 1 1 (1)
@@ -356,9 +399,12 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     I0902 22:52:17.941329 2079114000 net.cpp:109]     with loss weight 1

@@ -13,11 +13,14 @@ FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 FILES=`find . -type f -maxdepth 1 ! -name "*.caffemodel*" | xargs echo`
@@ -27,9 +30,12 @@ FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 

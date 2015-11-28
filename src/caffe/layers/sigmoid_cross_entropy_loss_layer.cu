@@ -11,10 +11,13 @@ template <typename Dtype>
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 void SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
@@ -42,9 +45,12 @@ template <typename Dtype>
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
@@ -75,11 +81,14 @@ INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 INSTANTIATE_LAYER_GPU_FUNCS(SigmoidCrossEntropyLossLayer);
@@ -89,9 +98,12 @@ INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 

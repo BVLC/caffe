@@ -8,11 +8,14 @@
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #ifdef USE_OPENCV
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
@@ -21,9 +24,12 @@
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 #include <opencv2/core/core.hpp>
@@ -100,6 +106,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -107,6 +114,8 @@ cv::Mat ReadImageToCVMat(const string& filename,
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color) {
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 cv::Mat ReadImageToCVMat(const string& filename,
@@ -169,9 +178,12 @@ cv::Mat ReadImageToCVMat(const string& filename,
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   cv::Mat cv_img;
@@ -184,6 +196,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -192,6 +205,9 @@ cv::Mat ReadImageToCVMat(const string& filename,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -282,6 +298,7 @@ bool ReadFileToDatum(const string& filename, const int label,
     return false;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 =======
 <<<<<<< HEAD
@@ -306,6 +323,21 @@ bool ReadFileToDatum(const string& filename, const int label,
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
   } else {
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+  const string& data = datum.data();
+  std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
+  if (height > 0 && width > 0) {
+    cv::Mat cv_img_origin = cv::imdecode(cv::Mat(vec_data), cv_read_flag);
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+    cv_img = cv::imdecode(vec_data, cv_read_flag);
+>>>>>>> origin/BVLC/parallel
+=======
+  if (height > 0 && width > 0) {
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+>>>>>>> pod/caffe-merge
     cv_img = cv_img_origin;
   }
   return cv_img;
@@ -382,6 +414,7 @@ bool ReadFileToDatum(const string& filename, const int label,
     return true;
   } else {
     return false;
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
   const string& data = datum.data();
@@ -492,6 +525,10 @@ bool ReadFileToDatum(const string& filename, const int label,
   }
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/caffe-merge
+=======
+>>>>>>> caffe
+  }
 >>>>>>> pod/caffe-merge
 }
 
@@ -513,6 +550,7 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -521,6 +559,9 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -548,9 +589,12 @@ bool DecodeDatumNative(Datum* datum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -567,6 +611,7 @@ bool DecodeDatum(const int height, const int width, const bool is_color,
   } else {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
     return false;
@@ -616,6 +661,8 @@ bool DecodeDatum(Datum* datum, bool is_color) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/caffe-merge
     return false;
   }
 }
@@ -645,9 +692,12 @@ bool DecodeDatum(Datum* datum, bool is_color) {
   }
 }
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> pod/caffe-merge
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
@@ -679,10 +729,13 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -765,9 +818,12 @@ void hdf5_save_nd_dataset<double>(
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }

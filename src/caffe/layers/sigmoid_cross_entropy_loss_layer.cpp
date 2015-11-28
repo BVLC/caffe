@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 =======
@@ -18,6 +19,8 @@
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -73,9 +76,12 @@
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 
@@ -90,6 +96,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::LayerSetUp(
   sigmoid_top_vec_.clear();
   sigmoid_top_vec_.push_back(sigmoid_output_.get());
   sigmoid_layer_->SetUp(sigmoid_bottom_vec_, sigmoid_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -132,6 +139,8 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 }
 
 template <typename Dtype>
@@ -147,6 +156,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 }
@@ -164,6 +174,8 @@ template <typename Dtype>
 <<<<<<< HEAD
 Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> pod/caffe-merge
 =======
 =======
@@ -249,9 +261,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
   // The forward pass computes the sigmoid outputs.
@@ -285,6 +300,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -293,6 +309,8 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 =======
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -337,9 +355,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
     const int count = bottom[0]->count();
@@ -358,6 +379,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 STUB_GPU_BACKWARD(SigmoidCrossEntropyLossLayer, Backward);
 #endif
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -380,6 +402,8 @@ INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> BVLC/master
 INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
 <<<<<<< HEAD
@@ -392,9 +416,12 @@ REGISTER_LAYER_CLASS(SIGMOID_CROSS_ENTROPY_LOSS, SigmoidCrossEntropyLossLayer);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(SigmoidCrossEntropyLoss);

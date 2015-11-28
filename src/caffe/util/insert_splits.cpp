@@ -70,11 +70,14 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       LayerParameter* split_layer_param = param_split->add_layers();
@@ -84,9 +87,12 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
       const float kZeroLossWeight = 0;
@@ -123,11 +129,14 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
         LayerParameter* split_layer_param = param_split->add_layer();
 =======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         LayerParameter* split_layer_param = param_split->add_layers();
@@ -137,9 +146,12 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
         const float loss_weight = top_idx_to_loss_weight[top_idx];

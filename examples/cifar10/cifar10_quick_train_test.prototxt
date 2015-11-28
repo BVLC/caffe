@@ -15,6 +15,7 @@ layer {
 <<<<<<< HEAD
     source: "examples/cifar10/cifar10_train_lmdb"
 <<<<<<< HEAD
+<<<<<<< HEAD
     batch_size: 100
     backend: LMDB
   }
@@ -24,6 +25,8 @@ layer {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     source: "examples/cifar10/cifar10_train_lmdb"
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -47,9 +50,12 @@ layer {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
@@ -69,6 +75,7 @@ layer {
 <<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
 <<<<<<< HEAD
+<<<<<<< HEAD
     batch_size: 100
     backend: LMDB
   }
@@ -78,6 +85,8 @@ layer {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -101,9 +110,12 @@ layer {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
 }
