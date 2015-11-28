@@ -1,0 +1,60 @@
+{
+  "name": "after",
+  "description": "after - tiny flow control",
+  "version": "0.8.1",
+  "author": {
+    "name": "Raynos",
+    "email": "raynos2@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "Raynos",
+      "email": "raynos2@gmail.com",
+      "url": "http://raynos.org"
+    }
+  ],
+  "scripts": {
+    "test": "mocha --ui tdd --reporter spec test/*.js"
+  },
+  "devDependencies": {
+    "mocha": "~1.8.1"
+  },
+  "keywords": [
+    "flowcontrol",
+    "after",
+    "flow",
+    "control",
+    "arch"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Raynos/after.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Raynos/after/issues"
+  },
+  "_id": "after@0.8.1",
+  "dist": {
+    "shasum": "ab5d4fb883f596816d3515f8f791c0af486dd627",
+    "tarball": "http://registry.npmjs.org/after/-/after-0.8.1.tgz"
+  },
+  "_from": "after@0.8.1",
+  "_npmVersion": "1.2.25",
+  "_npmUser": {
+    "name": "raynos",
+    "email": "raynos2@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "raynos",
+      "email": "raynos2@gmail.com"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "ab5d4fb883f596816d3515f8f791c0af486dd627",
+  "_resolved": "https://registry.npmjs.org/after/-/after-0.8.1.tgz"
+}

@@ -1,0 +1,1 @@
+{"version":3,"sources":["fixtures/other/fourth.js","first","extra","fixtures/other/third.js"],"sourcesContent":["\n// Hello world\n\nfunction fourth(){\n  throw new Error('fourth');\n}\n","first-content",null,"function third(){\n  throw new Error(\"oh no\");\n}\n"],"names":[],"mappings":"AAAA;AACA;AACA;AACA;AACA;AACA;AGLA;AACA;AACA;","file":"too-many-sources-out.js"}

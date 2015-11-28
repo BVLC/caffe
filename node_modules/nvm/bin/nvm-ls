@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+
+function fatal(msg, code) {
+  process.stderr.write((msg || 'An error occured') + '\n');
+  process.exit(code || 1);
+}
+
+const getNodeVersions = require('../lib/get-node-versions');
+var where = process.argv[2];
+
+if (!where)
+  where = 'local';
+
+if (where == 'local')
+  fatal('"local" not implemented yet');
+
+if (where == 'remote') {
+  getNodeVersions(function (versions) {
+    process.stdout.write(versions.join('\n') + '\n');
+  });
+}

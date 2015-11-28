@@ -1,0 +1,43 @@
+{
+  "name": "component-inherit",
+  "description": "Prototype inheritance utility",
+  "version": "0.0.3",
+  "keywords": [
+    "inherit",
+    "utility"
+  ],
+  "dependencies": {},
+  "component": {
+    "scripts": {
+      "inherit/index.js": "index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/component/inherit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/component/inherit/issues"
+  },
+  "homepage": "https://github.com/component/inherit",
+  "_id": "component-inherit@0.0.3",
+  "dist": {
+    "shasum": "645fc4adf58b72b649d5cae65135619db26ff143",
+    "tarball": "http://registry.npmjs.org/component-inherit/-/component-inherit-0.0.3.tgz"
+  },
+  "_from": "component-inherit@0.0.3",
+  "_npmVersion": "1.3.24",
+  "_npmUser": {
+    "name": "coreh",
+    "email": "thecoreh@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "coreh",
+      "email": "thecoreh@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "645fc4adf58b72b649d5cae65135619db26ff143",
+  "_resolved": "https://registry.npmjs.org/component-inherit/-/component-inherit-0.0.3.tgz"
+}

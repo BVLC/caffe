@@ -1,0 +1,2 @@
+node_modules
+!fixtures/foo/node_modules

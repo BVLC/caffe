@@ -1,0 +1,12 @@
+function meaningOfLife() {
+  throw new Error(42);
+}
+
+function boom() {
+  throw new Error('boom');
+}
+
+function somethingElse() {
+  throw new Error("somethign else");
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlubmVyL2ZpcnN0LmpzIiwiaW5uZXIvc2Vjb25kLmpzIl0sInNvdXJjZXNDb250ZW50IjpbImZ1bmN0aW9uIG1lYW5pbmdPZkxpZmUoKSB7XG4gIHRocm93IG5ldyBFcnJvcig0Mik7XG59XG5cbmZ1bmN0aW9uIGJvb20oKSB7XG4gIHRocm93IG5ldyBFcnJvcignYm9vbScpO1xufVxuIiwiZnVuY3Rpb24gc29tZXRoaW5nRWxzZSgpIHtcbiAgdGhyb3cgbmV3IEVycm9yKFwic29tZXRoaWduIGVsc2VcIik7XG59XG4iXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUE7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7O0FDTkE7QUFDQTtBQUNBOyIsImZpbGUiOiJhbGwtaW5uZXIuanMifQ==

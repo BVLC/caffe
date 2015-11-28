@@ -1,0 +1,36 @@
+{
+  "name": "has-binary-data",
+  "version": "0.1.3",
+  "description": "A function that takes anything in javascript and returns true if its argument contains binary data.",
+  "dependencies": {
+    "isarray": "0.0.1"
+  },
+  "devDependencies": {
+    "better-assert": "1.0.0",
+    "mocha": "1.17.1"
+  },
+  "author": {
+    "name": "Kevin Roark"
+  },
+  "license": "ISC",
+  "_id": "has-binary-data@0.1.3",
+  "dist": {
+    "shasum": "8ebb18388b57f19a5231275a16fc18d51f379aae",
+    "tarball": "http://registry.npmjs.org/has-binary-data/-/has-binary-data-0.1.3.tgz"
+  },
+  "_from": "has-binary-data@0.1.3",
+  "_npmVersion": "1.3.24",
+  "_npmUser": {
+    "name": "porkfat",
+    "email": "ker2143@columbia.edu"
+  },
+  "maintainers": [
+    {
+      "name": "porkfat",
+      "email": "ker2143@columbia.edu"
+    }
+  ],
+  "directories": {},
+  "_shasum": "8ebb18388b57f19a5231275a16fc18d51f379aae",
+  "_resolved": "https://registry.npmjs.org/has-binary-data/-/has-binary-data-0.1.3.tgz"
+}

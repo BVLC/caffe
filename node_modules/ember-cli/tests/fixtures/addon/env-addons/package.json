@@ -1,0 +1,9 @@
+{
+  "name": "env-addons",
+  "private": true,
+  "devDependencies": {
+    "ember-foo-env-addon": "latest",
+    "ember-random-addon": "latest"
+  }
+}
+

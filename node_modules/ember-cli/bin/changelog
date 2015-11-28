@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+'use strict';
+
+/*
+ * This script generates the template a changelog by comparing a current version
+ * with master. Run this, copy what's logged into the `CHANGELOG.md` and update
+ * the top section based on the changes listed in "Community Contributions"
+ *
+ * Usage:
+ *
+ * bin/changelog
+ */
+
+var EOL       = require('os').EOL;
+var multiline = require('multiline');
+var Promise   = require('../lib/ext/promise');
+var GitHubApi = require('github');
+
+var github         = new GitHubApi({version: '3.0.0'});
+var compareCommits = Promise.denodeify(github.repos.compareCommits);
+var currentVersion = 'v' + require('../package').version;
+
+compareCommits({
+  user: 'ember-cli',
+  repo: 'ember-cli',
+  base: currentVersion,
+  head: 'master'
+}).then(function(res) {
+  return res.commits.map(function(commitInfo) {
+    return commitInfo.commit.message
+
+  }).filter(function(message) {
+    return message.indexOf('Merge pull request #') > -1;
+
+  }).map(function(message) {
+    var numAndAuthor = message.match(/#(\d+) from (.*)\//).slice(1,3);
+    var title        = message.split('\n\n')[1];
+
+    return {
+      number:  +numAndAuthor[0],
+      author:  numAndAuthor[1],
+      title:   title
+    };
+
+  }).sort(function(a, b) {
+    return a.number > b.number;
+  }).map(function(pr) {
+    var link   = '[#' + pr.number + ']' +
+                 '(https://github.com/ember-cli/ember-cli/pull/' + pr.number + ')';
+    var title  = pr.title;
+    var author = '[@' + pr.author + ']' +
+                 '(https://github.com/' + pr.author +')';
+
+    return '- ' + link + ' ' + title + ' ' + author;
+
+  }).join('\n');
+
+}).then(function(contributions) {
+  var changelog = generateChangelog(contributions);
+
+  console.log(changelog);
+}).catch(function(err) {
+  console.error(err);
+})
+
+function generateChangelog(contributions) {
+  var header = multiline(function() {/*
+The following changes are required if you are upgrading from the previous
+version:
+
+- Users
+  + Upgrade your project's ember-cli version - [docs](http://www.ember-cli.com/#project-update)
+- Addon Developers
+  + No changes required
+- Core Contributors
+  + No changes required
+
+#### Community Contributions
+  */});
+
+  var footer = 'Thank you to all who took the time to contribute!';
+
+ return header + EOL + EOL + contributions + EOL + EOL + footer;
+}

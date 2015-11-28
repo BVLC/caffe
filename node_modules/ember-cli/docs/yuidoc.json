@@ -1,0 +1,13 @@
+{
+  "name": "The Ember CLI API",
+  "description": "The Ember CLI API: The command line interface for ambitious web applications.",
+  "version": "1.0 pre",
+  "url": "http://www.ember-cli.com/",
+  "options": {
+    "paths": [
+      "../lib"
+    ],
+    "exclude": "vendor",
+    "outdir":   "./build"
+  }
+}

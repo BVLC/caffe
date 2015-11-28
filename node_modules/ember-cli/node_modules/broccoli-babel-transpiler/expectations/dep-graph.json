@@ -1,0 +1,56 @@
+{
+  "fixtures": {
+    "exports": {
+      "exported": [
+      ],
+      "specifiers": [
+      ]
+    },
+    "imports": [
+    ]
+  },
+  "named-module-fixture": {
+    "exports": {
+      "exported": [
+        "foo",
+        "bar"
+      ],
+      "specifiers": [
+        {
+          "exported": "foo",
+          "kind": "local",
+          "local": "foo"
+        },
+        {
+          "exported": "bar",
+          "kind": "local",
+          "local": "bar"
+        }
+      ]
+    },
+    "imports": [
+    ]
+  },
+  "true-module-fixture": {
+    "exports": {
+      "exported": [
+        "foo",
+        "bar"
+      ],
+      "specifiers": [
+        {
+          "exported": "foo",
+          "kind": "local",
+          "local": "foo"
+        },
+        {
+          "exported": "bar",
+          "kind": "local",
+          "local": "bar"
+        }
+      ]
+    },
+    "imports": [
+    ]
+  }
+}

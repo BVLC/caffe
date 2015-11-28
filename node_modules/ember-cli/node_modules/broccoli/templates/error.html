@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Build error</title>
+    {{#if liveReloadPath}}
+      <script src="{{liveReloadPath}}"></script>
+    {{/if}}
+  </head>
+  <body>
+    <h1>Build error</h1>
+    {{#if file}}
+      <p>
+        <b><code>{{file}}</code></b>{{#if line}}, line <b>{{line}}</b>{{/if}}
+        {{#if treeDir}}<span style="color: #888">(in <code>{{treeDir}}</code>)</span>{{/if}}
+      </p>
+    {{/if}}
+    <pre><b>{{message}}</b></pre>
+    {{#if stack}}
+      <hr>
+      <pre style="color: #888">{{stack}}</pre>
+    {{/if}}
+  </body>
+</html>

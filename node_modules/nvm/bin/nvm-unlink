@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+var fs = require('fs');
+var path = require('path');
+var util = require('util');
+fs.existsSync = fs.existsSync || path.existsSync;
+
+var PATH = path.join(process.cwd(), 'node_modules', '.bin', 'node');
+if (!fs.existsSync(PATH)) {
+  console.log('Could not find %s', PATH);
+  process.exit(1);
+}
+
+console.log('Unlinking %s', PATH);
+fs.unlinkSync(PATH);
+
+console.log('Done');

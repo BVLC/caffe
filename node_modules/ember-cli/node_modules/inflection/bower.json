@@ -1,0 +1,55 @@
+{
+  "name": "inflection",
+  "version": "1.7.1",
+  "homepage": "https://github.com/dreamerslab/node.inflection",
+  "description": "JavaScript Inflection Support",
+  "authors": [
+    "ben <ben@dreamerslab.com>"
+  ],
+  "contributors": [
+    { "name": "Ryan Schuft", "email": "ryan.schuft@gmail.com" },
+    { "name": "Ben Lin", "email": "ben@dreamerslab.com" },
+    { "name": "Lance Pollard", "email": "lancejpollard@gmail.com" },
+    { "name": "Dane O'Connor", "email": "dane.oconnor@gmail.com" },
+    { "name": "David Miró", "email": "lite.3engine@gmail.com" },
+    { "name": "brandondewitt" },
+    { "name": "luk3thomas" },
+    { "name": "Marcel Klehr" },
+    { "name": "Raymond Feng" },
+    { "name": "Kane Cohen", "email": "kanecohen@gmail.com" },
+    { "name": "Gianni Chiappetta", "email": "gianni@runlevel6.org" },
+    { "name": "Eric Brody" },
+    { "name": "overlookmotel" },
+    { "name": "Patrick Mowrer" },
+    { "name": "Greger Olsson" },
+    { "name": "Jason Crawford", "email": "jason@jasoncrawford.org" }
+  ],
+  "main": "lib/inflection.js",
+  "keywords": [
+    "inflection",
+    "inflections",
+    "inflection-js",
+    "pluralize",
+    "singularize",
+    "inflect",
+    "camelize",
+    "underscore",
+    "humanize",
+    "capitalize",
+    "dasherize",
+    "titleize",
+    "demodulize",
+    "tableize",
+    "classify",
+    "foreign_key",
+    "ordinalize"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

@@ -1,0 +1,124 @@
+#! /usr/bin/env node
+var http = require('http');
+var fs = require('fs');
+var cp = require('child_process');
+var util = require('util');
+var mkdirp = require('mkdirp');
+var path = require('path');
+
+fs.existsSync = fs.existsSync || path.existsSync;
+
+var VERSION = process.argv[2];
+if (!VERSION) {
+  console.error('You must pass a VERSION number');
+  process.exit(1);
+}
+var HOME = process.env.HOME;
+if (!HOME) {
+  console.error('There must be a `HOME` set in your environment');
+  process.exit(0);
+}
+var DIRECTORY = path.join(HOME, '.nvm');
+var PATH = path.join(DIRECTORY, util.format('node-v%s', VERSION));
+if (fs.existsSync(PATH)) {
+  console.error('Already downloaded %s.', VERSION);
+  process.exit(1);
+}
+
+var CONFIG = path.join(HOME, '.nvmrc');
+
+var opts = {
+    method: 'HEAD',
+    host: 'nodejs.org',
+    port: 80,
+    path: util.format('http://nodejs.org/dist/v%s/node-v%s.tar.gz', VERSION, VERSION)
+};
+
+if ( fs.existsSync(CONFIG) ) {
+  var content= fs.readFileSync(CONFIG, 'utf8');  
+  var strArr = content.split(/\n/);
+  var str = '';
+  for (var i = 0; i<strArr.length; ++i) {
+      str = strArr[i].split(/=/);
+      str[0] = rtrim(str[0]);
+      str[0] = ltrim(str[0]);      
+       
+      if (str[0].substr(0,2) != '//' && str[0].substring(0,1) != '#') {
+        if (str[0] == 'proxy') {
+
+          var strContent = str[1].replace(/http:\/\//, '').split(/:/);          
+          opts['port'] = strContent.splice( (strContent.length-1), 1 );     
+          opts['port'] = ltrim(opts['port'].toString().replace(/\//, ''));
+          opts['port'] = ~~(opts['port']);
+          opts['host'] = ltrim(strContent.join(''));
+
+        } else if (str[0] != '') {
+
+          str[1] = rtrim(str[1]);
+          str[1] = ltrim(str[1]);
+          opts[str[0]] = str[1];
+        }
+      }    
+  }  
+}
+
+function testResponse(resp) {
+  if (resp.statusCode !== 200) {
+    console.error(util.format('Requesting http://%s%s did not return 200 (got %d)', opts.host, opts.path, resp.statusCode));
+    process.exit(1);
+  }
+}
+
+function makeDir(callback) {
+  mkdirp(DIRECTORY, callback);
+}
+
+function probe(callback) {
+  var request = http.request(opts, function (resp) {
+    testResponse(resp);
+    callback(resp);
+  }).end();
+}
+
+function spawnTar(callback) {
+  var tar = cp.spawn('tar', ['-xvz'], { cwd: DIRECTORY });
+  tar.stdout.pipe(process.stdout);
+  tar.stderr.pipe(process.stderr);
+  callback(tar);
+}
+
+function get(tar, callback) {
+  opts.method = 'GET';
+  var request = http.request(opts, function (resp) {
+    console.log(util.format('Downloading and unpacking node v%s', VERSION));
+    testResponse(resp);
+    resp.pipe(tar.stdin);
+    tar.on('exit', function (code) {
+      process.stdout.write('\nDone.\n\n');
+    });
+  }).end();
+}
+
+function ltrim (str){return str.replace(/^\s+/,'');};
+function rtrim (str){return str.replace(/\s+$/,'');};
+
+makeDir(function (err) {
+  if (err) throw err;
+  probe(function (resp) {
+    spawnTar(function (tar) {
+      get(tar)
+    });
+  });
+});
+
+process.once('SIGINT', function () {
+  process.on('SIGINT', function () { console.log('wait') });
+
+  if (fs.existsSync(PATH)) {
+    console.log('\n removing %s', PATH);
+    var rm = cp.spawn('rm', ['-r', PATH]);
+    rm.stdout.pipe(process.stdout);
+    rm.stderr.pipe(process.stderr);
+  }
+  process.exit(1);
+});

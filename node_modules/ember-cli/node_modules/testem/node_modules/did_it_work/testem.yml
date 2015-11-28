@@ -1,0 +1,6 @@
+launchers:
+  mocha:
+    command: mocha -u tdd tests.js -R tap
+    protocol: tap
+launch_in_dev:
+- mocha

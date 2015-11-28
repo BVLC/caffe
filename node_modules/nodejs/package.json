@@ -1,0 +1,31 @@
+{
+  "name": "nodejs",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "_id": "nodejs@0.0.0",
+  "_shasum": "4722fa2e18ac4eb73a42ae16d01e3584a12b7531",
+  "_from": "nodejs@",
+  "_npmVersion": "1.4.8",
+  "_npmUser": {
+    "name": "foxfire9527",
+    "email": "81845990@qq.com"
+  },
+  "maintainers": [
+    {
+      "name": "foxfire9527",
+      "email": "81845990@qq.com"
+    }
+  ],
+  "dist": {
+    "shasum": "4722fa2e18ac4eb73a42ae16d01e3584a12b7531",
+    "tarball": "http://registry.npmjs.org/nodejs/-/nodejs-0.0.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/nodejs/-/nodejs-0.0.0.tgz"
+}

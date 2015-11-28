@@ -1,0 +1,6 @@
+{
+  "name": "<%= dasherizedModuleName %>",
+  "keywords": [
+    "ember-addon"
+  ]
+}

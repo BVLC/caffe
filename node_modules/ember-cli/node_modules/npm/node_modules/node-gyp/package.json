@@ -1,0 +1,97 @@
+{
+  "name": "node-gyp",
+  "description": "Node.js native addon build tool",
+  "license": "MIT",
+  "keywords": [
+    "native",
+    "addon",
+    "module",
+    "c",
+    "c++",
+    "bindings",
+    "gyp"
+  ],
+  "version": "3.0.3",
+  "installVersion": 9,
+  "author": {
+    "name": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://tootallnate.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nodejs/node-gyp.git"
+  },
+  "preferGlobal": true,
+  "bin": {
+    "node-gyp": "./bin/node-gyp.js"
+  },
+  "main": "./lib/node-gyp.js",
+  "dependencies": {
+    "fstream": "^1.0.0",
+    "glob": "3 || 4",
+    "graceful-fs": "^4.1.2",
+    "minimatch": "1",
+    "mkdirp": "^0.5.0",
+    "nopt": "2 || 3",
+    "npmlog": "0 || 1",
+    "osenv": "0",
+    "path-array": "^1.0.0",
+    "request": "2",
+    "rimraf": "2",
+    "semver": "2.x || 3.x || 4 || 5",
+    "tar": "^1.0.0",
+    "which": "1"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "devDependencies": {
+    "tape": "~4.2.0"
+  },
+  "scripts": {
+    "test": "tape test/test-*"
+  },
+  "gitHead": "d6b03851d366c7fa78e7d2f57c61bb074ea45ea3",
+  "bugs": {
+    "url": "https://github.com/nodejs/node-gyp/issues"
+  },
+  "homepage": "https://github.com/nodejs/node-gyp",
+  "_id": "node-gyp@3.0.3",
+  "_shasum": "9b004219f4fa9efbfd78c5fc674aa12e58fb8694",
+  "_from": "node-gyp@3.0.3",
+  "_npmVersion": "2.14.2",
+  "_nodeVersion": "4.0.0",
+  "_npmUser": {
+    "name": "rvagg",
+    "email": "rod@vagg.org"
+  },
+  "maintainers": [
+    {
+      "name": "TooTallNate",
+      "email": "nathan@tootallnate.net"
+    },
+    {
+      "name": "fishrock123",
+      "email": "fishrock123@rocketmail.com"
+    },
+    {
+      "name": "isaacs",
+      "email": "isaacs@npmjs.com"
+    },
+    {
+      "name": "rvagg",
+      "email": "rod@vagg.org"
+    },
+    {
+      "name": "tootallnate",
+      "email": "nathan@tootallnate.net"
+    }
+  ],
+  "dist": {
+    "shasum": "9b004219f4fa9efbfd78c5fc674aa12e58fb8694",
+    "tarball": "http://registry.npmjs.org/node-gyp/-/node-gyp-3.0.3.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/node-gyp/-/node-gyp-3.0.3.tgz"
+}

@@ -1,0 +1,62 @@
+{
+  "name": "nested-error-stacks",
+  "version": "1.0.2",
+  "description": "An Error subclass that will chain nested Errors and dump nested stacktraces",
+  "bugs": {
+    "url": "https://github.com/mdlavin/nested-error-stacks/issues"
+  },
+  "keywords": [
+    "error",
+    "nested",
+    "stack"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdlavin/nested-error-stacks.git"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "if [ \"$RUN_ZUUL\" != \"true\" ]; then node_modules/.bin/mocha; else npm install zuul && node_modules/.bin/zuul -- test.js; fi"
+  },
+  "author": {
+    "name": "Matt Lavin",
+    "email": "matt.lavin@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "inherits": "~2.0.1"
+  },
+  "devDependencies": {
+    "chai": "~1.9.1",
+    "mocha": "~1.18.2",
+    "uuid": "~1.4.1"
+  },
+  "gitHead": "7eb0c2058a0fd038d63703b953ca9bacd70b866f",
+  "homepage": "https://github.com/mdlavin/nested-error-stacks#readme",
+  "_id": "nested-error-stacks@1.0.2",
+  "_shasum": "19f619591519f096769a5ba9a86e6eeec823c3cf",
+  "_from": "nested-error-stacks@>=1.0.0 <2.0.0",
+  "_npmVersion": "2.13.2",
+  "_nodeVersion": "2.5.0",
+  "_npmUser": {
+    "name": "mdlavin",
+    "email": "matt.lavin@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "mdlavin",
+      "email": "matt.lavin@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "19f619591519f096769a5ba9a86e6eeec823c3cf",
+    "tarball": "http://registry.npmjs.org/nested-error-stacks/-/nested-error-stacks-1.0.2.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/nested-error-stacks/-/nested-error-stacks-1.0.2.tgz",
+  "readme": "ERROR: No README data found!"
+}

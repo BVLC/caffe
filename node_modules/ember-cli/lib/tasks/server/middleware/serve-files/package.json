@@ -1,0 +1,9 @@
+{
+  "name": "serve-files-middleware",
+  "keywords": [
+    "ember-addon"
+  ],
+  "ember-addon": {
+    "before": "proxy-server-middleware"
+  }
+}

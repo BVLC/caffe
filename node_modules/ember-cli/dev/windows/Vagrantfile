@@ -1,0 +1,15 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "opentable/win-2012r2-standard-amd64-nocm"
+
+  config.vm.synced_folder "../..", "/ember-cli"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = true
+    vb.cpus = 2
+    vb.memory = 2048
+    vb.customize ["modifyvm", :id, "--vram", "256"]
+
+  end
+
+  config.vm.provision "shell", path: "install.ps1"
+end

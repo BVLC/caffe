@@ -1,0 +1,25 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>rsvp.js Tests</title>
+  <link rel="stylesheet" href="mocha.css" />
+</head>
+<body>
+  <div id="mocha"></div>
+  <script src="json3.js"></script>
+  <script src="mocha.js"></script>
+  <script src="/testem.js"></script>
+  <script>
+    mocha.setup({
+      ui: 'bdd',
+      timeout: 200,
+      ignoreLeaks: true
+    });
+  </script>
+  <script src="browserify.js"></script>
+  <script>
+    if (window.mochaPhantomJS) { mochaPhantomJS.run(); }
+    else { mocha.run(); }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"version":3,"sources":["fixtures/inner/first.js"],"sourcesContent":["function meaningOfLife() {\n  throw new Error(42);\n}\n\nfunction boom() {\n  throw new Error('boom');\n}\n"],"names":[],"mappings":"AAAA;AACA;AACA;AACA;AACA;AACA;AACA;","file":"mapdird.js"}

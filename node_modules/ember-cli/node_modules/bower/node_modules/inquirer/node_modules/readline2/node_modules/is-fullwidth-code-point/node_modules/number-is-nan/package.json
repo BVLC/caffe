@@ -1,0 +1,50 @@
+{
+  "name": "number-is-nan",
+  "version": "1.0.0",
+  "description": "ES6 Number.isNaN() ponyfill",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sindresorhus/number-is-nan.git"
+  },
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "es6",
+    "es2015",
+    "ecmascript",
+    "harmony",
+    "ponyfill",
+    "polyfill",
+    "shim",
+    "number",
+    "is",
+    "nan",
+    "not"
+  ],
+  "devDependencies": {
+    "ava": "0.0.4"
+  },
+  "readme": "# number-is-nan [![Build Status](https://travis-ci.org/sindresorhus/number-is-nan.svg?branch=master)](https://travis-ci.org/sindresorhus/number-is-nan)\n\n> ES6 [`Number.isNaN()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN) ponyfill\n\n> Ponyfill: A polyfill that doesn't overwrite the native method\n\n\n## Install\n\n```\n$ npm install --save number-is-nan\n```\n\n\n## Usage\n\n```js\nvar numberIsNan = require('number-is-nan');\n\nnumberIsNan(NaN);\n//=> true\n\nnumberIsNan('unicorn');\n//=> false\n```\n\n\n## License\n\nMIT © [Sindre Sorhus](http://sindresorhus.com)\n",
+  "readmeFilename": "readme.md",
+  "bugs": {
+    "url": "https://github.com/sindresorhus/number-is-nan/issues"
+  },
+  "homepage": "https://github.com/sindresorhus/number-is-nan#readme",
+  "_id": "number-is-nan@1.0.0",
+  "_shasum": "c020f529c5282adfdd233d91d4b181c3d686dc4b",
+  "_resolved": "https://registry.npmjs.org/number-is-nan/-/number-is-nan-1.0.0.tgz",
+  "_from": "number-is-nan@>=1.0.0 <2.0.0"
+}

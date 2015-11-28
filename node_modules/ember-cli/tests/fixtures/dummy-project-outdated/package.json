@@ -1,0 +1,30 @@
+{
+  "name": "dummy-project",
+  "version": "0.0.0",
+  "private": true,
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "scripts": {
+    "start": "ember server",
+    "build": "ember build",
+    "test": "ember test"
+  },
+  "repository": "https://github.com/ember-cli/ember-cli",
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "body-parser": "^1.2.0",
+    "broccoli-asset-rev": "^2.1.2",
+    "broccoli-ember-hbs-template-compiler": "^1.5.0",
+    "ember-cli": "0.0.1",
+    "ember-cli-ember-data": "0.1.1",
+    "ember-cli-ic-ajax": "0.1.1",
+    "express": "^4.1.1",
+    "glob": "^3.2.9"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "md5-hex",
+  "version": "1.1.0",
+  "description": "Create a MD5 hash with hex encoding",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sindresorhus/md5-hex.git"
+  },
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "browser": "browser.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "xo && ava"
+  },
+  "files": [
+    "index.js",
+    "browser.js"
+  ],
+  "keywords": [
+    "hash",
+    "crypto",
+    "md5",
+    "hex",
+    "buffer",
+    "browser",
+    "browserify"
+  ],
+  "dependencies": {
+    "md5-o-matic": "^0.1.1"
+  },
+  "devDependencies": {
+    "ava": "*",
+    "xo": "*"
+  },
+  "gitHead": "9722ed0e0b13d5b7dc0383308b494ccae3160faa",
+  "bugs": {
+    "url": "https://github.com/sindresorhus/md5-hex/issues"
+  },
+  "homepage": "https://github.com/sindresorhus/md5-hex#readme",
+  "_id": "md5-hex@1.1.0",
+  "_shasum": "d107074c4ee81cbca7f2b61150669dce38058080",
+  "_from": "md5-hex@^1.0.2",
+  "_npmVersion": "2.14.3",
+  "_nodeVersion": "4.1.0",
+  "_npmUser": {
+    "name": "sindresorhus",
+    "email": "sindresorhus@gmail.com"
+  },
+  "dist": {
+    "shasum": "d107074c4ee81cbca7f2b61150669dce38058080",
+    "tarball": "http://registry.npmjs.org/md5-hex/-/md5-hex-1.1.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "sindresorhus",
+      "email": "sindresorhus@gmail.com"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/md5-hex/-/md5-hex-1.1.0.tgz"
+}

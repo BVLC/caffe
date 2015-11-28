@@ -1,0 +1,7 @@
+languages:
+   JavaScript: true
+
+exclude_paths:
+ - "tests/acceptance/*"
+ - "tests/fixtures/*"
+ - "tests/unit/*"

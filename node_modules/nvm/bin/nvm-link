@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+var path = require('path');
+var mkdirp = require('mkdirp');
+var fs = require('fs');
+var util = require('util');
+
+fs.existsSync = fs.existsSync || path.existsSync;
+
+var VERSION = process.argv[2];
+if (!VERSION) {
+  console.error('You must pass a VERSION number');
+  process.exit(1);
+}
+var HOME = process.env.HOME;
+if (!HOME) {
+  console.error('There must be a `HOME` set in your environment');
+  process.exit(0);
+}
+var DIRECTORY = path.join(HOME, '.nvm', util.format('node-v%s', VERSION));
+if (!fs.existsSync(DIRECTORY)) {
+  console.error('%s doesn\'t exist, (need to downloaded first?)', DIRECTORY, VERSION);
+  process.exit(1);
+}
+var EXECUTABLE = path.join(DIRECTORY, 'node');
+if (!fs.existsSync(EXECUTABLE)) {
+  console.error('% not built yet.');
+  process.exit(1);
+}
+
+var BINPATH = path.join(process.cwd(), 'node_modules', '.bin')
+mkdirp(BINPATH);
+
+var src = EXECUTABLE;
+var dest = path.join(BINPATH, 'node');
+
+if (fs.existsSync(dest)) {
+  console.log('removing old symlink');
+  fs.unlinkSync(dest);
+}
+
+console.log('symlinking node-v%s', VERSION);
+fs.symlinkSync(src, dest);
+
+console.log('done. do `node --version` to confirm');

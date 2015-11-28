@@ -1,0 +1,28 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+
+const args = process.argv ;
+const node = args.shift(); // node
+const file = args.shift(); // this file
+
+const join = require('path').join;
+const sprintf = require('util').format;
+const cp = require('child_process');
+const aliases = require('./aliases');
+var command = args.shift();
+
+if (aliases[command])
+  command = aliases[command];
+
+const executable = join(__dirname, sprintf('nvm-%s', command));
+
+args.unshift(node);
+args.unshift(file);
+
+if (!fs.existsSync(executable)) {
+  require('./nvm-help');
+  process.exit(1);
+}
+
+require(executable);

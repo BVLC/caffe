@@ -1,0 +1,62 @@
+{
+  "name": "rimraf",
+  "version": "2.4.4",
+  "main": "rimraf.js",
+  "description": "A deep deletion module for node (like `rm -rf`)",
+  "author": {
+    "name": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/"
+  },
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/rimraf.git"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "bin": {
+    "rimraf": "./bin.js"
+  },
+  "dependencies": {
+    "glob": "^5.0.14"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "bin.js",
+    "rimraf.js"
+  ],
+  "devDependencies": {
+    "mkdirp": "^0.5.1",
+    "tap": "^1.3.1"
+  },
+  "gitHead": "62ae8a4037e7190691eeab35265aed1c768d23e3",
+  "bugs": {
+    "url": "https://github.com/isaacs/rimraf/issues"
+  },
+  "homepage": "https://github.com/isaacs/rimraf#readme",
+  "_id": "rimraf@2.4.4",
+  "_shasum": "b528ce2ebe0e6d89fb03b265de11d61da0dbcf82",
+  "_from": "rimraf@>=2.2.8 <3.0.0",
+  "_npmVersion": "3.3.2",
+  "_nodeVersion": "4.0.0",
+  "_npmUser": {
+    "name": "isaacs",
+    "email": "i@izs.me"
+  },
+  "dist": {
+    "shasum": "b528ce2ebe0e6d89fb03b265de11d61da0dbcf82",
+    "tarball": "http://registry.npmjs.org/rimraf/-/rimraf-2.4.4.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "isaacs",
+      "email": "i@izs.me"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.4.4.tgz",
+  "readme": "ERROR: No README data found!"
+}

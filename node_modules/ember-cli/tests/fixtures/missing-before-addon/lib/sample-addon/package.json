@@ -1,0 +1,10 @@
+{
+  "name": "sample-addon",
+  "keywords": [
+    "ember-addon"
+  ],
+  "ember-addon": {
+    "after": "broccoli-asset-rev"
+  },
+  "dependencies": {}
+}

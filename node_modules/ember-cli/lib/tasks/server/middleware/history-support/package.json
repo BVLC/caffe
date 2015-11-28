@@ -1,0 +1,9 @@
+{
+  "name": "history-support-middleware",
+  "keywords": [
+    "ember-addon"
+  ],
+  "ember-addon": {
+    "before": "serve-files-middleware"
+  }
+}

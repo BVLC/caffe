@@ -1,0 +1,70 @@
+{
+  "name": "debug",
+  "version": "1.0.4",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/visionmedia/debug.git"
+  },
+  "description": "small debugging utility",
+  "keywords": [
+    "debug",
+    "log",
+    "debugger"
+  ],
+  "author": {
+    "name": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca"
+  },
+  "contributors": [
+    {
+      "name": "Nathan Rajlich",
+      "email": "nathan@tootallnate.net",
+      "url": "http://n8.io"
+    }
+  ],
+  "dependencies": {
+    "ms": "0.6.2"
+  },
+  "devDependencies": {
+    "browserify": "4.1.6",
+    "mocha": "*"
+  },
+  "main": "./node.js",
+  "browser": "./browser.js",
+  "component": {
+    "scripts": {
+      "debug/index.js": "browser.js",
+      "debug/debug.js": "debug.js"
+    }
+  },
+  "gitHead": "abc10a5912f79d251752d18350e269fe0b0fbbf9",
+  "bugs": {
+    "url": "https://github.com/visionmedia/debug/issues"
+  },
+  "homepage": "https://github.com/visionmedia/debug",
+  "_id": "debug@1.0.4",
+  "scripts": {},
+  "_shasum": "5b9c256bd54b6ec02283176fa8a0ede6d154cbf8",
+  "_from": "debug@1.0.4",
+  "_npmVersion": "1.4.14",
+  "_npmUser": {
+    "name": "tootallnate",
+    "email": "nathan@tootallnate.net"
+  },
+  "maintainers": [
+    {
+      "name": "tjholowaychuk",
+      "email": "tj@vision-media.ca"
+    },
+    {
+      "name": "tootallnate",
+      "email": "nathan@tootallnate.net"
+    }
+  ],
+  "dist": {
+    "shasum": "5b9c256bd54b6ec02283176fa8a0ede6d154cbf8",
+    "tarball": "http://registry.npmjs.org/debug/-/debug-1.0.4.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/debug/-/debug-1.0.4.tgz"
+}

@@ -1,0 +1,8 @@
+{
+  "broccoli": "<= 0.7.0",
+  "broccoli-kitchen-sink-helpers": "<= 0.1.1",
+  "broccoli-filter": "<= 0.1.5",
+  "broccoli-static-compiler": "<= 0.1.3",
+  "broccoli-merge-trees": "<= 0.1.2",
+  "broccoli-es6-import-validate": "<= 0.0.1"
+}

@@ -1,0 +1,10 @@
+{
+  "leekOptions": {
+    "adapterUrls": {
+      "event": "http://www.example.com/event",
+      "exception": "http://www.example.com/error",
+      "timing": "http://www.example.com/timing",
+      "appview": "http://www.example.com/track"
+    }
+  }
+}

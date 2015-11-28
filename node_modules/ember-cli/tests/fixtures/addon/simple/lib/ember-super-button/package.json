@@ -1,0 +1,12 @@
+{
+  "name": "ember-super-button",
+  "keywords": [
+    "ember-addon"
+  ],
+  "ember-addon": {
+    "paths": ["./lib/ember-ng"]
+  },
+  "dependencies": {
+    "ember-yagni": "0"
+  }
+}

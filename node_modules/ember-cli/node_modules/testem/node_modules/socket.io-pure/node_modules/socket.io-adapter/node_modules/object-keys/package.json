@@ -1,0 +1,81 @@
+{
+  "name": "object-keys",
+  "version": "1.0.1",
+  "author": {
+    "name": "Jordan Harband"
+  },
+  "description": "An Object.keys replacement, in case Object.keys is not available. From https://github.com/es-shims/es5-shim",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run lint && node test/index.js",
+    "coverage": "covert test/*.js",
+    "coverage-quiet": "covert test/*.js --quiet",
+    "lint": "jscs test/*.js *.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ljharb/object-keys.git"
+  },
+  "keywords": [
+    "Object.keys",
+    "keys",
+    "ES5",
+    "shim"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "foreach": "~2.0.4",
+    "is": "~2.0.1",
+    "tape": "~2.14.0",
+    "indexof": "~0.0.1",
+    "covert": "~1.0.0",
+    "jscs": "~1.6.1"
+  },
+  "testling": {
+    "files": "test/index.js",
+    "browsers": [
+      "iexplore/6.0..latest",
+      "firefox/3.0..6.0",
+      "firefox/15.0..latest",
+      "firefox/nightly",
+      "chrome/4.0..10.0",
+      "chrome/20.0..latest",
+      "chrome/canary",
+      "opera/10.0..latest",
+      "opera/next",
+      "safari/4.0..latest",
+      "ipad/6.0..latest",
+      "iphone/6.0..latest",
+      "android-browser/4.2"
+    ]
+  },
+  "engines": {
+    "node": ">= 0.4"
+  },
+  "gitHead": "2ecbaaa0405c2f03e8b669ccf4b70376318a8f8b",
+  "bugs": {
+    "url": "https://github.com/ljharb/object-keys/issues"
+  },
+  "homepage": "https://github.com/ljharb/object-keys",
+  "_id": "object-keys@1.0.1",
+  "_shasum": "55802e85842c26bbb5ebbc157abf3be302569ba8",
+  "_from": "object-keys@1.0.1",
+  "_npmVersion": "1.4.23",
+  "_npmUser": {
+    "name": "ljharb",
+    "email": "ljharb@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "ljharb",
+      "email": "ljharb@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "55802e85842c26bbb5ebbc157abf3be302569ba8",
+    "tarball": "http://registry.npmjs.org/object-keys/-/object-keys-1.0.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/object-keys/-/object-keys-1.0.1.tgz"
+}

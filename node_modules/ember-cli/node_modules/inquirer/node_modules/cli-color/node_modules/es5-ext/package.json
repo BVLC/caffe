@@ -1,0 +1,73 @@
+{
+  "name": "es5-ext",
+  "version": "0.10.8",
+  "description": "ECMAScript 5 extensions and ES6 shims",
+  "author": {
+    "name": "Mariusz Nowak",
+    "email": "medyk@medikoo.com",
+    "url": "http://www.medikoo.com/"
+  },
+  "keywords": [
+    "ecmascript",
+    "ecmascript5",
+    "ecmascript6",
+    "es5",
+    "es6",
+    "extensions",
+    "ext",
+    "addons",
+    "extras",
+    "harmony",
+    "javascript",
+    "polyfill",
+    "shim",
+    "util",
+    "utils",
+    "utilities"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/medikoo/es5-ext.git"
+  },
+  "dependencies": {
+    "es6-iterator": "2",
+    "es6-symbol": "3"
+  },
+  "devDependencies": {
+    "tad": "~0.2.3",
+    "xlint": "~0.2.2",
+    "xlint-jslint-medikoo": "~0.1.4"
+  },
+  "scripts": {
+    "lint": "node node_modules/xlint/bin/xlint --linter=node_modules/xlint-jslint-medikoo/index.js --no-cache --no-stream",
+    "lint-console": "node node_modules/xlint/bin/xlint --linter=node_modules/xlint-jslint-medikoo/index.js --watch",
+    "test": "node ./node_modules/tad/bin/tad"
+  },
+  "license": "MIT",
+  "gitHead": "5da2943d75bc8f1f4e56a376f9857e751adbeb85",
+  "bugs": {
+    "url": "https://github.com/medikoo/es5-ext/issues"
+  },
+  "homepage": "https://github.com/medikoo/es5-ext#readme",
+  "_id": "es5-ext@0.10.8",
+  "_shasum": "f48c43424fa7c7d96f903e2948705cf826f69c32",
+  "_from": "es5-ext@~0.10.6",
+  "_npmVersion": "2.11.3",
+  "_nodeVersion": "0.12.7",
+  "_npmUser": {
+    "name": "medikoo",
+    "email": "medikoo+npm@medikoo.com"
+  },
+  "dist": {
+    "shasum": "f48c43424fa7c7d96f903e2948705cf826f69c32",
+    "tarball": "http://registry.npmjs.org/es5-ext/-/es5-ext-0.10.8.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "medikoo",
+      "email": "medikoo+npm@medikoo.com"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/es5-ext/-/es5-ext-0.10.8.tgz"
+}

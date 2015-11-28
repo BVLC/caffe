@@ -1,0 +1,2 @@
+Router.map(function() {
+});
