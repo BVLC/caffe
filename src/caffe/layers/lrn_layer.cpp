@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
@@ -78,6 +79,10 @@
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -277,6 +282,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
@@ -301,6 +307,8 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
                                      top_data);
   GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,

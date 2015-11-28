@@ -134,6 +134,7 @@ inline void SyncedMemory::to_cpu() {
 <<<<<<< HEAD
     CaffeMallocHost(&cpu_ptr_, size_);
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -211,6 +212,8 @@ inline void SyncedMemory::to_cpu() {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
     break;
@@ -462,6 +465,7 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
@@ -486,6 +490,8 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -497,6 +503,7 @@ const void* SyncedMemory::const_data() {
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -719,6 +726,8 @@ const void* SyncedMemory::const_data() {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 
 void* SyncedMemory::mutable_data() {
   switch (Caffe::mode()) {
@@ -726,12 +735,16 @@ void* SyncedMemory::mutable_data() {
     return mutable_cpu_data();
   case Caffe::GPU:
     return mutable_gpu_data();
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   default:
     LOG(FATAL) << "Unknown caffe mode.";
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -992,4 +1005,7 @@ void* SyncedMemory::mutable_data() {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+
+>>>>>>> BVLC/device-abstraction
 }  // namespace caffe

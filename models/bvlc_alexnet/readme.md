@@ -5,6 +5,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 license: unrestricted
@@ -45,6 +46,9 @@ license: unrestricted
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+license: unrestricted
+>>>>>>> BVLC/device-abstraction
 sha1: 9116a64c0fbe4459d18f4bb6b56d647b63920377
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
@@ -64,6 +68,7 @@ This model was trained by Evan Shelhamer @shelhamer
 
 ## License
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,3 +114,6 @@ This model is released for unrestricted use.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+This model is released for unrestricted use.
+>>>>>>> BVLC/device-abstraction

@@ -38,6 +38,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -75,6 +76,8 @@
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {

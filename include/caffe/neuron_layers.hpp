@@ -629,6 +629,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
   explicit ExpLayer(const LayerParameter& param)
 >>>>>>> pod/device/blob.hpp
       : NeuronLayer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -636,6 +637,14 @@ class ExpLayer : public NeuronLayer<Dtype> {
   virtual inline const char* type() const { return "AbsVal"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
  protected:
   /// @copydoc AbsValLayer
@@ -657,6 +666,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 
  protected:
+<<<<<<< HEAD
   /**
    * @param bottom input Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
@@ -772,6 +782,12 @@ class LogLayer : public NeuronLayer<Dtype> {
   Dtype base_scale_;
   Dtype input_scale_, input_shift_;
   Dtype backward_num_scale_;
+=======
+  Dtype power_;
+  Dtype scale_;
+  Dtype shift_;
+  Dtype diff_scale_;
+>>>>>>> BVLC/device-abstraction
 };
 
 /**

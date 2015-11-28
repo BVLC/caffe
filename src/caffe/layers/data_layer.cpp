@@ -1157,6 +1157,7 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     this->device_->copy(
         prefetch_label_.count(), prefetch_label_.cpu_data(),
         (*top)[1]->mutable_data());
+<<<<<<< HEAD
 =======
     reader_.free().push(const_cast<Datum*>(&datum));
 >>>>>>> BVLC/master
@@ -1351,6 +1352,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   }
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
@@ -1388,6 +1391,7 @@ DataLoader::~DataLoader() {
     instances_.erase(source_);
 }
 
+<<<<<<< HEAD
 DataLoader::Body::Body(const DataParameter& param, int index,
                        blocking_queue<Datum*>* free,
                        blocking_queue<Datum*>* full) :
@@ -2848,6 +2852,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod/device/blob.hpp
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======

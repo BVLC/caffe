@@ -685,6 +685,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 }
 
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -974,6 +975,8 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 

@@ -48,6 +48,7 @@
 <<<<<<< HEAD
 =======
 #include "caffe/util/io.hpp"
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
@@ -102,6 +103,8 @@
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -1913,6 +1916,7 @@ void Net<Dtype>::Update() {
     const Dtype* this_diff = params_[i]->const_diff();
     Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
     GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -1993,6 +1997,8 @@ void Net<Dtype>::ClearParamDiffs() {
     const Dtype* this_diff = params_[i]->const_diff();
     Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
     GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
+=======
+>>>>>>> BVLC/device-abstraction
   }
   // Now, update the owned parameters.
 >>>>>>> BVLC/device-abstraction
