@@ -10,15 +10,46 @@ New input types are supported by developing a new data layer -- the rest of the 
 
 This data layer definition
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     layer {
       name: "mnist"
       # Data layer loads leveldb or lmdb storage DBs for high-throughput.
       type: "Data"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    layers {
+      name: "mnist"
+      # DATA layer loads leveldb or lmdb storage DBs for high-throughput.
+      type: DATA
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       # the 1st top is the data itself: the name is only convention
       top: "data"
       # the 2nd top is the ground truth: the name is only convention
       top: "label"
+<<<<<<< HEAD
       # the Data layer configuration
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      # the Data layer configuration
+=======
+      # the DATA layer configuration
+>>>>>>> origin/BVLC/parallel
+=======
+      # the Data layer configuration
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       data_param {
         # path to the DB
         source: "examples/mnist/mnist_train_lmdb"
@@ -46,9 +77,27 @@ The (data, label) pairing is a convenience for classification models.
 
 **Transformations**: data preprocessing is parametrized by transformation messages within the data layer definition.
 
+<<<<<<< HEAD
     layer {
       name: "data"
       type: "Data"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    layer {
+      name: "data"
+      type: "Data"
+=======
+    layers {
+      name: "data"
+      type: DATA
+>>>>>>> origin/BVLC/parallel
+=======
+    layer {
+      name: "data"
+      type: "Data"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       [...]
       transform_param {
         scale: 0.1

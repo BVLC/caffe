@@ -2,6 +2,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 =======
@@ -9,6 +10,65 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -27,6 +87,13 @@ void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   const int num_axes = bottom[0]->num_axes();
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   if (slice_param.has_slice_dim()) {
@@ -45,9 +112,35 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   num_slices_ = bottom[0]->count(0, slice_axis_);
   slice_size_ = bottom[0]->count(slice_axis_ + 1);
   int count = 0;
+<<<<<<< HEAD
   if (slice_point_.size() != 0) {
     CHECK_EQ(slice_point_.size(), top.size() - 1);
     CHECK_LE(top.size(), bottom_slice_axis);
+=======
+<<<<<<< HEAD
+  if (slice_point_.size() != 0) {
+    CHECK_EQ(slice_point_.size(), top.size() - 1);
+    CHECK_LE(top.size(), bottom_slice_axis);
+=======
+  count_ = 0;
+  num_ = bottom[0]->num();
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+  if (slice_point_.size() != 0) {
+    CHECK_EQ(slice_point_.size(), top.size() - 1);
+    if (slice_dim_ == 0) {
+      CHECK_LE(top.size(), num_);
+    } else {
+      CHECK_LE(top.size(), channels_);
+    }
+>>>>>>> origin/BVLC/parallel
+=======
+  if (slice_point_.size() != 0) {
+    CHECK_EQ(slice_point_.size(), top.size() - 1);
+    CHECK_LE(top.size(), bottom_slice_axis);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     int prev = 0;
     vector<int> slices;
     for (int i = 0; i < slice_point_.size(); ++i) {
@@ -55,11 +148,23 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       slices.push_back(slice_point_[i] - prev);
       prev = slice_point_[i];
     }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     slices.push_back(bottom_slice_axis - prev);
     for (int i = 0; i < top.size(); ++i) {
       top_shape[slice_axis_] = slices[i];
       top[i]->Reshape(top_shape);
       count += top[i]->count();
+<<<<<<< HEAD
+    }
+  } else {
+=======
+<<<<<<< HEAD
     }
   } else {
     CHECK_EQ(bottom_slice_axis % top.size(), 0)
@@ -69,6 +174,51 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < top.size(); ++i) {
       top[i]->Reshape(top_shape);
       count += top[i]->count();
+=======
+    if (slice_dim_ == 0) {
+      slices.push_back(num_ - prev);
+      for (int i = 0; i < top.size(); ++i) {
+        top[i]->Reshape(slices[i], channels_, height_, width_);
+        count_ += top[i]->count();
+      }
+    } else {
+      slices.push_back(channels_ - prev);
+      for (int i = 0; i < top.size(); ++i) {
+        top[i]->Reshape(num_, slices[i], height_, width_);
+        count_ += top[i]->count();
+      }
+    }
+  } else {
+    if (slice_dim_ == 0) {
+      CHECK_EQ(num_ % top.size(), 0)
+          << "Number of top blobs (" << top.size() << ") "
+          << "should evenly divide input num ( " << num_ << ")";
+      num_ = num_ / top.size();
+    } else {
+      CHECK_EQ(channels_ % top.size(), 0)
+          << "Number of top blobs (" << top.size() << ") "
+          << "should evenly divide input channels ( " << channels_ << ")";
+      channels_ = channels_ / top.size();
+    }
+    for (int i = 0; i < top.size(); ++i) {
+      top[i]->Reshape(num_, channels_, height_, width_);
+      count_ += top[i]->count();
+>>>>>>> origin/BVLC/parallel
+=======
+    }
+  } else {
+>>>>>>> pod-caffe-pod.hpp-merge
+    CHECK_EQ(bottom_slice_axis % top.size(), 0)
+        << "Number of top blobs (" << top.size() << ") should evenly "
+        << "divide input slice axis (" << bottom_slice_axis << ")";
+    top_shape[slice_axis_] = bottom_slice_axis / top.size();
+    for (int i = 0; i < top.size(); ++i) {
+      top[i]->Reshape(top_shape);
+      count += top[i]->count();
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     }
   }
   CHECK_EQ(count, bottom[0]->count());
@@ -79,6 +229,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -99,13 +250,30 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     offset_slice_axis += top_slice_axis;
   }
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+>>>>>>> origin/BVLC/parallel
   const Dtype* bottom_data = bottom[0]->mutable_cpu_data();
   if (slice_dim_ == 0) {
     int offset_num = 0;
-    for (int i = 0; i < top->size(); ++i) {
-      Blob<Dtype>* blob = (*top)[i];
+    for (int i = 0; i < top.size(); ++i) {
+      Blob<Dtype>* blob = top[i];
       Dtype* top_data = blob->mutable_cpu_data();
       GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(),
           bottom_data + bottom[0]->offset(offset_num), top_data);
@@ -113,8 +281,8 @@ Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
   } else if (slice_dim_ == 1) {
     int offset_channel = 0;
-    for (int i = 0; i < top->size(); ++i) {
-      Blob<Dtype>* blob = (*top)[i];
+    for (int i = 0; i < top.size(); ++i) {
+      Blob<Dtype>* blob = top[i];
       Dtype* top_data = blob->mutable_cpu_data();
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
@@ -125,12 +293,239 @@ Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       offset_channel += blob->channels();
     }
   }  // slice_dim_ is guaranteed to be 0 or 1 by SetUp.
+<<<<<<< HEAD
   return Dtype(0.);
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> BVLC/master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> BVLC/master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> BVLC/master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> caffe
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> BVLC/master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> master
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          bottom_data + bottom_offset, top_data + top_offset);
+    }
+    offset_slice_axis += top_slice_axis;
+  }
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
 void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+<<<<<<< HEAD
 <<<<<<< HEAD
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0] || top.size() == 1) { return; }
@@ -147,16 +542,42 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_copy(top_slice_axis * slice_size_,
           top_diff + top_offset, bottom_diff + bottom_offset);
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+=======
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+>>>>>>> origin/BVLC/parallel
   if (!propagate_down[0]) { return; }
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   if (slice_dim_ == 0) {
     int offset_num = 0;
     for (int i = 0; i < top.size(); ++i) {
       Blob<Dtype>* blob = top[i];
       const Dtype* top_diff = blob->cpu_diff();
+<<<<<<< HEAD
       GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
+=======
+<<<<<<< HEAD
+      GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
+          bottom_diff + (*bottom)[0]->offset(offset_num));
+=======
+      caffe_copy(blob->count(), top_diff,
+                 bottom_diff + bottom[0]->offset(offset_num));
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -166,11 +587,89 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const Dtype* top_diff = blob->cpu_diff();
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
+<<<<<<< HEAD
         GetDevice<Dtype>(Caffe::CPU)->copy(num_elem, top_diff + blob->offset(n),
             bottom_diff + (*bottom)[0]->offset(n, offset_channel));
       }
       offset_channel += blob->channels();
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+        GetDevice<Dtype>(Caffe::CPU)->copy(num_elem, top_diff + blob->offset(n),
+            bottom_diff + (*bottom)[0]->offset(n, offset_channel));
+=======
+        caffe_copy(num_elem, top_diff + blob->offset(n),
+                   bottom_diff + bottom[0]->offset(n, offset_channel));
+>>>>>>> origin/BVLC/parallel
+      }
+      offset_channel += blob->channels();
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0] || top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    const Dtype* top_diff = top[i]->cpu_diff();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          top_diff + top_offset, bottom_diff + bottom_offset);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     offset_slice_axis += top_slice_axis;
   }
@@ -181,6 +680,16 @@ STUB_GPU(SliceLayer);
 #endif
 
 INSTANTIATE_CLASS(SliceLayer);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(Slice);
 
+=======
+REGISTER_LAYER_CLASS(SLICE, SliceLayer);
+>>>>>>> origin/BVLC/parallel
 }  // namespace caffe

@@ -1,5 +1,12 @@
 name: "mnist_siamese"
 input: "data"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 input_shape {
   dim: 10000
   dim: 1
@@ -17,15 +24,53 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+input_dim: 10000
+input_dim: 1
+input_dim: 28
+input_dim: 28
+
+layers {
+  name: "conv1"
+  type: CONVOLUTION
+  bottom: "data"
+  top: "conv1"
+  blobs_lr: 1
+  blobs_lr: 2
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 20
     kernel_size: 5
     stride: 1
   }
 }
+<<<<<<< HEAD
 layer {
   name: "pool1"
   type: "Pooling"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+layer {
+  name: "pool1"
+  type: "Pooling"
+=======
+layers {
+  name: "pool1"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "pool1"
+  type: "Pooling"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -34,6 +79,13 @@ layer {
     stride: 2
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "conv2"
   type: "Convolution"
@@ -45,15 +97,48 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "conv2"
+  type: CONVOLUTION
+  bottom: "pool1"
+  top: "conv2"
+  blobs_lr: 1
+  blobs_lr: 2
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 50
     kernel_size: 5
     stride: 1
   }
 }
+<<<<<<< HEAD
 layer {
   name: "pool2"
   type: "Pooling"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+layer {
+  name: "pool2"
+  type: "Pooling"
+=======
+layers {
+  name: "pool2"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "pool2"
+  type: "Pooling"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "conv2"
   top: "pool2"
   pooling_param {
@@ -62,6 +147,13 @@ layer {
     stride: 2
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "ip1"
   type: "InnerProduct"
@@ -73,10 +165,32 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "ip1"
+  type: INNER_PRODUCT
+  bottom: "pool2"
+  top: "ip1"
+  blobs_lr: 1
+  blobs_lr: 2
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 500
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu1"
   type: "ReLU"
@@ -94,10 +208,38 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu1"
+  type: RELU
+  bottom: "ip1"
+  top: "ip1"
+}
+layers {
+  name: "ip2"
+  type: INNER_PRODUCT
+  bottom: "ip1"
+  top: "ip2"
+  blobs_lr: 1
+  blobs_lr: 2
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 10
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "feat"
   type: "InnerProduct"
@@ -109,6 +251,22 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+
+layers {
+  name: "feat"
+  type: INNER_PRODUCT
+  bottom: "ip2"
+  top: "feat"
+  blobs_lr: 1
+  blobs_lr: 2
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 2
   }

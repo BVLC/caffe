@@ -1,7 +1,21 @@
 #include <algorithm>
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/loss_layers.hpp"
+=======
+#include "caffe/layer.hpp"
+#include "caffe/loss_layers.hpp"
+#include "caffe/util/io.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -39,8 +53,21 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
       diff_.mutable_cpu_data());  // a_i-b_i
   const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+<<<<<<< HEAD
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  bool legacy_version =
+      this->layer_param_.contrastive_loss_param().legacy_version();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  bool legacy_version =
+      this->layer_param_.contrastive_loss_param().legacy_version();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
     dist_sq_.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
@@ -48,6 +75,13 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
     if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       if (legacy_version) {
         loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
       } else {
@@ -55,6 +89,15 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
           Dtype(0.0));
         loss += dist*dist;
       }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+      loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     }
   }
   loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
@@ -65,8 +108,21 @@ template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+<<<<<<< HEAD
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  bool legacy_version =
+      this->layer_param_.contrastive_loss_param().legacy_version();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  bool legacy_version =
+      this->layer_param_.contrastive_loss_param().legacy_version();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
@@ -84,6 +140,13 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               Dtype(0.0),
               bout + (j*channels));
         } else {  // dissimilar pairs
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
           Dtype mdist(0.0);
           Dtype beta(0.0);
           if (legacy_version) {
@@ -98,6 +161,18 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             caffe_cpu_axpby(
                 channels,
                 beta,
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+          if ((margin-dist_sq_.cpu_data()[j]) > Dtype(0.0)) {
+            caffe_cpu_axpby(
+                channels,
+                -alpha,
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
                 diff_.cpu_data() + (j*channels),
                 Dtype(0.0),
                 bout + (j*channels));
@@ -115,6 +190,20 @@ STUB_GPU(ContrastiveLossLayer);
 #endif
 
 INSTANTIATE_CLASS(ContrastiveLossLayer);
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(ContrastiveLoss);
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+REGISTER_LAYER_CLASS(ContrastiveLoss);
+
+=======
+REGISTER_LAYER_CLASS(CONTRASTIVE_LOSS, ContrastiveLossLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+REGISTER_LAYER_CLASS(ContrastiveLoss);
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

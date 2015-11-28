@@ -9,6 +9,13 @@ Caffe has command line, Python, and MATLAB interfaces for day-to-day usage, inte
 
 The command line interface -- cmdcaffe -- is the `caffe` tool for model training, scoring, and diagnostics. Run `caffe` without any arguments for help. This tool and others are found in caffe/build/tools. (The following example calls require completing the LeNet / MNIST example first.)
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 **Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:
 
 * All training requires a solver configuration through the `-solver solver.prototxt` argument.
@@ -16,6 +23,15 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 * Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.
 
 For example, you can run:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+**Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks. All training requires a solver configuration through the `-solver solver.prototxt` argument. Resuming requires the `-snapshot model_iter_1000.solverstate` argument to load the solver snapshot. Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
     # train LeNet
     caffe train -solver examples/mnist/lenet_solver.prototxt
@@ -31,25 +47,68 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 
 **Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.
 
+<<<<<<< HEAD
     # score the learned LeNet model on the validation set as defined in the
     # model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    # score the learned LeNet model on the validation set as defined in the
+    # model architeture lenet_train_test.prototxt
+    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+=======
+    #
+    # score the learned LeNet model on the validation set as defined in the model architeture lenet_train_test.prototxt
+    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000 -gpu 0 -iterations 100
+>>>>>>> origin/BVLC/parallel
+=======
+    # score the learned LeNet model on the validation set as defined in the
+    # model architeture lenet_train_test.prototxt
+    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 **Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.
 
     # (These example calls require you complete the LeNet / MNIST example first.)
     # time LeNet training on CPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     # time LeNet training on GPU for the default 50 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
     # time a model architecture with the given weights on the first GPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    # time a model architecture with the given weights on the first GPU for 10 iterations
+    # time LeNet training on GPU for the default 50 iterations
+    caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 **Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.
 
     # query the first device
     caffe device_query -gpu 0
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 **Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.
 
     # train on GPUs 0 & 1 (doubling the batch size)
@@ -57,6 +116,14 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
     # train on all GPUs (multiplying batch size by number of devices)
     caffe train -solver examples/mnist/lenet_solver.prototxt -gpu all
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 ## Python
 
 The Python interface -- pycaffe -- is the `caffe` module and its scripts in caffe/python. `import caffe` to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.
@@ -69,6 +136,13 @@ The Python interface -- pycaffe -- is the `caffe` module and its scripts in caff
 
 Tutorial IPython notebooks are found in caffe/examples: do `ipython notebook caffe/examples` to try them. For developer reference docstrings can be found throughout the code.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 Compile pycaffe by `make pycaffe`.
 Add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like for `import caffe`.
 
@@ -284,3 +358,22 @@ We show in caffe/matlab/hdf5creation how to read and write HDF5 data with Matlab
 #### Clear nets and solvers
 
 Call `caffe.reset_all()` to clear all solvers and stand-alone nets you have created.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+Compile pycaffe by `make pycaffe`. The module dir caffe/python/caffe should be installed in your PYTHONPATH for `import caffe`.
+
+## MATLAB
+
+The MATLAB interface -- matcaffe -- is the `caffe` mex and its helper m-files in caffe/matlab. Load models, do forward and backward, extract output and read-only model weights, and load the binaryproto format mean as a matrix.
+
+A MATLAB demo is in caffe/matlab/caffe/matcaffe_demo.m
+
+Note that MATLAB matrices and memory are in column-major layout counter to Caffe's row-major layout! Double-check your work accordingly.
+
+Compile matcaffe by `make matcaffe`.
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

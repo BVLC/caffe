@@ -1,4 +1,15 @@
+<<<<<<< HEAD
 #ifdef USE_OPENCV
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#ifdef USE_OPENCV
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+#ifdef USE_OPENCV
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -290,8 +301,23 @@ TEST_F(IOTest, TestDecodeDatum) {
   string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
   Datum datum;
   EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+<<<<<<< HEAD
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  EXPECT_TRUE(DecodeDatum(&datum, true));
+  EXPECT_FALSE(DecodeDatum(&datum, true));
+=======
+  EXPECT_TRUE(DecodeDatum(&datum));
+  EXPECT_FALSE(DecodeDatum(&datum));
+>>>>>>> origin/BVLC/parallel
+=======
+  EXPECT_TRUE(DecodeDatum(&datum, true));
+  EXPECT_FALSE(DecodeDatum(&datum, true));
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   Datum datum_ref;
   ReadImageToDatumReference(filename, 0, 0, 0, true, &datum_ref);
   EXPECT_EQ(datum.channels(), datum_ref.channels());
@@ -310,6 +336,13 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
   string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
   Datum datum;
   EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img = DecodeDatumToCVMat(datum, true);
   EXPECT_EQ(cv_img.channels(), 3);
   EXPECT_EQ(cv_img.rows, 360);
@@ -405,6 +438,46 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
   Datum datum;
   EXPECT_TRUE(ReadImageToDatum(filename, 0, std::string("jpg"), &datum));
   cv::Mat cv_img = DecodeDatumToCVMatNative(datum);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  cv::Mat cv_img = DecodeDatumToCVMat(datum);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 360);
+  EXPECT_EQ(cv_img.cols, 480);
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMatResized) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  cv::Mat cv_img = DecodeDatumToCVMat(datum, 100, 200);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 100);
+  EXPECT_EQ(cv_img.cols, 200);
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMatResizedGray) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  const bool is_color = false;
+  cv::Mat cv_img = DecodeDatumToCVMat(datum, 200, 100, is_color);
+  EXPECT_EQ(cv_img.channels(), 1);
+  EXPECT_EQ(cv_img.rows, 200);
+  EXPECT_EQ(cv_img.cols, 100);
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  cv::Mat cv_img = DecodeDatumToCVMat(datum);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img_ref = ReadImageToCVMat(filename);
   EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());
   EXPECT_EQ(cv_img_ref.rows, cv_img.rows);
@@ -421,4 +494,15 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
 }
 
 }  // namespace caffe
+<<<<<<< HEAD
 #endif  // USE_OPENCV
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#endif  // USE_OPENCV
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+#endif  // USE_OPENCV
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

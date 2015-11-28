@@ -1,10 +1,25 @@
 #include <math.h>
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 #include <string>
 #include <vector>
 
 =======
+=======
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <algorithm>
 #include <cstdio>
 #include <string>
@@ -13,7 +28,65 @@
 #include "caffe/device.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> BVLC/master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> BVLC/master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> BVLC/master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> caffe
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> BVLC/master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> master
+=======
+#include <string>
+#include <vector>
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -40,6 +113,11 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
@@ -61,6 +139,10 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
       << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param.DebugString();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   param_ = param;
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
@@ -80,6 +162,7 @@ Solver<Dtype>::Solver(const string& param_file)
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 =======
 Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
     : iter_(), iter_total_(&iter_), net_() {
@@ -112,6 +195,8 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
@@ -123,6 +208,15 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
   if (param_.random_seed() >= 0) {
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
+=======
+=======
+  param_ = param;
+  CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
+  CheckSnapshotWritePermissions();
+  if (Caffe::root_solver() && param_.random_seed() >= 0) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
@@ -130,21 +224,36 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   if (Caffe::root_solver()) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
   }
   iter_ = 0;
   current_step_ = 0;
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if(!skip_test_nets)
     InitTestNets();
   LOG(INFO) << "Solver scaffolding done.";
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -264,6 +373,13 @@ void Solver<Dtype>::InitTestNets() {
     net_params[i].mutable_state()->CopyFrom(net_state);
     LOG(INFO)
         << "Creating test net (#" << i << ") specified by " << sources[i];
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     if (Caffe::root_solver()) {
       test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     } else {
@@ -271,6 +387,20 @@ void Solver<Dtype>::InitTestNets() {
           root_solver_->test_nets_[i].get()));
     }
     test_nets_[i]->set_debug_info(param_.debug_info());
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
   }
 }
 
@@ -282,6 +412,8 @@ void Solver<Dtype>::Step(int iters) {
   int average_loss = this->param_.average_loss();
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
+<<<<<<< HEAD
+<<<<<<< HEAD
 
   while (iter_ < stop_iter) {
     // zero-init the params
@@ -344,6 +476,343 @@ void Solver<Dtype>::Step(int iters) {
       callbacks_[i]->on_gradients_ready();
     }
     ApplyUpdate();
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+    test_nets_[i].reset(new Net<Dtype>(net_params[i]));
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+<<<<<<< HEAD
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+=======
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+=======
+  PreSolve();
+
+  iter_ = 0;
+  current_step_ = 0;
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+  // Remember the initial iter_ value; will be non-zero if we loaded from a
+  // resume_file above.
+  const int start_iter = iter_;
+
+  int average_loss = this->param_.average_loss();
+
+  CHECK_GE(average_loss, 1) << "average_loss should be non-negative.";
+
+  vector<Dtype> losses;
+  Dtype smoothed_loss = 0;
+
+  // For a network that is trained by the solver, no bottom or top vecs
+  // should be given, and we will just provide dummy vecs.
+  vector<Blob<Dtype>*> bottom_vec;
+  for (; iter_ < param_.max_iter(); ++iter_) {
+>>>>>>> origin/BVLC/parallel
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+=======
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
+=======
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  const int start_iter = iter_;
+  const int stop_iter = iter_ + iters;
+  int average_loss = this->param_.average_loss();
+  vector<Dtype> losses;
+  Dtype smoothed_loss = 0;
+<<<<<<< HEAD
+
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+
+<<<<<<< HEAD
+=======
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  while (iter_ < stop_iter) {
+    // zero-init the params
+    net_->ClearParamDiffs();
+    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+        && (iter_ > 0 || param_.test_initialization())
+        && Caffe::root_solver()) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+        && (iter_ > 0 || param_.test_initialization())) {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+      TestAll();
+      if (requested_early_exit_) {
+        // Break out of the while loop because stop was requested while testing.
+        break;
+      }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    }
+  }
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+<<<<<<< HEAD
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+
+<<<<<<< HEAD
+=======
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+=======
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_start();
+    }
+    const bool display = param_.display() && iter_ % param_.display() == 0;
+    net_->set_debug_info(display && param_.debug_info());
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    // accumulate the loss and gradient
+    Dtype loss = 0;
+    for (int i = 0; i < param_.iter_size(); ++i) {
+      loss += net_->ForwardBackward(bottom_vec);
+    }
+    loss /= param_.iter_size();
+    // average the loss across iterations for smoothed reporting
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    Dtype loss = net_->ForwardBackward(bottom_vec);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    if (losses.size() < average_loss) {
+      losses.push_back(loss);
+      int size = losses.size();
+      smoothed_loss = (smoothed_loss * (size - 1) + loss) / size;
+    } else {
+      int idx = (iter_ - start_iter) % average_loss;
+      smoothed_loss += (loss - losses[idx]) / average_loss;
+      losses[idx] = loss;
+    }
+    if (display) {
+<<<<<<< HEAD
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+=======
+      LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
+>>>>>>> origin/BVLC/parallel
+=======
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+      const vector<Blob<Dtype>*>& result = net_->output_blobs();
+      int score_index = 0;
+      for (int j = 0; j < result.size(); ++j) {
+        const Dtype* result_vec = result[j]->cpu_data();
+        const string& output_name =
+            net_->blob_names()[net_->output_blob_indices()[j]];
+        const Dtype loss_weight =
+            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
+        for (int k = 0; k < result[j]->count(); ++k) {
+          ostringstream loss_msg_stream;
+          if (loss_weight) {
+            loss_msg_stream << " (* " << loss_weight
+                            << " = " << loss_weight * result_vec[k] << " loss)";
+          }
+<<<<<<< HEAD
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+=======
+          LOG(INFO) << "    Train net output #"
+>>>>>>> origin/BVLC/parallel
+=======
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+              << score_index++ << ": " << output_name << " = "
+              << result_vec[k] << loss_msg_stream.str();
+        }
+      }
+<<<<<<< HEAD
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
 
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
@@ -375,11 +844,255 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+=======
+>>>>>>> origin/BVLC/parallel
+    }
+    ApplyUpdate();
+>>>>>>> master
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+    SolverAction::Enum request = GetRequestedAction();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+
+    SolverAction::Enum request = GetRequestedAction();
+>>>>>>> master
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> master
+=======
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+=======
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+>>>>>>> caffe
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+<<<<<<< HEAD
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+
+>>>>>>> master
+=======
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> BVLC/master
+=======
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((param_.snapshot()
+         && iter_ % param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> master
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
   }
 
+=======
+
+=======
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   Step(param_.max_iter() - iter_);
@@ -491,13 +1204,31 @@ void Solver<Dtype>::Test(const int test_net_id) {
                       << " = " << loss_weight * mean_score << " loss)";
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
+<<<<<<< HEAD
               << mean_score << loss_msg_stream.str();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+              << mean_score << loss_msg_stream.str();
+=======
+        << mean_score << loss_msg_stream.str();
+>>>>>>> origin/BVLC/parallel
+=======
+              << mean_score << loss_msg_stream.str();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   CHECK(Caffe::root_solver());
   string model_filename;
   switch (param_.snapshot_format()) {
@@ -509,6 +1240,11 @@ void Solver<Dtype>::Snapshot() {
     break;
   default:
     LOG(FATAL) << "Unsupported snapshot format.";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   NetParameter net_param;
   // For intermediate results, we will also dump the gradient values.
@@ -545,8 +1281,32 @@ void Solver<Dtype>::Restore(const char* state_file) {
   current_step_ = state.current_step();
   RestoreSolverState(state);
 }
+>>>>>>> origin/BVLC/parallel
+=======
+  }
+>>>>>>> caffe
 
+  SnapshotSolverState(model_filename);
+}
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+template <typename Dtype>
+void Solver<Dtype>::CheckSnapshotWritePermissions() {
+  if (Caffe::root_solver() && param_.snapshot()) {
+    CHECK(param_.has_snapshot_prefix())
+        << "In solver params, snapshot is specified but snapshot_prefix is not";
+    string probe_filename = SnapshotFilename(".tempfile");
+    std::ofstream probe_ofs(probe_filename.c_str());
+    if (probe_ofs.good()) {
+      probe_ofs.close();
+      std::remove(probe_filename.c_str());
+    } else {
+      LOG(FATAL) << "Cannot write to snapshot prefix '"
+          << param_.snapshot_prefix() << "'.  Make sure "
+          << "that the directory exists and is writeable.";
+    }
+=======
 // Return the current learning rate. The currently implemented learning rate
 // policies are as follows:
 //    - fixed: always return base_lr.
@@ -599,6 +1359,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   } else {
     LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
   }
 
   SnapshotSolverState(model_filename);
@@ -619,9 +1380,57 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
           << param_.snapshot_prefix() << "'.  Make sure "
           << "that the directory exists and is writeable.";
     }
+=======
+=======
+template <typename Dtype>
+void Solver<Dtype>::CheckSnapshotWritePermissions() {
+  if (Caffe::root_solver() && param_.snapshot()) {
+    CHECK(param_.has_snapshot_prefix())
+        << "In solver params, snapshot is specified but snapshot_prefix is not";
+    string probe_filename = SnapshotFilename(".tempfile");
+    std::ofstream probe_ofs(probe_filename.c_str());
+    if (probe_ofs.good()) {
+      probe_ofs.close();
+      std::remove(probe_filename.c_str());
+    } else {
+      LOG(FATAL) << "Cannot write to snapshot prefix '"
+          << param_.snapshot_prefix() << "'.  Make sure "
+          << "that the directory exists and is writeable.";
+    }
+>>>>>>> caffe
   }
 }
 
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+string Solver<Dtype>::SnapshotFilename(const string extension) {
+  return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
+    + extension;
+=======
+void SGDSolver<Dtype>::PreSolve() {
+  // Initialize the history
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  history_.clear();
+  update_.clear();
+  temp_.clear();
+  for (int i = 0; i < net_params.size(); ++i) {
+    const Blob<Dtype>* net_param = net_params[i].get();
+    history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
+        net_param->num(), net_param->channels(), net_param->height(),
+        net_param->width())));
+    update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
+        net_param->num(), net_param->channels(), net_param->height(),
+        net_param->width())));
+    temp_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
+        net_param->num(), net_param->channels(), net_param->height(),
+        net_param->width())));
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+>>>>>>> origin/BVLC/parallel
+}
+
+<<<<<<< HEAD
 template <typename Dtype>
 string Solver<Dtype>::SnapshotFilename(const string extension) {
   return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
@@ -638,6 +1447,19 @@ string Solver<Dtype>::SnapshotToBinaryProto() {
   WriteProtoToBinaryFile(net_param, model_filename);
   return model_filename;
 =======
+=======
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 void SGDSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
@@ -649,6 +1471,10 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   }
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   Device<Dtype>* device = GetDevice<Dtype>();
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     // Compute the value to history, and then copy them to the blob's diff.
@@ -662,13 +1488,164 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       device->axpy(net_params[param_id]->count(), local_decay * local_rate,
           net_params[param_id]->const_data(),
           history_[param_id]->mutable_data());
+<<<<<<< HEAD
     }
     // copy
     device->copy(net_params[param_id]->count(),
         history_[param_id]->const_data(),
         net_params[param_id]->mutable_diff());
+=======
+    }
+    // copy
+    device->copy(net_params[param_id]->count(),
+        history_[param_id]->const_data(),
+        net_params[param_id]->mutable_diff());
+=======
+  string regularization_type = this->param_.regularization_type();
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // Compute the value to history, and then copy them to the blob's diff.
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_cpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->cpu_data(),
+              temp_[param_id]->mutable_cpu_data());
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              temp_[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else {
+          LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+        }
+      }
+
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                net_params[param_id]->cpu_diff(), momentum,
+                history_[param_id]->mutable_cpu_data());
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          history_[param_id]->cpu_data(),
+          net_params[param_id]->mutable_cpu_diff());
+    }
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // Compute the value to history, and then copy them to the blob's diff.
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_gpu_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_gpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->gpu_data(),
+              temp_[param_id]->mutable_gpu_data());
+          caffe_gpu_axpy(net_params[param_id]->count(),
+              local_decay,
+              temp_[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else {
+          LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+        }
+      }
+
+      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
+                net_params[param_id]->gpu_diff(), momentum,
+                history_[param_id]->mutable_gpu_data());
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          history_[param_id]->gpu_data(),
+          net_params[param_id]->mutable_gpu_diff());
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+>>>>>>> origin/BVLC/parallel
   }
->>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+string Solver<Dtype>::SnapshotFilename(const string extension) {
+  return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
+    + extension;
+}
+
+template <typename Dtype>
+>>>>>>> caffe
+string Solver<Dtype>::SnapshotToBinaryProto() {
+  string model_filename = SnapshotFilename(".caffemodel");
+  LOG(INFO) << "Snapshotting to binary proto file " << model_filename;
+  NetParameter net_param;
+  net_->ToProto(&net_param, param_.snapshot_diff());
+  WriteProtoToBinaryFile(net_param, model_filename);
+  return model_filename;
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
 }
 
 template <typename Dtype>
@@ -677,6 +1654,7 @@ string Solver<Dtype>::SnapshotToHDF5() {
   LOG(INFO) << "Snapshotting to HDF5 file " << model_filename;
   net_->ToHDF5(model_filename, param_.snapshot_diff());
   return model_filename;
+<<<<<<< HEAD
 }
 
 template <typename Dtype>
@@ -691,6 +1669,292 @@ void Solver<Dtype>::Restore(const char* state_file) {
   }
 }
 
+template <typename Dtype>
+void NesterovSolver<Dtype>::ComputeUpdateValue() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  // get the learning rate
+  Dtype rate = this->GetLearningRate();
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+  }
+  Dtype momentum = this->param_.momentum();
+  Dtype weight_decay = this->param_.weight_decay();
+  string regularization_type = this->param_.regularization_type();
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // save history momentum for stepping back
+      caffe_copy(net_params[param_id]->count(),
+          this->history_[param_id]->cpu_data(),
+          this->update_[param_id]->mutable_cpu_data());
+
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_cpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->cpu_data(),
+              this->temp_[param_id]->mutable_cpu_data());
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              this->temp_[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else {
+          LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+        }
+      }
+
+      // update history
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                net_params[param_id]->cpu_diff(), momentum,
+                this->history_[param_id]->mutable_cpu_data());
+
+      // compute udpate: step back then over step
+      caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
+          this->history_[param_id]->cpu_data(), -momentum,
+          this->update_[param_id]->mutable_cpu_data());
+
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          this->update_[param_id]->cpu_data(),
+          net_params[param_id]->mutable_cpu_diff());
+    }
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // save history momentum for stepping back
+      caffe_copy(net_params[param_id]->count(),
+          this->history_[param_id]->gpu_data(),
+          this->update_[param_id]->mutable_gpu_data());
+
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_gpu_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_gpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->gpu_data(),
+              this->temp_[param_id]->mutable_gpu_data());
+          caffe_gpu_axpy(net_params[param_id]->count(),
+              local_decay,
+              this->temp_[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else {
+          LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+        }
+      }
+
+      // update history
+      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
+                net_params[param_id]->gpu_diff(), momentum,
+                this->history_[param_id]->mutable_gpu_data());
+
+      // compute udpate: step back then over step
+      caffe_gpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
+          this->history_[param_id]->gpu_data(), -momentum,
+          this->update_[param_id]->mutable_gpu_data());
+
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          this->update_[param_id]->gpu_data(),
+          net_params[param_id]->mutable_gpu_diff());
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+>>>>>>> BVLC/device-abstraction
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+string Solver<Dtype>::SnapshotToHDF5() {
+  string model_filename = SnapshotFilename(".caffemodel.h5");
+  LOG(INFO) << "Snapshotting to HDF5 file " << model_filename;
+  net_->ToHDF5(model_filename, param_.snapshot_diff());
+  return model_filename;
+=======
+void AdaGradSolver<Dtype>::ComputeUpdateValue() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  // get the learning rate
+  Dtype rate = this->GetLearningRate();
+  Dtype delta = this->param_.delta();
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+  }
+  Dtype weight_decay = this->param_.weight_decay();
+  string regularization_type = this->param_.regularization_type();
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_cpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->cpu_data(),
+              this->temp_[param_id]->mutable_cpu_data());
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              this->temp_[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else {
+          LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+        }
+      }
+
+      // compute square of gradient in update
+      caffe_powx(net_params[param_id]->count(),
+          net_params[param_id]->cpu_diff(), Dtype(2),
+          this->update_[param_id]->mutable_cpu_data());
+
+      // update history
+      caffe_add(net_params[param_id]->count(),
+          this->update_[param_id]->cpu_data(),
+          this->history_[param_id]->cpu_data(),
+          this->history_[param_id]->mutable_cpu_data());
+
+      // prepare update
+      caffe_powx(net_params[param_id]->count(),
+                this->history_[param_id]->cpu_data(), Dtype(0.5),
+                this->update_[param_id]->mutable_cpu_data());
+
+      caffe_add_scalar(net_params[param_id]->count(),
+                delta, this->update_[param_id]->mutable_cpu_data());
+
+      caffe_div(net_params[param_id]->count(),
+                net_params[param_id]->cpu_diff(),
+                this->update_[param_id]->cpu_data(),
+                this->update_[param_id]->mutable_cpu_data());
+
+      // scale and copy
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+          this->update_[param_id]->cpu_data(), Dtype(0),
+          net_params[param_id]->mutable_cpu_diff());
+    }
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          caffe_gpu_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else if (regularization_type == "L1") {
+          caffe_gpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->gpu_data(),
+              this->temp_[param_id]->mutable_gpu_data());
+          caffe_gpu_axpy(net_params[param_id]->count(),
+              local_decay,
+              this->temp_[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else {
+          LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+        }
+      }
+
+      // compute square of gradient in update
+      caffe_gpu_powx(net_params[param_id]->count(),
+          net_params[param_id]->gpu_diff(), Dtype(2),
+          this->update_[param_id]->mutable_gpu_data());
+
+      // update history
+      caffe_gpu_add(net_params[param_id]->count(),
+          this->update_[param_id]->gpu_data(),
+          this->history_[param_id]->gpu_data(),
+          this->history_[param_id]->mutable_gpu_data());
+
+      // prepare update
+      caffe_gpu_powx(net_params[param_id]->count(),
+                this->history_[param_id]->gpu_data(), Dtype(0.5),
+                this->update_[param_id]->mutable_gpu_data());
+
+      caffe_gpu_add_scalar(net_params[param_id]->count(),
+                delta, this->update_[param_id]->mutable_gpu_data());
+
+      caffe_gpu_div(net_params[param_id]->count(),
+                net_params[param_id]->gpu_diff(),
+                this->update_[param_id]->gpu_data(),
+                this->update_[param_id]->mutable_gpu_data());
+
+      // scale and copy
+      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
+          this->update_[param_id]->gpu_data(), Dtype(0),
+          net_params[param_id]->mutable_gpu_diff());
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Restore(const char* state_file) {
+  CHECK(Caffe::root_solver());
+  string state_filename(state_file);
+  if (state_filename.size() >= 3 &&
+      state_filename.compare(state_filename.size() - 3, 3, ".h5") == 0) {
+    RestoreSolverStateFromHDF5(state_filename);
+  } else {
+    RestoreSolverStateFromBinaryProto(state_filename);
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+}
+
 INSTANTIATE_CLASS(Solver);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+INSTANTIATE_CLASS(SGDSolver);
+INSTANTIATE_CLASS(NesterovSolver);
+INSTANTIATE_CLASS(AdaGradSolver);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 }  // namespace caffe

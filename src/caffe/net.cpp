@@ -16,10 +16,47 @@
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/util/io.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/util/io.hpp"
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -139,6 +176,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
     // After this layer is connected, set it up.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     if (share_from_root) {
       // Set up size of top blobs using root_net_
       const vector<Blob<Dtype>*>& base_top = root_net_->top_vecs_[layer_id];
@@ -157,6 +201,44 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    LOG(INFO) << "Setting up " << layer_names_[layer_id];
+    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
+    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
+        blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
+      }
+      blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
+      LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
+          << top_vecs_[layer_id][top_id]->channels() << " "
+          << top_vecs_[layer_id][top_id]->height() << " "
+          << top_vecs_[layer_id][top_id]->width() << " ("
+          << top_vecs_[layer_id][top_id]->count() << ")";
+      if (layer->loss(top_id)) {
+        LOG(INFO) << "    with loss weight " << layer->loss(top_id);
+      }
+      memory_used_ += top_vecs_[layer_id][top_id]->count();
+    }
+    DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+    const int blobs_lr_size = layer_param.blobs_lr_size();
+    const int num_param_blobs = layers_[layer_id]->blobs().size();
+    CHECK(blobs_lr_size == num_param_blobs || blobs_lr_size == 0)
+        << "Incorrect blobs lr size: should be either 0 "
+        << "or the same as the number of the layer's parameter blobs.";
+    if (blobs_lr_size) {
+      // Check if this layer needs backward operation itself
+      for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
+        const bool param_need_backward = layer_param.blobs_lr(param_id) > 0;
+        need_backward |= param_need_backward;
+        layers_[layer_id]->set_param_propagate_down(param_id,
+                                                    param_need_backward);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       }
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
       LOG_IF(INFO, Caffe::root_solver())
@@ -196,6 +278,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Also checks if all bottom blobs don't need backward computation (possible
   // because the skip_propagate_down param) and so we can skip bacward
   // computation for the entire layer
@@ -204,11 +293,29 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
     bool layer_contributes_loss = false;
     bool layer_skip_propagate_down = true;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  set<string> blobs_under_loss;
+  for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
+    bool layer_contributes_loss = false;
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
       if (layers_[layer_id]->loss(top_id) ||
           (blobs_under_loss.find(blob_name) != blobs_under_loss.end())) {
         layer_contributes_loss = true;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       }
       if (blobs_skip_backp.find(blob_name) == blobs_skip_backp.end()) {
         layer_skip_propagate_down = false;
@@ -248,6 +355,33 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
                    blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
         blobs_skip_backp.insert(blob_name);
       }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+        break;
+      }
+    }
+    if (!layer_contributes_loss) { layer_need_backward_[layer_id] = false; }
+    if (layer_need_backward_[layer_id]) {
+      LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
+    } else {
+      LOG(INFO) << layer_names_[layer_id]
+                << " does not need backward computation.";
+>>>>>>> origin/BVLC/parallel
+    }
+    for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
+         ++bottom_id) {
+      if (layer_contributes_loss) {
+        const string& blob_name =
+            blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
+        blobs_under_loss.insert(blob_name);
+      } else {
+        bottom_need_backward_[layer_id][bottom_id] = false;
+      }
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     }
   }
   // Handle force_backward if needed.
@@ -360,9 +494,26 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
       if (rule.stage(i) == state.stage(j)) { has_stage = true; }
     }
     if (!has_stage) {
+<<<<<<< HEAD
       LOG_IF(INFO, Caffe::root_solver())
           << "The NetState did not contain stage '" << rule.stage(i)
           << "' specified by a rule in layer " << layer_name;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      LOG_IF(INFO, Caffe::root_solver())
+          << "The NetState did not contain stage '" << rule.stage(i)
+          << "' specified by a rule in layer " << layer_name;
+=======
+      LOG(INFO) << "The NetState did not contain stage '" << rule.stage(i)
+                << "' specified by a rule in layer " << layer_name;
+>>>>>>> origin/BVLC/parallel
+=======
+      LOG_IF(INFO, Caffe::root_solver())
+          << "The NetState did not contain stage '" << rule.stage(i)
+          << "' specified by a rule in layer " << layer_name;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       return false;
     }
   }
@@ -375,9 +526,26 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
       if (rule.not_stage(i) == state.stage(j)) { has_stage = true; }
     }
     if (has_stage) {
+<<<<<<< HEAD
       LOG_IF(INFO, Caffe::root_solver())
           << "The NetState contained a not_stage '" << rule.not_stage(i)
           << "' specified by a rule in layer " << layer_name;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      LOG_IF(INFO, Caffe::root_solver())
+          << "The NetState contained a not_stage '" << rule.not_stage(i)
+          << "' specified by a rule in layer " << layer_name;
+=======
+      LOG(INFO) << "The NetState contained a not_stage '" << rule.not_stage(i)
+                << "' specified by a rule in layer " << layer_name;
+>>>>>>> origin/BVLC/parallel
+=======
+      LOG_IF(INFO, Caffe::root_solver())
+          << "The NetState contained a not_stage '" << rule.not_stage(i)
+          << "' specified by a rule in layer " << layer_name;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       return false;
     }
   }
@@ -578,6 +746,16 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   }
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -804,6 +982,19 @@ void Net<Dtype>::Reshape() {
   for (int i = 0; i < layers_.size(); ++i) {
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+}
+
+template <typename Dtype>
+void Net<Dtype>::Reshape() {
+  for (int i = 0; i < layers_.size(); ++i) {
+    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
+  }
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -955,6 +1146,79 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       CHECK_GE(layer_diff_hid, 0)
           << "Error saving weights to " << filename << ".";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+>>>>>>> pod-caffe-pod.hpp-merge
+    }
+    int num_params = layers_[layer_id]->blobs().size();
+    for (int param_id = 0; param_id < num_params; ++param_id) {
+      ostringstream dataset_name;
+      dataset_name << param_id;
+      const int net_param_id = param_id_vecs_[layer_id][param_id];
+      if (param_owners_[net_param_id] == -1) {
+        // Only save params that own themselves
+        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+            *params_[net_param_id]);
+      }
+      if (write_diff) {
+        // Write diffs regardless of weight-sharing
+        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+            *params_[net_param_id], true);
+      }
+<<<<<<< HEAD
+    }
+    H5Gclose(layer_data_hid);
+    if (write_diff) {
+      H5Gclose(layer_diff_hid);
+    }
+  }
+  H5Gclose(data_hid);
+  if (write_diff) {
+    H5Gclose(diff_hid);
+  }
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+    }
+=======
     }
     int num_params = layers_[layer_id]->blobs().size();
     for (int param_id = 0; param_id < num_params; ++param_id) {
@@ -972,6 +1236,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
             *params_[net_param_id], true);
       }
     }
+>>>>>>> caffe
     H5Gclose(layer_data_hid);
     if (write_diff) {
       H5Gclose(layer_diff_hid);
@@ -981,12 +1246,125 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
   if (write_diff) {
     H5Gclose(diff_hid);
   }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    }
+    H5Gclose(layer_data_hid);
+    if (write_diff) {
+      H5Gclose(layer_diff_hid);
+    }
+  }
+=======
+=======
+    }
+    int num_params = layers_[layer_id]->blobs().size();
+    for (int param_id = 0; param_id < num_params; ++param_id) {
+      ostringstream dataset_name;
+      dataset_name << param_id;
+      const int net_param_id = param_id_vecs_[layer_id][param_id];
+      if (param_owners_[net_param_id] == -1) {
+        // Only save params that own themselves
+        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+            *params_[net_param_id]);
+      }
+      if (write_diff) {
+        // Write diffs regardless of weight-sharing
+        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+            *params_[net_param_id], true);
+      }
+>>>>>>> master
+    }
+    H5Gclose(layer_data_hid);
+    if (write_diff) {
+      H5Gclose(layer_diff_hid);
+    }
+  }
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+  H5Gclose(data_hid);
+  if (write_diff) {
+    H5Gclose(diff_hid);
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   H5Fclose(file_hid);
 }
 
 template <typename Dtype>
 void Net<Dtype>::Update() {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  // First, accumulate the diffs of any shared parameters into their owner's
+  // diff. (Assumes that the learning rate, weight decay, etc. have already been
+  // accounted for in the current diff.)
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+    if (debug_info_) { UpdateDebugInfo(i); }
+    const int count = params_[i]->count();
+    const Dtype* this_diff = params_[i]->const_diff();
+    Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
+    GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < learnable_params_.size(); ++i) {
     learnable_params_[i]->Update();
   }
@@ -1010,6 +1388,7 @@ void Net<Dtype>::ClearParamDiffs() {
 #endif
       break;
     }
+<<<<<<< HEAD
 =======
   // First, accumulate the diffs of any shared parameters into their owner's
   // diff. (Assumes that the learning rate, weight decay, etc. have already been
@@ -1029,6 +1408,16 @@ template <typename Dtype>
 void Net<Dtype>::ShareWeights() {
   for (int i = 0; i < params_.size(); ++i) {
     if (param_owners_[i] < 0) { continue; }
+=======
+>>>>>>> BVLC/master
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ShareWeights() {
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+>>>>>>> pod-caffe-pod.hpp-merge
     params_[i]->ShareData(*params_[param_owners_[i]]);
     params_[i]->ShareDiff(*params_[param_owners_[i]]);
   }

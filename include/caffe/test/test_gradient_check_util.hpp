@@ -46,10 +46,25 @@ class GradientChecker {
   void CheckGradientEltwise(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Checks the gradient of a single output with respect to particular input
   // blob(s).  If check_bottom = i >= 0, check only the ith bottom Blob.
   // If check_bottom == -1, check everything -- all bottom Blobs and all
   // param Blobs.  Otherwise (if check_bottom < -1), check only param Blobs.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   void CheckGradientSingle(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom, int top_id, int top_data_id, bool element_wise = false);
@@ -88,17 +103,53 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   // First, figure out what blobs we need to check against, and zero init
   // parameter blobs.
   vector<Blob<Dtype>*> blobs_to_check;
+<<<<<<< HEAD
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  vector<bool> propagate_down(bottom.size(), check_bottom == -1);
+=======
+  vector<bool> propagate_down(bottom.size(), check_bottom < 0);
+>>>>>>> origin/BVLC/parallel
+=======
+  vector<bool> propagate_down(bottom.size(), check_bottom == -1);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < layer->blobs().size(); ++i) {
     Blob<Dtype>* blob = layer->blobs()[i].get();
     caffe_set(blob->count(), static_cast<Dtype>(0), blob->mutable_cpu_diff());
     blobs_to_check.push_back(blob);
   }
+<<<<<<< HEAD
   if (check_bottom == -1) {
     for (int i = 0; i < bottom.size(); ++i) {
       blobs_to_check.push_back(bottom[i]);
     }
   } else if (check_bottom >= 0) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  if (check_bottom == -1) {
+    for (int i = 0; i < bottom.size(); ++i) {
+      blobs_to_check.push_back(bottom[i]);
+    }
+  } else if (check_bottom >= 0) {
+=======
+  if (check_bottom < 0) {
+    for (int i = 0; i < bottom.size(); ++i) {
+      blobs_to_check.push_back(bottom[i]);
+    }
+  } else {
+>>>>>>> origin/BVLC/parallel
+=======
+  if (check_bottom == -1) {
+    for (int i = 0; i < bottom.size(); ++i) {
+      blobs_to_check.push_back(bottom[i]);
+    }
+  } else if (check_bottom >= 0) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     CHECK_LT(check_bottom, bottom.size());
     blobs_to_check.push_back(bottom[check_bottom]);
     propagate_down[check_bottom] = true;

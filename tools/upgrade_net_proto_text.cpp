@@ -46,6 +46,20 @@ int main(int argc, char** argv) {
   if (need_data_upgrade) {
     UpgradeNetDataTransformation(&net_param);
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+  // Convert to a NetParameterPrettyPrint to print fields in desired
+  // order.
+  NetParameterPrettyPrint net_param_pretty;
+  NetParameterToPrettyPrint(net_param, &net_param_pretty);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // Save new format prototxt.
   WriteProtoToTextFile(net_param, argv[2]);

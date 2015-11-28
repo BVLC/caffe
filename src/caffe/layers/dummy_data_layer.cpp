@@ -74,6 +74,13 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }
   for (int i = 0; i < num_top; ++i) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     if (legacy_dims) {
       const int num = (param.num_size() == 1) ? param.num(0) : param.num(i);
       const int channels =
@@ -87,6 +94,22 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const int shape_index = (param.shape_size() == 1) ? 0 : i;
       top[i]->Reshape(param.shape(shape_index));
     }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    const int num = (param.num_size() == 1) ? param.num(0) : param.num(i);
+    const int channels =
+        (param.channels_size() == 1) ? param.channels(0) : param.channels(i);
+    const int height =
+        (param.height_size() == 1) ? param.height(0) : param.height(i);
+    const int width =
+        (param.width_size() == 1) ? param.width(0) : param.width(i);
+    top[i]->Reshape(num, channels, height, width);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   // Run Forward once, with refill_ inverted, to fill the constant Blobs.
   this->Forward(bottom, top);
@@ -99,6 +122,7 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < top.size(); ++i) {
@@ -107,6 +131,82 @@ Dtype DummyDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < top->size(); ++i) {
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype DummyDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  for (int i = 0; i < top->size(); ++i) {
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> BVLC/master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> BVLC/master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> BVLC/master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> caffe
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> BVLC/master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> master
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> origin/BVLC/parallel
+=======
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     const int filler_id = (fillers_.size() > 1) ? i : 0;
     if (refill_[filler_id]) {
       fillers_[filler_id]->Fill(top[i]);
@@ -115,6 +215,16 @@ Dtype DummyDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 INSTANTIATE_CLASS(DummyDataLayer);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(DummyData);
 
+=======
+REGISTER_LAYER_CLASS(DUMMY_DATA, DummyDataLayer);
+>>>>>>> origin/BVLC/parallel
 }  // namespace caffe

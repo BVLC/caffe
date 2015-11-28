@@ -5,8 +5,20 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
+<<<<<<< HEAD
 #include "caffe/neuron_layers.hpp"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/neuron_layers.hpp"
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

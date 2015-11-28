@@ -5,11 +5,32 @@ set -e
 mv Makefile.config.example Makefile.config
 
 if $WITH_CUDA; then
+<<<<<<< HEAD
   # Only generate compute_50.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  # Only generate compute_50.
+=======
+  # Remove default gencode set; only generate compute_50.
+  sed -i 's/-gencode arch=.*\\//' Makefile.config
+  sed -i 's/CUDA_ARCH :=//' Makefile.config
+>>>>>>> origin/BVLC/parallel
+=======
+  # Only generate compute_50.
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   GENCODE="-gencode arch=compute_50,code=sm_50"
   GENCODE="$GENCODE -gencode arch=compute_50,code=compute_50"
   echo "CUDA_ARCH := $GENCODE" >> Makefile.config
 fi
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Remove IO library settings from Makefile.config
 # to avoid conflicts with CI configuration
@@ -29,3 +50,11 @@ INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 WITH_PYTHON_LAYER := 1
 EOF
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

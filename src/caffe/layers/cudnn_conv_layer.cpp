@@ -1,7 +1,28 @@
 #ifdef USE_CUDNN
+<<<<<<< HEAD
 #include <algorithm>
 #include <vector>
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include <algorithm>
+#include <vector>
+
+=======
+#include <vector>
+
+#include "caffe/filler.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/util/im2col.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+#include <algorithm>
+#include <vector>
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -22,6 +43,13 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Initialize algorithm arrays
   fwd_algo_       = new cudnnConvolutionFwdAlgo_t[bottom.size()];
   bwd_filter_algo_= new cudnnConvolutionBwdFilterAlgo_t[bottom.size()];
@@ -48,10 +76,25 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     workspace_bwd_filter_sizes_[i] = 0;
   }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
     CUDA_CHECK(cudaStreamCreate(&stream_[g]));
     CUDNN_CHECK(cudnnCreate(&handle_[g]));
     CUDNN_CHECK(cudnnSetStream(handle_[g], stream_[g]));
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     workspace[g] = NULL;
   }
 
@@ -72,6 +115,32 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     cudnn::createTensor4dDesc<Dtype>(&bottom_desc);
     bottom_descs_.push_back(bottom_desc);
     cudnnTensorDescriptor_t top_desc;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  }
+
+  // Set the indexing parameters.
+  weight_offset_ = (this->num_output_ / this->group_)
+      * (this->channels_ / this->group_) * this->kernel_h_ * this->kernel_w_;
+  bias_offset_ = (this->num_output_ / this->group_);
+
+  // Create filter descriptor.
+  cudnn::createFilterDesc<Dtype>(&filter_desc_,
+      this->num_output_ / this->group_, this->channels_ / this->group_,
+      this->kernel_h_, this->kernel_w_);
+
+  // Create tensor descriptor(s) for data and corresponding convolution(s).
+  for (int i = 0; i < bottom.size(); i++) {
+    cudnnTensor4dDescriptor_t bottom_desc;
+    cudnn::createTensor4dDesc<Dtype>(&bottom_desc);
+    bottom_descs_.push_back(bottom_desc);
+    cudnnTensor4dDescriptor_t top_desc;
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     cudnn::createTensor4dDesc<Dtype>(&top_desc);
     top_descs_.push_back(top_desc);
     cudnnConvolutionDescriptor_t conv_desc;
@@ -83,14 +152,34 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   if (this->bias_term_) {
     cudnn::createTensor4dDesc<Dtype>(&bias_desc_);
   }
+<<<<<<< HEAD
 
   handles_setup_ = true;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+  handles_setup_ = true;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+
+  handles_setup_ = true;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   CHECK_EQ(2, this->num_spatial_axes_)
       << "CuDNNConvolution input must have 2 spatial axes "
       << "(e.g., height and width). "
@@ -111,10 +200,29 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
   size_t workspace_limit_bytes = 8*1024*1024;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  bottom_offset_ = (this->channels_ / this->group_)
+      * this->height_ * this->width_;
+  top_offset_ = (this->num_output_ / this->group_)
+      * this->height_out_ * this->width_out_;
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
         this->num_,
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
         this->channels_ / this->group_, height, width,
         this->channels_ * height * width,
         height * width, width, 1);
@@ -222,6 +330,29 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
       workspace[g] = reinterpret_cast<char *>(workspaceData) + g*max_workspace;
     }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+        this->channels_ / this->group_,
+        this->height_, this->width_,
+        this->channels_ * this->height_ * this->width_,
+        this->height_ * this->width_,
+        this->width_, 1);
+    cudnn::setTensor4dDesc<Dtype>(&top_descs_[i],
+        this->num_,
+        this->num_output_ / this->group_,
+        this->height_out_, this->width_out_,
+        this->num_output_ * this->height_out_ * this->width_out_,
+        this->height_out_ * this->width_out_,
+        this->width_out_, 1);
+    cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
+        filter_desc_, this->pad_h_, this->pad_w_,
+        this->stride_h_, this->stride_w_);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   // Tensor descriptor for bias.
@@ -233,6 +364,13 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
@@ -243,6 +381,21 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   }
   if (this->bias_term_) {
     cudnnDestroyTensorDescriptor(bias_desc_);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  for (int i = 0; i < bottom_descs_.size(); i++) {
+    cudnnDestroyTensor4dDescriptor(bottom_descs_[i]);
+    cudnnDestroyTensor4dDescriptor(top_descs_[i]);
+    cudnnDestroyConvolutionDescriptor(conv_descs_[i]);
+  }
+  if (this->bias_term_) {
+    cudnnDestroyTensor4dDescriptor(bias_desc_);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   cudnnDestroyFilterDescriptor(filter_desc_);
 
@@ -251,6 +404,13 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
     cudnnDestroy(handle_[g]);
   }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   cudaFree(workspaceData);
   delete [] stream_;
   delete [] handle_;
@@ -260,6 +420,16 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   delete [] workspace_fwd_sizes_;
   delete [] workspace_bwd_data_sizes_;
   delete [] workspace_bwd_filter_sizes_;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  delete [] stream_;
+  delete [] handle_;
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 INSTANTIATE_CLASS(CuDNNConvolutionLayer);

@@ -1,12 +1,71 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -20,29 +79,127 @@ void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     // the backward pass.  (Technically, it should be possible to share the diff
     // blob of the first split output with the input, but this seems to cause
     // some strange effects in practice...)
+<<<<<<< HEAD
     CHECK_NE(top[i], bottom[0]) << this->type() << " Layer does not "
         "allow in-place computation.";
     top[i]->ReshapeLike(*bottom[0]);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    CHECK_NE(top[i], bottom[0]) << this->type() << " Layer does not "
+        "allow in-place computation.";
+    top[i]->ReshapeLike(*bottom[0]);
+=======
+    CHECK_NE(top[i], bottom[0]) << this->type_name() << " Layer does not "
+        "allow in-place computation.";
+    top[i]->Reshape(bottom[0]->num(), bottom[0]->channels(),
+                       bottom[0]->height(), bottom[0]->width());
+>>>>>>> origin/BVLC/parallel
+=======
+    CHECK_NE(top[i], bottom[0]) << this->type() << " Layer does not "
+        "allow in-place computation.";
+    top[i]->ReshapeLike(*bottom[0]);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     CHECK_EQ(count_, top[i]->count());
   }
 }
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 void SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < top.size(); ++i) {
     top[i]->ShareData(*bottom[0]);
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 Dtype SplitLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < top->size(); ++i) {
     (*top)[i]->ShareData(*bottom[0]);
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+void SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < top.size(); ++i) {
+    top[i]->ShareData(*bottom[0]);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -59,6 +216,19 @@ void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[0]) {
@@ -69,11 +239,95 @@ void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const Dtype* top_diff = top[i]->const_diff();
       this->device_->axpy(count_, Dtype(1.), top_diff, bottom_diff);
     }
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0]) { return; }
+  if (top.size() == 1) {
+    caffe_copy(count_, top[0]->cpu_diff(), bottom[0]->mutable_cpu_diff());
+    return;
+  }
+  caffe_add(count_, top[0]->cpu_diff(), top[1]->cpu_diff(),
+            bottom[0]->mutable_cpu_diff());
+  // Add remaining top blob diffs.
+  for (int i = 2; i < top.size(); ++i) {
+    const Dtype* top_diff = top[i]->cpu_diff();
+    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+    caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
 INSTANTIATE_CLASS(SplitLayer);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(Split);
 
+=======
+REGISTER_LAYER_CLASS(SPLIT, SplitLayer);
+>>>>>>> origin/BVLC/parallel
 }  // namespace caffe

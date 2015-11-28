@@ -12,6 +12,11 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
@@ -21,15 +26,23 @@ Caffe& Caffe::Get() {
   }
   return *(thread_instance_.get());
 }
+<<<<<<< HEAD
 =======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+thread_specific_ptr<Caffe> Caffe::thread_instance_;
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel
 =======
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel
 =======
-thread_specific_ptr<Caffe> Caffe::thread_instance_;
->>>>>>> origin/BVLC/parallel
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 // random seeding
 int64_t cluster_seedgen(void) {

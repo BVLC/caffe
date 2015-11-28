@@ -63,6 +63,17 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+  int dim = bottom[0]->count() / num;
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   int dim = bottom[0]->count() / num;
 

@@ -41,9 +41,28 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+<<<<<<< HEAD
   ASSERT_EQ(this->blob_top_->num_axes(), 2);
   EXPECT_EQ(this->blob_top_->shape(0), 2);
   EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  ASSERT_EQ(this->blob_top_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
+=======
+  EXPECT_EQ(this->blob_top_->num(), 2);
+  EXPECT_EQ(this->blob_top_->channels(), 3 * 6 * 5);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+>>>>>>> origin/BVLC/parallel
+=======
+  ASSERT_EQ(this->blob_top_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
@@ -52,6 +71,13 @@ TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
   layer_param.mutable_flatten_param()->set_axis(2);
   FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   ASSERT_EQ(this->blob_top_->num_axes(), 3);
   EXPECT_EQ(this->blob_top_->shape(0), 2);
   EXPECT_EQ(this->blob_top_->shape(1), 3);
@@ -87,6 +113,14 @@ TYPED_TEST(FlattenLayerTest, TestForward) {
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),

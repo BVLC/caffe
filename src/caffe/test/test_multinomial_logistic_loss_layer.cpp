@@ -6,11 +6,59 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 =======
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/util/rng.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> master
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

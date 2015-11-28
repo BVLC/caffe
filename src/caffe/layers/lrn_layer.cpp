@@ -1,11 +1,49 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -73,8 +111,21 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -154,6 +205,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 
   // In the end, compute output
 <<<<<<< HEAD
+<<<<<<< HEAD
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 =======
@@ -163,6 +215,50 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
                                     top_data);
   return Dtype(0.);
 >>>>>>> BVLC/device-abstraction
+=======
+  GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
+                                     top_data);
+  GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,
+                                    top_data);
+  return Dtype(0.);
+=======
+  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
+  caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -276,5 +372,15 @@ STUB_GPU_BACKWARD(LRNLayer, CrossChannelBackward);
 #endif
 
 INSTANTIATE_CLASS(LRNLayer);
+<<<<<<< HEAD
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+REGISTER_LAYER_CLASS(LRN, LRNLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

@@ -1,7 +1,28 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <vector>
 
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+#include <algorithm>
+#include <vector>
+
+#include "caffe/layer.hpp"
+#include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -62,6 +83,20 @@ STUB_GPU(ExpLayer);
 #endif
 
 INSTANTIATE_CLASS(ExpLayer);
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(Exp);
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+REGISTER_LAYER_CLASS(Exp);
+
+=======
+REGISTER_LAYER_CLASS(EXP, ExpLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+REGISTER_LAYER_CLASS(Exp);
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

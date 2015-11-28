@@ -26,6 +26,13 @@ def _Net_blobs(self):
     blobs indexed by name
     """
     return OrderedDict(zip(self._blob_names, self._blobs))
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 
 @property
@@ -35,6 +42,14 @@ def _Net_blob_loss_weights(self):
     blob loss weights indexed by name
     """
     return OrderedDict(zip(self._blob_names, self._blob_loss_weights))
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 
 @property

@@ -71,12 +71,65 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // Test that the layer setup got the correct parameters.
   HDF5DataLayer<Dtype> layer(param);
 <<<<<<< HEAD
+<<<<<<< HEAD
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 =======
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
 
   // Test that the layer setup got the correct parameters.
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+
+  // Test that the layer setup got the correct parameters.
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> BVLC/master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> BVLC/master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> BVLC/master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> caffe
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> BVLC/master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> master
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> origin/BVLC/parallel
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);
@@ -86,9 +139,28 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label_->shape(1), 1);
 
+<<<<<<< HEAD
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
   EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
+=======
+  EXPECT_EQ(this->blob_top_label2_->num(), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label2_->height(), 1);
+  EXPECT_EQ(this->blob_top_label2_->width(), 1);
+>>>>>>> origin/BVLC/parallel
+=======
+  EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 

@@ -8,10 +8,61 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layer_factory.hpp"
 =======
 #include "caffe/device.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/device.hpp"
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> master
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -27,11 +78,31 @@ namespace caffe {
  * @brief An interface for the units of computation which can be composed into a
  *        Net.
  *
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
  * Layer%s must implement a Forward function, in which they take their input
  * (bottom) Blob%s (if any) and compute their output Blob%s (if any).
  * They may also implement a Backward function, in which they compute the error
  * gradients with respect to their input Blob%s, given the error gradients with
  * their output Blob%s.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+ * Layer&s must implement a Forward function, in which they take their input
+ * (bottom) Blob&s (if any) and compute their output Blob&s (if any).
+ * They may also implement a Backward function, in which they compute the error
+ * gradients with respect to their input Blob&s, given the error gradients with
+ * their output Blob&s.
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class Layer {
@@ -43,6 +114,7 @@ class Layer {
    */
   explicit Layer(const LayerParameter& param)
 <<<<<<< HEAD
+<<<<<<< HEAD
     : layer_param_(param), is_shared_(false) {
       // Set phase and copy blobs (if there are any).
       phase_ = param.phase();
@@ -50,6 +122,75 @@ class Layer {
     : layer_param_(param), device_(GetDevice<Dtype>()) {
       // The only thing we do is to copy blobs if there are any.
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    : layer_param_(param), device_(GetDevice<Dtype>()) {
+      // The only thing we do is to copy blobs if there are any.
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> BVLC/master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> BVLC/master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> BVLC/master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> caffe
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> BVLC/master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> master
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
         for (int i = 0; i < layer_param_.blobs_size(); ++i) {
@@ -75,11 +216,52 @@ class Layer {
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
     InitMutex();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    InitMutex();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+    InitMutex();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     CheckBlobCounts(bottom, top);
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   /**
@@ -125,6 +307,7 @@ class Layer {
     is_shared_ = is_shared;
   }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
@@ -184,13 +367,230 @@ class Layer {
    */
   inline void Backward(const vector<Blob<Dtype>*>& top,
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
   // functions.
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+  /**
+=======
+  }
+
+=======
+  }
+
+>>>>>>> origin/BVLC/parallel
+  /**
+   * @brief Does layer-specific setup: your layer should implement this function
+   *        as well as Reshape.
+   *
+   * @param bottom
+   *     the preshaped input blobs, whose data fields store the input data for
+   *     this layer
+   * @param top
+   *     the allocated but unshaped output blobs
+   *
+   * This method should do one-time layer specific setup. This includes reading
+   * and processing relevent parameters from the <code>layer_param_</code>.
+   * Setting up the shapes of top blobs and internal buffers should be done in
+   * <code>Reshape</code>, which will be called before the forward pass to
+   * adjust the top blob sizes.
+   */
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+  /**
+<<<<<<< HEAD
+   * @brief Whether a layer should be shared by multiple nets during data
+   *        parallelism. By default, all layers except for data layers should
+   *        not be shared. data layers should be shared to ensure each worker
+   *        solver access data sequentially during data parallelism.
+   */
+  virtual inline bool ShareInParallel() const { return false; }
+
+  /** @brief Return whether this layer is actually shared by other nets.
+   *         If ShareInParallel() is true and using more than one GPU and the
+   *         net has TRAIN phase, then this function is expected return true.
+   */
+  inline bool IsShared() const { return is_shared_; }
+
+  /** @brief Set whether this layer is actually shared by other nets
+   *         If ShareInParallel() is true and using more than one GPU and the
+   *         net has TRAIN phase, then is_shared should be set true.
+   */
+  inline void SetShared(bool is_shared) {
+    CHECK(ShareInParallel() || !is_shared)
+        << type() << "Layer does not support sharing.";
+    is_shared_ = is_shared;
+  }
+
+  /**
+>>>>>>> BVLC/master
+=======
+  }
+
+  /**
+   * @brief Does layer-specific setup: your layer should implement this function
+   *        as well as Reshape.
+   *
+   * @param bottom
+   *     the preshaped input blobs, whose data fields store the input data for
+   *     this layer
+   * @param top
+   *     the allocated but unshaped output blobs
+   *
+   * This method should do one-time layer specific setup. This includes reading
+   * and processing relevent parameters from the <code>layer_param_</code>.
+   * Setting up the shapes of top blobs and internal buffers should be done in
+   * <code>Reshape</code>, which will be called before the forward pass to
+   * adjust the top blob sizes.
+   */
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+  /**
+   * @brief Whether a layer should be shared by multiple nets during data
+   *        parallelism. By default, all layers except for data layers should
+   *        not be shared. data layers should be shared to ensure each worker
+   *        solver access data sequentially during data parallelism.
+   */
+  virtual inline bool ShareInParallel() const { return false; }
+
+  /** @brief Return whether this layer is actually shared by other nets.
+   *         If ShareInParallel() is true and using more than one GPU and the
+   *         net has TRAIN phase, then this function is expected return true.
+   */
+  inline bool IsShared() const { return is_shared_; }
+
+  /** @brief Set whether this layer is actually shared by other nets
+   *         If ShareInParallel() is true and using more than one GPU and the
+   *         net has TRAIN phase, then is_shared should be set true.
+   */
+  inline void SetShared(bool is_shared) {
+    CHECK(ShareInParallel() || !is_shared)
+        << type() << "Layer does not support sharing.";
+    is_shared_ = is_shared;
+  }
+
+  /**
+>>>>>>> BVLC/master
+=======
+  /**
+>>>>>>> master
+=======
+  /**
+>>>>>>> caffe
+=======
+  /**
+>>>>>>> master
+=======
+  /**
+>>>>>>> master
+=======
+  /**
+>>>>>>> BVLC/master
+=======
+  /**
+>>>>>>> master
+=======
+  /**
+>>>>>>> master
+   * @brief Adjust the shapes of top blobs and internal buffers to accommodate
+=======
+   * @brief Adjust the shapes of top blobs and internal buffers to accomodate
+>>>>>>> origin/BVLC/parallel
+=======
+  /**
+   * @brief Adjust the shapes of top blobs and internal buffers to accommodate
+>>>>>>> caffe
+   *        the shapes of the bottom blobs.
+   *
+   * @param bottom the input blobs, with the requested input shapes
+   * @param top the top blobs, which should be reshaped as needed
+   *
+   * This method should reshape top blobs as needed according to the shapes
+   * of the bottom (input) blobs, as well as reshaping any internal buffers
+   * and making any other necessary adjustments so that the layer can
+<<<<<<< HEAD
+<<<<<<< HEAD
+   * accommodate the bottom blobs.
+=======
+   * accomodate the bottom blobs.
+>>>>>>> origin/BVLC/parallel
+=======
+   * accommodate the bottom blobs.
+>>>>>>> caffe
+   */
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) = 0;
+
+  /**
+   * @brief Given the bottom blobs, compute the top blobs and the loss.
+   *
+   * @param bottom
+   *     the input blobs, whose data fields store the input data for this layer
+   * @param top
+   *     the preshaped output blobs, whose data fields will store this layers'
+   *     outputs
+   * \return The total loss from the layer.
+   *
+   * The Forward wrapper calls the relevant device wrapper function
+   * (Forward_cpu or Forward_gpu) to compute the top blob values given the
+   * bottom blobs.  If the layer has any non-zero loss_weights, the wrapper
+   * then computes and returns the loss.
+   *
+   * Your layer should implement Forward_cpu and (optionally) Forward_gpu.
+   */
+  inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Given the top blob error gradients, compute the bottom blob error
+   *        gradients.
+   *
+   * @param top
+   *     the output blobs, whose diff fields store the gradient of the error
+   *     with respect to themselves
+   * @param propagate_down
+   *     a vector with equal length to bottom, with each index indicating
+   *     whether to propagate the error gradients down to the bottom blob at
+   *     the corresponding index
+   * @param bottom
+   *     the input blobs, whose diff fields will store the gradient of the error
+   *     with respect to themselves after Backward is run
+   *
+   * The Backward wrapper calls the relevant device wrapper function
+   * (Backward_cpu or Backward_gpu) to compute the bottom blob diffs given the
+   * top blob diffs.
+   *
+<<<<<<< HEAD
+<<<<<<< HEAD
+   * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
+=======
+   * Your layer should implement Forward_cpu and (optionally) Forward_gpu.
+>>>>>>> origin/BVLC/parallel
+=======
+   * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
+>>>>>>> caffe
+   */
+  inline void Backward(const vector<Blob<Dtype>*>& top,
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
 
@@ -216,6 +616,23 @@ class Layer {
    */
   inline Dtype loss(const int top_index) const {
     return (loss_.size() > top_index) ? loss_[top_index] : Dtype(0);
+<<<<<<< HEAD
+  }
+
+  /**
+   * @brief Sets the loss associated with a top blob at a given index.
+   */
+  inline void set_loss(const int top_index, const Dtype value) {
+    if (loss_.size() <= top_index) {
+      loss_.resize(top_index + 1, Dtype(0));
+    }
+    loss_[top_index] = value;
+  }
+
+  /**
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
   }
 
   /**
@@ -234,6 +651,59 @@ class Layer {
   virtual inline const char* type() const { return ""; }
 
   /**
+=======
+  }
+
+  /**
+   * @brief Sets the loss associated with a top blob at a given index.
+   */
+  inline void set_loss(const int top_index, const Dtype value) {
+    if (loss_.size() <= top_index) {
+      loss_.resize(top_index + 1, Dtype(0));
+    }
+    loss_[top_index] = value;
+  }
+
+  /**
+   * @brief Returns the layer type as an enum value.
+   */
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_NONE;
+  }
+
+  /**
+   * @brief Returns the layer type name.
+   */
+  virtual inline const string& type_name() const {
+    return LayerParameter_LayerType_Name(type());
+  }
+
+  /**
+>>>>>>> origin/BVLC/parallel
+=======
+  }
+
+  /**
+   * @brief Sets the loss associated with a top blob at a given index.
+   */
+  inline void set_loss(const int top_index, const Dtype value) {
+    if (loss_.size() <= top_index) {
+      loss_.resize(top_index + 1, Dtype(0));
+    }
+    loss_[top_index] = value;
+  }
+
+  /**
+>>>>>>> pod-caffe-pod.hpp-merge
+   * @brief Returns the layer type.
+   */
+  virtual inline const char* type() const { return ""; }
+
+  /**
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
    * @brief Returns the exact number of bottom blobs required by the layer,
    *        or -1 if no exact number is required.
    *
@@ -338,8 +808,21 @@ class Layer {
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
+<<<<<<< HEAD
   /** The phase: TRAIN or TEST */
   Phase phase_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  /** The phase: TRAIN or TEST */
+  Phase phase_;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  /** The phase: TRAIN or TEST */
+  Phase phase_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
@@ -347,6 +830,7 @@ class Layer {
   // The math backend abstracts the CPU and the GPU specific
   // implementation details
   Device<Dtype>* device_;
+<<<<<<< HEAD
 
 <<<<<<< HEAD
   /** The vector that indicates whether each top blob has a non-zero weight in
@@ -363,6 +847,21 @@ class Layer {
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 =======
+=======
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -370,7 +869,80 @@ class Layer {
   // If no gpu code is provided, we will simply use cpu code.
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  /** The vector that indicates whether each top blob has a non-zero weight in
+   *  the objective function. */
+  vector<Dtype> loss_;
+
+  /** @brief Using the CPU device, compute the layer output. */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) = 0;
+  /**
+   * @brief Using the GPU device, compute the layer output.
+   *        Fall back to Forward_cpu() if unavailable.
+   */
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     // LOG(WARNING) << "Using CPU code as backup.";
     return Forward_cpu(bottom, top);
   }
@@ -382,15 +954,90 @@ class Layer {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+      vector<Blob<Dtype>*>* bottom) { return; }
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       const vector<Blob<Dtype>*>& bottom) = 0;
   /**
    * @brief Using the GPU device, compute the gradients for any parameters and
    *        for the bottom blobs if propagate_down is true.
    *        Fall back to Backward_cpu() if unavailable.
    */
+<<<<<<< HEAD
 =======
       vector<Blob<Dtype>*>* bottom) { return; }
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
@@ -462,6 +1109,13 @@ class Layer {
     }
   }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
  private:
   /** Whether this layer is actually shared by other nets*/
   bool is_shared_;
@@ -476,6 +1130,14 @@ class Layer {
   /** Unlock forward_mutex_ if this layer is shared */
   void Unlock();
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
 
@@ -483,6 +1145,7 @@ class Layer {
 // gpu specific implementations instead, and should not change these
 // functions.
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -494,6 +1157,84 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  // Lock during forward to ensure sequential forward
+  Lock();
+  Dtype loss = 0;
+  Reshape(bottom, top);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype loss = 0;
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
@@ -522,7 +1263,18 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
+<<<<<<< HEAD
   Unlock();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  Unlock();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  Unlock();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   return loss;
 }
 

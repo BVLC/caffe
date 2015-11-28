@@ -28,6 +28,18 @@
 
 # IPython notebook checkpoints
 .ipynb_checkpoints
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+# CMake generated files
+*.gen.cmake
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Editor temporaries
 *.swp
@@ -41,12 +53,27 @@
 *.*project
 .settings
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # QtCreator files
 *.user
 
 # PyCharm files
 .idea
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # OSX dir files
 .DS_Store
 
@@ -61,9 +88,25 @@ Makefile.config
 data/*
 models/*
 *.caffemodel
+<<<<<<< HEAD
 *.caffemodel.h5
 *.solverstate
 *.solverstate.h5
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+*.caffemodel.h5
+*.solverstate
+*.solverstate.h5
+=======
+*.solverstate
+>>>>>>> origin/BVLC/parallel
+=======
+*.caffemodel.h5
+*.solverstate
+*.solverstate.h5
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 *.binaryproto
 *leveldb
 *lmdb
@@ -76,8 +119,21 @@ distribute/*
 *.testbin
 *.bin
 python/caffe/proto/
+<<<<<<< HEAD
 cmake_build
 .cmake_build
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+cmake_build
+.cmake_build
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+cmake_build
+.cmake_build
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Generated documentation
 docs/_site

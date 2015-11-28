@@ -14,6 +14,7 @@
 #include "google/protobuf/text_format.h"
 #include "stdint.h"
 
+#include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/format.hpp"
@@ -22,6 +23,17 @@ using caffe::Datum;
 using boost::scoped_ptr;
 using std::string;
 namespace db = caffe::db;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+
+using caffe::Dataset;
+using caffe::DatasetFactory;
+using caffe::Datum;
+using caffe::shared_ptr;
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 const int kCIFARSize = 32;
 const int kCIFARImageNBytes = 3072;
@@ -38,9 +50,28 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
 
 void convert_dataset(const string& input_folder, const string& output_folder,
     const string& db_type) {
+<<<<<<< HEAD
   scoped_ptr<db::DB> train_db(db::GetDB(db_type));
   train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
   scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  scoped_ptr<db::DB> train_db(db::GetDB(db_type));
+  train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
+  scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
+=======
+  shared_ptr<Dataset<string, Datum> > train_dataset =
+      DatasetFactory<string, Datum>(db_type);
+  CHECK(train_dataset->open(output_folder + "/cifar10_train_" + db_type,
+      Dataset<string, Datum>::New));
+>>>>>>> origin/BVLC/parallel
+=======
+  scoped_ptr<db::DB> train_db(db::GetDB(db_type));
+  train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
+  scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
@@ -62,6 +93,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       read_image(&data_file, &label, str_buffer);
       datum.set_label(label);
       datum.set_data(str_buffer, kCIFARImageNBytes);
+<<<<<<< HEAD
       string out;
       CHECK(datum.SerializeToString(&out));
       txn->Put(caffe::format_int(fileid * kCIFARBatchSize + itemid, 5), out);
@@ -74,6 +106,51 @@ void convert_dataset(const string& input_folder, const string& output_folder,
   scoped_ptr<db::DB> test_db(db::GetDB(db_type));
   test_db->Open(output_folder + "/cifar10_test_" + db_type, db::NEW);
   txn.reset(test_db->NewTransaction());
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      string out;
+      CHECK(datum.SerializeToString(&out));
+      txn->Put(caffe::format_int(fileid * kCIFARBatchSize + itemid, 5), out);
+    }
+  }
+  txn->Commit();
+  train_db->Close();
+
+  LOG(INFO) << "Writing Testing data";
+  scoped_ptr<db::DB> test_db(db::GetDB(db_type));
+  test_db->Open(output_folder + "/cifar10_test_" + db_type, db::NEW);
+  txn.reset(test_db->NewTransaction());
+=======
+      int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
+          fileid * kCIFARBatchSize + itemid);
+      CHECK(train_dataset->put(string(str_buffer, length), datum));
+    }
+  }
+  CHECK(train_dataset->commit());
+  train_dataset->close();
+
+  LOG(INFO) << "Writing Testing data";
+  shared_ptr<Dataset<string, Datum> > test_dataset =
+      DatasetFactory<string, Datum>(db_type);
+  CHECK(test_dataset->open(output_folder + "/cifar10_test_" + db_type,
+      Dataset<string, Datum>::New));
+>>>>>>> origin/BVLC/parallel
+=======
+      string out;
+      CHECK(datum.SerializeToString(&out));
+      txn->Put(caffe::format_int(fileid * kCIFARBatchSize + itemid, 5), out);
+    }
+  }
+  txn->Commit();
+  train_db->Close();
+
+  LOG(INFO) << "Writing Testing data";
+  scoped_ptr<db::DB> test_db(db::GetDB(db_type));
+  test_db->Open(output_folder + "/cifar10_test_" + db_type, db::NEW);
+  txn.reset(test_db->NewTransaction());
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -82,12 +159,32 @@ void convert_dataset(const string& input_folder, const string& output_folder,
     read_image(&data_file, &label, str_buffer);
     datum.set_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     string out;
     CHECK(datum.SerializeToString(&out));
     txn->Put(caffe::format_int(itemid, 5), out);
   }
   txn->Commit();
   test_db->Close();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
+    CHECK(test_dataset->put(string(str_buffer, length), datum));
+  }
+  CHECK(test_dataset->commit());
+  test_dataset->close();
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 int main(int argc, char** argv) {

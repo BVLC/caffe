@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # Builds Matlab (or Octave) interface. In case of Matlab caffe must be
 # compield as shared library. Octave can link static or shared caffe library
 # To install octave run: sudo apt-get install liboctave-dev
@@ -70,3 +77,12 @@ endif()
 file(GLOB mfiles caffe/*.m)
 install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+project( Matlab )
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

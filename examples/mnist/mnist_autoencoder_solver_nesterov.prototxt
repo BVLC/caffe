@@ -17,4 +17,16 @@ snapshot_prefix: "examples/mnist/mnist_autoencoder_nesterov_train"
 momentum: 0.95
 # solver mode: CPU or GPU
 solver_mode: GPU
+<<<<<<< HEAD
 type: "Nesterov"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+type: "Nesterov"
+=======
+solver_type: NESTEROV
+>>>>>>> origin/BVLC/parallel
+=======
+type: "Nesterov"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

@@ -46,7 +46,19 @@ def main(argv):
     parser.add_argument(
         "--model_def",
         default=os.path.join(pycaffe_dir,
+<<<<<<< HEAD
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+                "../models/bvlc_reference_caffenet/deploy.prototxt"),
+=======
+                "../models/bvlc_reference_caffenet/deploy.prototxt.prototxt"),
+>>>>>>> origin/BVLC/parallel
+=======
+                "../models/bvlc_reference_caffenet/deploy.prototxt"),
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
         help="Model definition file."
     )
     parser.add_argument(

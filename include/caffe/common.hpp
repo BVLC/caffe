@@ -20,7 +20,19 @@
 #include "caffe/util/device_alternate.hpp"
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
+<<<<<<< HEAD
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+// Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+=======
+// Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
+>>>>>>> origin/BVLC/parallel
+=======
+// Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
 // TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
 // remove the following hack.
@@ -66,9 +78,18 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 // See PR #1236
 namespace cv { class Mat; }
 
+=======
+>>>>>>> origin/BVLC/parallel
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
@@ -101,7 +122,20 @@ class Caffe {
  public:
   ~Caffe();
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   inline static Caffe& Get() {
     if (!thread_instance_.get()) {
       thread_instance_.reset(new Caffe());
@@ -110,13 +144,77 @@ class Caffe {
   }
   enum Brew { UNSPECIFIED = -1, CPU, GPU };
   enum Phase { TRAIN, TEST };
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // Thread local context for Caffe. Moved to common.cpp instead of
   // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
   // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+  // Thread local context for Caffe. Moved to common.cpp instead of
+  // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
+  // on OSX. Also fails on Linux with CUDA 7.0.18.
+  static Caffe& Get();
+
+>>>>>>> BVLC/master
+=======
+=======
+>>>>>>> master
+
+  // Thread local context for Caffe. Moved to common.cpp instead of
+  // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
+  // on OSX. Also fails on Linux with CUDA 7.0.18.
+  static Caffe& Get();
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   enum Brew { CPU, GPU };
 
   // This random number generator facade hides boost and CUDA rng
@@ -177,6 +275,10 @@ class Caffe {
 
   Brew mode_;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   int solver_count_;
   bool root_solver_;
 =======
@@ -186,11 +288,19 @@ class Caffe {
   static thread_specific_ptr<Caffe> thread_instance_;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  int solver_count_;
+  bool root_solver_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
  private:
   // The private constructor to avoid duplicate instantiation.

@@ -1,6 +1,19 @@
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+#ifndef OSX
+#include <opencv2/core/core.hpp>
+#endif
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -16,7 +29,19 @@ namespace caffe {
 template <typename Dtype>
 class DataTransformer {
  public:
+<<<<<<< HEAD
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+=======
+  explicit DataTransformer(const TransformationParameter& param);
+>>>>>>> origin/BVLC/parallel
+=======
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual ~DataTransformer() {}
 
   /**
@@ -50,6 +75,13 @@ class DataTransformer {
   void Transform(const vector<Datum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #ifdef USE_OPENCV
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -64,6 +96,14 @@ class DataTransformer {
   void Transform(const vector<cv::Mat> & mat_vector,
                 Blob<Dtype>* transformed_blob);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
@@ -74,8 +114,24 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
+<<<<<<< HEAD
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif  // USE_OPENCV
+=======
+#ifndef OSX
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif
+>>>>>>> origin/BVLC/parallel
+=======
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif  // USE_OPENCV
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   /**
    * @brief Applies the same transformation defined in the data layer's
@@ -90,6 +146,13 @@ class DataTransformer {
    */
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -131,6 +194,18 @@ class DataTransformer {
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
    *
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+ protected:
+   /**
+   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
+   * 
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
    * @param n
    *    The upperbound (exclusive) value of the random number.
    * @return
@@ -144,7 +219,19 @@ class DataTransformer {
 
 
   shared_ptr<Caffe::RNG> rng_;
+<<<<<<< HEAD
   Phase phase_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  Phase phase_;
+=======
+  Caffe::Phase phase_;
+>>>>>>> origin/BVLC/parallel
+=======
+  Phase phase_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
 };
@@ -152,3 +239,13 @@ class DataTransformer {
 }  // namespace caffe
 
 #endif  // CAFFE_DATA_TRANSFORMER_HPP_
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

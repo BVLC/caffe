@@ -45,7 +45,18 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
       layer_param.mutable_dropout_param()->set_dropout_ratio(dropout_ratio);
     }
     DropoutLayer<Dtype> layer(layer_param);
+<<<<<<< HEAD
     layer_param.set_phase(TRAIN);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    layer_param.set_phase(TRAIN);
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+    layer_param.set_phase(TRAIN);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     // Now, check values
@@ -100,6 +111,13 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     GradientChecker<Dtype> checker(1e-2, 1e-3);
     checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   void TestPReLU(PReLULayer<Dtype> *layer) {
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -160,6 +178,14 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     GradientChecker<Dtype> checker(1e-2, 1e-2);
     checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 };
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
@@ -380,6 +406,13 @@ TYPED_TEST(NeuronLayerTest, TestExpGradientBase2Shift1Scale3) {
   const Dtype kScale = 3;
   const Dtype kShift = 1;
   this->TestExpGradient(kBase, kScale, kShift);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 TYPED_TEST(NeuronLayerTest, TestLogLayer) {
@@ -462,6 +495,14 @@ TYPED_TEST(NeuronLayerTest, TestLogGradientBase2Shift1Scale3) {
   const Dtype kScale = 3;
   const Dtype kShift = 1;
   this->TestLogGradient(kBase, kScale, kShift);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 TYPED_TEST(NeuronLayerTest, TestDropoutHalf) {
@@ -533,6 +574,367 @@ TYPED_TEST(NeuronLayerTest, TestBNLLGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+<<<<<<< HEAD
+}
+
+=======
+<<<<<<< HEAD
+}
+
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+TYPED_TEST(NeuronLayerTest, TestPReLUParam) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype* slopes = layer.blobs()[0]->cpu_data();
+  int count = layer.blobs()[0]->count();
+  for (int i = 0; i < count; ++i, ++slopes) {
+    EXPECT_EQ(*slopes, 0.25);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLUForward) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(layer.blobs()[0].get());
+  this->TestPReLU(&layer);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLUForwardChannelShared) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_prelu_param()->set_channel_shared(true);
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  this->TestPReLU(&layer);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLUGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(layer.blobs()[0].get());
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLUGradientChannelShared) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_prelu_param()->set_channel_shared(true);
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLUConsistencyReLU) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter prelu_layer_param;
+  LayerParameter relu_layer_param;
+  relu_layer_param.mutable_relu_param()->set_negative_slope(0.25);
+  PReLULayer<Dtype> prelu(prelu_layer_param);
+  ReLULayer<Dtype> relu(relu_layer_param);
+  // Set up blobs
+  vector<Blob<Dtype>*> blob_bottom_vec_2;
+  vector<Blob<Dtype>*> blob_top_vec_2;
+  shared_ptr<Blob<Dtype> > blob_bottom_2(new Blob<Dtype>());
+  shared_ptr<Blob<Dtype> > blob_top_2(new Blob<Dtype>());
+  blob_bottom_vec_2.push_back(blob_bottom_2.get());
+  blob_top_vec_2.push_back(blob_top_2.get());
+  blob_bottom_2->CopyFrom(*this->blob_bottom_, false, true);
+  // SetUp layers
+  prelu.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  relu.SetUp(blob_bottom_vec_2, blob_top_vec_2);
+  // Check forward
+  prelu.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  relu.Forward(this->blob_bottom_vec_, blob_top_vec_2);
+  for (int s = 0; s < blob_top_2->count(); ++s) {
+    EXPECT_EQ(this->blob_top_->cpu_data()[s], blob_top_2->cpu_data()[s]);
+  }
+  // Check backward
+  shared_ptr<Blob<Dtype> > tmp_blob(new Blob<Dtype>());
+  tmp_blob->ReshapeLike(*blob_top_2.get());
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(tmp_blob.get());
+  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+      this->blob_top_->mutable_cpu_diff());
+  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+      blob_top_2->mutable_cpu_diff());
+  vector<bool> propagate_down;
+  propagate_down.push_back(true);
+  prelu.Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  relu.Backward(blob_top_vec_2, propagate_down, blob_bottom_vec_2);
+  for (int s = 0; s < blob_bottom_2->count(); ++s) {
+    EXPECT_EQ(this->blob_bottom_->cpu_diff()[s], blob_bottom_2->cpu_diff()[s]);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Set layer parameters
+  LayerParameter ip_layer_param;
+  LayerParameter prelu_layer_param;
+  InnerProductParameter *ip_param =
+      ip_layer_param.mutable_inner_product_param();
+  ip_param->mutable_weight_filler()->set_type("gaussian");
+  ip_param->set_num_output(3);
+  InnerProductLayer<Dtype> ip(ip_layer_param);
+  PReLULayer<Dtype> prelu(prelu_layer_param);
+  InnerProductLayer<Dtype> ip2(ip_layer_param);
+  PReLULayer<Dtype> prelu2(prelu_layer_param);
+  // Set up blobs
+  vector<Blob<Dtype>*> blob_bottom_vec_2;
+  vector<Blob<Dtype>*> blob_middle_vec_2;
+  vector<Blob<Dtype>*> blob_top_vec_2;
+  shared_ptr<Blob<Dtype> > blob_bottom_2(new Blob<Dtype>());
+  shared_ptr<Blob<Dtype> > blob_middle_2(new Blob<Dtype>());
+  shared_ptr<Blob<Dtype> > blob_top_2(new Blob<Dtype>());
+  blob_bottom_vec_2.push_back(blob_bottom_2.get());
+  blob_middle_vec_2.push_back(blob_middle_2.get());
+  blob_top_vec_2.push_back(blob_top_2.get());
+  blob_bottom_2->CopyFrom(*this->blob_bottom_, false, true);
+  // SetUp layers
+  ip.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  prelu.SetUp(this->blob_top_vec_, this->blob_top_vec_);
+  ip2.SetUp(blob_bottom_vec_2, blob_middle_vec_2);
+  prelu2.SetUp(blob_middle_vec_2, blob_top_vec_2);
+  caffe_copy(ip2.blobs()[0]->count(), ip.blobs()[0]->cpu_data(),
+      ip2.blobs()[0]->mutable_cpu_data());
+  // Forward in-place
+  ip.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  prelu.Forward(this->blob_top_vec_, this->blob_top_vec_);
+  // Forward non-in-place
+  ip2.Forward(blob_bottom_vec_2, blob_middle_vec_2);
+  prelu2.Forward(blob_middle_vec_2, blob_top_vec_2);
+  // Check numbers
+  for (int s = 0; s < blob_top_2->count(); ++s) {
+    EXPECT_EQ(this->blob_top_->cpu_data()[s], blob_top_2->cpu_data()[s]);
+  }
+  // Fill top diff with random numbers
+  shared_ptr<Blob<Dtype> > tmp_blob(new Blob<Dtype>());
+  tmp_blob->ReshapeLike(*blob_top_2.get());
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(tmp_blob.get());
+  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+      this->blob_top_->mutable_cpu_diff());
+  caffe_copy(blob_top_2->count(), tmp_blob->cpu_data(),
+      blob_top_2->mutable_cpu_diff());
+  // Backward in-place
+  vector<bool> propagate_down;
+  propagate_down.push_back(true);
+  prelu.Backward(this->blob_top_vec_, propagate_down, this->blob_top_vec_);
+  ip.Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  // Backward non-in-place
+  prelu2.Backward(blob_top_vec_2, propagate_down, blob_middle_vec_2);
+  ip2.Backward(blob_middle_vec_2, propagate_down, blob_bottom_vec_2);
+  // Check numbers
+  for (int s = 0; s < blob_bottom_2->count(); ++s) {
+    EXPECT_EQ(this->blob_bottom_->cpu_diff()[s], blob_bottom_2->cpu_diff()[s]);
+  }
+  for (int s = 0; s < ip.blobs()[0]->count(); ++s) {
+    EXPECT_EQ(ip.blobs()[0]->cpu_diff()[s], ip2.blobs()[0]->cpu_diff()[s]);
+  }
+  for (int s = 0; s < ip.blobs()[1]->count(); ++s) {
+    EXPECT_EQ(ip.blobs()[1]->cpu_diff()[s], ip2.blobs()[1]->cpu_diff()[s]);
+  }
+  for (int s = 0; s < prelu.blobs()[0]->count(); ++s) {
+    EXPECT_EQ(prelu.blobs()[0]->cpu_diff()[s],
+        prelu2.blobs()[0]->cpu_diff()[s]);
+  }
+}
+
+#ifdef USE_CUDNN
+template <typename Dtype>
+class CuDNNNeuronLayerTest : public GPUDeviceTest<Dtype> {
+<<<<<<< HEAD
+=======
+=======
+#ifdef USE_CUDNN
+template <typename Dtype>
+class CuDNNNeuronLayerTest : public ::testing::Test {
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+ protected:
+  CuDNNNeuronLayerTest()
+      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
+        blob_top_(new Blob<Dtype>()) {
+    Caffe::set_random_seed(1701);
+    // fill the values
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_top_vec_.push_back(blob_top_);
+  }
+  virtual ~CuDNNNeuronLayerTest() { delete blob_bottom_; delete blob_top_; }
+  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_top_;
+  vector<Blob<Dtype>*> blob_bottom_vec_;
+  vector<Blob<Dtype>*> blob_top_vec_;
+};
+
+TYPED_TEST_CASE(CuDNNNeuronLayerTest, TestDtypes);
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+  LayerParameter layer_param;
+  CuDNNReLULayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+  }
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+  LayerParameter layer_param;
+  CuDNNReLULayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param { negative_slope: 0.01 }", &layer_param));
+  CuDNNReLULayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (top_data[i] >= 0) {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+    } else {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] * 0.01);
+    }
+  }
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param { negative_slope: 0.01 }", &layer_param));
+  CuDNNReLULayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
+  LayerParameter layer_param;
+  CuDNNSigmoidLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_FLOAT_EQ(top_data[i], 1. / (1 + exp(-bottom_data[i])));
+    // check that we squashed the value between 0 and 1
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_LE(top_data[i], 1.);
+  }
+<<<<<<< HEAD
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
+=======
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
+=======
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param { negative_slope: 0.01 }", &layer_param));
+  CuDNNReLULayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (top_data[i] >= 0) {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+    } else {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] * 0.01);
+    }
+  }
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param { negative_slope: 0.01 }", &layer_param));
+  CuDNNReLULayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  CuDNNSigmoidLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_FLOAT_EQ(top_data[i], 1. / (1 + exp(-bottom_data[i])));
+    // check that we squashed the value between 0 and 1
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_LE(top_data[i], 1.);
+  }
+}
+
+TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+=======
 }
 
 TYPED_TEST(NeuronLayerTest, TestPReLUParam) {
@@ -801,6 +1203,8 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   LayerParameter layer_param;
   CuDNNSigmoidLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
@@ -809,6 +1213,16 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidGradientCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   LayerParameter layer_param;
   CuDNNTanHLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -831,6 +1245,16 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
 }
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestTanHGradientCuDNN) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   LayerParameter layer_param;
   CuDNNTanHLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);

@@ -9,10 +9,67 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 const int kMaxBlobAxes = 32;
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> caffe
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -27,6 +84,14 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
+<<<<<<< HEAD
+       : data_(), diff_(), count_(0), capacity_(0) {}
+
+  /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
+  explicit Blob(const int num, const int channels, const int height,
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
        : data_(), diff_(), count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
@@ -35,6 +100,40 @@ class Blob {
   explicit Blob(const vector<int>& shape);
 
   /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
+=======
+       : data_(), diff_(), num_(0), channels_(0), height_(0), width_(0),
+       count_(0), capacity_(0) {}
+  explicit Blob(const int num, const int channels, const int height,
+    const int width);
+  /**
+   * @brief Change the dimensions of the blob, allocating new memory if
+   *        necessary.
+   *
+   * This function can be called both to create an initial allocation
+   * of memory, and to adjust the dimensions of a top blob during Layer::Reshape
+   * or Layer::Forward. When changing the size of blob, memory will only be
+   * reallocated if sufficient memory does not already exist, and excess memory
+   * will never be freed.
+   *
+   * Note that reshaping an input blob and immediately calling Net::Backward is
+   * an error; either Net::Forward or Net::Reshape need to be called to
+   * propagate the new input shape to higher layers.
+   */
+>>>>>>> origin/BVLC/parallel
+=======
+       : data_(), diff_(), count_(0), capacity_(0) {}
+
+  /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
+  explicit Blob(const int num, const int channels, const int height,
+>>>>>>> pod-caffe-pod.hpp-merge
+      const int width);
+  explicit Blob(const vector<int>& shape);
+
+  /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   void Reshape(const int num, const int channels, const int height,
       const int width);
   /**
@@ -156,6 +255,13 @@ class Blob {
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     CHECK_LE(n, num());
     CHECK_GE(channels(), 0);
     CHECK_LE(c, channels());
@@ -164,6 +270,62 @@ class Blob {
     CHECK_GE(width(), 0);
     CHECK_LE(w, width());
     return ((n * channels() + c) * height() + h) * width() + w;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+
+  inline int offset(const vector<int>& indices) const {
+    CHECK_LE(indices.size(), num_axes());
+    int offset = 0;
+    for (int i = 0; i < num_axes(); ++i) {
+      offset *= shape(i);
+      if (indices.size() > i) {
+        CHECK_GE(indices[i], 0);
+        CHECK_LT(indices[i], shape(i));
+        offset += indices[i];
+      }
+    }
+    return offset;
+<<<<<<< HEAD
+  }
+=======
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
   }
 
   inline int offset(const vector<int>& indices) const {
@@ -179,6 +341,52 @@ class Blob {
     }
     return offset;
   }
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+    CHECK_LE(n, num_);
+    CHECK_GE(channels_, 0);
+    CHECK_LE(c, channels_);
+    CHECK_GE(height_, 0);
+    CHECK_LE(h, height_);
+    CHECK_GE(width_, 0);
+    CHECK_LE(w, width_);
+    return ((n * channels_ + c) * height_ + h) * width_ + w;
+  }
+>>>>>>> origin/BVLC/parallel
+=======
+  }
+
+  inline int offset(const vector<int>& indices) const {
+    CHECK_LE(indices.size(), num_axes());
+    int offset = 0;
+    for (int i = 0; i < num_axes(); ++i) {
+      offset *= shape(i);
+      if (indices.size() > i) {
+        CHECK_GE(indices[i], 0);
+        CHECK_LT(indices[i], shape(i));
+        offset += indices[i];
+      }
+    }
+    return offset;
+  }
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief Copy from a source Blob.
    *
@@ -247,15 +455,106 @@ class Blob {
   Dtype sumsq_data() const;
   /// @brief Compute the sum of squares (L2 norm squared) of the diff.
   Dtype sumsq_diff() const;
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+  /// @brief Scale the blob data by a constant factor.
+  void scale_data(Dtype scale_factor);
+  /// @brief Scale the blob diff by a constant factor.
+  void scale_diff(Dtype scale_factor);
+<<<<<<< HEAD
+
+  /**
+   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer%s which simply perform a copy
+=======
+
+<<<<<<< HEAD
+=======
+
+=======
+
+>>>>>>> BVLC/master
+=======
+
+>>>>>>> master
+=======
+
+>>>>>>> caffe
+=======
+
+>>>>>>> master
+=======
+
+>>>>>>> master
+=======
+
+>>>>>>> BVLC/master
+=======
+
+>>>>>>> master
+=======
+
+>>>>>>> caffe
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
   void scale_diff(Dtype scale_factor);
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
    *        data_ of Blob other -- useful in Layer%s which simply perform a copy
+=======
+  /**
+   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer&s which simply perform a copy
+>>>>>>> origin/BVLC/parallel
+=======
+  /**
+   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer%s which simply perform a copy
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's data_, as
@@ -264,7 +563,19 @@ class Blob {
   void ShareData(const Blob& other);
   /**
    * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
+<<<<<<< HEAD
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
+=======
+   *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
+>>>>>>> origin/BVLC/parallel
+=======
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's diff_, as

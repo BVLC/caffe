@@ -21,7 +21,18 @@ display: 200
 max_iter: 70000
 # snapshot intermediate results
 snapshot: 5000
+<<<<<<< HEAD
 snapshot_format: HDF5
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+snapshot_format: HDF5
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+snapshot_format: HDF5
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 snapshot_prefix: "examples/cifar10/cifar10_full"
 # solver mode: CPU or GPU
 solver_mode: GPU

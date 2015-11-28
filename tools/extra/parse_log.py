@@ -3,7 +3,19 @@
 """
 Parse training log
 
+<<<<<<< HEAD
 Evolved from parse_log.sh
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+Evolved from parse_log.sh
+=======
+Competitor to parse_log.sh
+>>>>>>> origin/BVLC/parallel
+=======
+Evolved from parse_log.sh
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 """
 
 import os
@@ -11,7 +23,30 @@ import re
 import extract_seconds
 import argparse
 import csv
+<<<<<<< HEAD
 from collections import OrderedDict
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+from collections import OrderedDict
+=======
+
+
+def get_line_type(line):
+    """Return either 'test' or 'train' depending on line type
+    """
+
+    line_type = None
+    if line.find('Train') != -1:
+        line_type = 'train'
+    elif line.find('Test') != -1:
+        line_type = 'test'
+    return line_type
+>>>>>>> origin/BVLC/parallel
+=======
+from collections import OrderedDict
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 
 def parse_log(path_to_log):
@@ -25,6 +60,13 @@ def parse_log(path_to_log):
     for the two dict_lists
     """
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     regex_iteration = re.compile('Iteration (\d+)')
     regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\deE+-]+)')
@@ -37,24 +79,73 @@ def parse_log(path_to_log):
     test_dict_list = []
     train_row = None
     test_row = None
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    re_iteration = re.compile('Iteration (\d+)')
+    re_accuracy = re.compile('output #\d+: accuracy = ([\.\d]+)')
+    re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
+    re_output_loss = re.compile('output #\d+: loss = ([\.\d]+)')
+    re_lr = re.compile('lr = ([\.\d]+)')
+
+    # Pick out lines of interest
+    iteration = -1
+    test_accuracy = -1
+    learning_rate = float('NaN')
+    train_dict_list = []
+    test_dict_list = []
+    train_dict_names = ('NumIters', 'Seconds', 'TrainingLoss', 'LearningRate')
+    test_dict_names = ('NumIters', 'Seconds', 'TestAccuracy', 'TestLoss')
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
     with open(path_to_log) as f:
         start_time = extract_seconds.get_start_time(f, logfile_year)
 
         for line in f:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
             iteration_match = regex_iteration.search(line)
             if iteration_match:
                 iteration = float(iteration_match.group(1))
             if iteration == -1:
                 # Only start parsing for other stuff if we've found the first
                 # iteration
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+            iteration_match = re_iteration.search(line)
+            if iteration_match:
+                iteration = float(iteration_match.group(1))
+            if iteration == -1:
+                # Only look for other stuff if we've found the first iteration
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
                 continue
 
             time = extract_seconds.extract_datetime_from_line(line,
                                                               logfile_year)
             seconds = (time - start_time).total_seconds()
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
             learning_rate_match = regex_learning_rate.search(line)
             if learning_rate_match:
                 learning_rate = float(learning_rate_match.group(1))
@@ -131,6 +222,47 @@ def fix_initial_nan_learning_rate(dict_list):
 
 def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
                    delimiter=',', verbose=False):
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+            lr_match = re_lr.search(line)
+            if lr_match:
+                learning_rate = float(lr_match.group(1))
+
+            accuracy_match = re_accuracy.search(line)
+            if accuracy_match and get_line_type(line) == 'test':
+                test_accuracy = float(accuracy_match.group(1))
+
+            train_loss_match = re_train_loss.search(line)
+            if train_loss_match:
+                train_loss = float(train_loss_match.group(1))
+                train_dict_list.append({'NumIters': iteration,
+                                        'Seconds': seconds,
+                                        'TrainingLoss': train_loss,
+                                        'LearningRate': learning_rate})
+
+            output_loss_match = re_output_loss.search(line)
+            if output_loss_match and get_line_type(line) == 'test':
+                test_loss = float(output_loss_match.group(1))
+                # NOTE: we assume that (1) accuracy always comes right before
+                # loss for test data so the test_accuracy variable is already
+                # correctly populated and (2) there's one and only one output
+                # named "accuracy" for the test net
+                test_dict_list.append({'NumIters': iteration,
+                                       'Seconds': seconds,
+                                       'TestAccuracy': test_accuracy,
+                                       'TestLoss': test_loss})
+
+    return train_dict_list, train_dict_names, test_dict_list, test_dict_names
+
+
+def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
+                   test_dict_list, test_dict_names, verbose=False):
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     """Save CSV files to output_dir
 
     If the input log file is, e.g., caffe.INFO, the names will be
@@ -139,6 +271,13 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
 
     log_basename = os.path.basename(logfile_path)
     train_filename = os.path.join(output_dir, log_basename + '.train')
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     write_csv(train_filename, train_dict_list, delimiter, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
@@ -155,6 +294,26 @@ def write_csv(output_filename, dict_list, delimiter, verbose=False):
     with open(output_filename, 'w') as f:
         dict_writer = csv.DictWriter(f, fieldnames=dict_list[0].keys(),
                                      dialect=dialect)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    write_csv(train_filename, train_dict_list, train_dict_names, verbose)
+
+    test_filename = os.path.join(output_dir, log_basename + '.test')
+    write_csv(test_filename, test_dict_list, test_dict_names, verbose)
+
+
+def write_csv(output_filename, dict_list, header_names, verbose=False):
+    """Write a CSV file
+    """
+
+    with open(output_filename, 'w') as f:
+        dict_writer = csv.DictWriter(f, header_names)
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
         dict_writer.writeheader()
         dict_writer.writerows(dict_list)
     if verbose:
@@ -176,20 +335,54 @@ def parse_args():
                         action='store_true',
                         help='Print some extra info (e.g., output filenames)')
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     parser.add_argument('--delimiter',
                         default=',',
                         help=('Column delimiter in output files '
                               '(default: \'%(default)s\')'))
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     args = parser.parse_args()
     return args
 
 
 def main():
     args = parse_args()
+<<<<<<< HEAD
     train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
                    test_dict_list, delimiter=args.delimiter)
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    train_dict_list, test_dict_list = parse_log(args.logfile_path)
+    save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
+                   test_dict_list, delimiter=args.delimiter)
+=======
+    train_dict_list, train_dict_names, test_dict_list, test_dict_names = \
+        parse_log(args.logfile_path)
+    save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
+                   train_dict_names, test_dict_list, test_dict_names)
+>>>>>>> origin/BVLC/parallel
+=======
+    train_dict_list, test_dict_list = parse_log(args.logfile_path)
+    save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
+                   test_dict_list, delimiter=args.delimiter)
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 
 if __name__ == '__main__':

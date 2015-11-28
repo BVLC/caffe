@@ -37,11 +37,21 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
 // Upgrade a single V0LayerConnection to the V1LayerParameter format.
 bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
                              V1LayerParameter* layer_param);
+<<<<<<< HEAD
 
 V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
 // Return true iff any layer contains deprecated data transformation parameters.
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
+
+=======
+<<<<<<< HEAD
+
+V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
+
+// Return true iff any layer contains deprecated data transformation parameters.
+bool NetNeedsDataUpgrade(const NetParameter& net_param);
+<<<<<<< HEAD
 
 // Perform all necessary transformations to upgrade old transformation fields
 // into a TransformationParameter.
@@ -70,6 +80,62 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param);
 // Read parameters from a file into a SolverParameter proto message.
 void ReadSolverParamsFromTextFileOrDie(const string& param_file,
                                        SolverParameter* param);
+=======
+
+// Perform all necessary transformations to upgrade old transformation fields
+// into a TransformationParameter.
+void UpgradeNetDataTransformation(NetParameter* net_param);
+=======
+
+V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
+>>>>>>> caffe
+
+// Return true iff any layer contains deprecated data transformation parameters.
+bool NetNeedsDataUpgrade(const NetParameter& net_param);
+
+<<<<<<< HEAD
+// Check for deprecations and upgrade the NetParameter as needed.
+void UpgradeNetAsNeeded(NetParameter* param);
+
+// Read parameters from a file into a NetParameter proto message.
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param);
+void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+                                      NetParameter* param);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+// Perform all necessary transformations to upgrade old transformation fields
+// into a TransformationParameter.
+void UpgradeNetDataTransformation(NetParameter* net_param);
+
+// Return true iff the Net contains any layers specified as V1LayerParameters.
+bool NetNeedsV1ToV2Upgrade(const NetParameter& net_param);
+
+// Perform all necessary transformations to upgrade a NetParameter with
+// deprecated V1LayerParameters.
+bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param);
+
+bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
+                             LayerParameter* layer_param);
+
+const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
+
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param);
+
+bool UpgradeSolverType(SolverParameter* solver_param);
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param);
+
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param);
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 }  // namespace caffe
 

@@ -5,6 +5,17 @@
 #include <vector>
 
 #include "caffe/data_layers.hpp"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -19,11 +30,30 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(batch_size_ * size_, 0) <<
       "batch_size, channels, height, and width must be specified and"
       " positive in memory_data_param";
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   vector<int> label_shape(1, batch_size_);
   top[0]->Reshape(batch_size_, channels_, height_, width_);
   top[1]->Reshape(label_shape);
   added_data_.Reshape(batch_size_, channels_, height_, width_);
   added_label_.Reshape(label_shape);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  top[0]->Reshape(batch_size_, channels_, height_, width_);
+  top[1]->Reshape(batch_size_, 1, 1, 1);
+  added_data_.Reshape(batch_size_, channels_, height_, width_);
+  added_label_.Reshape(batch_size_, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   data_ = NULL;
   labels_ = NULL;
   added_data_.cpu_data();
@@ -33,6 +63,13 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK(!has_new_data_) <<
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       "Can't add data until current data has been consumed.";
   size_t num = datum_vector.size();
   CHECK_GT(num, 0) << "There is no datum to add.";
@@ -75,6 +112,31 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   // num_images == batch_size_
   Dtype* top_data = added_data_.mutable_cpu_data();
   Reset(top_data, top_label, num);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+      "Can't add Datum when earlier ones haven't been consumed"
+      << " by the upper layers";
+  size_t num = datum_vector.size();
+  CHECK_GT(num, 0) << "There is no datum to add";
+  CHECK_LE(num, batch_size_) <<
+      "The number of added datum must be no greater than the batch size";
+
+  // Apply data transformations (mirror, scale, crop...)
+  this->data_transformer_.Transform(datum_vector, &added_data_);
+  // Copy Labels
+  Dtype* top_label = added_label_.mutable_cpu_data();
+  for (int item_id = 0; item_id < num; ++item_id) {
+    top_label[item_id] = datum_vector[item_id].label();
+  }
+  // num_images == batch_size_
+  Dtype* top_data = added_data_.mutable_cpu_data();
+  Reset(top_data, top_label, batch_size_);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   has_new_data_ = true;
 }
 #endif  // USE_OPENCV
@@ -97,6 +159,7 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
   CHECK(!has_new_data_) <<
       "Can't change batch_size until current data has been consumed.";
@@ -112,6 +175,84 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 Dtype MemoryDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype MemoryDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
+  CHECK(!has_new_data_) <<
+      "Can't change batch_size until current data has been consumed.";
+  batch_size_ = new_size;
+  added_data_.Reshape(batch_size_, channels_, height_, width_);
+  added_label_.Reshape(batch_size_, 1, 1, 1);
+}
+
+template <typename Dtype>
+void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
   top[0]->Reshape(batch_size_, channels_, height_, width_);
   top[1]->Reshape(batch_size_, 1, 1, 1);
@@ -124,5 +265,24 @@ Dtype MemoryDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 INSTANTIATE_CLASS(MemoryDataLayer);
 REGISTER_LAYER_CLASS(MemoryData);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
 
+=======
+void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
+  top[0]->set_cpu_data(data_ + pos_ * size_);
+  top[1]->set_cpu_data(labels_ + pos_);
+  pos_ = (pos_ + batch_size_) % n_;
+  has_new_data_ = false;
+}
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+
+INSTANTIATE_CLASS(MemoryDataLayer);
+REGISTER_LAYER_CLASS(MEMORY_DATA, MemoryDataLayer);
+>>>>>>> origin/BVLC/parallel
 }  // namespace caffe

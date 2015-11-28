@@ -32,7 +32,19 @@ def parse_readme_frontmatter(dirname):
     with open(readme_filename) as f:
         lines = [line.strip() for line in f.readlines()]
     top = lines.index('---')
+<<<<<<< HEAD
     bottom = lines.index('---', top + 1)
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    bottom = lines.index('---', top + 1)
+=======
+    bottom = lines[top + 1:].index('---')
+>>>>>>> origin/BVLC/parallel
+=======
+    bottom = lines.index('---', top + 1)
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))
     assert all(key in frontmatter for key in required_keys)
     return dirname, frontmatter

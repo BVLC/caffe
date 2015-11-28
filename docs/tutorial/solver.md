@@ -6,6 +6,13 @@ title: Solver / Model Optimization
 The solver orchestrates model optimization by coordinating the network's forward inference and backward gradients to form parameter updates that attempt to improve the loss.
 The responsibilities of learning are divided between the Solver for overseeing the optimization and generating parameter updates and the Net for yielding loss and gradients.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 The Caffe solvers are:
 
 - Stochastic Gradient Descent (`type: "SGD"`),
@@ -14,6 +21,15 @@ The Caffe solvers are:
 - Adam (`type: "Adam"`),
 - Nesterov's Accelerated Gradient (`type: "Nesterov"`) and
 - RMSprop (`type: "RMSProp"`)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov's Accelerated Gradient (NAG).
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 The solver
 
@@ -51,7 +67,19 @@ The parameter update $$\Delta W$$ is formed by the solver from the error gradien
 
 ### SGD
 
+<<<<<<< HEAD
 **Stochastic gradient descent** (`type: "SGD"`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+**Stochastic gradient descent** (`type: "SGD"`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
+=======
+**Stochastic gradient descent** (`solver_type: SGD`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
+>>>>>>> origin/BVLC/parallel
+=======
+**Stochastic gradient descent** (`type: "SGD"`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 The **learning rate** $$ \alpha $$ is the weight of the negative gradient.
 The **momentum** $$ \mu $$ is the weight of the previous update.
 
@@ -111,6 +139,13 @@ If learning diverges (e.g., you start to see very large or `NaN` or `inf` loss v
     [ImageNet Classification with Deep Convolutional Neural Networks](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf).
     *Advances in Neural Information Processing Systems*, 2012.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 ### AdaDelta
 
 The **AdaDelta** (`type: "AdaDelta"`) method (M. Zeiler [1]) is a "robust learning rate method". It is a gradient-based optimization method (like SGD). The update formulas are
@@ -140,6 +175,17 @@ $$
 ### AdaGrad
 
 The **adaptive gradient** (`type: "AdaGrad"`) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to "find needles in haystacks in the form of very predictive but rarely seen features," in Duchi et al.'s words.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+### AdaGrad
+
+The **adaptive gradient** (`solver_type: ADAGRAD`) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to "find needles in haystacks in the form of very predictive but rarely seen features," in Duchi et al.'s words.
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 Given the update information from all previous iterations $$ \left( \nabla L(W) \right)_{t'} $$ for $$ t' \in \{1, 2, ..., t\} $$,
 the update formulas proposed by [1] are as follows, specified for each component $$i$$ of the weights $$W$$:
 
@@ -157,6 +203,13 @@ Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementa
     [Adaptive Subgradient Methods for Online Learning and Stochastic Optimization](http://www.magicbroom.info/Papers/DuchiHaSi10.pdf).
     *The Journal of Machine Learning Research*, 2011.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 ### Adam
 
 The **Adam** (`type: "Adam"`), proposed in Kingma et al. [1], is a gradient-based optimization method (like SGD). This includes an "adaptive moment estimation" ($$m_t, v_t$$) and can be regarded as a generalization of AdaGrad. The update formulas are
@@ -182,6 +235,17 @@ Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon 
 ### NAG
 
 **Nesterov's accelerated gradient** (`type: "Nesterov"`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+### NAG
+
+**Nesterov's accelerated gradient** (`solver_type: NAG`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 Though the required assumptions to achieve the $$ \mathcal{O}(1/t^2) $$ convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].
 
 The weight update formulas look very similar to the SGD updates given above:
@@ -204,6 +268,13 @@ What distinguishes the method from SGD is the weight setting $$ W $$ on which we
     [On the Importance of Initialization and Momentum in Deep Learning](http://www.cs.toronto.edu/~fritz/absps/momentum.pdf).
     *Proceedings of the 30th International Conference on Machine Learning*, 2013.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 ### RMSprop
 
 The **RMSprop** (`type: "RMSProp"`), suggested by Tieleman in a Coursera course lecture, is a gradient-based optimization method (like SGD). The update formulas are
@@ -226,6 +297,14 @@ If the gradient updates results in oscillations the gradient is reduced by times
     [RMSProp: Divide the gradient by a running average of its recent magnitude](http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf).
     *COURSERA: Neural Networks for Machine Learning.Technical report*, 2012.
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 ## Scaffolding
 
 The solver scaffolding prepares the optimization method and initializes the model to be learned in `Solver::Presolve()`.

@@ -2,7 +2,18 @@
 #include "gtest/gtest.h"
 
 #include "caffe/internal_thread.hpp"
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/util/math_functions.hpp"
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -14,6 +25,13 @@ class InternalThreadTest : public ::testing::Test {};
 TEST_F(InternalThreadTest, TestStartAndExit) {
   InternalThread thread;
   EXPECT_FALSE(thread.is_started());
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   thread.StartInternalThread();
   EXPECT_TRUE(thread.is_started());
   thread.StopInternalThread();
@@ -49,5 +67,19 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
   t3.StopInternalThread();
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  EXPECT_TRUE(thread.StartInternalThread());
+  EXPECT_TRUE(thread.is_started());
+  EXPECT_TRUE(thread.WaitForInternalThreadToExit());
+  EXPECT_FALSE(thread.is_started());
+}
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe
 

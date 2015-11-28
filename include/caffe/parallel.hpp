@@ -1,6 +1,11 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
@@ -43,11 +48,16 @@ class Params {
   const size_t size_;           // Size of buffers
   Dtype* data_;                 // Network parameters
   Dtype* diff_;                 // Gradient
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #ifndef CAFFE_PARALLEL_H_
 #define CAFFE_PARALLEL_H_
 
@@ -182,11 +192,17 @@ class Params {
   friend class GPUParams;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 DISABLE_COPY_AND_ASSIGN(Params);
 };
@@ -194,6 +210,11 @@ DISABLE_COPY_AND_ASSIGN(Params);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 // Params stored in GPU memory.
 template<typename Dtype>
 class GPUParams : public Params<Dtype> {
@@ -264,11 +285,16 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 };
 
 }  // namespace caffe
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #ifndef CPU_ONLY
 
 // Params on a GPU
@@ -690,10 +716,16 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #endif

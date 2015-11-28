@@ -1,4 +1,11 @@
 name: "FlickrStyleCaffeNet"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "data"
   type: "ImageData"
@@ -12,12 +19,32 @@ layer {
     crop_size: 227
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "data"
+  type: IMAGE_DATA
+  top: "data"
+  top: "label"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   image_data_param {
     source: "data/flickr_style/train.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "data"
@@ -32,12 +59,39 @@ layer {
     crop_size: 227
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  transform_param {
+    crop_size: 227
+    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+    mirror: true
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: IMAGE_DATA
+  top: "data"
+  top: "label"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   image_data_param {
     source: "data/flickr_style/test.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "conv1"
@@ -52,6 +106,30 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  transform_param {
+    crop_size: 227
+    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+    mirror: false
+  }
+  include: { phase: TEST }
+}
+layers {
+  name: "conv1"
+  type: CONVOLUTION
+  bottom: "data"
+  top: "conv1"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 96
     kernel_size: 11
@@ -66,6 +144,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu1"
   type: "ReLU"
@@ -75,6 +160,23 @@ layer {
 layer {
   name: "pool1"
   type: "Pooling"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu1"
+  type: RELU
+  bottom: "conv1"
+  top: "conv1"
+}
+layers {
+  name: "pool1"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -83,9 +185,27 @@ layer {
     stride: 2
   }
 }
+<<<<<<< HEAD
 layer {
   name: "norm1"
   type: "LRN"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+layer {
+  name: "norm1"
+  type: "LRN"
+=======
+layers {
+  name: "norm1"
+  type: LRN
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "norm1"
+  type: "LRN"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "pool1"
   top: "norm1"
   lrn_param {
@@ -94,6 +214,13 @@ layer {
     beta: 0.75
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "conv2"
   type: "Convolution"
@@ -107,6 +234,23 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "conv2"
+  type: CONVOLUTION
+  bottom: "norm1"
+  top: "conv2"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 256
     pad: 2
@@ -122,6 +266,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu2"
   type: "ReLU"
@@ -131,6 +282,23 @@ layer {
 layer {
   name: "pool2"
   type: "Pooling"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu2"
+  type: RELU
+  bottom: "conv2"
+  top: "conv2"
+}
+layers {
+  name: "pool2"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "conv2"
   top: "pool2"
   pooling_param {
@@ -139,9 +307,27 @@ layer {
     stride: 2
   }
 }
+<<<<<<< HEAD
 layer {
   name: "norm2"
   type: "LRN"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+layer {
+  name: "norm2"
+  type: "LRN"
+=======
+layers {
+  name: "norm2"
+  type: LRN
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "norm2"
+  type: "LRN"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "pool2"
   top: "norm2"
   lrn_param {
@@ -150,6 +336,13 @@ layer {
     beta: 0.75
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "conv3"
   type: "Convolution"
@@ -163,6 +356,23 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "conv3"
+  type: CONVOLUTION
+  bottom: "norm2"
+  top: "conv3"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 384
     pad: 1
@@ -177,6 +387,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu3"
   type: "ReLU"
@@ -196,6 +413,29 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu3"
+  type: RELU
+  bottom: "conv3"
+  top: "conv3"
+}
+layers {
+  name: "conv4"
+  type: CONVOLUTION
+  bottom: "conv3"
+  top: "conv4"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 384
     pad: 1
@@ -211,6 +451,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu4"
   type: "ReLU"
@@ -230,6 +477,29 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu4"
+  type: RELU
+  bottom: "conv4"
+  top: "conv4"
+}
+layers {
+  name: "conv5"
+  type: CONVOLUTION
+  bottom: "conv4"
+  top: "conv5"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 256
     pad: 1
@@ -245,6 +515,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu5"
   type: "ReLU"
@@ -254,6 +531,23 @@ layer {
 layer {
   name: "pool5"
   type: "Pooling"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu5"
+  type: RELU
+  bottom: "conv5"
+  top: "conv5"
+}
+layers {
+  name: "pool5"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "conv5"
   top: "pool5"
   pooling_param {
@@ -262,6 +556,13 @@ layer {
     stride: 2
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "fc6"
   type: "InnerProduct"
@@ -275,6 +576,23 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "fc6"
+  type: INNER_PRODUCT
+  bottom: "pool5"
+  top: "fc6"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 4096
     weight_filler {
@@ -287,6 +605,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu6"
   type: "ReLU"
@@ -296,12 +621,36 @@ layer {
 layer {
   name: "drop6"
   type: "Dropout"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu6"
+  type: RELU
+  bottom: "fc6"
+  top: "fc6"
+}
+layers {
+  name: "drop6"
+  type: DROPOUT
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "fc6"
   top: "fc6"
   dropout_param {
     dropout_ratio: 0.5
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "fc7"
   type: "InnerProduct"
@@ -316,6 +665,24 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "fc7"
+  type: INNER_PRODUCT
+  bottom: "fc6"
+  top: "fc7"
+  # Note that blobs_lr can be set to 0 to disable any fine-tuning of this, and any other, layer
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 4096
     weight_filler {
@@ -328,6 +695,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu7"
   type: "ReLU"
@@ -337,12 +711,36 @@ layer {
 layer {
   name: "drop7"
   type: "Dropout"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu7"
+  type: RELU
+  bottom: "fc7"
+  top: "fc7"
+}
+layers {
+  name: "drop7"
+  type: DROPOUT
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "fc7"
   top: "fc7"
   dropout_param {
     dropout_ratio: 0.5
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "fc8_flickr"
   type: "InnerProduct"
@@ -357,6 +755,24 @@ layer {
     lr_mult: 20
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "fc8_flickr"
+  type: INNER_PRODUCT
+  bottom: "fc7"
+  top: "fc8_flickr"
+  # blobs_lr is set to higher than for other layers, because this layer is starting from random while the others are already trained
+  blobs_lr: 10
+  blobs_lr: 20
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 20
     weight_filler {
@@ -369,6 +785,13 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "accuracy"
   type: "Accuracy"
@@ -385,4 +808,25 @@ layer {
   bottom: "fc8_flickr"
   bottom: "label"
   top: "loss"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "fc8_flickr"
+  bottom: "label"
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "fc8_flickr"
+  bottom: "label"
+  top: "accuracy"
+  include: { phase: TEST }
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }

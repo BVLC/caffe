@@ -5,6 +5,7 @@
 #include "thrust/device_vector.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 =======
@@ -12,6 +13,65 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -30,6 +90,13 @@ __global__ void kernel_channel_max(const int num, const int channels,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 __global__ void kernel_channel_subtract(const int count,
     const int num, const int channels,
     const int spatial_dim, const Dtype* channel_max, Dtype* data) {
@@ -37,6 +104,22 @@ __global__ void kernel_channel_subtract(const int count,
     int n = index / channels / spatial_dim;
     int s = index % spatial_dim;
     data[index] -= channel_max[n * spatial_dim + s];
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+__global__ void kernel_channel_subtract(const int num, const int channels,
+    const int spatial_dim, Dtype* data, const Dtype* channel_max) {
+  CUDA_KERNEL_LOOP(index, num * spatial_dim) {
+    int n = index / spatial_dim;
+    int s = index % spatial_dim;
+    for (int c = 0; c < channels; ++c) {
+      data[(n * channels + c) * spatial_dim + s] -= channel_max[index];
+    }
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
@@ -62,6 +145,13 @@ __global__ void kernel_channel_sum(const int num, const int channels,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 __global__ void kernel_channel_div(const int count,
     const int num, const int channels,
     const int spatial_dim, const Dtype* channel_sum, Dtype* data) {
@@ -69,6 +159,22 @@ __global__ void kernel_channel_div(const int count,
     int n = index / channels / spatial_dim;
     int s = index % spatial_dim;
     data[index] /= channel_sum[n * spatial_dim + s];
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+__global__ void kernel_channel_div(const int num, const int channels,
+    const int spatial_dim, Dtype* data, const Dtype* channel_sum) {
+  CUDA_KERNEL_LOOP(index, num * spatial_dim) {
+    int n = index / spatial_dim;
+    int s = index % spatial_dim;
+    for (int c = 0; c < channels; ++c) {
+      data[(n * channels + c) * spatial_dim + s] /= channel_sum[index];
+    }
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
@@ -95,15 +201,30 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
 <<<<<<< HEAD
+<<<<<<< HEAD
   int count = bottom[0]->count();
   int channels = top[0]->shape(softmax_axis_);
   caffe_copy(count, bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   int num = bottom[0]->num();
+<<<<<<< HEAD
   int dim = bottom[0]->count() / bottom[0]->num();
   GetDevice<Dtype>(Caffe::GPU)->copy(bottom[0]->count(), bottom_data, top_data);
   // we need to subtract the max to avoid numerical issues, compute the exp,
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
   // and then normalize.
   // compute max
@@ -119,6 +240,68 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       scale_data, top_data);
   // exponentiate
 =======
+=======
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+  int count = bottom[0]->count();
+  int channels = top[0]->shape(softmax_axis_);
+  caffe_copy(count, bottom_data, top_data);
+  // We need to subtract the max to avoid numerical issues, compute the exp,
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   kernel_get_max<Dtype><<<CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, bottom_data, scale_data);
   // subtraction
@@ -126,27 +309,258 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                      -1., scale_data,
                                      sum_multiplier_.gpu_data(), 1., top_data);
   // Perform exponentiation
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+=======
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> master
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+  // exponentiate
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+>>>>>>> pod-caffe-pod.hpp-merge
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, top_data, top_data);
   // sum after exp
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   GetDevice<Dtype>(Caffe::GPU)->gemv(CblasNoTrans, num, dim, 1., top_data,
                                      sum_multiplier_.gpu_data(), 0.,
                                      scale_data);
   // Do division
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
       CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
       scale_data);
   // divide
+<<<<<<< HEAD
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
       CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, top_data);
+=======
+  // NOLINT_NEXT_LINE(whitespace/operators)
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  // NOLINT_NEXT_LINE(whitespace/operators)
+=======
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+  // exponentiate
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, top_data, top_data);
+  // sum after exp
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> master
+  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // divide
+  // NOLINT_NEXT_LINE(whitespace/operators)
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+  // NOLINT_NEXT_LINE(whitespace/operators)
+=======
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+  // exponentiate
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, top_data, top_data);
+  // sum after exp
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> master
+=======
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+  // exponentiate
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, top_data, top_data);
+  // sum after exp
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> BVLC/master
+=======
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+  // exponentiate
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, top_data, top_data);
+  // sum after exp
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> master
+=======
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> master
+=======
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+  // exponentiate
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, top_data, top_data);
+  // sum after exp
+  // NOLINT_NEXT_LINE(whitespace/operators)
+>>>>>>> caffe
+  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+      scale_data);
+  // divide
+  // NOLINT_NEXT_LINE(whitespace/operators)
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+  kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+=======
+  int channels = bottom[0]->channels();
+  int spatial_dim = bottom[0]->height() * bottom[0]->width();
+  caffe_copy(bottom[0]->count(), bottom_data, top_data);
+  // We need to subtract the max to avoid numerical issues, compute the exp,
+  // and then normalize.
+  // compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_data,
+      scale_data);
+  // subtract
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_data,
+      scale_data);
+  // exponentiate
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(num * channels * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num * channels * spatial_dim, top_data,
+      top_data);
+  // sum after exp
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_data,
+      scale_data);
+  // divide
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_data,
+      scale_data);
+>>>>>>> origin/BVLC/parallel
+=======
+  kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, top_data);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -154,6 +568,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   Dtype* scale_data = scale_.mutable_gpu_data();
@@ -170,6 +585,19 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, bottom_diff);
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   int num = top[0]->num();
   int dim = top[0]->count() / top[0]->num();
@@ -191,7 +619,113 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                      -1., scale_.gpu_data(),
                                      sum_multiplier_.gpu_data(), 1.,
                                      bottom_diff);
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> BVLC/master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> BVLC/master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> caffe
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> BVLC/master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+>>>>>>> caffe
+  int count = top[0]->count();
+  int channels = top[0]->shape(softmax_axis_);
+  caffe_copy(count, top_diff, bottom_diff);
+  // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff.
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_dot<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_,
+      top_diff, top_data, scale_data);
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
+      scale_data, bottom_diff);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+  int num = top[0]->num();
+  int channels = top[0]->channels();
+  int spatial_dim = top[0]->height() * top[0]->width();
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff.
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_dot<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_diff, top_data,
+      scale_data);
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
+      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, bottom_diff,
+      scale_data);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // elementwise multiplication
   GetDevice<Dtype>(Caffe::GPU)->mul(top[0]->count(), bottom_diff, top_data,
                                     bottom_diff);

@@ -4,6 +4,16 @@
 set -e
 
 MAKE="make --jobs=$NUM_THREADS"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
 # This ppa is for gflags and glog
@@ -11,8 +21,24 @@ add-apt-repository -y ppa:tuleu/precise-backports
 apt-get -y update
 apt-get install \
     wget git curl \
+<<<<<<< HEAD
     python-dev python-numpy python3-dev\
     libleveldb-dev libsnappy-dev libopencv-dev \
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    python-dev python-numpy python3-dev\
+    libleveldb-dev libsnappy-dev libopencv-dev \
+=======
+    python-dev python-numpy \
+    libleveldb-dev libsnappy-dev libopencv-dev \
+    libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev \
+>>>>>>> origin/BVLC/parallel
+=======
+    python-dev python-numpy python3-dev\
+    libleveldb-dev libsnappy-dev libopencv-dev \
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
@@ -22,10 +48,28 @@ apt-get install \
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
 # Caffe requires a minimum CMake version of 2.8.8.
 if $WITH_CMAKE; then
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   # cmake 3 will make sure that the python interpreter and libraries match
   wget --no-check-certificate http://www.cmake.org/files/v3.2/cmake-3.2.3-Linux-x86_64.sh -O cmake3.sh
   chmod +x cmake3.sh
   ./cmake3.sh --prefix=/usr/ --skip-license --exclude-subdir
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  add-apt-repository -y ppa:ubuntu-sdk-team/ppa
+  apt-get -y update
+  apt-get -y install cmake
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 fi
 
 # Install CUDA, if needed
@@ -46,16 +90,44 @@ if $WITH_CUDA; then
 fi
 
 # Install LMDB
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 LMDB_URL=https://github.com/LMDB/lmdb/archive/LMDB_0.9.14.tar.gz
 LMDB_FILE=/tmp/lmdb.tar.gz
 pushd .
 wget $LMDB_URL -O $LMDB_FILE
 tar -C /tmp -xzvf $LMDB_FILE
 cd /tmp/lmdb*/libraries/liblmdb/
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+LMDB_URL=ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.39.tgz
+LMDB_FILE=/tmp/openldap.tgz
+pushd .
+curl $LMDB_URL -o $LMDB_FILE
+tar -C /tmp -xzvf $LMDB_FILE
+cd /tmp/openldap*/libraries/liblmdb/
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 $MAKE
 $MAKE install
 popd
 rm -f $LMDB_FILE
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Install the Python runtime dependencies via miniconda (this is much faster
 # than using pip for everything).
@@ -97,3 +169,11 @@ if [ "$PYTHON_VERSION" -eq "3" ]; then
 else
   pip install protobuf
 fi
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

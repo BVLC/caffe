@@ -1,5 +1,15 @@
 #include <vector>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+#include "caffe/layer.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -9,7 +19,19 @@ template <typename Dtype>
 void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::LayerSetUp(bottom, top);
+<<<<<<< HEAD
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+=======
+  CHECK_NE(top[0], bottom[0]) << this->type_name() << " Layer does not "
+>>>>>>> origin/BVLC/parallel
+=======
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     "allow in-place computation.";
 }
 
@@ -39,6 +61,20 @@ STUB_GPU(AbsValLayer);
 #endif
 
 INSTANTIATE_CLASS(AbsValLayer);
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(AbsVal);
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+REGISTER_LAYER_CLASS(AbsVal);
+
+=======
+REGISTER_LAYER_CLASS(ABSVAL, AbsValLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+REGISTER_LAYER_CLASS(AbsVal);
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

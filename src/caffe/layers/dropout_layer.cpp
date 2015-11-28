@@ -3,15 +3,75 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/vision_layers.hpp"
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -61,7 +121,19 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+<<<<<<< HEAD
     if (this->phase_ == TRAIN) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    if (this->phase_ == TRAIN) {
+=======
+    if (Caffe::phase() == Caffe::TRAIN) {
+>>>>>>> origin/BVLC/parallel
+=======
+    if (this->phase_ == TRAIN) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       const unsigned int* mask = rand_vec_.cpu_data();
       const int count = bottom[0]->count();
       for (int i = 0; i < count; ++i) {
@@ -80,6 +152,18 @@ STUB_GPU(DropoutLayer);
 #endif
 
 INSTANTIATE_CLASS(DropoutLayer);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(Dropout);
 
+=======
+REGISTER_LAYER_CLASS(DROPOUT, DropoutLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+REGISTER_LAYER_CLASS(Dropout);
+
+>>>>>>> caffe
 }  // namespace caffe

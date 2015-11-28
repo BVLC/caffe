@@ -1,6 +1,13 @@
 name: "MNISTAutoencoder"
 layer {
   name: "data"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   type: "Data"
   top: "data"
   include {
@@ -11,9 +18,30 @@ layer {
   }
   data_param {
     source: "examples/mnist/mnist_train_lmdb"
+<<<<<<< HEAD
     batch_size: 100
     backend: LMDB
   }
+}
+layer {
+=======
+<<<<<<< HEAD
+=======
+  type: DATA
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    backend: LMDB
+>>>>>>> origin/BVLC/parallel
+    batch_size: 100
+    backend: LMDB
+  }
+<<<<<<< HEAD
+=======
+  transform_param {
+    scale: 0.0039215684
+  }
+  include: { phase: TRAIN }
+>>>>>>> origin/BVLC/parallel
 }
 layer {
   name: "data"
@@ -27,6 +55,96 @@ layer {
     scale: 0.0039215684
   }
   data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+<<<<<<< HEAD
+    batch_size: 100
+    backend: LMDB
+  }
+}
+layer {
+>>>>>>> pod-caffe-pod.hpp-merge
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+<<<<<<< HEAD
+    stage: "test-on-train"
+=======
+    stage: "test-on-test"
+=======
+    backend: LMDB
+    batch_size: 100
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+<<<<<<< HEAD
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+=======
+<<<<<<< HEAD
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+=======
+  include: {
+    phase: TEST
+    stage: 'test-on-train'
+  }
+=======
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+<<<<<<< HEAD
+    stage: "test-on-test"
+=======
+    stage: "test-on-train"
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+<<<<<<< HEAD
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+}
+layer {
+=======
+<<<<<<< HEAD
+    source: "examples/mnist/mnist_test_lmdb"
+    backend: LMDB
+>>>>>>> origin/BVLC/parallel
+    batch_size: 100
+    backend: LMDB
+  }
+<<<<<<< HEAD
+=======
+  transform_param {
+    scale: 0.0039215684
+  }
+  include: {
+    phase: TEST
+    stage: 'test-on-test'
+  }
+>>>>>>> origin/BVLC/parallel
+=======
     source: "examples/mnist/mnist_train_lmdb"
     batch_size: 100
     backend: LMDB
@@ -48,8 +166,10 @@ layer {
     batch_size: 100
     backend: LMDB
   }
+>>>>>>> caffe
 }
 layer {
+>>>>>>> pod-caffe-pod.hpp-merge
   name: "flatdata"
   type: "Flatten"
   bottom: "data"
@@ -305,6 +425,17 @@ layer {
   bottom: "decode1"
   bottom: "flatdata"
   top: "cross_entropy_loss"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  name: "loss"
+  type: SIGMOID_CROSS_ENTROPY_LOSS
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   loss_weight: 1
 }
 layer {
@@ -312,6 +443,17 @@ layer {
   type: "Sigmoid"
   bottom: "decode1"
   top: "decode1neuron"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  name: "decode1neuron"
+  type: SIGMOID
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "loss"
@@ -319,5 +461,16 @@ layer {
   bottom: "decode1neuron"
   bottom: "flatdata"
   top: "l2_error"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  name: "loss"
+  type: EUCLIDEAN_LOSS
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   loss_weight: 0
 }

@@ -14,17 +14,30 @@ SyncedMemory::~SyncedMemory() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
       CUDA_CHECK(cudaSetDevice(gpu_device_));
     }
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
@@ -35,12 +48,51 @@ inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
 <<<<<<< HEAD
+<<<<<<< HEAD
     CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, cpu_ptr_);
 =======
     CaffeMallocHost(&cpu_ptr_, size_);
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    CaffeMallocHost(&cpu_ptr_, size_);
+    GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+    CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
+    caffe_memset(size_, 0, cpu_ptr_);
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
     break;
@@ -132,6 +184,25 @@ void SyncedMemory::set_gpu_data(void* data) {
   own_gpu_data_ = false;
 #else
   NO_GPU;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+#endif
+}
+
+void SyncedMemory::set_gpu_data(void* data) {
+#ifndef CPU_ONLY
+  CHECK(data);
+  if (own_gpu_data_) {
+    CUDA_CHECK(cudaFree(gpu_ptr_));
+  }
+  gpu_ptr_ = data;
+  head_ = HEAD_AT_GPU;
+  own_gpu_data_ = false;
+#else
+  NO_GPU;
+<<<<<<< HEAD
 #endif
 }
 
@@ -160,20 +231,10 @@ void SyncedMemory::set_gpu_data(void* data) {
   own_gpu_data_ = false;
 #else
   NO_GPU;
-#endif
-}
-
-void SyncedMemory::set_gpu_data(void* data) {
-#ifndef CPU_ONLY
-  CHECK(data);
-  if (own_gpu_data_) {
-    CUDA_CHECK(cudaFree(gpu_ptr_));
-  }
-  gpu_ptr_ = data;
-  head_ = HEAD_AT_GPU;
-  own_gpu_data_ = false;
-#else
-  NO_GPU;
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #endif
 }
 
@@ -196,37 +257,20 @@ void* SyncedMemory::mutable_gpu_data() {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
-=======
->>>>>>> origin/BVLC/parallel
-#ifndef CPU_ONLY
-void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
-  CHECK(head_ == HEAD_AT_CPU);
-  if (gpu_ptr_ == NULL) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    CUDA_CHECK(cudaGetDevice(&gpu_device_));
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-    own_gpu_data_ = true;
-  }
-  const cudaMemcpyKind put = cudaMemcpyHostToDevice;
-  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
-=======
-=======
->>>>>>> origin/BVLC/parallel
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-    own_gpu_data_ = true;
-  }
-  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice, stream));
-<<<<<<< HEAD
->>>>>>> origin/BVLC/parallel
-=======
->>>>>>> origin/BVLC/parallel
-  // Assume caller will synchronize on the stream before use
-  head_ = SYNCED;
-}
-#endif
 <<<<<<< HEAD
 =======
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -238,6 +282,108 @@ const void* SyncedMemory::const_data() {
     return static_cast<void*>(0);
   }
 }
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+#ifndef CPU_ONLY
+void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
+  CHECK(head_ == HEAD_AT_CPU);
+  if (gpu_ptr_ == NULL) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    CUDA_CHECK(cudaGetDevice(&gpu_device_));
+    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    own_gpu_data_ = true;
+  }
+  const cudaMemcpyKind put = cudaMemcpyHostToDevice;
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    own_gpu_data_ = true;
+  }
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice, stream));
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  // Assume caller will synchronize on the stream before use
+  head_ = SYNCED;
+}
+#endif
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+const void* SyncedMemory::const_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return cpu_data();
+  case Caffe::GPU:
+    return gpu_data();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+
+void* SyncedMemory::mutable_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+>>>>>>> pod-caffe-pod.hpp-merge
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<void*>(0);
+  }
+}
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> origin/BVLC/parallel
@@ -269,4 +415,29 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 #endif
 >>>>>>> origin/BVLC/parallel
 
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

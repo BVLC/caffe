@@ -45,7 +45,49 @@ with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
         'label', data=label,
         compression='gzip', compression_opts=1,
         dtype='uint8',
+<<<<<<< HEAD
     )
+=======
+<<<<<<< HEAD
+    )
+    f.create_dataset(
+        'label2', data=label2,
+<<<<<<< HEAD
+        compression='gzip', compression_opts=1,
+        dtype='uint8',
+    )
+
+with open(script_dir + '/sample_data_list.txt', 'w') as f:
+    f.write('src/caffe/test/test_data/sample_data.h5\n')
+    f.write('src/caffe/test/test_data/sample_data_2_gzip.h5\n')
+
+# Generate GradientBasedSolver solver_data.h5
+
+num_cols = 3
+num_rows = 8
+height = 10
+width = 10
+
+data = np.random.randn(num_rows, num_cols, height, width)
+data = data.reshape(num_rows, num_cols, height, width)
+data = data.astype('float32')
+
+targets = np.random.randn(num_rows, 1)
+targets = targets.astype('float32')
+
+print data
+print targets
+
+with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
+    f['data'] = data
+    f['targets'] = targets
+=======
+        compression='gzip', compression_opts=1
+    )
+>>>>>>> origin/BVLC/parallel
+=======
+    )
+>>>>>>> pod-caffe-pod.hpp-merge
     f.create_dataset(
         'label2', data=label2,
         compression='gzip', compression_opts=1,
@@ -76,6 +118,10 @@ print targets
 with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
     f['data'] = data
     f['targets'] = targets
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 with open(script_dir + '/solver_data_list.txt', 'w') as f:
     f.write('src/caffe/test/test_data/solver_data.h5\n')

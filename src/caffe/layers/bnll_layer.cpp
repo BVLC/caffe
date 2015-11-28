@@ -42,6 +42,18 @@ STUB_GPU(BNLLLayer);
 #endif
 
 INSTANTIATE_CLASS(BNLLLayer);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(BNLL);
 
+=======
+REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+REGISTER_LAYER_CLASS(BNLL);
+
+>>>>>>> caffe
 }  // namespace caffe

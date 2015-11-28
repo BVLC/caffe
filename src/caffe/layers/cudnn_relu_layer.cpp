@@ -1,6 +1,23 @@
 #ifdef USE_CUDNN
+<<<<<<< HEAD
 #include <vector>
 
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include <vector>
+
+=======
+#include <algorithm>
+#include <vector>
+
+#include "caffe/layer.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+#include <vector>
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -13,7 +30,18 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+<<<<<<< HEAD
   handles_setup_ = true;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  handles_setup_ = true;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  handles_setup_ = true;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -30,11 +58,28 @@ void CuDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
   cudnnDestroyTensorDescriptor(this->bottom_desc_);
   cudnnDestroyTensorDescriptor(this->top_desc_);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
+  cudnnDestroyTensor4dDescriptor(this->top_desc_);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   cudnnDestroy(this->handle_);
 }
 

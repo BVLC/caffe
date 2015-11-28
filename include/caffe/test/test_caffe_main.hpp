@@ -15,7 +15,19 @@ using std::cout;
 using std::endl;
 
 #ifdef CMAKE_BUILD
+<<<<<<< HEAD
   #include "caffe_config.h"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  #include "caffe_config.h"
+=======
+  #include <cmake_test_defines.hpp.gen.cmake>
+>>>>>>> origin/BVLC/parallel
+=======
+  #include "caffe_config.h"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #else
   #define CUDA_TEST_DEVICE -1
   #define CMAKE_SOURCE_DIR "src/"

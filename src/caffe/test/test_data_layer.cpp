@@ -2,16 +2,51 @@
 #include <string>
 #include <vector>
 
+<<<<<<< HEAD
 #include "boost/scoped_ptr.hpp"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "boost/scoped_ptr.hpp"
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+#include "boost/scoped_ptr.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+<<<<<<< HEAD
 #include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/data_layers.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/db.hpp"
+#include "caffe/util/io.hpp"
+=======
+#include "caffe/dataset_factory.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+#include "caffe/data_layers.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/db.hpp"
+#include "caffe/util/io.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -43,9 +78,27 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   void Fill(const bool unique_pixels, DataParameter_DB backend) {
     backend_ = backend;
     LOG(INFO) << "Using temporary dataset " << *filename_;
+<<<<<<< HEAD
     scoped_ptr<db::DB> db(db::GetDB(backend));
     db->Open(*filename_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    scoped_ptr<db::DB> db(db::GetDB(backend));
+    db->Open(*filename_, db::NEW);
+    scoped_ptr<db::Transaction> txn(db->NewTransaction());
+=======
+    shared_ptr<Dataset<string, Datum> > dataset =
+        DatasetFactory<string, Datum>(backend_);
+    CHECK(dataset->open(*filename_, Dataset<string, Datum>::New));
+>>>>>>> origin/BVLC/parallel
+=======
+    scoped_ptr<db::DB> db(db::GetDB(backend));
+    db->Open(*filename_, db::NEW);
+    scoped_ptr<db::Transaction> txn(db->NewTransaction());
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -59,12 +112,31 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       }
       stringstream ss;
       ss << i;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       string out;
       CHECK(datum.SerializeToString(&out));
       txn->Put(ss.str(), out);
     }
     txn->Commit();
     db->Close();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+      CHECK(dataset->put(ss.str(), datum));
+    }
+    CHECK(dataset->commit());
+    dataset->close();
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   void TestRead() {
@@ -257,7 +329,19 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         }
         crop_sequence.push_back(iter_crop_sequence);
       }
+<<<<<<< HEAD
     }  // destroy 1st data layer and unlock the db
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    }  // destroy 1st data layer and unlock the db
+=======
+    }  // destroy 1st data layer and unlock the dataset
+>>>>>>> origin/BVLC/parallel
+=======
+    }  // destroy 1st data layer and unlock the db
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
     // Get crop sequence after reseeding Caffe with 1701.
     // Check that the sequence is the same as the original.
@@ -313,7 +397,19 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         }
         crop_sequence.push_back(iter_crop_sequence);
       }
+<<<<<<< HEAD
     }  // destroy 1st data layer and unlock the db
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    }  // destroy 1st data layer and unlock the db
+=======
+    }  // destroy 1st data layer and unlock the dataset
+>>>>>>> origin/BVLC/parallel
+=======
+    }  // destroy 1st data layer and unlock the db
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
     // Get crop sequence continuing from previous Caffe RNG state; reseed
     // srand with 1701. Check that the sequence differs from the original.
@@ -363,7 +459,19 @@ TYPED_TEST(DataLayerTest, TestReshapeLevelDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+<<<<<<< HEAD
   this->TestReadCrop(TRAIN);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  this->TestReadCrop(TRAIN);
+=======
+  this->TestReadCrop();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->TestReadCrop(TRAIN);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // Test that the sequence of random crops is consistent when using
@@ -385,7 +493,19 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLevelDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+<<<<<<< HEAD
   this->TestReadCrop(TEST);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  this->TestReadCrop(TEST);
+=======
+  this->TestReadCrop();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->TestReadCrop(TEST);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 #endif  // USE_LEVELDB
 
@@ -403,7 +523,19 @@ TYPED_TEST(DataLayerTest, TestReshapeLMDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
+<<<<<<< HEAD
   this->TestReadCrop(TRAIN);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  this->TestReadCrop(TRAIN);
+=======
+  this->TestReadCrop();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->TestReadCrop(TRAIN);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // Test that the sequence of random crops is consistent when using
@@ -425,7 +557,19 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLMDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
+<<<<<<< HEAD
   this->TestReadCrop(TEST);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  this->TestReadCrop(TEST);
+=======
+  this->TestReadCrop();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->TestReadCrop(TEST);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 #endif  // USE_LMDB

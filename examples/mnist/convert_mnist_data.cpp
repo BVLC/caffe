@@ -9,6 +9,13 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
 #include <leveldb/db.h>
@@ -16,6 +23,17 @@
 #include <lmdb.h>
 #endif
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+#include <leveldb/db.h>
+#include <leveldb/write_batch.h>
+#include <lmdb.h>
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <stdint.h>
 #include <sys/stat.h>
 
@@ -31,6 +49,17 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+
+using namespace caffe;  // NOLINT(build/namespaces)
+using std::string;
+
+DEFINE_string(backend, "lmdb", "The backend for storing the result");
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -79,6 +108,10 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
   leveldb::WriteBatch* batch = NULL;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
 
   // Open db
   if (db_backend == "leveldb") {  // leveldb
@@ -105,10 +138,58 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
 
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+
+  // Open db
+  if (db_backend == "leveldb") {  // leveldb
+    LOG(INFO) << "Opening leveldb " << db_path;
+    leveldb::Status status = leveldb::DB::Open(
+        options, db_path, &db);
+    CHECK(status.ok()) << "Failed to open leveldb " << db_path
+        << ". Is it already existing?";
+    batch = new leveldb::WriteBatch();
+  } else if (db_backend == "lmdb") {  // lmdb
+    LOG(INFO) << "Opening lmdb " << db_path;
+    CHECK_EQ(mkdir(db_path, 0744), 0)
+        << "mkdir " << db_path << "failed";
+    CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
+    CHECK_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
+        << "mdb_env_set_mapsize failed";
+    CHECK_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
+        << "mdb_env_open failed";
+    CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
+        << "mdb_txn_begin failed";
+    CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
+        << "mdb_open failed. Does the lmdb already exist? ";
+  } else {
+    LOG(FATAL) << "Unknown db backend " << db_backend;
+  }
+
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Storing to db
   char label;
   char* pixels = new char[rows * cols];
   int count = 0;
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  const int kMaxKeyLength = 10;
+  char key_cstr[kMaxKeyLength];
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   string value;
 
   Datum datum;
@@ -122,6 +203,13 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     label_file.read(&label, 1);
     datum.set_data(pixels, rows*cols);
     datum.set_label(label);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     string key_str = caffe::format_int(item_id, 8);
     datum.SerializeToString(&value);
 
@@ -133,6 +221,26 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       mdb_data.mv_data = reinterpret_cast<void*>(&value[0]);
       mdb_key.mv_size = key_str.size();
       mdb_key.mv_data = reinterpret_cast<void*>(&key_str[0]);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    snprintf(key_cstr, kMaxKeyLength, "%08d", item_id);
+    datum.SerializeToString(&value);
+    string keystr(key_cstr);
+
+    // Put in db
+    if (db_backend == "leveldb") {  // leveldb
+      batch->Put(keystr, value);
+    } else if (db_backend == "lmdb") {  // lmdb
+      mdb_data.mv_size = value.size();
+      mdb_data.mv_data = reinterpret_cast<void*>(&value[0]);
+      mdb_key.mv_size = keystr.size();
+      mdb_key.mv_data = reinterpret_cast<void*>(&keystr[0]);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
     } else {
@@ -170,7 +278,19 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     }
     LOG(ERROR) << "Processed " << count << " files.";
   }
+<<<<<<< HEAD
   delete[] pixels;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  delete[] pixels;
+=======
+  delete pixels;
+>>>>>>> origin/BVLC/parallel
+=======
+  delete[] pixels;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 int main(int argc, char** argv) {

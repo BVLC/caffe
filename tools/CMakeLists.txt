@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # Collect source files
 file(GLOB_RECURSE srcs ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
@@ -27,3 +34,31 @@ foreach(source ${srcs})
   # Install
   install(TARGETS ${name} DESTINATION bin)
 endforeach(source)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+project( Tools )
+
+#    Find all source files
+file(GLOB_RECURSE TOOLS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
+
+#    Build each source file independently
+foreach(source ${TOOLS_SOURCES})
+    get_filename_component(name ${source} NAME_WE)
+    add_executable(${name}.bin ${source})
+    set_target_properties(${name}.bin PROPERTIES OUTPUT_NAME ${name})
+    target_link_libraries(${name}.bin ${CAFFE_STATIC_LINK})
+
+###    Install    #################################################################################
+
+    install(TARGETS ${name}.bin DESTINATION tools)
+
+
+endforeach(source)
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

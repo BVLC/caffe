@@ -1,4 +1,11 @@
 name: "LogisticRegressionNet"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "data"
   type: "HDF5Data"
@@ -7,10 +14,30 @@ layer {
   include {
     phase: TRAIN
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   hdf5_data_param {
     source: "examples/hdf5_classification/data/train.txt"
     batch_size: 10
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "data"
@@ -20,10 +47,32 @@ layer {
   include {
     phase: TEST
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   hdf5_data_param {
     source: "examples/hdf5_classification/data/test.txt"
     batch_size: 10
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "fc1"
@@ -42,6 +91,30 @@ layer {
     num_output: 2
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  include: { phase: TEST }
+}
+layers {
+  name: "fc1"
+  type: INNER_PRODUCT
+  bottom: "data"
+  top: "fc1"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -49,13 +122,38 @@ layer {
     }
   }
 }
+<<<<<<< HEAD
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+=======
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "fc1"
   bottom: "label"
   top: "loss"
 }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "accuracy"
   type: "Accuracy"
@@ -65,4 +163,19 @@ layer {
   include {
     phase: TEST
   }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "fc1"
+  bottom: "label"
+  top: "accuracy"
+  include: { phase: TEST }
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }

@@ -2,12 +2,31 @@
 # one using CMake, and one using make.
 env:
   matrix:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3
     - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true
     - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+    - WITH_CUDA=false WITH_CMAKE=false
+    - WITH_CUDA=false WITH_CMAKE=true
+    - WITH_CUDA=true WITH_CMAKE=false
+    - WITH_CUDA=true WITH_CMAKE=true
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 language: cpp
 
@@ -24,14 +43,39 @@ compiler: gcc
 before_install:
   - export NUM_THREADS=4
   - export SCRIPTS=./scripts/travis
+<<<<<<< HEAD
   - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 install:
   - sudo -E $SCRIPTS/travis_install.sh
 
 before_script:
+<<<<<<< HEAD
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
   - export PATH=$CONDA_DIR/bin:$PATH
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export PATH=$CONDA_DIR/bin:$PATH
+=======
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+>>>>>>> origin/BVLC/parallel
+=======
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export PATH=$CONDA_DIR/bin:$PATH
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
 script: $SCRIPTS/travis_build_and_test.sh

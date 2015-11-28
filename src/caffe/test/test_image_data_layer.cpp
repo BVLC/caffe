@@ -1,4 +1,15 @@
+<<<<<<< HEAD
 #ifdef USE_OPENCV
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#ifdef USE_OPENCV
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+#ifdef USE_OPENCV
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <map>
 #include <string>
 #include <vector>
@@ -11,6 +22,16 @@
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -26,11 +47,26 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()) {}
   virtual void SetUp() {
+    MakeTempFilename(&filename_);
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
     Caffe::set_random_seed(seed_);
+<<<<<<< HEAD
     // Create test input file.
     MakeTempFilename(&filename_);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    // Create test input file.
+    MakeTempFilename(&filename_);
+=======
+    // Create a Vector of files with labels
+>>>>>>> origin/BVLC/parallel
+=======
+    // Create test input file.
+    MakeTempFilename(&filename_);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     std::ofstream outfile(filename_.c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename_;
     for (int i = 0; i < 5; ++i) {
@@ -53,7 +89,18 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 
   int seed_;
   string filename_;
+<<<<<<< HEAD
   string filename_reshape_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  string filename_reshape_;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  string filename_reshape_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
