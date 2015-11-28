@@ -775,6 +775,7 @@ message MemoryDataParameter {
   optional uint32 channels = 2;
   optional uint32 height = 3;
   optional uint32 width = 4;
+  optional uint32 num_labels = 5;
 }
 
 message MVNParameter {
@@ -980,6 +981,7 @@ message SoftmaxParameter {
   // from the end (e.g., -1 for the last axis).
   // Any other axes will be evaluated as independent softmaxes.
   optional int32 axis = 2 [default = 1];
+  optional int32 slice = 3 [default = 1];
 }
 
 message TanHParameter {

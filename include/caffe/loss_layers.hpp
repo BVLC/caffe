@@ -769,7 +769,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// How to normalize the output loss.
   LossParameter_NormalizationMode normalization_;
 
-  int softmax_axis_, outer_num_, inner_num_;
+  int softmax_axis_, outer_num_, inner_num_, label_num_;
 };
 
 }  // namespace caffe
