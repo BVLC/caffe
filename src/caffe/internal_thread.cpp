@@ -66,6 +66,7 @@ InternalThread::~InternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -84,6 +85,8 @@ InternalThread::~InternalThread() {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 }
 
 bool InternalThread::is_started() const {

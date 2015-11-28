@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -24,6 +25,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 #ifndef CPU_ONLY
 #include <cuda_runtime.h>
 #endif
@@ -232,6 +235,7 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -243,6 +247,9 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 #include <cstdlib>
 #include <string>
 #include <stdio.h>
@@ -825,10 +832,13 @@ void IBChannel::poll() const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -865,6 +875,7 @@ template<typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -883,6 +894,8 @@ template<typename Dtype>
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
                         P2PSync<Dtype>* parent, const SolverParameter& param)
     : GPUParams<Dtype>(root_solver, param.device_id()),
@@ -1131,6 +1144,7 @@ INSTANTIATE_CLASS(P2PSync);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1142,6 +1156,9 @@ INSTANTIATE_CLASS(P2PSync);
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 IBSync<Dtype>::IBSync(const Params<Dtype>& params, int rank,
                       const IBChannel& ucast, const IBChannel& mcast,
                       const vector<ib_addr>& ucast_addrs,
@@ -1846,10 +1863,13 @@ INSTANTIATE_CLASS(RawSync);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel

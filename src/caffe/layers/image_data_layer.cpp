@@ -52,6 +52,7 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -62,6 +63,8 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
   this->StopInternalThread();
 =======
   this->InternalThread::StopInternalThread();
@@ -77,6 +80,7 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
   this->StopInternalThread();
 >>>>>>> caffe
@@ -97,6 +101,10 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   this->StopInternalThread();
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 }
 
 template <typename Dtype>
@@ -307,6 +315,11 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -353,9 +366,16 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+=======
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 =======
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();

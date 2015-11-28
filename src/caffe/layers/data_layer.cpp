@@ -104,6 +104,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -159,6 +160,8 @@ namespace caffe {
 >>>>>>> pod/caffe-merge
 =======
 <<<<<<< HEAD
+>>>>>>> pod/common.hpp
+=======
 >>>>>>> pod/common.hpp
 template <typename Dtype>
 DataLayer<Dtype>::DataLayer(const LayerParameter& param)
@@ -251,9 +254,39 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
 <<<<<<< HEAD
 }
 
+<<<<<<< HEAD
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer() {
   this->StopInternalThread();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+map<string, weak_ptr<DataLoader::Body> > DataLoader::instances_;
+boost::mutex DataLoader::instances_mutex_;
+
+DataLoader::DataLoader(const DataParameter& param, int index,
+                       blocking_queue<Datum*>* free,
+                       blocking_queue<Datum*>* full):
+    source_(param.source(index)) {
+  boost::mutex::scoped_lock lock(instances_mutex_);
+  weak_ptr<Body> body = instances_[source_];
+  body_ = body.lock();
+  if (body_) {
+    CHECK(!free || free == body_.get()->free_);
+    CHECK(!full || full == body_.get()->full_);
+  } else {
+    body_.reset(new Body(param, index, free, full));
+    instances_[source_] = weak_ptr<Body>(body_);
+  }
+}
+
+>>>>>>> origin/BVLC/parallel
+DataLoader::~DataLoader() {
+  boost::mutex::scoped_lock lock(instances_mutex_);
+  body_.reset();
+  if (instances_[source_].expired())
+    instances_.erase(source_);
+>>>>>>> pod/common.hpp
 }
 
 template <typename Dtype>
@@ -284,6 +317,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->prefetch_[i].label_.Reshape(label_shape);
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
   }
 }
 <<<<<<< HEAD
@@ -1450,6 +1486,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
   }
@@ -1478,6 +1515,11 @@ DataLoader::Body::~Body() {
   if(own_free_full_) {
     delete free_;
     delete full_;
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   }
 }
 
@@ -1511,6 +1553,7 @@ template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
+<<<<<<< HEAD
   // Look at first data point to initialize the top blob.
   Datum* datum = loaders_full_->peek();
 
@@ -1620,6 +1663,14 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     top[1]->Reshape(batch_size, 1, 1, 1);
     for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
       this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+=======
+  // Loaders share queues in case of multiple sources
+  for(int i = 1; i < param.data_param().source().size(); ++i) {
+    ld = new DataLoader(param.data_param(), i, loaders_free_, loaders_full_);
+    loaders_.push_back(shared_ptr<DataLoader>(ld));
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
@@ -1653,7 +1704,11 @@ template<typename Dtype>
 =======
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+>>>>>>> pod/common.hpp
 =======
 template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
@@ -1687,6 +1742,15 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
@@ -1716,21 +1780,73 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     this->transformed_data_.Reshape(1, datum->channels(),
         datum->height(), datum->width());
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
   if (this->output_labels_) {
+<<<<<<< HEAD
     top[1]->Reshape(batch_size, 1, 1, 1);
     for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
       this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    vector<int> label_shape(1, batch_size);
+    top[1]->Reshape(label_shape);
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(label_shape);
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
     }
   }
 }
 
 // This function is called on prefetch thread
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+template<typename Dtype>
+=======
+>>>>>>> pod/common.hpp
 template <typename Dtype>
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1742,7 +1858,14 @@ template <typename Dtype>
 >>>>>>> pod/common.hpp
 =======
 template <typename Dtype>
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
@@ -1759,6 +1882,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
 
@@ -1781,6 +1907,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1791,6 +1918,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
   if (this->output_labels_)
@@ -1804,6 +1934,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
   if (this->output_labels_) {
@@ -1981,6 +2114,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
     reader_.free().push(const_cast<Datum*>(&datum));

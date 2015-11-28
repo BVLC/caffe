@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 #include "boost/weak_ptr.hpp"
@@ -18,6 +19,8 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/common.hpp
 =======
 
 #include "boost/weak_ptr.hpp"
@@ -49,8 +52,14 @@
 #include "boost/weak_ptr.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+
+#include "boost/weak_ptr.hpp"
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 #include "hdf5.h"
 
 #include "caffe/blob.hpp"
@@ -103,6 +112,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
 #include "caffe/util/db.hpp"
@@ -728,6 +740,57 @@ class DataLoader {
 template <typename Dtype>
 class DataLayer: public BasePrefetchingDataLayer<Dtype> {
  public:
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+ public:
+  DataLoader(const DataParameter& param, int index,
+             blocking_queue<Datum*>* free = NULL,
+             blocking_queue<Datum*>* full = NULL);
+  ~DataLoader();
+
+  inline blocking_queue<Datum*>* free() {
+    return body_.get()->free_;
+  }
+  inline blocking_queue<Datum*>* full() {
+    return body_.get()->full_;
+  }
+
+ protected:
+  class Body: public InternalThread {
+   public:
+    Body(const DataParameter& param, int index,
+         blocking_queue<Datum*>* free,
+         blocking_queue<Datum*>* full);
+    ~Body();
+
+    void InternalThreadEntry();
+
+    shared_ptr<Dataset<string, Datum> > dataset_;
+    Dataset<string, Datum>::const_iterator iter_;
+
+    blocking_queue<Datum*>* free_;
+    blocking_queue<Datum*>* full_;
+    bool own_free_full_;
+
+    DISABLE_COPY_AND_ASSIGN(Body);
+  };
+
+  static map<string, weak_ptr<Body> > instances_;
+  static boost::mutex instances_mutex_;
+
+  const string source_;
+  shared_ptr<Body> body_;
+
+  DISABLE_COPY_AND_ASSIGN(DataLoader);
+};
+
+template <typename Dtype>
+class DataLayer: public BasePrefetchingDataLayer<Dtype> {
+ public:
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   explicit DataLayer(const LayerParameter& param);
   virtual ~DataLayer() {}
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -789,12 +852,21 @@ class DataLayer: public BasePrefetchingDataLayer<Dtype> {
   }
 
  protected:
+<<<<<<< HEAD
   class Body: public InternalThread {
    public:
     Body(const DataParameter& param, int index,
          blocking_queue<Datum*>* free,
          blocking_queue<Datum*>* full);
     ~Body();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  virtual void load_batch(Batch<Dtype>* batch);
+>>>>>>> pod/common.hpp
 
     void InternalThreadEntry();
 
@@ -808,6 +880,7 @@ class DataLayer: public BasePrefetchingDataLayer<Dtype> {
     DISABLE_COPY_AND_ASSIGN(Body);
   };
 
+<<<<<<< HEAD
   static map<string, weak_ptr<Body> > instances_;
   static boost::mutex instances_mutex_;
 
@@ -815,6 +888,18 @@ class DataLayer: public BasePrefetchingDataLayer<Dtype> {
   shared_ptr<Body> body_;
 
   DISABLE_COPY_AND_ASSIGN(DataLoader);
+=======
+  virtual void load_batch(Batch<Dtype>* batch);
+  vector<shared_ptr<DataLoader> > loaders_;
+>>>>>>> origin/BVLC/parallel
+=======
+  blocking_queue<Datum*>* loaders_free_;
+  blocking_queue<Datum*>* loaders_full_;
+
+  virtual void load_batch(Batch<Dtype>* batch);
+  vector<shared_ptr<DataLoader> > loaders_;
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 };
 
 template <typename Dtype>

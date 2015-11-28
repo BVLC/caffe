@@ -346,6 +346,10 @@ class InternalThread {
   bool is_started() const;
 >>>>>>> caffe
 
+  bool must_stop() {
+    return must_stop_;
+  }
+
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
@@ -398,8 +402,11 @@ class InternalThread {
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel

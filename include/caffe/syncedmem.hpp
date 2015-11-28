@@ -15,6 +15,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -33,6 +34,8 @@ namespace caffe {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
 // The improvement in performance seems negligible in the single GPU case,
@@ -89,9 +92,14 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 inline void CaffeMallocHost(void** ptr, size_t size) {
 #ifndef CPU_ONLY
   cudaMallocHost(ptr, size);
@@ -111,6 +119,9 @@ inline void CaffeFreeHost(void* ptr) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -200,6 +211,7 @@ class SyncedMemory {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -218,6 +230,8 @@ class SyncedMemory {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
         own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
         gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
@@ -245,6 +259,8 @@ class SyncedMemory {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
         own_cpu_data_(false), own_gpu_data_(false) {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
@@ -253,6 +269,7 @@ class SyncedMemory {
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -263,6 +280,8 @@ class SyncedMemory {
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), own_gpu_data_(false) {}
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -300,6 +319,9 @@ class SyncedMemory {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
 #ifndef CPU_ONLY
@@ -444,10 +466,18 @@ class SyncedMemory {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+#ifndef CPU_ONLY
+  void async_gpu_push(const cudaStream_t& stream);
+#endif
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
  private:
   void to_cpu();
@@ -465,6 +495,7 @@ class SyncedMemory {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -475,6 +506,8 @@ class SyncedMemory {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
@@ -514,9 +547,15 @@ class SyncedMemory {
 =======
   bool own_gpu_data_;
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+  bool own_gpu_data_;
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

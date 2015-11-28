@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -24,6 +25,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
@@ -78,6 +81,7 @@ class Params {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -89,6 +93,9 @@ class Params {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 #ifndef CAFFE_PARALLEL_H_
 #define CAFFE_PARALLEL_H_
 
@@ -228,10 +235,13 @@ class Params {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -267,6 +277,7 @@ DISABLE_COPY_AND_ASSIGN(Params);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -285,6 +296,8 @@ DISABLE_COPY_AND_ASSIGN(Params);
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 // Params stored in GPU memory.
 template<typename Dtype>
 class GPUParams : public Params<Dtype> {
@@ -367,6 +380,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -378,6 +392,9 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 #ifndef CPU_ONLY
 
 // Params on a GPU
@@ -804,10 +821,13 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
