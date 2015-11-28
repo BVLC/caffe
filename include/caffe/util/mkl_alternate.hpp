@@ -38,19 +38,25 @@ DEFINE_VSL_UNARY_FUNC(Exp, y[i] = exp(a[i]));
 DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));
 =======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
 DEFINE_VSL_UNARY_FUNC(Ln, y[i] = log(a[i]));
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));
 
 // A simple way to define the vsl unary functions with singular parameter b.

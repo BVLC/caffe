@@ -30,6 +30,7 @@ STUB_GPU_FORWARD(ThresholdLayer, Forward);
 INSTANTIATE_CLASS(ThresholdLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 REGISTER_LAYER_CLASS(Threshold);
 
 =======
@@ -37,6 +38,8 @@ REGISTER_LAYER_CLASS(Threshold);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
 REGISTER_LAYER_CLASS(Threshold);
@@ -45,7 +48,10 @@ REGISTER_LAYER_CLASS(Threshold);
 REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }  // namespace caffe

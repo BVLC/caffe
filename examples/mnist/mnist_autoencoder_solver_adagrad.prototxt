@@ -19,17 +19,23 @@ solver_mode: GPU
 type: "AdaGrad"
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 type: "AdaGrad"
 =======
+=======
+>>>>>>> pod/caffe-merge
 solver_type: ADAGRAD
 >>>>>>> origin/BVLC/parallel
 =======
 type: "AdaGrad"
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge

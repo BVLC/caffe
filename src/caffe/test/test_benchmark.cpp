@@ -69,20 +69,26 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
+=======
+>>>>>>> pod/caffe-merge
   usleep(300 * 1000);
 >>>>>>> origin/BVLC/parallel
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_GE(timer.MilliSeconds(), 300 - kMillisecondsThreshold);
   EXPECT_LE(timer.MilliSeconds(), 300 + kMillisecondsThreshold);
   EXPECT_TRUE(timer.initted());
@@ -102,20 +108,26 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
+=======
+>>>>>>> pod/caffe-merge
   usleep(300 * 1000);
 >>>>>>> origin/BVLC/parallel
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_GE(timer.Seconds(), 0.3 - kMillisecondsThreshold / 1000.);
   EXPECT_LE(timer.Seconds(), 0.3 + kMillisecondsThreshold / 1000.);
   EXPECT_TRUE(timer.initted());

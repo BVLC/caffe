@@ -5,12 +5,15 @@
 # Travis CI tests are CPU-only for lack of compatible hardware.
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 # Script called by Travis to build and test Caffe.
 # Travis CI tests are CPU-only for lack of compatible hardware.
 =======
+=======
+>>>>>>> pod/caffe-merge
 # Script called by Travis to do a CPU-only build of and test Caffe.
 >>>>>>> origin/BVLC/parallel
 =======
@@ -18,9 +21,12 @@
 # Travis CI tests are CPU-only for lack of compatible hardware.
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 set -e
 MAKE="make --jobs=$NUM_THREADS --keep-going"
@@ -33,6 +39,7 @@ if $WITH_CMAKE; then
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -41,6 +48,9 @@ if $WITH_CMAKE; then
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   CPU_ONLY=" -DCPU_ONLY=ON"
   if ! $WITH_CUDA; then
     CPU_ONLY=" -DCPU_ONLY=OFF"
@@ -61,18 +71,24 @@ if $WITH_CMAKE; then
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
   $MAKE
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   if ! $WITH_CUDA; then
     $MAKE runtest
     $MAKE lint
@@ -88,6 +104,7 @@ else
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -96,6 +113,9 @@ else
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   if $WITH_IO; then
     export USE_LMDB=1
     export USE_LEVELDB=1
@@ -105,6 +125,7 @@ else
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -115,6 +136,11 @@ else
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   $MAKE all test pycaffe warn lint || true
   if ! $WITH_CUDA; then
     $MAKE runtest
@@ -127,19 +153,25 @@ else
   $MAKE pytest
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   $MAKE pytest
 =======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
   $MAKE pytest
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   $MAKE warn
   if ! $WITH_CUDA; then
     $MAKE lint

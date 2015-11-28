@@ -588,6 +588,7 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {
 <<<<<<< HEAD
     if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
+<<<<<<< HEAD
       DataParameter layer_param = net_param.layers(i).data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
@@ -862,6 +863,8 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
+=======
+>>>>>>> pod/caffe-merge
 =======
     if (net_param.layers(i).type() == LayerParameter_LayerType_DATA) {
 >>>>>>> origin/BVLC/parallel
@@ -1213,9 +1216,12 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   switch (type) {
   case V1LayerParameter_LayerType_NONE:
@@ -1303,6 +1309,7 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "";
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 }
 
@@ -1371,6 +1378,8 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
   }
@@ -1629,6 +1638,7 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
         << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
         << "weights upgrade this and any other net protos to the new format.";
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   }
   // NetParameter uses old style data transformation fields; try to upgrade it.
@@ -1641,6 +1651,8 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
     LOG(ERROR) << "Note that future Caffe releases will only support "
                << "transform_param messages for transformation fields.";
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   }
   // NetParameter uses old style data transformation fields; try to upgrade it.
   if (NetNeedsDataUpgrade(*param)) {
@@ -1661,6 +1673,7 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
   UpgradeNetAsNeeded(param_file, param);
 }
 
+<<<<<<< HEAD
 void ReadNetParamsFromTextFileOrDie(const string& param_file,
                                     NetParameter* param) {
   CHECK(ReadProtoFromTextFile(param_file, param))
@@ -1668,6 +1681,8 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
   UpgradeNetAsNeeded(param_file, param);
 }
 
+=======
+>>>>>>> pod/caffe-merge
 void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
                                       NetParameter* param) {
   CHECK(ReadProtoFromBinaryFile(param_file, param))
@@ -1676,9 +1691,12 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   }
   return success;
 }
@@ -1691,12 +1709,16 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
   UpgradeSolverAsNeeded(param_file, param);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 }
 
 }  // namespace caffe

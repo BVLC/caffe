@@ -183,20 +183,26 @@ Layer definitions can include rules for whether and when they are included in th
     layer {
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     layer {
 =======
+=======
+>>>>>>> pod/caffe-merge
     layers {
 >>>>>>> origin/BVLC/parallel
 =======
     layer {
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       // ...layer definition...
       include: { phase: TRAIN }
     }
@@ -213,20 +219,26 @@ Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different 
 Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 =======
+=======
+>>>>>>> pod/caffe-merge
 Also, there is an `ACCURACY` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 >>>>>>> origin/BVLC/parallel
 =======
 Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 ## Define the MNIST Solver
 
@@ -324,18 +336,24 @@ MNIST is a small dataset, so training with GPU does not really introduce too muc
 ### How to reduce the learning rate at fixed steps?
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 ### How to reduce the learning rate at fixed steps?
 =======
+=======
+>>>>>>> pod/caffe-merge
 ### How to reduce the learning rate a fixed steps?
 >>>>>>> origin/BVLC/parallel
 =======
 ### How to reduce the learning rate at fixed steps?
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 Look at lenet_multistep_solver.prototxt

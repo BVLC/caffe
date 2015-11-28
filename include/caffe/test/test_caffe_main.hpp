@@ -20,20 +20,26 @@ using std::endl;
   #include "caffe_config.h"
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   #include "caffe_config.h"
 =======
+=======
+>>>>>>> pod/caffe-merge
   #include <cmake_test_defines.hpp.gen.cmake>
 >>>>>>> origin/BVLC/parallel
 =======
   #include "caffe_config.h"
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #else
   #define CUDA_TEST_DEVICE -1
   #define CMAKE_SOURCE_DIR "src/"

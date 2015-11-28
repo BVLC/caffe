@@ -8,20 +8,26 @@ Parse training log
 Evolved from parse_log.sh
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 Evolved from parse_log.sh
 =======
+=======
+>>>>>>> pod/caffe-merge
 Competitor to parse_log.sh
 >>>>>>> origin/BVLC/parallel
 =======
 Evolved from parse_log.sh
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 """
 
 import os
@@ -34,11 +40,14 @@ import csv
 from collections import OrderedDict
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 from collections import OrderedDict
 =======
+=======
+>>>>>>> pod/caffe-merge
 
 
 def get_line_type(line):
@@ -56,9 +65,12 @@ def get_line_type(line):
 from collections import OrderedDict
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 
 def parse_log(path_to_log):
@@ -77,6 +89,7 @@ def parse_log(path_to_log):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -85,6 +98,9 @@ def parse_log(path_to_log):
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     regex_iteration = re.compile('Iteration (\d+)')
     regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\deE+-]+)')
@@ -101,9 +117,12 @@ def parse_log(path_to_log):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     re_iteration = re.compile('Iteration (\d+)')
     re_accuracy = re.compile('output #\d+: accuracy = ([\.\d]+)')
     re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
@@ -122,9 +141,12 @@ def parse_log(path_to_log):
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
     with open(path_to_log) as f:
@@ -136,6 +158,7 @@ def parse_log(path_to_log):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -144,6 +167,9 @@ def parse_log(path_to_log):
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
             iteration_match = regex_iteration.search(line)
             if iteration_match:
                 iteration = float(iteration_match.group(1))
@@ -154,9 +180,12 @@ def parse_log(path_to_log):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
             iteration_match = re_iteration.search(line)
             if iteration_match:
                 iteration = float(iteration_match.group(1))
@@ -166,9 +195,12 @@ def parse_log(path_to_log):
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
                 continue
 
             time = extract_seconds.extract_datetime_from_line(line,
@@ -180,6 +212,7 @@ def parse_log(path_to_log):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -188,6 +221,9 @@ def parse_log(path_to_log):
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
             learning_rate_match = regex_learning_rate.search(line)
             if learning_rate_match:
                 learning_rate = float(learning_rate_match.group(1))
@@ -268,9 +304,12 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
             lr_match = re_lr.search(line)
             if lr_match:
                 learning_rate = float(lr_match.group(1))
@@ -308,9 +347,12 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     """Save CSV files to output_dir
 
     If the input log file is, e.g., caffe.INFO, the names will be
@@ -324,6 +366,7 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -332,6 +375,9 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     write_csv(train_filename, train_dict_list, delimiter, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
@@ -352,9 +398,12 @@ def write_csv(output_filename, dict_list, delimiter, verbose=False):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     write_csv(train_filename, train_dict_list, train_dict_names, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
@@ -371,9 +420,12 @@ def write_csv(output_filename, dict_list, header_names, verbose=False):
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
         dict_writer.writeheader()
         dict_writer.writerows(dict_list)
     if verbose:
@@ -400,6 +452,7 @@ def parse_args():
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -408,6 +461,9 @@ def parse_args():
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     parser.add_argument('--delimiter',
                         default=',',
                         help=('Column delimiter in output files '
@@ -417,6 +473,7 @@ def parse_args():
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -427,6 +484,11 @@ def parse_args():
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     args = parser.parse_args()
     return args
 
@@ -440,6 +502,7 @@ def main():
                    test_dict_list, delimiter=args.delimiter)
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -447,6 +510,8 @@ def main():
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
                    test_dict_list, delimiter=args.delimiter)
 =======
+=======
+>>>>>>> pod/caffe-merge
     train_dict_list, train_dict_names, test_dict_list, test_dict_names = \
         parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
@@ -458,9 +523,12 @@ def main():
                    test_dict_list, delimiter=args.delimiter)
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 
 if __name__ == '__main__':

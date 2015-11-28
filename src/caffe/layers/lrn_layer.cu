@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
 =======
 #include "caffe/layer.hpp"
@@ -12,6 +13,8 @@
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -45,9 +48,12 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -61,20 +67,26 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
     const Dtype k, Dtype* const scale) {
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     const Dtype k, Dtype* const scale) {
 =======
+=======
+>>>>>>> pod/caffe-merge
     const Dtype k, Dtype* scale) {
 >>>>>>> origin/BVLC/parallel
 =======
     const Dtype k, Dtype* const scale) {
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     const int w = index % width;
@@ -96,12 +108,15 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
       accum_scale += in_off[head * step] * in_off[head * step];
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     while (head < post_pad && head < channels) {
       accum_scale += in_off[head * step] * in_off[head * step];
 =======
+=======
+>>>>>>> pod/caffe-merge
     while (head < post_pad) {
       accum_scale += in[head * step] * in[head * step];
       ++head;
@@ -116,9 +131,12 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
       accum_scale += in_off[head * step] * in_off[head * step];
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       ++head;
     }
     // both add and subtract
@@ -128,6 +146,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -136,6 +155,9 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
       accum_scale += in_off[head * step] * in_off[head * step];
       if (head - size >= 0) {
         accum_scale -= in_off[(head - size) * step]
@@ -146,9 +168,12 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       accum_scale += in[head * step] * in[head * step];
       accum_scale -= in[(head - size) * step] * in[(head - size) * step];
       scale[(head - post_pad) * step] = k + accum_scale * alpha_over_size;
@@ -156,9 +181,12 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       ++head;
     }
     // subtract only
@@ -168,6 +196,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -176,6 +205,9 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
       if (head - size >= 0) {
         accum_scale -= in_off[(head - size) * step]
                        * in_off[(head - size) * step];
@@ -185,18 +217,24 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* const in,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       accum_scale -= in[(head - size) * step] * in[(head - size) * step];
       scale[(head - post_pad) * step] = k + accum_scale * alpha_over_size;
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       ++head;
     }
   }

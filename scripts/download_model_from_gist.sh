@@ -25,6 +25,7 @@ unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
 rm $MODEL_DIR/gist.zip
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -32,6 +33,8 @@ wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.zip
 unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
 rm $MODEL_DIR/gist.zip
 =======
+=======
+>>>>>>> pod/caffe-merge
 wget https://gist.github.com/$GIST/download -O $MODEL_DIR/gist.tar.gz
 tar xzf $MODEL_DIR/gist.tar.gz --directory=$MODEL_DIR --strip-components=1
 rm $MODEL_DIR/gist.tar.gz
@@ -42,7 +45,10 @@ unzip -j $MODEL_DIR/gist.zip -d $MODEL_DIR
 rm $MODEL_DIR/gist.zip
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 echo "Done"

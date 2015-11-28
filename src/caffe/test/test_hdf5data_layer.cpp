@@ -73,6 +73,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 =======
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
@@ -84,6 +85,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -133,9 +136,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);
@@ -152,6 +158,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -159,6 +166,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
 =======
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_EQ(this->blob_top_label2_->num(), batch_size);
   EXPECT_EQ(this->blob_top_label2_->channels(), 1);
   EXPECT_EQ(this->blob_top_label2_->height(), 1);
@@ -170,9 +179,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 

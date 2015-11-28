@@ -50,10 +50,13 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 
   // Convert to a NetParameterPrettyPrint to print fields in desired
   // order.
@@ -63,9 +66,12 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
   // Save new format prototxt.
   WriteProtoToTextFile(net_param, argv[2]);

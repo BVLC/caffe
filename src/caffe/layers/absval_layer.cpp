@@ -4,18 +4,24 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -30,20 +36,26 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 =======
+=======
+>>>>>>> pod/caffe-merge
   CHECK_NE(top[0], bottom[0]) << this->type_name() << " Layer does not "
 >>>>>>> origin/BVLC/parallel
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     "allow in-place computation.";
 }
 
@@ -79,12 +91,15 @@ REGISTER_LAYER_CLASS(AbsVal);
 
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 REGISTER_LAYER_CLASS(AbsVal);
 
 =======
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(ABSVAL, AbsValLayer);
 >>>>>>> origin/BVLC/parallel
 =======
@@ -92,7 +107,10 @@ REGISTER_LAYER_CLASS(AbsVal);
 
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }  // namespace caffe

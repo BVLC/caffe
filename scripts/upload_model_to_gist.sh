@@ -12,20 +12,26 @@ cd $DIRNAME
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
+=======
+>>>>>>> pod/caffe-merge
 FILES=`find . -type f -maxdepth 1 ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> origin/BVLC/parallel
 =======
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 # Check for gist tool.
 gist -v >/dev/null 2>&1 || { echo >&2 "I require 'gist' but it's not installed. Do 'gem install gist'."; exit 1; }

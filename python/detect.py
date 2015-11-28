@@ -51,20 +51,26 @@ def main(argv):
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
+=======
+>>>>>>> pod/caffe-merge
                 "../models/bvlc_reference_caffenet/deploy.prototxt.prototxt"),
 >>>>>>> origin/BVLC/parallel
 =======
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
         help="Model definition file."
     )
     parser.add_argument(

@@ -13,17 +13,23 @@ $TOOLS/caffe train \
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 =======
+=======
+>>>>>>> pod/caffe-merge
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate
 >>>>>>> origin/BVLC/parallel
 =======
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge

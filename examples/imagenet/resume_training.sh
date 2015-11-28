@@ -7,17 +7,23 @@
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
 =======
+=======
+>>>>>>> pod/caffe-merge
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate
 >>>>>>> origin/BVLC/parallel
 =======
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge

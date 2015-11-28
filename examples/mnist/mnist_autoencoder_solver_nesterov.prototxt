@@ -22,17 +22,23 @@ solver_mode: GPU
 type: "Nesterov"
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 type: "Nesterov"
 =======
+=======
+>>>>>>> pod/caffe-merge
 solver_type: NESTEROV
 >>>>>>> origin/BVLC/parallel
 =======
 type: "Nesterov"
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge

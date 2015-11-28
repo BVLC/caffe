@@ -3,19 +3,25 @@
 #ifdef USE_OPENCV
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #ifdef USE_OPENCV
 =======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include <string>
 #include <vector>
 
@@ -60,6 +66,7 @@ class DataTransformTest : public ::testing::Test {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -68,6 +75,9 @@ class DataTransformTest : public ::testing::Test {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
       const Datum& datum, Phase phase) {
     // Get crop sequence with Caffe seed 1701.
     DataTransformer<Dtype>* transformer =
@@ -76,9 +86,12 @@ class DataTransformTest : public ::testing::Test {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       const Datum& datum) {
     // Get crop sequence with Caffe seed 1701.
     DataTransformer<Dtype>* transformer =
@@ -87,9 +100,12 @@ class DataTransformTest : public ::testing::Test {
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     const int crop_size = transform_param.crop_size();
     Caffe::set_random_seed(seed_);
     transformer->InitRand();
@@ -146,20 +162,26 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -188,20 +210,26 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -231,20 +259,26 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   transformer->InitRand();
   Blob<TypeParam>* blob =
       new Blob<TypeParam>(1, channels, crop_size, crop_size);
@@ -278,11 +312,14 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 =======
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_phase(Caffe::TRAIN);
   int num_matches = this->NumSequenceMatches(transform_param, datum);
 >>>>>>> origin/BVLC/parallel
@@ -290,9 +327,12 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_LT(num_matches, size * this->num_iter_);
 }
 
@@ -314,11 +354,14 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_phase(Caffe::TEST);
   int num_matches = this->NumSequenceMatches(transform_param, datum);
 >>>>>>> origin/BVLC/parallel
@@ -326,9 +369,12 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_EQ(num_matches, size * this->num_iter_);
 }
 
@@ -349,11 +395,14 @@ TYPED_TEST(DataTransformTest, TestMirrorTrain) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 =======
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_phase(Caffe::TRAIN);
   int num_matches = this->NumSequenceMatches(transform_param, datum);
 >>>>>>> origin/BVLC/parallel
@@ -361,9 +410,12 @@ TYPED_TEST(DataTransformTest, TestMirrorTrain) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_LT(num_matches, size * this->num_iter_);
 }
 
@@ -384,11 +436,14 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_phase(Caffe::TEST);
   int num_matches = this->NumSequenceMatches(transform_param, datum);
 >>>>>>> origin/BVLC/parallel
@@ -396,9 +451,12 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_LT(num_matches, size * this->num_iter_);
 }
 
@@ -419,6 +477,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -427,6 +486,9 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   int num_matches_crop = this->NumSequenceMatches(
       transform_param, datum, TRAIN);
 
@@ -437,9 +499,12 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_phase(Caffe::TRAIN);
   int num_matches_crop = this->NumSequenceMatches(transform_param, datum);
 
@@ -450,9 +515,12 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   // When doing crop and mirror we expect less num_matches than just crop
   EXPECT_LE(num_matches_crop_mirror, num_matches_crop);
 }
@@ -474,6 +542,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -482,6 +551,9 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   int num_matches_crop = this->NumSequenceMatches(transform_param, datum, TEST);
 
   transform_param.set_mirror(true);
@@ -491,9 +563,12 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_phase(Caffe::TEST);
   int num_matches_crop = this->NumSequenceMatches(transform_param, datum);
 
@@ -504,9 +579,12 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   // When doing crop and mirror we expect less num_matches than just crop
   EXPECT_LT(num_matches_crop_mirror, num_matches_crop);
 }
@@ -531,20 +609,26 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {
@@ -572,20 +656,26 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int c = 0; c < channels; ++c) {
@@ -630,20 +720,26 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+=======
+>>>>>>> pod/caffe-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {
@@ -657,16 +753,22 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 #endif  // USE_OPENCV
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 #endif  // USE_OPENCV
 =======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #endif  // USE_OPENCV
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
