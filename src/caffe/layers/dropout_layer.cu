@@ -1,7 +1,14 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/common.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/syncedmem.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -24,14 +31,14 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   if (this->phase_ == TRAIN) {
     unsigned int* mask =
         static_cast<unsigned int*>(rand_vec_.mutable_gpu_data());
-    caffe_gpu_rng_uniform(count, mask);
+    CURAND_CHECK(curandGenerate(Caffe::curand_generator(), mask, count));
     // set thresholds
     // NOLINT_NEXT_LINE(whitespace/operators)
     DropoutForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, mask, uint_thres_, scale_, top_data);
     CUDA_POST_KERNEL_CHECK;
   } else {
-    caffe_copy(count, bottom_data, top_data);
+    GetDevice<Dtype>(Caffe::GPU)->copy(count, bottom_data, top_data);
   }
 }
 
@@ -61,7 +68,8 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           count, top_diff, mask, uint_thres_, scale_, bottom_diff);
       CUDA_POST_KERNEL_CHECK;
     } else {
-      caffe_copy(top[0]->count(), top_diff, bottom_diff);
+      GetDevice<Dtype>(Caffe::GPU)->copy(top[0]->count(), top_diff,
+                                         bottom_diff);
     }
   }
 }

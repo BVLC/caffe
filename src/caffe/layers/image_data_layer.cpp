@@ -10,14 +10,25 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
   this->StopInternalThread();
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 }
 
 template <typename Dtype>
@@ -68,10 +79,24 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data and top[0] according to the batch_size.
   const int batch_size = this->layer_param_.image_data_param().batch_size();
+<<<<<<< HEAD
   CHECK_GT(batch_size, 0) << "Positive batch size required";
   top_shape[0] = batch_size;
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].data_.Reshape(top_shape);
+=======
+  if (crop_size > 0) {
+    top[0]->Reshape(batch_size, channels, crop_size, crop_size);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+	    this->prefetch_[i].data_.Reshape(batch_size, channels,
+	        crop_size, crop_size);
+    this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
+  } else {
+    top[0]->Reshape(batch_size, channels, height, width);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+	    this->prefetch_[i].data_.Reshape(batch_size, channels, height, width);
+    this->transformed_data_.Reshape(1, channels, height, width);
+>>>>>>> origin/BVLC/parallel
   }
   top[0]->Reshape(top_shape);
 
@@ -79,11 +104,23 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
+<<<<<<< HEAD
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].label_.Reshape(label_shape);
   }
+=======
+  top[1]->Reshape(batch_size, 1, 1, 1);
+  for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+    this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
 }
 
 template <typename Dtype>
@@ -103,6 +140,21 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+=======
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+=======
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
   const int new_height = image_data_param.new_height();
@@ -125,6 +177,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
+<<<<<<< HEAD
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
@@ -138,8 +191,19 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
     int offset = batch->data_.offset(item_id);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+    this->transformed_data_.set_cpu_data(top_data + offset);
+    this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
+>>>>>>> origin/BVLC/parallel
     trans_time += timer.MicroSeconds();
 
     prefetch_label[item_id] = lines_[lines_id_].second;
@@ -158,6 +222,21 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+=======
+template <typename Dtype>
+Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  // First, join the thread
+  JoinPrefetchThread();
+  // Copy the data
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+                      (*top)[0]->mutable_data());
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+                      (*top)[1]->mutable_data());
+  // Start a new prefetch thread
+  CreatePrefetchThread();
+  return Dtype(0.);
+>>>>>>> BVLC/device-abstraction
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);

@@ -7,7 +7,11 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+<<<<<<< HEAD
 #include "caffe/layer_factory.hpp"
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -38,9 +42,14 @@ class Layer {
    * layer.
    */
   explicit Layer(const LayerParameter& param)
+<<<<<<< HEAD
     : layer_param_(param), is_shared_(false) {
       // Set phase and copy blobs (if there are any).
       phase_ = param.phase();
+=======
+    : layer_param_(param), device_(GetDevice<Dtype>()) {
+      // The only thing we do is to copy blobs if there are any.
+>>>>>>> BVLC/device-abstraction
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
         for (int i = 0; i < layer_param_.blobs_size(); ++i) {
@@ -116,6 +125,7 @@ class Layer {
     is_shared_ = is_shared;
   }
 
+<<<<<<< HEAD
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
    *        the shapes of the bottom blobs.
@@ -173,6 +183,14 @@ class Layer {
    * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
    */
   inline void Backward(const vector<Blob<Dtype>*>& top,
+=======
+  // Forward and backward wrappers. You should implement the cpu and
+  // gpu specific implementations instead, and should not change these
+  // functions.
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+>>>>>>> BVLC/device-abstraction
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
 
@@ -326,7 +344,11 @@ class Layer {
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
   vector<bool> param_propagate_down_;
+  // The math backend abstracts the CPU and the GPU specific
+  // implementation details
+  Device<Dtype>* device_;
 
+<<<<<<< HEAD
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
   vector<Dtype> loss_;
@@ -340,6 +362,15 @@ class Layer {
    */
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+=======
+  // Forward functions: compute the layer output
+  // (and loss layers return the loss; other layers return the dummy value 0.)
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) { return static_cast<Dtype>(0); }
+  // If no gpu code is provided, we will simply use cpu code.
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
     // LOG(WARNING) << "Using CPU code as backup.";
     return Forward_cpu(bottom, top);
   }
@@ -350,12 +381,16 @@ class Layer {
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
+<<<<<<< HEAD
       const vector<Blob<Dtype>*>& bottom) = 0;
   /**
    * @brief Using the GPU device, compute the gradients for any parameters and
    *        for the bottom blobs if propagate_down is true.
    *        Fall back to Backward_cpu() if unavailable.
    */
+=======
+      vector<Blob<Dtype>*>* bottom) { return; }
+>>>>>>> BVLC/device-abstraction
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
@@ -448,12 +483,17 @@ class Layer {
 // gpu specific implementations instead, and should not change these
 // functions.
 template <typename Dtype>
+<<<<<<< HEAD
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   // Lock during forward to ensure sequential forward
   Lock();
   Dtype loss = 0;
   Reshape(bottom, top);
+=======
+Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
@@ -487,7 +527,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   switch (Caffe::mode()) {

@@ -2,6 +2,7 @@
 #define CAFFE_COMMON_HPP_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -73,6 +74,7 @@ namespace caffe {
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
+using boost::thread_specific_ptr;
 
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
@@ -98,6 +100,17 @@ void GlobalInit(int* pargc, char*** pargv);
 class Caffe {
  public:
   ~Caffe();
+<<<<<<< HEAD
+=======
+  inline static Caffe& Get() {
+    if (!thread_instance_.get()) {
+      thread_instance_.reset(new Caffe());
+    }
+    return *(thread_instance_.get());
+  }
+  enum Brew { UNSPECIFIED = -1, CPU, GPU };
+  enum Phase { TRAIN, TEST };
+>>>>>>> origin/BVLC/parallel
 
   // Thread local context for Caffe. Moved to common.cpp instead of
   // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
@@ -163,8 +176,21 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
+<<<<<<< HEAD
   int solver_count_;
   bool root_solver_;
+=======
+  Phase phase_;
+
+  // Make sure each thread can have different values.
+  static thread_specific_ptr<Caffe> thread_instance_;
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
 
  private:
   // The private constructor to avoid duplicate instantiation.

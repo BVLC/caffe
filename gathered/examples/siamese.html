@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Siamese Network Tutorial
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="siamese-network-training-with-caffe">Siamese Network Training with Caffe</h1>
+<p>This example shows how you can use weight sharing and a contrastive loss
+function to learn a model using a siamese network in Caffe.</p>
+
+<p>We will assume that you have caffe successfully compiled. If not, please refer
+to the <a href="../../installation.html">Installation page</a>. This example builds on the
+<a href="mnist.html">MNIST tutorial</a> so it would be a good idea to read that before
+continuing.</p>
+
+<p><em>The guide specifies all paths and assumes all commands are executed from the
+root caffe directory</em></p>
+
+<h2 id="prepare-datasets">Prepare Datasets</h2>
+
+<p>You will first need to download and convert the data from the MNIST
+website. To do this, simply run the following commands:</p>
+
+<pre><code>./data/mnist/get_mnist.sh
+./examples/siamese/create_mnist_siamese.sh
+</code></pre>
+
+<p>After running the script there should be two datasets,
+<code>./examples/siamese/mnist_siamese_train_leveldb</code>, and
+<code>./examples/siamese/mnist_siamese_test_leveldb</code>.</p>
+
+<h2 id="the-model">The Model</h2>
+<p>First, we will define the model that we want to train using the siamese network.
+We will use the convolutional net defined in
+<code>./examples/siamese/mnist_siamese.prototxt</code>. This model is almost
+exactly the same as the <a href="mnist.html">LeNet model</a>, the only difference is that
+we have replaced the top layers that produced probabilities over the 10 digit
+classes with a linear “feature” layer that produces a 2 dimensional vector.</p>
+
+<pre><code>layer {
+  name: "feat"
+  type: "InnerProduct"
+  bottom: "ip2"
+  top: "feat"
+  param {
+    name: "feat_w"
+    lr_mult: 1
+  }
+  param {
+    name: "feat_b"
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 2
+  }
+}
+</code></pre>
+
+<h2 id="define-the-siamese-network">Define the Siamese Network</h2>
+
+<p>In this section we will define the siamese network used for training. The
+resulting network is defined in
+<code>./examples/siamese/mnist_siamese_train_test.prototxt</code>.</p>
+
+<h3 id="reading-in-the-pair-data">Reading in the Pair Data</h3>
+
+<p>We start with a data layer that reads from the LevelDB database we created
+earlier. Each entry in this database contains the image data for a pair of
+images (<code>pair_data</code>) and a binary label saying if they belong to the same class
+or different classes (<code>sim</code>).</p>
+
+<pre><code>layer {
+  name: "pair_data"
+  type: "Data"
+  top: "pair_data"
+  top: "sim"
+  include { phase: TRAIN }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/siamese/mnist_siamese_train_leveldb"
+    batch_size: 64
+  }
+}
+</code></pre>
+
+<p>In order to pack a pair of images into the same blob in the database we pack one
+image per channel. We want to be able to work with these two images separately,
+so we add a slice layer after the data layer. This takes the <code>pair_data</code> and
+slices it along the channel dimension so that we have a single image in <code>data</code>
+and its paired image in <code>data_p.</code></p>
+
+<pre><code>layer {
+  name: "slice_pair"
+  type: "Slice"
+  bottom: "pair_data"
+  top: "data"
+  top: "data_p"
+  slice_param {
+    slice_dim: 1
+    slice_point: 1
+  }
+}
+</code></pre>
+
+<h3 id="building-the-first-side-of-the-siamese-net">Building the First Side of the Siamese Net</h3>
+
+<p>Now we can specify the first side of the siamese net. This side operates on
+<code>data</code> and produces <code>feat</code>. Starting from the net in
+<code>./examples/siamese/mnist_siamese.prototxt</code> we add default weight fillers. Then
+we name the parameters of the convolutional and inner product layers. Naming the
+parameters allows Caffe to share the parameters between layers on both sides of
+the siamese net. In the definition this looks like:</p>
+
+<pre><code>...
+param { name: "conv1_w" ...  }
+param { name: "conv1_b" ...  }
+...
+param { name: "conv2_w" ...  }
+param { name: "conv2_b" ...  }
+...
+param { name: "ip1_w" ...  }
+param { name: "ip1_b" ...  }
+...
+param { name: "ip2_w" ...  }
+param { name: "ip2_b" ...  }
+...
+</code></pre>
+
+<h3 id="building-the-second-side-of-the-siamese-net">Building the Second Side of the Siamese Net</h3>
+
+<p>Now we need to create the second path that operates on <code>data_p</code> and produces
+<code>feat_p</code>. This path is exactly the same as the first. So we can just copy and
+paste it. Then we change the name of each layer, input, and output by appending
+<code>_p</code> to differentiate the “paired” layers from the originals.</p>
+
+<h3 id="adding-the-contrastive-loss-function">Adding the Contrastive Loss Function</h3>
+
+<p>To train the network we will optimize a contrastive loss function proposed in:
+Raia Hadsell, Sumit Chopra, and Yann LeCun “Dimensionality Reduction by Learning
+an Invariant Mapping”. This loss function encourages matching pairs to be close
+together in feature space while pushing non-matching pairs apart. This cost
+function is implemented with the <code>CONTRASTIVE_LOSS</code> layer:</p>
+
+<pre><code>layer {
+    name: "loss"
+    type: "ContrastiveLoss"
+    contrastive_loss_param {
+        margin: 1.0
+    }
+    bottom: "feat"
+    bottom: "feat_p"
+    bottom: "sim"
+    top: "loss"
+}
+</code></pre>
+
+<h2 id="define-the-solver">Define the Solver</h2>
+
+<p>Nothing special needs to be done to the solver besides pointing it at the
+correct model file. The solver is defined in
+<code>./examples/siamese/mnist_siamese_solver.prototxt</code>.</p>
+
+<h2 id="training-and-testing-the-model">Training and Testing the Model</h2>
+
+<p>Training the model is simple after you have written the network definition
+protobuf and solver protobuf files. Simply run
+<code>./examples/siamese/train_mnist_siamese.sh</code>:</p>
+
+<pre><code>./examples/siamese/train_mnist_siamese.sh
+</code></pre>
+
+<h1 id="plotting-the-results">Plotting the results</h1>
+
+<p>First, we can draw the model and siamese networks by running the following
+commands that draw the DAGs defined in the .prototxt files:</p>
+
+<pre><code>./python/draw_net.py \
+    ./examples/siamese/mnist_siamese.prototxt \
+    ./examples/siamese/mnist_siamese.png
+
+./python/draw_net.py \
+    ./examples/siamese/mnist_siamese_train_test.prototxt \
+    ./examples/siamese/mnist_siamese_train_test.png
+</code></pre>
+
+<p>Second, we can load the learned model and plot the features using the iPython
+notebook:</p>
+
+<pre><code>ipython notebook ./examples/siamese/mnist_siamese.ipynb
+</code></pre>
+
+
+
+      </section>
+  </div>
+  </body>
+</html>

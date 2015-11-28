@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Forward and Backward for Inference and Learning
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="forward-and-backward">Forward and Backward</h1>
+
+<p>The forward and backward passes are the essential computations of a <a href="net_layer_blob.html">Net</a>.</p>
+
+<p><img src="fig/forward_backward.png" alt="Forward and Backward" width="480" /></p>
+
+<p>Let’s consider a simple logistic regression classifier.</p>
+
+<p>The <strong>forward</strong> pass computes the output given the input for inference.
+In forward Caffe composes the computation of each layer to compute the “function” represented by the model.
+This pass goes from bottom to top.</p>
+
+<p><img src="fig/forward.jpg" alt="Forward pass" width="320" /></p>
+
+<p>The data <script type="math/tex">x</script> is passed through an inner product layer for <script type="math/tex">g(x)</script> then through a softmax for <script type="math/tex">h(g(x))</script> and softmax loss to give <script type="math/tex">f_W(x)</script>.</p>
+
+<p>The <strong>backward</strong> pass computes the gradient given the loss for learning.
+In backward Caffe reverse-composes the gradient of each layer to compute the gradient of the whole model by automatic differentiation.
+This is back-propagation.
+This pass goes from top to bottom.</p>
+
+<p><img src="fig/backward.jpg" alt="Backward pass" width="320" /></p>
+
+<p>The backward pass begins with the loss and computes the gradient with respect to the output <script type="math/tex">\frac{\partial f_W}{\partial h}</script>. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the <code>INNER_PRODUCT</code> layer, compute the gradient with respect to their parameters <script type="math/tex">\frac{\partial f_W}{\partial W_{\text{ip}}}</script> during the backward step.</p>
+
+<p>These computations follow immediately from defining the model: Caffe plans and carries out the forward and backward passes for you.</p>
+
+<ul>
+  <li>The <code>Net::Forward()</code> and <code>Net::Backward()</code> methods carry out the respective passes while <code>Layer::Forward()</code> and <code>Layer::Backward()</code> compute each step.</li>
+  <li>Every layer type has <code>forward_{cpu,gpu}()</code> and <code>backward_{cpu,gpu}</code> methods to compute its steps according to the mode of computation. A layer may only implement CPU or GPU mode due to constraints or convenience.</li>
+</ul>
+
+<p>The <a href="solver.html">Solver</a> optimizes a model by first calling forward to yield the output and loss, then calling backward to generate the gradient of the model, and then incorporating the gradient into a weight update that attempts to minimize the loss. Division of labor between the Solver, Net, and Layer keep Caffe modular and open to development.</p>
+
+<p>For the details of the forward and backward steps of Caffe’s layer types, refer to the <a href="layers.html">layer catalogue</a>.</p>
+
+
+
+      </section>
+  </div>
+  </body>
+</html>

@@ -3,8 +3,8 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -133,6 +133,58 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
+const Dtype* Blob<Dtype>::const_data() const {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return cpu_data();
+  case Caffe::GPU:
+    return gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(0);
+  }
+}
+
+template <typename Dtype>
+const Dtype* Blob<Dtype>::const_diff() const {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return cpu_diff();
+  case Caffe::GPU:
+    return gpu_diff();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(0);
+  }
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(0);
+  }
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_diff() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_diff();
+  case Caffe::GPU:
+    return mutable_gpu_diff();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(0);
+  }
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
@@ -156,7 +208,7 @@ void Blob<Dtype>::Update() {
   switch (data_->head()) {
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
-    caffe_axpy<Dtype>(count_, Dtype(-1),
+    GetDevice<Dtype>(Caffe::CPU)->axpy(count_, Dtype(-1),
         static_cast<const Dtype*>(diff_->cpu_data()),
         static_cast<Dtype*>(data_->mutable_cpu_data()));
     break;
@@ -164,7 +216,7 @@ void Blob<Dtype>::Update() {
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
     // perform computation on GPU
-    caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
+    GetDevice<Dtype>(Caffe::GPU)->axpy(count_, Dtype(-1),
         static_cast<const Dtype*>(diff_->gpu_data()),
         static_cast<Dtype*>(data_->mutable_gpu_data()));
 #else
@@ -189,26 +241,25 @@ template <> int Blob<int>::asum_data() const {
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) { return 0; }
+  Dtype asum = 0;
   switch (data_->head()) {
   case SyncedMemory::HEAD_AT_CPU:
-    return caffe_cpu_asum(count_, cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->asum(count_, cpu_data(), &asum);
+    return asum;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_data(), &asum);
+    GetDevice<Dtype>(Caffe::GPU)->asum(count_, gpu_data(), &asum);
     return asum;
-  }
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
-    return 0;
+    return asum;
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
   }
-  return 0;
+  return asum;
 }
 
 template <> unsigned int Blob<unsigned int>::asum_diff() const {
@@ -224,26 +275,25 @@ template <> int Blob<int>::asum_diff() const {
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) { return 0; }
+  Dtype asum = 0;
   switch (diff_->head()) {
   case SyncedMemory::HEAD_AT_CPU:
-    return caffe_cpu_asum(count_, cpu_diff());
+    GetDevice<Dtype>(Caffe::CPU)->asum(count_, cpu_diff(), &asum);
+    return asum;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_diff(), &asum);
+    GetDevice<Dtype>(Caffe::GPU)->asum(count_, gpu_diff(), &asum);
     return asum;
-  }
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
-    return 0;
+    return asum;
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
-  return 0;
+  return asum;
 }
 
 template <> unsigned int Blob<unsigned int>::sumsq_data() const {
@@ -418,27 +468,13 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
       LOG(FATAL) << "Trying to copy blobs of different sizes.";
     }
   }
-  switch (Caffe::mode()) {
-  case Caffe::GPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.gpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_gpu_data()));
-    } else {
-      caffe_copy(count_, source.gpu_data(),
-          static_cast<Dtype*>(data_->mutable_gpu_data()));
-    }
-    break;
-  case Caffe::CPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.cpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_cpu_data()));
-    } else {
-      caffe_copy(count_, source.cpu_data(),
-          static_cast<Dtype*>(data_->mutable_cpu_data()));
-    }
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
+
+  if (copy_diff) {
+    GetDevice<Dtype>()->copy(count_, source.const_diff(),
+                             static_cast<Dtype*>(diff_->mutable_data()));
+  } else {
+    GetDevice<Dtype>()->copy(count_, source.const_data(),
+                             static_cast<Dtype*>(data_->mutable_data()));
   }
 }
 
@@ -538,4 +574,3 @@ template class Blob<int>;
 template class Blob<unsigned int>;
 
 }  // namespace caffe
-

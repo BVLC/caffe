@@ -2,8 +2,14 @@
 #include <cfloat>
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -56,6 +62,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
     LossParameter_NormalizationMode normalization_mode, int valid_count) {
   Dtype normalizer;
@@ -88,6 +95,10 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+=======
+Dtype SoftmaxWithLossLayer<Dtype>::Forward(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
   // The forward pass computes the softmax prob values.
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
   const Dtype* prob_data = prob_.cpu_data();
@@ -115,8 +126,14 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+=======
+void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    vector<Blob<Dtype>*>* bottom) {
+>>>>>>> BVLC/device-abstraction
   if (propagate_down[1]) {
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
@@ -124,6 +141,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const Dtype* prob_data = prob_.cpu_data();
+<<<<<<< HEAD
     caffe_copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = bottom[1]->cpu_data();
     int dim = prob_.count() / outer_num_;
@@ -152,6 +170,21 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(SoftmaxWithLossLayer);
 #endif
 
+=======
+    GetDevice<Dtype>(Caffe::CPU)->copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = (*bottom)[1]->cpu_data();
+    int num = prob_.num();
+    int dim = prob_.count() / num;
+    for (int i = 0; i < num; ++i) {
+      bottom_diff[i * dim + static_cast<int>(label[i])] -= 1;
+    }
+    // Scale down gradient
+    GetDevice<Dtype>(Caffe::CPU)->scal(prob_.count(), Dtype(1) / num,
+                                       bottom_diff);
+  }
+}
+
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
 REGISTER_LAYER_CLASS(SoftmaxWithLoss);
 

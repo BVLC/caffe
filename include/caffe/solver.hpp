@@ -40,10 +40,28 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 template <typename Dtype>
 class Solver {
  public:
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
   explicit Solver(const SolverParameter& param,
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
   void Init(const SolverParameter& param);
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
   void InitTrainNet();
   void InitTestNets();
 
@@ -72,7 +90,11 @@ class Solver {
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+  inline int iter() { return iter_; }
+  inline int *iter_total() { return iter_total_; }
+  inline void iter_total(int *value) { iter_total_ = value; }
+<<<<<<< HEAD
+<<<<<<< HEAD
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -93,6 +115,10 @@ class Solver {
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -110,14 +136,37 @@ class Solver {
 
   SolverParameter param_;
   int iter_;
+  // Points to iter_ by default, but can be overriden, e.g. to a global
+  // counter if multiple solvers contribute iterations to the same model.
+  int *iter_total_;
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
 
+<<<<<<< HEAD
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
   const Solver* const root_solver_;
+=======
+  DISABLE_COPY_AND_ASSIGN(Solver);
+};
+
+
+/**
+ * @brief Optimizes the parameters of a Net using
+ *        stochastic gradient descent (SGD) with momentum.
+ */
+template <typename Dtype>
+class SGDSolver : public Solver<Dtype> {
+ public:
+  explicit SGDSolver(const SolverParameter& param, bool skip_test_nets = false)
+      : Solver<Dtype>(param, skip_test_nets) {}
+  explicit SGDSolver(const string& param_file)
+      : Solver<Dtype>(param_file) {}
+
+  const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+>>>>>>> origin/BVLC/parallel
 
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.

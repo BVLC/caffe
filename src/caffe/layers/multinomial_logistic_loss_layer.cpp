@@ -2,8 +2,15 @@
 #include <cmath>
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 
@@ -17,8 +24,13 @@ void MultinomialLogisticLossLayer<Dtype>::Reshape(
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+=======
+Dtype MultinomialLogisticLossLayer<Dtype>::Forward(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+>>>>>>> BVLC/device-abstraction
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
   int num = bottom[0]->num();
@@ -34,7 +46,7 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
+void MultinomialLogisticLossLayer<Dtype>::Backward(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
@@ -42,6 +54,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
+<<<<<<< HEAD
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* bottom_label = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -49,6 +62,15 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
     int dim = bottom[0]->count() / bottom[0]->num();
     caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
     const Dtype scale = - top[0]->cpu_diff()[0] / num;
+=======
+    const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+    const Dtype* bottom_label = (*bottom)[1]->cpu_data();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+    int num = (*bottom)[0]->num();
+    int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
+    GetDevice<Dtype>(Caffe::CPU)->set((*bottom)[0]->count(), Dtype(0),
+                                      bottom_diff);
+>>>>>>> BVLC/device-abstraction
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       Dtype prob = std::max(

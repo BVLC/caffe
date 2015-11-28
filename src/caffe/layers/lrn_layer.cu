@@ -1,6 +1,10 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/util/math_functions.hpp"
+=======
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {

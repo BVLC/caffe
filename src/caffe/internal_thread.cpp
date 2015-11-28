@@ -8,6 +8,9 @@ namespace caffe {
 
 InternalThread::~InternalThread() {
   StopInternalThread();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 bool InternalThread::is_started() const {
@@ -30,6 +33,28 @@ void InternalThread::StartInternalThread() {
   int solver_count = Caffe::solver_count();
   bool root_solver = Caffe::root_solver();
 
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+  if (thread_ != NULL) {
+    delete thread_;
+  }
+}
+
+bool InternalThread::StartInternalThread() {
+  if (!StopInternalThread()) {
+    return false;
+  }
+  must_stop_ = false;
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
   try {
     thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
           rand_seed, solver_count, root_solver));
@@ -38,6 +63,7 @@ void InternalThread::StartInternalThread() {
   }
 }
 
+<<<<<<< HEAD
 void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
     int solver_count, bool root_solver) {
 #ifndef CPU_ONLY
@@ -52,6 +78,17 @@ void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
 }
 
 void InternalThread::StopInternalThread() {
+=======
+/** Will not return until the internal thread has exited. */
+bool InternalThread::StopInternalThread() {
+  must_stop_ = true;
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
   if (is_started()) {
     thread_->interrupt();
     try {
