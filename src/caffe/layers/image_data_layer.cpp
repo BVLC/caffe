@@ -44,12 +44,15 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
   this->StopInternalThread();
 =======
   this->InternalThread::StopInternalThread();
@@ -64,6 +67,7 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
   this->StopInternalThread();
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -75,6 +79,10 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   this->StopInternalThread();
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 }
 
 template <typename Dtype>
@@ -263,6 +271,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -302,8 +313,15 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 =======
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
@@ -393,9 +411,12 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======

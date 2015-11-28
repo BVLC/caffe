@@ -61,6 +61,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -73,6 +74,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
@@ -142,6 +145,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -158,6 +162,12 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+# Parallelization over InfiniBand or RoCE
+# RDMA := 1
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++

@@ -54,6 +54,7 @@ InternalThread::~InternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -66,6 +67,8 @@ InternalThread::~InternalThread() {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 }
 
 bool InternalThread::is_started() const {
@@ -96,6 +99,8 @@ void InternalThread::StartInternalThread() {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
   if (thread_ != NULL) {
     delete thread_;
   }
@@ -108,6 +113,9 @@ bool InternalThread::StartInternalThread() {
   must_stop_ = false;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -160,6 +168,9 @@ bool InternalThread::StopInternalThread() {
   must_stop_ = true;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel

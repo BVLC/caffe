@@ -6,12 +6,15 @@ PROJECT := caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
@@ -20,6 +23,9 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+CONFIG_FILE ?= Makefile.config
+>>>>>>> origin/BVLC/parallel
 =======
 CONFIG_FILE ?= Makefile.config
 >>>>>>> origin/BVLC/parallel
@@ -860,6 +866,7 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -872,6 +879,8 @@ endif
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -903,6 +912,7 @@ ifeq ($(RDMA), 1)
 	LIBRARIES += ibverbs ibumad
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -911,6 +921,12 @@ ifeq ($(RDMA), 1)
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+ifeq ($(RDMA), 1)
+	COMMON_FLAGS += -DRDMA
+	LIBRARIES += ibverbs ibumad
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -1888,6 +1904,7 @@ $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
@@ -1899,6 +1916,35 @@ $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+=======
+=======
+		| $(LAYER_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+>>>>>>> origin/BVLC/parallel
+		| $(LAYER_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+>>>>>>> origin/BVLC/parallel
+		| $(LAYER_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+		| $(LAYER_BUILD_DIR)
+>>>>>>> pod/common.hpp
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ echo

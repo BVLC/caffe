@@ -61,7 +61,11 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   InternalThread() : thread_() {}
+=======
+  InternalThread() : thread_(NULL), must_stop_() {}
+>>>>>>> origin/BVLC/parallel
 =======
   InternalThread() : thread_(NULL), must_stop_() {}
 >>>>>>> origin/BVLC/parallel
@@ -84,7 +88,11 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   void StopInternalThread();
+=======
+  bool StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 =======
   bool StopInternalThread();
 >>>>>>> origin/BVLC/parallel
@@ -286,6 +294,10 @@ class InternalThread {
 
   bool is_started() const;
 >>>>>>> caffe
+
+  bool must_stop() {
+    return must_stop_;
+  }
 
  protected:
   /* Implement this method in your subclass
@@ -329,6 +341,9 @@ class InternalThread {
   bool must_stop_;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
