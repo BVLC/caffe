@@ -709,6 +709,45 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   }
 }
 
+TYPED_TEST(NeuronLayerTest, TestPReLU_ConstrainNegSlope) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_prelu_param()->set_constrain_neg_slope(true);
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  FillerParameter filler_param;
+  filler_param.set_std(10.0f);
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(layer.blobs()[0].get());
+
+  int less_than_zero = 0;
+  int greater_than_one = 0;
+  for (int i = 0; i < layer.blobs()[0]->count(); ++i) {
+    Dtype slope = layer.blobs()[0]->cpu_data()[i];
+    less_than_zero += (slope < 0.0f) ? 1 : 0;
+    greater_than_one += (slope > 1.0f) ? 1 : 0;
+  }
+
+  // Expect to have some values outside the range 0.0 to 1.0.
+  EXPECT_GT(less_than_zero, 0);
+  EXPECT_GT(greater_than_one, 0);
+
+  // Run the logic that constrains the negative slope.
+  layer.PostUpdateProcessing();
+
+  less_than_zero = 0;
+  greater_than_one = 0;
+  for (int i = 0; i < layer.blobs()[0]->count(); ++i) {
+    Dtype slope = layer.blobs()[0]->cpu_data()[i];
+    less_than_zero += (slope < 0.0f) ? 1 : 0;
+    greater_than_one += (slope > 1.0f) ? 1 : 0;
+  }
+
+  // Expect to have no values outside the range 0.0 to 1.0.
+  EXPECT_EQ(less_than_zero, 0);
+  EXPECT_EQ(greater_than_one, 0);
+}
+
 #ifdef USE_CUDNN
 template <typename Dtype>
 class CuDNNNeuronLayerTest : public GPUDeviceTest<Dtype> {

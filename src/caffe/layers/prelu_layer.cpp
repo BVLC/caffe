@@ -13,6 +13,10 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "Number of axes of bottom blob must be >=2.";
   PReLUParameter prelu_param = this->layer_param().prelu_param();
   int channels = bottom[0]->channels();
+  constrain_neg_slope_ = prelu_param.constrain_neg_slope();
+  min_neg_slope_ = prelu_param.min_neg_slope();
+  max_neg_slope_ = prelu_param.max_neg_slope();
+
   channel_shared_ = prelu_param.channel_shared();
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
@@ -128,9 +132,29 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+template<typename Dtype>
+void PReLULayer<Dtype>::PostUpdateProcessing_cpu() {
+  if (!this->constrain_neg_slope_) {
+    return;
+  }
+
+  // Constrain the slopes to be between the limits.
+  Dtype* slopes = this->blobs_[0]->mutable_cpu_data();
+  int slope_count = this->blobs_[0]->count();
+  for (int i = 0; i < slope_count; ++i) {
+    Dtype slope = *slopes;
+    if (slope < this->min_neg_slope_) {
+      *slopes = this->min_neg_slope_;
+    } else if (slope > this->max_neg_slope_) {
+      *slopes = this->max_neg_slope_;
+    }
+    slopes++;
+  }
+}
 
 #ifdef CPU_ONLY
 STUB_GPU(PReLULayer);
+STUB_GPU_POSTUPDATEPROCESSING(PReLULayer);
 #endif
 
 INSTANTIATE_CLASS(PReLULayer);

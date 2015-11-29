@@ -795,7 +795,17 @@ class PReLULayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /*********
+   * @brief Perform the post-update processing to constrain the negative slopes
+   *        of the Prelu.
+   *********/
+  virtual void PostUpdateProcessing_cpu();
+  virtual void PostUpdateProcessing_gpu();
+
   bool channel_shared_;
+  bool constrain_neg_slope_;
+  Dtype min_neg_slope_;
+  Dtype max_neg_slope_;
   Blob<Dtype> multiplier_;  // dot multiplier for backward computation of params
   Blob<Dtype> backward_buff_;  // temporary buffer for backward computation
   Blob<Dtype> bottom_memory_;  // memory for in-place computation

@@ -315,7 +315,22 @@ class Layer {
     }
     param_propagate_down_[param_id] = value;
   }
-
+  /**
+   * @brief Called on each layer after net's parameters have been updated
+   *        using the solver.
+   */
+  void PostUpdateProcessing() {
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      PostUpdateProcessing_cpu();
+      break;
+    case Caffe::GPU:
+      PostUpdateProcessing_gpu();
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode.";
+    }
+  }
 
  protected:
   /** The protobuf that stores the layer parameters */
@@ -361,6 +376,20 @@ class Layer {
       const vector<Blob<Dtype>*>& bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
     Backward_cpu(top, propagate_down, bottom);
+  }
+
+  /**
+   * @brief Perform any processing required after the solver has updated
+   *        network parameters. Called only when Caffe mode is CPU.
+   */
+  virtual void PostUpdateProcessing_cpu() { /* Default behavior: no action.*/ }
+  /**
+   * @brief Perform any processing required after the solver has updated
+   *        network parameters. Called only when Caffe mode is GPU.
+   */
+  virtual void PostUpdateProcessing_gpu() {
+    // Call cpu code as a backup.
+    PostUpdateProcessing_cpu();
   }
 
   /**
