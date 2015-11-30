@@ -36,7 +36,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
   string filename;
-  int label;
+  double label;
   while (infile >> filename >> label) {
     lines_.push_back(std::make_pair(filename, label));
   }
