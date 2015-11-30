@@ -154,7 +154,8 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     if (datum.encoded()) {
       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     } else {
-      this->data_transformer_->Transform_nv(datum, &(this->transformed_data_),
+      this->data_transformer_->Transform_nv(datum, 
+        &(this->transformed_data_),
         &(this->transformed_label_), cnt);
       ++cnt;
     }

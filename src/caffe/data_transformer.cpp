@@ -1,6 +1,8 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #endif  // USE_OPENCV
 
 #include <iostream>
@@ -368,15 +370,13 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     int grid_y = img_aug.rows;
     Mat label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
     for (int g_y = 0; g_y < grid_y; g_y++){
-      //printf("\n");
       for (int g_x = 0; g_x < grid_x; g_x++){
         label_map.at<uchar>(g_y,g_x) = (int)(transformed_data[3*offset + g_y*grid_x + g_x]*255);
-        //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
       }
     }
-    //Mat color_label_map = Mat::zeros(grid_y, grid_x, CV_8UC3);
-    //cv::applyColorMap(label_map, color_label_map, cv::COLORMAP_JET);
-    
+    applyColorMap(label_map, label_map, COLORMAP_JET);
+    addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+
     circle(label_map, meta.objpos, 3, CV_RGB(100,100,100), -1);
     
     char imagename [100];
@@ -477,9 +477,9 @@ void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
   //MPII R leg: 0(ankle), 1(knee), 2(hip)
   //     L leg: 5(ankle), 4(knee), 3(hip)
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
-  //     L arms: 13(wrist), 14(elbow), 15(shoulder)
+  //     L arms: 15(wrist), 14(elbow), 13(shoulder)
   int right[6] = {0,1,2,10,11,12};
-  int left[6] = {5,4,3,13,14,15};
+  int left[6] = {5,4,3,15,14,13};
   for(int i=0; i<6; i++){
     Point2f temp = j.joints[right[i]];
     j.joints[right[i]] = j.joints[left[i]];
@@ -581,8 +581,9 @@ template<typename Dtype>
 void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img_aug, MetaData meta) {
   int rezX = img_aug.cols;
   int rezY = img_aug.rows;
-  int grid_x = rezX / param_.stride();
-  int grid_y = rezY / param_.stride();
+  int stride = param_.stride();
+  int grid_x = rezX / stride;
+  int grid_y = rezY / stride;
   int channelOffset = grid_y * grid_x;
 
   // clear out transformed_label, it may remain things for last batch
@@ -621,8 +622,8 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     Mat label_map;
     for(int i = 0; i < 14; i++){      
       label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
-      int MPI_index = MPI_to_ours[i];
-      Point2f center = meta.joint_self.joints[MPI_index];
+      //int MPI_index = MPI_to_ours[i];
+      //Point2f center = meta.joint_self.joints[MPI_index];
       for (int g_y = 0; g_y < grid_y; g_y++){
         //printf("\n");
         for (int g_x = 0; g_x < grid_x; g_x++){
@@ -630,10 +631,12 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
           //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
         }
       }
-      //Mat color_label_map = Mat::zeros(grid_y, grid_x, CV_8UC3);
-      //cv::applyColorMap(label_map, color_label_map, cv::COLORMAP_JET);
-      center = center * (1.0/(float)param_.stride());
-      circle(label_map, center, 3, CV_RGB(255,0,255), -1);
+      resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
+      applyColorMap(label_map, label_map, COLORMAP_JET);
+      addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+      
+      //center = center * (1.0/(float)param_.stride());
+      //circle(label_map, center, 3, CV_RGB(255,0,255), -1);
       char imagename [100];
       sprintf(imagename, "augment_%04d_label_part_%02d.jpg", counter, i);
       //LOG(INFO) << "filename is " << imagename;
@@ -648,10 +651,12 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
         //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
       }
     }
-    //Mat color_label_map = Mat::zeros(grid_y, grid_x, CV_8UC3);
-    //cv::applyColorMap(label_map, color_label_map, cv::COLORMAP_JET);
+    resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
+    applyColorMap(label_map, label_map, COLORMAP_JET);
+    addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+
     for(int i=0;i<16;i++){
-      Point2f center = meta.joint_self.joints[i] * (1.0/param_.stride());
+      Point2f center = meta.joint_self.joints[i];// * (1.0/param_.stride());
       circle(label_map, center, 3, CV_RGB(100,100,100), -1);
     }
     char imagename [100];
