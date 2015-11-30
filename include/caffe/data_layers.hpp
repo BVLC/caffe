@@ -272,6 +272,40 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+  class MatGenerator {
+   public:
+    virtual void generate(int batch_size, std::vector<cv::Mat> * mats,
+                          std::vector<int> * labels) = 0;
+    virtual ~MatGenerator() {}
+  };
+
+  class DatumGenerator {
+   public:
+    virtual void generate(int batch_size, std::vector<Datum> * data) = 0;
+    virtual ~DatumGenerator() {}
+  };
+
+  class RawPointerGenerator {
+   public:
+    virtual void generate(int batch_size, Dtype ** data,
+                          Dtype ** labels, int * n) = 0;
+    virtual ~RawPointerGenerator() {}
+  };
+
+  void inline SetMatGenerator(boost::shared_ptr<MatGenerator> callback) {
+    ResetGenerators();
+    generate_cv_mat_labels_cb_ = callback;
+  }
+  void inline SetDatumGenerator(boost::shared_ptr<DatumGenerator> callback) {
+    ResetGenerators();
+    generate_datum_cb_ = callback;
+  }
+  void inline SetRawPointerGenerator(
+          boost::shared_ptr<RawPointerGenerator> callback) {
+    ResetGenerators();
+    generate_raw_pointer_cb_ = callback;
+  }
+
   virtual inline const char* type() const { return "MemoryData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
@@ -282,6 +316,10 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
       const vector<int>& labels);
 #endif  // USE_OPENCV
 
+  /**
+   * @brief **Warning**: Reset does not perform transformations.
+   *   Use `AddDatumVector` or `AddMatVector` instead if you want your input transformed.
+   */
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
@@ -295,7 +333,12 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
+  void HandleGenerators();
+  void inline ResetGenerators() {
+    generate_cv_mat_labels_cb_ = boost::shared_ptr<MatGenerator>();
+    generate_datum_cb_ = boost::shared_ptr<DatumGenerator>();
+    generate_raw_pointer_cb_ = boost::shared_ptr<RawPointerGenerator>();
+  }
   int batch_size_, channels_, height_, width_, size_;
   Dtype* data_;
   Dtype* labels_;
@@ -304,6 +347,9 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
+  boost::shared_ptr<MatGenerator> generate_cv_mat_labels_cb_;
+  boost::shared_ptr<DatumGenerator> generate_datum_cb_;
+  boost::shared_ptr<RawPointerGenerator> generate_raw_pointer_cb_;
 };
 
 /**
