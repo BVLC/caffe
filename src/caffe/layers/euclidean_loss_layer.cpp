@@ -3,6 +3,12 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/highgui/highgui.hpp>
+using namespace cv;
+
 namespace caffe {
 
 template <typename Dtype>
@@ -17,6 +23,36 @@ void EuclideanLossLayer<Dtype>::Reshape(
 template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  //add some visualization code here
+  int num = bottom[1]->num();
+  int nchannel = bottom[1]->channels();
+  int height = bottom[1]->height();
+  int width = bottom[1]->width();
+  LOG(INFO) << "Label shape is " << num << " x " << nchannel << " x " << height << " x " << width;
+
+  static int counter = 0;
+  int stride = 8;
+  for(int n=0; n<num; n++){
+    for(int c=0; c<nchannel; c++){
+      int offset = n*nchannel*height*width + c*height*width;
+      
+      Mat label_map = Mat::zeros(height, width, CV_8UC1);
+      for(int h=0; h<height; h++){
+        for(int w=0; w<width; w++){
+          label_map.at<uchar>(h,w) = (int)(bottom[1]->cpu_data()[offset + h*width + w]*255);
+        }
+      }
+      char filename[100];
+      sprintf(filename, "from_euc_loss_%04d_part%02d.jpg", counter, c);
+      resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
+      applyColorMap(label_map, label_map, COLORMAP_JET);
+      //addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+      imwrite(filename, label_map);
+    }
+    counter++;
+  }
+
+
   int count = bottom[0]->count();
   caffe_sub(
       count,

@@ -361,8 +361,10 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
       transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
       transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
+      transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero it
     }
   }
+  
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
   if(param_.visualize()){
     static int counter = 3;
