@@ -307,6 +307,7 @@ message ParamSpec {
 // Update the next available ID when you add a new LayerParameter field.
 //
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+// Extra next available ID: 1984003
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -391,6 +392,10 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+
+  //extra layer parameters
+  optional ExTextMemoryDataParameter ex_text_memory_data_param = 1984001;
+  optional ExMultiEmbedParameter ex_multiembed_param = 1984002;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1249,4 +1254,16 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
+}
+
+message ExTextMemoryDataParameter {
+  optional string source = 1;
+  optional uint32 batch_size = 2;
+}
+
+message ExMultiEmbedParameter {
+  repeated EmbedParameter embed_param = 1;
+  optional bool bias_term = 3 [default = true]; // Whether to use a bias term
+  optional FillerParameter weight_filler = 4; // The filler for the weight
+  optional FillerParameter bias_filler = 5; // The filler for the bias
 }
