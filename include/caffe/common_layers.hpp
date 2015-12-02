@@ -145,6 +145,35 @@ class BatchNormLayer : public Layer<Dtype> {
   Blob<Dtype> spatial_sum_multiplier_;
 };
 
+#ifdef USE_CUDNN
+template <typename Dtype>
+class CuDNNBatchNormLayer : public BatchNormLayer<Dtype> {
+ public:
+  explicit CuDNNBatchNormLayer(const LayerParameter& param)
+      : BatchNormLayer<Dtype>(param), epsilon_(1e-4), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNBatchNormLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  // cuDNN descriptors / handles
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
+  cudnnTensorDescriptor_t scale_bias_mean_var_desc_;
+  cudnnBatchNormMode_t mode_;
+
+  double epsilon_;
+  Blob<Dtype> save_mean_, save_inv_var_;
+  bool handles_setup_;
+};
+#endif
+
 /**
  * @brief Takes at least two Blob%s and concatenates them along either the num
  *        or channel dimension, outputting the result.
