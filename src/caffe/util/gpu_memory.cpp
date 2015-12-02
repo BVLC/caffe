@@ -131,7 +131,11 @@ namespace caffe {
 
           cubAlloc = new cub::CachingDeviceAllocator( 2,   // defaults
                                                       6,
-                                                      16,
+                                                      32,  // largest
+                                                           // cached
+                                                           // allocation
+                                                           // becomes
+                                                           // 2^32 here
                                                       poolsize_,
                                                       false,
                                                       debug_);
