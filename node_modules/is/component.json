@@ -1,0 +1,8 @@
+{
+  "name": "is",
+  "repo": "enricomarino/is",
+  "description": "The definitive type testing library",
+  "version": "0.2.0",
+  "dependencies": {},
+  "scripts": ["index.js"]
+}

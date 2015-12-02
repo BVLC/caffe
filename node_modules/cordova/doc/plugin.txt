@@ -1,0 +1,44 @@
+Synopsis
+
+    cordova-cli plugin <command> [options]
+
+Manage project plugins
+
+    add <pluginid>|<directory>|<giturl> [...] ..... add specified plugins
+                                                    pluginid will be matched in --searchpath / registry
+                                                    directory is a directory containing a plugin
+                                                    giturl is a git repo containing a plugin
+
+        [--searchpath <directory>] ................ when looking up plugins by ID, look in this directory and
+                                                    each of its subdirectories for the plugin before hitting the registry.
+                                                    Multiple search paths can be used by either specifying the flag multiple
+                                                    times, or by separating paths with a delimiter (: on 'nix, ; on Windows).
+
+        [--noregistry] ............................ don't search the registry for plugins
+
+        [--link] .................................. when installing from a local path, creates a symbolic link to the plugin
+                                                    instead of copying files. The extent to which files are linked vs copied
+                                                    varies by platform. Useful for plugin development.
+        [--save] .................................. save the information for specified plugin into config.xml
+        [--shrinkwrap] ............................ used together with --save, saves the installed version number to config.xml
+
+
+
+    remove <pluginid> [...] ....................... remove plugins with the given IDs
+      
+        [--save] ................................... remove the information for specified plugin into config.xml
+
+
+    list .......................................... list currently installed plugins
+    search [<keyword>] [...] ...................... search the plugin registry for plugins matching the keywords
+
+aliases:
+    plugins -> plugin
+    rm -> remove
+    ls -> list
+
+
+Experimental Flags
+
+    --browserify .......................... Plugins javascript gets loaded at build time instead of runtime using browserify.
+                                            Replaces cordovajs file with one that includes the JS of the installed plugins.

@@ -1,0 +1,46 @@
+Synopsis
+
+    cordova-cli run [MODE] [PROD] [TARGET] [EXP] [PLATS] [BUILDCONFIG] [-- POPTS] 
+
+      MODE:       --list|--nobuild
+      PROD:        --debug|--release
+      TARGET:      DEVICECLASS|--target=FOO
+      EXP:         --experimental [EXPERIMENTALFLAGS]
+      PLATS:       PLATFORM [...]
+      BUILDCONFIG: --buildConfig=CONFIGFILE
+      POPTS:       platformopts
+      DEVICECLASS: --device|--emulator
+
+Deploys app on specified platform devices / emulators
+
+    --nobuild .......................... don't build
+
+    --debug ............................ Deploy a debug build
+    --release .......................... Deploy a release build
+
+    --device ........................... Deploy to a device
+    --emulator ......................... Deploy to an emulator
+    --target ........................... Deploy to a specific target
+
+    --list ............................. Lists available targets
+                                         Will display both device and emulator
+                                         unless DEVICECLASS option is provided
+
+    --buildConfig....................... Use the specified build configuration
+                                         instead of default build.json
+
+To provide platform specific options, you must include them after `--`.
+
+Technical details
+    calls cordova prepare
+    calls PLATFORM run
+        PLATFORM run calls PLATFORM build (unless --nobuild)
+
+Experimental Flags
+
+    --browserify ....................... Plugins javascript gets loaded at build time instead of runtime using browserify.
+                                         Replaces cordovajs file with one that includes the JS of the installed plugins.
+
+Example
+
+    cordova run android --release --buildConfig=..\myBuildConfig.json --target=myEmulator

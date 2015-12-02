@@ -1,0 +1,4 @@
+test/fixtures/angular-bridge
+node_modules
+npm-debug.log
+coverage

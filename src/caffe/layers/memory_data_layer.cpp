@@ -4,6 +4,7 @@
 
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -48,6 +49,9 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/memory_data_layer.hpp"
+>>>>>>> BVLC/master
 
 namespace caffe {
 

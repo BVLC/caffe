@@ -33,7 +33,7 @@
 >>>>>>> device-abstraction
 #include <vector>
 
-#include "caffe/neuron_layers.hpp"
+#include "caffe/layers/exp_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD

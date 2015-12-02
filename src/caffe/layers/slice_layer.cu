@@ -8,9 +8,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
+=======
+#include "caffe/layers/slice_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/math_functions.hpp"
 =======
 =======

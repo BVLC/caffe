@@ -1,0 +1,29 @@
+{
+    "name": "cronjs",
+    "version": "1.0.1",
+    "homepage": "https://github.com/ncb000gt/node-cron",
+    "authors": [
+        "Romain Beauxis<toots@rastageeks.org>",
+        "James Padoulsey<@padolsey>",
+        "Craig Condon<craig@browsertap.com>",
+        "Finn Herpich",
+        "cliftonc",
+        "neyric",
+        "humanchimp",
+        "danhbear"
+    ],
+    "description": "js cron handler",
+    "main": ["lib/cron.js"],
+    "keywords": [
+        "cron",
+        "js"
+    ],
+    "license": "MIT",
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ]
+}

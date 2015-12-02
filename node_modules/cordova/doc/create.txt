@@ -1,0 +1,15 @@
+Synopsis
+
+    cordova-cli create <PATH> [ID [NAME [CONFIG]]] [options] [PLATFORM...]
+
+Create a Cordova project
+
+    PATH ......................... Where to create the project
+    ID ........................... reverse-domain-style package name - used in <widget id>
+    NAME ......................... human readable field
+    CONFIG ....................... json string whose key/values will be included in
+                                    [PATH]/.cordova-cli/config.json
+
+    Options:
+        --copy-from|src=<PATH> ... use custom www assets instead of the stock Cordova hello-world.
+        --link-to=<PATH> ......... symlink to custom www assets without creating a copy.

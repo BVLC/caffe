@@ -1,0 +1,76 @@
+{
+  "name": "strip-json-comments",
+  "version": "0.1.3",
+  "description": "Strip comments from JSON. Lets you use comments in your JSON files!",
+  "keywords": [
+    "json",
+    "strip",
+    "remove",
+    "delete",
+    "trim",
+    "comments",
+    "multiline",
+    "parse",
+    "config",
+    "configuration",
+    "conf",
+    "settings",
+    "util",
+    "env",
+    "environment",
+    "cli",
+    "bin"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "http://sindresorhus.com"
+  },
+  "files": [
+    "cli.js",
+    "strip-json-comments.js"
+  ],
+  "main": "strip-json-comments",
+  "bin": {
+    "strip-json-comments": "cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sindresorhus/strip-json-comments"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "gitHead": "cbd5aede7ccbe5d5a9065b1d47070fd99ad579af",
+  "bugs": {
+    "url": "https://github.com/sindresorhus/strip-json-comments/issues"
+  },
+  "homepage": "https://github.com/sindresorhus/strip-json-comments",
+  "_id": "strip-json-comments@0.1.3",
+  "_shasum": "164c64e370a8a3cc00c9e01b539e569823f0ee54",
+  "_from": "strip-json-comments@0.1.x",
+  "_npmVersion": "1.4.13",
+  "_npmUser": {
+    "name": "sindresorhus",
+    "email": "sindresorhus@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "sindresorhus",
+      "email": "sindresorhus@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "164c64e370a8a3cc00c9e01b539e569823f0ee54",
+    "tarball": "http://registry.npmjs.org/strip-json-comments/-/strip-json-comments-0.1.3.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/strip-json-comments/-/strip-json-comments-0.1.3.tgz"
+}

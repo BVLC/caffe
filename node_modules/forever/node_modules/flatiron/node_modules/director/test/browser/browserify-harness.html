@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Director Browserify Tests</title>
+    <link rel="stylesheet" href="../../node_modules/qunitjs/qunit/qunit.css">
+</head>
+<body>
+    <p>To run these tests first generate a Browserify bundle for director by running the command <kbd>browserify -r ../director -o test/browser/browserified-bundle.js</kbd> in the repo's root directory.</p>
+
+    <div id="qunit">
+    <div id="qunit-fixture"></div>
+
+    <script src="browserified-bundle.js"></script>
+    <script>
+        var HTML5TEST = false;
+        var RouterAlias = require('/').Router;
+    </script>
+
+    <script src="../../node_modules/qunitjs/qunit/qunit.js"></script>
+    <script src="helpers/api.js"></script>
+    <script src="routes-test.js"></script>
+</body>
+</html>

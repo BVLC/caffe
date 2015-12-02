@@ -1,0 +1,4 @@
+ometa Grammar {
+  rule false -> false,
+  rule true -> true
+}

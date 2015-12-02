@@ -1,0 +1,6 @@
+spec-plugman
+spec-cordova
+fixtures
+platformsConfig.json
+defaults.json
+help.txt

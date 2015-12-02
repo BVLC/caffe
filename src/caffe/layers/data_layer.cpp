@@ -169,6 +169,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -212,6 +213,10 @@ namespace caffe {
 =======
 #include "caffe/data_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+=======
+#include "caffe/data_transformer.hpp"
+#include "caffe/layers/data_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/benchmark.hpp"
 >>>>>>> caffe
 

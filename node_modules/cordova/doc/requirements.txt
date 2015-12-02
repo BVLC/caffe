@@ -1,0 +1,7 @@
+Synopsis
+
+    cordova-cli requirements [PLATFORM ...]
+
+Checks and print out all the requirements for platforms specified (or all platforms added
+to project if none specified). If all requirements for each platform are met, exits with code 0
+otherwise exits with non-zero code.

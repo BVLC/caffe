@@ -1,0 +1,24 @@
+{
+    "disallowMixedSpacesAndTabs": true,
+    "disallowTrailingWhitespace": true,
+    "validateLineBreaks": "LF",
+    "validateIndentation": 4,
+    "requireLineFeedAtFileEnd": true,
+
+    "disallowSpaceAfterPrefixUnaryOperators": true,
+    "disallowSpaceBeforePostfixUnaryOperators": true,
+    "requireSpaceAfterLineComment": true,
+    "requireCapitalizedConstructors": true,
+
+    "disallowSpacesInNamedFunctionExpression": {
+        "beforeOpeningRoundBrace": true
+    },
+
+    "requireSpaceAfterKeywords": [
+      "if",
+      "else",
+      "for",
+      "while",
+      "do"
+    ]
+}

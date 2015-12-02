@@ -1,0 +1,45 @@
+{
+  "name": "duplexify",
+  "version": "3.4.2",
+  "description": "Turn a writeable and readable stream into a streams2 duplex stream with support for async initialization and streams1/streams2 input",
+  "main": "index.js",
+  "dependencies": {
+    "end-of-stream": "1.0.0",
+    "readable-stream": "^2.0.0"
+  },
+  "devDependencies": {
+    "concat-stream": "^1.4.6",
+    "tape": "^2.13.3",
+    "through2": "^0.5.1"
+  },
+  "scripts": {
+    "test": "tape test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mafintosh/duplexify.git"
+  },
+  "keywords": [
+    "duplex",
+    "streams2",
+    "streams",
+    "stream",
+    "writable",
+    "readable",
+    "async"
+  ],
+  "author": {
+    "name": "Mathias Buus"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafintosh/duplexify/issues"
+  },
+  "homepage": "https://github.com/mafintosh/duplexify",
+  "readme": "# duplexify\n\nTurn a writeable and readable stream into a single streams2 duplex stream.\n\nSimilar to [duplexer2](https://github.com/deoxxa/duplexer2) except it supports both streams2 and streams1 as input\nand it allows you to set the readable and writable part asynchroniously using `setReadable(stream)` and `setWritable(stream)`\n\n```\nnpm install duplexify\n```\n\n[![build status](http://img.shields.io/travis/mafintosh/duplexify.svg?style=flat)](http://travis-ci.org/mafintosh/duplexify)\n\n## Usage\n\nUse `duplexify(writable, readable, streamOptions)` (or `duplexify.obj(writable, readable)` to create an object stream)\n\n``` js\nvar duplexify = require('duplexify')\n\n// turn writableStream and readableStream into a single duplex stream\nvar dup = duplexify(writableStream, readableStream)\n\ndup.write('hello world') // will write to writableStream\ndup.on('data', function(data) {\n  // will read from readableStream\n})\n```\n\nYou can also set the readable and writable parts asynchroniously\n\n``` js\nvar dup = duplexify()\n\ndup.write('hello world') // write will buffer until the writable\n                         // part has been set\n\n// wait a bit ...\ndup.setReadable(readableStream)\n\n// maybe wait some more?\ndup.setWritable(writableStream)\n```\n\nIf you call `setReadable` or `setWritable` multiple times it will unregister the previous readable/writable stream.\nTo disable the readable or writable part call `setReadable` or `setWritable` with `null`.\n\nIf the readable or writable streams emits an error or close it will destroy both streams and bubble up the event.\nYou can also explictly destroy the streams by calling `dup.destroy()`. The `destroy` method optionally takes an\nerror object as argument, in which case the error is emitted as part of the `error` event.\n\n``` js\ndup.on('error', function(err) {\n  console.log('readable or writable emitted an error - close will follow')\n})\n\ndup.on('close', function() {\n  console.log('the duplex stream is destroyed')\n})\n\ndup.destroy() // calls destroy on the readable and writable part (if present)\n```\n\n## HTTP request example\n\nTurn a node core http request into a duplex stream is as easy as\n\n``` js\nvar duplexify = require('duplexify')\nvar http = require('http')\n\nvar request = function(opts) {\n  var req = http.request(opts)\n  var dup = duplexify(req)\n  req.on('response', function(res) {\n    dup.setReadable(res)\n  })\n  return dup\n}\n\nvar req = request({\n  method: 'GET',\n  host: 'www.google.com',\n  port: 80\n})\n\nreq.end()\nreq.pipe(process.stdout)\n```\n\n## License\n\nMIT",
+  "readmeFilename": "README.md",
+  "_id": "duplexify@3.4.2",
+  "_shasum": "71a578af03e0d063eb8f1326affd5e5600145e1b",
+  "_resolved": "https://registry.npmjs.org/duplexify/-/duplexify-3.4.2.tgz",
+  "_from": "duplexify@>=3.2.0 <4.0.0"
+}

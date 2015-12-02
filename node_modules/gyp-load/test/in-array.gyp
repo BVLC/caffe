@@ -1,0 +1,7 @@
+{
+    "a": [
+        {
+            "includes": ["include.gypi"]
+        }
+    ]
+}

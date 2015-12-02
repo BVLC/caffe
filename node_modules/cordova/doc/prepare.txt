@@ -1,0 +1,11 @@
+Synopsis
+
+    cordova-cli prepare [PLATFORM..]
+
+Copies files for specified platforms, or all platforms,
+so that the project is ready to build with each SDK.
+
+Experimental Flags
+
+    --browserify ...................... Plugins javascript gets loaded at build time instead of runtime using browserify.
+                                        Replaces cordovajs file with one that includes the JS of the installed plugins.

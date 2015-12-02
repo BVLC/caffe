@@ -1,0 +1,70 @@
+{
+  "name": "object-inspect",
+  "version": "0.4.0",
+  "description": "string representations of objects in node and the browser",
+  "main": "index.js",
+  "devDependencies": {
+    "tape": "~2.6.0"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "testling": {
+    "files": [
+      "test/*.js",
+      "test/browser/*.js"
+    ],
+    "browsers": [
+      "ie/6..latest",
+      "chrome/latest",
+      "firefox/latest",
+      "safari/latest",
+      "opera/latest",
+      "iphone/latest",
+      "ipad/latest",
+      "android/latest"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/object-inspect.git"
+  },
+  "homepage": "https://github.com/substack/object-inspect",
+  "keywords": [
+    "inspect",
+    "util.inspect",
+    "object",
+    "stringify",
+    "pretty"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/substack/object-inspect/issues"
+  },
+  "_id": "object-inspect@0.4.0",
+  "dist": {
+    "shasum": "f5157c116c1455b243b06ee97703392c5ad89fec",
+    "tarball": "http://registry.npmjs.org/object-inspect/-/object-inspect-0.4.0.tgz"
+  },
+  "_from": "object-inspect@>=0.4.0 <0.5.0",
+  "_npmVersion": "1.4.4",
+  "_npmUser": {
+    "name": "substack",
+    "email": "mail@substack.net"
+  },
+  "maintainers": [
+    {
+      "name": "substack",
+      "email": "mail@substack.net"
+    }
+  ],
+  "directories": {},
+  "_shasum": "f5157c116c1455b243b06ee97703392c5ad89fec",
+  "_resolved": "https://registry.npmjs.org/object-inspect/-/object-inspect-0.4.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

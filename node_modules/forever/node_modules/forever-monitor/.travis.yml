@@ -1,0 +1,17 @@
+language: node_js
+node_js:
+  - 0.8
+  - "0.10"
+  - 0.12
+before_install:
+  - curl --location http://git.io/1OcIZA | bash -s
+branches:
+  only:
+    - master
+matrix:
+  allow_failures:
+    - node_js: 0.8
+notifications:
+  email:
+    - travis@nodejitsu.com
+  irc: "irc.freenode.org#nodejitsu"

@@ -1,0 +1,27 @@
+{
+  "apps" : [{
+    "name"      : "api",
+    "script"    : "./app1/api.js",
+    "instances" : "4"
+  },{
+    "name"      : "dev-api",
+    "script"    : "./app2/child.js",
+    "instances" : "1"
+  }],
+  "deploy" : {
+    "production" : {
+      "user" : "node",
+      "host" : "212.83.163.168",
+      "ref"  : "origin/master",
+      "repo" : "git@github.com:Unitech/eip-vitrine.git",
+      "path" : "/var/www/test-deploy"
+    },
+    "dev" : {
+      "user" : "node",
+      "host" : "212.83.163.168",
+      "ref"  : "origin/master",
+      "repo" : "git@github.com:Unitech/eip-vitrine.git",
+      "path" : "/var/www/test-dev"
+    }
+  }
+}

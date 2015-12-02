@@ -1,0 +1,85 @@
+<!DOCTYPE html>  <html> <head>   <title>common.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="../docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="..//nconf/common.html">                 nconf/common.html               </a>                                           <a class="source" href="..//nconf/formats.html">                 nconf/formats.html               </a>                                           <a class="source" href="..//nconf/provider.html">                 nconf/provider.html               </a>                                           <a class="source" href="..//nconf/stores/file.html">                 nconf/stores/file.html               </a>                                           <a class="source" href="..//nconf/stores/memory.html">                 nconf/stores/memory.html               </a>                                           <a class="source" href="..//nconf/stores/system.html">                 nconf/stores/system.html               </a>                                           <a class="source" href="..//nconf/stores.html">                 nconf/stores.html               </a>                                           <a class="source" href="..//nconf.html">                 nconf.html               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               common.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="cm">/*</span>
+<span class="cm"> * utils.js: Utility functions for the nconf module.</span>
+<span class="cm"> *</span>
+<span class="cm"> * (C) 2011, Charlie Robbins</span>
+<span class="cm"> *</span>
+<span class="cm"> */</span>
+ 
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">async</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;async&#39;</span><span class="p">),</span>
+    <span class="nx">formats</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./formats&#39;</span><span class="p">),</span>
+    <span class="nx">Memory</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./stores/Memory&#39;</span><span class="p">).</span><span class="nx">Memory</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">common</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <h3>function path (key)</h3>
+
+<h4>@key {string} The ':' delimited key to split</h4>
+
+<p>Returns a fully-qualified path to a nested nconf key. </p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">common</span><span class="p">.</span><span class="nx">path</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">key</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">);</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <h3>function key (arguments)</h3>
+
+<p>Returns a <code>:</code> joined string from the <code>arguments</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">common</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">);</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <h3>function loadFiles (files, callback)</h3>
+
+<h4>@files {Object|Array} List of files (or settings object) to load.</h4>
+
+<h4>@callback {function} Continuation to respond to when complete.</h4>
+
+<p>Loads all the data in the specified <code>files</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">common</span><span class="p">.</span><span class="nx">loadFiles</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{});</span>
+  <span class="p">}</span>
+
+  <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">files</span><span class="p">)</span> <span class="o">?</span> <span class="p">{</span> <span class="nx">files</span><span class="o">:</span> <span class="nx">files</span> <span class="p">}</span> <span class="o">:</span> <span class="nx">files</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Set the default JSON format if not already
+specified</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">options</span><span class="p">.</span><span class="nx">format</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">format</span> <span class="o">||</span> <span class="nx">formats</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+
+  <span class="kd">function</span> <span class="nx">parseFile</span> <span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="o">!</span><span class="nx">err</span> 
+        <span class="o">?</span> <span class="nx">next</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">format</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">toString</span><span class="p">()))</span>
+        <span class="o">:</span> <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+
+  <span class="nx">async</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="nx">parseFile</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">objs</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">err</span> <span class="o">?</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">:</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">common</span><span class="p">.</span><span class="nx">merge</span><span class="p">(</span><span class="nx">objs</span><span class="p">));</span>
+  <span class="p">});</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <h3>function loadFilesSync (files)</h3>
+
+<h4>@files {Object|Array} List of files (or settings object) to load.</h4>
+
+<p>Loads all the data in the specified <code>files</code> synchronously.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">common</span><span class="p">.</span><span class="nx">loadFilesSync</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Set the default JSON format if not already
+specified</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">files</span><span class="p">)</span> <span class="o">?</span> <span class="p">{</span> <span class="nx">files</span><span class="o">:</span> <span class="nx">files</span> <span class="p">}</span> <span class="o">:</span> <span class="nx">files</span><span class="p">;</span>
+  <span class="nx">options</span><span class="p">.</span><span class="nx">format</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">format</span> <span class="o">||</span> <span class="nx">formats</span><span class="p">.</span><span class="nx">json</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="nx">common</span><span class="p">.</span><span class="nx">merge</span><span class="p">(</span><span class="nx">files</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">options</span><span class="p">.</span><span class="nx">format</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">));</span>
+  <span class="p">}));</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <h3>function merge (objs)</h3>
+
+<h4>@objs {Array} Array of object literals to merge</h4>
+
+<p>Merges the specified <code>objs</code> using a temporary instance
+of <code>stores.Memory</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">common</span><span class="p">.</span><span class="nx">merge</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">objs</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">store</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memory</span><span class="p">();</span>
+  
+  <span class="nx">objs</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">obj</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">store</span><span class="p">.</span><span class="nx">merge</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">obj</span><span class="p">[</span><span class="nx">key</span><span class="p">]);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+  
+  <span class="k">return</span> <span class="nx">store</span><span class="p">.</span><span class="nx">store</span><span class="p">;</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <h3>function capitalize (str)</h3>
+
+<h4>@str {string} String to capitalize</h4>
+
+<p>Capitalizes the specified <code>str</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">common</span><span class="p">.</span><span class="nx">capitalize</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">str</span> <span class="o">&amp;&amp;</span> <span class="nx">str</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">toUpperCase</span><span class="p">()</span> <span class="o">+</span> <span class="nx">str</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">};</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

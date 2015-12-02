@@ -1,0 +1,4 @@
+forever start examples/server.js -p 8080
+forever start examples/server.js -p 8081
+forever start examples/server.js -p 8082
+forever list

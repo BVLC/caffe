@@ -7,9 +7,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/neuron_layers.hpp"
+=======
+#include "caffe/layers/dropout_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/math_functions.hpp"
 =======
 =======
@@ -137,7 +141,6 @@
 
 namespace caffe {
 
-
 template <typename Dtype>
 __global__ void DropoutForward(const int n, const Dtype* in,
     const unsigned int* mask, const unsigned int threshold, const float scale,
@@ -248,6 +251,5 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(DropoutLayer);
-
 
 }  // namespace caffe

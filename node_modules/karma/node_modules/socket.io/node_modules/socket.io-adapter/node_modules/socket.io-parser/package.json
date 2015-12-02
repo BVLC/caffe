@@ -1,0 +1,51 @@
+{
+  "name": "socket.io-parser",
+  "version": "2.2.2",
+  "description": "socket.io protocol parser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Automattic/socket.io-parser.git"
+  },
+  "dependencies": {
+    "debug": "0.7.4",
+    "json3": "3.2.6",
+    "component-emitter": "1.1.2",
+    "isarray": "0.0.1",
+    "benchmark": "1.0.0"
+  },
+  "devDependencies": {
+    "mocha": "1.16.2",
+    "expect.js": "0.2.0",
+    "zuul": "1.6.3"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "license": "MIT",
+  "gitHead": "83c68c7a715ac54e95c5dae6445f751b3a4dfe9f",
+  "bugs": {
+    "url": "https://github.com/Automattic/socket.io-parser/issues"
+  },
+  "homepage": "https://github.com/Automattic/socket.io-parser",
+  "_id": "socket.io-parser@2.2.2",
+  "_shasum": "3d7af6b64497e956b7d9fe775f999716027f9417",
+  "_from": "socket.io-parser@2.2.2",
+  "_npmVersion": "1.4.25",
+  "_npmUser": {
+    "name": "rauchg",
+    "email": "rauchg@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "rauchg",
+      "email": "rauchg@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "3d7af6b64497e956b7d9fe775f999716027f9417",
+    "tarball": "http://registry.npmjs.org/socket.io-parser/-/socket.io-parser-2.2.2.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/socket.io-parser/-/socket.io-parser-2.2.2.tgz",
+  "readme": "ERROR: No README data found!"
+}

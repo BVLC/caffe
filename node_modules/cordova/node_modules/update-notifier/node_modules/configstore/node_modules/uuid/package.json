@@ -1,0 +1,86 @@
+{
+  "name": "uuid",
+  "version": "2.0.1",
+  "description": "Rigorous implementation of RFC4122 (v1 and v4) UUIDs.",
+  "keywords": [
+    "uuid",
+    "guid",
+    "rfc4122"
+  ],
+  "author": {
+    "name": "Robert Kieffer",
+    "email": "robert@broofa.com"
+  },
+  "contributors": [
+    {
+      "name": "Christoph Tavan",
+      "email": "dev@tavan.de"
+    },
+    {
+      "name": "Vincent Voyer",
+      "email": "vincent@zeroload.net"
+    }
+  ],
+  "main": "./uuid.js",
+  "devDependencies": {
+    "mocha": "1.8.0"
+  },
+  "scripts": {
+    "test": "mocha test/test.js"
+  },
+  "browser": {
+    "./rng.js": "./rng-browser.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shtylman/node-uuid.git"
+  },
+  "testling": {
+    "browsers": [
+      "ie6..latest",
+      "firefox/3.6..latest",
+      "chrome/22..latest",
+      "safari/5.1..latest"
+    ],
+    "harness": "mocha-tdd",
+    "files": "test/*.js"
+  },
+  "gitHead": "ddaf90942095f26ee8c1961b4346f093b3e7eb5b",
+  "bugs": {
+    "url": "https://github.com/shtylman/node-uuid/issues"
+  },
+  "homepage": "https://github.com/shtylman/node-uuid",
+  "_id": "uuid@2.0.1",
+  "_shasum": "c2a30dedb3e535d72ccf82e343941a50ba8533ac",
+  "_from": "uuid@^2.0.1",
+  "_npmVersion": "2.0.0",
+  "_npmUser": {
+    "name": "vvo",
+    "email": "vincent.voyer@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "broofa",
+      "email": "robert@broofa.com"
+    },
+    {
+      "name": "tim-smart",
+      "email": "tim@fostle.com"
+    },
+    {
+      "name": "shtylman",
+      "email": "shtylman@gmail.com"
+    },
+    {
+      "name": "vvo",
+      "email": "vincent.voyer@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "c2a30dedb3e535d72ccf82e343941a50ba8533ac",
+    "tarball": "http://registry.npmjs.org/uuid/-/uuid-2.0.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/uuid/-/uuid-2.0.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

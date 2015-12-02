@@ -1,0 +1,27 @@
+{
+  "expr":true,
+  "bitwise":false,
+  "camelcase":true,
+  "curly":false,
+  "eqeqeq":true,
+  "freeze":true,
+  "immed":true,
+  "indent":2,
+  "latedef":"nofunc",
+  "laxbreak":true,
+  "laxcomma":true,
+  "newcap":true,
+  "noarg":true,
+  "node":true,
+  "strict": true,
+  "trailing":true,
+  "undef":true,
+  "globals":{
+    "it":true,
+    "describe":true,
+    "before":true,
+    "after":true,
+    "beforeEach":true,
+    "afterEach":true
+  }
+}

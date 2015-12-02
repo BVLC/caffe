@@ -1,0 +1,8 @@
+{
+    "aliasify": {
+        "aliases": {
+            "react":        "react/addons",
+            "react/addons": "react/addons"
+        }
+    }
+}

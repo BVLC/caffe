@@ -1,0 +1,86 @@
+{
+  "name": "sshpk",
+  "version": "1.7.0",
+  "description": "A library for finding and using SSH public keys",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arekinath/node-sshpk.git"
+  },
+  "author": {
+    "name": "Joyent, Inc"
+  },
+  "contributors": [
+    {
+      "name": "Dave Eddy",
+      "email": "dave@daveeddy.com"
+    },
+    {
+      "name": "Mark Cavage",
+      "email": "mcavage@gmail.com"
+    },
+    {
+      "name": "Alex Wilson",
+      "email": "alex@cooperi.net"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arekinath/node-sshpk/issues"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "directories": {
+    "bin": "./bin",
+    "lib": "./lib"
+  },
+  "homepage": "https://github.com/arekinath/node-sshpk#readme",
+  "dependencies": {
+    "asn1": ">=0.2.3 <0.3.0",
+    "assert-plus": ">=0.2.0 <0.3.0",
+    "dashdash": ">=1.10.1 <2.0.0",
+    "jsbn": ">=0.1.0 <0.2.0",
+    "tweetnacl": ">=0.13.0 <1.0.0",
+    "jodid25519": ">=1.0.0 <2.0.0",
+    "ecc-jsbn": ">=0.0.1 <1.0.0"
+  },
+  "optionalDependencies": {
+    "jsbn": ">=0.1.0 <0.2.0",
+    "tweetnacl": ">=0.13.0 <1.0.0",
+    "jodid25519": ">=1.0.0 <2.0.0",
+    "ecc-jsbn": ">=0.0.1 <1.0.0"
+  },
+  "devDependencies": {
+    "tape": ">=3.5.0 <4.0.0",
+    "benchmark": ">=1.0.0 <2.0.0",
+    "sinon": ">=1.17.2 <2.0.0"
+  },
+  "bin": {
+    "sshpk-conv": "bin/sshpk-conv"
+  },
+  "gitHead": "d268fc9a5442727dfb975a0c609f7419bc4d7057",
+  "_id": "sshpk@1.7.0",
+  "_shasum": "c64ac26de1bdd19cc9ccbe78ba747292c6c70a7c",
+  "_from": "sshpk@^1.7.0",
+  "_npmVersion": "2.14.4",
+  "_nodeVersion": "0.12.7",
+  "_npmUser": {
+    "name": "arekinath",
+    "email": "alex@cooperi.net"
+  },
+  "dist": {
+    "shasum": "c64ac26de1bdd19cc9ccbe78ba747292c6c70a7c",
+    "tarball": "http://registry.npmjs.org/sshpk/-/sshpk-1.7.0.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "arekinath",
+      "email": "alex@cooperi.net"
+    }
+  ],
+  "_resolved": "https://registry.npmjs.org/sshpk/-/sshpk-1.7.0.tgz"
+}

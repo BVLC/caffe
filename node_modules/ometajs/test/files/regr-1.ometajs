@@ -1,0 +1,5 @@
+ometa Regr1 {
+  isKeyword = :x ?(x === 'a') -> true
+            | :x ?(x === 'b') -> true,
+  run = isKeyword('b'):r -> r
+}

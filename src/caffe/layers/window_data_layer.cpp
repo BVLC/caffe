@@ -71,6 +71,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/data_layers.hpp"
@@ -143,6 +144,12 @@
 >>>>>>> master
 =======
 #include "caffe/data_layers.hpp"
+=======
+#include "caffe/data_transformer.hpp"
+#include "caffe/internal_thread.hpp"
+#include "caffe/layers/base_data_layer.hpp"
+#include "caffe/layers/window_data_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/benchmark.hpp"
 >>>>>>> master
 =======

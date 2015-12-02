@@ -14,7 +14,7 @@ TODO:
 #include "hdf5_hl.h"
 #include "stdint.h"
 
-#include "caffe/data_layers.hpp"
+#include "caffe/layers/hdf5_data_layer.hpp"
 #include "caffe/util/hdf5.hpp"
 
 namespace caffe {

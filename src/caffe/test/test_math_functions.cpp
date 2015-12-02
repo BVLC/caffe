@@ -40,27 +40,6 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_;
   }
 
-  // http://en.wikipedia.org/wiki/Hamming_distance
-  int ReferenceHammingDistance(const int n, const Dtype* x, const Dtype* y) {
-    int dist = 0;
-    uint64_t val;
-    for (int i = 0; i < n; ++i) {
-      if (sizeof(Dtype) == 8) {
-        val = static_cast<uint64_t>(x[i]) ^ static_cast<uint64_t>(y[i]);
-      } else if (sizeof(Dtype) == 4) {
-        val = static_cast<uint32_t>(x[i]) ^ static_cast<uint32_t>(y[i]);
-      } else {
-        LOG(FATAL) << "Unrecognized Dtype size: " << sizeof(Dtype);
-      }
-      // Count the number of set bits
-      while (val) {
-        ++dist;
-        val &= val - 1;
-      }
-    }
-    return dist;
-  }
-
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
 };
@@ -77,6 +56,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
   //   due to the set up overhead.
 }
 
+<<<<<<< HEAD
 TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -86,6 +66,8 @@ TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
   EXPECT_EQ(this->ReferenceHammingDistance(n, x, y), dist);
 }
 
+=======
+>>>>>>> BVLC/master
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -374,6 +356,7 @@ class GPUMathFunctionsTest : public MathFunctionsTest<GPUDevice<Dtype> > {
 
 TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 
+<<<<<<< HEAD
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
 TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   int n = this->blob_bottom_->count();
@@ -388,6 +371,8 @@ TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   EXPECT_EQ(reference_distance, computed_distance);
 }
 
+=======
+>>>>>>> BVLC/master
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();

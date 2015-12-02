@@ -1,0 +1,11 @@
+.coveralls.yml
+.jshintrc
+.travis.yml
+coverage.html
+Makefile
+
+lib-cov/
+specs/
+coverage/
+*.jpg
+*.png

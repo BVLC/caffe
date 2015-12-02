@@ -1,0 +1,7 @@
+Synopsis
+
+    cordova-cli emulate [PLATFORM...] [-- [platformopts]]
+
+Alias for `cordova-cli run --emulator`
+
+To provide platform specific options, you must include them after `--`.

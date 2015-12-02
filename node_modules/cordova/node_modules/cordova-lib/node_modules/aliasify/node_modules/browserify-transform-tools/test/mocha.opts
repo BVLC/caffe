@@ -1,0 +1,4 @@
+--compilers     coffee:coffee-script/register
+--reporter      spec
+--timeout       60000
+--slow          1000

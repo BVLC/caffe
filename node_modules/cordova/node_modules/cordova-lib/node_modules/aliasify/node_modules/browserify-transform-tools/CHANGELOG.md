@@ -1,0 +1,1 @@
+Change log available here: https://github.com/benbria/browserify-transform-tools/wiki/Change-log

@@ -1,0 +1,82 @@
+{
+  "_from": "readable-stream@~2.0.0",
+  "_id": "readable-stream@2.0.4",
+  "_location": "/bl/readable-stream",
+  "_nodeVersion": "4.1.1",
+  "_npmUser": {
+    "email": "calvin.metcalf@gmail.com",
+    "name": "cwmma"
+  },
+  "_npmVersion": "2.14.4",
+  "_phantomChildren": {},
+  "_requiredBy": [
+    "/bl"
+  ],
+  "_resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.4.tgz",
+  "_shasum": "2523ef27ffa339d7ba9da8603f2d0599d06edbd8",
+  "browser": {
+    "util": false
+  },
+  "bugs": {
+    "url": "https://github.com/nodejs/readable-stream/issues"
+  },
+  "dependencies": {
+    "core-util-is": "~1.0.0",
+    "inherits": "~2.0.1",
+    "isarray": "0.0.1",
+    "process-nextick-args": "~1.0.0",
+    "string_decoder": "~0.10.x",
+    "util-deprecate": "~1.0.1"
+  },
+  "description": "Streams3, a user-land copy of the stream library from iojs v2.x",
+  "devDependencies": {
+    "tap": "~0.2.6",
+    "tape": "~4.0.0",
+    "zuul": "~3.0.0"
+  },
+  "directories": {},
+  "dist": {
+    "shasum": "2523ef27ffa339d7ba9da8603f2d0599d06edbd8",
+    "tarball": "http://registry.npmjs.org/readable-stream/-/readable-stream-2.0.4.tgz"
+  },
+  "gitHead": "f2a4f4a659bacbe742a494b7d2aede64fab0d4f9",
+  "homepage": "https://github.com/nodejs/readable-stream#readme",
+  "keywords": [
+    "pipe",
+    "readable",
+    "stream"
+  ],
+  "license": "MIT",
+  "main": "readable.js",
+  "maintainers": [
+    {
+      "name": "isaacs",
+      "email": "isaacs@npmjs.com"
+    },
+    {
+      "name": "tootallnate",
+      "email": "nathan@tootallnate.net"
+    },
+    {
+      "name": "rvagg",
+      "email": "rod@vagg.org"
+    },
+    {
+      "name": "cwmma",
+      "email": "calvin.metcalf@gmail.com"
+    }
+  ],
+  "name": "readable-stream",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nodejs/readable-stream.git"
+  },
+  "scripts": {
+    "browser": "npm run write-zuul && zuul -- test/browser.js",
+    "test": "tap test/parallel/*.js",
+    "write-zuul": "printf \"ui: tape\nbrowsers:\n  - name: $BROWSER_NAME\n    version: $BROWSER_VERSION\n\">.zuul.yml"
+  },
+  "version": "2.0.4"
+}

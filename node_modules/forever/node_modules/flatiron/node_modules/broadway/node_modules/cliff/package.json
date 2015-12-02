@@ -1,0 +1,63 @@
+{
+  "name": "cliff",
+  "description": "Your CLI formatting friend.",
+  "version": "0.1.9",
+  "author": {
+    "name": "Nodejitsu Inc.",
+    "email": "info@nodejitsu.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/flatiron/cliff.git"
+  },
+  "maintainers": [
+    {
+      "name": "indexzero",
+      "email": "charlie.robbins@gmail.com"
+    },
+    {
+      "name": "jcrugzz",
+      "email": "jcrugzz@gmail.com"
+    }
+  ],
+  "keywords": [
+    "cli",
+    "logging",
+    "tools",
+    "winston"
+  ],
+  "dependencies": {
+    "colors": "0.x.x",
+    "eyes": "0.1.x",
+    "winston": "0.8.x"
+  },
+  "devDependencies": {
+    "vows": "0.7.x"
+  },
+  "main": "./lib/cliff",
+  "scripts": {
+    "test": "vows test/*-test.js --spec"
+  },
+  "engines": {
+    "node": ">= 0.4.0"
+  },
+  "gitHead": "66462b3de5ddab850675e8e6ac077645d0bfc425",
+  "bugs": {
+    "url": "https://github.com/flatiron/cliff/issues"
+  },
+  "homepage": "https://github.com/flatiron/cliff",
+  "_id": "cliff@0.1.9",
+  "_shasum": "a211e09c6a3de3ba1af27d049d301250d18812bc",
+  "_from": "cliff@0.1.9",
+  "_npmVersion": "1.4.23",
+  "_npmUser": {
+    "name": "jcrugzz",
+    "email": "jcrugzz@gmail.com"
+  },
+  "dist": {
+    "shasum": "a211e09c6a3de3ba1af27d049d301250d18812bc",
+    "tarball": "http://registry.npmjs.org/cliff/-/cliff-0.1.9.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/cliff/-/cliff-0.1.9.tgz"
+}

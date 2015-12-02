@@ -1,0 +1,48 @@
+The language supported in this workspace is not quite JavaScript; it is rather a (large) subset of JavaScript, extended with some
+new syntax.
+
+
+One such extension allows string literals to be written as
+
+  '`' <identifier>   or   '#' <identifier>
+
+For example, instead of writing
+  "foo"
+you can write
+  `foo
+And of course,
+  "foo" == `foo && `foo == #foo
+
+I did this because I think parse trees, like
+  ["plus", ["lit", 2], ["lit", 5]]
+look better when you write them like this
+  [`plus, [`lit, 2], [`lit, 5]]
+
+
+Another extension is that string literals, as in Smalltalk, can span multiple lines, e.g.,
+
+" this whole thing
+is a string
+yay!
+"
+
+This is useful because it lets you put an entire program into a string (I do this in the Prolog, Logo, and MetaToo projects). Keep in mind that, as in Python, you can put escape sequences inside multi-line strings. So if you want a '\' character inside one of these guys, you need to type '\\'.
+
+And because it's usually annoying to have to escape double quotes inside these big strings, you can also write multi-line string literals in Python-like syntax, e.g.,
+
+"""
+1+2
+alert("hello world")
+"""
+
+ 
+-Alex
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Hey, Alex -- How about using a symbol that is less in one's face than "#"? What about tilde  ~  or  `  or underline, etc.?  -- Alan
+
+Hi Alan - this is funny, because the # was inspired by ST-80, heh heh... anyway, I like the idea of using ` instead. Try it now, it works. --- Alex
+
+Hi Alex -- I have always hated that convention in ST-80 (I was not around to protest when that went in). ST-80 had the interesting problem of moving from an environment at PARC in which any glyphs desired could be authored, displayed and printed, to the "outside world" in the early 80s in which none of those things could be done. So they had to go back to ASCII conventions and this was painful. Thanks for the change. --- Alan
+

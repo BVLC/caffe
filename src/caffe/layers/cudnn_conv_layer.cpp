@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -61,6 +62,9 @@
 
 >>>>>>> device-abstraction
 #include "caffe/vision_layers.hpp"
+=======
+#include "caffe/layers/cudnn_conv_layer.hpp"
+>>>>>>> BVLC/master
 
 namespace caffe {
 

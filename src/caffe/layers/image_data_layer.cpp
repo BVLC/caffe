@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -50,6 +51,11 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+#include "caffe/data_transformer.hpp"
+#include "caffe/layers/base_data_layer.hpp"
+#include "caffe/layers/image_data_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"

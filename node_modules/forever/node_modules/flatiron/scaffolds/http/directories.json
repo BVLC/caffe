@@ -1,0 +1,5 @@
+{
+  "config": "#CONFIG",
+  "lib": "#LIB",
+  "test": "#TEST"
+}

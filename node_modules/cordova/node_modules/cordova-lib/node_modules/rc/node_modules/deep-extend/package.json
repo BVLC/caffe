@@ -1,0 +1,58 @@
+{
+  "name": "deep-extend",
+  "description": "Recursive object extending.",
+  "license": "MIT",
+  "version": "0.2.11",
+  "homepage": "https://github.com/unclechu/node-deep-extend",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/unclechu/node-deep-extend.git"
+  },
+  "author": {
+    "name": "Viacheslav Lotsmanov",
+    "email": "lotsmanov89@gmail.com",
+    "url": "unclechu"
+  },
+  "contributors": [
+    {
+      "name": "Romain Prieto",
+      "url": "https://github.com/rprieto"
+    }
+  ],
+  "main": "index",
+  "engines": {
+    "node": ">=0.4"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "mocha": "~1.19.0",
+    "should": "~3.3.2"
+  },
+  "directories": {
+    "test": "./test"
+  },
+  "bugs": {
+    "url": "https://github.com/unclechu/node-deep-extend/issues"
+  },
+  "_id": "deep-extend@0.2.11",
+  "dist": {
+    "shasum": "7a16ba69729132340506170494bc83f7076fe08f",
+    "tarball": "http://registry.npmjs.org/deep-extend/-/deep-extend-0.2.11.tgz"
+  },
+  "_from": "deep-extend@~0.2.5",
+  "_npmVersion": "1.4.6",
+  "_npmUser": {
+    "name": "unclechu",
+    "email": "lotsmanov89@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "unclechu",
+      "email": "lotsmanov89@gmail.com"
+    }
+  ],
+  "_shasum": "7a16ba69729132340506170494bc83f7076fe08f",
+  "_resolved": "https://registry.npmjs.org/deep-extend/-/deep-extend-0.2.11.tgz"
+}

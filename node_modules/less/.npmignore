@@ -1,0 +1,9 @@
+.gitattributes
+build/
+.grunt/
+benchmark/
+test/
+# re-include test files as they can be useful for plugins that do testing
+!test/*.js
+tmp/
+gradle/

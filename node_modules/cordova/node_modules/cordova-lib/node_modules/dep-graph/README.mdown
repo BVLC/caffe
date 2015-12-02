@@ -1,0 +1,40 @@
+# dep-graph.js
+
+This is a small project spun off from [connect-assets](http://github.com/TrevorBurnham/connect-assets). Written in [CoffeeScript](coffeescript.org) by the author of [CoffeeScript: Accelerated JavaScript Development](http://pragprog.com/book/tbcoffee/coffeescript).
+
+## What's it for?
+
+Say you have a set of resources that depend on each other in some way. These resources can be anything—files, chains of command, plot twists on *Lost*—whatever. All that matters is that each one has a unique string identifier, and a list of direct dependencies.
+
+`dep-graph` makes it easy to compute "chains" of dependencies, with guaranteed logical ordering and no duplicates. That's trivial in most cases, but if `A` depends on `B` and `B` depends on `A`, a naïve dependency graph would get trapped in an infinite loop. `dep-graph` throws an error if any such "cycles" are detected.
+
+## How to use it?
+
+### In the browser
+
+    deps = new DepGraph
+    deps.add 'A', 'B'  # A requires B
+    deps.add 'B', 'C'  # B requires C
+    deps.getChain 'A'  # ['C', 'B', 'A']
+
+### In Node.js
+
+Same as above, but first run
+
+    npm install dep-graph
+
+from your project's directory, and put
+
+    DepGraph = require 'dep-graph'
+
+at the top of your file.
+
+## License
+
+©2011 Trevor Burnham and available under the [MIT license](http://www.opensource.org/licenses/mit-license.php):
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

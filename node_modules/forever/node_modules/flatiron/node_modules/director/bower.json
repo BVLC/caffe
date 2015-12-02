@@ -1,0 +1,9 @@
+{
+  "name": "director",
+  "version": "1.2.7",
+  "dependencies": {},
+  "main": "build/director.js",
+  "scripts": [
+    "build/director.js"
+  ]
+}

@@ -7,10 +7,14 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
+=======
+>>>>>>> BVLC/master
 #include "caffe/filler.hpp"
+#include "caffe/layers/inner_product_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 =======
 =======

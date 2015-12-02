@@ -1,0 +1,20 @@
+Synopsis
+
+    cordova-cli compile [PROD] [TARGET] [EXP] [PLATS] [-- POPTS]
+
+      PROD:   --debug|--release
+      TARGET: --device|--emulator|--target=FOO
+      EXP:    --experimental [EXPERIMENTALFLAGS]
+      PLATS:  PLATFORM [...]
+      POPTS:  platformopts
+
+Builds the app for specified platforms, or all platforms
+
+    --debug ............................ Deploy a debug build
+    --release .......................... Deploy a release build
+
+    --device ........................... Deploy to a device
+    --emulator ......................... Deploy to an emulator
+    --target ........................... Deploy to a specific target
+
+To provide platform specific options, you must include them after `--`.

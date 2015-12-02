@@ -1,0 +1,88 @@
+{
+  "name": "tape",
+  "version": "3.5.0",
+  "description": "tap-producing test harness for node and browsers",
+  "main": "index.js",
+  "bin": {
+    "tape": "./bin/tape"
+  },
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "dependencies": {
+    "deep-equal": "~0.2.0",
+    "defined": "~0.0.0",
+    "glob": "~3.2.9",
+    "inherits": "~2.0.1",
+    "object-inspect": "~0.4.0",
+    "resumer": "~0.0.0",
+    "through": "~2.3.4"
+  },
+  "devDependencies": {
+    "tap": "~0.4.8",
+    "falafel": "~0.3.1",
+    "concat-stream": "~1.4.1"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "testling": {
+    "files": "test/browser/*.js",
+    "browsers": [
+      "ie/6..latest",
+      "chrome/20..latest",
+      "firefox/10..latest",
+      "safari/latest",
+      "opera/11.0..latest",
+      "iphone/6",
+      "ipad/6"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/substack/tape.git"
+  },
+  "homepage": "https://github.com/substack/tape",
+  "keywords": [
+    "tap",
+    "test",
+    "harness",
+    "assert",
+    "browser"
+  ],
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "license": "MIT",
+  "gitHead": "51f2f97d7eade23b1e23b7cfea37f449ade5b9c3",
+  "bugs": {
+    "url": "https://github.com/substack/tape/issues"
+  },
+  "_id": "tape@3.5.0",
+  "_shasum": "aebb061388104ad0cb407be842782049d64624f8",
+  "_from": "tape@>=3.5.0 <4.0.0",
+  "_npmVersion": "1.4.28",
+  "_npmUser": {
+    "name": "raynos",
+    "email": "raynos2@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "substack",
+      "email": "mail@substack.net"
+    },
+    {
+      "name": "raynos",
+      "email": "raynos2@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "aebb061388104ad0cb407be842782049d64624f8",
+    "tarball": "http://registry.npmjs.org/tape/-/tape-3.5.0.tgz"
+  },
+  "_resolved": "https://registry.npmjs.org/tape/-/tape-3.5.0.tgz",
+  "readme": "ERROR: No README data found!"
+}

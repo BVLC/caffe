@@ -1,0 +1,83 @@
+{
+  "name": "eventemitter2",
+  "version": "0.4.14",
+  "description": "A Node.js event emitter implementation with namespaces, wildcards, TTL and browser support.",
+  "keywords": [
+    "event",
+    "events",
+    "emitter",
+    "eventemitter"
+  ],
+  "author": {
+    "name": "hij1nx",
+    "email": "paolo@async.ly"
+  },
+  "contributors": [
+    {
+      "name": "Eric Elliott"
+    },
+    {
+      "name": "Charlie Robbins",
+      "email": "charlie@nodejitsu.com"
+    },
+    {
+      "name": "Jameson Lee",
+      "email": "jameson@nodejitsu.com"
+    },
+    {
+      "name": "Jeroen van Duffelen",
+      "email": "jvduf@nodejitsu.com"
+    },
+    {
+      "name": "Fedor Indutny",
+      "email": "fedor.indutny@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hij1nx/EventEmitter2.git"
+  },
+  "devDependencies": {
+    "nodeunit": "*",
+    "benchmark": ">= 0.2.2"
+  },
+  "main": "./lib/eventemitter2.js",
+  "scripts": {
+    "test": "nodeunit test/simple/ && nodeunit test/wildcardEvents/",
+    "benchmark": "node test/perf/benchmark.js"
+  },
+  "files": [
+    "lib/eventemitter2.js",
+    "index.js"
+  ],
+  "bugs": {
+    "url": "https://github.com/hij1nx/EventEmitter2/issues"
+  },
+  "homepage": "https://github.com/hij1nx/EventEmitter2",
+  "_id": "eventemitter2@0.4.14",
+  "_shasum": "8f61b75cde012b2e9eb284d4545583b5643b61ab",
+  "_from": "eventemitter2@0.4.14",
+  "_npmVersion": "1.4.7",
+  "_npmUser": {
+    "name": "jasonkuhrt",
+    "email": "jasonkuhrt@me.com"
+  },
+  "maintainers": [
+    {
+      "name": "hij1nx",
+      "email": "hij1nx@me.com"
+    },
+    {
+      "name": "jasonkuhrt",
+      "email": "jasonkuhrt@me.com"
+    }
+  ],
+  "dist": {
+    "shasum": "8f61b75cde012b2e9eb284d4545583b5643b61ab",
+    "tarball": "http://registry.npmjs.org/eventemitter2/-/eventemitter2-0.4.14.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/eventemitter2/-/eventemitter2-0.4.14.tgz",
+  "readme": "ERROR: No README data found!"
+}

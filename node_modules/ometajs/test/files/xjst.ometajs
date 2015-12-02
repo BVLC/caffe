@@ -1,0 +1,322 @@
+var ometajs = require('ometajs'),
+    xjst = require('../../xjst'),
+    utils = xjst.utils,
+
+    Identifier = utils.Identifier,
+    BSJSParser = ometajs.BSJSParser,
+    BSJSTranslator = ometajs.BSJSTranslator,
+    BSJSIdentity = ometajs.BSJSIdentity;
+
+ometa XJSTParser <: BSJSParser {
+
+    isKeyword :x = ?(BSJSParser._isKeyword(x) || x === 'local' ||
+                     x === 'apply' || x === 'template' || x === 'extends' ||
+                     x === 'super'),
+
+    primExprHd = "local" "(" expr:a ")" asgnExpr:b localExpr([#local, a, b]):r -> r
+        | "super" "apply" "(" ")" superExpr([#super]):st -> st
+        | "super" "apply" "(" expr:a ")" superExpr([#super]):st
+                                         localExpr([#local, a, st]):r -> r
+        | "apply" "(" ")" applyStmt([#apply]):st -> st
+        | "apply" "(" expr:a ")" applyStmt([#apply]):st
+                                     localExpr([#local, a, st]):r -> r
+        | "apply" applyExpr([#apply]):expr -> expr
+        | ^primExprHd,
+
+    stmt = "local" "(" expr:a ")" stmt:b localStmt([#local, a, b]):r -> r
+        | "super" "apply" "(" ")" superStmt([#super]):st -> st
+        | "super" "apply" "(" expr:a ")" superStmt([#super]):st
+                                         localStmt([#local, a, st]):r -> r
+        | "apply" "(" ")" applyStmt([#apply]):st -> st
+        | "apply" "(" expr:a ")" applyStmt([#apply]):st
+                                 localStmt([#local, a, st]):r -> r
+        | ^stmt,
+
+    extends = "extends" spaces str:filename -> [#extends, filename[1]],
+
+    template = "template" "(" expr:m ")" stmt:b -> [#template, m, b],
+
+    superExpr = [#super] applyStmt([#apply]):st -> [#superExpr, st],
+    superStmt = [#super] applyStmt([#apply]):st -> [#superStmt, st],
+
+    applyStmt = [#apply] -> [#nhApplyStmt, {}],
+    applyExpr = [#apply] -> [#nhApplyExpr],
+
+    localStmt = [#local :a :b] -> [#localStmt, a, b],
+    localExpr = [#local :a :b] -> [#localExpr, a, b],
+
+    topLevel = (
+      extends:t -> t |
+      template:t -> t |
+      srcElem:s -> [#stmt, s]
+    )+:ts spaces end -> ts
+}
+
+ometa XJSTTranslator <: BSJSIdentity {
+
+    const = [#string :s] | [#number :n],
+
+    extends :filename -> [#extends, filename],
+
+    superStmt :op localStmt([
+      #json,
+      [#binding, '__d0' + this.id, [#get, true]]
+    ], op):st -> {
+      st
+    },
+    superExpr :op localExpr([
+      #json,
+      [#binding, '__d' + this.id, [#get, true]]
+    ], op):st -> {
+      st
+    },
+
+    nhApplyStmt :p -> [#applyStmt, p],
+    nhApplyExpr -> [#nhApplyExpr],
+
+    localStmt localAsmts:as trans:t -> {
+            [#begin].concat(
+                [[
+                  #localStart,
+                  XJSTTranslator._localToPred(this.identifier, as),
+                  []
+                ]],
+                as[0],
+                [t],
+                as[1],
+                [[#localEnd]]
+            );
+        },
+
+    localExpr localAsmts:as trans:t -> {
+            var result = XJSTTranslator._getLocalVar(this),
+                prelude = [
+                  [
+                    #localStart,
+                    XJSTTranslator._localToPred(this.identifier, as),
+                    as[0].filter(function(op) {
+                      return op[0] === 'var';
+                    }).map(function(op) {
+                      return op.slice(1).map(function(asmt) {
+                        return [asmt[0]];
+                      });
+                    }).concat([[[result[1]]]])
+                  ]
+                ],
+                self = this;
+
+            as[0].forEach(function(e) {
+              if (e[0] === 'var') {
+                e.slice(1).forEach(function(v) {
+                  prelude.push([#set, [#get, v[0]], v[1]]);
+                });
+              } else {
+                prelude.push(e);
+              }
+            });
+
+            [].concat(
+                prelude,
+                [[#set, result, t]],
+                as[1],
+                [[#localEnd], result]
+            ).reduce(function(a, i) {
+                return a ? [#binop, ",", a, i] : i;
+            });
+        },
+
+    bindingToAsmt = [#binding :k :v]
+        localAsmt([#set, [#getp, [#string, k], [#get, '__this']], v]):r -> r,
+
+    localAsmts = [#json bindingToAsmt*:as] -> {
+          var es = [];
+
+          as.forEach(function(a) {
+            a.forEach(function(e, i) {
+              es[i] = es[i] ? es[i].concat(e) : e;
+            });
+          });
+
+          es
+        }
+        | localAsmt:e1 -> e1
+        | [#binop ',' localAsmts:es localAsmt:e2] -> {
+            es.forEach(function(e, i) {
+                es[i] = e.concat(e2[i]);
+            });
+            es
+        },
+
+    localAsmt = [#set [(#get :n | #getp :k :o)]:p :v]
+                localProps(p):props -> {
+            var lv = XJSTTranslator._getLocalVar(this),
+                vars = [[#var].concat(props[1], [[lv[1], props[0]]])];
+
+            [
+                vars.concat([[#set, props[0], v]]),
+                [[#set, props[0], lv]],
+                [[p, v]]
+            ]
+        },
+
+    localProps = [#getp const:k [#this]]:expr -> [expr, []]
+                 | [#getp const:k [#get :o]]:expr -> [expr, []]
+                 | [#getp :k [#this]] -> {
+                    var v = XJSTTranslator._getLocalVar(this);
+
+                    [ [#getp, v, [#this]], [[v[1], k]] ]
+                 } | [#getp const:k :o] -> {
+                    var v = XJSTTranslator._getLocalVar(this);
+
+                    [ [#getp, k, v], [[v[1], o]] ]
+                 } | [#getp :k :o] -> {
+                    var v1 = XJSTTranslator._getLocalVar(this),
+                        v2 = XJSTTranslator._getLocalVar(this);
+
+                    [
+                        [#getp, v1, v2],
+                        [[v1[1], k], [v2[1], o]]
+                    ]
+                 } | :expr -> [expr, []],
+
+    subMatch = [#binop '===' :e1 const:c] -> [e1, c] |
+        [#binop '===' const:c :e2] -> [e2, c] |
+        :e3 -> [[#unop, '!', e3], [#get, #false]],
+
+    expr2match = [#binop '&&' expr2match:ms subMatch:m1] -> { ms.push(m1); ms} |
+        subMatch:m2 -> [m2] ,
+
+    template :m trans:b -> [
+                                #template,
+                                [XJSTTranslator.match(m, #expr2match), b]
+                             ],
+    stmt trans:s -> [#stmt, s],
+
+    topLevel :id = {
+        this.id = id; this._vars = []; this.identifier = new Identifier();
+    } trans*:ts -> {
+
+        if (this._vars.length) {
+           this._vars.unshift(#var);
+           ts.unshift([#stmt, this._vars]);
+        }
+
+        XJSTTranslator._splitTemplates(this.identifier, ts);
+    }
+
+}
+
+XJSTTranslator._getLocalIdCounter = 0;
+XJSTTranslator._getLocalId = function() {
+  return this._getLocalIdCounter++;
+};
+XJSTTranslator._getLocalVar = function(p) {
+    var id = this._getLocalId();
+    return [#get, '__r' + id];
+};
+
+XJSTTranslator._localToPred = function(identifier, as) {
+  return as[2].map(function(as) {
+    function replaceThis(as) {
+      if (Array.isArray(as)) {
+        if (as[0] === 'get' && as[1] === '__this') return ['this'];
+        return as.map(replaceThis);
+      } else {
+        return as;
+      }
+    }
+
+    as = [identifier.identify(replaceThis(as[0])), as[0], as[1]];
+    if (as[2][0] !== 'string' && as[2][0] !== 'number') {
+      return [as[0], as[1], 'reset'];
+    } else {
+      return as;
+    }
+  });
+};
+
+XJSTTranslator._splitTemplates = function(predicates, ts) {
+    var extend = [],
+        templates = [],
+        other = [],
+        i;
+
+    while(i = ts.shift())
+        i[0] === 'extends' ?
+            extend.push(i[1]) :
+            i[0] === 'template'?
+                templates.push(i[1]) :
+                other.push(i[1]);
+
+    return [
+      other,
+      XJSTTranslator._identify(predicates, templates.reverse()),
+      extend
+    ];
+};
+
+XJSTTranslator._identify = function(predicates, templates) {
+    templates.forEach(function(template) {
+        template[0].forEach(function(subMatch) {
+            subMatch.unshift(predicates.identify(subMatch[0]));
+        })
+    });
+
+    return templates;
+};
+
+ometa XJSTLocalAndApplyCompiler <: BSJSIdentity {
+    extends :filename -> [#extends, filename],
+    superStmt trans:op -> [#superStmt, op],
+    superExpr trans:op -> [#superExpr, op],
+
+    applyStmt = :p -> { this.result.push(['apply', p]); [#applyStmt, p] },
+    nhApplyExpr = [#nhApplyExpr],
+
+    localStart = :as :vars -> {
+      this.result.push(['localStart', as, vars]); [#localStart, as, vars]
+    },
+    localEnd -> { this.result.push(['localEnd']); [#localEnd] },
+
+    topLevel = { this.result = []; } trans:t { this.result; }
+}
+
+ometa XJSTCompiler <: BSJSTranslator {
+    extends trans:filename -> { '"extends" + ' + filename },
+    superStmt trans:op -> op,
+    superExpr trans:op -> op,
+
+    applyStmt = :param -> { param.code || 'apply.call(__this)' },
+
+    nhApplyStmt = :param -> 'apply()',
+    nhApplyExpr -> 'apply',
+
+    localStmt = trans:a trans:b -> { 'local (' + a + ') ' + b + ';' },
+    localExpr = trans:a trans:b -> { 'local (' + a + ') ' + b },
+
+    localStart = :as :vars -> '""',
+    localEnd -> '""',
+
+    subMatch = [:id trans:m [#get #true]] -> m |
+        [:id trans:e trans:c] -> (e + ' === ' + c),
+
+    tMatch = [subMatch:m] -> m |
+        [subMatch+:ms] -> ms.join(' && '),
+
+    tBody = trans:e -> e,
+
+    template = [tMatch:m tBody:b] -> ('if(' + m + ') {' + b + ';return}'),
+
+    templates = [template*:ts] -> ('exports.apply = apply;function apply(c) {\nvar __this = this;\n' + ts.join('\n') +'\n};'),
+
+    other = [trans*:o] -> o.join(';'),
+
+    skipBraces = [#begin skipBraces*:e] -> e.join(';')
+               | trans:e -> e,
+
+    topLevel = [other:o templates:t] -> {
+        '(function(exports) {' +
+        o + ';' + t +
+        'return exports})(typeof exports === "undefined"? {} : exports)' }
+
+}

@@ -1,0 +1,51 @@
+{
+  "author": {
+    "name": "Einar Otto Stangvik",
+    "email": "einaros@gmail.com",
+    "url": "http://2x.io"
+  },
+  "name": "options",
+  "description": "A very light-weight in-code option parsers for node.js.",
+  "version": "0.0.6",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/einaros/options.js.git"
+  },
+  "main": "lib/options",
+  "scripts": {
+    "test": "make test"
+  },
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "latest"
+  },
+  "gitHead": "ff53d0a092c897cb95964232a96fe17da65c11af",
+  "bugs": {
+    "url": "https://github.com/einaros/options.js/issues"
+  },
+  "homepage": "https://github.com/einaros/options.js",
+  "_id": "options@0.0.6",
+  "_shasum": "ec22d312806bb53e731773e7cdaefcf1c643128f",
+  "_from": "options@>=0.0.5",
+  "_npmVersion": "1.4.21",
+  "_npmUser": {
+    "name": "einaros",
+    "email": "einaros@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "einaros",
+      "email": "einaros@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "ec22d312806bb53e731773e7cdaefcf1c643128f",
+    "tarball": "http://registry.npmjs.org/options/-/options-0.0.6.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/options/-/options-0.0.6.tgz",
+  "readme": "ERROR: No README data found!"
+}

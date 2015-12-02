@@ -1,0 +1,65 @@
+{
+  "name": "esprima",
+  "description": "ECMAScript parsing infrastructure for multipurpose analysis",
+  "homepage": "http://esprima.org",
+  "main": "esprima.js",
+  "bin": {
+    "esparse": "./bin/esparse.js",
+    "esvalidate": "./bin/esvalidate.js"
+  },
+  "files": [
+    "bin",
+    "test/run.js",
+    "test/runner.js",
+    "test/test.js",
+    "test/compat.js",
+    "test/reflect.js",
+    "esprima.js"
+  ],
+  "version": "1.0.4",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "maintainers": [
+    {
+      "name": "ariya",
+      "email": "ariya.hidayat@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/ariya/esprima.git"
+  },
+  "licenses": [
+    {
+      "type": "BSD",
+      "url": "http://github.com/ariya/esprima/raw/master/LICENSE.BSD"
+    }
+  ],
+  "keywords": [
+    "ast",
+    "ecmascript",
+    "javascript",
+    "parser",
+    "syntax"
+  ],
+  "scripts": {
+    "test": "node test/run.js",
+    "benchmark": "node test/benchmarks.js",
+    "benchmark-quick": "node test/benchmarks.js quick"
+  },
+  "_id": "esprima@1.0.4",
+  "dist": {
+    "shasum": "9f557e08fc3b4d26ece9dd34f8fbf476b62585ad",
+    "tarball": "http://registry.npmjs.org/esprima/-/esprima-1.0.4.tgz"
+  },
+  "_npmVersion": "1.1.61",
+  "_npmUser": {
+    "name": "ariya",
+    "email": "ariya.hidayat@gmail.com"
+  },
+  "directories": {},
+  "_shasum": "9f557e08fc3b4d26ece9dd34f8fbf476b62585ad",
+  "_from": "esprima@~ 1.0.2",
+  "_resolved": "https://registry.npmjs.org/esprima/-/esprima-1.0.4.tgz"
+}

@@ -5,9 +5,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
+=======
+#include "caffe/layers/contrastive_loss_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/math_functions.hpp"
 =======
 <<<<<<< HEAD

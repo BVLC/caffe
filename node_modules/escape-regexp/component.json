@@ -1,0 +1,10 @@
+{
+  "name": "escape-regexp",
+  "description": "Escape regular expression special characters",
+  "version": "0.0.1",
+  "keywords": ["escape", "regexp", "utility"],
+  "dependencies": {},
+  "scripts": [
+    "index.js"
+  ]
+}

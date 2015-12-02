@@ -1,0 +1,4 @@
+# This is a sample json file with comments.
+# I'll call this 'jsonic'.
+{"Hello": "World"}
+# Ain't that cute? It should just parse up nice and neat.

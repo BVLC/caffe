@@ -1788,11 +1788,18 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 bp::object PyBlobWrap::get_data() {
   npy_intp dims[] = {num(), channels(), height(), width()};
 
+<<<<<<< HEAD
   PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
                                             blob_->mutable_cpu_data());
   PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
   Py_INCREF(self_);
   bp::handle<> h(obj);
+=======
+#include "caffe/caffe.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
+#include "caffe/layers/python_layer.hpp"
+#include "caffe/sgd_solvers.hpp"
+>>>>>>> BVLC/master
 
   return bp::object(h);
 }

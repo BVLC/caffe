@@ -1,0 +1,3 @@
+--reporter spec
+--require should
+--require test/helper

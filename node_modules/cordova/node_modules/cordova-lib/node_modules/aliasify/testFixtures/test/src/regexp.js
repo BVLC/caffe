@@ -1,0 +1,1 @@
+SomeComponent = require("_components/SomeComponent");

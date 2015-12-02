@@ -1,0 +1,23 @@
+language: node_js
+sudo: false
+git:
+  depth: 10
+node_js:
+  - "0.10"
+# getting cordova tools dependencies from github
+# to make sure we're using their latest versions
+install:
+  - cd ..
+  - git clone https://github.com/apache/cordova-js --depth 10
+  - cd cordova-js
+  - npm install
+  - npm link
+  - cd ..
+  - git clone https://github.com/apache/cordova-lib --depth 10
+  - cd cordova-lib/cordova-lib
+  - npm link cordova-js
+  - npm install
+  - npm link
+  - cd ../../cordova-cli
+  - npm link cordova-lib
+  - npm install

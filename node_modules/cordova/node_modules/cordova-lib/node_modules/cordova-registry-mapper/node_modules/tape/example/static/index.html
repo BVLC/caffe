@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+<style>
+body {
+    font-family: monospace;
+    white-space: pre;
+}
+</style>
+</head>
+<body>
+<script>
+if (typeof console === 'undefined') console = {};
+console.log = function (msg) {
+    var txt = document.createTextNode(msg);
+    document.body.appendChild(txt);
+};
+</script>
+<script src="bundle.js"></script>
+</body>
+</html>

@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
@@ -132,6 +133,9 @@
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/multinomial_logistic_loss_layer.hpp"
+>>>>>>> BVLC/master
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

@@ -1,0 +1,73 @@
+{
+  "name": "director",
+  "description": "A client Side/Server Side Router",
+  "author": {
+    "name": "Charlie Robbins",
+    "email": "charlie.robbins@gmail.com"
+  },
+  "version": "1.2.7",
+  "maintainers": [
+    {
+      "name": "indexzero",
+      "email": "charlie.robbins@gmail.com"
+    },
+    {
+      "name": "jcrugzz",
+      "email": "jcrugzz@gmail.com"
+    },
+    {
+      "name": "swaagie",
+      "email": "info@martijnswaagman.nl"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/flatiron/director.git"
+  },
+  "keywords": [
+    "URL",
+    "router",
+    "http",
+    "cli",
+    "flatiron",
+    "client side",
+    "ender"
+  ],
+  "devDependencies": {
+    "api-easy": "0.4.x",
+    "codesurgeon": "https://github.com/hij1nx/codesurgeon/tarball/master",
+    "colors": "1.0.x",
+    "qunitjs": "1.9.x",
+    "request": "2.49.x",
+    "uglify-js": "2.4.x",
+    "vows": "0.7.x"
+  },
+  "ender": "./build/ender.js",
+  "browserify": "./build/director",
+  "main": "./lib/director",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "vows test/server/*/*-test.js --spec"
+  },
+  "gitHead": "0de14dc3bcde9f9783e5d6d6c3bde1faaa0a1783",
+  "bugs": {
+    "url": "https://github.com/flatiron/director/issues"
+  },
+  "homepage": "https://github.com/flatiron/director",
+  "_id": "director@1.2.7",
+  "_shasum": "bfd3741075fd7fb1a5b2e13658c5f4bec77736f3",
+  "_from": "director@1.2.7",
+  "_npmVersion": "1.4.23",
+  "_npmUser": {
+    "name": "swaagie",
+    "email": "info@martijnswaagman.nl"
+  },
+  "dist": {
+    "shasum": "bfd3741075fd7fb1a5b2e13658c5f4bec77736f3",
+    "tarball": "http://registry.npmjs.org/director/-/director-1.2.7.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/director/-/director-1.2.7.tgz"
+}

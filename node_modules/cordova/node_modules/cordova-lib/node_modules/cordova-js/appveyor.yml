@@ -1,0 +1,32 @@
+# appveyor file
+# http://www.appveyor.com/docs/appveyor-yml
+environment:
+  matrix:
+  - nodejs_version: "0.12"
+  - nodejs_version: "0.10"
+
+install:
+  - ps: Install-Product node $env:nodejs_version
+
+  - npm -g install npm
+  - set PATH=%APPDATA%\npm;%PATH%
+
+  - cd ..
+  - git clone https://github.com/apache/cordova-android --depth 10
+  - git clone https://github.com/apache/cordova-ios --depth 10
+  - git clone https://github.com/apache/cordova-blackberry --depth 10
+  - git clone https://github.com/apache/cordova-windows --depth 10
+  - git clone https://github.com/apache/cordova-wp8 --depth 10
+  - git clone https://github.com/apache/cordova-ubuntu --depth 10
+  - git clone https://github.com/apache/cordova-browser --depth 10
+  - git clone https://github.com/apache/cordova-amazon-fireos --depth 10
+  - git clone https://github.com/apache/cordova-webos --depth 10
+  - cd cordova-js
+  - npm install --msvs_version=2013
+
+build: off
+
+test_script:
+  - node --version
+  - npm --version
+  - npm test

@@ -1,0 +1,4 @@
+{
+    "main" : "main.js",
+    "browserify" : { "main.js" : "browser.js" }
+}

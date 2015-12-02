@@ -1,0 +1,147 @@
+{
+  "name": "acorn",
+  "description": "ECMAScript parser",
+  "homepage": "http://marijnhaverbeke.nl/acorn/",
+  "main": "acorn.js",
+  "version": "0.11.0",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "maintainers": [
+    {
+      "name": "marijn",
+      "email": "marijnh@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://marijnhaverbeke.nl/git/acorn"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://marijnhaverbeke.nl/acorn/LICENSE"
+    }
+  ],
+  "scripts": {
+    "test": "node test/run.js",
+    "prepublish": "bin/without_eval > acorn_csp.js"
+  },
+  "bin": {
+    "acorn": "./bin/acorn"
+  },
+  "devDependencies": {
+    "regenerate": "~0.6.2",
+    "unicode-7.0.0": "~0.1.5"
+  },
+  "contributors": [
+    {
+      "name": "List of Acorn contributors. Updated before every release."
+    },
+    {
+      "name": "Alistair Braidwood"
+    },
+    {
+      "name": "Aparajita Fishman"
+    },
+    {
+      "name": "Arian Stolwijk"
+    },
+    {
+      "name": "Artem Govorov"
+    },
+    {
+      "name": "Brandon Mills"
+    },
+    {
+      "name": "Charles Hughes"
+    },
+    {
+      "name": "Conrad Irwin"
+    },
+    {
+      "name": "David Bonnet"
+    },
+    {
+      "name": "impinball"
+    },
+    {
+      "name": "Ingvar Stepanyan"
+    },
+    {
+      "name": "Jiaxing Wang"
+    },
+    {
+      "name": "Johannes Herr"
+    },
+    {
+      "name": "Jürg Lehni"
+    },
+    {
+      "name": "keeyipchan"
+    },
+    {
+      "name": "krator"
+    },
+    {
+      "name": "Marijn Haverbeke"
+    },
+    {
+      "name": "Martin Carlberg"
+    },
+    {
+      "name": "Mathias Bynens"
+    },
+    {
+      "name": "Mathieu 'p01' Henri"
+    },
+    {
+      "name": "Max Schaefer"
+    },
+    {
+      "name": "Mihai Bazon"
+    },
+    {
+      "name": "Mike Rennie"
+    },
+    {
+      "name": "Oskar Schöldström"
+    },
+    {
+      "name": "Paul Harper"
+    },
+    {
+      "name": "Peter Rust"
+    },
+    {
+      "name": "PlNG"
+    },
+    {
+      "name": "r-e-d"
+    },
+    {
+      "name": "Rich Harris"
+    },
+    {
+      "name": "Sebastian McKenzie"
+    },
+    {
+      "name": "zsjforcn"
+    }
+  ],
+  "gitHead": "78e1d7ada684868d92d09555408ae2df1812b5ae",
+  "_id": "acorn@0.11.0",
+  "_shasum": "6e95f0253ad161ff0127db32983e5e2e5352d59a",
+  "_from": "acorn@~0.11.0",
+  "_npmVersion": "1.4.28",
+  "_npmUser": {
+    "name": "marijn",
+    "email": "marijnh@gmail.com"
+  },
+  "dist": {
+    "shasum": "6e95f0253ad161ff0127db32983e5e2e5352d59a",
+    "tarball": "http://registry.npmjs.org/acorn/-/acorn-0.11.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/acorn/-/acorn-0.11.0.tgz"
+}

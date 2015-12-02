@@ -1,0 +1,10 @@
+var JSON = require('json-ometajs');
+
+ometa JSONIC <: JSON {
+    token = (spaces | fromTo('#', '\n'))* /true|false|null|:|"|'|\{|\}|\[|\]|,/:t -> [ t, t ],
+    root = value:v (spaces | fromTo('#', '\n'))* end -> v
+}
+
+JSONIC.parse = JSON.parse;
+
+module.exports = JSONIC;

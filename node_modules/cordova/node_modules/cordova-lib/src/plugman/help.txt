@@ -1,0 +1,138 @@
+plugman manages plugin.xml-compatible cordova plugins into cordova-generated projects.
+
+Usage
+=====
+
+To display this help file, use one of the following:
+
+$ plugman --help
+$ plugman -h
+
+To display the plugman version, use one of the following:
+
+ $ plugman --version
+ $ plugman -v 
+
+Optional flags
+--------------
+
+ --debug|-d    : Verbose mode
+ 
+Install a plugin
+----------------
+
+    $ plugman install --platform <platform> --project <directory> --plugin <plugin> [--variable NAME=VALUE]
+
+Parameters:
+
+ - platform <platform>: One of android, ios, blackberry10, wp8, or windows8
+ - project <directory>: Path reference to a cordova-generated project of the platform you specify
+ - plugin <plugin>: One of a path reference to a local copy of a plugin, or a remote https: or git: URL pointing to a cordova plugin (optionally append #branch:subdir) or a plugin ID from http://plugins.cordova.io
+ - variable NAME=VALUE: Some plugins require install-time variables to be defined. These could be things like API keys/tokens or other app-specific variables.
+
+ Optional parameters:
+
+ - www <directory>: www assets for the plugin will be installed into this directory. Default is to install into the standard www directory for the platform specified
+ - plugins_dir <directory>: a copy of the plugin will be stored in this directory. Default is to install into the <project directory>/plugins folder
+ - searchpath <directory>: when looking up plugins by ID, look in this directory and each of its subdirectories for the plugin before hitting the registry.
+   Multiple search paths can be used by either specifying the flag multiple times, or by separating paths with a delimiter (: on 'nix, ; on Windows).
+
+Uninstall a plugin
+------------------
+
+    $ plugman uninstall --platform <platform> --project <directory> --plugin <plugin-id>
+
+Parameters:
+
+ - platform <platform>: One of android, ios, blackberry10, wp8, or windows8
+ - project <directory>: Path reference to a cordova-generated project of the platform you specify
+ - plugin <plugin-id>: The plugin to remove, identified by its id (see the plugin.xml's <plugin id> attribute)
+
+
+Interacting with the registry
+=============================
+
+NOTICE: The Cordova Plugin registry is moving to read-only. Please move your plugins over to npm. The following commands have been removed:
+
+    $ plugman adduser
+    $ plugman publish
+    $ plugman unpublish
+    $ plugman owner add/rm
+
+For managing plugins on the npm registry, use the corresponding npm commands. For more info on npm commands see `npm help <command>`
+
+Search for a plugin
+-------------------
+
+    $ plugman search <keyword1 keyword2 ...>
+
+Display plugin information
+--------------------------
+
+    $ plugman info <pluginID>
+
+Manage registry configuration
+-----------------------------
+Display current configuration settings:
+
+    $ plugman config ls
+
+Display the current registry URL:
+
+    $ plugman config get registry
+
+Set registry URL: 
+
+    $ plugman config set registry <url>
+
+Example:
+
+    $ plugman config set registry http://localhost:5984/registry/_design/app/_rewrite
+    
+Manage Owners
+-------------
+Plugin owners are allowed to publish updates to a plugin. To display a list of owners for a plugin, use:
+
+    $ plugman owner ls <pluginID>
+
+Example: 
+   
+    $ plugman owner ls org.apache.cordova.core.file
+
+Create A Plugin
+---------------
+
+    $ plugman create --name <pluginName> --plugin_id <pluginID> --plugin_version <version> [--path <directory>] [--variable NAME=VALUE]
+
+Parameters:
+
+ - <pluginName>: The name of the plugin
+ - <pluginID>: An ID for the plugin, ex: org.bar.foo
+ - <version>: A version for the plugin, ex: 0.0.1
+ - <directory>: An absolute or relative path for the directory where the plugin project will be created
+ - variable NAME=VALUE: Extra variables such as description or Author
+
+Add a Package.JSON file to plugin
+---------------------------------
+Creates a package.json file in the plugin based on values from plugin.xml.
+
+ $ plugman createpackagejson <directory>
+
+
+Add a Platform to a Plugin
+--------------------------
+
+    $ plugman platform add --platform_name <platform>
+
+Parameters:
+
+- <platform>: One of android, ios
+
+Remove a Platform from a Plugin
+-------------------------------
+
+    $ plugman platform remove --platform_name <platform>
+
+Parameters:
+
+- <platform>: One of android, ios

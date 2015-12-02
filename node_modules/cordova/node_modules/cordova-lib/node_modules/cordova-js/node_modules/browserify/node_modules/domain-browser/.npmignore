@@ -1,0 +1,39 @@
+# v1.3.23 October 11, 2014
+# https://github.com/bevry/base
+
+# Temp Files
+**/*.log
+**/.docpad.db
+
+# Build Files
+build/
+components/
+bower_components/
+node_modules/
+
+# Private Files
+.env
+
+# Development Files
+.editorconfig
+.eslintrc
+.jshintrc
+coffeelint.json
+.travis*
+Cakefile
+Makefile
+BACKERS.md
+CONTRIBUTING.md
+HISTORY.md
+**/src/
+**/test/
+
+# Other Package Definitions
+template.js
+component.json
+bower.json
+
+# =====================================
+# CUSTOM MODIFICATIONS
+
+# None

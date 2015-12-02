@@ -1,0 +1,3 @@
+tasks/vendor
+vendor
+appveyor.yml

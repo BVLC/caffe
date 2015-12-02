@@ -1,0 +1,57 @@
+Synopsis
+
+    cordova-cli platform <command> [options]
+
+Manage project platforms
+
+    add <plat-spec> [...].............. add specified platforms
+        --usegit ...................... [WARNING: This flag has been deprecated.]
+                                        [Instead, please use: `cordova platform add git-url#custom-branch`.] 
+                                        [e.g: cordova platform add https://github.com/apache/cordova-android.git#2.4.0]
+                                        retrieve from git instead of npm registry
+
+        --save ........................ save specified platforms into config.xml after installing them
+
+        --link ........................ when <plat-spec> is a local path, links the platform
+                                        library directly instead of making a copy of it (support
+                                        varies by platform; useful for platform development)
+
+
+
+    remove <platform> [...] ........... remove specified platforms
+        --save ........................ delete specified platforms from config.xml after removing them
+
+    list .............................. list all installed and available platforms
+    update <plat-spec> ................ update the version of Cordova used for a specific platform;
+                                        update to the latest <version> if no <version>, <path> or <url> is specified
+
+        --usegit ...................... retrieve platform from git instead of npm registry
+        --save ........................ save the latest versions for specified platforms into config.xml
+
+    check ............................. list platforms which can be updated by `cordova-cli platform update`
+
+Syntax
+    <plat-spec>:
+        <platform-ver>|<path>|<git-url>
+
+    <platform-ver>:
+        <platform>[@<version>]
+
+    <git-url>:
+        <url>[#<branch>]
+
+    <platform> ........................ platform (typically from npm registry)
+
+    <path> ............................ path to a directory containing a platform
+                                        name of platform to be retrieved from npm registry
+
+    <url> ............................. url to a git repository containing a platform
+
+    <version> ......................... major.minor.patch version specifier
+
+    <branch> .......................... name of the branch to checkout after cloning the git repo
+                                        if none is specified, the 'master' branch will be checked out
+aliases:
+    platforms -> platform
+    rm -> remove
+    ls -> list

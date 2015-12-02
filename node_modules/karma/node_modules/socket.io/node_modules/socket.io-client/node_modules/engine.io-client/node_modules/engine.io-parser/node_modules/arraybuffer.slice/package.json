@@ -1,0 +1,40 @@
+{
+  "name": "arraybuffer.slice",
+  "description": "Exports a function for slicing ArrayBuffers (no polyfilling)",
+  "version": "0.0.6",
+  "homepage": "https://github.com/rase-/arraybuffer.slice",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "1.17.1",
+    "expect.js": "0.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:rase-/arraybuffer.slice.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rase-/arraybuffer.slice/issues"
+  },
+  "_id": "arraybuffer.slice@0.0.6",
+  "dist": {
+    "shasum": "f33b2159f0532a3f3107a272c0ccfbd1ad2979ca",
+    "tarball": "http://registry.npmjs.org/arraybuffer.slice/-/arraybuffer.slice-0.0.6.tgz"
+  },
+  "_from": "arraybuffer.slice@0.0.6",
+  "_npmVersion": "1.3.5",
+  "_npmUser": {
+    "name": "rase-",
+    "email": "tonykovanen@hotmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "rase-",
+      "email": "tonykovanen@hotmail.com"
+    }
+  ],
+  "directories": {},
+  "_shasum": "f33b2159f0532a3f3107a272c0ccfbd1ad2979ca",
+  "_resolved": "https://registry.npmjs.org/arraybuffer.slice/-/arraybuffer.slice-0.0.6.tgz",
+  "readme": "ERROR: No README data found!",
+  "scripts": {}
+}

@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -43,6 +44,9 @@
 =======
 >>>>>>> device-abstraction
 #include "caffe/neuron_layers.hpp"
+=======
+#include "caffe/layers/absval_layer.hpp"
+>>>>>>> BVLC/master
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

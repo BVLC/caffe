@@ -1,0 +1,15 @@
+{
+  "name": "resourceful-app",
+  "description": "An example flatiron app using resourceful",
+  "version": "0.1.0",
+  "author": "Nodejitsu Inc. <info@nodejitsu.com>",
+  "dependencies": {
+    "flatiron": "0.3.x",
+    "resourceful": "0.3.x"
+  },
+  "main": "./app",
+  "engines": {
+    "node": ">= 0.6.4"
+  }
+}
+

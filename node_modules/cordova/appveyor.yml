@@ -1,0 +1,27 @@
+# appveyor file
+# http://www.appveyor.com/docs/appveyor-yml
+
+# getting cordova tools dependencies from github
+# to make sure we're using their latest versions
+install:
+  - cd ..
+  - git clone https://github.com/apache/cordova-js --depth 10
+  - cd cordova-js
+  - npm install
+  - npm link
+  - cd ..
+  - git clone https://github.com/apache/cordova-lib --depth 10
+  - cd cordova-lib\cordova-lib
+  - npm link cordova-js
+  - npm install
+  - npm link
+  - cd ..\..\cordova-cli
+  - npm link cordova-lib
+  - npm install
+
+build: off
+
+test_script:
+  - node --version
+  - npm --version
+  - npm test

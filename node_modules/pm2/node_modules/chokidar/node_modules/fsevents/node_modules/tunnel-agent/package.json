@@ -1,0 +1,65 @@
+{
+  "_from": "tunnel-agent@~0.4.1",
+  "_id": "tunnel-agent@0.4.1",
+  "_location": "/tunnel-agent",
+  "_nodeVersion": "0.12.5",
+  "_npmUser": {
+    "email": "simeonvelichkov@gmail.com",
+    "name": "simov"
+  },
+  "_npmVersion": "2.11.2",
+  "_phantomChildren": {},
+  "_requiredBy": [
+    "/request"
+  ],
+  "_resolved": "https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.4.1.tgz",
+  "_shasum": "bbeecff4d679ce753db9462761a88dfcec3c5ab3",
+  "author": {
+    "email": "mikeal.rogers@gmail.com",
+    "name": "Mikeal Rogers",
+    "url": "http://www.futurealoof.com"
+  },
+  "bugs": {
+    "url": "https://github.com/mikeal/tunnel-agent/issues"
+  },
+  "dependencies": {},
+  "description": "HTTP proxy tunneling agent. Formerly part of mikeal/request, now a standalone module.",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "bbeecff4d679ce753db9462761a88dfcec3c5ab3",
+    "tarball": "http://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.4.1.tgz"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "gitHead": "912a7a6d00e10ec76baf9c9369de280fa5badef3",
+  "homepage": "https://github.com/mikeal/tunnel-agent#readme",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "name": "mikeal",
+      "email": "mikeal.rogers@gmail.com"
+    },
+    {
+      "name": "nylen",
+      "email": "jnylen@gmail.com"
+    },
+    {
+      "name": "fredkschott",
+      "email": "fkschott@gmail.com"
+    },
+    {
+      "name": "simov",
+      "email": "simeonvelichkov@gmail.com"
+    }
+  ],
+  "name": "tunnel-agent",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "url": "git+https://github.com/mikeal/tunnel-agent.git"
+  },
+  "scripts": {},
+  "version": "0.4.1"
+}

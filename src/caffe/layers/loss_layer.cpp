@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
@@ -126,6 +127,9 @@
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/loss_layer.hpp"
+>>>>>>> BVLC/master
 
 namespace caffe {
 

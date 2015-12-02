@@ -1,0 +1,76 @@
+{
+  "name": "requires-port",
+  "version": "0.0.1",
+  "description": "Check if a protocol requires a certain port number to be added to an URL.",
+  "main": "index.js",
+  "scripts": {
+    "100%": "istanbul check-coverage --statements 100 --functions 100 --lines 100 --branches 100",
+    "test": "mocha test.js",
+    "watch": "mocha --watch test.js",
+    "coverage": "istanbul cover ./node_modules/.bin/_mocha -- test.js",
+    "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unshiftio/requires-port.git"
+  },
+  "keywords": [
+    "port",
+    "require",
+    "http",
+    "https",
+    "ws",
+    "wss",
+    "gopher",
+    "file",
+    "ftp",
+    "requires",
+    "requried",
+    "portnumber",
+    "url",
+    "parsing",
+    "validation",
+    "cows"
+  ],
+  "author": {
+    "name": "Arnout Kazemier"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/unshiftio/requires-port/issues"
+  },
+  "homepage": "https://github.com/unshiftio/requires-port",
+  "devDependencies": {
+    "assume": "1.1.x",
+    "istanbul": "0.3.x",
+    "mocha": "2.1.x",
+    "pre-commit": "1.0.x"
+  },
+  "gitHead": "d6235df7aa7e8d08e9ac72c842e1e2c6c366376f",
+  "_id": "requires-port@0.0.1",
+  "_shasum": "4b4414411d9df7c855995dd899a8c78a2951c16d",
+  "_from": "requires-port@0.x.x",
+  "_npmVersion": "2.9.1",
+  "_nodeVersion": "0.12.3",
+  "_npmUser": {
+    "name": "3rdeden",
+    "email": "npm@3rd-Eden.com"
+  },
+  "maintainers": [
+    {
+      "name": "v1",
+      "email": "info@3rd-Eden.com"
+    },
+    {
+      "name": "3rdeden",
+      "email": "npm@3rd-Eden.com"
+    }
+  ],
+  "dist": {
+    "shasum": "4b4414411d9df7c855995dd899a8c78a2951c16d",
+    "tarball": "http://registry.npmjs.org/requires-port/-/requires-port-0.0.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/requires-port/-/requires-port-0.0.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

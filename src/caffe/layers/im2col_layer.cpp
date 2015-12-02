@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/im2col.hpp"
@@ -89,6 +90,10 @@
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
 #include "caffe/vision_layers.hpp"
+=======
+#include "caffe/layers/im2col_layer.hpp"
+#include "caffe/util/im2col.hpp"
+>>>>>>> BVLC/master
 
 namespace caffe {
 
