@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/neuron_layers.hpp"
+#include "caffe/layers/relu_layer.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"

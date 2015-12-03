@@ -1,9 +1,10 @@
 #include <vector>
 
-#include "caffe/neuron_layers.hpp"
+#include "caffe/layers/dropout_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+
 
 #ifdef USE_CUDA
 template<typename Dtype>

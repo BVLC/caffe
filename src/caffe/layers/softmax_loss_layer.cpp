@@ -2,7 +2,7 @@
 #include <cfloat>
 #include <vector>
 
-#include "caffe/loss_layers.hpp"
+#include "caffe/layers/softmax_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -57,7 +57,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+    LossParameter_NormalizationMode normalization_mode, int_tp valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:

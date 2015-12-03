@@ -1,8 +1,7 @@
 #include <vector>
 
-#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layer.hpp"
+#include "caffe/layers/embed_layer.hpp"
 #ifdef USE_CUDA
 #include "caffe/util/gpu_util.cuh"
 #endif  // USE_CUDA

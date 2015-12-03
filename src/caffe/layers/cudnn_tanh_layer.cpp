@@ -1,7 +1,7 @@
 #ifdef USE_CUDNN
 #include <vector>
 
-#include "caffe/neuron_layers.hpp"
+#include "caffe/layers/cudnn_tanh_layer.hpp"
 
 namespace caffe {
 

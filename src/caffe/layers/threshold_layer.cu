@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "caffe/neuron_layers.hpp"
+#include "caffe/layers/threshold_layer.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"

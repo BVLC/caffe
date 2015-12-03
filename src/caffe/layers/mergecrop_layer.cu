@@ -2,7 +2,7 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/mergecrop_layer.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"

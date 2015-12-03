@@ -88,14 +88,7 @@ namespace caffe {
 const char* cublasGetErrorString(cublasStatus_t error);
 const char* curandGetErrorString(curandStatus_t error);
 
-// CUDA: thread number configuration.
-// Use 1024 threads per block, which requires cuda sm_2x or above,
-// or fall back to attempt compatibility (best of luck to you).
-#if __CUDA_ARCH__ >= 200
-#define CAFFE_CUDA_NUM_THREADS 1024
-#else
 #define CAFFE_CUDA_NUM_THREADS 512
-#endif
 
 // CDT hacks: allow proper code formatting and remove errors in CDT
 #ifdef __CDT_PARSER__
