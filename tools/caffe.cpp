@@ -407,7 +407,7 @@ int main(int argc, char** argv) {
   // initialize gpu memory arena
   vector<int> gpus;
   get_gpus(&gpus);
-  caffe::gpu_memory::arena arena(gpus);
+  caffe::gpu_memory::arena arena(gpus, caffe::gpu_memory::DefaultPool, false);
 
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER

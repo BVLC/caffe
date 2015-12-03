@@ -407,6 +407,11 @@ struct CachingDeviceAllocator
         while ( (block_itr != cached_blocks.end())
                 && (block_itr->device == device)
                 && (block_itr->bin == search_key.bin)) {
+
+                // use special rule for the last ("exact size") bin: set max memory overuse to 1/8th
+          if (search_key.bin == (unsigned int) -1 && (block_itr->bytes - search_key.bytes)*8UL > search_key.bytes)
+            break;
+            
           cudaStream_t prev_stream = block_itr->associated_stream;
 	  if ((active_stream == prev_stream)
 	      || (cudaEventQuery(block_itr->ready_event) != cudaErrorNotReady)) {
@@ -662,7 +667,7 @@ struct CachingDeviceAllocator
             cached_blocks.erase(begin);
 
             if (debug) CubLog("\tdevice %d freed %lld bytes.\n\t\t  %lld available blocks cached (%lld bytes), %lld live blocks (%lld bytes) outstanding.\n",
-                              current_device, (long long) begin->bytes, (long long) cached_blocks.size(), (long long) cached_bytes[current_device].free, (long long) live_blocks.size(), (long long) cached_bytes[current_device].free);
+                              current_device, (long long) begin->bytes, (long long) cached_blocks.size(), (long long) cached_bytes[current_device].free, (long long) live_blocks.size(), (long long) cached_bytes[current_device].busy);
         }
 
         Unlock(&spin_lock);

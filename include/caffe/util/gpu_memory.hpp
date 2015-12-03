@@ -83,11 +83,17 @@ class gpu_memory {
   static void init(const std::vector<int>&, PoolMode, bool);
   static void destroy();
 
-  static bool     initialized_;
-  static PoolMode mode_;
-  static size_t   poolsize_;
-  static bool     debug_;
+  static bool             initialized_;
+  static PoolMode         mode_;
+  static bool             debug_;
+
 #ifndef CPU_ONLY
+  struct MemInfo {
+      size_t free;
+      size_t total;
+  };
+
+  static vector<MemInfo>  dev_info_;
 
  public:
   typedef void* pointer;
