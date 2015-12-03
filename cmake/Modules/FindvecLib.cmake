@@ -23,7 +23,7 @@ find_package_handle_standard_args(vecLib DEFAULT_MSG vecLib_INCLUDE_DIR)
 
 if(VECLIB_FOUND)
   if(vecLib_INCLUDE_DIR MATCHES "^/System/Library/Frameworks/vecLib.framework.*")
-    set(vecLib_LINKER_LIBS -lcblas "-framework vecLib")
+    set(vecLib_LINKER_LIBS -lcblas "-framework Accelerate")
     message(STATUS "Found standalone vecLib.framework")
   else()
     set(vecLib_LINKER_LIBS -lcblas "-framework Accelerate")
