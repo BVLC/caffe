@@ -1,7 +1,7 @@
 #include <vector>
 
+#include "caffe/layers/im2col_layer.hpp"
 #include "caffe/util/im2col.hpp"
-#include "caffe/vision_layers.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"

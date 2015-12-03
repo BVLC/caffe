@@ -9,7 +9,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+
+#include "caffe/layers/affinity_layer.hpp"
 
 // #define CAFFE_AFFINITY_DEBUG
 

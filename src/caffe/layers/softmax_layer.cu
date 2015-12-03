@@ -6,7 +6,7 @@
 #include "thrust/device_vector.h"
 #endif
 
-#include "caffe/common_layers.hpp"
+#include "caffe/layers/softmax_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #ifdef USE_GREENTEA

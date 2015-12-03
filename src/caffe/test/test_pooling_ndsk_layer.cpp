@@ -9,7 +9,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/pooling_layer.hpp"
 
 #ifndef CPU_ONLY  // CPU-GPU test
 

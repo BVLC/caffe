@@ -394,28 +394,6 @@ template
 double caffe_cpu_dot<double>(const int_tp n, const double* x, const double* y);
 
 template<>
-int_tp caffe_cpu_hamming_distance<float>(const int_tp n, const float* x,
-                                         const float* y) {
-  int_tp dist = 0;
-  for (int_tp i = 0; i < n; ++i) {
-    dist += __builtin_popcount(
-        static_cast<uint32_t>(x[i]) ^ static_cast<uint32_t>(y[i]));
-  }
-  return dist;
-}
-
-template<>
-int_tp caffe_cpu_hamming_distance<double>(const int_tp n, const double* x,
-                                          const double* y) {
-  int_tp dist = 0;
-  for (int_tp i = 0; i < n; ++i) {
-    dist += __builtin_popcountl(
-        static_cast<uint64_t>(x[i]) ^ static_cast<uint64_t>(y[i]));
-  }
-  return dist;
-}
-
-template<>
 float caffe_cpu_asum<float>(const int_tp n, const float* x) {
   return cblas_sasum(n, x, 1);
 }
