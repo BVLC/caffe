@@ -53,6 +53,6 @@ class MergeCropLayer : public Layer<Dtype> {
   Blob<int_tp> shape_b_;
 };
 
-}
+}  // namespace caffe
 
-#endif // CAFFE_MERGECROP_LAYER_HPP_
+#endif  // CAFFE_MERGECROP_LAYER_HPP_

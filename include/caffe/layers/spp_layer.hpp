@@ -37,7 +37,9 @@ class SPPLayer : public Layer<Dtype> {
   // calculates the kernel and stride dimensions for the pooling layer,
   // returns a correctly configured LayerParameter for a PoolingLayer
   virtual LayerParameter GetPoolingParam(const int_tp pyramid_level,
-      const int_tp bottom_h, const int_tp bottom_w, const SPPParameter spp_param);
+                                         const int_tp bottom_h,
+                                         const int_tp bottom_w,
+                                         const SPPParameter spp_param);
 
   int_tp pyramid_height_;
   int_tp bottom_h_, bottom_w_;

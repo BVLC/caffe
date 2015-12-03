@@ -1,8 +1,8 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/layers/mergecrop_layer.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 

@@ -6,9 +6,9 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layers/conv_layer.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/layers/conv_layer.hpp"
 
 #ifndef CPU_ONLY  // CPU-GPU test
 

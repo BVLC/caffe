@@ -66,7 +66,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  /// when divided by uint_tp_tp_MAX, the randomly generated values @f$u\sim U(0,1)@f$
+  /// when divided by uint_MAX, the randomly generated values @f$u\sim U(0,1)@f$
   Blob<uint_tp> rand_vec_;
   /// the probability @f$ p @f$ of dropping any input
   Dtype threshold_;

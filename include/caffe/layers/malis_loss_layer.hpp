@@ -55,6 +55,6 @@ class MalisLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> dloss_neg_;
 };
 
-}
+}  // namespace caffe
 
-#endif // CAFFE_MALIS_LOSS_LAYER_HPP_
+#endif  // CAFFE_MALIS_LOSS_LAYER_HPP_

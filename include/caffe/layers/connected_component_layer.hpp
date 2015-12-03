@@ -49,6 +49,6 @@ class ConnectedComponentLayer : public Layer<Dtype> {
      cv::Mat FindBlobs(const int maxlabel, const cv::Mat &input);
 };
 
-}
+}  // namespace caffe
 
-#endif // CAFFE_CONNECTED_COMPONENT_LAYER_HPP_
+#endif  // CAFFE_CONNECTED_COMPONENT_LAYER_HPP_
