@@ -17,8 +17,8 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/layers/malis_loss_layer.hpp"
+#include "caffe/util/math_functions.hpp"
 
 
 namespace caffe {

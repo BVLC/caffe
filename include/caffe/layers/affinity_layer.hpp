@@ -43,6 +43,6 @@ class AffinityLayer : public Layer<Dtype> {
   std::vector<int_tp> offsets_;
 };
 
-}
+}  // namespace caffe
 
-#endif // CAFFE_AFFINITY_LAYER_HPP_
+#endif  // CAFFE_AFFINITY_LAYER_HPP_
