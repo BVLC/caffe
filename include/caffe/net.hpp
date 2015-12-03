@@ -185,10 +185,17 @@ class Net {
   inline const vector<string>& param_display_names() const {
     return param_display_names_;
   }
-  /// @brief output blob number
+  /// @brief Input and output blob numbers
+  inline int num_inputs() const { return net_input_blobs_.size(); }
   inline int num_outputs() const { return net_output_blobs_.size(); }
+  inline const vector<Blob<Dtype>*>& input_blobs() const {
+    return net_input_blobs_;
+  }
   inline const vector<Blob<Dtype>*>& output_blobs() const {
     return net_output_blobs_;
+  }
+  inline const vector<int>& input_blob_indices() const {
+    return net_input_blob_indices_;
   }
   inline const vector<int>& output_blob_indices() const {
     return net_output_blob_indices_;
@@ -263,8 +270,10 @@ class Net {
   vector<string> param_display_names_;
   vector<pair<int, int> > param_layer_indices_;
   map<string, int> param_names_index_;
-  /// blob indices for the output of the net
+  /// blob indices for the input and the output of the net
+  vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;
+  vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
