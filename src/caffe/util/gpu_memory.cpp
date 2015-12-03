@@ -26,9 +26,13 @@ namespace caffe {
     return "No GPU: CPU Only Memory";
   }
 #else
+
   void gpu_memory::init(const std::vector<int>& gpus,
                         PoolMode m, bool debug) {
-    debug_ = debug;
+
+    bool debug_env = (getenv("DEBUG_GPU_MEM")!=0);
+    debug_ = debug || debug_env;
+
     if (gpus.size() <= 0) {
       // should we report an error here ?
       m = gpu_memory::NoPool;
