@@ -167,6 +167,7 @@ class DataTransformer {
   bool onPlane(Point p, Size img_size);
   void swapLeftRight(Joints& j);
 
+  int np_in_lmdb;
   int np;
 
  protected:
@@ -183,6 +184,8 @@ class DataTransformer {
   void Transform(const Datum& datum, Dtype* transformed_data);
   void Transform_nv(const Datum& datum, Dtype* transformed_data, Dtype* transformed_label, int cnt);
   void ReadMetaData(MetaData& meta, const string& data, size_t offset3, size_t offset1);
+  void TransformMetaJoints(MetaData& meta);
+  void TransformJoints(Joints& joints);
   void clahe(Mat& img, int, int);
   void putGaussianMaps(Dtype* entry, Point2f center, int stride, int grid_x, int grid_y, float sigma);
 

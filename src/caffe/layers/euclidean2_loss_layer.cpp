@@ -12,7 +12,7 @@ using namespace cv;
 namespace caffe {
 
 template <typename Dtype>
-void EuclideanLossLayer<Dtype>::Reshape(
+void Euclidean2LossLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
   CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
@@ -21,10 +21,10 @@ void EuclideanLossLayer<Dtype>::Reshape(
 }
 
 template <typename Dtype>
-void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void Euclidean2LossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  //add some visualization code here
   // if(0){
+  //   //add some visualization code here
   //   int num = bottom[1]->num();
   //   int nchannel = bottom[1]->channels();
   //   int height = bottom[1]->height();
@@ -45,7 +45,7 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   //           }
   //         }
   //         char filename[100];
-  //         sprintf(filename, "from_euc_loss_%04d_part%02d.jpg", counter, c);
+  //         sprintf(filename, "from_euc_loss2_%04d_part%02d.jpg", counter, c);
   //         //resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
   //         applyColorMap(label_map, label_map, COLORMAP_JET);
   //         //addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
@@ -80,7 +80,6 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   //   }
   // }
 
-
   int count = bottom[0]->count();
   caffe_sub(
       count,
@@ -93,7 +92,7 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void Euclidean2LossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
@@ -110,10 +109,10 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(EuclideanLossLayer);
+STUB_GPU(Euclidean2LossLayer);
 #endif
 
-INSTANTIATE_CLASS(EuclideanLossLayer);
-REGISTER_LAYER_CLASS(EuclideanLoss);
+INSTANTIATE_CLASS(Euclidean2LossLayer);
+REGISTER_LAYER_CLASS(Euclidean2Loss);
 
 }  // namespace caffe

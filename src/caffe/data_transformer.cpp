@@ -38,9 +38,9 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   DecodeFloats(data, offset3+offset1+4, &meta.objpos.y, 1);
   meta.objpos -= Point2f(1,1);
   DecodeFloats(data, offset3+2*offset1, &meta.scale_self, 1);
-  meta.joint_self.joints.resize(np);
-  meta.joint_self.isVisible.resize(np);
-  for(int i=0; i<np; i++){
+  meta.joint_self.joints.resize(np_in_lmdb);
+  meta.joint_self.isVisible.resize(np_in_lmdb);
+  for(int i=0; i<np_in_lmdb; i++){
     DecodeFloats(data, offset3+3*offset1+4*i, &meta.joint_self.joints[i].x, 1);
     DecodeFloats(data, offset3+4*offset1+4*i, &meta.joint_self.joints[i].y, 1);
     meta.joint_self.joints[i] -= Point2f(1,1); //from matlab 1-index to c++ 0-index
@@ -64,9 +64,9 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   }
   //6+numOtherPeople lines passed
   for(int p=0; p<meta.numOtherPeople; p++){
-    meta.joint_others[p].joints.resize(np);
-    meta.joint_others[p].isVisible.resize(np);
-    for(int i=0; i<np; i++){
+    meta.joint_others[p].joints.resize(np_in_lmdb);
+    meta.joint_others[p].isVisible.resize(np_in_lmdb);
+    for(int i=0; i<np_in_lmdb; i++){
       DecodeFloats(data, offset3+(7+meta.numOtherPeople+3*p)*offset1+4*i, &meta.joint_others[p].joints[i].x, 1);
       DecodeFloats(data, offset3+(7+meta.numOtherPeople+3*p+1)*offset1+4*i, &meta.joint_others[p].joints[i].y, 1);
       meta.joint_others[p].joints[i] -= Point2f(1,1);
@@ -78,6 +78,57 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
       }
     }
   }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformMetaJoints(MetaData& meta) {
+  //transform joints in meta from np_in_lmdb to np (specified in prototxt)
+  TransformJoints(meta.joint_self);
+  for(int i=0;i<meta.joint_others.size();i++){
+    TransformJoints(meta.joint_others[i]);
+  }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformJoints(Joints& j) {
+  //transform joints in meta from np_in_lmdb to np (specified in prototxt)
+  //MPII R leg: 0(ankle), 1(knee), 2(hip)
+  //     L leg: 5(ankle), 4(knee), 3(hip)
+  //     R arms: 10(wrist), 11(elbow), 12(shoulder)
+  //     L arms: 15(wrist), 14(elbow), 13(shoulder)
+  //     6 - pelvis, 7 - thorax, 8 - upper neck, 9 - head top
+  assert(joints.size() == np_in_lmdb);
+  assert(np == 14 || np == 28);
+  Joints jo;
+  if(np == 14){
+    int MPI_to_ours[14] = {9, 8, 12, 11, 10, 13, 14, 15, 2, 1, 0, 3, 4, 5};
+    jo.joints.resize(np);
+    jo.isVisible.resize(np);
+    for(int i=0;i<np;i++){
+      jo.joints[i] = j.joints[MPI_to_ours[i]];
+      jo.isVisible[i] = j.isVisible[MPI_to_ours[i]];
+    }
+  }
+  else if(np == 28){
+    int MPI_to_ours_1[28] = {9, 8,12,11,10,13,14,15, 2, 1, 0, 3, 4, 5, 7, 6, \
+                             9, 8,12,11, 8,13,14, 2, 1, 3, 4, 6};
+                          //17,18,19,20,21,22,23,24,25,26,27,28
+    int MPI_to_ours_2[28] = {9, 8,12,11,10,13,14,15, 2, 1, 0, 3, 4, 5, 7, 6, \
+                             8,12,11,10,13,14,15, 1, 0, 4, 5, 7};
+                          //17,18,19,20,21,22,23,24,25,26,27,28
+    jo.joints.resize(np);
+    jo.isVisible.resize(np);
+    for(int i=0;i<np;i++){
+      jo.joints[i] = (j.joints[MPI_to_ours_1[i]] + j.joints[MPI_to_ours_2[i]]) * 0.5;
+      if(j.isVisible[MPI_to_ours_1[i]]==2 || j.isVisible[MPI_to_ours_2[i]]==2){
+        jo.isVisible[i] = 2;
+      }
+      else {
+        jo.isVisible[i] = j.isVisible[MPI_to_ours_1[i]] && j.isVisible[MPI_to_ours_2[i]];
+      }
+    }
+  }
+  j = jo;
 }
 
 template<typename Dtype> DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param, Phase phase) : param_(param), phase_(phase) {
@@ -102,7 +153,8 @@ template<typename Dtype> DataTransformer<Dtype>::DataTransformer(const Transform
     }
   }
   LOG(INFO) << "DataTransformer constructor done.";
-  np = 16;
+  np_in_lmdb = 16;
+  np = param_.num_parts();
 }
 
 template<typename Dtype> void DataTransformer<Dtype>::Transform(const Datum& datum, Dtype* transformed_data) {
@@ -324,6 +376,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   int offset3 = 3 * offset;
   int offset1 = datum_width;
   ReadMetaData(meta, data, offset3, offset1);
+  TransformMetaJoints(meta);
 
   //visualize original
   if(param_.visualize()) 
@@ -352,6 +405,8 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     as.flip = 0;
     as.degree = 0;
   }
+  //LOG(INFO) << "scale: " << as.scale << "; crop:(" << as.crop.width << "," << as.crop.height 
+  //          << "); flip:" << as.flip << "; degree: " << as.degree;
 
   //copy transformed img (img_aug) into transformed_data, do the mean-subtraction here
   offset = img_aug.rows * img_aug.cols;
@@ -361,10 +416,10 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       transformed_data[0*offset + i*img_aug.cols + j] = (rgb[0] - 128)/256.0;
       transformed_data[1*offset + i*img_aug.cols + j] = (rgb[1] - 128)/256.0;
       transformed_data[2*offset + i*img_aug.cols + j] = (rgb[2] - 128)/256.0;
-      transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero it
+      transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
     }
   }
-  
+
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
   if(param_.visualize()){
     static int counter = 3;
@@ -387,7 +442,6 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
     imwrite(imagename, label_map);
     counter += 4;
   }
-
   generateLabelMap(transformed_label, img_aug, meta);
 }
 
@@ -475,20 +529,38 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
 
 template<typename Dtype>
 void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
-  assert(j.joints.size() == 16 && j.isVisible.size() == 16);
+  assert(j.joints.size() == 14 && j.isVisible.size() == 28);
   //MPII R leg: 0(ankle), 1(knee), 2(hip)
   //     L leg: 5(ankle), 4(knee), 3(hip)
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
   //     L arms: 15(wrist), 14(elbow), 13(shoulder)
-  int right[6] = {0,1,2,10,11,12};
-  int left[6] = {5,4,3,15,14,13};
-  for(int i=0; i<6; i++){
-    Point2f temp = j.joints[right[i]];
-    j.joints[right[i]] = j.joints[left[i]];
-    j.joints[left[i]] = temp;
-    int temp_v = j.isVisible[right[i]];
-    j.isVisible[right[i]] = j.isVisible[left[i]];
-    j.isVisible[left[i]] = temp_v;
+  if(np == 14){
+    int right[6] = {3,4,5,9,10,11}; //1-index
+    int left[6] = {6,7,8,12,13,14}; //1-index
+    for(int i=0; i<6; i++){
+      int ri = right[i] - 1;
+      int li = left[i] - 1;
+      Point2f temp = j.joints[ri];
+      j.joints[ri] = j.joints[li];
+      j.joints[li] = temp;
+      int temp_v = j.isVisible[ri];
+      j.isVisible[ri] = j.isVisible[li];
+      j.isVisible[li] = temp_v;
+    }
+  }
+  else if(np == 28){
+    int right[11] = {3,4,5,9,10,11,18,19,20,24,25}; //1-index
+    int left[11] = {6,7,8,12,13,14,21,22,23,26,27}; //1-index
+    for(int i=0; i<6; i++){
+      int ri = right[i] - 1;
+      int li = left[i] - 1;
+      Point2f temp = j.joints[ri];
+      j.joints[ri] = j.joints[li];
+      j.joints[li] = temp;
+      int temp_v = j.isVisible[ri];
+      j.isVisible[ri] = j.isVisible[li];
+      j.isVisible[li] = temp_v;
+    }
   }
 }
 
@@ -591,19 +663,16 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   // clear out transformed_label, it may remain things for last batch
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
-      for (int i = 0; i < 15; i++){
+      for (int i = 0; i < np+1; i++){
         transformed_label[i*channelOffset + g_y*grid_x + g_x] = 0;
       }
     }
   }
   
-  //assume part is 14
   static int counter = 3;
-  int MPI_to_ours[14] = {9, 8, 12, 11, 10, 13, 14, 15, 2, 1, 0, 3, 4, 5};
-  for (int i = 0; i < 14; i++){
-    int MPI_index = MPI_to_ours[i];
-    Point2f center = meta.joint_self.joints[MPI_index];
-    if(meta.joint_self.isVisible[MPI_index] == 1){
+  for (int i = 0; i < np; i++){
+    Point2f center = meta.joint_self.joints[i];
+    if(meta.joint_self.isVisible[i] == 1){
       putGaussianMaps(transformed_label + i*channelOffset, center, param_.stride(), 
                       grid_x, grid_y, param_.sigma());
     }
@@ -612,17 +681,17 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
       float sum = 0;
-      for (int i = 0; i < 14; i++){
+      for (int i = 0; i < np; i++){
         sum += transformed_label[i*channelOffset + g_y*grid_x + g_x];
       }
-      transformed_label[14*channelOffset + g_y*grid_x + g_x] = max(1.0-sum, 0.0);
+      transformed_label[np*channelOffset + g_y*grid_x + g_x] = max(1.0-sum, 0.0);
     }
   }
 
   //visualize
   if(param_.visualize()){
     Mat label_map;
-    for(int i = 0; i < 14; i++){      
+    for(int i = 0; i < np; i++){      
       label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
       //int MPI_index = MPI_to_ours[i];
       //Point2f center = meta.joint_self.joints[MPI_index];
@@ -649,7 +718,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     for (int g_y = 0; g_y < grid_y; g_y++){
       //printf("\n");
       for (int g_x = 0; g_x < grid_x; g_x++){
-        label_map.at<uchar>(g_y,g_x) = (int)(transformed_label[14*channelOffset + g_y*grid_x + g_x]*255);
+        label_map.at<uchar>(g_y,g_x) = (int)(transformed_label[np*channelOffset + g_y*grid_x + g_x]*255);
         //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
       }
     }
@@ -657,7 +726,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     applyColorMap(label_map, label_map, COLORMAP_JET);
     addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
 
-    for(int i=0;i<16;i++){
+    for(int i=0;i<np;i++){
       Point2f center = meta.joint_self.joints[i];// * (1.0/param_.stride());
       circle(label_map, center, 3, CV_RGB(100,100,100), -1);
     }
@@ -703,12 +772,24 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
   rectangle(img_vis, meta.objpos-Point2f(3,3), meta.objpos+Point2f(3,3), CV_RGB(255,255,0), CV_FILLED);
   for(int i=0;i<np;i++){
     //if(meta.joint_self.isVisible[i])
-    if(i==0 || i==1 || i==2 || i==10 || i==11 || i==12)
-      circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,255), -1);
-    else if(i==5 || i==4 || i==3 || i==13 || i==14 || i==15)
+    if(i < 14){
+      if(i==2 || i==3 || i==4 || i==8 || i==9 || i==10)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,255), -1);
+      else if(i==5 || i==6 || i==7 || i==11 || i==12 || i==13)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,255), -1);
+      else
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,150,255), -1);
+    }
+    else if(i < 16)
       circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,255,0), -1);
-    else
-      circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,0,0), -1);
+    else {
+      if(i==17 || i==18 || i==19 || i==23 || i==24)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
+      else if(i==20 || i==21 || i==22 || i==25 || i==26)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,100), -1);
+      else
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,150,150), -1);
+    }
   }
   line(img_vis, meta.objpos+Point2f(-368/2,-368/2), meta.objpos+Point2f(368/2,-368/2), CV_RGB(0,255,0), 2);
   line(img_vis, meta.objpos+Point2f(368/2,-368/2), meta.objpos+Point2f(368/2,368/2), CV_RGB(0,255,0), 2);
@@ -727,12 +808,12 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
       //     L leg: 5(ankle), 4(knee), 3(hip)
       //     R arms: 10(wrist), 11(elbow), 12(shoulder)
       //     L arms: 13(wrist), 14(elbow), 15(shoulder)
-      if(i==0 || i==1 || i==2 || i==10 || i==11 || i==12)
-        circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,0,255), -1);
-      else if(i==5 || i==4 || i==3 || i==13 || i==14 || i==15)
-        circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,255,255), -1);
-      else
-        circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,0,0), -1);
+      //if(i==0 || i==1 || i==2 || i==10 || i==11 || i==12)
+      circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,0,255), -1);
+      //else if(i==5 || i==4 || i==3 || i==13 || i==14 || i==15)
+        //circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,255,255), -1);
+      //else
+        //circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(255,255,0), -1);
     }
   }
   
@@ -764,8 +845,6 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
   }
   counter++;
 }
-
-
 
 
 template<typename Dtype>

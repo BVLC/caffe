@@ -76,11 +76,12 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const int width = this->phase_ != TRAIN ? datum.width() :
       this->layer_param_.transform_param().crop_size_x();
 
-    top[1]->Reshape(batch_size, 15, height/stride, width/stride);
+    int num_parts = this->layer_param_.transform_param().num_parts();
+    top[1]->Reshape(batch_size, num_parts+1, height/stride, width/stride);
     for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-      this->prefetch_[i].label_.Reshape(batch_size, 15, height/stride, width/stride);
+      this->prefetch_[i].label_.Reshape(batch_size, num_parts+1, height/stride, width/stride);
     }
-    this->transformed_label_.Reshape(1, 15, height/stride, width/stride);
+    this->transformed_label_.Reshape(1, num_parts+1, height/stride, width/stride);
   }
 }
 
