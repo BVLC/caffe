@@ -8,9 +8,12 @@
 #include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/argmax_layer.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 

@@ -359,6 +359,7 @@ CUDA_nppi_LIBRARY:FILEPATH=/usr/local/cuda/lib/libnppi.dylib
 CUDA_npps_LIBRARY:FILEPATH=/usr/local/cuda/lib/libnpps.dylib
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 //Path to CUDNN include directory.
 CUDNN_INCLUDE:PATH=/usr/local/cuda/samples/7_CUDALibraries/cuda/include/cudnn.h
 
@@ -377,6 +378,8 @@ mnistCUDNN_LIBRARY:FILEPATH=/usr/local/cuda/samples/7_CUDALibraries/mnistCUDNN/F
 //mnistCUDNN root folder
 mnistCUDNN_ROOT:PATH=/usr/local/cuda/samples/7_CUDALibraries/mnistCUDNN
 =======
+=======
+>>>>>>> pod/caffe-merge
 //Path to cuDNN include directory.
 CUDNN_INCLUDE:PATH=CUDNN_INCLUDE-NOTFOUND
 
@@ -385,7 +388,10 @@ CUDNN_LIBRARY:FILEPATH=CUDNN_LIBRARY-NOTFOUND
 
 //CUDNN root folder
 CUDNN_ROOT:PATH=
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 //Value Computed by CMake
 Caffe_BINARY_DIR:STATIC=/Users/Shared/Jenkins/caffe

@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27,15 +28,21 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -61,6 +68,8 @@
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -76,6 +85,7 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
                 bottom[i]->mutable_cpu_diff());
@@ -101,11 +111,16 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 bottom[i]->mutable_cpu_diff());
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+                bottom[i]->mutable_cpu_diff());
+=======
+>>>>>>> pod/caffe-merge
                 bottom[i]->mutable_cpu_data());
 >>>>>>> origin/BVLC/parallel
 =======
                 bottom[i]->mutable_cpu_diff());
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -126,6 +141,8 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     }
   }
 }
@@ -140,6 +157,7 @@ INSTANTIATE_CLASS(SilenceLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(Silence);
@@ -169,12 +187,18 @@ REGISTER_LAYER_CLASS(Silence);
 
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+REGISTER_LAYER_CLASS(Silence);
+
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(SILENCE, SilenceLayer);
 >>>>>>> origin/BVLC/parallel
 =======
 REGISTER_LAYER_CLASS(Silence);
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -196,4 +220,6 @@ REGISTER_LAYER_CLASS(Silence);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }  // namespace caffe

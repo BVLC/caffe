@@ -12,6 +12,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
@@ -57,6 +58,8 @@
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -66,9 +69,12 @@
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/caffe-merge
+=======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
@@ -108,6 +114,7 @@
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -127,6 +134,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 
@@ -138,6 +147,7 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -171,6 +181,10 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   softmax_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
   top[0]->ReshapeLike(*bottom[0]);
@@ -179,6 +193,7 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -226,6 +241,9 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
+>>>>>>> pod/caffe-merge
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
@@ -238,6 +256,7 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -253,6 +272,8 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
   top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
@@ -266,18 +287,22 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
   vector<int> scale_dims = bottom[0]->shape();
   scale_dims[softmax_axis_] = 1;
   scale_.Reshape(scale_dims);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -290,6 +315,9 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 }
 
 template <typename Dtype>
@@ -306,6 +334,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   int channels = bottom[0]->shape(softmax_axis_);
@@ -355,6 +384,11 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
   int num = bottom[0]->num();
   int channels = bottom[0]->channels();
   int dim = bottom[0]->count() / bottom[0]->num();
@@ -362,6 +396,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data, top_data);
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -383,6 +418,9 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data, top_data);
+>>>>>>> pod/caffe-merge
   // we need to subtract the max to avoid numerical issues, compute the exp,
 =======
 =======
@@ -405,6 +443,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
   GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data, top_data);
   // we need to subtract the max to avoid numerical issues, compute the exp,
@@ -435,6 +474,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
   caffe_copy(bottom[0]->count(), bottom_data, top_data);
@@ -451,8 +492,11 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -474,6 +518,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -494,6 +539,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   // and then normalize.
   for (int i = 0; i < outer_num_; ++i) {
     // initialize scale_data to the first plane
@@ -526,6 +573,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -576,6 +624,11 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
   // subtraction
   GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
                                      -1., scale_data,
@@ -592,6 +645,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                        top_data + i * dim);
   }
   return Dtype(0);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -616,6 +670,9 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -671,6 +728,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -687,6 +745,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }
 
 template <typename Dtype>
@@ -697,6 +757,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   Dtype* scale_data = scale_.mutable_cpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -766,9 +827,15 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
   int num = top[0]->num();
   int channels = top[0]->channels();
   int dim = top[0]->count() / top[0]->num();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -797,6 +864,8 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   GetDevice<Dtype>(Caffe::CPU)->copy(top[0]->count(), top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   for (int i = 0; i < num; ++i) {
@@ -816,6 +885,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   // elementwise multiplication
@@ -978,6 +1048,8 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
   // elementwise multiplication
   GetDevice<Dtype>(Caffe::CPU)->mul(top[0]->count(), bottom_diff, top_data,
                                     bottom_diff);
@@ -1032,6 +1104,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
         -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
   }
+<<<<<<< HEAD
   // elementwise multiplication
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -1226,6 +1299,172 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> BVLC/master
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> master
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> caffe
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> master
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> master
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> BVLC/master
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> master
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> master
+=======
+  int spatial_dim = top[0]->height() * top[0]->width();
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < num; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < spatial_dim; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, spatial_dim,
+          top_data + i * dim + k, spatial_dim);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> origin/BVLC/parallel
+=======
+  int channels = top[0]->shape(softmax_axis_);
+  int dim = top[0]->count() / outer_num_;
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  for (int i = 0; i < outer_num_; ++i) {
+    // compute dot(top_diff, top_data) and subtract them from the bottom diff
+    for (int k = 0; k < inner_num_; ++k) {
+      scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
+          bottom_diff + i * dim + k, inner_num_,
+          top_data + i * dim + k, inner_num_);
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
+        -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
+  }
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 }
 
 
@@ -1236,6 +1475,7 @@ STUB_GPU(SoftmaxLayer);
 INSTANTIATE_CLASS(SoftmaxLayer);
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1255,9 +1495,12 @@ INSTANTIATE_CLASS(SoftmaxLayer);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -1277,4 +1520,6 @@ INSTANTIATE_CLASS(SoftmaxLayer);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }  // namespace caffe

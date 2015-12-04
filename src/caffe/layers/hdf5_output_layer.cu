@@ -4,10 +4,14 @@
 #include "hdf5_hl.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/hdf5_output_layer.hpp"
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 

@@ -8,6 +8,7 @@
 #include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/softmax_layer.hpp"
 
 #ifdef USE_CUDNN
@@ -15,6 +16,8 @@
 #endif
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -86,10 +89,14 @@ TYPED_TEST(SoftmaxLayerTest, TestGradient) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 }
 
 #ifdef USE_CUDNN
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -262,6 +269,8 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 =======
 class CuDNNSoftmaxLayerTest : public ::testing::Test {
@@ -293,11 +302,15 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   Caffe::set_mode(Caffe::GPU);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -316,6 +329,8 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 =======
 >>>>>>> device-abstraction
 =======
+=======
+>>>>>>> pod/caffe-merge
   LayerParameter layer_param;
   CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -356,7 +371,10 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   LayerParameter layer_param;
   CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);

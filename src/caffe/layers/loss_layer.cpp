@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
@@ -83,6 +84,13 @@
 #include "caffe/vision_layers.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
 =======
@@ -115,6 +123,7 @@
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -146,6 +155,8 @@
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 
@@ -168,6 +179,7 @@ void LossLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
@@ -197,12 +209,18 @@ void LossLayer<Dtype>::Reshape(
   top[0]->Reshape(loss_shape);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
+  top[0]->Reshape(loss_shape);
+=======
+>>>>>>> pod/caffe-merge
   top[0]->Reshape(1, 1, 1, 1);
 >>>>>>> origin/BVLC/parallel
 =======
   vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
   top[0]->Reshape(loss_shape);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -224,6 +242,8 @@ void LossLayer<Dtype>::Reshape(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }
 
 INSTANTIATE_CLASS(LossLayer);

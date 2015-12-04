@@ -19,10 +19,14 @@ def reporthook(count, block_size, total_size):
         start_time = time.time()
         return
 <<<<<<< HEAD
+<<<<<<< HEAD
     duration = (time.time() - start_time) or 0.01
 =======
     duration = time.time() - start_time
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    duration = time.time() - start_time
+>>>>>>> pod/caffe-merge
     progress_size = int(count * block_size)
     speed = int(progress_size / (1024 * duration))
     percent = int(count * block_size * 100 / total_size)
@@ -41,6 +45,7 @@ def parse_readme_frontmatter(dirname):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     bottom = lines.index('---', top + 1)
@@ -66,11 +71,16 @@ def parse_readme_frontmatter(dirname):
     bottom = lines.index('---', top + 1)
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    bottom = lines.index('---', top + 1)
+=======
+>>>>>>> pod/caffe-merge
     bottom = lines[top + 1:].index('---')
 >>>>>>> origin/BVLC/parallel
 =======
     bottom = lines.index('---', top + 1)
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,6 +101,8 @@ def parse_readme_frontmatter(dirname):
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))
     assert all(key in frontmatter for key in required_keys)
     return dirname, frontmatter

@@ -143,10 +143,14 @@ function(caffe_print_configuration_summary)
     caffe_status("  GPU arch(s)       :   ${NVCC_FLAGS_EXTRA_readable}")
     if(USE_CUDNN)
 <<<<<<< HEAD
+<<<<<<< HEAD
       caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes (ver. ${CUDNN_VERSION})" ELSE "Not found")
 =======
       caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes" ELSE "Not found")
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes" ELSE "Not found")
+>>>>>>> pod/caffe-merge
     else()
       caffe_status("  cuDNN             :   Disabled")
     endif()

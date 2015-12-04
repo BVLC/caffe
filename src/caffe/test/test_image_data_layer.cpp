@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
@@ -28,10 +29,15 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -52,6 +58,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include <map>
 #include <string>
 #include <vector>
@@ -70,6 +78,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,10 +100,14 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/vision_layers.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -114,6 +127,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -138,6 +153,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     // Create test input file.
@@ -167,12 +183,18 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     MakeTempFilename(&filename_);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    // Create test input file.
+    MakeTempFilename(&filename_);
+=======
+>>>>>>> pod/caffe-merge
     // Create a Vector of files with labels
 >>>>>>> origin/BVLC/parallel
 =======
     // Create test input file.
     MakeTempFilename(&filename_);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -194,6 +216,8 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     std::ofstream outfile(filename_.c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename_;
     for (int i = 0; i < 5; ++i) {
@@ -221,6 +245,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   string filename_reshape_;
@@ -246,10 +271,15 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   string filename_reshape_;
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  string filename_reshape_;
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
   string filename_reshape_;
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -270,6 +300,8 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;

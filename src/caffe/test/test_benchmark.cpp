@@ -69,6 +69,7 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
@@ -94,11 +95,16 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+=======
+>>>>>>> pod/caffe-merge
   usleep(300 * 1000);
 >>>>>>> origin/BVLC/parallel
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -119,6 +125,8 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_GE(timer.MilliSeconds(), 300 - kMillisecondsThreshold);
   EXPECT_LE(timer.MilliSeconds(), 300 + kMillisecondsThreshold);
   EXPECT_TRUE(timer.initted());
@@ -138,6 +146,7 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
@@ -163,11 +172,16 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+=======
+>>>>>>> pod/caffe-merge
   usleep(300 * 1000);
 >>>>>>> origin/BVLC/parallel
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -188,6 +202,8 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   EXPECT_GE(timer.Seconds(), 0.3 - kMillisecondsThreshold / 1000.);
   EXPECT_LE(timer.Seconds(), 0.3 + kMillisecondsThreshold / 1000.);
   EXPECT_TRUE(timer.initted());

@@ -1,10 +1,14 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/deconv_layer.hpp"
 =======
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 

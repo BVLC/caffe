@@ -13,6 +13,7 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
@@ -38,11 +39,16 @@ $TOOLS/caffe train \
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
+=======
+>>>>>>> pod/caffe-merge
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate
 >>>>>>> origin/BVLC/parallel
 =======
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -63,3 +69,5 @@ $TOOLS/caffe train \
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge

@@ -12,6 +12,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
@@ -56,6 +57,8 @@
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 =======
@@ -64,8 +67,11 @@
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -111,6 +117,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -125,6 +132,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 
@@ -145,6 +154,7 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -201,6 +211,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
@@ -229,6 +241,7 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   }
@@ -252,6 +265,8 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 <<<<<<< HEAD
@@ -282,6 +297,7 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     max_idx_.Reshape(bottom[0]->shape());
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 <<<<<<< HEAD
@@ -434,10 +450,31 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.eltwise_param().operation() ==
       EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
     max_idx_.Reshape(bottom[0]->shape());
+=======
+>>>>>>> pod/caffe-merge
+  }
+  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+=======
+void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 1; i < bottom.size(); ++i) {
+    CHECK(bottom[i]->shape() == bottom[0]->shape());
+  }
+  top[0]->ReshapeLike(*bottom[0]);
+  // If max operation, we will initialize the vector index part.
+  if (this->layer_param_.eltwise_param().operation() ==
+      EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
+    max_idx_.Reshape(bottom[0]->shape());
   }
 }
 
 template <typename Dtype>
+>>>>>>> pod/caffe-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -447,10 +484,13 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 Dtype EltwiseLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -478,6 +518,9 @@ Dtype EltwiseLayer<Dtype>::Forward(
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> BVLC/master
 =======
@@ -569,11 +612,14 @@ template <typename Dtype>
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 void EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   int* mask = NULL;
@@ -594,8 +640,11 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -624,6 +673,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -641,6 +691,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
     this->device_->mul(count, bottom[0]->const_data(),
@@ -651,12 +703,15 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     }
     break;
   case EltwiseParameter_EltwiseOp_SUM:
@@ -668,10 +723,13 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
@@ -700,6 +758,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
           mask[idx] = blob_idx;  // maxid
         }
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -715,6 +774,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
@@ -969,6 +1030,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
       }
     }
     break;
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
     }
@@ -1272,6 +1334,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   case EltwiseParameter_EltwiseOp_MAX:
     // Initialize
     mask = max_idx_.mutable_cpu_data();
@@ -1331,6 +1395,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1347,6 +1412,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     }
     break;
   default:
@@ -1364,6 +1431,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1397,6 +1465,11 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
 void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 =======
@@ -1405,7 +1478,10 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const int* mask = NULL;
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->const_data();
   const Dtype* top_diff = top[0]->const_diff();
@@ -1441,7 +1517,10 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int* mask = NULL;
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->const_data();
   const Dtype* top_diff = top[0]->const_diff();
@@ -1530,6 +1609,7 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
@@ -1595,6 +1675,9 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/caffe-merge
         break;
       case EltwiseParameter_EltwiseOp_SUM:
         if (coeffs_[i] == Dtype(1)) {
@@ -1606,12 +1689,15 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
@@ -1622,6 +1708,7 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
             gradient += top_diff[index];
           }
           bottom_diff[index] = gradient;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1630,6 +1717,8 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
@@ -1740,6 +1829,7 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
             gradient += top_diff[index];
           }
           bottom_diff[index] = gradient;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1882,6 +1972,8 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
         }
         break;
       default:
@@ -1899,6 +1991,7 @@ INSTANTIATE_CLASS(EltwiseLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1915,12 +2008,15 @@ INSTANTIATE_CLASS(EltwiseLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(Eltwise);
 
 =======
 REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1940,6 +2036,8 @@ REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(Eltwise);
 
 >>>>>>> caffe

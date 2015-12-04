@@ -1,12 +1,17 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/filler.hpp"
 #include "caffe/layers/embed_layer.hpp"
 =======
 #include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/common_layers.hpp"
+#include "caffe/filler.hpp"
+>>>>>>> pod/caffe-merge
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

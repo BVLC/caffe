@@ -7,10 +7,14 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/sigmoid_cross_entropy_loss_layer.hpp"
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> pod/caffe-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

@@ -2,10 +2,14 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/bnll_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 
@@ -53,6 +57,7 @@ INSTANTIATE_CLASS(BNLLLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -69,12 +74,15 @@ INSTANTIATE_CLASS(BNLLLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(BNLL);
 
 =======
 REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -94,6 +102,8 @@ REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(BNLL);
 
 >>>>>>> caffe

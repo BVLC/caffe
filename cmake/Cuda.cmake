@@ -184,6 +184,7 @@ function(detect_cuDNN)
     set(CUDNN_FOUND TRUE PARENT_SCOPE)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     file(READ ${CUDNN_INCLUDE}/cudnn.h CUDNN_VERSION_FILE_CONTENTS)
 
     # cuDNN v3 and beyond
@@ -220,13 +221,18 @@ function(detect_cuDNN)
 endfunction()
 
 =======
+=======
+>>>>>>> pod/caffe-merge
     mark_as_advanced(CUDNN_INCLUDE CUDNN_LIBRARY CUDNN_ROOT)
     message(STATUS "Found cuDNN (include: ${CUDNN_INCLUDE}, library: ${CUDNN_LIBRARY})")
   endif()
 endfunction()
 
 
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 ################################################################################################
 ###  Non macro section
 ################################################################################################

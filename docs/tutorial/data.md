@@ -15,6 +15,7 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -48,10 +49,15 @@ This data layer definition
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     layer {
       name: "mnist"
       # Data layer loads leveldb or lmdb storage DBs for high-throughput.
       type: "Data"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -74,6 +80,9 @@ This data layer definition
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
     layers {
       name: "mnist"
       # DATA layer loads leveldb or lmdb storage DBs for high-throughput.
@@ -86,6 +95,7 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -100,6 +110,8 @@ This data layer definition
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       # the 1st top is the data itself: the name is only convention
       top: "data"
       # the 2nd top is the ground truth: the name is only convention
@@ -109,6 +121,7 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       # the Data layer configuration
@@ -134,6 +147,10 @@ This data layer definition
       # the Data layer configuration
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      # the Data layer configuration
+=======
+>>>>>>> pod/caffe-merge
       # the DATA layer configuration
 >>>>>>> origin/BVLC/parallel
 =======
@@ -144,6 +161,7 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -159,6 +177,8 @@ This data layer definition
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       data_param {
         # path to the DB
         source: "examples/mnist/mnist_train_lmdb"
@@ -191,6 +211,7 @@ The (data, label) pairing is a convenience for classification models.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -209,10 +230,13 @@ The (data, label) pairing is a convenience for classification models.
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
     layer {
       name: "data"
       type: "Data"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
@@ -222,6 +246,8 @@ The (data, label) pairing is a convenience for classification models.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     layers {
       name: "data"
       type: DATA
@@ -231,6 +257,7 @@ The (data, label) pairing is a convenience for classification models.
       name: "data"
       type: "Data"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -253,6 +280,8 @@ The (data, label) pairing is a convenience for classification models.
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
       [...]
       transform_param {
         scale: 0.1

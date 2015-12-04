@@ -7,6 +7,7 @@ env:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -40,12 +41,17 @@ env:
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3
     - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true
     - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -68,6 +74,9 @@ env:
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
     - WITH_CUDA=false WITH_CMAKE=false
     - WITH_CUDA=false WITH_CMAKE=true
     - WITH_CUDA=true WITH_CMAKE=false
@@ -80,6 +89,7 @@ env:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -94,6 +104,8 @@ env:
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 language: cpp
 
@@ -115,6 +127,7 @@ before_install:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
@@ -140,10 +153,15 @@ before_install:
   - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
   - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -164,6 +182,8 @@ before_install:
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 install:
   - sudo -E $SCRIPTS/travis_install.sh
@@ -174,6 +194,7 @@ before_script:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
@@ -203,6 +224,11 @@ before_script:
   - export PATH=$CONDA_DIR/bin:$PATH
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export PATH=$CONDA_DIR/bin:$PATH
+=======
+>>>>>>> pod/caffe-merge
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 >>>>>>> origin/BVLC/parallel
 =======
@@ -214,6 +240,7 @@ before_script:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -230,6 +257,8 @@ before_script:
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
 script: $SCRIPTS/travis_build_and_test.sh

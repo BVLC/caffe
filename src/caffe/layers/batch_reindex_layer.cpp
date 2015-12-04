@@ -1,10 +1,14 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/batch_reindex_layer.hpp"
 =======
 #include "caffe/common_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/common_layers.hpp"
+>>>>>>> pod/caffe-merge
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

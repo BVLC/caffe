@@ -1,8 +1,11 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/threshold_layer.hpp"
 =======
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/neuron_layers.hpp"
 
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -39,6 +42,7 @@ INSTANTIATE_CLASS(ThresholdLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -63,12 +67,16 @@ REGISTER_LAYER_CLASS(Threshold);
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> caffe
 REGISTER_LAYER_CLASS(Threshold);
 
 =======
 REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -86,4 +94,6 @@ REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }  // namespace caffe

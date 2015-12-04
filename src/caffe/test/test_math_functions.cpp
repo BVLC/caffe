@@ -59,8 +59,11 @@ TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -71,12 +74,15 @@ TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -123,6 +129,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   caffe_abs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
@@ -165,6 +172,11 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/caffe-merge
   GetDevice<TypeParam>(Caffe::CPU)->fabs(n, x,
       this->blob_bottom_->mutable_cpu_diff());
 =======
@@ -172,8 +184,11 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
   caffe_abs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
 >>>>>>> BVLC/master
@@ -212,6 +227,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -230,6 +246,8 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   for (int i = 0; i < n; ++i) {
     EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
@@ -262,6 +280,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   caffe_copy(n, bottom_data, top_data);
@@ -282,6 +301,8 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
   GetDevice<TypeParam>(Caffe::CPU)->copy(n, bottom_data, top_data);
@@ -308,6 +329,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
 >>>>>>> caffe
   caffe_copy(n, bottom_data, top_data);
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -395,6 +417,8 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
   caffe_copy(n, bottom_data, top_data);
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   for (int i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
   }
@@ -411,8 +435,11 @@ TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
 TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   int n = this->blob_bottom_->count();
@@ -428,12 +455,15 @@ TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -480,6 +510,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   caffe_gpu_abs<TypeParam>(n, this->blob_bottom_->gpu_data(),
@@ -548,6 +579,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -579,6 +612,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   caffe_gpu_abs<TypeParam>(n, this->blob_bottom_->gpu_data(),
                             this->blob_bottom_->mutable_gpu_diff());
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -639,6 +673,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int i = 0; i < n; ++i) {
@@ -672,6 +708,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   caffe_copy(n, bottom_data, top_data);
@@ -703,6 +740,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
   GetDevice<TypeParam>(Caffe::GPU)->copy(n, bottom_data, top_data);
@@ -727,6 +766,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
   caffe_copy(n, bottom_data, top_data);
 >>>>>>> BVLC/master
@@ -757,6 +797,10 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   caffe_copy(n, bottom_data, top_data);
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  caffe_copy(n, bottom_data, top_data);
+>>>>>>> BVLC/master
+>>>>>>> pod/caffe-merge
   bottom_data = this->blob_bottom_->cpu_data();
   top_data = this->blob_top_->mutable_cpu_data();
   for (int i = 0; i < n; ++i) {

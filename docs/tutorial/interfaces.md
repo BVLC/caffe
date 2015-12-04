@@ -14,6 +14,7 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -47,6 +48,10 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 **Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:
 
 * All training requires a solver configuration through the `-solver solver.prototxt` argument.
@@ -57,6 +62,7 @@ For example, you can run:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,10 +82,14 @@ For example, you can run:
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 **Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks. All training requires a solver configuration through the `-solver solver.prototxt` argument. Resuming requires the `-snapshot model_iter_1000.solverstate` argument to load the solver snapshot. Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -99,6 +109,8 @@ For example, you can run:
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
     # train LeNet
     caffe train -solver examples/mnist/lenet_solver.prototxt
@@ -119,12 +131,16 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
     # score the learned LeNet model on the validation set as defined in the
     # model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -150,6 +166,8 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     #
     # score the learned LeNet model on the validation set as defined in the model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000 -gpu 0 -iterations 100
@@ -164,6 +182,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -181,6 +200,8 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 **Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.
 
@@ -192,6 +213,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -225,10 +247,15 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
     # time LeNet training on GPU for the default 50 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
     # time a model architecture with the given weights on the first GPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -251,6 +278,9 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
     # time a model architecture with the given weights on the first GPU for 10 iterations
     # time LeNet training on GPU for the default 50 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
@@ -262,6 +292,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -276,6 +307,8 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 **Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.
 
@@ -287,6 +320,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -320,6 +354,10 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 **Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.
 
     # train on GPUs 0 & 1 (doubling the batch size)
@@ -330,6 +368,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -358,9 +397,12 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -368,6 +410,8 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 ## Python
 
 The Python interface -- pycaffe -- is the `caffe` module and its scripts in caffe/python. `import caffe` to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.
@@ -385,6 +429,7 @@ Tutorial IPython notebooks are found in caffe/examples: do `ipython notebook caf
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -418,6 +463,10 @@ Tutorial IPython notebooks are found in caffe/examples: do `ipython notebook caf
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 Compile pycaffe by `make pycaffe`.
 Add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like for `import caffe`.
 
@@ -636,6 +685,7 @@ Call `caffe.reset_all()` to clear all solvers and stand-alone nets you have crea
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -655,6 +705,9 @@ Call `caffe.reset_all()` to clear all solvers and stand-alone nets you have crea
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 Compile pycaffe by `make pycaffe`. The module dir caffe/python/caffe should be installed in your PYTHONPATH for `import caffe`.
 
 ## MATLAB
@@ -674,6 +727,7 @@ Compile matcaffe by `make matcaffe`.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -688,3 +742,5 @@ Compile matcaffe by `make matcaffe`.
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge

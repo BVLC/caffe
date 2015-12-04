@@ -4,10 +4,14 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/tanh_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 

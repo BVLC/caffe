@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -56,6 +57,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> caffe
 #include <vector>
 
@@ -63,7 +66,10 @@
 #include "caffe/util/math_functions.hpp"
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include <algorithm>
 #include <vector>
 
@@ -73,6 +79,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -92,6 +99,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 
@@ -157,6 +166,7 @@ INSTANTIATE_CLASS(ExpLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(Exp);
@@ -186,12 +196,18 @@ REGISTER_LAYER_CLASS(Exp);
 
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+REGISTER_LAYER_CLASS(Exp);
+
+=======
+>>>>>>> pod/caffe-merge
 REGISTER_LAYER_CLASS(EXP, ExpLayer);
 >>>>>>> origin/BVLC/parallel
 =======
 REGISTER_LAYER_CLASS(Exp);
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -213,4 +229,6 @@ REGISTER_LAYER_CLASS(Exp);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }  // namespace caffe

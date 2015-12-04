@@ -2,6 +2,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layer.hpp"
 #include "caffe/layers/concat_layer.hpp"
 #include "caffe/layers/flatten_layer.hpp"
@@ -11,6 +12,9 @@
 =======
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/caffe-merge
 
 namespace caffe {
 
@@ -227,9 +231,13 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+>>>>>>> pod/caffe-merge
 INSTANTIATE_CLASS(SPPLayer);
 REGISTER_LAYER_CLASS(SPP);
 

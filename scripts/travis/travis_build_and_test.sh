@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 # Script called by Travis to build and test Caffe.
@@ -33,12 +34,18 @@
 # Travis CI tests are CPU-only for lack of compatible hardware.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+# Script called by Travis to build and test Caffe.
+# Travis CI tests are CPU-only for lack of compatible hardware.
+=======
+>>>>>>> pod/caffe-merge
 # Script called by Travis to do a CPU-only build of and test Caffe.
 >>>>>>> origin/BVLC/parallel
 =======
 # Script called by Travis to build and test Caffe.
 # Travis CI tests are CPU-only for lack of compatible hardware.
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -60,6 +67,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 set -e
 MAKE="make --jobs=$NUM_THREADS --keep-going"
@@ -72,6 +81,7 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -105,6 +115,10 @@ if $WITH_CMAKE; then
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   CPU_ONLY=" -DCPU_ONLY=ON"
   if ! $WITH_CUDA; then
     CPU_ONLY=" -DCPU_ONLY=OFF"
@@ -124,6 +138,7 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -143,11 +158,15 @@ if $WITH_CMAKE; then
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
   cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
   $MAKE
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -167,6 +186,8 @@ if $WITH_CMAKE; then
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   if ! $WITH_CUDA; then
     $MAKE runtest
     $MAKE lint
@@ -182,6 +203,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -215,6 +237,10 @@ else
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
   if $WITH_IO; then
     export USE_LMDB=1
     export USE_LEVELDB=1
@@ -223,6 +249,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -246,9 +273,12 @@ else
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+>>>>>>> pod/caffe-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -261,6 +291,8 @@ else
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   $MAKE all test pycaffe warn lint || true
   if ! $WITH_CUDA; then
     $MAKE runtest
@@ -273,6 +305,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   $MAKE pytest
@@ -298,10 +331,15 @@ else
   $MAKE pytest
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  $MAKE pytest
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
   $MAKE pytest
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -322,6 +360,8 @@ else
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   $MAKE warn
   if ! $WITH_CUDA; then
     $MAKE lint

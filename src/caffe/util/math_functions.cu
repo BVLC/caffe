@@ -282,7 +282,10 @@ void caffe_gpu_div<double>(const int N, const double* a,
 template <typename Dtype>
 __global__ void abs_kernel(const int n, const Dtype* a, Dtype* y) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/caffe-merge
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = abs(a[index]);
   }
@@ -382,7 +385,10 @@ void caffe_gpu_abs<double>(const int N, const double* a, double* y) {
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
                                       - (x[index] < Dtype(0)));
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sgnbit, y[index] = signbit(x[index]));
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 template <typename Dtype>
 __global__ void exp_kernel(const int n, const Dtype* a, Dtype* y) {

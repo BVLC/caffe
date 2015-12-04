@@ -583,6 +583,7 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 }
 
@@ -859,11 +860,14 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   }
 }
 
 bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -884,6 +888,10 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
     if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
+=======
+>>>>>>> pod/caffe-merge
     if (net_param.layers(i).type() == LayerParameter_LayerType_DATA) {
 >>>>>>> origin/BVLC/parallel
       DataParameter layer_param = net_param.layers(i).data_param();
@@ -1238,6 +1246,7 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1521,6 +1530,8 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
   switch (type) {
   case V1LayerParameter_LayerType_NONE:
@@ -1613,6 +1624,7 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   }
@@ -1694,6 +1706,9 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> caffe
   }
   if (v1_layer_param.has_transform_param()) {
@@ -1955,8 +1970,11 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
+=======
+>>>>>>> pod/caffe-merge
   }
   // NetParameter uses old style data transformation fields; try to upgrade it.
   if (NetNeedsDataUpgrade(*param)) {
@@ -1967,6 +1985,7 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
               << "data transformation parameters.";
     LOG(ERROR) << "Note that future Caffe releases will only support "
                << "transform_param messages for transformation fields.";
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
   // NetParameter uses old style data transformation fields; try to upgrade it.
@@ -1985,6 +2004,8 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
   }
   // NetParameter uses old style data transformation fields; try to upgrade it.
   if (NetNeedsDataUpgrade(*param)) {
@@ -2030,7 +2051,17 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
   UpgradeNetAsNeeded(param_file, param);
 }
 
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
+}
+
+>>>>>>> pod/caffe-merge
 void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
                                       NetParameter* param) {
   CHECK(ReadProtoFromBinaryFile(param_file, param))
@@ -2038,6 +2069,7 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
   UpgradeNetAsNeeded(param_file, param);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2122,6 +2154,8 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   }
   return success;
 }
@@ -2132,6 +2166,7 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse SolverParameter file: " << param_file;
   UpgradeSolverAsNeeded(param_file, param);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2161,6 +2196,9 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 }
 
 }  // namespace caffe

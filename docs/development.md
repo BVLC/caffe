@@ -9,6 +9,7 @@ Caffe is developed with active participation of the community.<br>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
@@ -34,11 +35,16 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
+=======
+>>>>>>> pod/caffe-merge
 The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions!
 >>>>>>> origin/BVLC/parallel
 =======
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -59,6 +65,8 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).
 This method is impartial and always up-to-date.
@@ -100,6 +108,7 @@ BVLC maintainers will periodically make releases by marking stable checkpoints a
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
@@ -129,6 +138,11 @@ Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report 
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
+Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
+=======
+>>>>>>> pod/caffe-merge
 Use Github Issues to report [bugs], propose features, and ask development [questions].
 Large-scale development work is guided by [milestones], which are sets of Issues selected for concurrent release (integration from `dev` to `master`).
 >>>>>>> origin/BVLC/parallel
@@ -141,6 +155,7 @@ Large-scale development work is guided by [milestones], which are sets of Issues
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -157,12 +172,15 @@ Large-scale development work is guided by [milestones], which are sets of Issues
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 Please note that since the core developers are largely researchers, we may work on a feature in isolation for some time before releasing it to the community, so as to claim honest academic contribution.
 We do release things as soon as a reasonable technical report may be written, and we still aim to inform the community of ongoing development through Github Issues.
 
 **When you are ready to develop a feature or fixing a bug, follow this protocol**:
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -201,10 +219,15 @@ We do release things as soon as a reasonable technical report may be written, an
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
 - Develop in [feature branches] with descriptive names. Branch off of the latest `master`.
 - Bring your work up-to-date by [rebasing] onto the latest `master` when done.
 (Groom your changes by [interactive rebase], if you'd like.)
 - [Pull request] your contribution to `BVLC/caffe`'s `master` branch for discussion and review.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -227,6 +250,9 @@ We do release things as soon as a reasonable technical report may be written, an
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
 - Develop in [feature branches] with descriptive names.
     - For new development branch off `dev`.
     - For documentation and fixes for `master` branch off `master`.
@@ -241,6 +267,7 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -255,6 +282,8 @@ We do release things as soon as a reasonable technical report may be written, an
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   - Make PRs *as soon as development begins*, to let discussion guide development.
   - A PR is only ready for merge review when it is a fast-forward merge, and all code is documented, linted, and tested -- that means your PR must include tests!
 - When the PR satisfies the above properties, use comments to request maintainer review.

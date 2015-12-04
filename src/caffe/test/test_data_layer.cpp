@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "boost/scoped_ptr.hpp"
@@ -32,10 +33,15 @@
 #include "boost/scoped_ptr.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "boost/scoped_ptr.hpp"
+=======
+>>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #include "boost/scoped_ptr.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -56,6 +62,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
@@ -67,6 +75,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/data_layers.hpp"
@@ -86,12 +95,15 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -102,6 +114,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 #include "caffe/dataset_factory.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -115,6 +129,7 @@
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -144,6 +159,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -180,6 +197,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -198,10 +216,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
     scoped_ptr<db::DB> db(db::GetDB(backend));
     db->Open(*filename_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
@@ -211,6 +232,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     shared_ptr<Dataset<string, Datum> > dataset =
         DatasetFactory<string, Datum>(backend_);
     CHECK(dataset->open(*filename_, Dataset<string, Datum>::New));
@@ -220,6 +243,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     db->Open(*filename_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -242,6 +266,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -260,6 +286,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -293,12 +320,17 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/caffe-merge
       string out;
       CHECK(datum.SerializeToString(&out));
       txn->Put(ss.str(), out);
     }
     txn->Commit();
     db->Close();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -321,6 +353,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/caffe-merge
       CHECK(dataset->put(ss.str(), datum));
     }
     CHECK(dataset->commit());
@@ -333,6 +368,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -347,6 +383,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
   }
 
   void TestRead() {
@@ -544,6 +582,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     }  // destroy 1st data layer and unlock the db
@@ -569,11 +608,16 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }  // destroy 1st data layer and unlock the db
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    }  // destroy 1st data layer and unlock the db
+=======
+>>>>>>> pod/caffe-merge
     }  // destroy 1st data layer and unlock the dataset
 >>>>>>> origin/BVLC/parallel
 =======
     }  // destroy 1st data layer and unlock the db
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -594,6 +638,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
     // Get crop sequence after reseeding Caffe with 1701.
     // Check that the sequence is the same as the original.
@@ -654,6 +700,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     }  // destroy 1st data layer and unlock the db
@@ -679,11 +726,16 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }  // destroy 1st data layer and unlock the db
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    }  // destroy 1st data layer and unlock the db
+=======
+>>>>>>> pod/caffe-merge
     }  // destroy 1st data layer and unlock the dataset
 >>>>>>> origin/BVLC/parallel
 =======
     }  // destroy 1st data layer and unlock the db
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -704,6 +756,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 
     // Get crop sequence continuing from previous Caffe RNG state; reseed
     // srand with 1701. Check that the sequence differs from the original.
@@ -758,6 +812,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TRAIN);
@@ -783,11 +838,16 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
   this->TestReadCrop(TRAIN);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  this->TestReadCrop(TRAIN);
+=======
+>>>>>>> pod/caffe-merge
   this->TestReadCrop();
 >>>>>>> origin/BVLC/parallel
 =======
   this->TestReadCrop(TRAIN);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -808,6 +868,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }
 
 // Test that the sequence of random crops is consistent when using
@@ -834,6 +896,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TEST);
@@ -859,11 +922,16 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->TestReadCrop(TEST);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  this->TestReadCrop(TEST);
+=======
+>>>>>>> pod/caffe-merge
   this->TestReadCrop();
 >>>>>>> origin/BVLC/parallel
 =======
   this->TestReadCrop(TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -884,6 +952,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }
 #endif  // USE_LEVELDB
 
@@ -906,6 +976,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TRAIN);
@@ -931,11 +1002,16 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
   this->TestReadCrop(TRAIN);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  this->TestReadCrop(TRAIN);
+=======
+>>>>>>> pod/caffe-merge
   this->TestReadCrop();
 >>>>>>> origin/BVLC/parallel
 =======
   this->TestReadCrop(TRAIN);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -956,6 +1032,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }
 
 // Test that the sequence of random crops is consistent when using
@@ -982,6 +1060,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TEST);
@@ -1007,11 +1086,16 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   this->TestReadCrop(TEST);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  this->TestReadCrop(TEST);
+=======
+>>>>>>> pod/caffe-merge
   this->TestReadCrop();
 >>>>>>> origin/BVLC/parallel
 =======
   this->TestReadCrop(TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1032,6 +1116,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 }
 
 #endif  // USE_LMDB
