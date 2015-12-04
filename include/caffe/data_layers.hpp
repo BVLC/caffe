@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 #include "boost/weak_ptr.hpp"
@@ -62,6 +63,8 @@
 <<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 =======
 
 #include "boost/weak_ptr.hpp"
@@ -100,8 +103,14 @@
 #include "boost/weak_ptr.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+
+#include "boost/weak_ptr.hpp"
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 #include "hdf5.h"
 
 #include "caffe/blob.hpp"
@@ -201,12 +210,15 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/common.hpp
 #include "caffe/util/db.hpp"
 
 #define HDF5_DATA_DATASET_NAME "data"
@@ -254,16 +266,60 @@ class HDF5OutputLayer : public Layer<Dtype> {
 =======
 #include "caffe/util/db.hpp"
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
 namespace caffe {
 >>>>>>> origin/BVLC/parallel
 
 using boost::weak_ptr;
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  virtual ~BasePrefetchingDataLayer();
+>>>>>>> origin/BVLC/parallel
+=======
+  virtual ~BasePrefetchingDataLayer();
+>>>>>>> origin/BVLC/parallel
+=======
+  virtual ~BasePrefetchingDataLayer();
+>>>>>>> origin/BVLC/parallel
+=======
+  virtual ~BasePrefetchingDataLayer();
+>>>>>>> origin/BVLC/parallel
+  // LayerSetUp: implements common data layer setup functionality, and calls
+  // DataLayerSetUp to do special data layer setup for individual layer types.
+  // This method may not be overridden.
+  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+>>>>>>> pod/common.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -292,6 +348,10 @@ class HDF5OutputLayer : public Layer<Dtype> {
   // TODO: no limit on the number of blobs
   virtual inline int ExactNumBottomBlobs() const { return 2; }
   virtual inline int ExactNumTopBlobs() const { return 0; }
+=======
+  // Prefetches batches (asynchronously if to GPU memory)
+  static const int PREFETCH_COUNT = 3;
+>>>>>>> pod/common.hpp
 
 =======
 #include "caffe/util/db.hpp"
@@ -299,9 +359,18 @@ class HDF5OutputLayer : public Layer<Dtype> {
 
 namespace caffe {
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 
 using boost::weak_ptr;
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+ protected:
+  virtual void InternalThreadEntry();
+  virtual void load_batch(Batch<Dtype>* batch) = 0;
+>>>>>>> pod/common.hpp
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -315,6 +384,45 @@ using boost::weak_ptr;
 <<<<<<< HEAD
 template <typename Dtype>
 class HDF5OutputLayer : public Layer<Dtype> {
+=======
+<<<<<<< HEAD
+  Batch<Dtype> prefetch_[PREFETCH_COUNT];
+  BlockingQueue<Batch<Dtype>*> prefetch_free_;
+  BlockingQueue<Batch<Dtype>*> prefetch_full_;
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+  // Prefetches batches (asynchronously if to GPU memory)
+  static const int PREFETCH_COUNT = 4;
+  Batch<Dtype> prefetch_[PREFETCH_COUNT];
+  blocking_queue<Batch<Dtype>*> prefetch_free_;
+  blocking_queue<Batch<Dtype>*> prefetch_full_;
+  int device_;
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+
+  Blob<Dtype> transformed_data_;
+};
+
+// Single database context per file, prefetches datums to host memory that
+// can be read by multiple data layers.
+class DataLoader {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/common.hpp
  public:
   explicit HDF5OutputLayer(const LayerParameter& param);
   virtual ~HDF5OutputLayer();
@@ -408,6 +516,7 @@ using boost::weak_ptr;
 template <typename Dtype>
 class HDF5OutputLayer : public Layer<Dtype> {
  public:
+<<<<<<< HEAD
   explicit HDF5OutputLayer(const LayerParameter& param);
   virtual ~HDF5OutputLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
@@ -417,6 +526,67 @@ class HDF5OutputLayer : public Layer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
     return;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+ public:
+  DataLoader(const DataParameter& param, int index,
+             blocking_queue<Datum*>* free = NULL,
+             blocking_queue<Datum*>* full = NULL);
+  ~DataLoader();
+
+  inline blocking_queue<Datum*>* free() {
+    return body_.get()->free_;
+  }
+  inline blocking_queue<Datum*>* full() {
+    return body_.get()->full_;
+  }
+
+ protected:
+  class Body: public InternalThread {
+   public:
+    Body(const DataParameter& param, int index,
+         blocking_queue<Datum*>* free,
+         blocking_queue<Datum*>* full);
+    ~Body();
+
+    void InternalThreadEntry();
+
+    shared_ptr<Dataset<string, Datum> > dataset_;
+    Dataset<string, Datum>::const_iterator iter_;
+
+    blocking_queue<Datum*>* free_;
+    blocking_queue<Datum*>* full_;
+    bool own_free_full_;
+
+    DISABLE_COPY_AND_ASSIGN(Body);
+  };
+
+  static map<string, weak_ptr<Body> > instances_;
+  static boost::mutex instances_mutex_;
+
+  const string source_;
+  shared_ptr<Body> body_;
+
+  DISABLE_COPY_AND_ASSIGN(DataLoader);
+};
+
+template <typename Dtype>
+class DataLayer: public BasePrefetchingDataLayer<Dtype> {
+ public:
+>>>>>>> origin/BVLC/parallel
+  explicit DataLayer(const LayerParameter& param);
+  virtual ~DataLayer() {}
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> origin/BVLC/parallel
+
+  inline blocking_queue<Datum*>* free() {
+    return body_.get()->free_;
+  }
+  inline blocking_queue<Datum*>* full() {
+    return body_.get()->full_;
+>>>>>>> pod/common.hpp
   }
 
   virtual inline LayerParameter_LayerType type() const {
@@ -448,6 +618,13 @@ class HDF5OutputLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+  virtual void load_batch(Batch<Dtype>* batch);
+
+  DataReader reader_;
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/device-abstraction
@@ -468,6 +645,7 @@ using boost::weak_ptr;
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 =======
 namespace caffe {
 >>>>>>> BVLC/master
@@ -499,6 +677,16 @@ namespace caffe {
 namespace caffe {
 >>>>>>> master
 =======
+=======
+  blocking_queue<Datum*>* loaders_free_;
+  blocking_queue<Datum*>* loaders_full_;
+
+  virtual void load_batch(Batch<Dtype>* batch);
+  vector<shared_ptr<DataLoader> > loaders_;
+>>>>>>> origin/BVLC/parallel
+};
+
+>>>>>>> pod/common.hpp
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
  *

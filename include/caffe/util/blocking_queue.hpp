@@ -12,6 +12,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -47,6 +48,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 #ifndef CAFFE_UTIL_BLOCKING_QUEUE_HPP_
 #define CAFFE_UTIL_BLOCKING_QUEUE_HPP_
 
@@ -85,6 +88,7 @@
 =======
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 =======
@@ -102,11 +106,16 @@
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 #ifndef CAFFE_UTIL_BLOCKING_QUEUE_H_
 #define CAFFE_UTIL_BLOCKING_QUEUE_H_
 
 #include <queue>
 #include "boost/thread.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -126,6 +135,10 @@
 =======
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -189,6 +202,7 @@ template<typename T>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -224,6 +238,8 @@ template<typename T>
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 class BlockingQueue {
  public:
   explicit BlockingQueue();
@@ -288,6 +304,7 @@ DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 =======
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 =======
@@ -305,6 +322,10 @@ DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 class blocking_queue {
 public:
   void push(const T& t) {
@@ -376,6 +397,7 @@ private:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -383,6 +405,10 @@ private:
 =======
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel

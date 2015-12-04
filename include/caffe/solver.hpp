@@ -151,6 +151,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -186,6 +187,8 @@ class Solver {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
   explicit Solver(const SolverParameter& param,
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
@@ -250,9 +253,16 @@ class Solver {
   void Init(const SolverParameter& param, bool skip_test_nets);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   void InitTrainNet();
   void InitTestNets();
 
@@ -295,6 +305,7 @@ class Solver {
   inline int iter() { return iter_; }
   inline int *iter_total() { return iter_total_; }
   inline void iter_total(int *value) { iter_total_ = value; }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -348,6 +359,8 @@ class Solver {
 >>>>>>> caffe
   int iter() { return iter_; }
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -438,11 +451,15 @@ class Solver {
   inline void iter_total(int *value) { iter_total_ = value; }
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
  protected:
   // Make and apply the update value for the current iteration.

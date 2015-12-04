@@ -548,6 +548,10 @@ class InternalThread {
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 
+  bool must_stop() {
+    return must_stop_;
+  }
+
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
@@ -628,6 +632,11 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD

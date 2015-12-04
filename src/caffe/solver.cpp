@@ -241,6 +241,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -276,6 +277,8 @@ template <typename Dtype>
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/common.hpp
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
@@ -386,7 +389,50 @@ template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
+    : iter_(), iter_total_(&iter_), net_() {
+  Init(param, skip_test_nets);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file)
+    : iter_(), iter_total_(&iter_), net_() {
+  SolverParameter param;
+  ReadProtoFromTextFileOrDie(param_file, &param);
+  Init(param, false);
+}
+
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
+void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
+  LOG(INFO) << "Initializing solver from parameters: " << std::endl
+            << param.DebugString();
+  param_ = param;
+  if (param_.solver_mode() == SolverParameter::GPU &&
+      param_.has_device_id()) {
+    Caffe::SetDevice(param_.device_id());
+  }
+  Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
+  if (param_.random_seed() >= 0) {
+>>>>>>> origin/BVLC/parallel
+    Caffe::set_random_seed(param_.random_seed());
+  }
+  // Scaffolding code
+  InitTrainNet();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  if (Caffe::root_solver()) {
+    InitTestNets();
+    LOG(INFO) << "Solver scaffolding done.";
+  }
+  iter_ = 0;
+  current_step_ = 0;
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -410,6 +456,7 @@ Solver<Dtype>::Solver(const string& param_file)
 template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
@@ -418,6 +465,14 @@ template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
     : iter_(), iter_total_(&iter_), net_() {
   Init(param, skip_test_nets);
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+  if(!skip_test_nets)
+    InitTestNets();
+  LOG(INFO) << "Solver scaffolding done.";
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 }
 
 template <typename Dtype>
