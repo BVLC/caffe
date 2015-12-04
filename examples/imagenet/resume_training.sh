@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
@@ -27,11 +28,16 @@
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate
 >>>>>>> origin/BVLC/parallel
 =======
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -49,3 +55,5 @@
 =======
     --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate.h5
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

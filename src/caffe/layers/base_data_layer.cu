@@ -1,6 +1,10 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/layers/base_data_layer.hpp"
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -20,6 +24,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -47,6 +52,10 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
   // Copy the data
@@ -64,12 +73,15 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 
@@ -82,6 +94,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
@@ -180,6 +193,9 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   prefetch_free_.push(batch);
 }
 

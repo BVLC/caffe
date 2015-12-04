@@ -15,6 +15,7 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,6 +45,10 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   vector<int> shape(4);
   shape[0] = num;
   shape[1] = channels;
@@ -70,6 +75,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -86,6 +92,9 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   CHECK_GE(num, 0);
   CHECK_GE(channels, 0);
   CHECK_GE(height, 0);
@@ -102,6 +111,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -114,6 +124,8 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if (count_ > capacity_) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
@@ -124,6 +136,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -143,6 +156,8 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -185,7 +200,10 @@ void Blob<Dtype>::Reshape(const BlobShape& shape) {
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   Reshape(shape_vec);
 }
@@ -228,6 +246,7 @@ void Blob<Dtype>::Reshape(const BlobShape& shape) {
 =======
 =======
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
   Reshape(shape_vec);
@@ -351,6 +370,23 @@ void Blob<Dtype>::Reshape(const BlobShape& shape) {
     shape_vec[i] = shape.dim(i);
   }
   Reshape(shape_vec);
+=======
+  }
+  Reshape(shape_vec);
+>>>>>>> BVLC/master
+=======
+  }
+  Reshape(shape_vec);
+>>>>>>> master
+=======
+  }
+  Reshape(shape_vec);
+>>>>>>> master
+=======
+  }
+  Reshape(shape_vec);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -592,8 +628,11 @@ Dtype Blob<Dtype>::asum_diff() const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
+    return asum;
+=======
     return asum;
 =======
     return asum;
@@ -618,6 +657,26 @@ template <> int Blob<int>::sumsq_data() const {
   return 0;
 }
 
+template <> unsigned int Blob<unsigned int>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <> int Blob<int>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <> unsigned int Blob<unsigned int>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <> int Blob<int>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
 template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq;
@@ -631,6 +690,67 @@ Dtype Blob<Dtype>::sumsq_data() const {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
+    data = gpu_data();
+    caffe_gpu_dot(count_, data, data, &sumsq);
+>>>>>>> pod-caffe-pod.hpp-merge
+#else
+    NO_GPU;
+#endif
+    break;
+  case SyncedMemory::UNINITIALIZED:
+    return asum;
+  default:
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+  }
+<<<<<<< HEAD
+  return asum;
+}
+
+template <> unsigned int Blob<unsigned int>::sumsq_data() const {
+=======
+  return sumsq;
+}
+
+template <> unsigned int Blob<unsigned int>::sumsq_diff() const {
+>>>>>>> pod-caffe-pod.hpp-merge
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+<<<<<<< HEAD
+template <> int Blob<int>::sumsq_data() const {
+=======
+template <> int Blob<int>::sumsq_diff() const {
+>>>>>>> pod-caffe-pod.hpp-merge
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+Dtype Blob<Dtype>::sumsq_data() const {
+  Dtype sumsq;
+  const Dtype* data;
+  if (!data_) { return 0; }
+  switch (data_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    data = cpu_data();
+    sumsq = caffe_cpu_dot(count_, data, data);
+=======
+Dtype Blob<Dtype>::sumsq_diff() const {
+  Dtype sumsq;
+  const Dtype* diff;
+  if (!diff_) { return 0; }
+  switch (diff_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    diff = cpu_diff();
+    sumsq = caffe_cpu_dot(count_, diff, diff);
+>>>>>>> pod-caffe-pod.hpp-merge
+    break;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
+<<<<<<< HEAD
     data = gpu_data();
     caffe_gpu_dot(count_, data, data, &sumsq);
 >>>>>>> device-abstraction
@@ -647,10 +767,50 @@ Dtype Blob<Dtype>::sumsq_data() const {
     return asum;
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+    diff = gpu_diff();
+    caffe_gpu_dot(count_, diff, diff, &sumsq);
+    break;
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
+    return 0;
+  default:
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+  }
+  return sumsq;
+}
+
+template <> void Blob<unsigned int>::scale_data(unsigned int scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template <> void Blob<int>::scale_data(int scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
+void Blob<Dtype>::scale_data(Dtype scale_factor) {
+  Dtype* data;
+  if (!data_) { return; }
+  switch (data_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    data = mutable_cpu_data();
+    caffe_scal(count_, scale_factor, data);
+    return;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
+    data = mutable_gpu_data();
+    caffe_gpu_scal(count_, scale_factor, data);
+    return;
+>>>>>>> pod-caffe-pod.hpp-merge
+#else
+    NO_GPU;
+#endif
+  case SyncedMemory::UNINITIALIZED:
+<<<<<<< HEAD
     return asum;
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -661,10 +821,42 @@ Dtype Blob<Dtype>::sumsq_data() const {
 =======
 >>>>>>> pod/device/blob.hpp
     return asum;
+=======
+    return;
+  default:
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+  }
+}
+
+template <> void Blob<unsigned int>::scale_diff(unsigned int scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template <> void Blob<int>::scale_diff(int scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
+void Blob<Dtype>::scale_diff(Dtype scale_factor) {
+  Dtype* diff;
+  if (!diff_) { return; }
+  switch (diff_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    diff = mutable_cpu_diff();
+    caffe_scal(count_, scale_factor, diff);
+    return;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
+    diff = mutable_gpu_diff();
+    caffe_gpu_scal(count_, scale_factor, diff);
+    return;
+>>>>>>> pod-caffe-pod.hpp-merge
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
+<<<<<<< HEAD
     return asum;
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -737,20 +929,86 @@ Dtype Blob<Dtype>::sumsq_diff() const {
     diff = cpu_diff();
     sumsq = caffe_cpu_dot(count_, diff, diff);
 >>>>>>> device-abstraction
+=======
+    return;
+  default:
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
+  }
+}
+
+template <typename Dtype>
+bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
+  if (other.has_num() || other.has_channels() ||
+      other.has_height() || other.has_width()) {
+    // Using deprecated 4D Blob dimensions --
+    // shape is (num, channels, height, width).
+    // Note: we do not use the normal Blob::num(), Blob::channels(), etc.
+    // methods as these index from the beginning of the blob shape, where legacy
+    // parameter blobs were indexed from the end of the blob shape (e.g., bias
+    // Blob shape (1 x 1 x 1 x N), IP layer weight Blob shape (1 x 1 x M x N)).
+    return shape_.size() <= 4 &&
+           LegacyShape(-4) == other.num() &&
+           LegacyShape(-3) == other.channels() &&
+           LegacyShape(-2) == other.height() &&
+           LegacyShape(-1) == other.width();
+  }
+  vector<int> other_shape(other.shape().dim_size());
+  for (int i = 0; i < other.shape().dim_size(); ++i) {
+    other_shape[i] = other.shape().dim(i);
+  }
+  return shape_ == other_shape;
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+Dtype Blob<Dtype>::sumsq_data() const {
+  Dtype sumsq;
+  const Dtype* data;
+  if (!data_) { return 0; }
+  switch (data_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    data = cpu_data();
+    sumsq = caffe_cpu_dot(count_, data, data);
+=======
+void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
+  if (source.count() != count_ || source.shape() != shape_) {
+    if (reshape) {
+      ReshapeLike(source);
+    } else {
+      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+    }
+  }
+  switch (Caffe::mode()) {
+  case Caffe::GPU:
+    if (copy_diff) {
+      caffe_copy(count_, source.gpu_diff(),
+          static_cast<Dtype*>(diff_->mutable_gpu_data()));
+    } else {
+      caffe_copy(count_, source.gpu_data(),
+          static_cast<Dtype*>(data_->mutable_gpu_data()));
+    }
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     break;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
 <<<<<<< HEAD
+<<<<<<< HEAD
     data = gpu_data();
     caffe_gpu_dot(count_, data, data, &sumsq);
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+    data = gpu_data();
+    caffe_gpu_dot(count_, data, data, &sumsq);
+>>>>>>> pod-caffe-pod.hpp-merge
 #else
     NO_GPU;
 #endif
     break;
   case SyncedMemory::UNINITIALIZED:
+<<<<<<< HEAD
     return asum;
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
@@ -8286,11 +8544,31 @@ template <> int Blob<int>::sumsq_diff() const {
 >>>>>>> pod/caffe-merge
 }
 
+=======
+    return 0;
+  default:
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+  }
+  return sumsq;
+}
+
+template <> unsigned int Blob<unsigned int>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <> int Blob<int>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+>>>>>>> pod-caffe-pod.hpp-merge
 template <> unsigned int Blob<unsigned int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -8300,6 +8578,8 @@ template <> unsigned int Blob<unsigned int>::sumsq_data() const {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 template <> int Blob<int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
@@ -10514,6 +10794,7 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   for (int i = 0; i < count_; ++i) {
     proto->add_data(data_vec[i]);
   }
+<<<<<<< HEAD
 =======
 void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   if (reshape) {
@@ -10598,6 +10879,8 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
     proto->add_data(data_vec[i]);
   }
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if (write_diff) {
     const float* diff_vec = cpu_diff();
     for (int i = 0; i < count_; ++i) {
@@ -10611,10 +10894,13 @@ template class Blob<int>;
 template class Blob<unsigned int>;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

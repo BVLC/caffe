@@ -1,6 +1,10 @@
 #include <vector>
 
+<<<<<<< HEAD
 #include "caffe/layers/euclidean_loss_layer.hpp"
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

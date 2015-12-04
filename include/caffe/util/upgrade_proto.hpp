@@ -39,6 +39,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
                              V1LayerParameter* layer_param);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
@@ -53,11 +54,14 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param);
 >>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
 // Return true iff any layer contains deprecated data transformation parameters.
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -71,6 +75,9 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param);
 <<<<<<< HEAD
 
 >>>>>>> pod/device/blob.hpp
+=======
+
+>>>>>>> pod-caffe-pod.hpp-merge
 // Perform all necessary transformations to upgrade old transformation fields
 // into a TransformationParameter.
 void UpgradeNetDataTransformation(NetParameter* net_param);
@@ -81,10 +88,13 @@ bool NetNeedsV1ToV2Upgrade(const NetParameter& net_param);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 // Perform all necessary transformations to upgrade a NetParameter with
 // deprecated V1LayerParameters.
@@ -92,6 +102,7 @@ bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param);
 
 bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
                              LayerParameter* layer_param);
+<<<<<<< HEAD
 
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 
@@ -118,6 +129,11 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+
+const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
+
+>>>>>>> pod-caffe-pod.hpp-merge
 // Return true iff the solver contains any old solver_type specified as enums
 bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param);
 
@@ -157,6 +173,7 @@ void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -175,6 +192,8 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // Perform all necessary transformations to upgrade old transformation fields
 // into a TransformationParameter.
 void UpgradeNetDataTransformation(NetParameter* net_param);
@@ -208,6 +227,7 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -227,6 +247,9 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 }  // namespace caffe
 

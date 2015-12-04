@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -53,6 +54,16 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+#include <vector>
+
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <algorithm>
 #include <vector>
 
@@ -62,6 +73,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -78,6 +90,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -142,6 +156,7 @@ INSTANTIATE_CLASS(ExpLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(Exp);
@@ -166,12 +181,18 @@ REGISTER_LAYER_CLASS(Exp);
 
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+REGISTER_LAYER_CLASS(Exp);
+
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(EXP, ExpLayer);
 >>>>>>> origin/BVLC/parallel
 =======
 REGISTER_LAYER_CLASS(Exp);
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -190,4 +211,6 @@ REGISTER_LAYER_CLASS(Exp);
 REGISTER_LAYER_CLASS(Exp);
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

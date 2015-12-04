@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
  cuDNN acceleration switch (uncomment to build with cuDNN).
 =======
 <<<<<<< HEAD
@@ -44,9 +45,13 @@
 <<<<<<< HEAD
  cuDNN acceleration switch (uncomment to build with cuDNN).
 =======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> caffe
 =======
+<<<<<<< HEAD
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> pod/device/blob.hpp
 >>>>>>> master
@@ -64,10 +69,29 @@
 >>>>>>> master
 =======
  cuDNN acceleration switch (uncomment to build with cuDNN).
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> master
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> master
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> BVLC/master
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> master
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> master
+=======
+# cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -92,10 +116,14 @@
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> device-abstraction
  USE_CUDNN := 1
+=======
+# USE_CUDNN := 1
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -135,6 +163,10 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
@@ -145,6 +177,7 @@
 #	possibility of simultaneous read and write
 # ALLOW_LMDB_NOLOCK := 1
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -257,9 +290,13 @@
 <<<<<<< HEAD
  Uncomment if you're using OpenCV 3
 =======
+# Uncomment if you're using OpenCV 3
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
  Uncomment if you're using OpenCV 3
 >>>>>>> caffe
 =======
+<<<<<<< HEAD
  Uncomment if you're using OpenCV 3
 >>>>>>> master
 =======
@@ -298,16 +335,43 @@
 >>>>>>> pod/device/blob.hpp
 =======
  Parallelization over InfiniBand or RoCE
+=======
+# Uncomment if you're using OpenCV 3
+>>>>>>> master
+=======
+# Uncomment if you're using OpenCV 3
+>>>>>>> master
+=======
+# Uncomment if you're using OpenCV 3
+>>>>>>> BVLC/master
+=======
+# Uncomment if you're using OpenCV 3
+>>>>>>> master
+=======
+# Uncomment if you're using OpenCV 3
+>>>>>>> master
+# OPENCV_VERSION := 3
+=======
+# Parallelization over InfiniBand or RoCE
+>>>>>>> pod-caffe-pod.hpp-merge
 # RDMA := 1
 >>>>>>> origin/BVLC/parallel
 =======
  Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 
  To customize your choice of compiler, uncomment and set the following.
  N.B. the default for Linux is g++ and the default for OSX is clang++
  CUSTOM_CXX := g++
+=======
+>>>>>>> caffe
+
+# To customize your choice of compiler, uncomment and set the following.
+# N.B. the default for Linux is g++ and the default for OSX is clang++
+# CUSTOM_CXX := g++
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # CUDA directory contains bin/ and lib/ directories that we need.
 CUDA_DIR := /usr/local/cuda
@@ -335,8 +399,14 @@ BLAS := atlas
 # BLAS_INCLUDE := /path/to/your/blas
 # BLAS_LIB := /path/to/your/blas
 
+<<<<<<< HEAD
 # Homebrew puts openblas in a directory that is not on the standard sear
  BLAS_LIB := $(shell brew --prefix openblas)/lib
+=======
+# Homebrew puts openblas in a directory that is not on the standard search path
+# BLAS_INCLUDE := $(shell brew --prefix openblas)/include
+# BLAS_LIB := $(shell brew --prefix openblas)/lib
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # This is required only if you will compile the matlab interface.
  MATLAB directory should contain the mex binary in /bin.
@@ -348,14 +418,21 @@ BLAS := atlas
 PYTHON_INCLUDE := /usr/include/python2.7 \
 		/usr/lib/python2.7/dist-packages/numpy/core/include
 # Anaconda Python distribution is quite popular. Include path:
+<<<<<<< HEAD
  Verify anaconda location, sometimes it's in root.
  ANACONDA_HOME := $(HOME)/anaconda
  PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
+=======
+# Verify anaconda location, sometimes it's in root.
+# ANACONDA_HOME := $(HOME)/anaconda
+# PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
+>>>>>>> pod-caffe-pod.hpp-merge
 		# $(ANACONDA_HOME)/include/python2.7 \
 		# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include \
 
 # We need to be able to find libpythonX.X.so or .dylib.
 PYTHON_LIB := /usr/lib
+<<<<<<< HEAD
  PYTHON_LIB := $(ANACONDA_HOME)/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -413,9 +490,25 @@ PYTHON_LIB := /usr/lib
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+# PYTHON_LIB := $(ANACONDA_HOME)/lib
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+
+# Homebrew installs numpy in a non standard path (keg only)
+# PYTHON_INCLUDE += $(dir $(shell python -c 'import numpy.core; print(numpy.core.__file__)'))/include
+# PYTHON_LIB += $(shell brew --prefix numpy)/lib
+
+# Uncomment to support layers written in Python (will link against Python libs)
+# WITH_PYTHON_LAYER := 1
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -432,11 +525,14 @@ PYTHON_LIB := /usr/lib
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -473,7 +569,15 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
  INCLUDE_DIRS += $(shell brew --prefix)/include
 LIBRARY_DIRS += $(shell brew --prefix)/lib
+=======
+=======
+>>>>>>> caffe
+# If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
+# INCLUDE_DIRS += $(shell brew --prefix)/include
+# LIBRARY_DIRS += $(shell brew --prefix)/lib
+>>>>>>> pod-caffe-pod.hpp-merge
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -506,10 +610,14 @@ LIBRARY_DIRS += $(shell brew --prefix)/lib
 <<<<<<< HEAD
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 =======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> caffe
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> master
 =======
@@ -540,10 +648,29 @@ LIBRARY_DIRS += $(shell brew --prefix)/lib
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> pod/device/blob.hpp
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> master
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> master
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> BVLC/master
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> master
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> master
+=======
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -567,6 +694,8 @@ LIBRARY_DIRS += $(shell brew --prefix)/lib
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 
@@ -579,5 +708,9 @@ DISTRIBUTE_DIR := distribute
  The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0
 
+<<<<<<< HEAD
  enable pretty build (comment to see full commands)
+=======
+# enable pretty build (comment to see full commands)
+>>>>>>> pod-caffe-pod.hpp-merge
 Q ?= @

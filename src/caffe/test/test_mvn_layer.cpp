@@ -3,7 +3,10 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+<<<<<<< HEAD
 #include "caffe/layers/mvn_layer.hpp"
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 

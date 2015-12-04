@@ -9,6 +9,7 @@ if $WITH_CUDA; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   # Only generate compute_50.
@@ -30,6 +31,10 @@ if $WITH_CUDA; then
   # Only generate compute_50.
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  # Only generate compute_50.
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   # Remove default gencode set; only generate compute_50.
   sed -i 's/-gencode arch=.*\\//' Makefile.config
   sed -i 's/CUDA_ARCH :=//' Makefile.config
@@ -41,6 +46,7 @@ if $WITH_CUDA; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -54,10 +60,13 @@ if $WITH_CUDA; then
 =======
   # Only generate compute_50.
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   GENCODE="-gencode arch=compute_50,code=sm_50"
   GENCODE="$GENCODE -gencode arch=compute_50,code=compute_50"
   echo "CUDA_ARCH := $GENCODE" >> Makefile.config
 fi
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,6 +100,10 @@ fi
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Remove IO library settings from Makefile.config
 # to avoid conflicts with CI configuration
@@ -112,16 +125,20 @@ WITH_PYTHON_LAYER := 1
 EOF
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -145,3 +162,5 @@ EOF
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

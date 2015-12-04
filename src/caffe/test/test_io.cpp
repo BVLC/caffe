@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
@@ -23,10 +24,15 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,6 +50,8 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -339,6 +347,7 @@ TEST_F(IOTest, TestDecodeDatum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   EXPECT_TRUE(DecodeDatum(&datum, true));
@@ -363,6 +372,11 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_FALSE(DecodeDatum(&datum, true));
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  EXPECT_TRUE(DecodeDatum(&datum, true));
+  EXPECT_FALSE(DecodeDatum(&datum, true));
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_TRUE(DecodeDatum(&datum));
   EXPECT_FALSE(DecodeDatum(&datum));
 >>>>>>> origin/BVLC/parallel
@@ -370,6 +384,7 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -388,6 +403,8 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Datum datum_ref;
   ReadImageToDatumReference(filename, 0, 0, 0, true, &datum_ref);
   EXPECT_EQ(datum.channels(), datum_ref.channels());
@@ -410,6 +427,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -439,6 +457,10 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img = DecodeDatumToCVMat(datum, true);
   EXPECT_EQ(cv_img.channels(), 3);
   EXPECT_EQ(cv_img.rows, 360);
@@ -536,6 +558,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
   cv::Mat cv_img = DecodeDatumToCVMatNative(datum);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -552,6 +575,9 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img = DecodeDatumToCVMat(datum);
   EXPECT_EQ(cv_img.channels(), 3);
   EXPECT_EQ(cv_img.rows, 360);
@@ -591,6 +617,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -603,6 +630,8 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img_ref = ReadImageToCVMat(filename);
   EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());
   EXPECT_EQ(cv_img_ref.rows, cv_img.rows);
@@ -623,6 +652,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #endif  // USE_OPENCV
@@ -644,10 +674,15 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 #endif  // USE_OPENCV
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#endif  // USE_OPENCV
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #endif  // USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -665,3 +700,5 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 =======
 #endif  // USE_OPENCV
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

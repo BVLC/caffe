@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -35,6 +36,10 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
@@ -43,6 +48,7 @@
 namespace boost { class thread; }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -57,9 +63,12 @@ namespace boost { class thread; }
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -76,6 +85,8 @@ namespace boost { class thread; }
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -84,6 +95,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
  * Virtual class encapsulate boost::thread for use in base class
@@ -253,6 +265,11 @@ class InternalThread {
   virtual ~InternalThread();
 
 =======
+=======
+ * Virtual class encapsulate boost::thread for use in base class
+ * The child class will acquire the ability to run a single thread,
+ * by reimplementing the virtual function InternalThreadEntry.
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 class InternalThread {
  public:
@@ -294,6 +311,7 @@ class InternalThread {
   InternalThread() : thread_(NULL), must_stop_() {}
   virtual ~InternalThread();
 
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
   /** Returns true if the thread was successfully started. **/
   bool StartInternalThread();
@@ -370,10 +388,20 @@ class InternalThread {
 
   bool is_started() const;
 >>>>>>> caffe
+=======
+  /** Returns true if the thread was successfully started. **/
+  bool StartInternalThread();
+
+  /** Will not return until the internal thread has exited. */
+  bool StopInternalThread();
+
+  bool is_started() const { return thread_ != NULL && thread_->joinable(); }
+>>>>>>> pod-caffe-pod.hpp-merge
 
   bool must_stop() {
     return must_stop_;
   }
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -433,6 +461,8 @@ class InternalThread {
   bool must_stop() {
     return must_stop_;
   }
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
  * Virtual class encapsulate boost::thread for use in base class
@@ -444,6 +474,7 @@ class InternalThread {
   InternalThread() : thread_() {}
   virtual ~InternalThread();
 
+<<<<<<< HEAD
 =======
  * Virtual class encapsulate boost::thread for use in base class
  * The child class will acquire the ability to run a single thread,
@@ -455,6 +486,8 @@ class InternalThread {
   virtual ~InternalThread();
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * Caffe's thread local state will be initialized using the current
    * thread values, e.g. device id, solver index etc. The random seed
@@ -467,6 +500,7 @@ class InternalThread {
 
   bool is_started() const;
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 
   bool must_stop() {
@@ -474,6 +508,9 @@ class InternalThread {
   }
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
  protected:
   /* Implement this method in your subclass
@@ -485,6 +522,7 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 
@@ -521,12 +559,18 @@ class InternalThread {
 =======
 
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+
+>>>>>>> pod-caffe-pod.hpp-merge
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
  private:
   void entry(int device, Caffe::Brew mode, int rand_seed, int solver_count,
       bool root_solver);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -570,11 +614,17 @@ class InternalThread {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+
+  shared_ptr<boost::thread> thread_;
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   caffe::Thread* thread_;
   bool must_stop_;
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 
   shared_ptr<boost::thread> thread_;
 >>>>>>> caffe
@@ -598,6 +648,11 @@ class InternalThread {
 
   shared_ptr<boost::thread> thread_;
 >>>>>>> device-abstraction
+=======
+
+  shared_ptr<boost::thread> thread_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 };
 
 }  // namespace caffe

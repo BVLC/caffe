@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -31,11 +32,16 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 add_library(gtest STATIC EXCLUDE_FROM_ALL gtest.h gtest-all.cpp)
 caffe_default_properties(gtest)
 
 #add_library(gtest_main gtest_main.cc)
 #target_link_libraries(gtest_main gtest)
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -54,6 +60,9 @@ caffe_default_properties(gtest)
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 project(gtest CXX C)
 cmake_minimum_required(VERSION 2.6.2)
 
@@ -67,6 +76,7 @@ target_link_libraries(gtest_main gtest)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -79,3 +89,5 @@ target_link_libraries(gtest_main gtest)
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

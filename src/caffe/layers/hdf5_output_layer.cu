@@ -3,7 +3,11 @@
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
+<<<<<<< HEAD
 #include "caffe/layers/hdf5_output_layer.hpp"
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 

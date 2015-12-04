@@ -1,8 +1,13 @@
 #include <boost/thread.hpp>
 #include <string>
 
+<<<<<<< HEAD
 #include "caffe/data_reader.hpp"
 #include "caffe/layers/base_data_layer.hpp"
+=======
+#include "caffe/data_layers.hpp"
+#include "caffe/data_reader.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/parallel.hpp"
 #include "caffe/util/blocking_queue.hpp"
 

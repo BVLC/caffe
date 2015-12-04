@@ -11,6 +11,7 @@ cd $DIRNAME
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
@@ -32,11 +33,16 @@ FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 FILES=`find . -type f -maxdepth 1 ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> origin/BVLC/parallel
 =======
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -54,6 +60,8 @@ FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 =======
 FILES=`find . -maxdepth 1 -type f ! -name "*.caffemodel*" | xargs echo`
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Check for gist tool.
 gist -v >/dev/null 2>&1 || { echo >&2 "I require 'gist' but it's not installed. Do 'gem install gist'."; exit 1; }

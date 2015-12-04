@@ -9,12 +9,15 @@
 <<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/rng.hpp"
+<<<<<<< HEAD
 =======
 #include "caffe/layers/infogain_loss_layer.hpp"
 >>>>>>> BVLC/master
 =======
 #include "caffe/layers/infogain_loss_layer.hpp"
 >>>>>>> BVLC/master
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
