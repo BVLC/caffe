@@ -8,9 +8,12 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
+=======
+>>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 #include "caffe/filler.hpp"

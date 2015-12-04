@@ -57,6 +57,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -66,6 +67,8 @@ TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
   EXPECT_EQ(this->ReferenceHammingDistance(n, x, y), dist);
 }
 
+=======
+>>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
@@ -357,6 +360,7 @@ class GPUMathFunctionsTest : public MathFunctionsTest<GPUDevice<Dtype> > {
 TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
 TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   int n = this->blob_bottom_->count();
@@ -371,6 +375,8 @@ TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   EXPECT_EQ(reference_distance, computed_distance);
 }
 
+=======
+>>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {

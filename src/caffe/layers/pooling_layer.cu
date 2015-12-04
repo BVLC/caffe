@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
@@ -95,6 +96,10 @@
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
 #include "caffe/vision_layers.hpp"
+=======
+#include "caffe/layers/pooling_layer.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/pooling_layer.hpp"
 #include "caffe/util/math_functions.hpp"

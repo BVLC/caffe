@@ -12,6 +12,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/neuron_layers.hpp"
@@ -54,6 +55,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/tanh_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/tanh_layer.hpp"
 >>>>>>> BVLC/master

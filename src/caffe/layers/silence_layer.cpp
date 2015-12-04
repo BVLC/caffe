@@ -1,6 +1,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,6 +45,9 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/silence_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/silence_layer.hpp"
 >>>>>>> BVLC/master

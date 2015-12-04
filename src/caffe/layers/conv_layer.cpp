@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 #include "caffe/device.hpp"
@@ -129,6 +130,9 @@
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
 #include "caffe/vision_layers.hpp"
+=======
+#include "caffe/layers/conv_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/conv_layer.hpp"
 >>>>>>> BVLC/master

@@ -358,14 +358,23 @@ CUDA_nppi_LIBRARY:FILEPATH=/usr/local/cuda/lib/libnppi.dylib
 //"npps" library
 CUDA_npps_LIBRARY:FILEPATH=/usr/local/cuda/lib/libnpps.dylib
 
-//Path to cuDNN include directory.
-CUDNN_INCLUDE:PATH=CUDNN_INCLUDE-NOTFOUND
+//Path to CUDNN include directory.
+CUDNN_INCLUDE:PATH=/usr/local/cuda/samples/7_CUDALibraries/cuda/include/cudnn.h
 
-//Path to cuDNN library.
-CUDNN_LIBRARY:FILEPATH=CUDNN_LIBRARY-NOTFOUND
+//Path to CUDNN library.
+CUDNN_INCLUDE:PATH=/usr/local/cuda/samples/7_CUDALibraries/cuda/lib/libcudnn.7.0.dylib
 
 //CUDNN root folder
-CUDNN_ROOT:PATH=
+CUDNN_INCLUDE:PATH=/usr/local/cuda/samples/7_CUDALibraries/cuda
+
+//Path to mnistCUDNN include directory.
+mnistCUDNN_INCLUDE:PATH=/usr/local/cuda/samples/7_CUDALibraries/mnistCUDNN/Freeimage/include/Freeimage.h
+
+//Path to mnistcuDNN library.
+mnistCUDNN_LIBRARY:FILEPATH=/usr/local/cuda/samples/7_CUDALibraries/mnistCUDNN/Freeimage/lib/darwin/libfreeimage-3.16.0.dylib
+
+//mnistCUDNN root folder
+mnistCUDNN_ROOT:PATH=/usr/local/cuda/samples/7_CUDALibraries/mnistCUDNN
 
 //Value Computed by CMake
 Caffe_BINARY_DIR:STATIC=/Users/Shared/Jenkins/caffe

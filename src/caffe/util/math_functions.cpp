@@ -420,6 +420,7 @@ Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y) {
   return caffe_cpu_strided_dot(n, x, 1, y, 1);
 }
 
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 }
@@ -436,6 +437,8 @@ float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
 template
 double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
+=======
+>>>>>>> BVLC/master
 template <>
 float caffe_cpu_asum<float>(const int n, const float* x) {
   return cblas_sasum(n, x, 1);

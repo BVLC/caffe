@@ -10,9 +10,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
+=======
+#include "caffe/layers/accuracy_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/accuracy_layer.hpp"
 >>>>>>> BVLC/master

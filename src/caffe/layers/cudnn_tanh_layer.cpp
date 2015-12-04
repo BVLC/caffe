@@ -8,6 +8,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/neuron_layers.hpp"
 =======
 <<<<<<< HEAD
@@ -60,6 +61,9 @@
 
 #include "caffe/neuron_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/cudnn_tanh_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/cudnn_tanh_layer.hpp"
 >>>>>>> BVLC/master

@@ -6,8 +6,12 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/rng.hpp"
+=======
+#include "caffe/layers/infogain_loss_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/infogain_loss_layer.hpp"
 >>>>>>> BVLC/master

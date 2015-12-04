@@ -51,6 +51,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,6 +92,9 @@
 =======
 >>>>>>> device-abstraction
 #include "caffe/vision_layers.hpp"
+=======
+#include "caffe/layers/cudnn_softmax_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/cudnn_softmax_layer.hpp"
 >>>>>>> BVLC/master

@@ -1,6 +1,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12,6 +13,9 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/layers/mvn_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/mvn_layer.hpp"
 >>>>>>> BVLC/master

@@ -35,6 +35,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,6 +80,8 @@
 =======
 >>>>>>> device-abstraction
 =======
+=======
+>>>>>>> BVLC/master
 #include "caffe/blob.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/internal_thread.hpp"
@@ -86,6 +89,9 @@
 #include "caffe/layers/base_data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/blocking_queue.hpp"
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
 >>>>>>> BVLC/master
 
 namespace caffe {

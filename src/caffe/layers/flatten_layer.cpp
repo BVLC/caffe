@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
@@ -121,6 +122,9 @@
 #include "caffe/common_layers.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+#include "caffe/layers/flatten_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/flatten_layer.hpp"
 >>>>>>> BVLC/master

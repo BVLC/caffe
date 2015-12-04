@@ -9,9 +9,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
+=======
+#include "caffe/layers/sigmoid_cross_entropy_loss_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/sigmoid_cross_entropy_loss_layer.hpp"
 >>>>>>> BVLC/master

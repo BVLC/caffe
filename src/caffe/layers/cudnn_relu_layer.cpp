@@ -8,6 +8,7 @@
 #include <vector>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -56,6 +57,9 @@
 
 >>>>>>> device-abstraction
 #include "caffe/vision_layers.hpp"
+=======
+#include "caffe/layers/cudnn_relu_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/cudnn_relu_layer.hpp"
 >>>>>>> BVLC/master

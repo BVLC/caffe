@@ -10,9 +10,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
+=======
+#include "caffe/layers/softmax_layer.hpp"
+>>>>>>> BVLC/master
 =======
 #include "caffe/layers/softmax_layer.hpp"
 >>>>>>> BVLC/master

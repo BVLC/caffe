@@ -57,6 +57,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/data_layers.hpp"
@@ -116,6 +117,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 #include "caffe/data_layers.hpp"
+=======
+>>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 #include "caffe/filler.hpp"
