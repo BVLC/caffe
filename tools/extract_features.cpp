@@ -75,6 +75,7 @@ using caffe::Caffe;
 using caffe::Datum;
 using caffe::Net;
 <<<<<<< HEAD
+<<<<<<< HEAD
 using std::string;
 namespace db = caffe::db;
 <<<<<<< HEAD
@@ -111,6 +112,8 @@ namespace db = caffe::db;
 >>>>>>> pod/device/blob.hpp
 =======
 using boost::shared_ptr;
+=======
+>>>>>>> BVLC/master
 using std::string;
 namespace db = caffe::db;
 <<<<<<< HEAD
@@ -315,10 +318,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
    */
   std::string feature_extraction_proto(argv[++arg_pos]);
 <<<<<<< HEAD
+<<<<<<< HEAD
   boost::shared_ptr<Net<Dtype> > feature_extraction_net(
 =======
   shared_ptr<Net<Dtype> > feature_extraction_net(
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  boost::shared_ptr<Net<Dtype> > feature_extraction_net(
+>>>>>>> BVLC/master
       new Net<Dtype>(feature_extraction_proto, caffe::TEST));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
@@ -354,6 +361,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -560,9 +568,17 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
     shared_ptr<db::DB> db(db::GetDB(db_type));
+=======
+  std::vector<boost::shared_ptr<db::DB> > feature_dbs;
+  std::vector<boost::shared_ptr<db::Transaction> > txns;
+  const char* db_type = argv[++arg_pos];
+  for (size_t i = 0; i < num_features; ++i) {
+    LOG(INFO)<< "Opening dataset " << dataset_names[i];
+    boost::shared_ptr<db::DB> db(db::GetDB(db_type));
+>>>>>>> BVLC/master
     db->Open(dataset_names.at(i), db::NEW);
     feature_dbs.push_back(db);
-    shared_ptr<db::Transaction> txn(db->NewTransaction());
+    boost::shared_ptr<db::Transaction> txn(db->NewTransaction());
     txns.push_back(txn);
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
