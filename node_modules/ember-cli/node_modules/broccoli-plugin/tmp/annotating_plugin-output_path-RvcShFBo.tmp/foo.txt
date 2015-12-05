@@ -1,0 +1,1 @@
+foo contents - from input node #0
