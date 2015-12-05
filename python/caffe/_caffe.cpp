@@ -501,6 +501,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
+    .add_property("get_solver_params", &Solver<Dtype>::GetSolverParams)
+    .def("update_solver_params", &Solver<Dtype>::UpdateSolverParams)
     .def("add_callback", &Solver_add_callback<Dtype>)
     .def("add_callback", &Solver_add_nccl)
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
@@ -512,6 +514,53 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("param", bp::make_function(&Solver<Dtype>::param,
               bp::return_value_policy<bp::copy_const_reference>()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
+
+
+  bp::class_<SolverParameter>("SolverParam", bp::no_init)
+    .add_property("base_lr",   &SolverParameter::base_lr,
+                               &SolverParameter::set_base_lr)
+    .add_property("max_iter",  &SolverParameter::max_iter,
+                               &SolverParameter::set_max_iter)
+    .add_property("lr_policy",
+                      bp::make_function(&SolverParameter::lr_policy,
+                      bp::return_value_policy<bp::copy_const_reference>()),
+                      static_cast<void (SolverParameter::*)(const char*)>(
+                               &SolverParameter::set_lr_policy))
+    .add_property("gamma",     &SolverParameter::gamma,
+                               &SolverParameter::set_gamma)
+    .add_property("power",     &SolverParameter::power,
+                               &SolverParameter::set_power)
+    .add_property("momentum",  &SolverParameter::momentum,
+                               &SolverParameter::set_momentum)
+    .add_property("momentum2", &SolverParameter::momentum2,
+                               &SolverParameter::set_momentum2)
+    .add_property("delta",     &SolverParameter::delta,
+                               &SolverParameter::set_delta)
+    .add_property("rms_decay", &SolverParameter::rms_decay,
+                               &SolverParameter::set_rms_decay)
+    .add_property("weight_decay",
+                               &SolverParameter::weight_decay,
+                               &SolverParameter::set_weight_decay)
+    .add_property("regularization_type",
+                       bp::make_function(&SolverParameter::regularization_type,
+                       bp::return_value_policy<bp::copy_const_reference>()),
+                       static_cast<void (SolverParameter::*)(const string&)>(
+                               &SolverParameter::set_regularization_type))
+    .add_property("stepsize",  &SolverParameter::stepsize,
+                               &SolverParameter::set_stepsize)
+    .add_property("snapshot",  &SolverParameter::snapshot,
+                               &SolverParameter::set_snapshot)
+    .add_property("snapshot_prefix",
+                       bp::make_function(&SolverParameter::snapshot_prefix,
+                       bp::return_value_policy<bp::copy_const_reference>()),
+                       static_cast<void (SolverParameter::*)(const string&)>(
+                               &SolverParameter::set_snapshot_prefix))
+    .add_property("type",
+                       bp::make_function(&SolverParameter::type,
+                       bp::return_value_policy<bp::copy_const_reference>()),
+                       static_cast<void (SolverParameter::*)(const string&)>(
+                               &SolverParameter::set_type));
+
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
