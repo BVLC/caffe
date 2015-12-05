@@ -20,10 +20,14 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 type: "AdaGrad"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -49,11 +53,16 @@ type: "AdaGrad"
 type: "AdaGrad"
 =======
 >>>>>>> pod/caffe-merge
+=======
+type: "AdaGrad"
+=======
+>>>>>>> pod/device/blob.hpp
 solver_type: ADAGRAD
 >>>>>>> origin/BVLC/parallel
 =======
 type: "AdaGrad"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -77,3 +86,6 @@ type: "AdaGrad"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

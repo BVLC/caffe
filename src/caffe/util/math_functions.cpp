@@ -213,6 +213,7 @@ template <>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -250,6 +251,14 @@ template <>
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 void caffe_log<float>(const int n, const float* a, float* y) {
   vsLn(n, a, y);
 }
@@ -264,6 +273,7 @@ template <>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -288,11 +298,15 @@ template <>
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -307,6 +321,9 @@ template <>
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 void caffe_abs<float>(const int n, const float* a, float* y) {
     vsAbs(n, a, y);
 }

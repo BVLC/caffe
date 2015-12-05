@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 
@@ -100,6 +101,8 @@ const int kMaxBlobAxes = 32;
 const int kMaxBlobAxes = 32;
 >>>>>>> BVLC/master
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 
 const int kMaxBlobAxes = 32;
 >>>>>>> master
@@ -130,11 +133,70 @@ const int kMaxBlobAxes = 32;
 =======
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> caffe
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> BVLC/master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> master
+=======
+
+const int kMaxBlobAxes = 32;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 namespace caffe {
 
@@ -155,12 +217,15 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
        : data_(), diff_(), count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
@@ -170,10 +235,15 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -184,6 +254,7 @@ class Blob {
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -194,6 +265,8 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       const int width);
   explicit Blob(const vector<int>& shape);
 
@@ -219,6 +292,7 @@ class Blob {
    */
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
        : data_(), diff_(), count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
@@ -240,15 +314,21 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
        : data_(), diff_(), count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       const int width);
   explicit Blob(const vector<int>& shape);
 
@@ -261,6 +341,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -286,6 +367,11 @@ class Blob {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   void Reshape(const int num, const int channels, const int height,
       const int width);
   /**
@@ -413,6 +499,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -450,6 +537,14 @@ class Blob {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     CHECK_LE(n, num());
     CHECK_GE(channels(), 0);
     CHECK_LE(c, channels());
@@ -466,6 +561,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -492,6 +588,18 @@ class Blob {
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
@@ -515,6 +623,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -531,6 +640,9 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 
   inline int offset(const vector<int>& indices) const {
@@ -553,6 +665,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 =======
 =======
@@ -569,6 +682,10 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  }
+=======
+>>>>>>> pod/device/blob.hpp
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -579,6 +696,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
   }
 
   inline int offset(const vector<int>& indices) const {
@@ -697,6 +815,104 @@ class Blob {
     return data_;
   }
 
+=======
+  }
+
+  inline int offset(const vector<int>& indices) const {
+    CHECK_LE(indices.size(), num_axes());
+    int offset = 0;
+    for (int i = 0; i < num_axes(); ++i) {
+      offset *= shape(i);
+      if (indices.size() > i) {
+        CHECK_GE(indices[i], 0);
+        CHECK_LT(indices[i], shape(i));
+        offset += indices[i];
+      }
+    }
+    return offset;
+  }
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+    CHECK_LE(n, num_);
+    CHECK_GE(channels_, 0);
+    CHECK_LE(c, channels_);
+    CHECK_GE(height_, 0);
+    CHECK_LE(h, height_);
+    CHECK_GE(width_, 0);
+    CHECK_LE(w, width_);
+    return ((n * channels_ + c) * height_ + h) * width_ + w;
+  }
+>>>>>>> origin/BVLC/parallel
+=======
+  }
+
+  inline int offset(const vector<int>& indices) const {
+    CHECK_LE(indices.size(), num_axes());
+    int offset = 0;
+    for (int i = 0; i < num_axes(); ++i) {
+      offset *= shape(i);
+      if (indices.size() > i) {
+        CHECK_GE(indices[i], 0);
+        CHECK_LT(indices[i], shape(i));
+        offset += indices[i];
+      }
+    }
+    return offset;
+  }
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  /**
+   * @brief Copy from a source Blob.
+   *
+   * @param source the Blob to copy from
+   * @param copy_diff if false, copy the data; if true, copy the diff
+   * @param reshape if false, require this Blob to be pre-shaped to the shape
+   *        of other (and die otherwise); if true, Reshape this Blob to other's
+   *        shape if necessary
+   */
+  void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
+      bool reshape = false);
+
+  inline Dtype data_at(const int n, const int c, const int h,
+      const int w) const {
+    return cpu_data()[offset(n, c, h, w)];
+  }
+
+  inline Dtype diff_at(const int n, const int c, const int h,
+      const int w) const {
+    return cpu_diff()[offset(n, c, h, w)];
+  }
+
+  inline Dtype data_at(const vector<int>& index) const {
+    return cpu_data()[offset(index)];
+  }
+
+  inline Dtype diff_at(const vector<int>& index) const {
+    return cpu_diff()[offset(index)];
+  }
+
+  inline const shared_ptr<SyncedMemory>& data() const {
+    CHECK(data_);
+    return data_;
+  }
+
+>>>>>>> pod/device/blob.hpp
   inline const shared_ptr<SyncedMemory>& diff() const {
     CHECK(diff_);
     return diff_;
@@ -738,6 +954,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
@@ -750,18 +967,26 @@ class Blob {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -774,6 +999,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -786,6 +1012,9 @@ class Blob {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
@@ -796,6 +1025,9 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 
@@ -804,6 +1036,7 @@ class Blob {
    *        data_ of Blob other -- useful in Layer%s which simply perform a copy
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -837,6 +1070,8 @@ class Blob {
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
   void scale_diff(Dtype scale_factor);
+=======
+>>>>>>> pod/device/blob.hpp
 
 <<<<<<< HEAD
 =======
@@ -849,6 +1084,7 @@ class Blob {
 >>>>>>> master
 =======
 
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 
@@ -864,6 +1100,8 @@ class Blob {
 =======
 
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 =======
 
@@ -872,6 +1110,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -898,17 +1137,26 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
->>>>>>> BVLC/master
 =======
 
 >>>>>>> master
 =======
 
 >>>>>>> pod/device/blob.hpp
+>>>>>>> BVLC/master
+=======
+
+>>>>>>> master
+=======
+
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
@@ -959,6 +1207,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -984,6 +1233,9 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's data_, as
@@ -998,10 +1250,14 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1055,6 +1311,16 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
+=======
+   *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
+>>>>>>> origin/BVLC/parallel
+=======
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's diff_, as

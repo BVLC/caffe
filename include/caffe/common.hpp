@@ -26,6 +26,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 // Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
@@ -85,6 +86,20 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+// Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+// Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+=======
+// Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
+>>>>>>> origin/BVLC/parallel
+=======
+// Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
 // TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
 // remove the following hack.
@@ -136,6 +151,7 @@ private:\
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -157,11 +173,14 @@ private:\
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
@@ -187,6 +206,13 @@ namespace cv { class Mat; }
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+// See PR #1236
+namespace cv { class Mat; }
+
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/device/blob.hpp
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
@@ -227,6 +253,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -241,6 +268,13 @@ class Caffe {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -276,6 +310,9 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   inline static Caffe& Get() {
     if (!thread_instance_.get()) {
       thread_instance_.reset(new Caffe());
@@ -292,6 +329,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 =======
@@ -312,6 +350,11 @@ class Caffe {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 >>>>>>> caffe
@@ -327,6 +370,7 @@ class Caffe {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -346,12 +390,16 @@ class Caffe {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
   // Thread local context for Caffe. Moved to common.cpp instead of
   // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
   // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -399,6 +447,10 @@ class Caffe {
   // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
 
+=======
+=======
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -411,6 +463,8 @@ class Caffe {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -431,6 +485,7 @@ class Caffe {
   // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -438,6 +493,8 @@ class Caffe {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 >>>>>>> master
@@ -455,6 +512,7 @@ class Caffe {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -477,6 +535,9 @@ class Caffe {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   enum Brew { CPU, GPU };
 
   // This random number generator facade hides boost and CUDA rng
@@ -545,6 +606,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -563,6 +625,11 @@ class Caffe {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   int solver_count_;
   bool root_solver_;
 =======
@@ -583,6 +650,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 =======
@@ -624,6 +692,10 @@ class Caffe {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
   int solver_count_;
@@ -642,6 +714,7 @@ class Caffe {
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
   int solver_count_;
   bool root_solver_;
 >>>>>>> caffe
@@ -649,6 +722,14 @@ class Caffe {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  int solver_count_;
+  bool root_solver_;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
  private:
   // The private constructor to avoid duplicate instantiation.

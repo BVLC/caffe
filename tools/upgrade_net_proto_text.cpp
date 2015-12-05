@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,6 +77,12 @@ int main(int argc, char** argv) {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 
   // Convert to a NetParameterPrettyPrint to print fields in desired
   // order.
@@ -84,6 +91,7 @@ int main(int argc, char** argv) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -106,6 +114,9 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
   // Save new format prototxt.
   WriteProtoToTextFile(net_param, argv[2]);

@@ -31,6 +31,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -59,15 +60,20 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 =======
 >>>>>>> device-abstraction
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
   // Copy the data
@@ -87,6 +93,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -95,6 +102,10 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 
@@ -109,8 +120,11 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
   caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
       top[0]->mutable_gpu_data());
@@ -139,6 +153,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -202,6 +217,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 =======
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 
   caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
       top[0]->mutable_gpu_data());
@@ -211,6 +228,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   }
 
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
@@ -223,6 +241,11 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   prefetch_free_.push(batch);
 }
 

@@ -22,6 +22,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -59,6 +60,14 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   const int num_kernels = channels_ * top[0]->count(channel_axis_ + 1);
   for (int n = 0; n < num_; ++n) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
@@ -80,6 +89,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -102,6 +112,11 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   for (int n = 0; n < bottom[0]->num(); ++n) {
     im2col_gpu(bottom_data + bottom[0]->offset(n), channels_, height_,
         width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
@@ -109,6 +124,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -131,6 +147,9 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 }
 
@@ -145,6 +164,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -182,6 +202,14 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   for (int n = 0; n < num_; ++n) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       col2im_gpu(top_diff + n * top_dim_, channels_,
@@ -202,6 +230,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -224,6 +253,11 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   for (int n = 0; n < top[0]->num(); ++n) {
     col2im_gpu(top_diff + top[0]->offset(n), channels_, height_, width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_,
@@ -231,6 +265,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -253,6 +288,9 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 }
 

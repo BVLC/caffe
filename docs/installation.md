@@ -50,6 +50,7 @@ Optional dependencies:
 * IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
 * cuDNN for GPU acceleration (v3)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 Pycaffe and Matcaffe interfaces have their own natural needs.
@@ -194,10 +195,44 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+
+Pycaffe and Matcaffe interfaces have their own natural needs.
+
+=======
+<<<<<<< HEAD
+
+<<<<<<< HEAD
+Pycaffe and Matcaffe interfaces have their own natural needs.
+
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
 **cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+=======
+* [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
+* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
+* [OpenCV](http://opencv.org/).
+* [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 and 1.56 are tested)
+* `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`, `lmdb`
+* For the Python wrapper
+    * `Python 2.7`, `numpy (>= 1.7)`, boost-provided `boost.python`
+* For the MATLAB wrapper
+    * MATLAB with the `mex` compiler.
+
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic.
+>>>>>>> origin/BVLC/parallel
+=======
+
+Pycaffe and Matcaffe interfaces have their own natural needs.
+
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+* For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
+* For MATLAB Caffe: MATLAB with the `mex` compiler.
+
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -231,6 +266,11 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 **CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
@@ -251,6 +291,7 @@ There are several implementations of this library. The choice is yours:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -275,12 +316,19 @@ There are several implementations of this library. The choice is yours:
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     + Ubuntu: `sudo apt-get install libatlas-base-dev`
     + CentOS/RHEL/Fedora: `sudo yum install atlas-devel`
     + OS X: already installed as the [Accelerate / vecLib Framework](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html).
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -303,6 +351,9 @@ There are several implementations of this library. The choice is yours:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
     1. Install MKL.
     2. Set `BLAS := mkl` in `Makefile.config`
@@ -318,6 +369,7 @@ The main requirements are `numpy` and `boost.python` (provided by boost). `panda
 
 You can install the dependencies with
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -400,6 +452,34 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    for req in $(cat requirements.txt); do pip install $req; done
+
+but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    for req in $(cat requirements.txt); do pip install $req; done
+
+but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+=======
+    for req in $(cat requirements.txt); do sudo pip install $req; done
+
+but we highly recommend first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+
+For **Ubuntu**, if you use the default Python you will need to `sudo apt-get install` the `python-dev` package to have the Python headers for building the wrapper.
+
+For **Fedora**, if you use the default Python you will need to `sudo yum install` the `python-devel` package to have the Python headers for building the wrapper.
+
+For **OS X**, Anaconda is the preferred Python. If you decide against it, please use Homebrew -- but beware of potential linking errors!
+>>>>>>> origin/BVLC/parallel
+=======
+    for req in $(cat requirements.txt); do pip install $req; done
+
+but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 To import the `caffe` Python module after completing the installation, add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like. You should not import the module in the `caffe/python/caffe` directory!
 
@@ -415,10 +495,14 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -444,6 +528,10 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 =======
 >>>>>>> pod/caffe-merge
+=======
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
+=======
+>>>>>>> pod/device/blob.hpp
 *Caffe's MATLAB interface works with versions 2012b, 2013a/b, and 2014a.*
 
 ### The rest of the dependencies
@@ -610,6 +698,7 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
 At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 >>>>>>> caffe
 <<<<<<< HEAD
@@ -635,6 +724,11 @@ At this point, you should be running the latest Homebrew packages and your Caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 #### Windows
 
@@ -648,10 +742,14 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -677,12 +775,17 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 =======
 >>>>>>> pod/caffe-merge
+=======
+Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+=======
+>>>>>>> pod/device/blob.hpp
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup (you should especially uncomment and set `BLAS_LIB` accordingly on distributions like **CentOS / RHEL / Fedora** where ATLAS is installed under `/usr/lib[64]/atlas`)
 The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 >>>>>>> origin/BVLC/parallel
 =======
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -706,6 +809,9 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
     cp Makefile.config.example Makefile.config
     # Adjust Makefile.config (for example, if using Anaconda Python)
@@ -719,11 +825,15 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 - For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -784,6 +894,20 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
+=======
+To compile with cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+
+If there is no GPU in your machine, you should switch to CPU-only Caffe by uncommenting `CPU_ONLY := 1` in `Makefile.config`.
+>>>>>>> origin/BVLC/parallel
+=======
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
 Be sure to set your MATLAB and Python paths in `Makefile.config` first!
@@ -793,6 +917,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -840,6 +965,12 @@ Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examp
 =======
 
 >>>>>>> pod/caffe-merge
+=======
+
+=======
+<<<<<<< HEAD
+
+>>>>>>> pod/device/blob.hpp
 **Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
@@ -859,6 +990,7 @@ The basic steps are as follows:
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 =======
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 <<<<<<< HEAD
@@ -1017,6 +1149,8 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 >>>>>>> device-abstraction
 =======
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 
 ### Compilation using CMake (beta)
 
@@ -1041,6 +1175,7 @@ As a workaround, if you are using Ubuntu 12.04 you can try the following steps t
 >>>>>>> origin/BVLC/parallel
 =======
 
+>>>>>>> pod-caffe-pod.hpp-merge
 **Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
@@ -1057,8 +1192,15 @@ The basic steps are as follows:
     make runtest
 
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 >>>>>>> caffe
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ## Hardware
 

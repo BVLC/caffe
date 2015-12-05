@@ -1,0 +1,6 @@
+# Hashes of file build rules.
+114dbbd9e91ea1ba0e6abac562da1634 CMakeFiles/protoPy
+bab8c62e4933b96bfda550d49e59ef27 caffe.pb.cc
+307e43e9beb3a279478a1f8385bcb9f7 caffe_pb2.py
+db60b6eb73ec7d2f1fe72d58b8c3f96b caffe_pretty_print.pb.cc
+d217191a842f39fefc1df8305bdf9414 caffe_pretty_print_pb2.py

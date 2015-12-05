@@ -56,6 +56,9 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -69,6 +72,7 @@ Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -80,6 +84,11 @@ Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -102,6 +111,10 @@ Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 =======
@@ -111,10 +124,13 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -165,6 +181,7 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -181,6 +198,9 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   CHECK_GE(bottom.size(), 2);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   data_blob_.Reshape(bottom[0]->num(), bottom[0]->channels(),
@@ -211,6 +231,7 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -237,6 +258,11 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -255,6 +281,11 @@ STUB_GPU(HDF5OutputLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -262,6 +293,10 @@ STUB_GPU(HDF5OutputLayer);
 =======
 >>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(HDF5OutputLayer);
+=======
+>>>>>>> BVLC/master
+INSTANTIATE_CLASS(HDF5OutputLayer);
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 INSTANTIATE_CLASS(HDF5OutputLayer);
@@ -279,10 +314,13 @@ INSTANTIATE_CLASS(HDF5OutputLayer);
 INSTANTIATE_CLASS(HDF5OutputLayer);
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -314,6 +352,9 @@ INSTANTIATE_CLASS(HDF5OutputLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(HDF5Output);
 
 =======

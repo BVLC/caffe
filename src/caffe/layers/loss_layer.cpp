@@ -11,6 +11,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
@@ -44,6 +47,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
@@ -91,6 +95,8 @@
 #include "caffe/vision_layers.hpp"
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
 =======
@@ -123,6 +129,7 @@
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -157,6 +164,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 namespace caffe {
 
@@ -174,6 +184,7 @@ void LossLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number.";
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -244,6 +255,23 @@ void LossLayer<Dtype>::Reshape(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
+  top[0]->Reshape(loss_shape);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
+  top[0]->Reshape(loss_shape);
+=======
+  top[0]->Reshape(1, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+  vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
+  top[0]->Reshape(loss_shape);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 INSTANTIATE_CLASS(LossLayer);

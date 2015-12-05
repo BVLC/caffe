@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -45,12 +46,21 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
 TOOLS=build/tools
 
 $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
   $DATA/imagenet_mean.binaryproto
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -77,6 +87,11 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 ./build/tools/compute_image_mean examples/imagenet/ilsvrc12_train_leveldb \
   data/ilsvrc12/imagenet_mean.binaryproto
 >>>>>>> origin/BVLC/parallel
@@ -88,6 +103,7 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -104,5 +120,8 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 echo "Done."

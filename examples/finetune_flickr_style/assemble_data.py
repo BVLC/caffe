@@ -15,10 +15,14 @@ import pandas as pd
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 from skimage import io
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,10 +48,15 @@ from skimage import io
 from skimage import io
 =======
 >>>>>>> pod/caffe-merge
+=======
+from skimage import io
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 from skimage import io
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -71,6 +80,9 @@ from skimage import io
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 import multiprocessing
 
 # Flickr returns a special image if the request is unavailable.
@@ -95,10 +107,14 @@ def download_image(args_tuple):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
         test_read_image = io.imread(filename)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -151,6 +167,15 @@ def download_image(args_tuple):
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+        test_read_image = io.imread(filename)
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+        test_read_image = io.imread(filename)
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         return True
     except KeyboardInterrupt:
         raise Exception()  # multiprocessing doesn't catch keyboard exceptions
@@ -178,6 +203,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -215,6 +241,14 @@ if __name__ == '__main__':
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     parser.add_argument(
         '-l', '--labels', type=int, default=0,
         help="if set to a positive value, only sample images from the first number of labels."
@@ -223,6 +257,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -244,11 +279,15 @@ if __name__ == '__main__':
 >>>>>>> caffe
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -266,6 +305,9 @@ if __name__ == '__main__':
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
     args = parser.parse_args()
     np.random.seed(args.seed)
@@ -280,11 +322,15 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     if args.labels > 0:
         df = df.loc[df['label'] < args.labels]
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -343,6 +389,17 @@ if __name__ == '__main__':
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    if args.labels > 0:
+        df = df.loc[df['label'] < args.labels]
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+    if args.labels > 0:
+        df = df.loc[df['label'] < args.labels]
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     if args.images > 0 and args.images < df.shape[0]:
         df = df.iloc[:args.images]
 

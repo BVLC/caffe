@@ -40,15 +40,23 @@
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -81,6 +89,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
@@ -104,6 +115,7 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -165,6 +177,10 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   this->StopInternalThread();
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
@@ -178,6 +194,10 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+  this->InternalThread::StopInternalThread();
+>>>>>>> origin/BVLC/parallel
 =======
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
@@ -196,7 +216,14 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 =======
   this->InternalThread::StopInternalThread();
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+  this->StopInternalThread();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -247,6 +274,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -284,11 +312,20 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
   this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data and top[0] according to the batch_size.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -305,6 +342,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   const int batch_size = this->layer_param_.image_data_param().batch_size();
 <<<<<<< HEAD
 =======
@@ -349,12 +388,33 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/caffe-merge
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+  const int batch_size = this->layer_param_.image_data_param().batch_size();
+  CHECK_GT(batch_size, 0) << "Positive batch size required";
+  top_shape[0] = batch_size;
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].data_.Reshape(top_shape);
+  }
+  top[0]->Reshape(top_shape);
+
+=======
+  const int channels = cv_img.channels();
+  const int height = cv_img.rows;
+  const int width = cv_img.cols;
+  // image
+  const int crop_size = this->layer_param_.transform_param().crop_size();
+  const int batch_size = this->layer_param_.image_data_param().batch_size();
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   if (crop_size > 0) {
     top[0]->Reshape(batch_size, channels, crop_size, crop_size);
     for(int i = 0; i < this->PREFETCH_COUNT; ++i)
@@ -373,10 +433,14 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
   }
 =======
   }
+<<<<<<< HEAD
 =======
   }
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -395,6 +459,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 >>>>>>> pod/caffe-merge
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
@@ -406,11 +472,44 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_[i].label_.Reshape(label_shape);
   }
 =======
+  top[1]->Reshape(batch_size, 1, 1, 1);
+  for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+    this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+  const int batch_size = this->layer_param_.image_data_param().batch_size();
+  CHECK_GT(batch_size, 0) << "Positive batch size required";
+  top_shape[0] = batch_size;
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].data_.Reshape(top_shape);
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
+  top[0]->Reshape(top_shape);
+
+>>>>>>> pod/device/blob.hpp
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
+  // label
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+  vector<int> label_shape(1, batch_size);
+  top[1]->Reshape(label_shape);
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].label_.Reshape(label_shape);
+  }
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -418,6 +517,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   }
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
@@ -446,6 +546,33 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_[i].data_.Reshape(top_shape);
   }
 <<<<<<< HEAD
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+}
+
+template <typename Dtype>
+void ImageDataLayer<Dtype>::ShuffleImages() {
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  shuffle(lines_.begin(), lines_.end(), prefetch_rng);
+}
+
+// This function is called on prefetch thread
+template <typename Dtype>
+void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
+  CPUTimer batch_timer;
+  batch_timer.Start();
+  double read_time = 0;
+  double trans_time = 0;
+  CPUTimer timer;
+  CHECK(batch->data_.count());
+  CHECK(this->transformed_data_.count());
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -454,6 +581,10 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
@@ -657,6 +788,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
 >>>>>>> pod/caffe-merge
 =======
+<<<<<<< HEAD
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+=======
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
 >>>>>>> origin/BVLC/parallel
@@ -683,11 +819,16 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* top_label = batch->label_.mutable_cpu_data();
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
   const int new_height = image_data_param.new_height();
@@ -701,6 +842,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -738,6 +880,14 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
@@ -757,6 +907,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -766,6 +917,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
@@ -774,6 +930,9 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
@@ -789,6 +948,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     int offset = batch->data_.offset(item_id);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -838,6 +998,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/caffe-merge
@@ -878,6 +1039,8 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -892,6 +1055,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   CreatePrefetchThread();
   return Dtype(0.);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -1149,6 +1313,13 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> BVLC/device-abstraction
+}
+
+=======
+=======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -1202,6 +1373,9 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
@@ -1211,8 +1385,11 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     prefetch_label[item_id] = lines_[lines_id_].second;
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
     this->transformed_data_.set_cpu_data(top_data + offset);
     this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
@@ -1285,6 +1462,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 
@@ -1331,12 +1509,15 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/device/blob.hpp
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 
 =======
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 }
@@ -1447,6 +1628,8 @@ REGISTER_LAYER_CLASS(ImageData);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(IMAGE_DATA, ImageDataLayer);
 >>>>>>> origin/BVLC/parallel

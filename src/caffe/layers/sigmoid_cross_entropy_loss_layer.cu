@@ -20,6 +20,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,6 +45,12 @@ template <typename Dtype>
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 void SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // The forward pass computes the sigmoid outputs.
@@ -73,6 +80,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -89,6 +97,9 @@ template <typename Dtype>
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
@@ -117,10 +128,14 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -174,6 +189,16 @@ INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
+=======
+INSTANTIATE_LAYER_GPU_FUNCS(SigmoidCrossEntropyLossLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+INSTANTIATE_LAYER_GPU_BACKWARD(SigmoidCrossEntropyLossLayer);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 
 }  // namespace caffe

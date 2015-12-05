@@ -1,0 +1,2 @@
+/Users/stevenjames/Documents/caffe/src/caffe/proto/CMakeFiles/proto.dir
+/Users/stevenjames/Documents/caffe/src/caffe/proto/CMakeFiles/protoPy.dir

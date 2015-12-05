@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23,9 +24,12 @@
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
@@ -33,6 +37,8 @@
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
@@ -40,6 +46,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -58,6 +65,9 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/cudnn_pooling_layer.hpp"
@@ -84,6 +94,7 @@ void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -108,12 +119,19 @@ void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   // Sanity check: CUDNN currently only supports pad == 0.
   CHECK_EQ(this->pad_h_, 0);
   CHECK_EQ(this->pad_w_, 0);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -136,11 +154,15 @@ void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
   cudnn::createPoolingDesc<Dtype>(&pooling_desc_,
       this->layer_param_.pooling_param().pool(), &mode_,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -215,6 +237,26 @@ void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
+      this->stride_h_, this->stride_w_);
+  handles_setup_ = true;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
+      this->stride_h_, this->stride_w_);
+  handles_setup_ = true;
+=======
+      this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_);
+>>>>>>> origin/BVLC/parallel
+=======
+      this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
+      this->stride_h_, this->stride_w_);
+  handles_setup_ = true;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -235,6 +277,7 @@ CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -272,11 +315,20 @@ CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -303,6 +355,11 @@ CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   cudnnDestroyTensor4dDescriptor(bottom_desc_);
   cudnnDestroyTensor4dDescriptor(top_desc_);
 >>>>>>> origin/BVLC/parallel
@@ -314,6 +371,7 @@ CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -330,6 +388,9 @@ CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   cudnnDestroyPoolingDescriptor(pooling_desc_);
   cudnnDestroy(handle_);
 }

@@ -16,6 +16,7 @@ Some of these layers' outputs may be used in the loss function.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -53,11 +54,20 @@ Some of these layers' outputs may be used in the loss function.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 A typical choice of loss function for one-versus-all classification tasks is the `SoftmaxWithLoss` function, used in a network definition as follows, for example:
 
     layer {
       name: "loss"
       type: "SoftmaxWithLoss"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -84,6 +94,11 @@ A typical choice of loss function for one-versus-all classification tasks is the
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 A typical choice of loss function for one-versus-all classification tasks is the `SOFTMAX_LOSS` function, used in a network definition as follows, for example:
 
     layers {
@@ -98,6 +113,7 @@ A typical choice of loss function for one-versus-all classification tasks is the
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -114,6 +130,9 @@ A typical choice of loss function for one-versus-all classification tasks is the
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       bottom: "pred"
       bottom: "label"
       top: "loss"
@@ -125,6 +144,7 @@ A typical choice of loss function for one-versus-all classification tasks is the
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -162,6 +182,14 @@ A typical choice of loss function for one-versus-all classification tasks is the
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 In a `SoftmaxWithLoss` function, the `top` blob is a scalar (empty shape) which averages the loss (computed from predicted labels `pred` and actuals labels `label`) over the entire mini-batch.
 
 ### Loss weights
@@ -180,6 +208,7 @@ So, the above `SoftmaxWithLoss` layer could be equivalently written as:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -202,6 +231,11 @@ So, the above `SoftmaxWithLoss` layer could be equivalently written as:
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 In a `SOFTMAX_LOSS` function, the `top` blob is a scalar (dimensions $$1 \times 1 \times 1 \times 1$$) which averages the loss (computed from predicted labels `pred` and actuals labels `label`) over the entire mini-batch.
 
 ### Loss weights
@@ -225,6 +259,7 @@ So, the above `SOFTMAX_LOSS` layer could be equivalently written as:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -241,6 +276,9 @@ So, the above `SOFTMAX_LOSS` layer could be equivalently written as:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       bottom: "pred"
       bottom: "label"
       top: "loss"

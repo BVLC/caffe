@@ -1,0 +1,2 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc libproto.a  CMakeFiles/proto.dir/caffe.pb.o CMakeFiles/proto.dir/caffe_pretty_print.pb.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib libproto.a

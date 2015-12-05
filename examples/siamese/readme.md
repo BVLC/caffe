@@ -45,6 +45,7 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -82,6 +83,14 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     layer {
       name: "feat"
       type: "InnerProduct"
@@ -99,6 +108,7 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -121,6 +131,11 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     layers {
       name: "feat"
       type: INNER_PRODUCT
@@ -131,6 +146,7 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -153,6 +169,9 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       inner_product_param {
         num_output: 2
       }
@@ -177,6 +196,7 @@ or different classes (`sim`).
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -214,6 +234,14 @@ or different classes (`sim`).
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     layer {
       name: "pair_data"
       type: "Data"
@@ -227,6 +255,7 @@ or different classes (`sim`).
         source: "examples/siamese/mnist_siamese_train_leveldb"
         batch_size: 64
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -253,6 +282,11 @@ or different classes (`sim`).
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     layers {
       name: "pair_data"
       type: DATA
@@ -273,6 +307,7 @@ or different classes (`sim`).
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -289,6 +324,9 @@ or different classes (`sim`).
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     }
 
 In order to pack a pair of images into the same blob in the database we pack one
@@ -303,6 +341,7 @@ and its paired image in `data_p.`
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -340,6 +379,14 @@ and its paired image in `data_p.`
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     layer {
       name: "slice_pair"
       type: "Slice"
@@ -350,6 +397,7 @@ and its paired image in `data_p.`
         slice_dim: 1
         slice_point: 1
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -376,6 +424,11 @@ and its paired image in `data_p.`
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     layers {
         name: "slice_pair"
         type: SLICE
@@ -395,6 +448,7 @@ and its paired image in `data_p.`
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -411,6 +465,9 @@ and its paired image in `data_p.`
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     }
 
 ### Building the First Side of the Siamese Net
@@ -429,6 +486,7 @@ the siamese net. In the definition this looks like:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -466,6 +524,14 @@ the siamese net. In the definition this looks like:
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     param { name: "conv1_w" ...  }
     param { name: "conv1_b" ...  }
     ...
@@ -477,6 +543,7 @@ the siamese net. In the definition this looks like:
     ...
     param { name: "ip2_w" ...  }
     param { name: "ip2_b" ...  }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -503,6 +570,11 @@ the siamese net. In the definition this looks like:
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     param: "conv1_w"
     param: "conv1_b"
     ...
@@ -523,6 +595,7 @@ the siamese net. In the definition this looks like:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -539,6 +612,9 @@ the siamese net. In the definition this looks like:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     ...
 
 ### Building the Second Side of the Siamese Net
@@ -562,10 +638,13 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
     layer {
         name: "loss"
         type: "ContrastiveLoss"
@@ -575,6 +654,7 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -582,12 +662,15 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     layer {
         name: "loss"
         type: "ContrastiveLoss"
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -598,11 +681,14 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
     layers {
         name: "loss"
         type: CONTRASTIVE_LOSS
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
     layer {
         name: "loss"
         type: "ContrastiveLoss"
@@ -632,6 +718,13 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    layer {
+        name: "loss"
+        type: "ContrastiveLoss"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         contrastive_loss_param {
             margin: 1.0
         }

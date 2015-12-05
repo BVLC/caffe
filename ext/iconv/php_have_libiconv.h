@@ -1,0 +1,1 @@
+#define HAVE_LIBICONV 1

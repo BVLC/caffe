@@ -1,0 +1,1 @@
+#define ICONV_BROKEN_IGNORE 0

@@ -5,6 +5,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include <vector>
@@ -17,6 +20,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -24,10 +28,13 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include <vector>
 
 #include "caffe/neuron_layers.hpp"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -44,6 +51,8 @@
 #include "caffe/neuron_layers.hpp"
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include <algorithm>
 #include <vector>
 
@@ -61,6 +70,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -86,6 +96,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 namespace caffe {
 
@@ -103,10 +116,14 @@ void CuDNNTanHLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   handles_setup_ = true;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -159,6 +176,15 @@ void CuDNNTanHLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  handles_setup_ = true;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  handles_setup_ = true;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -181,6 +207,7 @@ CuDNNTanHLayer<Dtype>::~CuDNNTanHLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -218,11 +245,20 @@ CuDNNTanHLayer<Dtype>::~CuDNNTanHLayer() {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
   cudnnDestroyTensorDescriptor(this->bottom_desc_);
   cudnnDestroyTensorDescriptor(this->top_desc_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -249,6 +285,11 @@ CuDNNTanHLayer<Dtype>::~CuDNNTanHLayer() {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
   cudnnDestroyTensor4dDescriptor(this->top_desc_);
 >>>>>>> origin/BVLC/parallel
@@ -260,6 +301,7 @@ CuDNNTanHLayer<Dtype>::~CuDNNTanHLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -276,6 +318,9 @@ CuDNNTanHLayer<Dtype>::~CuDNNTanHLayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   cudnnDestroy(this->handle_);
 }
 

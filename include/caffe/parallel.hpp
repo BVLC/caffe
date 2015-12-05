@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -41,15 +42,20 @@
 =======
 >>>>>>> device-abstraction
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
@@ -97,6 +103,7 @@ class Params {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -111,6 +118,8 @@ class Params {
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -132,6 +141,7 @@ class Params {
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -147,6 +157,13 @@ class Params {
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #ifndef CAFFE_PARALLEL_H_
 #define CAFFE_PARALLEL_H_
 
@@ -292,6 +309,7 @@ class Params {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -328,6 +346,12 @@ class Params {
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -343,11 +367,14 @@ class Params {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
 DISABLE_COPY_AND_ASSIGN(Params);
 };
@@ -367,6 +394,7 @@ DISABLE_COPY_AND_ASSIGN(Params);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -395,15 +423,20 @@ DISABLE_COPY_AND_ASSIGN(Params);
 =======
 >>>>>>> device-abstraction
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 // Params stored in GPU memory.
 template<typename Dtype>
 class GPUParams : public Params<Dtype> {
@@ -479,6 +512,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -493,6 +527,8 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -514,6 +550,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -529,6 +566,13 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #ifndef CPU_ONLY
 
 // Params on a GPU
@@ -961,6 +1005,7 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -997,6 +1042,12 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -1012,10 +1063,13 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
 #endif

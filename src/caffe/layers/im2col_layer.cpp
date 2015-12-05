@@ -11,6 +11,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/im2col.hpp"
@@ -20,6 +23,7 @@
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
@@ -96,6 +100,19 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
@@ -123,9 +140,13 @@
 #include "caffe/util/im2col.hpp"
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/im2col_layer.hpp"
@@ -177,6 +198,7 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -212,10 +234,24 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
   }
   for (int i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -224,10 +260,14 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> master
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
   }
   for (int i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
@@ -252,12 +292,21 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/master
+=======
+=======
+>>>>>>> master
+>>>>>>> pod/device/blob.hpp
   }
   for (int i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 >>>>>>> master
@@ -274,6 +323,7 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
@@ -321,10 +371,14 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
   for (int i = 0; i < num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -333,6 +387,14 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 >>>>>>> caffe
 =======
@@ -347,6 +409,7 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -369,6 +432,9 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // Setup stride dimensions (stride_).
   stride_.Reshape(dim_blob_shape);
   int* stride_data = stride_.mutable_cpu_data();
@@ -410,6 +476,7 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -447,6 +514,14 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     const int num_pad_dims = conv_param.pad_size();
     CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
           num_pad_dims == num_spatial_axes_)
@@ -466,6 +541,9 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   }
@@ -473,8 +551,11 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -502,6 +583,7 @@ template <typename Dtype>
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -522,6 +604,13 @@ template <typename Dtype>
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -543,8 +632,11 @@ template <typename Dtype>
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   }
 }
 
@@ -562,6 +654,7 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
         / stride_data[i] + 1;
     top_shape[channel_axis_ + i + 1] = output_dim;
+<<<<<<< HEAD
 <<<<<<< HEAD
   }
 =======
@@ -1174,6 +1267,10 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           top_data + n * top_dim_);
     }
 >>>>>>> master
+=======
+  }
+=======
+>>>>>>> pod/device/blob.hpp
   }
 }
 
@@ -1192,12 +1289,14 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         / stride_data[i] + 1;
     top_shape[channel_axis_ + i + 1] = output_dim;
   }
+>>>>>>> caffe
   top[0]->Reshape(top_shape);
   num_ = bottom[0]->count(0, channel_axis_);
   bottom_dim_ = bottom[0]->count(channel_axis_);
   top_dim_ = top[0]->count(channel_axis_);
 
   channels_ = bottom[0]->shape(channel_axis_);
+<<<<<<< HEAD
 }
 
 template <typename Dtype>
@@ -1231,6 +1330,7 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1262,10 +1362,36 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 >>>>>>> BVLC/master
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype Im2colLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+=======
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+  top[0]->Reshape(
+      bottom[0]->num(), channels_ * kernel_h_ * kernel_w_,
+      (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1,
+      (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1);
+=======
+>>>>>>> caffe
+}
+
+template <typename Dtype>
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
+<<<<<<< HEAD
   for (int n = 0; n < num_; ++n) {
     DCHECK_EQ(bottom[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
     DCHECK_EQ(top[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
@@ -1290,11 +1416,99 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
+<<<<<<< HEAD
 >>>>>>> BVLC/master
+=======
+=======
+>>>>>>> BVLC/device-abstraction
+Dtype Im2colLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+=======
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+  for (int n = 0; n < bottom[0]->num(); ++n) {
+    this->device_->im2col(
+        bottom_data + bottom[0]->offset(n), channels_, height_,
+        width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+<<<<<<< HEAD
+        stride_h_, stride_w_, top_data + (*top)[0]->offset(n));
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+=======
+=======
+=======
+=======
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
+=======
+>>>>>>> caffe
+  for (int n = 0; n < num_; ++n) {
+    DCHECK_EQ(bottom[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(top[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(kernel_shape_.count(), num_spatial_axes_);
+    DCHECK_EQ(pad_.count(), num_spatial_axes_);
+    DCHECK_EQ(stride_.count(), num_spatial_axes_);
+    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+      im2col_cpu(bottom_data + n * bottom_dim_, channels_,
+          bottom[0]->shape(channel_axis_ + 1),
+          bottom[0]->shape(channel_axis_ + 2),
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          top_data + n * top_dim_);
+    } else {
+      im2col_nd_cpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
+          bottom[0]->shape().data() + channel_axis_,
+          top[0]->shape().data() + channel_axis_,
+          kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
+          top_data + n * top_dim_);
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+        stride_h_, stride_w_, top_data + top[0]->offset(n));
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1311,6 +1525,10 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->const_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+=======
+=======
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1334,14 +1552,189 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+<<<<<<< HEAD
+<<<<<<< HEAD
+void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  vector<int> top_shape = bottom[0]->shape();
+  const int* kernel_shape_data = kernel_shape_.cpu_data();
+  const int* stride_data = stride_.cpu_data();
+  const int* pad_data = pad_.cpu_data();
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    top_shape[channel_axis_] *= kernel_shape_data[i];
+    const int input_dim = bottom[0]->shape(channel_axis_ + i + 1);
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+        / stride_data[i] + 1;
+    top_shape[channel_axis_ + i + 1] = output_dim;
+  }
+  top[0]->Reshape(top_shape);
+  num_ = bottom[0]->count(0, channel_axis_);
+  bottom_dim_ = bottom[0]->count(channel_axis_);
+  top_dim_ = top[0]->count(channel_axis_);
+
+  channels_ = bottom[0]->shape(channel_axis_);
+}
+
+template <typename Dtype>
+void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  for (int n = 0; n < num_; ++n) {
+    DCHECK_EQ(bottom[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(top[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(kernel_shape_.count(), num_spatial_axes_);
+    DCHECK_EQ(pad_.count(), num_spatial_axes_);
+    DCHECK_EQ(stride_.count(), num_spatial_axes_);
+    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+      im2col_cpu(bottom_data + n * bottom_dim_, channels_,
+          bottom[0]->shape(channel_axis_ + 1),
+          bottom[0]->shape(channel_axis_ + 2),
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          top_data + n * top_dim_);
+    } else {
+      im2col_nd_cpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
+          bottom[0]->shape().data() + channel_axis_,
+          top[0]->shape().data() + channel_axis_,
+          kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
+          top_data + n * top_dim_);
+    }
+>>>>>>> master
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  vector<int> top_shape = bottom[0]->shape();
+  const int* kernel_shape_data = kernel_shape_.cpu_data();
+  const int* stride_data = stride_.cpu_data();
+  const int* pad_data = pad_.cpu_data();
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    top_shape[channel_axis_] *= kernel_shape_data[i];
+    const int input_dim = bottom[0]->shape(channel_axis_ + i + 1);
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+        / stride_data[i] + 1;
+    top_shape[channel_axis_ + i + 1] = output_dim;
+  }
+  top[0]->Reshape(top_shape);
+  num_ = bottom[0]->count(0, channel_axis_);
+  bottom_dim_ = bottom[0]->count(channel_axis_);
+  top_dim_ = top[0]->count(channel_axis_);
+
+  channels_ = bottom[0]->shape(channel_axis_);
+}
+
+template <typename Dtype>
+void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  for (int n = 0; n < num_; ++n) {
+    DCHECK_EQ(bottom[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(top[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(kernel_shape_.count(), num_spatial_axes_);
+    DCHECK_EQ(pad_.count(), num_spatial_axes_);
+    DCHECK_EQ(stride_.count(), num_spatial_axes_);
+    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+      im2col_cpu(bottom_data + n * bottom_dim_, channels_,
+          bottom[0]->shape(channel_axis_ + 1),
+          bottom[0]->shape(channel_axis_ + 2),
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          top_data + n * top_dim_);
+    } else {
+      im2col_nd_cpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
+          bottom[0]->shape().data() + channel_axis_,
+          top[0]->shape().data() + channel_axis_,
+          kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
+          top_data + n * top_dim_);
+    }
+>>>>>>> BVLC/master
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  vector<int> top_shape = bottom[0]->shape();
+  const int* kernel_shape_data = kernel_shape_.cpu_data();
+  const int* stride_data = stride_.cpu_data();
+  const int* pad_data = pad_.cpu_data();
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    top_shape[channel_axis_] *= kernel_shape_data[i];
+    const int input_dim = bottom[0]->shape(channel_axis_ + i + 1);
+    const int output_dim = (input_dim + 2 * pad_data[i] - kernel_shape_data[i])
+        / stride_data[i] + 1;
+    top_shape[channel_axis_ + i + 1] = output_dim;
+  }
+  top[0]->Reshape(top_shape);
+  num_ = bottom[0]->count(0, channel_axis_);
+  bottom_dim_ = bottom[0]->count(channel_axis_);
+  top_dim_ = top[0]->count(channel_axis_);
+
+  channels_ = bottom[0]->shape(channel_axis_);
+}
+
+template <typename Dtype>
+>>>>>>> BVLC/master
+void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  for (int n = 0; n < num_; ++n) {
+    DCHECK_EQ(bottom[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(top[0]->shape().size() - channel_axis_, num_spatial_axes_ + 1);
+    DCHECK_EQ(kernel_shape_.count(), num_spatial_axes_);
+    DCHECK_EQ(pad_.count(), num_spatial_axes_);
+    DCHECK_EQ(stride_.count(), num_spatial_axes_);
+    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+      im2col_cpu(bottom_data + n * bottom_dim_, channels_,
+          bottom[0]->shape(channel_axis_ + 1),
+          bottom[0]->shape(channel_axis_ + 2),
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          top_data + n * top_dim_);
+    } else {
+      im2col_nd_cpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
+          bottom[0]->shape().data() + channel_axis_,
+          top[0]->shape().data() + channel_axis_,
+          kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
+          top_data + n * top_dim_);
+    }
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* top_diff = top[0]->const_diff();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -1353,6 +1746,9 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   for (int n = 0; n < num_; ++n) {
@@ -1383,6 +1779,7 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1404,6 +1801,8 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   for (int n = 0; n < top[0]->num(); ++n) {
     this->device_->col2im(
         top_diff + top[0]->offset(n), channels_, height_, width_,
@@ -1418,6 +1817,7 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -1440,6 +1840,12 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -1459,6 +1865,7 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> device-abstraction
@@ -1466,6 +1873,8 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -1473,6 +1882,7 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 =======
@@ -1485,6 +1895,10 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
   for (int n = 0; n < num_; ++n) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       col2im_cpu(top_diff + n * top_dim_, channels_,
@@ -1514,10 +1928,13 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -1548,6 +1965,7 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1565,10 +1983,14 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
 }
 
 INSTANTIATE_CLASS(Im2colLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1612,6 +2034,14 @@ INSTANTIATE_CLASS(Im2colLayer);
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(Im2col);
 
 =======

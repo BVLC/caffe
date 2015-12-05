@@ -139,6 +139,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannels) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -176,6 +177,14 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannels) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
@@ -196,6 +205,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -220,11 +230,15 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -239,6 +253,9 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
@@ -334,6 +351,7 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -358,6 +376,14 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 =======
 =======
 >>>>>>> caffe
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
@@ -380,6 +406,7 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   // }
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
 =======
@@ -389,9 +416,15 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -401,6 +434,9 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 TYPED_TEST(LRNLayerTest, TestSetupWithinChannel) {
@@ -633,10 +669,19 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
       this->blob_top_vec_);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> caffe
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 #ifdef USE_CUDNN
@@ -840,6 +885,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -870,9 +916,14 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -883,6 +934,9 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 #endif

@@ -12,6 +12,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common_layers.hpp"
@@ -32,6 +35,7 @@
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -42,6 +46,9 @@
 >>>>>>> pod/caffe-merge
 =======
 <<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
+=======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -59,6 +66,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -69,10 +79,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -119,6 +132,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -135,6 +149,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 namespace caffe {
 
@@ -147,12 +164,16 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
   CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
       << "Either axis or concat_dim should be specified; not both.";
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -225,6 +246,24 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  const ConcatParameter& concat_param = this->layer_param_.concat_param();
+  CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
+      << "Either axis or concat_dim should be specified; not both.";
+=======
+  concat_dim_ = this->layer_param_.concat_param().concat_dim();
+  CHECK_GE(concat_dim_, 0) <<
+    "concat_dim should be >= 0";
+  CHECK_LE(concat_dim_, 1) <<
+    "For now concat_dim <=1, it can only concat num and channels";
+>>>>>>> origin/BVLC/parallel
+=======
+  const ConcatParameter& concat_param = this->layer_param_.concat_param();
+  CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
+      << "Either axis or concat_dim should be specified; not both.";
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -236,6 +275,7 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -273,6 +313,14 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   const int num_axes = bottom[0]->num_axes();
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
   if (concat_param.has_concat_dim()) {
@@ -290,6 +338,7 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -314,11 +363,15 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -333,6 +386,9 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // Initialize with the first blob.
   vector<int> top_shape = bottom[0]->shape();
   num_concats_ = bottom[0]->count(0, concat_axis_);
@@ -353,6 +409,7 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     }
     bottom_count_sum += bottom[i]->count();
     top_shape[concat_axis_] += bottom[i]->shape(concat_axis_);
@@ -363,6 +420,8 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
     }
     bottom_count_sum += bottom[i]->count();
     top_shape[concat_axis_] += bottom[i]->shape(concat_axis_);
@@ -420,10 +479,43 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 =======
 >>>>>>> BVLC/device-abstraction
+<<<<<<< HEAD
+=======
 Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype* top_data = (*top)[0]->mutable_data();
 =======
+    }
+    bottom_count_sum += bottom[i]->count();
+    top_shape[concat_axis_] += bottom[i]->shape(concat_axis_);
+<<<<<<< HEAD
+  }
+  top[0]->Reshape(top_shape);
+  CHECK_EQ(bottom_count_sum, top[0]->count());
+  if (bottom.size() == 1) {
+    top[0]->ShareData(*bottom[0]);
+    top[0]->ShareDiff(*bottom[0]);
+  }
+<<<<<<< HEAD
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+=======
+<<<<<<< HEAD
     }
     bottom_count_sum += bottom[i]->count();
     top_shape[concat_axis_] += bottom[i]->shape(concat_axis_);
@@ -739,6 +831,52 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       }
       offset_channel += bottom[i]->channels();
     }
+=======
+  top[0]->Reshape(num_, channels_, height_, width_);
+  CHECK_EQ(count_, top[0]->count());
+}
+
+template <typename Dtype>
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+  if (concat_dim_== 0) {
+    int offset_num = 0;
+    for (int i = 0; i < bottom.size(); ++i) {
+      const Dtype* bottom_data = bottom[i]->const_data();
+      int num_elem = bottom[i]->count();
+<<<<<<< HEAD
+      this->device_->copy(num_elem, bottom_data,
+                        top_data+(*top)[0]->offset(offset_num));
+=======
+<<<<<<< HEAD
+      this->device_->copy(num_elem, bottom_data,
+                        top_data+(*top)[0]->offset(offset_num));
+=======
+      caffe_copy(num_elem, bottom_data, top_data+top[0]->offset(offset_num));
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
+      offset_num += bottom[i]->num();
+    }
+  } else if (concat_dim_ == 1) {
+    int offset_channel = 0;
+    for (int i = 0; i < bottom.size(); ++i) {
+      const Dtype* bottom_data = bottom[i]->const_data();
+      int num_elem =
+        bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
+      for (int n = 0; n < num_; ++n) {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+        this->device_->copy(num_elem, bottom_data+bottom[i]->offset(n),
+          top_data+(*top)[0]->offset(n, offset_channel));
+      }
+      offset_channel += bottom[i]->channels();
+    }
+>>>>>>> pod/device/blob.hpp
   }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
   return Dtype(0.);
 =======
@@ -749,6 +887,7 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     top[0]->ShareData(*bottom[0]);
     top[0]->ShareDiff(*bottom[0]);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -900,6 +1039,8 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -951,6 +1092,7 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -960,6 +1102,9 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   if (concat_dim_ == 0) {
     int offset_num = 0;
     for (int i = 0; i < bottom.size(); ++i) {
@@ -968,6 +1113,7 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         Dtype* bottom_diff = blob->mutable_diff();
         this->device_->copy(blob->count(),
             top_diff + top[0]->offset(offset_num), bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
@@ -2782,6 +2928,8 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_copy(bottom_concat_axis * concat_input_size_, top_diff +
             (n * top_concat_axis + offset_concat_axis) * concat_input_size_,
             bottom_diff + n * bottom_concat_axis * concat_input_size_);
+=======
+>>>>>>> pod/device/blob.hpp
       }
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2791,6 +2939,345 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+    offset_concat_axis += bottom_concat_axis;
+  }
+=======
+  }  // concat_dim_ is guaranteed to be 0 or 1 by LayerSetUp.
+>>>>>>> origin/BVLC/parallel
+=======
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+>>>>>>> caffe
+}
+
+template <typename Dtype>
+>>>>>>> pod-caffe-pod.hpp-merge
+void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (bottom.size() == 1) { return; }
+  const Dtype* top_diff = top[0]->cpu_diff();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    if (propagate_down[i]) {
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      for (int n = 0; n < num_concats_; ++n) {
+        caffe_copy(bottom_concat_axis * concat_input_size_, top_diff +
+            (n * top_concat_axis + offset_concat_axis) * concat_input_size_,
+            bottom_diff + n * bottom_concat_axis * concat_input_size_);
+>>>>>>> BVLC/master
+=======
+  } else if (concat_dim_ == 1) {
+    int offset_channel = 0;
+    for (int i = 0; i < bottom.size(); ++i) {
+      Blob<Dtype>* blob = bottom[i];
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_diff();
+        int num_elem = blob->channels() * blob->height() * blob->width();
+        for (int n = 0; n < num_; ++n) {
+          this->device_->copy(num_elem,
+              top_diff + top[0]->offset(n, offset_channel),
+              bottom_diff + blob->offset(n));
+        }
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+>>>>>>> pod/device/blob.hpp
+      }
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+=======
+>>>>>>> BVLC/device-abstraction
+INSTANTIATE_CLASS(ConcatLayer);
+<<<<<<< HEAD
+=======
+=======
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> BVLC/master
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> master
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> caffe
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> master
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> master
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> BVLC/master
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> master
+=======
+void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1) { return; }
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    for (int n = 0; n < num_concats_; ++n) {
+      caffe_copy(bottom_concat_axis * concat_input_size_,
+          bottom_data + n * bottom_concat_axis * concat_input_size_,
+          top_data + (n * top_concat_axis + offset_concat_axis)
+              * concat_input_size_);
+    }
+    offset_concat_axis += bottom_concat_axis;
+  }
+}
+
+template <typename Dtype>
+>>>>>>> master
+void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (bottom.size() == 1) { return; }
+  const Dtype* top_diff = top[0]->cpu_diff();
+=======
+  if (bottom.size() == 1) { return; }
+  const Dtype* top_diff = top[0]->cpu_diff();
+>>>>>>> caffe
+  int offset_concat_axis = 0;
+  const int top_concat_axis = top[0]->shape(concat_axis_);
+  for (int i = 0; i < bottom.size(); ++i) {
+    const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
+    if (propagate_down[i]) {
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      for (int n = 0; n < num_concats_; ++n) {
+        caffe_copy(bottom_concat_axis * concat_input_size_, top_diff +
+            (n * top_concat_axis + offset_concat_axis) * concat_input_size_,
+            bottom_diff + n * bottom_concat_axis * concat_input_size_);
+      }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
+REGISTER_LAYER_CLASS(Concat);
+
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod/caffe-merge
+=======
+>>>>>>> caffe
+REGISTER_LAYER_CLASS(Concat);
+
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
+=======
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
@@ -2824,7 +3311,6 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
->>>>>>> pod-caffe-pod.hpp-merge
 void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (bottom.size() == 1) { return; }
@@ -2846,33 +3332,15 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-=======
->>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(ConcatLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
-=======
->>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(Concat);
 
 >>>>>>> pod/device/blob.hpp
-=======
-=======
->>>>>>> pod/caffe-merge
-=======
->>>>>>> caffe
-REGISTER_LAYER_CLASS(Concat);
-
-<<<<<<< HEAD
->>>>>>> pod-caffe-pod.hpp-merge
-=======
->>>>>>> pod/caffe-merge
 =======
 REGISTER_LAYER_CLASS(CONCAT, ConcatLayer);
 >>>>>>> origin/BVLC/parallel

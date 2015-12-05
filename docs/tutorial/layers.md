@@ -11,10 +11,14 @@ To create a Caffe model you need to define the model architecture in a protocol 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -40,6 +44,10 @@ Caffe layers and their parameters are defined in the protocol buffer definitions
 Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
 =======
 >>>>>>> pod/caffe-merge
+=======
+Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
+=======
+>>>>>>> pod/device/blob.hpp
 Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto). The latest definitions are in the [dev caffe.proto](https://github.com/BVLC/caffe/blob/dev/src/caffe/proto/caffe.proto).
 
 TODO complete list of layers linking to headings
@@ -47,6 +55,7 @@ TODO complete list of layers linking to headings
 =======
 Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -70,6 +79,9 @@ Caffe layers and their parameters are defined in the protocol buffer definitions
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ### Vision Layers
 
@@ -85,6 +97,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 
 #### Convolution
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -148,6 +161,20 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `Convolution`
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+* Layer type: `Convolution`
+=======
+* LayerType: `CONVOLUTION`
+>>>>>>> origin/BVLC/parallel
+=======
+* Layer type: `Convolution`
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Parameters (`ConvolutionParameter convolution_param`)
@@ -171,6 +198,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -208,6 +236,14 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
@@ -219,6 +255,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
         param { lr_mult: 1 decay_mult: 1 }
         # learning rate and decay multipliers for the biases
         param { lr_mult: 2 decay_mult: 0 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -245,6 +282,11 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
       layers {
@@ -265,6 +307,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -281,6 +324,9 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         convolution_param {
           num_output: 96     # learn 96 filters
           kernel_size: 11    # each filter is 11x11
@@ -302,6 +348,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -339,11 +386,20 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 The `Convolution` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
 
 #### Pooling
 
 * Layer type: `Pooling`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -370,6 +426,11 @@ The `Convolution` layer convolves the input image with a set of learnable filter
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 The `CONVOLUTION` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
 
 #### Pooling
@@ -384,6 +445,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -400,6 +462,9 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
 * Parameters (`PoolingParameter pooling_param`)
@@ -419,6 +484,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -456,11 +522,20 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "pool1"
         type: "Pooling"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -487,6 +562,11 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
       layers {
@@ -501,6 +581,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -517,6 +598,9 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         bottom: "conv1"
         top: "pool1"
         pooling_param {
@@ -534,10 +618,14 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `LRN`
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -563,11 +651,16 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 * Layer type: `LRN`
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `LRN`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `LRN`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `LRN`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -591,6 +684,9 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
 * CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
 * Parameters (`LRNParameter lrn_param`)
@@ -610,10 +706,14 @@ The local response normalization layer performs a kind of "lateral inhibition" b
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 `Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -639,11 +739,16 @@ The local response normalization layer performs a kind of "lateral inhibition" b
 `Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 =======
 >>>>>>> pod/caffe-merge
+=======
+`Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
+=======
+>>>>>>> pod/device/blob.hpp
 `IM2COL` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 >>>>>>> origin/BVLC/parallel
 =======
 `Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -667,6 +772,9 @@ The local response normalization layer performs a kind of "lateral inhibition" b
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ### Loss Layers
 
@@ -680,10 +788,14 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `SoftmaxWithLoss`
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -709,6 +821,10 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 * Layer type: `SoftmaxWithLoss`
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `SoftmaxWithLoss`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `SOFTMAX_LOSS`
 >>>>>>> origin/BVLC/parallel
 =======
@@ -720,6 +836,7 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -766,11 +883,15 @@ The softmax loss layer computes the multinomial logistic loss of the softmax of 
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It's conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.
 
 #### Sum-of-Squares / Euclidean
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 * Layer type: `EuclideanLoss`
@@ -779,6 +900,14 @@ The softmax loss layer computes the multinomial logistic loss of the softmax of 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `EuclideanLoss`
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+* Layer type: `EuclideanLoss`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `EUCLIDEAN_LOSS`
 >>>>>>> origin/BVLC/parallel
 =======
@@ -790,6 +919,7 @@ The softmax loss layer computes the multinomial logistic loss of the softmax of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -807,6 +937,9 @@ The softmax loss layer computes the multinomial logistic loss of the softmax of 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 The Euclidean loss layer computes the sum of squares of differences of its two inputs, $$\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2$$.
 
@@ -818,10 +951,14 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `HingeLoss`
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -847,11 +984,16 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 * Layer type: `HingeLoss`
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `HingeLoss`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `HINGE_LOSS`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `HingeLoss`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -875,6 +1017,9 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
 * CUDA GPU implementation: none yet
 * Parameters (`HingeLossParameter hinge_loss_param`)
@@ -894,6 +1039,7 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       layer {
@@ -965,6 +1111,28 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+=======
+      layers {
+        name: "loss"
+        type: HINGE_LOSS
+>>>>>>> origin/BVLC/parallel
+=======
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         bottom: "pred"
         bottom: "label"
       }
@@ -976,6 +1144,29 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
       layer {
@@ -987,22 +1178,6 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod-caffe-pod.hpp-merge
-=======
->>>>>>> pod/caffe-merge
-      layer {
-        name: "loss"
-        type: "HingeLoss"
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -1012,11 +1187,14 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       layers {
         name: "loss"
         type: HINGE_LOSS
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
       layer {
         name: "loss"
         type: "HingeLoss"
@@ -1046,6 +1224,13 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         bottom: "pred"
         bottom: "label"
         top: "loss"
@@ -1064,6 +1249,7 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1101,6 +1287,14 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 `SigmoidCrossEntropyLoss`
 
 #### Infogain
@@ -1110,6 +1304,7 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 #### Accuracy and Top-k
 
 `Accuracy` scores the output as the accuracy of output with respect to target -- it is not actually a loss and has no backward step.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1136,6 +1331,11 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 `SIGMOID_CROSS_ENTROPY_LOSS`
 
 #### Infogain
@@ -1154,6 +1354,7 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1170,6 +1371,9 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ### Activation / Neuron Layers
 
@@ -1188,6 +1392,9 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `ReLU`
@@ -1196,6 +1403,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -1225,6 +1433,8 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 * Layer type: `ReLU`
 =======
 * LayerType: `RELU`
@@ -1232,6 +1442,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 =======
 * Layer type: `ReLU`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1243,6 +1454,9 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/relu_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
 * Parameters (`ReLUParameter relu_param`)
@@ -1254,6 +1468,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1291,11 +1506,20 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "relu1"
         type: "ReLU"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1322,6 +1546,11 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
       layers {
@@ -1336,6 +1565,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1352,6 +1582,9 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         bottom: "conv1"
         top: "conv1"
       }
@@ -1362,6 +1595,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1399,6 +1633,14 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 Given an input value x, The `ReLU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
 #### Sigmoid
@@ -1424,6 +1666,7 @@ The `Sigmoid` layer computes the output as sigmoid(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1446,6 +1689,11 @@ The `Sigmoid` layer computes the output as sigmoid(x) for each input element x.
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 Given an input value x, The `RELU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
 #### Sigmoid
@@ -1476,6 +1724,7 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1492,6 +1741,9 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/tanh_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/tanh_layer.cu`
 * Sample
@@ -1502,6 +1754,7 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1539,6 +1792,14 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       layer {
         name: "layer"
         bottom: "in"
@@ -1555,6 +1816,7 @@ The `TanH` layer computes the output as tanh(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1577,6 +1839,11 @@ The `TanH` layer computes the output as tanh(x) for each input element x.
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       layers {
         name: "layer"
         bottom: "in"
@@ -1598,6 +1865,7 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1614,6 +1882,9 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/absval_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/absval_layer.cu`
 * Sample
@@ -1624,6 +1895,7 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1661,6 +1933,14 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       layer {
         name: "layer"
         bottom: "in"
@@ -1677,6 +1957,7 @@ The `AbsVal` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1699,6 +1980,11 @@ The `AbsVal` layer computes the output as abs(x) for each input element x.
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       layers {
         name: "layer"
         bottom: "in"
@@ -1720,6 +2006,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1736,6 +2023,9 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/power_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/power_layer.cu`
 * Parameters (`PowerParameter power_param`)
@@ -1751,6 +2041,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1788,11 +2079,20 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       layer {
         name: "layer"
         bottom: "in"
         top: "out"
         type: "Power"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1819,6 +2119,11 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       layers {
         name: "layer"
         bottom: "in"
@@ -1833,6 +2138,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1849,6 +2155,9 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         power_param {
           power: 1
           scale: 1
@@ -1862,6 +2171,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1899,11 +2209,20 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 The `Power` layer computes the output as (shift + scale * x) ^ power for each input element x.
 
 #### BNLL
 
 * Layer type: `BNLL`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1930,6 +2249,11 @@ The `Power` layer computes the output as (shift + scale * x) ^ power for each in
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 The `POWER` layer computes the output as (shift + scale * x) ^ power for each input element x.
 
 #### BNLL
@@ -1944,6 +2268,7 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1960,6 +2285,9 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/bnll_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/bnll_layer.cu`
 * Sample
@@ -1970,6 +2298,7 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       layer {
 =======
 <<<<<<< HEAD
@@ -1985,12 +2314,15 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
       layer {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
       layer {
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
       layer {
@@ -2000,6 +2332,8 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
       layer {
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
       layers {
 >>>>>>> origin/BVLC/parallel
 =======
@@ -2011,6 +2345,7 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2028,6 +2363,9 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         name: "layer"
         bottom: "in"
         top: "out"
@@ -2051,6 +2389,9 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `Data`
@@ -2059,6 +2400,7 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -2076,11 +2418,16 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 * Layer type: `Data`
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `Data`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `DATA`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `Data`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2110,6 +2457,9 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Parameters
     - Required
         - `source`: the name of the directory containing the database
@@ -2128,6 +2478,7 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 * Layer type: `MemoryData`
 =======
 <<<<<<< HEAD
@@ -2143,12 +2494,15 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 * Layer type: `MemoryData`
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 * Layer type: `MemoryData`
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 * Layer type: `MemoryData`
@@ -2158,11 +2512,14 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 * Layer type: `MemoryData`
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `MEMORY_DATA`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `MemoryData`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2186,6 +2543,9 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Parameters
     - Required
         - `batch_size`, `channels`, `height`, `width`: specify the size of input chunks to read from memory
@@ -2200,6 +2560,9 @@ The memory data layer reads data directly from memory, without copying it. In or
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `HDF5Data`
@@ -2208,6 +2571,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -2242,11 +2606,15 @@ The memory data layer reads data directly from memory, without copying it. In or
 >>>>>>> pod-caffe-pod.hpp-merge
 * Layer type: `HDF5Data`
 =======
+* Layer type: `HDF5Data`
+>>>>>>> pod/device/blob.hpp
+=======
 * LayerType: `HDF5_DATA`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `HDF5Data`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -2257,6 +2625,9 @@ The memory data layer reads data directly from memory, without copying it. In or
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Parameters
     - Required
         - `source`: the name of the file to read from
@@ -2270,6 +2641,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 * Layer type: `HDF5Output`
 =======
 <<<<<<< HEAD
@@ -2285,8 +2657,11 @@ The memory data layer reads data directly from memory, without copying it. In or
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 * Layer type: `HDF5Output`
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 * Layer type: `HDF5Output`
@@ -2300,6 +2675,10 @@ The memory data layer reads data directly from memory, without copying it. In or
 * Layer type: `HDF5Output`
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `HDF5Output`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `HDF5_OUTPUT`
 >>>>>>> origin/BVLC/parallel
 =======
@@ -2311,6 +2690,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2324,6 +2704,9 @@ The memory data layer reads data directly from memory, without copying it. In or
 =======
 * Layer type: `HDF5Output`
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Parameters
     - Required
         - `file_name`: name of file to write to
@@ -2336,6 +2719,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `ImageData`
@@ -2344,6 +2730,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -2388,11 +2775,16 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod/caffe-merge
 * Layer type: `ImageData`
 =======
+=======
+* Layer type: `ImageData`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `IMAGE_DATA`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `ImageData`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2404,6 +2796,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * Parameters
     - Required
         - `source`: name of a text file, with each line giving an image filename and label
@@ -2421,6 +2816,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2484,6 +2880,14 @@ The HDF5 output layer performs the opposite function of the other layers in this
 =======
 =======
 >>>>>>> caffe
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 `WindowData`
 
 #### Dummy
@@ -2491,7 +2895,12 @@ The HDF5 output layer performs the opposite function of the other layers in this
 `DummyData` is for development and debugging. See `DummyDataParameter`.
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 `WINDOW_DATA`
 
 #### Dummy
@@ -2506,6 +2915,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2522,6 +2932,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 ### Common Layers
 
@@ -2533,6 +2946,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 * Layer type: `InnerProduct`
 =======
 <<<<<<< HEAD
@@ -2563,11 +2977,20 @@ The HDF5 output layer performs the opposite function of the other layers in this
 * Layer type: `InnerProduct`
 =======
 >>>>>>> pod/caffe-merge
+=======
+* Layer type: `InnerProduct`
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+* Layer type: `InnerProduct`
+=======
+>>>>>>> pod/device/blob.hpp
 * LayerType: `INNER_PRODUCT`
 >>>>>>> origin/BVLC/parallel
 =======
 * Layer type: `InnerProduct`
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2591,6 +3014,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
 * Parameters (`InnerProductParameter inner_product_param`)
@@ -2613,6 +3039,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2650,6 +3077,14 @@ The HDF5 output layer performs the opposite function of the other layers in this
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       layer {
         name: "fc8"
         type: "InnerProduct"
@@ -2657,6 +3092,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
         param { lr_mult: 1 decay_mult: 1 }
         # learning rate and decay multipliers for the biases
         param { lr_mult: 2 decay_mult: 0 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2683,6 +3119,11 @@ The HDF5 output layer performs the opposite function of the other layers in this
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       layers {
         name: "fc8"
         type: INNER_PRODUCT
@@ -2699,6 +3140,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2715,6 +3157,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         inner_product_param {
           num_output: 1000
           weight_filler {
@@ -2736,6 +3181,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2773,6 +3219,14 @@ The HDF5 output layer performs the opposite function of the other layers in this
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 The `InnerProduct` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
 
 #### Splitting
@@ -2829,6 +3283,7 @@ As another example, specifying `reshape_param { shape { dim: 0 dim: -1 } }` make
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2851,6 +3306,11 @@ As another example, specifying `reshape_param { shape { dim: 0 dim: -1 } }` make
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 The `INNER_PRODUCT` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
 
 #### Splitting
@@ -2873,6 +3333,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2889,6 +3350,9 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 * CPU implementation: `./src/caffe/layers/concat_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
 * Parameters (`ConcatParameter concat_param`)
@@ -2899,6 +3363,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2936,6 +3401,14 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         - `axis` [default 1]: 0 for concatenation along num and 1 for channels.
 * Input
     - `n_i * c_i * h * w` for each input blob i from 1 to K.
@@ -2949,6 +3422,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2971,6 +3445,11 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
         - `concat_dim` [default 1]: 0 for concatenation along num and 1 for channels.
 * Input
     - `n_i * c_i * h * w` for each input blob i from 1 to K.
@@ -2989,6 +3468,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3005,6 +3485,9 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         name: "concat"
         bottom: "in1"
         bottom: "in2"
@@ -3015,6 +3498,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3052,6 +3536,14 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         type: "Concat"
         concat_param {
           axis: 1
@@ -3099,6 +3591,7 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3121,6 +3614,11 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
         type: CONCAT
         concat_param {
           concat_dim: 1
@@ -3153,6 +3651,7 @@ The `SLICE` layer is a utility layer that slices an input layer to multiple outp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3169,6 +3668,9 @@ The `SLICE` layer is a utility layer that slices an input layer to multiple outp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 #### Mean-Variance Normalization
 

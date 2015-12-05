@@ -14,6 +14,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
@@ -70,6 +71,8 @@
 >>>>>>> master
 =======
 >>>>>>> caffe
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 <<<<<<< HEAD
@@ -93,6 +96,7 @@
 =======
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 =======
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
@@ -101,6 +105,19 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 =======
@@ -127,9 +144,13 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/pooling_layer.hpp"
@@ -481,6 +502,9 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
@@ -490,6 +514,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   const int count = (*bottom)[0]->count();
   GetDevice<Dtype>(Caffe::GPU)->set(count, Dtype(0.), bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
@@ -624,6 +649,54 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+  const int count = (*bottom)[0]->count();
+  GetDevice<Dtype>(Caffe::GPU)->set(count, Dtype(0.), bottom_diff);
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  const int count = bottom[0]->count();
+  caffe_gpu_set(count, Dtype(0.), bottom_diff);
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;

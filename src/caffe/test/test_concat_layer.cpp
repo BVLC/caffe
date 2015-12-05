@@ -75,10 +75,14 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -104,11 +108,16 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
 =======
 >>>>>>> pod/caffe-merge
+=======
+  layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
+=======
+>>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_1, this->blob_top_vec_);
 >>>>>>> origin/BVLC/parallel
 =======
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -132,6 +141,9 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_->num(),
       this->blob_bottom_0_->num() + this->blob_bottom_2_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_0_->channels());
@@ -149,11 +161,15 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -183,6 +199,11 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
 =======
 >>>>>>> pod/caffe-merge
+=======
+  layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
+=======
+>>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_0, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0->num());
 >>>>>>> origin/BVLC/parallel
@@ -190,6 +211,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -214,6 +236,9 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_->channels(),
       this->blob_bottom_0_->channels() + this->blob_bottom_1_->channels());
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_0_->height());
@@ -260,6 +285,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -297,6 +323,14 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_1_, this->blob_top_vec_);
   for (int n = 0; n < this->blob_bottom_vec_1_[0]->num(); ++n) {
@@ -331,6 +365,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -353,11 +388,17 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_0, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0, this->blob_top_vec_);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -380,6 +421,9 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   for (int n = 0; n < this->blob_top_->num(); ++n) {
     for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
@@ -440,11 +484,15 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_, 1);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -474,10 +522,16 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
     this->blob_top_vec_, 1);
 =======
 >>>>>>> pod/caffe-merge
+=======
+  checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
+    this->blob_top_vec_, 1);
+=======
+>>>>>>> pod/device/blob.hpp
   checker.CheckGradient(&layer, this->blob_bottom_vec_0,
     this->blob_top_vec_);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_, 1);
 >>>>>>> caffe
@@ -505,6 +559,12 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
+    this->blob_top_vec_, 1);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 }  // namespace caffe

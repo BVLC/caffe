@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -38,10 +39,17 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -70,6 +78,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -80,6 +91,7 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
       caffe_set(bottom[i]->count(), Dtype(0),
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -143,6 +155,20 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+                bottom[i]->mutable_cpu_diff());
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+                bottom[i]->mutable_cpu_diff());
+=======
+                bottom[i]->mutable_cpu_data());
+>>>>>>> origin/BVLC/parallel
+=======
+                bottom[i]->mutable_cpu_diff());
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     }
   }
 }
@@ -158,11 +184,15 @@ INSTANTIATE_CLASS(SilenceLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(Silence);
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -222,4 +252,16 @@ REGISTER_LAYER_CLASS(Silence);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+REGISTER_LAYER_CLASS(Silence);
+
+=======
+REGISTER_LAYER_CLASS(SILENCE, SilenceLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+REGISTER_LAYER_CLASS(Silence);
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }  // namespace caffe

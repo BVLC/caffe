@@ -12,6 +12,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
@@ -20,6 +23,7 @@
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -31,15 +35,21 @@
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -101,6 +111,10 @@
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
@@ -128,8 +142,11 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/lrn_layer.hpp"
@@ -211,6 +228,7 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
 =======
@@ -276,6 +294,22 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -364,6 +398,9 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
@@ -386,6 +423,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 =======
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -442,6 +480,8 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -481,6 +521,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -506,6 +547,9 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -625,6 +669,7 @@ INSTANTIATE_CLASS(LRNLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -647,10 +692,16 @@ INSTANTIATE_CLASS(LRNLayer);
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(LRN, LRNLayer);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -673,4 +724,7 @@ REGISTER_LAYER_CLASS(LRN, LRNLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }  // namespace caffe

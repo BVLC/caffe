@@ -153,6 +153,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -190,6 +191,12 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
+=======
+TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -199,6 +206,10 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
 <<<<<<< HEAD
@@ -217,6 +228,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -253,10 +265,17 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 >>>>>>> BVLC/master
 =======
 =======
+=======
+  Caffe::set_mode(Caffe::CPU);
+>>>>>>> BVLC/device-abstraction
+>>>>>>> pod/device/blob.hpp
+=======
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   Caffe::set_mode(Caffe::CPU);
 >>>>>>> BVLC/device-abstraction
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
+<<<<<<< HEAD
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -650,10 +669,14 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 <<<<<<< HEAD
+=======
+=======
+>>>>>>> pod/device/blob.hpp
   Caffe::set_mode(Caffe::CPU);
 =======
 >>>>>>> BVLC/master
   LayerParameter layer_param;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   AccuracyLayer<TypeParam> layer(layer_param);
@@ -661,6 +684,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
@@ -804,18 +829,24 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
 <<<<<<< HEAD
+<<<<<<< HEAD
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
 =======
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
 =======
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -852,9 +883,13 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 

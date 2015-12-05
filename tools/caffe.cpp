@@ -201,6 +201,7 @@ int train() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 
@@ -378,7 +379,17 @@ int train() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 
+  if (FLAGS_snapshot.size()) {
+    LOG(INFO) << "Resuming from " << FLAGS_snapshot;
+    solver->Restore(FLAGS_snapshot.c_str());
+  } else if (FLAGS_weights.size()) {
+=======
+<<<<<<< HEAD
+
+<<<<<<< HEAD
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());
@@ -391,6 +402,7 @@ int train() {
     sync.run(gpus);
   } else {
     LOG(INFO) << "Starting Optimization";
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
   } else {
@@ -412,6 +424,37 @@ int train() {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+=======
+  // If the gpu flag is not provided, allow the mode and device to be set
+  // in the solver prototxt.
+  if (FLAGS_gpu < 0
+      && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
+    FLAGS_gpu = solver_param.device_id();
+  }
+
+  // Set device id and mode
+  if (FLAGS_gpu >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
+    Caffe::SetDevice(FLAGS_gpu);
+    Caffe::set_mode(Caffe::GPU);
+  } else {
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+  }
+
+  LOG(INFO) << "Starting Optimization";
+  shared_ptr<caffe::Solver<float> >
+    solver(caffe::GetSolver<float>(solver_param));
+
+  if (FLAGS_snapshot.size()) {
+    LOG(INFO) << "Resuming from " << FLAGS_snapshot;
+    solver->Solve(FLAGS_snapshot);
+  } else if (FLAGS_weights.size()) {
+    LOG(INFO) << "Finetuning from " << FLAGS_weights;
+    solver->net()->CopyTrainedLayersFrom(FLAGS_weights);
+    solver->Solve();
+>>>>>>> pod/device/blob.hpp
   } else {
 >>>>>>> origin/BVLC/parallel
 =======
@@ -420,6 +463,10 @@ int train() {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());
   } else if (FLAGS_weights.size()) {
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     CopyLayers(solver.get(), FLAGS_weights);
   }
 
@@ -428,8 +475,15 @@ int train() {
     sync.run(gpus);
   } else {
     LOG(INFO) << "Starting Optimization";
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
@@ -496,11 +550,15 @@ int test() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     const float loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -530,6 +588,11 @@ int test() {
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
 =======
 >>>>>>> pod/caffe-merge
+=======
+    const float loss_weight = caffe_net.blob_loss_weights()[
+        caffe_net.output_blob_indices()[test_score_output_id[i]]];
+=======
+>>>>>>> pod/device/blob.hpp
     const float loss_weight =
         caffe_net.blob_loss_weights()[caffe_net.output_blob_indices()[i]];
 >>>>>>> origin/BVLC/parallel
@@ -537,6 +600,7 @@ int test() {
     const float loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -561,6 +625,9 @@ int test() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     std::ostringstream loss_msg_stream;
     const float mean_score = test_score[i] / FLAGS_iterations;
     if (loss_weight) {
@@ -632,6 +699,7 @@ int time() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -656,12 +724,19 @@ int time() {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       // Although Reshape should be essentially free, we include it here
       // so that we will notice Reshape performance bugs.
       layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -684,6 +759,9 @@ int time() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
@@ -704,6 +782,7 @@ int time() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -718,11 +797,14 @@ int time() {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   }
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
   }
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
   }
@@ -730,6 +812,8 @@ int time() {
 =======
   }
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
@@ -751,6 +835,7 @@ int time() {
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -778,13 +863,18 @@ int time() {
   }
 >>>>>>> device-abstraction
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   }
 >>>>>>> origin/BVLC/parallel
 =======
   }
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
@@ -795,6 +885,7 @@ int time() {
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -828,6 +919,11 @@ int time() {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
     FLAGS_iterations << " ms.";

@@ -70,10 +70,14 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -99,11 +103,16 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
 >>>>>>> pod/caffe-merge
+=======
+      LayerParameter* split_layer_param = param_split->add_layer();
+=======
+>>>>>>> pod/device/blob.hpp
       LayerParameter* split_layer_param = param_split->add_layers();
 >>>>>>> origin/BVLC/parallel
 =======
       LayerParameter* split_layer_param = param_split->add_layer();
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -127,6 +136,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
       const float kZeroLossWeight = 0;
       ConfigureSplitLayer(layer_name, blob_name, i, split_count,
           kZeroLossWeight, split_layer_param);
@@ -161,10 +173,14 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
         LayerParameter* split_layer_param = param_split->add_layer();
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -218,6 +234,16 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+        LayerParameter* split_layer_param = param_split->add_layer();
+=======
+        LayerParameter* split_layer_param = param_split->add_layers();
+>>>>>>> origin/BVLC/parallel
+=======
+        LayerParameter* split_layer_param = param_split->add_layer();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
         const float loss_weight = top_idx_to_loss_weight[top_idx];
         ConfigureSplitLayer(layer_name, blob_name, j, split_count,
             loss_weight, split_layer_param);

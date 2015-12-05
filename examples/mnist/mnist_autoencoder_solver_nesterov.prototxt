@@ -23,10 +23,14 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 type: "Nesterov"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -52,11 +56,16 @@ type: "Nesterov"
 type: "Nesterov"
 =======
 >>>>>>> pod/caffe-merge
+=======
+type: "Nesterov"
+=======
+>>>>>>> pod/device/blob.hpp
 solver_type: NESTEROV
 >>>>>>> origin/BVLC/parallel
 =======
 type: "Nesterov"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -80,3 +89,6 @@ type: "Nesterov"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

@@ -8,10 +8,14 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -37,10 +41,15 @@
 #include "caffe/util/math_functions.hpp"
 =======
 >>>>>>> pod/caffe-merge
+=======
+#include "caffe/util/math_functions.hpp"
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -64,6 +73,9 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -81,6 +93,7 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -118,6 +131,14 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   thread.StartInternalThread();
   EXPECT_TRUE(thread.is_started());
   thread.StopInternalThread();
@@ -157,6 +178,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -179,6 +201,11 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   EXPECT_TRUE(thread.StartInternalThread());
   EXPECT_TRUE(thread.is_started());
   EXPECT_TRUE(thread.WaitForInternalThreadToExit());
@@ -188,6 +215,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -210,5 +238,8 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }  // namespace caffe
 

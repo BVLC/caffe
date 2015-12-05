@@ -24,6 +24,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -52,15 +53,20 @@ namespace caffe {
 =======
 >>>>>>> device-abstraction
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 // Make sure each thread can have different values.
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
@@ -74,6 +80,7 @@ Caffe& Caffe::Get() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -82,10 +89,15 @@ Caffe& Caffe::Get() {
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
@@ -100,6 +112,10 @@ thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel
 =======
@@ -155,7 +171,13 @@ thread_specific_ptr<Caffe> Caffe::thread_instance_;
 =======
 thread_specific_ptr<Caffe> Caffe::thread_instance_;
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 // random seeding
 int64_t cluster_seedgen(void) {

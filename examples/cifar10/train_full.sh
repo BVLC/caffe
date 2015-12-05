@@ -14,10 +14,14 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -43,11 +47,16 @@ $TOOLS/caffe train \
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
 =======
 >>>>>>> pod/caffe-merge
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
+=======
+>>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate
 >>>>>>> origin/BVLC/parallel
 =======
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -71,6 +80,9 @@ $TOOLS/caffe train \
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 # reduce learning rate by factor of 10
 $TOOLS/caffe train \
@@ -81,10 +93,14 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate.h5
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -138,3 +154,13 @@ $TOOLS/caffe train \
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate.h5
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate
+>>>>>>> origin/BVLC/parallel
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate.h5
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

@@ -10,6 +10,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -47,6 +48,14 @@ layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   include {
     phase: TRAIN
   }
@@ -63,6 +72,9 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     batch_size: 64
@@ -80,6 +92,7 @@ layer {
   }
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -123,6 +136,8 @@ layer {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   transform_param {
     scale: 0.00390625
   }
@@ -139,6 +154,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -158,12 +174,16 @@ layer {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 layer {
   name: "mnist"
   type: "Data"
   top: "data"
   top: "label"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -207,6 +227,14 @@ layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod/caffe-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   include {
     phase: TEST
   }
@@ -223,6 +251,9 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     batch_size: 100
@@ -232,8 +263,11 @@ layer {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   data_param {
     source: "examples/mnist/mnist_test_lmdb"
     backend: LMDB
@@ -241,6 +275,7 @@ layer {
     batch_size: 100
     backend: LMDB
   }
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/caffe-merge
@@ -280,12 +315,17 @@ layer {
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   transform_param {
     scale: 0.00390625
   }
   include: { phase: TEST }
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
     batch_size: 100
     backend: LMDB
   }
@@ -315,6 +355,13 @@ layer {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 layer {
   name: "conv1"
