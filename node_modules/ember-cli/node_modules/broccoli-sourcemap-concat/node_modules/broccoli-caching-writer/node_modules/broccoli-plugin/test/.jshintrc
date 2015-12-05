@@ -1,6 +1,0 @@
-{
-  "extends": "../.jshintrc",
-  "camelcase": false,
-  "loopfunc": true,
-  "mocha": true
-}
