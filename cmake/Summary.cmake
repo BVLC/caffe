@@ -144,6 +144,7 @@ function(caffe_print_configuration_summary)
     if(USE_CUDNN)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes (ver. ${CUDNN_VERSION})" ELSE "Not found")
 =======
       caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes" ELSE "Not found")
@@ -151,6 +152,9 @@ function(caffe_print_configuration_summary)
 =======
       caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes" ELSE "Not found")
 >>>>>>> pod/caffe-merge
+=======
+      caffe_status("  cuDNN             : " HAVE_CUDNN THEN "Yes" ELSE "Not found")
+>>>>>>> pod-caffe-pod.hpp-merge
     else()
       caffe_status("  cuDNN             :   Disabled")
     endif()

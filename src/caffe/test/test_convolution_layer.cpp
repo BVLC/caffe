@@ -29,6 +29,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -74,6 +75,10 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   const bool has_depth = (out->num_axes() == 5);
   if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
   // Kernel size, stride, and pad
@@ -123,6 +128,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -150,6 +156,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   // Kernel size, stride, and pad
   int kernel_h, kernel_w;
   if (conv_param->has_kernel_size()) {
@@ -192,6 +201,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -211,6 +221,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     for (int g = 0; g < groups; g++) {
       o_head = o_g * g;
       k_head = k_g * g;
@@ -223,6 +235,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -268,6 +281,10 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
           for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
             for (int y = 0; y < out->shape(2 + has_depth); y++) {
               for (int x = 0; x < out->shape(3 + has_depth); x++) {
@@ -305,6 +322,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -332,6 +350,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
           for (int y = 0; y < out->height(); y++) {
             for (int x = 0; x < out->width(); x++) {
               for (int p = 0; p < kernel_h; p++) {
@@ -353,6 +374,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -372,6 +394,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
                   }
                 }
               }
@@ -391,6 +415,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -436,6 +461,10 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     for (int n = 0; n < out->shape(0); n++) {
       for (int o = 0; o < out->shape(1); o++) {
         for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
@@ -453,6 +482,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -480,6 +510,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     for (int n = 0; n < out->num(); n++) {
       for (int o = 0; o < out->channels(); o++) {
         for (int y = 0; y < out->height(); y++) {
@@ -488,6 +521,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -514,6 +548,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
           }
         }
       }
@@ -654,6 +690,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
@@ -716,6 +753,8 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 =======
 TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
@@ -723,8 +762,11 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 =======
 TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -736,6 +778,7 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -781,6 +824,10 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   const int kNumOutput = 3;
   convolution_param->set_num_output(kNumOutput);
   convolution_param->set_axis(3);
@@ -835,12 +882,15 @@ TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -873,6 +923,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
 }
 
 TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -941,6 +992,9 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param->set_kernel_size(1);
   convolution_param->set_stride(1);
   convolution_param->set_num_output(4);
@@ -971,6 +1025,9 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
       layer_param.mutable_convolution_param();
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -1008,6 +1065,7 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1073,6 +1131,8 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param->add_kernel_size(1);
   convolution_param->add_stride(1);
   convolution_param->set_num_output(4);
@@ -1210,6 +1270,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1238,10 +1299,13 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   weights_2[0] = -1;
   weights_2[1] =  0;
   weights_2[2] =  1;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1257,6 +1321,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int c = 0; c < 3; ++c) {
     int i = c * 3;  // 1 x 3 filter
     weights_2[i +  0] = -1;
@@ -1269,6 +1335,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   weights_2[1] =  0;
   weights_2[2] =  1;
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1298,6 +1365,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
   layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
   // Test equivalence of full and separable filters.
@@ -1435,6 +1504,8 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient) {
   this->blob_top_vec_.push_back(this->blob_top_2_);
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
+<<<<<<< HEAD
+=======
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
@@ -1449,6 +1520,102 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient3D) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
+  vector<int> bottom_shape(5);
+  bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
+  bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
+  bottom_shape[2] = 5;
+  bottom_shape[3] = this->blob_bottom_vec_[0]->shape(2);
+  bottom_shape[4] = this->blob_bottom_vec_[0]->shape(3);
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+    this->blob_bottom_vec_[i]->Reshape(bottom_shape);
+    filler.Fill(this->blob_bottom_vec_[i]);
+  }
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+<<<<<<< HEAD
+=======
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->add_kernel_size(1);
+  convolution_param->add_stride(1);
+>>>>>>> caffe
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+<<<<<<< HEAD
+}
+
+TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->add_kernel_size(1);
+  convolution_param->add_stride(1);
+>>>>>>> pod-caffe-pod.hpp-merge
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+}
+
+TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->set_kernel_size(1);
+  convolution_param->set_stride(1);
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+}
+
+TYPED_TEST(ConvolutionLayerTest, TestGradient3D) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+<<<<<<< HEAD
   vector<int> bottom_shape(5);
   bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
   bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
@@ -1686,12 +1853,19 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
 =======
 >>>>>>> pod/caffe-merge
   convolution_param->set_num_output(2);
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   ConvolutionLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
@@ -4865,6 +5039,476 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+}
+
+#ifdef USE_CUDNN
+
+template <typename Dtype>
+<<<<<<< HEAD
+class CuDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
+=======
+class CuDNNConvolutionLayerTest : public ::testing::Test {
+>>>>>>> origin/BVLC/parallel
+ protected:
+  CuDNNConvolutionLayerTest()
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
+        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4)),
+        blob_top_(new Blob<Dtype>()),
+        blob_top_2_(new Blob<Dtype>()) {}
+  virtual void SetUp() {
+    // fill the values
+    FillerParameter filler_param;
+    filler_param.set_value(1.);
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    filler.Fill(this->blob_bottom_2_);
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_top_vec_.push_back(blob_top_);
+  }
+
+  virtual ~CuDNNConvolutionLayerTest() {
+    delete blob_bottom_;
+    delete blob_bottom_2_;
+    delete blob_top_;
+    delete blob_top_2_;
+  }
+
+  virtual Blob<Dtype>* MakeReferenceTop(Blob<Dtype>* top) {
+    this->ref_blob_top_.reset(new Blob<Dtype>());
+    this->ref_blob_top_->ReshapeLike(*top);
+    return this->ref_blob_top_.get();
+  }
+
+  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_bottom_2_;
+  Blob<Dtype>* const blob_top_;
+  Blob<Dtype>* const blob_top_2_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
+  vector<Blob<Dtype>*> blob_bottom_vec_;
+  vector<Blob<Dtype>*> blob_top_vec_;
+};
+
+TYPED_TEST_CASE(CuDNNConvolutionLayerTest, TestDtypes);
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+<<<<<<< HEAD
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+=======
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+>>>>>>> origin/BVLC/parallel
+  convolution_param->set_num_output(4);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  shared_ptr<Layer<TypeParam> > layer(
+      new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 2);
+  EXPECT_EQ(this->blob_top_->channels(), 4);
+  EXPECT_EQ(this->blob_top_->height(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_2_->num(), 2);
+  EXPECT_EQ(this->blob_top_2_->channels(), 4);
+  EXPECT_EQ(this->blob_top_2_->height(), 2);
+  EXPECT_EQ(this->blob_top_2_->width(), 1);
+  // setting group should not change the shape
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 2);
+  EXPECT_EQ(this->blob_top_->channels(), 3);
+  EXPECT_EQ(this->blob_top_->height(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_2_->num(), 2);
+  EXPECT_EQ(this->blob_top_2_->channels(), 3);
+  EXPECT_EQ(this->blob_top_2_->height(), 2);
+  EXPECT_EQ(this->blob_top_2_->width(), 1);
+}
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+=======
+}
+
+#ifdef USE_CUDNN
+
+template <typename Dtype>
+class CuDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
+ protected:
+  CuDNNConvolutionLayerTest()
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
+        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4)),
+        blob_top_(new Blob<Dtype>()),
+        blob_top_2_(new Blob<Dtype>()) {}
+  virtual void SetUp() {
+    // fill the values
+    FillerParameter filler_param;
+    filler_param.set_value(1.);
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    filler.Fill(this->blob_bottom_2_);
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_top_vec_.push_back(blob_top_);
+  }
+
+  virtual ~CuDNNConvolutionLayerTest() {
+    delete blob_bottom_;
+    delete blob_bottom_2_;
+    delete blob_top_;
+    delete blob_top_2_;
+  }
+
+  virtual Blob<Dtype>* MakeReferenceTop(Blob<Dtype>* top) {
+    this->ref_blob_top_.reset(new Blob<Dtype>());
+    this->ref_blob_top_->ReshapeLike(*top);
+    return this->ref_blob_top_.get();
+  }
+
+  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_bottom_2_;
+  Blob<Dtype>* const blob_top_;
+  Blob<Dtype>* const blob_top_2_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
+  vector<Blob<Dtype>*> blob_bottom_vec_;
+  vector<Blob<Dtype>*> blob_top_vec_;
+};
+
+TYPED_TEST_CASE(CuDNNConvolutionLayerTest, TestDtypes);
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(4);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  shared_ptr<Layer<TypeParam> > layer(
+      new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 2);
+  EXPECT_EQ(this->blob_top_->channels(), 4);
+  EXPECT_EQ(this->blob_top_->height(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_2_->num(), 2);
+  EXPECT_EQ(this->blob_top_2_->channels(), 4);
+  EXPECT_EQ(this->blob_top_2_->height(), 2);
+  EXPECT_EQ(this->blob_top_2_->width(), 1);
+  // setting group should not change the shape
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 2);
+  EXPECT_EQ(this->blob_top_->channels(), 3);
+  EXPECT_EQ(this->blob_top_->height(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_2_->num(), 2);
+  EXPECT_EQ(this->blob_top_2_->channels(), 3);
+  EXPECT_EQ(this->blob_top_2_->height(), 2);
+  EXPECT_EQ(this->blob_top_2_->width(), 1);
+}
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
+>>>>>>> caffe
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+<<<<<<< HEAD
+<<<<<<< HEAD
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+=======
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+>>>>>>> origin/BVLC/parallel
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+>>>>>>> caffe
+  convolution_param->set_num_output(4);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
+  shared_ptr<Layer<TypeParam> > layer(
+      new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const TypeParam* top_data;
+  const TypeParam* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_2_));
+  top_data = this->blob_top_2_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+}
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
+  shared_ptr<Layer<TypeParam> > layer(
+      new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const TypeParam* top_data;
+  const TypeParam* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+}
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
+  // Test separable convolution by computing the Sobel operator
+  // as a single filter then comparing the result
+  // as the convolution of two rectangular filters.
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+=======
+
+>>>>>>> caffe
+  // Fill bottoms with identical Gaussian noise.
+  shared_ptr<GaussianFiller<TypeParam> > filler;
+  FillerParameter filler_param;
+  filler_param.set_value(1.);
+  filler.reset(new GaussianFiller<TypeParam>(filler_param));
+  filler->Fill(this->blob_bottom_);
+  this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
+  // Compute Sobel G_x operator as 3 x 3 convolution.
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+<<<<<<< HEAD
+<<<<<<< HEAD
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+=======
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+>>>>>>> origin/BVLC/parallel
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+>>>>>>> caffe
+  convolution_param->set_num_output(1);
+  convolution_param->set_bias_term(false);
+  shared_ptr<Layer<TypeParam> > layer(
+      new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->blobs().resize(1);
+  layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 3));
+  TypeParam* weights = layer->blobs()[0]->mutable_cpu_data();
+  for (int c = 0; c < 3; ++c) {
+    int i = c * 9;  // 3 x 3 filter
+    weights[i +  0] = -1;
+    weights[i +  1] =  0;
+    weights[i +  2] =  1;
+    weights[i +  3] = -2;
+    weights[i +  4] =  0;
+    weights[i +  5] =  2;
+    weights[i +  6] = -1;
+    weights[i +  7] =  0;
+    weights[i +  8] =  1;
+  }
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+  // (1) the [1 2 1] column filter
+  vector<Blob<TypeParam>*> sep_blob_bottom_vec;
+  vector<Blob<TypeParam>*> sep_blob_top_vec;
+  shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
+  sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
+  sep_blob_top_vec.push_back(this->blob_top_2_);
+  convolution_param->clear_kernel_size();
+  convolution_param->clear_stride();
+  convolution_param->set_kernel_h(3);
+  convolution_param->set_kernel_w(1);
+  convolution_param->set_stride_h(2);
+  convolution_param->set_stride_w(1);
+  convolution_param->set_num_output(1);
+  convolution_param->set_bias_term(false);
+  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->blobs().resize(1);
+  layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 1));
+  TypeParam* weights_1 = layer->blobs()[0]->mutable_cpu_data();
+  for (int c = 0; c < 3; ++c) {
+    int i = c * 3;  // 3 x 1 filter
+    weights_1[i +  0] = 1;
+    weights_1[i +  1] = 2;
+    weights_1[i +  2] = 1;
+  }
+  layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
+  layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
+  // (2) the [-1 0 1] row filter
+  blob_sep->CopyFrom(*this->blob_top_2_, false, true);
+  sep_blob_bottom_vec.clear();
+  sep_blob_bottom_vec.push_back(blob_sep.get());
+  convolution_param->set_kernel_h(1);
+  convolution_param->set_kernel_w(3);
+  convolution_param->set_stride_h(1);
+  convolution_param->set_stride_w(2);
+  convolution_param->set_num_output(1);
+  convolution_param->set_bias_term(false);
+  layer.reset(new CuDNNConvolutionLayer<TypeParam>(layer_param));
+  layer->blobs().resize(1);
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  layer->blobs()[0].reset(new Blob<TypeParam>(1, 1, 1, 3));
+  TypeParam* weights_2 = layer->blobs()[0]->mutable_cpu_data();
+  weights_2[0] = -1;
+  weights_2[1] =  0;
+  weights_2[2] =  1;
+<<<<<<< HEAD
+=======
+  layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 1, 3));
+  TypeParam* weights_2 = layer->blobs()[0]->mutable_cpu_data();
+  for (int c = 0; c < 3; ++c) {
+    int i = c * 3;  // 1 x 3 filter
+    weights_2[i +  0] = -1;
+    weights_2[i +  1] =  0;
+    weights_2[i +  2] =  1;
+  }
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
+  layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
+  // Test equivalence of full and separable filters.
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  const TypeParam* sep_top_data = this->blob_top_2_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], sep_top_data[i], 1e-4);
+  }
+}
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+<<<<<<< HEAD
+<<<<<<< HEAD
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+=======
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+>>>>>>> origin/BVLC/parallel
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+>>>>>>> caffe
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  CuDNNConvolutionLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+<<<<<<< HEAD
+=======
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  CuDNNConvolutionLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+>>>>>>> pod-caffe-pod.hpp-merge
 #endif
 
 }  // namespace caffe

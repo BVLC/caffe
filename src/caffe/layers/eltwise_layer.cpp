@@ -14,6 +14,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -69,12 +70,15 @@
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -86,6 +90,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
@@ -125,6 +131,7 @@
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -151,6 +158,8 @@
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -180,6 +189,7 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -240,6 +250,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
@@ -294,6 +306,7 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     max_idx_.Reshape(bottom[0]->shape());
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 }
@@ -309,10 +322,31 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.eltwise_param().operation() ==
       EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
     max_idx_.Reshape(bottom[0]->shape());
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+=======
+void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 1; i < bottom.size(); ++i) {
+    CHECK(bottom[i]->shape() == bottom[0]->shape());
+  }
+  top[0]->ReshapeLike(*bottom[0]);
+  // If max operation, we will initialize the vector index part.
+  if (this->layer_param_.eltwise_param().operation() ==
+      EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
+    max_idx_.Reshape(bottom[0]->shape());
   }
 }
 
 template <typename Dtype>
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -322,16 +356,21 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 Dtype EltwiseLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_data();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
 >>>>>>> BVLC/master
@@ -464,6 +503,9 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
@@ -481,6 +523,9 @@ void EltwiseLayer<Dtype>::Forward_cpu(
                           top_data);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
@@ -512,9 +557,12 @@ void EltwiseLayer<Dtype>::Forward_cpu(
         }
       }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
@@ -823,6 +871,9 @@ void EltwiseLayer<Dtype>::Forward_cpu(
           mask[idx] = blob_idx;  // maxid
         }
       }
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
     }
     break;
@@ -830,6 +881,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     LOG(FATAL) << "Unknown elementwise operation.";
 >>>>>>> pod/device/blob.hpp
   }
+<<<<<<< HEAD
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 }
 
@@ -853,6 +905,12 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     max_idx_.Reshape(bottom[0]->num(), channels, height, width);
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
+=======
+}
+
+template <typename Dtype>
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -862,6 +920,9 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -893,11 +954,39 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+=======
+void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  const int* mask = NULL;
+>>>>>>> BVLC/master
+  const int count = top[0]->count();
+  const Dtype* top_data = top[0]->const_data();
+  const Dtype* top_diff = top[0]->const_diff();
+  for (int i = 0; i < bottom->size(); ++i) {
+    if (propagate_down[i]) {
+      const Dtype* bottom_data = (*bottom)[i]->const_data();
+      Dtype* bottom_diff = (*bottom)[i]->mutable_diff();
+      switch (op_) {
+      case EltwiseParameter_EltwiseOp_PROD:
+        this->device_->div(count, top_data, bottom_data, bottom_diff);
+        this->device_->mul(count, bottom_diff, top_diff, bottom_diff);
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> master
 =======
 >>>>>>> master
 =======
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 }
 
 template <typename Dtype>
@@ -2891,12 +2980,190 @@ INSTANTIATE_CLASS(EltwiseLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  const int* mask = NULL;
+  const int count = top[0]->count();
+  const Dtype* top_data = top[0]->cpu_data();
+  const Dtype* top_diff = top[0]->cpu_diff();
+  for (int i = 0; i < bottom.size(); ++i) {
+    if (propagate_down[i]) {
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      switch (op_) {
+      case EltwiseParameter_EltwiseOp_PROD:
+        if (stable_prod_grad_) {
+          bool initialized = false;
+          for (int j = 0; j < bottom.size(); ++j) {
+            if (i == j) { continue; }
+            if (!initialized) {
+              caffe_copy(count, bottom[j]->cpu_data(), bottom_diff);
+              initialized = true;
+            } else {
+              caffe_mul(count, bottom[j]->cpu_data(), bottom_diff,
+                        bottom_diff);
+            }
+          }
+        } else {
+          caffe_div(count, top_data, bottom_data, bottom_diff);
+        }
+        caffe_mul(count, bottom_diff, top_diff, bottom_diff);
+>>>>>>> BVLC/master
+        break;
+      case EltwiseParameter_EltwiseOp_SUM:
+        if (coeffs_[i] == Dtype(1)) {
+          this->device_->copy(count, top_diff, bottom_diff);
+        } else {
+          this->device_->scale(count, coeffs_[i], top_diff, bottom_diff);
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+        }
+        break;
+      default:
+        LOG(FATAL) << "Unknown elementwise operation.";
+      }
+    }
+  }
+}
+
+INSTANTIATE_CLASS(EltwiseLayer);
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(Eltwise);
 
 =======
 REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2923,6 +3190,8 @@ REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(Eltwise);
 
 >>>>>>> caffe

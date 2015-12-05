@@ -140,6 +140,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannels) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -185,6 +186,10 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannels) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
@@ -206,6 +211,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -241,9 +247,12 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -256,6 +265,8 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> top_reference;
   this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
       &top_reference);
@@ -273,6 +284,7 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannels) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 <<<<<<< HEAD
+<<<<<<< HEAD
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
@@ -335,6 +347,8 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
@@ -352,6 +366,7 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -384,6 +399,10 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
@@ -407,12 +426,16 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -437,6 +460,8 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 TYPED_TEST(LRNLayerTest, TestSetupWithinChannel) {
@@ -483,6 +508,7 @@ TYPED_TEST(LRNLayerTest, TestGradientWithinChannel) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
   for (int i = 0; i < this->blob_top_->count(); ++i) {
@@ -823,6 +849,154 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  }
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+
+#ifdef USE_CUDNN
+template <typename Dtype>
+class CuDNNLRNLayerTest : public GPUDeviceTest<Dtype> {
+ protected:
+  CuDNNLRNLayerTest()
+      : epsilon_(Dtype(1e-5)),
+        blob_bottom_(new Blob<Dtype>()),
+        blob_top_(new Blob<Dtype>()) {}
+  virtual void SetUp() {
+    Caffe::set_random_seed(1701);
+    blob_bottom_->Reshape(2, 7, 3, 3);
+    // fill the values
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_top_vec_.push_back(blob_top_);
+  }
+  virtual ~CuDNNLRNLayerTest() { delete blob_bottom_; delete blob_top_; }
+  void ReferenceLRNForward(const Blob<Dtype>& blob_bottom,
+      const LayerParameter& layer_param, Blob<Dtype>* blob_top);
+
+  Dtype epsilon_;
+  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_top_;
+  vector<Blob<Dtype>*> blob_bottom_vec_;
+  vector<Blob<Dtype>*> blob_top_vec_;
+};
+
+template <typename TypeParam>
+void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
+    const Blob<TypeParam>& blob_bottom, const LayerParameter& layer_param,
+    Blob<TypeParam>* blob_top) {
+  typedef TypeParam Dtype;
+  blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
+      blob_bottom.height(), blob_bottom.width());
+  Dtype* top_data = blob_top->mutable_cpu_data();
+  LRNParameter lrn_param = layer_param.lrn_param();
+  Dtype alpha = lrn_param.alpha();
+  Dtype beta = lrn_param.beta();
+  int size = lrn_param.local_size();
+  switch (lrn_param.norm_region()) {
+  case LRNParameter_NormRegion_ACROSS_CHANNELS:
+    for (int n = 0; n < blob_bottom.num(); ++n) {
+      for (int c = 0; c < blob_bottom.channels(); ++c) {
+        for (int h = 0; h < blob_bottom.height(); ++h) {
+          for (int w = 0; w < blob_bottom.width(); ++w) {
+            int c_start = c - (size - 1) / 2;
+            int c_end = min(c_start + size, blob_bottom.channels());
+            c_start = max(c_start, 0);
+            Dtype scale = 1.;
+            for (int i = c_start; i < c_end; ++i) {
+              Dtype value = blob_bottom.data_at(n, i, h, w);
+              scale += value * value * alpha / size;
+            }
+            *(top_data + blob_top->offset(n, c, h, w)) =
+              blob_bottom.data_at(n, c, h, w) / pow(scale, beta);
+          }
+        }
+      }
+    }
+    break;
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    for (int n = 0; n < blob_bottom.num(); ++n) {
+      for (int c = 0; c < blob_bottom.channels(); ++c) {
+        for (int h = 0; h < blob_bottom.height(); ++h) {
+          int h_start = h - (size - 1) / 2;
+          int h_end = min(h_start + size, blob_bottom.height());
+          h_start = max(h_start, 0);
+          for (int w = 0; w < blob_bottom.width(); ++w) {
+            Dtype scale = 1.;
+            int w_start = w - (size - 1) / 2;
+            int w_end = min(w_start + size, blob_bottom.width());
+            w_start = max(w_start, 0);
+            for (int nh = h_start; nh < h_end; ++nh) {
+              for (int nw = w_start; nw < w_end; ++nw) {
+                Dtype value = blob_bottom.data_at(n, c, nh, nw);
+                scale += value * value * alpha / (size * size);
+              }
+            }
+            *(top_data + blob_top->offset(n, c, h, w)) =
+              blob_bottom.data_at(n, c, h, w) / pow(scale, beta);
+          }
+        }
+      }
+    }
+    break;
+  default:
+    LOG(FATAL) << "Unknown normalization region.";
+  }
+}
+
+TYPED_TEST_CASE(CuDNNLRNLayerTest, TestDtypes);
+
+TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
+  // typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CuDNNLRNLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  Blob<TypeParam> top_reference;
+  this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
+      &top_reference);
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
+                this->epsilon_);
+  }
+}
+
+TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsLargeRegionCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_lrn_param()->set_local_size(15);
+  CuDNNLRNLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  Blob<Dtype> top_reference;
+  this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
+      &top_reference);
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
+                this->epsilon_);
+  }
+}
+
+TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  CuDNNLRNLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
   layer.Backward(this->blob_top_vec_, propagate_down,
                  this->blob_bottom_vec_);
@@ -886,16 +1060,20 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -937,6 +1115,8 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 #endif

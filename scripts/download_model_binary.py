@@ -20,6 +20,7 @@ def reporthook(count, block_size, total_size):
         return
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     duration = (time.time() - start_time) or 0.01
 =======
     duration = time.time() - start_time
@@ -27,6 +28,9 @@ def reporthook(count, block_size, total_size):
 =======
     duration = time.time() - start_time
 >>>>>>> pod/caffe-merge
+=======
+    duration = time.time() - start_time
+>>>>>>> pod-caffe-pod.hpp-merge
     progress_size = int(count * block_size)
     speed = int(progress_size / (1024 * duration))
     percent = int(count * block_size * 100 / total_size)
@@ -40,6 +44,7 @@ def parse_readme_frontmatter(dirname):
     with open(readme_filename) as f:
         lines = [line.strip() for line in f.readlines()]
     top = lines.index('---')
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,6 +114,8 @@ def parse_readme_frontmatter(dirname):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     bottom = lines.index('---', top + 1)
 =======
     bottom = lines[top + 1:].index('---')
@@ -116,8 +123,11 @@ def parse_readme_frontmatter(dirname):
 =======
     bottom = lines.index('---', top + 1)
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))
     assert all(key in frontmatter for key in required_keys)
     return dirname, frontmatter

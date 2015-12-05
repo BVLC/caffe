@@ -22,6 +22,7 @@ using std::endl;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -58,11 +59,16 @@ using std::endl;
   #include "caffe_config.h"
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  #include "caffe_config.h"
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   #include <cmake_test_defines.hpp.gen.cmake>
 >>>>>>> origin/BVLC/parallel
 =======
   #include "caffe_config.h"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -90,6 +96,8 @@ using std::endl;
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #else
   #define CUDA_TEST_DEVICE -1
   #define CMAKE_SOURCE_DIR "src/"

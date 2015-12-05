@@ -18,6 +18,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -58,6 +59,10 @@ layer {
     source: "examples/cifar10/cifar10_train_lmdb"
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    source: "examples/cifar10/cifar10_train_lmdb"
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     source: "examples/cifar10/cifar10_train_leveldb"
 >>>>>>> origin/BVLC/parallel
     batch_size: 100
@@ -83,6 +88,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -106,6 +112,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "cifar"
@@ -126,6 +134,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -169,6 +178,8 @@ layer {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     source: "examples/cifar10/cifar10_test_lmdb"
 =======
     source: "examples/cifar10/cifar10_test_leveldb"
@@ -177,12 +188,15 @@ layer {
     backend: LMDB
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   transform_param {
     mean_file: "examples/cifar10/mean.binaryproto"
@@ -191,11 +205,15 @@ layer {
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     source: "examples/cifar10/cifar10_test_lmdb"
     batch_size: 100
     backend: LMDB
   }
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -229,6 +247,8 @@ layer {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "conv1"

@@ -2,10 +2,13 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/threshold_layer.hpp"
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/neuron_layers.hpp"
 
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -35,6 +38,7 @@ STUB_GPU_FORWARD(ThresholdLayer, Forward);
 #endif
 
 INSTANTIATE_CLASS(ThresholdLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,6 +80,9 @@ REGISTER_LAYER_CLASS(Threshold);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> caffe
 REGISTER_LAYER_CLASS(Threshold);
 
@@ -89,6 +96,7 @@ REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -106,4 +114,6 @@ REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

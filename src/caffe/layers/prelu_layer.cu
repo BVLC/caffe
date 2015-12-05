@@ -3,6 +3,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/neuron_layer.hpp"
 #include "caffe/layers/prelu_layer.hpp"
 =======
@@ -11,6 +12,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod/caffe-merge
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
