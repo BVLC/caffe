@@ -202,6 +202,10 @@ Solver<Dtype>* GetSolverFromFile(const string& filename) {
   return SolverRegistry<Dtype>::CreateSolver(param);
 }
 
+Solver<Dtype>* GetSolver(const SolverParameter& solver_param) {
+  return SolverRegistry<Dtype>::CreateSolver(solver_param);
+}
+
 struct NdarrayConverterGenerator {
   template <typename T> struct apply;
 };
@@ -501,8 +505,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
-    .add_property("get_solver_params", &Solver<Dtype>::GetSolverParams)
-    .def("update_solver_params", &Solver<Dtype>::UpdateSolverParams)
+    .add_property("solver_params", &Solver<Dtype>::GetSolverParams,
+                                   &Solver<Dtype>::UpdateSolverParams)
     .def("add_callback", &Solver_add_callback<Dtype>)
     .def("add_callback", &Solver_add_nccl)
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
@@ -541,6 +545,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("weight_decay",
                                &SolverParameter::weight_decay,
                                &SolverParameter::set_weight_decay)
+    .add_property("display",   &SolverParameter::display,
+                               &SolverParameter::set_display)
     .add_property("regularization_type",
                        bp::make_function(&SolverParameter::regularization_type,
                        bp::return_value_policy<bp::copy_const_reference>()),
@@ -559,7 +565,12 @@ BOOST_PYTHON_MODULE(_caffe) {
                        bp::make_function(&SolverParameter::type,
                        bp::return_value_policy<bp::copy_const_reference>()),
                        static_cast<void (SolverParameter::*)(const string&)>(
-                               &SolverParameter::set_type));
+                               &SolverParameter::set_type))
+    .add_property("net",
+                       bp::make_function(&SolverParameter::net,
+                       bp::return_value_policy<bp::copy_const_reference>()),
+                       static_cast<void (SolverParameter::*)(const string&)>(
+                               &SolverParameter::set_net));
 
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
@@ -581,7 +592,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     shared_ptr<AdamSolver<Dtype> >, boost::noncopyable>(
         "AdamSolver", bp::init<string>());
 
-  bp::def("get_solver", &GetSolverFromFile,
+  bp::def("get_solver_from_file", &GetSolverFromFile,
+      bp::return_value_policy<bp::manage_new_object>());
+
+  bp::def("get_solver", &GetSolver,
       bp::return_value_policy<bp::manage_new_object>());
 
   // vector wrappers for all the vector types we use
