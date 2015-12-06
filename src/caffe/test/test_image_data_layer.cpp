@@ -6,12 +6,16 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -46,10 +50,15 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,6 +88,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 #include <map>
 #include <string>
@@ -101,6 +112,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -134,10 +146,17 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -166,6 +185,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -194,6 +215,9 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -201,6 +225,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     // Create test input file.
     MakeTempFilename(&filename_);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -241,12 +266,18 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     MakeTempFilename(&filename_);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    // Create test input file.
+    MakeTempFilename(&filename_);
+=======
+>>>>>>> pod/device/blob.hpp
     // Create a Vector of files with labels
 >>>>>>> origin/BVLC/parallel
 =======
     // Create test input file.
     MakeTempFilename(&filename_);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -277,6 +308,8 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     std::ofstream outfile(filename_.c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename_;
@@ -308,6 +341,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -370,6 +404,12 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  string filename_reshape_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
   string filename_reshape_;
 =======
 >>>>>>> origin/BVLC/parallel
@@ -377,9 +417,12 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   string filename_reshape_;
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;

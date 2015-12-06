@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include <vector>
@@ -58,6 +59,16 @@
 
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include <vector>
+
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include <vector>
+
+=======
+>>>>>>> pod/device/blob.hpp
 #include <algorithm>
 #include <vector>
 
@@ -67,6 +78,7 @@
 #include <vector>
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -89,6 +101,9 @@
 #include <vector>
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -127,6 +142,7 @@ void CuDNNSigmoidLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -189,6 +205,12 @@ void CuDNNSigmoidLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  handles_setup_ = true;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
   handles_setup_ = true;
 =======
 >>>>>>> origin/BVLC/parallel
@@ -196,9 +218,12 @@ void CuDNNSigmoidLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   handles_setup_ = true;
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 
@@ -224,6 +249,7 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -263,16 +289,21 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
@@ -284,6 +315,7 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -314,6 +346,11 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
   cudnnDestroyTensor4dDescriptor(this->top_desc_);
 >>>>>>> origin/BVLC/parallel
@@ -327,6 +364,7 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -347,6 +385,8 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   cudnnDestroy(this->handle_);
 }

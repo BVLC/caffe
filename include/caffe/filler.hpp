@@ -21,6 +21,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -52,6 +53,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -59,6 +62,7 @@
 <<<<<<< HEAD
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -110,12 +114,21 @@
 >>>>>>> BVLC/device-abstraction
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -127,10 +140,13 @@
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
 =======
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -143,6 +159,8 @@
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -162,6 +180,7 @@
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -169,6 +188,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
@@ -298,6 +319,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -337,16 +359,21 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
  * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$ is
  *        set inversely proportional to number of incoming nodes, outgoing
  *        nodes, or their average.
@@ -365,6 +392,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -395,6 +423,11 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
  * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$
  *        is set inversely proportional to the number of incoming nodes.
  *
@@ -417,6 +450,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -437,6 +471,8 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
  *
  * TODO(dox): make notation in above comment consistent with rest & use LaTeX.
@@ -453,6 +489,11 @@ class XavierFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+=======
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -492,6 +533,47 @@ class XavierFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+    Dtype scale = sqrt(Dtype(3) / fan_in);
+    GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
+                                              blob->mutable_cpu_data());
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+    int fan_out = blob->count() / blob->channels();
+    Dtype n = fan_in;  // default to fan_in
+    if (this->filler_param_.variance_norm() ==
+        FillerParameter_VarianceNorm_AVERAGE) {
+      n = (fan_in + fan_out) / Dtype(2);
+    } else if (this->filler_param_.variance_norm() ==
+        FillerParameter_VarianceNorm_FAN_OUT) {
+      n = fan_out;
+    }
+    Dtype scale = sqrt(Dtype(3) / n);
+    caffe_rng_uniform<Dtype>(blob->count(), -scale, scale,
+        blob->mutable_cpu_data());
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -499,6 +581,7 @@ class XavierFiller : public Filler<Dtype> {
     Dtype scale = sqrt(Dtype(3) / fan_in);
     GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
                                               blob->mutable_cpu_data());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -639,6 +722,11 @@ class XavierFiller : public Filler<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/device/blob.hpp
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
@@ -682,15 +770,19 @@ class MSRAFiller : public Filler<Dtype> {
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
         blob->mutable_cpu_data());
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
 };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 /**
@@ -758,6 +850,12 @@ class MSRAFiller : public Filler<Dtype> {
 =======
 =======
 <<<<<<< HEAD
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -775,6 +873,11 @@ class MSRAFiller : public Filler<Dtype> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> BVLC/master
@@ -795,6 +898,9 @@ class MSRAFiller : public Filler<Dtype> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 /**
  * @brief Fills a Blob with values @f$ x \sim N(0, \sigma^2) @f$ where
@@ -836,22 +942,29 @@ class MSRAFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
     Dtype scale = sqrt(Dtype(3) / fan_in);
     GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
                                               blob->mutable_cpu_data());
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
 };
 
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1008,6 +1121,14 @@ class MSRAFiller : public Filler<Dtype> {
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1032,6 +1153,7 @@ class MSRAFiller : public Filler<Dtype> {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1060,6 +1182,8 @@ class MSRAFiller : public Filler<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 /*!
 @brief Fills a Blob with coefficients for bilinear interpolation.

@@ -17,12 +17,16 @@ import pandas as pd
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 from skimage import io
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -57,10 +61,15 @@ from skimage import io
 from skimage import io
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+from skimage import io
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 from skimage import io
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -90,6 +99,8 @@ from skimage import io
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 import multiprocessing
 
@@ -117,12 +128,16 @@ def download_image(args_tuple):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
         test_read_image = io.imread(filename)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -182,6 +197,8 @@ def download_image(args_tuple):
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
         test_read_image = io.imread(filename)
 =======
 >>>>>>> origin/BVLC/parallel
@@ -189,9 +206,12 @@ def download_image(args_tuple):
         test_read_image = io.imread(filename)
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
         return True
     except KeyboardInterrupt:
         raise Exception()  # multiprocessing doesn't catch keyboard exceptions
@@ -221,6 +241,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -260,16 +281,21 @@ if __name__ == '__main__':
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     parser.add_argument(
         '-l', '--labels', type=int, default=0,
         help="if set to a positive value, only sample images from the first number of labels."
@@ -280,6 +306,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -304,11 +331,15 @@ if __name__ == '__main__':
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -334,6 +365,8 @@ if __name__ == '__main__':
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
     args = parser.parse_args()
@@ -351,6 +384,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -420,6 +454,13 @@ if __name__ == '__main__':
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    if args.labels > 0:
+        df = df.loc[df['label'] < args.labels]
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
     if args.labels > 0:
         df = df.loc[df['label'] < args.labels]
 =======
@@ -429,9 +470,12 @@ if __name__ == '__main__':
         df = df.loc[df['label'] < args.labels]
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     if args.images > 0 and args.images < df.shape[0]:
         df = df.iloc[:args.images]

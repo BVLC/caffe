@@ -106,12 +106,16 @@ message NetParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 // SolverParameter next available ID: 41 (last added: type)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -169,6 +173,8 @@ message NetParameter {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 // SolverParameter next available ID: 41 (last added: type)
 =======
 // SolverParameter next available ID: 35 (last added: stepvalue)
@@ -177,9 +183,12 @@ message NetParameter {
 // SolverParameter next available ID: 41 (last added: type)
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
@@ -271,6 +280,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -310,16 +320,21 @@ message SolverParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -331,6 +346,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -368,9 +384,14 @@ message SolverParameter {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -385,6 +406,8 @@ message SolverParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
@@ -417,6 +440,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -456,16 +480,21 @@ message SolverParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   // type of the solver
   optional string type = 40 [default = "SGD"];
 
@@ -483,6 +512,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -513,6 +543,11 @@ message SolverParameter {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   // Solver type
   enum SolverType {
     SGD = 0;
@@ -533,6 +568,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -553,6 +589,8 @@ message SolverParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
   // If true, print information about the state of the net that may help with
@@ -618,6 +656,7 @@ message NetStateRule {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -639,11 +678,14 @@ message NetStateRule {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
@@ -667,6 +709,8 @@ message NetStateRule {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 // Specifies training parameters (multipliers on global learning constants,
@@ -698,6 +742,7 @@ message ParamSpec {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -735,9 +780,14 @@ message ParamSpec {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -752,6 +802,8 @@ message ParamSpec {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 
@@ -766,6 +818,9 @@ message ParamSpec {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
@@ -774,6 +829,7 @@ message ParamSpec {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -803,11 +859,16 @@ message ParamSpec {
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+=======
+>>>>>>> pod/device/blob.hpp
 // LayerParameter next available ID: 42 (last added: exp_param)
 >>>>>>> origin/BVLC/parallel
 =======
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -843,6 +904,8 @@ message ParamSpec {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 message LayerParameter {
   optional string name = 1; // the layer name
@@ -2501,6 +2564,7 @@ message ConvolutionParameter {
 =======
 }
 
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -2508,6 +2572,216 @@ message ConvolutionParameter {
 >>>>>>> origin/BVLC/parallel
 =======
 }
+=======
+<<<<<<< HEAD
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 100;
+
+  // Parameters shared by loss layers.
+  optional LossParameter loss_param = 101;
+
+  // Layer type-specific parameters.
+  //
+  // Note: certain layers may have more than one computational engine
+  // for their implementation. These layers include an Engine type and
+  // engine parameter for selecting the implementation.
+  // The default for the engine is set by the ENGINE switch at compile-time.
+  optional AccuracyParameter accuracy_param = 102;
+  optional ArgMaxParameter argmax_param = 103;
+  optional BatchNormParameter batch_norm_param = 139;
+  optional ConcatParameter concat_param = 104;
+  optional ContrastiveLossParameter contrastive_loss_param = 105;
+  optional ConvolutionParameter convolution_param = 106;
+  optional DataParameter data_param = 107;
+  optional DropoutParameter dropout_param = 108;
+  optional DummyDataParameter dummy_data_param = 109;
+  optional EltwiseParameter eltwise_param = 110;
+  optional EmbedParameter embed_param = 137;
+  optional ExpParameter exp_param = 111;
+  optional FlattenParameter flatten_param = 135;
+  optional HDF5DataParameter hdf5_data_param = 112;
+  optional HDF5OutputParameter hdf5_output_param = 113;
+  optional HingeLossParameter hinge_loss_param = 114;
+  optional ImageDataParameter image_data_param = 115;
+  optional InfogainLossParameter infogain_loss_param = 116;
+  optional InnerProductParameter inner_product_param = 117;
+  optional LogParameter log_param = 134;
+  optional LRNParameter lrn_param = 118;
+  optional MemoryDataParameter memory_data_param = 119;
+  optional MVNParameter mvn_param = 120;
+  optional PoolingParameter pooling_param = 121;
+  optional PowerParameter power_param = 122;
+  optional PReLUParameter prelu_param = 131;
+  optional PythonParameter python_param = 130;
+  optional ReductionParameter reduction_param = 136;
+  optional ReLUParameter relu_param = 123;
+  optional ReshapeParameter reshape_param = 133;
+  optional SigmoidParameter sigmoid_param = 124;
+  optional SoftmaxParameter softmax_param = 125;
+  optional SPPParameter spp_param = 132;
+  optional SliceParameter slice_param = 126;
+  optional TanHParameter tanh_param = 127;
+  optional ThresholdParameter threshold_param = 128;
+  optional TileParameter tile_param = 138;
+  optional WindowDataParameter window_data_param = 129;
+}
+
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 100;
+=======
+  // NOTE
+  // Add new LayerTypes to the enum below in lexicographical order (other than
+  // starting with NONE), starting with the next available ID in the comment
+  // line above the enum. Update the next available ID when you add a new
+  // LayerType.
+  //
+  // LayerType next available ID: 39 (last added: EXP)
+  enum LayerType {
+    // "NONE" layer type is 0th enum element so that we don't cause confusion
+    // by defaulting to an existent LayerType (instead, should usually error if
+    // the type is unspecified).
+    NONE = 0;
+    ABSVAL = 35;
+    ACCURACY = 1;
+    ARGMAX = 30;
+    BNLL = 2;
+    CONCAT = 3;
+    CONTRASTIVE_LOSS = 37;
+    CONVOLUTION = 4;
+    DATA = 5;
+    DROPOUT = 6;
+    DUMMY_DATA = 32;
+    EUCLIDEAN_LOSS = 7;
+    ELTWISE = 25;
+    EXP = 38;
+    FLATTEN = 8;
+    HDF5_DATA = 9;
+    HDF5_OUTPUT = 10;
+    HINGE_LOSS = 28;
+    IM2COL = 11;
+    IMAGE_DATA = 12;
+    INFOGAIN_LOSS = 13;
+    INNER_PRODUCT = 14;
+    LRN = 15;
+    MEMORY_DATA = 29;
+    MULTINOMIAL_LOGISTIC_LOSS = 16;
+    MVN = 34;
+    POOLING = 17;
+    POWER = 26;
+    RELU = 18;
+    SIGMOID = 19;
+    SIGMOID_CROSS_ENTROPY_LOSS = 27;
+    SILENCE = 36;
+    SOFTMAX = 20;
+    SOFTMAX_LOSS = 21;
+    SPLIT = 22;
+    SLICE = 33;
+    TANH = 23;
+    WINDOW_DATA = 24;
+    THRESHOLD = 31;
+  }
+  optional LayerType type = 5; // the layer type from the enum above
+>>>>>>> origin/BVLC/parallel
+
+  // Parameters shared by loss layers.
+  optional LossParameter loss_param = 101;
+
+<<<<<<< HEAD
+  // Layer type-specific parameters.
+  //
+=======
+  // The amount of weight to assign each top blob in the objective.
+  // Each layer assigns a default value, usually of either 0 or 1,
+  // to each top blob.
+  repeated float loss_weight = 35;
+
+  optional AccuracyParameter accuracy_param = 27;
+  optional ArgMaxParameter argmax_param = 23;
+  optional ConcatParameter concat_param = 9;
+  optional ContrastiveLossParameter contrastive_loss_param = 40;
+  optional ConvolutionParameter convolution_param = 10;
+  optional DataParameter data_param = 11;
+  optional DropoutParameter dropout_param = 12;
+  optional DummyDataParameter dummy_data_param = 26;
+  optional EltwiseParameter eltwise_param = 24;
+  optional ExpParameter exp_param = 41;
+  optional HDF5DataParameter hdf5_data_param = 13;
+  optional HDF5OutputParameter hdf5_output_param = 14;
+  optional HingeLossParameter hinge_loss_param = 29;
+  optional ImageDataParameter image_data_param = 15;
+  optional InfogainLossParameter infogain_loss_param = 16;
+  optional InnerProductParameter inner_product_param = 17;
+  optional LRNParameter lrn_param = 18;
+  optional MemoryDataParameter memory_data_param = 22;
+  optional MVNParameter mvn_param = 34;
+  optional PoolingParameter pooling_param = 19;
+  optional PowerParameter power_param = 21;
+  optional ReLUParameter relu_param = 30;
+  optional SigmoidParameter sigmoid_param = 38;
+  optional SoftmaxParameter softmax_param = 39;
+  optional SliceParameter slice_param = 31;
+  optional TanHParameter tanh_param = 37;
+  optional ThresholdParameter threshold_param = 25;
+  optional WindowDataParameter window_data_param = 20;
+
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 36;
+
+>>>>>>> origin/BVLC/parallel
+  // Note: certain layers may have more than one computational engine
+  // for their implementation. These layers include an Engine type and
+  // engine parameter for selecting the implementation.
+  // The default for the engine is set by the ENGINE switch at compile-time.
+<<<<<<< HEAD
+  optional AccuracyParameter accuracy_param = 102;
+  optional ArgMaxParameter argmax_param = 103;
+  optional BatchNormParameter batch_norm_param = 139;
+  optional ConcatParameter concat_param = 104;
+  optional ContrastiveLossParameter contrastive_loss_param = 105;
+  optional ConvolutionParameter convolution_param = 106;
+  optional DataParameter data_param = 107;
+  optional DropoutParameter dropout_param = 108;
+  optional DummyDataParameter dummy_data_param = 109;
+  optional EltwiseParameter eltwise_param = 110;
+  optional EmbedParameter embed_param = 137;
+  optional ExpParameter exp_param = 111;
+  optional FlattenParameter flatten_param = 135;
+  optional HDF5DataParameter hdf5_data_param = 112;
+  optional HDF5OutputParameter hdf5_output_param = 113;
+  optional HingeLossParameter hinge_loss_param = 114;
+  optional ImageDataParameter image_data_param = 115;
+  optional InfogainLossParameter infogain_loss_param = 116;
+  optional InnerProductParameter inner_product_param = 117;
+  optional LogParameter log_param = 134;
+  optional LRNParameter lrn_param = 118;
+  optional MemoryDataParameter memory_data_param = 119;
+  optional MVNParameter mvn_param = 120;
+  optional PoolingParameter pooling_param = 121;
+  optional PowerParameter power_param = 122;
+  optional PReLUParameter prelu_param = 131;
+  optional PythonParameter python_param = 130;
+  optional ReductionParameter reduction_param = 136;
+  optional ReLUParameter relu_param = 123;
+  optional ReshapeParameter reshape_param = 133;
+  optional SigmoidParameter sigmoid_param = 124;
+  optional SoftmaxParameter softmax_param = 125;
+  optional SPPParameter spp_param = 132;
+  optional SliceParameter slice_param = 126;
+  optional TanHParameter tanh_param = 127;
+  optional ThresholdParameter threshold_param = 128;
+  optional TileParameter tile_param = 138;
+  optional WindowDataParameter window_data_param = 129;
+}
+=======
+>>>>>>> origin/BVLC/parallel
+
+=======
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 100;
+>>>>>>> pod/device/blob.hpp
 
 >>>>>>> device-abstraction
 =======
@@ -2527,6 +2801,7 @@ message ConvolutionParameter {
 
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -2536,8 +2811,38 @@ message ConvolutionParameter {
 // Message that stores parameters used by AccuracyLayer
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+// Message that stores parameters used to apply transformation
+// to the data layer's data
+message TransformationParameter {
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
+  optional float scale = 1 [default = 1];
+  // Specify if we want to randomly mirror data.
+  optional bool mirror = 2 [default = false];
+  // Specify if we would like to randomly crop an image.
+  optional uint32 crop_size = 3 [default = 0];
+  // mean_file and mean_value cannot be specified at the same time
+  optional string mean_file = 4;
+  // if specified can be repeated once (would substract it from all the channels)
+  // or can be repeated the same number of times as channels
+  // (would subtract them from the corresponding channel)
+  repeated float mean_value = 5;
+  // Force the decoded image to have 3 color channels.
+  optional bool force_color = 6 [default = false];
+  // Force the decoded image to have 1 color channels.
+  optional bool force_gray = 7 [default = false];
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 }
 
+=======
+<<<<<<< HEAD
+}
+
+<<<<<<< HEAD
 // Message that stores parameters shared by loss layers
 message LossParameter {
   // If specified, ignore instances with the given label.
@@ -2568,7 +2873,70 @@ message LossParameter {
 // Messages that store parameters used by individual layer types follow, in
 // alphabetical order.
 
+<<<<<<< HEAD
 >>>>>>> caffe
+=======
+=======
+// Message that stores parameters used to apply transformation
+// to the data layer's data
+message TransformationParameter {
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
+  optional float scale = 1 [default = 1];
+  // Specify if we want to randomly mirror data.
+  optional bool mirror = 2 [default = false];
+  // Specify if we would like to randomly crop an image.
+  optional uint32 crop_size = 3 [default = 0];
+  // mean_file and mean_value cannot be specified at the same time
+  optional string mean_file = 4;
+  // if specified can be repeated once (would substract it from all the channels)
+  // or can be repeated the same number of times as channels
+  // (would subtract them from the corresponding channel)
+  repeated float mean_value = 5;
+}
+
+// Message that stores parameters used by AccuracyLayer
+>>>>>>> origin/BVLC/parallel
+=======
+}
+
+>>>>>>> pod-caffe-pod.hpp-merge
+// Message that stores parameters shared by loss layers
+message LossParameter {
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 1;
+  // How to normalize the loss for loss layers that aggregate across batches,
+  // spatial dimensions, or other dimensions.  Currently only implemented in
+  // SoftmaxWithLoss layer.
+  enum NormalizationMode {
+    // Divide by the number of examples in the batch times spatial dimensions.
+    // Outputs that receive the ignore label will NOT be ignored in computing
+    // the normalization factor.
+    FULL = 0;
+    // Divide by the total number of output locations that do not take the 
+    // ignore_label.  If ignore_label is not set, this behaves like FULL.
+    VALID = 1;
+    // Divide by the batch size.
+    BATCH_SIZE = 2;
+    // Do not normalize the loss.
+    NONE = 3;
+  }
+  optional NormalizationMode normalization = 3 [default = VALID];
+  // Deprecated.  Ignored if normalization is specified.  If normalization
+  // is not specified, then setting this to false will be equivalent to
+  // normalization = BATCH_SIZE to be consistent with previous behavior.
+  optional bool normalize = 2;
+}
+
+// Messages that store parameters used by individual layer types follow, in
+// alphabetical order.
+
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 message AccuracyParameter {
   // When computing accuracy, count as correct by comparing the true label to
   // the top k scoring classes.  By default, only compare to the top scoring
@@ -2610,8 +2978,17 @@ message ConcatParameter {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 message BatchNormParameter {
   // If false, accumulate global mean/variance values via a moving average. If
   // true, use those accumulated values instead of computing mean/variance
@@ -2638,6 +3015,11 @@ message ContrastiveLossParameter {
 
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 // Message that stores parameters used by ContrastiveLossLayer
 message ContrastiveLossParameter {
   //margin for dissimilar pair
@@ -2648,6 +3030,10 @@ message ContrastiveLossParameter {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 message ConvolutionParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
@@ -2679,8 +3065,17 @@ message ConvolutionParameter {
   optional Engine engine = 15 [default = DEFAULT];
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
   // The axis to interpret as "channels" when performing convolution.
   // Preceding dimensions are treated as independent inputs;
@@ -2700,6 +3095,7 @@ message ConvolutionParameter {
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 =======
@@ -2709,6 +3105,14 @@ message ConvolutionParameter {
 // next available ID: 10 (last added: prefetch)
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+=======
+<<<<<<< HEAD
+}
+
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 }
 
 >>>>>>> caffe
@@ -2960,11 +3364,20 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   // Prefetch queue (Number of batches to prefetch).
   optional uint32 prefetch = 9 [default = 4];
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
@@ -2987,6 +3400,7 @@ message DataParameter {
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2999,6 +3413,8 @@ message DataParameter {
 =======
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 >>>>>>> caffe
@@ -3010,6 +3426,7 @@ message DataParameter {
   }
   // Specify the data source.
 <<<<<<< HEAD
+<<<<<<< HEAD
   repeated string source = 1;
 =======
 <<<<<<< HEAD
@@ -3017,6 +3434,15 @@ message DataParameter {
 <<<<<<< HEAD
 =======
   repeated string source = 1;
+=======
+  repeated string source = 1;
+=======
+<<<<<<< HEAD
+  optional string source = 1;
+<<<<<<< HEAD
+=======
+  repeated string source = 1;
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -3033,6 +3459,7 @@ message DataParameter {
   // be larger than the number of keys in the database.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   // DEPRECATED. Each solver accesses a different subset of the database.
 =======
 <<<<<<< HEAD
@@ -3048,6 +3475,18 @@ message DataParameter {
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+  // DEPRECATED. Each solver accesses a different subset of the database.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  // DEPRECATED. Each solver accesses a different subset of the database.
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  // DEPRECATED. Each solver accesses a different subset of the database.
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
@@ -3068,10 +3507,13 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 =======
@@ -3084,6 +3526,7 @@ message DataParameter {
   optional uint32 prefetch = 10 [default = 4];
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 <<<<<<< HEAD
@@ -3092,9 +3535,15 @@ message DataParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
   // Prefetch queue (Number of batches to prefetch).
   optional uint32 prefetch = 9 [default = 4];
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
@@ -3117,6 +3566,9 @@ message DataParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
   // Prefetch queue (Number of batches to prefetch).
   optional uint32 prefetch = 9 [default = 4];
 >>>>>>> origin/BVLC/parallel
@@ -3195,6 +3647,7 @@ message EltwiseParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3234,16 +3687,21 @@ message EltwiseParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 // Message that stores parameters used by EmbedLayer
 message EmbedParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
@@ -3264,6 +3722,7 @@ message EmbedParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3301,9 +3760,14 @@ message EmbedParameter {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -3318,6 +3782,8 @@ message EmbedParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters used by ExpLayer
 message ExpParameter {
@@ -3335,6 +3801,7 @@ message ExpParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3374,16 +3841,21 @@ message ExpParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 /// Message that stores parameters used by FlattenLayer
@@ -3402,6 +3874,7 @@ message FlattenParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3439,9 +3912,14 @@ message FlattenParameter {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -3456,6 +3934,8 @@ message FlattenParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 
@@ -3499,10 +3979,14 @@ message ImageDataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   optional uint32 batch_size = 4 [default = 1];
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3579,6 +4063,16 @@ message ImageDataParameter {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  optional uint32 batch_size = 4 [default = 1];
+=======
+  optional uint32 batch_size = 4;
+>>>>>>> origin/BVLC/parallel
+=======
+  optional uint32 batch_size = 4 [default = 1];
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
@@ -3651,6 +4145,7 @@ message LRNParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3690,16 +4185,21 @@ message LRNParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -3712,6 +4212,7 @@ message LRNParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3749,9 +4250,14 @@ message LRNParameter {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -3766,6 +4272,8 @@ message LRNParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 
@@ -3890,6 +4398,7 @@ message ReLUParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3929,16 +4438,21 @@ message ReLUParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 message ReshapeParameter {
   // Specify the output dimensions. If some of the dimensions are set to 0,
   // the corresponding dimension from the bottom layer is used (unchanged).
@@ -4009,6 +4523,7 @@ message ReshapeParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4039,10 +4554,16 @@ message ReshapeParameter {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 // Message that stores parameters used by SigmoidLayer
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4071,6 +4592,8 @@ message ReshapeParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 message SigmoidParameter {
   enum Engine {
@@ -4134,6 +4657,7 @@ message ThresholdParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 <<<<<<< HEAD
@@ -4180,11 +4704,20 @@ message ThresholdParameter {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+}
+
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 }
 
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
 message SoftmaxParameter {
   enum Engine {
@@ -4208,6 +4741,7 @@ message TanHParameter {
 // Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4271,6 +4805,16 @@ message ThresholdParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+}
+
+// Message that stores parameters used by WindowDataLayer
+>>>>>>> origin/BVLC/parallel
+=======
+}
+
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 message WindowDataParameter {
   // Specify the data source.
@@ -4311,6 +4855,7 @@ message WindowDataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4350,16 +4895,21 @@ message WindowDataParameter {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 message SPPParameter {
@@ -4475,6 +5025,7 @@ message V1LayerParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4512,9 +5063,14 @@ message V1LayerParameter {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -4529,6 +5085,8 @@ message V1LayerParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 

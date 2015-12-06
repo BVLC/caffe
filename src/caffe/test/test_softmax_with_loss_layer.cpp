@@ -21,6 +21,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -30,10 +33,13 @@
 =======
 >>>>>>> BVLC/device-abstraction
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
@@ -50,6 +56,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 =======
@@ -109,6 +116,10 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/util/rng.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/device/blob.hpp
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
@@ -142,6 +153,7 @@
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -181,6 +193,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -237,6 +251,7 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradient) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -276,16 +291,21 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradient) {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   SoftmaxWithLossLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
@@ -336,6 +356,7 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientUnnormalized) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -373,9 +394,14 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientUnnormalized) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -390,6 +416,8 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientUnnormalized) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   SoftmaxWithLossLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);

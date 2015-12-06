@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26,9 +27,12 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -42,10 +46,13 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -66,6 +73,9 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -101,6 +111,7 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
@@ -133,20 +144,28 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 =======
+=======
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   CHECK_NE(top[0], bottom[0]) << this->type_name() << " Layer does not "
 >>>>>>> origin/BVLC/parallel
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -176,6 +195,8 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     "allow in-place computation.";
 }
@@ -214,6 +235,9 @@ INSTANTIATE_CLASS(AbsValLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -221,6 +245,7 @@ INSTANTIATE_CLASS(AbsValLayer);
 REGISTER_LAYER_CLASS(AbsVal);
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -284,6 +309,8 @@ REGISTER_LAYER_CLASS(AbsVal);
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 REGISTER_LAYER_CLASS(AbsVal);
 
 =======
@@ -294,8 +321,11 @@ REGISTER_LAYER_CLASS(AbsVal);
 
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

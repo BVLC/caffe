@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <boost/filesystem.hpp>
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,15 +45,21 @@
 =======
 #include <boost/filesystem.hpp>
 =======
+#include <boost/filesystem.hpp>
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 #include <boost/filesystem.hpp>
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 #include <boost/filesystem.hpp>
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #ifndef OSX
 #include <opencv2/core/core.hpp>
 #endif
@@ -62,6 +69,7 @@
 =======
 #include <boost/filesystem.hpp>
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,6 +99,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 #include <string>
 
@@ -98,6 +108,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 #include "caffe/util/format.hpp"
@@ -153,6 +164,12 @@
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 #define HDF5_NUM_DIMS 4
@@ -161,6 +178,7 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
@@ -179,6 +197,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 namespace caffe {
 
 using ::google::protobuf::Message;
@@ -257,6 +277,7 @@ inline void MakeTempDir(string* temp_dirname) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -271,6 +292,10 @@ inline void MakeTempDir(string* temp_dirname) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 
 inline void MakeTempFilename(string* temp_filename) {
   temp_filename->clear();
@@ -307,6 +332,7 @@ inline void MakeTempDir(string* temp_dirname) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -327,6 +353,8 @@ inline void MakeTempDir(string* temp_dirname) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
@@ -409,6 +437,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -437,14 +466,19 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -455,6 +489,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, true, encoding, datum);
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -539,6 +574,8 @@ inline cv::Mat ReadImageToCVMat(const string& filename,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 bool DecodeDatumNative(Datum* datum);
 bool DecodeDatum(Datum* datum, bool is_color);
 
@@ -569,6 +606,7 @@ inline bool DecodeDatum(Datum* datum) {
   return DecodeDatum(0, 0, true, datum);
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 }
@@ -645,6 +683,8 @@ inline bool DecodeDatum(Datum* datum) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #ifndef OSX
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color);
@@ -659,6 +699,7 @@ inline cv::Mat ReadImageToCVMat(const string& filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -670,6 +711,8 @@ inline cv::Mat ReadImageToCVMat(const string& filename,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 inline cv::Mat ReadImageToCVMat(const string& filename,
     const bool is_color) {
   return ReadImageToCVMat(filename, 0, 0, is_color);
@@ -702,6 +745,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 <<<<<<< HEAD
@@ -721,6 +765,8 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -747,6 +793,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -776,6 +823,8 @@ cv::Mat ReadImageToCVMat(const string& filename,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe

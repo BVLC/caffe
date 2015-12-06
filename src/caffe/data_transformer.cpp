@@ -6,10 +6,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
@@ -22,6 +25,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -33,6 +37,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
@@ -41,6 +47,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -55,6 +62,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #ifndef OSX
 #include <opencv2/core/core.hpp>
 #endif
@@ -64,6 +73,7 @@
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -95,6 +105,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 #include <string>
@@ -116,6 +128,7 @@ template<typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -212,12 +225,34 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
+    Phase phase)
+    : param_(param), phase_(phase) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
+    Phase phase)
+    : param_(param), phase_(phase) {
+=======
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
+    : param_(param) {
+  phase_ = Caffe::phase();
+>>>>>>> origin/BVLC/parallel
+=======
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
+    Phase phase)
+    : param_(param), phase_(phase) {
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
       "Cannot specify mean_file and mean_value at the same time";
     const string& mean_file = param.mean_file();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -254,10 +289,13 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     if (Caffe::root_solver()) {
       LOG(INFO) << "Loading mean file from: " << mean_file;
     }
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -304,6 +342,15 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     if (Caffe::root_solver()) {
       LOG(INFO) << "Loading mean file from: " << mean_file;
     }
+=======
+    LOG(INFO) << "Loading mean file from" << mean_file;
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/device/blob.hpp
+=======
+    if (Caffe::root_solver()) {
+      LOG(INFO) << "Loading mean file from: " << mean_file;
+    }
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -313,6 +360,9 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
@@ -382,6 +432,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     if (phase_ == TRAIN) {
@@ -446,6 +497,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    if (phase_ == TRAIN) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
     if (phase_ == TRAIN) {
 =======
     if (phase_ == Caffe::TRAIN) {
@@ -454,9 +511,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     if (phase_ == TRAIN) {
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
       h_off = Rand(datum_height - crop_size + 1);
       w_off = Rand(datum_width - crop_size + 1);
@@ -507,6 +567,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -546,16 +607,21 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
@@ -590,6 +656,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -620,6 +687,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
@@ -634,6 +706,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -654,6 +727,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
@@ -667,12 +742,16 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   // Check dimensions.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -707,10 +786,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   // Check dimensions.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  // Check dimensions.
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
   // Check dimensions.
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -740,6 +824,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
@@ -759,6 +845,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -792,11 +879,18 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   const int crop_size = param_.crop_size();
 
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -825,6 +919,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   if (crop_size) {
     CHECK_EQ(crop_size, height);
@@ -857,12 +953,16 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     "The size of datum_vector must be no greater than transformed_blob->num()";
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -897,11 +997,16 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
     "The size of datum_vector must be no greater than transformed_blob->num()";
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    "The size of datum_vector must be no greater than transformed_blob->num()";
+=======
+>>>>>>> pod/device/blob.hpp
     "The size of datum_vector must be smaller than transformed_blob->num()";
 >>>>>>> origin/BVLC/parallel
 =======
     "The size of datum_vector must be no greater than transformed_blob->num()";
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -931,6 +1036,8 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> uni_blob(1, channels, height, width);
   for (int item_id = 0; item_id < datum_num; ++item_id) {
@@ -948,6 +1055,7 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -987,16 +1095,21 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
@@ -1028,6 +1141,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1055,6 +1169,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #ifndef OSX
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
@@ -1062,6 +1181,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1084,6 +1204,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
@@ -1095,10 +1217,14 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   // Check dimensions.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1184,6 +1310,13 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 >>>>>>> origin/BVLC/parallel
 =======
   // Check dimensions.
+=======
+  // Check dimensions.
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  // Check dimensions.
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
   const int channels = transformed_blob->channels();
@@ -1206,6 +1339,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1239,10 +1373,17 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   const int crop_size = param_.crop_size();
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1271,6 +1412,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
@@ -1317,6 +1460,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1397,6 +1541,19 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+    if (phase_ == TRAIN) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    if (phase_ == TRAIN) {
+=======
+    if (phase_ == Caffe::TRAIN) {
+>>>>>>> origin/BVLC/parallel
+=======
+    if (phase_ == TRAIN) {
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
       h_off = Rand(img_height - crop_size + 1);
       w_off = Rand(img_width - crop_size + 1);
@@ -1451,6 +1608,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #endif  // USE_OPENCV
@@ -1483,9 +1641,16 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
 #endif  // USE_OPENCV
 =======
+=======
+#endif  // USE_OPENCV
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 #endif  // USE_OPENCV
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #endif
@@ -1500,6 +1665,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1520,6 +1686,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
@@ -1531,12 +1700,16 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   const int crop_size = param_.crop_size();
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1598,11 +1771,21 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  const int crop_size = param_.crop_size();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  const int crop_size = param_.crop_size();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   const int input_num = input_blob->num();
   const int input_channels = input_blob->channels();
   const int input_height = input_blob->height();
   const int input_width = input_blob->width();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1700,6 +1883,13 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   if (transformed_blob->count() == 0) {
     // Initialize transformed_blob with the right shape.
@@ -1718,6 +1908,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1753,9 +1944,14 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1772,6 +1968,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   const int num = transformed_blob->num();
   const int channels = transformed_blob->channels();
@@ -1792,12 +1990,16 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1866,6 +2068,15 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+
+=======
+  const int crop_size = param_.crop_size();
+>>>>>>> origin/BVLC/parallel
+=======
+
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
@@ -1886,12 +2097,16 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     if (phase_ == TRAIN) {
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1960,6 +2175,15 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+    if (phase_ == TRAIN) {
+=======
+    if (phase_ == Caffe::TRAIN) {
+>>>>>>> origin/BVLC/parallel
+=======
+    if (phase_ == TRAIN) {
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
       h_off = Rand(input_height - crop_size + 1);
       w_off = Rand(input_width - crop_size + 1);
@@ -2038,6 +2262,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2077,16 +2302,21 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
@@ -2178,6 +2408,7 @@ void DataTransformer<Dtype>::InitRand() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2208,6 +2439,11 @@ void DataTransformer<Dtype>::InitRand() {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
@@ -2215,6 +2451,7 @@ void DataTransformer<Dtype>::InitRand() {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2243,6 +2480,8 @@ void DataTransformer<Dtype>::InitRand() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();

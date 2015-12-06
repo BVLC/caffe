@@ -28,6 +28,7 @@ SyncedMemory::~SyncedMemory() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -68,6 +69,8 @@ SyncedMemory::~SyncedMemory() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -85,6 +88,7 @@ SyncedMemory::~SyncedMemory() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -149,6 +153,8 @@ SyncedMemory::~SyncedMemory() {
 =======
 >>>>>>> pod/caffe-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
@@ -162,11 +168,21 @@ SyncedMemory::~SyncedMemory() {
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
@@ -188,6 +204,9 @@ inline void SyncedMemory::to_cpu() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -199,6 +218,7 @@ inline void SyncedMemory::to_cpu() {
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -224,10 +244,13 @@ inline void SyncedMemory::to_cpu() {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     CaffeMallocHost(&cpu_ptr_, size_);
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -296,6 +319,9 @@ inline void SyncedMemory::to_cpu() {
     caffe_memset(size_, 0, cpu_ptr_);
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -328,6 +354,10 @@ inline void SyncedMemory::to_cpu() {
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
     CaffeMallocHost(&cpu_ptr_, size_);
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
@@ -356,11 +386,14 @@ inline void SyncedMemory::to_cpu() {
     caffe_memset(size_, 0, cpu_ptr_);
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
@@ -463,6 +496,7 @@ void SyncedMemory::set_gpu_data(void* data) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -475,6 +509,11 @@ void SyncedMemory::set_gpu_data(void* data) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #endif
 }
 
@@ -493,6 +532,7 @@ void SyncedMemory::set_gpu_data(void* data) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -503,6 +543,8 @@ void SyncedMemory::set_gpu_data(void* data) {
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 #endif
 }
@@ -572,6 +614,24 @@ void SyncedMemory::set_gpu_data(void* data) {
 >>>>>>> pod/caffe-merge
 #endif
 =======
+#endif
+}
+
+void SyncedMemory::set_gpu_data(void* data) {
+#ifndef CPU_ONLY
+  CHECK(data);
+  if (own_gpu_data_) {
+    CUDA_CHECK(cudaFree(gpu_ptr_));
+  }
+  gpu_ptr_ = data;
+  head_ = HEAD_AT_GPU;
+  own_gpu_data_ = false;
+#else
+  NO_GPU;
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #endif
 }
 
@@ -633,6 +693,59 @@ void SyncedMemory::set_gpu_data(void* data) {
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+const void* SyncedMemory::const_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return cpu_data();
+  case Caffe::GPU:
+    return gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<void*>(0);
+  }
+}
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
@@ -689,6 +802,12 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
@@ -699,6 +818,7 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
     own_gpu_data_ = true;
 >>>>>>> pod/common.hpp
   }
+<<<<<<< HEAD
   gpu_ptr_ = data;
   head_ = HEAD_AT_GPU;
   own_gpu_data_ = false;
@@ -718,6 +838,22 @@ void SyncedMemory::set_gpu_data(void* data) {
   CHECK(data);
   if (own_gpu_data_) {
     CUDA_CHECK(cudaFree(gpu_ptr_));
+=======
+  const cudaMemcpyKind put = cudaMemcpyHostToDevice;
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    own_gpu_data_ = true;
+>>>>>>> pod/device/blob.hpp
   }
   gpu_ptr_ = data;
   head_ = HEAD_AT_GPU;
@@ -725,6 +861,7 @@ void SyncedMemory::set_gpu_data(void* data) {
 #else
   NO_GPU;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
@@ -744,6 +881,22 @@ void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
   return cpu_ptr_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  // Assume caller will synchronize on the stream before use
+  head_ = SYNCED;
+>>>>>>> pod/device/blob.hpp
 }
 
 void* SyncedMemory::mutable_gpu_data() {
@@ -809,6 +962,7 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
@@ -817,17 +971,41 @@ void* SyncedMemory::mutable_gpu_data() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> BVLC/device-abstraction
+>>>>>>> pod/device/blob.hpp
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
     return cpu_data();
   case Caffe::GPU:
     return gpu_data();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+
+void* SyncedMemory::mutable_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+>>>>>>> pod-caffe-pod.hpp-merge
   default:
     LOG(FATAL) << "Unknown caffe mode.";
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1580,6 +1758,30 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
 <<<<<<< HEAD
 =======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+
+<<<<<<< HEAD
+=======
+
+>>>>>>> BVLC/device-abstraction
+void* SyncedMemory::mutable_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<void*>(0);
+  }
+}
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     own_gpu_data_ = true;
   }
@@ -1749,6 +1951,33 @@ void* SyncedMemory::mutable_data() {
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
+
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 
 >>>>>>> pod-caffe-pod.hpp-merge

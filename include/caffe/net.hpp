@@ -67,6 +67,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -106,16 +107,21 @@ class Net {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
    * @brief Zeroes out the diffs of all net parameters.
    *        Should be run before Backward.
    */
@@ -128,6 +134,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -165,9 +172,14 @@ class Net {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -182,6 +194,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
    * The network backward should take no input and output, since it solely
    * computes the gradient w.r.t the parameters, and the data has already been
@@ -229,12 +243,16 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   void ShareTrainedLayersWith(const Net* other);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -269,11 +287,16 @@ class Net {
   void ShareTrainedLayersWith(const Net* other);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  void ShareTrainedLayersWith(const Net* other);
+=======
+>>>>>>> pod/device/blob.hpp
   void ShareTrainedLayersWith(Net* other);
 >>>>>>> origin/BVLC/parallel
 =======
   void ShareTrainedLayersWith(const Net* other);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -303,6 +326,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
@@ -320,6 +345,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -359,16 +385,21 @@ class Net {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   void CopyTrainedLayersFromBinaryProto(const string trained_filename);
   void CopyTrainedLayersFromHDF5(const string trained_filename);
   /// @brief Writes the net to a proto.
@@ -398,6 +429,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -428,6 +460,11 @@ class Net {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
 
@@ -452,6 +489,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -472,6 +510,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
@@ -485,6 +525,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   inline const vector<vector<Blob<Dtype>*> >& bottom_vecs() const {
@@ -568,6 +609,8 @@ class Net {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   inline const vector<vector<Blob<Dtype>*> >& bottom_vecs() const {
     return bottom_vecs_;
   }
@@ -586,9 +629,12 @@ class Net {
   }
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   /**
    * @brief returns the top vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
@@ -601,6 +647,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -640,16 +687,21 @@ class Net {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   inline const vector<vector<Blob<Dtype>*> >& top_vecs() const {
     return top_vecs_;
   }
@@ -660,6 +712,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     return bottom_need_backward_;
   }
 <<<<<<< HEAD
@@ -879,9 +932,12 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
+=======
+>>>>>>> pod/device/blob.hpp
     return bottom_need_backward_;
   }
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
     return bottom_need_backward_;
@@ -960,6 +1016,8 @@ class Net {
 =======
   inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
   inline vector<vector<bool> >& bottom_need_backward() {
+=======
+>>>>>>> pod/device/blob.hpp
     return bottom_need_backward_;
   }
   inline vector<Dtype>& blob_loss_weights() {
@@ -1038,9 +1096,89 @@ class Net {
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+  inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
+  inline vector<vector<bool> >& bottom_need_backward() {
+    return bottom_need_backward_;
+  }
+  inline vector<Dtype>& blob_loss_weights() {
+    return blob_loss_weights_;
+  }
+  /// @brief returns the parameters
+  inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
+  /// @brief returns the parameter learning rate multipliers
+  inline vector<float>& params_lr() { return params_lr_; }
+  inline vector<float>& params_weight_decay() { return params_weight_decay_; }
+  const map<string, int>& param_names_index() { return param_names_index_; }
+  /// @brief Input and output blob numbers
+  inline int num_inputs() { return net_input_blobs_.size(); }
+  inline int num_outputs() { return net_output_blobs_.size(); }
+  inline vector<Blob<Dtype>*>& input_blobs() { return net_input_blobs_; }
+  inline vector<Blob<Dtype>*>& output_blobs() { return net_output_blobs_; }
+  inline vector<int>& input_blob_indices() { return net_input_blob_indices_; }
+  inline vector<int>& output_blob_indices() { return net_output_blob_indices_; }
+  bool has_blob(const string& blob_name);
+  const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name);
+  bool has_layer(const string& layer_name);
+  const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
+>>>>>>> origin/BVLC/parallel
+=======
+    return bottom_need_backward_;
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
+  inline const vector<Dtype>& blob_loss_weights() const {
+    return blob_loss_weights_;
+  }
+  inline const vector<bool>& layer_need_backward() const {
+    return layer_need_backward_;
+  }
+  /// @brief returns the parameters
+  inline const vector<shared_ptr<Blob<Dtype> > >& params() const {
+    return params_;
+  }
+  inline const vector<Blob<Dtype>*>& learnable_params() const {
+    return learnable_params_;
+  }
+  /// @brief returns the learnable parameter learning rate multipliers
+  inline const vector<float>& params_lr() const { return params_lr_; }
+  inline const vector<bool>& has_params_lr() const { return has_params_lr_; }
+  /// @brief returns the learnable parameter decay multipliers
+  inline const vector<float>& params_weight_decay() const {
+    return params_weight_decay_;
+  }
+  inline const vector<bool>& has_params_decay() const {
+    return has_params_decay_;
+  }
+  const map<string, int>& param_names_index() const {
+    return param_names_index_;
+  }
+  inline const vector<int>& param_owners() const { return param_owners_; }
+  /// @brief Input and output blob numbers
+  inline int num_inputs() const { return net_input_blobs_.size(); }
+  inline int num_outputs() const { return net_output_blobs_.size(); }
+  inline const vector<Blob<Dtype>*>& input_blobs() const {
+    return net_input_blobs_;
+  }
+  inline const vector<Blob<Dtype>*>& output_blobs() const {
+    return net_output_blobs_;
+  }
+  inline const vector<int>& input_blob_indices() const {
+    return net_input_blob_indices_;
+  }
+  inline const vector<int>& output_blob_indices() const {
+    return net_output_blob_indices_;
+  }
+  bool has_blob(const string& blob_name) const;
+  const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
+  bool has_layer(const string& layer_name) const;
+  const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
@@ -1081,11 +1219,15 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1133,6 +1275,8 @@ class Net {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
 =======
@@ -1141,6 +1285,7 @@ class Net {
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1158,6 +1303,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Helper for displaying debug info in Forward.
   void ForwardDebugInfo(const int layer_id);
@@ -1174,6 +1321,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1213,16 +1361,21 @@ class Net {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   /// @brief The network name
   string name_;
   /// @brief The phase: TRAIN or TEST
@@ -1233,6 +1386,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1263,6 +1417,11 @@ class Net {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   /// @brief Get misc parameters, e.g. the LR multiplier and weight decay.
   void GetLearningRateAndWeightDecay();
 
@@ -1277,6 +1436,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1297,6 +1457,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
@@ -1328,6 +1490,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1397,6 +1560,18 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+  vector<vector<int> > param_id_vecs_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  vector<vector<int> > param_id_vecs_;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  vector<vector<int> > param_id_vecs_;
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   vector<int> param_owners_;
   vector<string> param_display_names_;
@@ -1415,12 +1590,15 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
   vector<Blob<Dtype>*> learnable_params_;
@@ -1439,6 +1617,7 @@ class Net {
   vector<float> params_weight_decay_;
   vector<bool> has_params_decay_;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1452,6 +1631,8 @@ class Net {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
   vector<Blob<Dtype>*> learnable_params_;
@@ -1470,6 +1651,7 @@ class Net {
   vector<float> params_weight_decay_;
   vector<bool> has_params_decay_;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   string name_;
@@ -1592,6 +1774,8 @@ class Net {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   string name_;
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
@@ -1599,7 +1783,10 @@ class Net {
   vector<float> params_lr_;
   /// the weight decay multipliers
   vector<float> params_weight_decay_;
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
   /// The parameters in the network.
@@ -1623,6 +1810,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -1630,6 +1818,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   /// The bytes of memory used by this net
   size_t memory_used_;

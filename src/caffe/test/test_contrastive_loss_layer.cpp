@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -41,11 +42,18 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 #include <cstdlib>
 #include <cstring>
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -74,6 +82,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 #include <vector>
 
@@ -92,12 +102,16 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/loss_layers.hpp"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -132,11 +146,16 @@
 #include "caffe/loss_layers.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/loss_layers.hpp"
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -172,6 +191,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -193,6 +214,7 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -232,16 +254,21 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
       : blob_bottom_data_i_(new Blob<Dtype>(512, 2, 1, 1)),
         blob_bottom_data_j_(new Blob<Dtype>(512, 2, 1, 1)),
         blob_bottom_y_(new Blob<Dtype>(512, 1, 1, 1)),
@@ -257,6 +284,7 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -287,6 +315,11 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
       : blob_bottom_data_i_(new Blob<Dtype>(128, 10, 1, 1)),
         blob_bottom_data_j_(new Blob<Dtype>(128, 10, 1, 1)),
         blob_bottom_y_(new Blob<Dtype>(128, 1, 1, 1)),
@@ -307,6 +340,7 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -327,6 +361,8 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     filler.Fill(this->blob_bottom_data_i_);
     blob_bottom_vec_.push_back(blob_bottom_data_i_);
@@ -384,6 +420,9 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -391,6 +430,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
       Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq), 0.0);
       loss += dist*dist;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -454,6 +494,8 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
       Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq), 0.0);
       loss += dist*dist;
 =======
@@ -464,9 +506,12 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
       loss += dist*dist;
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     }
   }
@@ -495,6 +540,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -534,16 +580,21 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 TYPED_TEST(ContrastiveLossLayerTest, TestForwardLegacy) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -593,6 +644,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradientLegacy) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -631,9 +683,14 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradientLegacy) {
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -647,5 +704,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradientLegacy) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

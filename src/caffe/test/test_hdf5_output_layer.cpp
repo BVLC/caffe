@@ -115,6 +115,7 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -148,10 +149,17 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -180,6 +188,8 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }

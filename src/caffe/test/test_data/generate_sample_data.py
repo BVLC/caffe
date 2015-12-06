@@ -51,6 +51,7 @@ with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     )
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -85,6 +86,12 @@ with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
 =======
     )
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    )
+=======
+<<<<<<< HEAD
+    )
+>>>>>>> pod/device/blob.hpp
     f.create_dataset(
         'label2', data=label2,
 <<<<<<< HEAD
@@ -130,6 +137,7 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -151,6 +159,8 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
     f.create_dataset(
         'label2', data=label2,
@@ -192,6 +202,7 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -221,6 +232,8 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe

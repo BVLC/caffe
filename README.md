@@ -8,6 +8,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -22,6 +25,7 @@ To push your changes to the documentation to the gh-pages branch of your or the 
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -38,6 +42,8 @@ To push your changes to the documentation to the gh-pages branch of your or the 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
@@ -85,6 +91,7 @@ Please cite Caffe in your publications if it helps your research:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
 <<<<<<< HEAD
@@ -97,11 +104,14 @@ Please cite Caffe in your publications if it helps your research:
 >>>>>>> pod/caffe-merge
 =======
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
@@ -119,6 +129,8 @@ Please cite Caffe in your publications if it helps your research:
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 # Caffe Documentation
 
 To generate the documentation, run `$CAFFE_ROOT/scripts/build_docs.sh`.
@@ -129,6 +141,7 @@ To push your changes to the documentation to the gh-pages branch of your or the 
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -157,4 +170,6 @@ To push your changes to the documentation to the gh-pages branch of your or the 
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -58,6 +59,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -73,6 +76,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -99,6 +103,8 @@
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -109,6 +115,7 @@
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -127,15 +134,20 @@
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #ifndef CAFFE_UTIL_BLOCKING_QUEUE_H_
 #define CAFFE_UTIL_BLOCKING_QUEUE_H_
 
@@ -156,6 +168,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -167,6 +180,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -174,6 +188,12 @@
 >>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -224,6 +244,8 @@
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 
@@ -247,6 +269,7 @@ template<typename T>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -287,6 +310,8 @@ template<typename T>
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -331,6 +356,7 @@ DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -357,6 +383,8 @@ DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -367,6 +395,7 @@ DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -385,15 +414,20 @@ DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 class blocking_queue {
 public:
   void push(const T& t) {
@@ -468,6 +502,7 @@ private:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -479,6 +514,7 @@ private:
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -486,6 +522,12 @@ private:
 >>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -536,6 +578,8 @@ private:
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 };

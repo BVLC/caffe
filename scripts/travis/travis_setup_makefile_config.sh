@@ -13,12 +13,16 @@ if $WITH_CUDA; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   # Only generate compute_50.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -53,6 +57,10 @@ if $WITH_CUDA; then
   # Only generate compute_50.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  # Only generate compute_50.
+=======
+>>>>>>> pod/device/blob.hpp
   # Remove default gencode set; only generate compute_50.
   sed -i 's/-gencode arch=.*\\//' Makefile.config
   sed -i 's/CUDA_ARCH :=//' Makefile.config
@@ -68,6 +76,7 @@ if $WITH_CUDA; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -89,11 +98,14 @@ if $WITH_CUDA; then
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   GENCODE="-gencode arch=compute_50,code=sm_50"
   GENCODE="$GENCODE -gencode arch=compute_50,code=compute_50"
   echo "CUDA_ARCH := $GENCODE" >> Makefile.config
 fi
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -141,16 +153,21 @@ fi
 >>>>>>> pod/caffe-merge
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
 # Remove IO library settings from Makefile.config
 # to avoid conflicts with CI configuration
@@ -176,6 +193,7 @@ EOF
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -214,9 +232,14 @@ EOF
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
@@ -230,4 +253,6 @@ EOF
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

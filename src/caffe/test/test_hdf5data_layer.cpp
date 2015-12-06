@@ -104,6 +104,9 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -116,6 +119,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
@@ -219,6 +223,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> BVLC/device-abstraction
 =======
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
@@ -232,6 +238,9 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
 
@@ -239,6 +248,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 =======
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
@@ -252,6 +262,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> BVLC/master
 =======
@@ -285,9 +297,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
@@ -306,6 +321,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
@@ -319,10 +335,13 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
   EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -352,6 +371,10 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
   EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
@@ -362,6 +385,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label2_->width(), 1);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
   EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
@@ -406,6 +430,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+  EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);

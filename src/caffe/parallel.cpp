@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -55,6 +56,8 @@
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -264,6 +267,7 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -290,6 +294,8 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -300,6 +306,7 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -318,15 +325,20 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 #include <cstdlib>
 #include <string>
 #include <stdio.h>
@@ -917,6 +929,7 @@ void IBChannel::poll() const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -928,6 +941,7 @@ void IBChannel::poll() const {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -935,6 +949,12 @@ void IBChannel::poll() const {
 >>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -985,6 +1005,8 @@ void IBChannel::poll() const {
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 }
@@ -1009,6 +1031,7 @@ template<typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -1049,6 +1072,8 @@ template<typename Dtype>
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1298,6 +1323,7 @@ INSTANTIATE_CLASS(P2PSync);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1324,6 +1350,8 @@ INSTANTIATE_CLASS(P2PSync);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> origin/BVLC/parallel
@@ -1334,6 +1362,7 @@ INSTANTIATE_CLASS(P2PSync);
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -1352,15 +1381,20 @@ INSTANTIATE_CLASS(P2PSync);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 IBSync<Dtype>::IBSync(const Params<Dtype>& params, int rank,
                       const IBChannel& ucast, const IBChannel& mcast,
                       const vector<ib_addr>& ucast_addrs,
@@ -2073,6 +2107,7 @@ INSTANTIATE_CLASS(RawSync);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
@@ -2084,6 +2119,7 @@ INSTANTIATE_CLASS(RawSync);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -2091,6 +2127,12 @@ INSTANTIATE_CLASS(RawSync);
 >>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -2141,5 +2183,7 @@ INSTANTIATE_CLASS(RawSync);
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
