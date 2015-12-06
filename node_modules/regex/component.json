@@ -1,0 +1,11 @@
+{
+    "name": "regex",
+    "repo": "aaditmshah/regex",
+    "description": "Native RegExp compatible regular expressions for JavaScript. Patterns may be composed of subexpressions and multiple expressions may be combined into a single expression.",
+    "version": "0.1.1",
+    "keywords": ["regex", "regexp", "regular", "expression", "pattern", "definition", "composition", "subexpression", "combination"],
+    "main": "lib/regex.js",
+    "scripts": ["lib/regex.js"],
+    "license": "MIT",
+    "twitter": "@zcombinator"
+}

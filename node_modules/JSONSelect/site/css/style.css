@@ -1,0 +1,209 @@
+body {
+    background-color: #191919;
+    color: #a1a1a1;
+    font-family: 'Droid Sans', arial, serif;
+    font-size: 14px;
+}
+
+#header {
+    position: fixed;
+    background-color: #191919;
+    opacity: .7;
+    color: #ccc;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    margin: 0px;
+    padding: 4px 10px 4px 10px;
+}
+
+#main {
+    margin-top: 100px;
+}
+
+#header b {
+    font-weight: bold;
+    color: #fff;
+}
+
+a {
+    color: #999;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #fff;
+}
+
+#header .title {
+    font-size: 400%;
+}
+
+#header .subtitle {
+    font-size: 150%;
+    margin-left: 1em;
+    font-style: italic;
+}
+
+#header .nav {
+    float: right;
+    margin-right: 100px;
+}
+
+div.content {
+    max-width: 850px;
+    min-width: 675px;
+    margin: auto;
+}
+
+div#tryit {
+    min-width: 825px;
+}
+
+#splash {
+    max-width: 700px;
+}
+
+.json {
+    background-color: #333;
+    padding: .5em 1em .5em 1em;
+    border: 3px solid #444;
+    border-radius: 1em;
+    -moz-border-radius: 1em;
+    -webkit-border-radius: 1em;
+}
+
+#splash .sample {
+    width: 250px;
+    float: right;
+    margin-left: 1em;
+    margin-top: 3em;
+    font-size: 90%;
+}
+
+#doc {
+    margin-top: 140px;
+}
+
+#doc table {
+    width: 100%;
+}
+
+#doc table th {
+    background-color: #aaa;
+    color: #333;
+    padding: 10px;
+}
+
+#doc table tr td:first-child {
+    font-family: "andale mono",monospace;
+}
+
+#doc table td {
+    padding-top: 3px;
+}
+
+#splash .sample tt {
+    font-size: 90%;
+    padding: 0 .2em 0 .2em;
+}
+
+#splash .sample pre {
+    border-top: 1px dashed #aaa;
+    padding-top: 1em;
+}
+
+#splash .pitch {
+    padding-top: 2em;
+    font-size: 170%;
+}
+
+.selected {
+    opacity: .7;
+    padding: 8px;
+    margin: -10px;
+    background-color: #fff475;
+    color: #000;
+    border: 2px solid white;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+
+div.current input, div.selector, pre, code, tt {
+    font-family: "andale mono",monospace;
+    font-size: .9em;
+}
+
+div.current {
+    width: 100%;
+    padding: 1em;
+}
+
+div.current input {
+    color: #fff;
+    font-size: 110%;
+    background-color: #333;
+    border: 1px solid #444;
+    padding: 8px;
+    width: 400px;
+    margin-left: 1em;
+    margin-right: 1em;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+
+pre.doc {
+    float: right;
+    padding: 1em 3em 1em 3em;
+    padding-right: 160px;
+    font-size: 90%;
+}
+
+.selectors {
+    margin: 1em;
+    background-color: #444;
+    width: 300px;
+    padding: 8px;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+
+}
+.selectors .selector {
+    background-color: #333;
+    padding: .4em;
+    margin: 1px;
+    cursor: pointer;
+}
+
+.selectors .selector.inuse {
+    border: 1px solid #9f9;
+    margin: -1px;
+    margin-left: 0px;
+}
+
+.results.error {
+    color: #f99;
+}
+
+.results {
+    color: #9f9;
+    font-size: 90%;
+    width: 300px;
+}
+
+#cred, #code {
+    padding-top: 2em;
+}
+
+p.psst {
+    margin-top: 4em;
+    font-size: .9em;
+}
+
+p.item {
+    margin-top: 2em;
+    margin-left: 1em;
+}

@@ -1,3 +1,0 @@
-[submodule "test"]
-	path = test
-	url = git@github.com:dominictarr/event-stream_tests.git

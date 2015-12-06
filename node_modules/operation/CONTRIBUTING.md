@@ -1,0 +1,1 @@
+<p align="center"> <a href="http://www.flickr.com/photos/detourart/2152289501/" title="dr. bob shaffer by queenodesign, on Flickr"><img src="http://farm3.staticflickr.com/2340/2152289501_d68431cd11_z.jpg" width="640" height="509" alt="dr. bob shaffer"></a> </p>

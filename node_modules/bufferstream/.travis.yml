@@ -1,0 +1,7 @@
+before_script: "npm install --dev"
+script: "npm test"
+language: node_js
+node_js:
+    - 0.4
+    - 0.8
+    - 0.10

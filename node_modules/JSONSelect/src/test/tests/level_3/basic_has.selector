@@ -1,0 +1,1 @@
+.languagesSpoken object:has(.language)

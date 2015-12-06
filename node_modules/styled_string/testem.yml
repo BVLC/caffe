@@ -1,8 +1,0 @@
-src_files:
-- ./*.js
-launchers:
-    Mocha:
-        command: mocha tests.js -R tap
-        protocol: tap
-auto_launch_in_dev:
-- Mocha

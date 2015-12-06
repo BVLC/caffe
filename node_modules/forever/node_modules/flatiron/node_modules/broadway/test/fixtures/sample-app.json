@@ -1,8 +1,0 @@
-{
-  "directories": {
-    "app": "#ROOT/app",
-    "config": "#ROOT/config",
-    "lib": "#ROOT/lib",
-    "test": "#ROOT/test"
-  }
-}

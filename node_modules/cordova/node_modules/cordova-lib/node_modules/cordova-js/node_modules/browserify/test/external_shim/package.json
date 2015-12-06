@@ -1,5 +1,0 @@
-{
-    "browser": {
-        "shim": "./shim.js"
-    }
-}

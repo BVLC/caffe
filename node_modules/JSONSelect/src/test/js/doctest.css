@@ -1,0 +1,69 @@
+pre {
+  overflow: auto;
+}
+
+pre.doctest {
+  border-left: 3px solid #99f;
+  padding-left: 1em;
+}
+
+pre.output {
+  border-left: 3px solid #9f9;
+  padding-left: 1em;
+}
+
+.doctest-example-prompt {
+  color: #333;
+}
+
+.doctest-success {
+  color: #060;
+}
+
+.doctest-failure {
+  color: #600;
+}
+
+.doctest-example-detail {
+  color: #060;
+  font-weight: bold;
+}
+
+a.doctest-failure-link {
+  text-decoration: none;
+}
+
+a.doctest-failure-link:hover {
+  text-decoration: underline;
+}
+
+.doctest-example:target {
+  border-left: 3px solid #f00;
+}
+
+div.test:target {
+  border: 3px solid #ff0;
+}
+
+div.test {
+  border: 1px solid #999;
+  margin-bottom: 1em;
+}
+
+div.test .test-id {
+  position: relative;
+  float: right;
+  background-color: #000;
+  color: #bbb;
+  padding: 3px;
+}
+
+div.test .test-id a:link,
+div.test .test-id a:visited {
+  color: #bbb;
+  text-decoration: none;
+}
+
+div.test .test-id a:hover {
+  text-decoration: underline;
+}

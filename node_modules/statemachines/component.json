@@ -1,0 +1,11 @@
+{
+    "name": "statemachines",
+    "repo": "aaditmshah/statemachines",
+    "description": "Deterministic and Nondeterministic Finite State Machines for JavaScript. The backend for my regex library.",
+    "version": "0.1.0",
+    "keywords": ["deterministic", "nondeterministic", "finite", "state", "machines", "backend", "regex"],
+    "main": "lib/statemachines.js",
+    "scripts": ["lib/statemachines.js"],
+    "license": "MIT",
+    "twitter": "@zcombinator"
+}

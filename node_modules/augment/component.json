@@ -1,0 +1,11 @@
+{
+    "name": "augment",
+    "repo": "javascript/augment",
+    "description": "The world's smallest and fastest classical JavaScript inheritance pattern.",
+    "version": "3.2.1",
+    "keywords": ["augment", "augments", "augmentation", "extend", "extends", "extension", "prototype", "prototypal", "class", "classical", "object", "inheritance", "uber", "super", "constructor", "oop"],
+    "main": "lib/augment.js",
+    "scripts": ["lib/augment.js"],
+    "license": "MIT",
+    "twitter": "@zcombinator"
+}

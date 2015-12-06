@@ -1,1 +1,0 @@
-# tests/dummy/public/robots.txt is present

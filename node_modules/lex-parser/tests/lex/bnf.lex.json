@@ -1,0 +1,24 @@
+{
+    "rules": [
+      ["\\s+", "/* skip whitespace */"],
+      ["\\/\\*[^*]*\\*", "return yy.lexComment(this);"],
+      ["[a-zA-Z][a-zA-Z0-9_-]*", "return 'ID';"],
+      ["\"[^\"]+\"", "yytext = yytext.substr(1, yyleng-2); return 'STRING';"],
+      ["'[^']+'", "yytext = yytext.substr(1, yyleng-2); return 'STRING';"],
+      [":", "return ':';"],
+      [";", "return ';';"],
+      ["\\|", "return '|';"],
+      ["%%", "return '%%';"],
+      ["%prec\\b", "return 'PREC';"],
+      ["%start\\b", "return 'START';"],
+      ["%left\\b", "return 'LEFT';"],
+      ["%right\\b", "return 'RIGHT';"],
+      ["%nonassoc\\b", "return 'NONASSOC';"],
+      ["%[a-zA-Z]+[^\\n]*", "/* ignore unrecognized decl */"],
+      ["\\{\\{[^}]*\\}", "return yy.lexAction(this);"],
+      ["\\{[^}]*\\}", "yytext = yytext.substr(1, yyleng-2); return 'ACTION';"],
+      ["<[^>]*>", "yytext = yytext.substr(1, yyleng-2); return 'ACTION';"],
+      [".", "/* ignore bad characters */"],
+      ["$", "return 'EOF';"]
+    ]
+}

@@ -1,5 +1,0 @@
-{
-  "browserify": {
-    "transform": [ "./xxx.js" ]
-  }
-}

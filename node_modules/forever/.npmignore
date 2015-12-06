@@ -1,8 +1,0 @@
-.DS_Store
-test/*.log
-node_modules/
-node_modules/*
-npm-debug.log
-.*.sw[op]
-test/fixtures/*.log
-.idea

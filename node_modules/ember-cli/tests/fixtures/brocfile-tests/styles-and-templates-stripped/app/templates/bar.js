@@ -1,1 +1,0 @@
-//app/templates/bar.js

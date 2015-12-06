@@ -1,9 +1,0 @@
-{
-  "name": "tests-server-middleware",
-  "keywords": [
-    "ember-addon"
-  ],
-  "ember-addon": {
-    "before": "history-support-middleware"
-  }
-}

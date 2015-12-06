@@ -1,0 +1,15 @@
+[
+    {
+        "language": "Bulgarian",
+        "level": "advanced"
+    },
+    {
+        "language": "English",
+        "level": "native",
+        "preferred": true
+    },
+    {
+        "language": "Spanish",
+        "level": "beginner"
+    }
+]

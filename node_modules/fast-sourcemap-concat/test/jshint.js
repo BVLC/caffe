@@ -1,3 +1,0 @@
-require('mocha-jshint')([
-  'lib'
-]);

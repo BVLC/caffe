@@ -1,5 +1,0 @@
-{
-  "app.js": "#ROOT/app.js",
-  "config/config.json": "#CONFIG/config.json",
-  "lib/index.js": "#LIB/index.js"
-}

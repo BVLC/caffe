@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> JSONSelect </title>
+    <link href='css/droid_sans.css' rel='stylesheet' type='text/css'>
+    <link href='css/style.css' type='text/css' rel='stylesheet'>
+  </head>
+  <body>
+    <div id="header">
+      <div class="content">
+        <div class="title">json<b>:</b>select<b>()</b></div>
+        <div class="nav"> <a href="#overview">Overview</a> | <a href="#tryit">Try It!</a> | <a href="#docs">Docs</a> | <a href="#code">Code</a> | <a href="mailto:jsonselect@librelist.com">Contact</a> | <a href="#cred">Credit</a> </div>
+        <div class="subtitle">CSS-like selectors for JSON.</div>
+      </div>
+    </div>
+    <div id="main">
+      <div style="display: none" id="splash" class="content">
+        <div class="sample json">
+          <tt>".author .drinkPref&nbsp;:first-child"</tt>
+          <pre>{
+  "author": {
+    "name": {
+      "first": "Lloyd",
+      "last": "Hilaiel"
+    },
+    "drinkPref": [
+      <span class="selected">"whiskey"</span>,
+      "beer",
+      "wine"
+    ],
+  },
+  "thing": "JSONSelect site",
+  "license": "<a href="http://creativecommons.org/licenses/by-sa/3.0/us/">(cc) BY-SA</a>"
+}</pre></div>
+        <div class="pitch">
+        <p>JSONSelect is an <i>experimental</i> selector language for JSON.</p>
+        <p>It makes it easy to access data  in complex JSON documents.</p>
+        <p>It <i>feels like</i> CSS.</p>
+        <p>Why not <a href="#tryit">give it a try</a>?
+        </div>
+      </div>
+      <div id="tryit" style="display: none" class="content">
+        <div class="current"> Current Selector (click to edit): <input type="text"></input><span class="results"></span></div>
+        <pre class="doc json">
+{
+    "name": {
+        "first": "Lloyd",
+        "last": "Hilaiel"
+    },
+    "favoriteColor": "yellow",
+    "languagesSpoken": [
+        {
+            "lang": "Bulgarian",
+            "level": "advanced"
+        },
+        {
+            "lang": "English",
+            "level": "native",
+            "preferred": true
+        },
+        {
+            "lang": "Spanish",
+            "level": "beginner"
+        }
+    ],
+    "seatingPreference": [
+        "window",
+        "aisle"
+    ],
+    "drinkPreference": [
+        "whiskey",
+        "beer",
+        "wine"
+    ],
+    "weight": 172
+}
+        </pre>
+        <div class="selectors">
+          <div class="title"> Choose A Selector... </div>
+          <div class="selector">.languagesSpoken .lang</div>
+          <div class="selector">.drinkPreference :first-child</div>
+          <div class="selector">.seatingPreference :nth-child(1)</div>
+          <div class="selector">."weight"</div>
+          <div class="selector">.lang</div>
+          <div class="selector">.favoriteColor</div>
+          <div class="selector">string.favoriteColor</div>
+          <div class="selector">string:last-child</div>
+          <div class="selector">string:nth-child(-n+2)</div>
+          <div class="selector">string:nth-child(odd)</div>
+          <div class="selector">string:nth-last-child(1)</div>
+          <div class="selector">:root</div>
+          <div class="selector">number</div>
+          <div class="selector">:has(:root > .preferred)</div>
+          <div class="selector">.preferred ~ .lang</div>
+          <div class="selector">:has(.lang:val("Spanish")) > .level</div>
+          <div class="selector">.lang:val("Bulgarian") ~ .level</div>
+          <div class="selector">.weight:expr(x<180) ~ .name .first</div>
+        </div>
+      </div>
+      <div style="display: none" id="cred" class="content">
+        <p>JSONSelect is dedicated to sad code everywhere that looks like this:</p>
+        <pre class="json">if (foo && foo.bar && foo.bar.baz && foo.bar.baz.length > 2)
+    return foo.bar.baz[2];
+return undefined;</pre>
+        <p><a href="http://trickyco.de/">Lloyd Hilaiel</a> started it, and is surrounded by many <a href="https://github.com/lloyd/JSONSelect/contributors">awesome contributors</a>.</p>
+        <p><a href="http://blog.mozilla.com/dherman/">Dave Herman</a> provided the name, and lots of encouragement.</p>
+        <p><a href="http://open-mike.org/">Mike Hanson</a> gave deep feedback and ideas.</p>
+        <p><a href="http://ejohn.org/">John Resig</a> unwittingly contributed his <a href="http://ejohn.org/blog/selectors-that-people-actually-use/">design thoughts</a>.</p>
+        <p>The jsonselect.org site design was inspired by <a href="http://www.stephenwildish.co.uk/">Stephen Wildish</a>.</p>
+        <p><a href="http://json.org/">JSON</a> and <a href="http://www.w3.org/TR/css3-selectors/">CSS3 Selectors</a> are the prerequisites to JSONSelect's existence, so thanks to you guys too.</p>
+        <p></p>
+      </div>
+      <div style="display: none" id="doc" class="content">
+        Loading documentation...
+      </div>
+      <div style="display: none" id="code" class="content">
+        <p>Several different implementations of JSONSelect are available:</p>
+        <p class="item"><b>JavaScript:</b> Get it <a href="js/jsonselect.js">documented</a>, or <a href="js/jsonselect.min.js">minified</a> (<i>2.9k</i> minified and gzipped).
+           The code is <a href="https://github.com/lloyd/JSONSelect">on github</a>.</p>
+        <p class="item"><b>node.js:</b> <tt>npm install JSONSelect</tt></p>
+        <p class="item"><b>ruby:</b> A gem by <a href="https://github.com/fd">Simon Menke</a>: <a href="https://github.com/fd/json_select">https://github.com/fd/json_select</a></p>
+        <p class="psst">
+          Something missing from this list?  Please, <a href="https://github.com/lloyd/JSONSelect/issues">tell me about it</a>.
+        </p>
+      </div>
+
+    </div>
+
+
+<a href="https://github.com/lloyd/JSONSelect"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/4c7dc970b89fd04b81c8e221ba88ff99a06c6b61/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub"></a>
+  </body>
+  <script src="js/json2.js"></script>
+  <script src="js/showdown.js"></script>
+  <script src="js/jquery-1.6.1.min.js"></script>
+  <script src="js/jquery.ba-hashchange.min.js"></script>
+  <script src="js/jsonselect.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/demo.js"></script>
+</html>

@@ -1,0 +1,85 @@
+"Lloyd"
+"Hilaiel"
+{
+    "first": "Lloyd",
+    "last": "Hilaiel"
+}
+"yellow"
+"Bulgarian"
+"advanced"
+{
+    "language": "Bulgarian",
+    "level": "advanced"
+}
+"English"
+"native"
+{
+    "language": "English",
+    "level": "native"
+}
+"Spanish"
+"beginner"
+{
+    "language": "Spanish",
+    "level": "beginner"
+}
+[
+    {
+        "language": "Bulgarian",
+        "level": "advanced"
+    },
+    {
+        "language": "English",
+        "level": "native"
+    },
+    {
+        "language": "Spanish",
+        "level": "beginner"
+    }
+]
+"window"
+"aisle"
+[
+    "window",
+    "aisle"
+]
+"beer"
+"whiskey"
+"wine"
+[
+    "beer",
+    "whiskey",
+    "wine"
+]
+172
+{
+    "name": {
+        "first": "Lloyd",
+        "last": "Hilaiel"
+    },
+    "favoriteColor": "yellow",
+    "languagesSpoken": [
+        {
+            "language": "Bulgarian",
+            "level": "advanced"
+        },
+        {
+            "language": "English",
+            "level": "native"
+        },
+        {
+            "language": "Spanish",
+            "level": "beginner"
+        }
+    ],
+    "seatingPreference": [
+        "window",
+        "aisle"
+    ],
+    "drinkPreference": [
+        "beer",
+        "whiskey",
+        "wine"
+    ],
+    "weight": 172
+}

@@ -1,7 +1,0 @@
-Synopsis
-
-    cordova-cli help [command]
-    cordova-cli [command] -h
-    cordova-cli -h [command]
- 
-Show syntax summary, or the help for a specific command.

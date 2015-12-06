@@ -1,2 +1,0 @@
-require('pkga');
-require('pkgb');

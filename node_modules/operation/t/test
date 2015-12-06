@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+echo ""
+
+(proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+
+if [ "$TRAVIS" = "true" ]; then
+  echo ""
+  echo "running with coverage"
+  t/cover
+  node_modules/.bin/istanbul report --format text
+  echo ""
+
+  echo "submitting to coveralls.io"
+  (cat coverage/lcov.info | node_modules/.bin/coveralls) > /dev/null 2>&1
+fi
+
+echo ""

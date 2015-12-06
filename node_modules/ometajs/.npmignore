@@ -1,6 +1,0 @@
-/lib/ometajs/ometa/*
-!/lib/ometajs/ometa/parsers.js
-
-/docs/
-/node_modules/
-npm-debug.log

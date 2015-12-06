@@ -1,1 +1,0 @@
-exports.shim = require('shim');

@@ -1,6 +1,0 @@
-.editorconfig
-.jshintrc
-.travis.yml
-Brocfile.js
-test/
-tmp/

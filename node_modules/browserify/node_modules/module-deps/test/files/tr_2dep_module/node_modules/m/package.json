@@ -1,6 +1,0 @@
-{
-  "main": "index.js",
-  "browserify": {
-    "transform": "insert-mmm"
-  }
-}

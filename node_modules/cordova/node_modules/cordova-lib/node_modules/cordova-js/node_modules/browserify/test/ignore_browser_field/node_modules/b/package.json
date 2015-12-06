@@ -1,8 +1,0 @@
-{
-  "name": "b",
-  "version": "1.0.0",
-  "main": "main.js",
-  "browser": {
-    "./x.js": "./browser-x.js"
-  }
-}

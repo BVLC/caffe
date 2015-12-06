@@ -1,2 +1,0 @@
-import "indexof";
-import "trim";

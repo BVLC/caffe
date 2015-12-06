@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <title>JSONSelect JS lex tests</title>
+    <link rel="stylesheet" type="text/css" href="js/doctest.css" />
+    <script src="js/doctest.js"></script>
+    <script src="../jsonselect.js"></script>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  </head>
+  <body>
+
+<div>
+  <button onclick="doctest()" type="button">run tests</button>
+  <pre id="doctestOutput"></pre>
+</div>
+
+    <h2> Tests of the JSONSelect lexer </h2>
+
+<div class="test">
+Simple tokens
+<pre class="doctest">
+$ JSONSelect._lex(">");
+[1, ">"]
+$ JSONSelect._lex("*");
+[1, "*"]
+$ JSONSelect._lex(",");
+[1, ","]
+$ JSONSelect._lex(".");
+[1, "."]
+</pre>
+</div>
+
+<div class="test">
+Offsets
+<pre class="doctest">
+$ JSONSelect._lex("foobar>",6);
+[7, ">"]
+</pre>
+</div>
+
+<div class="test">
+Types
+<pre class="doctest">
+$ JSONSelect._lex("string");
+[6, 3, "string"]
+$ JSONSelect._lex("boolean");
+[7, 3, "boolean"]
+$ JSONSelect._lex("null");
+[4, 3, "null"]
+$ JSONSelect._lex("array");
+[5, 3, "array"]
+$ JSONSelect._lex("object");
+[6, 3, "object"]
+$ JSONSelect._lex("number");
+[6, 3, "number"]
+</pre>
+</div>
+
+<div class="test">
+Whitespace
+<pre class="doctest">
+$ JSONSelect._lex("\r");
+[1, " "]
+$ JSONSelect._lex("\n");
+[1, " "]
+$ JSONSelect._lex("\t");
+[1, " "]
+$ JSONSelect._lex(" ");
+[1, " "]
+$ JSONSelect._lex("     \t   \r\n  !");
+[13, " "]
+</pre>
+
+<div class="test">
+pseudo classes
+<pre class="doctest">
+$ JSONSelect._lex(":root");
+[5, 1, ":root"]
+$ JSONSelect._lex(":first-child");
+[12, 1, ":first-child"]
+$ JSONSelect._lex(":last-child");
+[11, 1, ":last-child"]
+$ JSONSelect._lex(":only-child");
+[11, 1, ":only-child"]
+</pre>
+</div>
+
+<div class="test">
+json strings
+<pre class="doctest">
+$ JSONSelect._lex('"foo bar baz"');
+[13, 4, "foo bar baz"]
+$ JSONSelect._lex('"\\u0020"');
+[8, 4, " "]
+$ JSONSelect._lex('\"not terminated');
+Error: unclosed json string
+$ JSONSelect._lex('"invalid escape: \\y"');
+Error: invalid json string
+</pre>
+</div>
+
+<div class="test">
+identifiers (like after '.')
+<pre class="doctest">
+$ JSONSelect._lex("foo");
+[3, 4, "foo"]
+$ JSONSelect._lex("foo\\ bar");
+[8, 4, "foo bar"]
+$ JSONSelect._lex("_aB129bcde-\\:foo\\@$");
+[18, 4, "_aB129bcde-:foo@"]
+</pre>
+</div>
+
+<div class="test">
+non-ascii
+<pre class="doctest">
+$ JSONSelect._lex("обичам\\ те\\!");
+[12, 4, "обичам те!"]
+</pre>
+</div>
+
+  </body>
+</html>

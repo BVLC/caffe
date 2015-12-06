@@ -1,0 +1,5 @@
+/node_modules
+/.proof.out
+/coverage
+/npm-debug.log
+.DS_Store

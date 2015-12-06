@@ -1,6 +1,0 @@
-{
-  "config": "#CONFIG",
-  "lib": "#LIB",
-  "commands": "#LIB/commands",
-  "test": "#TEST"
-}

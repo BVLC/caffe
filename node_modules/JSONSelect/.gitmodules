@@ -1,0 +1,3 @@
+[submodule "src/test/tests"]
+	path = src/test/tests
+	url = git://github.com/lloyd/JSONSelectTests

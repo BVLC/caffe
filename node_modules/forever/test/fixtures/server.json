@@ -1,6 +1,0 @@
-{
-  "uid": "server",
-  "append": true,
-  "script": "server.js",
-  "sourceDir": "./test/fixtures"
-}

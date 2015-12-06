@@ -1,1 +1,0 @@
-exports.sax = require('./sax');

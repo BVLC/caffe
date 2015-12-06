@@ -1,0 +1,43 @@
+pre {
+  color: #ddd;
+  background-color: #333;
+  padding: 1em;
+  border-radius: 1em;
+  -moz-border-radius: 1em;
+  -webkit-border-radius: 1em;
+}
+
+pre.selector {
+    text-align: center;
+    padding: .5em;
+    cursor: pointer;
+}
+
+pre.document {
+    max-height: 150px;
+    overflow: auto;
+}
+
+pre.success {
+    background-color: #363;
+}
+
+pre.failure {
+    background-color: #633;
+}
+
+table {
+    width: 100%;
+}
+
+table td {
+    width: 50%;
+}
+
+table pre {
+    height: 100%;
+}
+
+h1,h2 {
+    text-align: center;
+}

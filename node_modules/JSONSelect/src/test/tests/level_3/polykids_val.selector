@@ -1,0 +1,1 @@
+:has(:root > .language:val("Bulgarian")) > .level
