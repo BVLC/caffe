@@ -3373,6 +3373,9 @@ message DataParameter {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -3508,6 +3511,7 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -3519,6 +3523,8 @@ message DataParameter {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/common.hpp
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
   // Prefetch queue (Number of batches to prefetch to host memory, increase if
@@ -3598,8 +3604,14 @@ message DataParameter {
   optional uint32 prefetch = 9 [default = 4];
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  // Prefetch queue (Number of batches to prefetch).
+  optional uint32 prefetch = 9 [default = 4];
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 }
 
 message DropoutParameter {

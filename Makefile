@@ -225,14 +225,20 @@ PROJECT := caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/common.hpp
 CONFIG_FILE := Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
 $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 <<<<<<< HEAD
+=======
+CONFIG_FILE ?= Makefile.config
+>>>>>>> origin/BVLC/parallel
 =======
 CONFIG_FILE ?= Makefile.config
 >>>>>>> origin/BVLC/parallel
@@ -878,10 +884,13 @@ endif
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/common.hpp
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -912,8 +921,15 @@ ifeq ($(RDMA), 1)
 	LIBRARIES += ibverbs ibumad
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+ifeq ($(RDMA), 1)
+	COMMON_FLAGS += -DRDMA
+	LIBRARIES += ibverbs ibumad
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -1687,6 +1703,14 @@ $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
 	@ echo
 
 <<<<<<< HEAD
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+>>>>>>> origin/BVLC/parallel
+		| $(LAYER_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
 =======

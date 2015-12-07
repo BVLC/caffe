@@ -201,6 +201,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -249,6 +250,8 @@ class Solver {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/common.hpp
   explicit Solver(const SolverParameter& param,
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
@@ -337,6 +340,7 @@ class Solver {
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 =======
@@ -346,6 +350,13 @@ class Solver {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   void InitTrainNet();
   void InitTestNets();
 
@@ -403,6 +414,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -473,6 +485,8 @@ class Solver {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/common.hpp
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -500,6 +514,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -608,6 +623,14 @@ class Solver {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 
  protected:
   // Make and apply the update value for the current iteration.

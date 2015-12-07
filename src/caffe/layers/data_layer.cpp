@@ -314,6 +314,35 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+template <typename Dtype>
+DataLayer<Dtype>::DataLayer(const LayerParameter& param)
+  : BasePrefetchingDataLayer<Dtype>(param),
+    reader_(param) {
+}
+
+template <typename Dtype>
+DataLayer<Dtype>::~DataLayer() {
+  this->StopInternalThread();
+}
+
+template <typename Dtype>
+void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  const int batch_size = this->layer_param_.data_param().batch_size();
+  // Read a data point, and use it to initialize the top blob.
+  Datum& datum = *(reader_.full().peek());
+
+  // Use data_transformer to infer the expected blob shape from datum.
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  this->transformed_data_.Reshape(top_shape);
+  // Reshape top[0] and prefetch_data according to the batch_size.
+  top_shape[0] = batch_size;
+  top[0]->Reshape(top_shape);
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].data_.Reshape(top_shape);
+>>>>>>> pod/common.hpp
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -556,6 +585,7 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer() {
   this->StopInternalThread();
@@ -571,6 +601,35 @@ DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),
     reader_(param) {
 <<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+map<string, weak_ptr<DataLoader::Body> > DataLoader::instances_;
+boost::mutex DataLoader::instances_mutex_;
+
+DataLoader::DataLoader(const DataParameter& param, int index,
+                       blocking_queue<Datum*>* free,
+                       blocking_queue<Datum*>* full):
+    source_(param.source(index)) {
+  boost::mutex::scoped_lock lock(instances_mutex_);
+  weak_ptr<Body> body = instances_[source_];
+  body_ = body.lock();
+  if (body_) {
+    CHECK(!free || free == body_.get()->free_);
+    CHECK(!full || full == body_.get()->full_);
+  } else {
+    body_.reset(new Body(param, index, free, full));
+    instances_[source_] = weak_ptr<Body>(body_);
+  }
+}
+
+>>>>>>> origin/BVLC/parallel
+DataLoader::~DataLoader() {
+  boost::mutex::scoped_lock lock(instances_mutex_);
+  body_.reset();
+  if (instances_[source_].expired())
+    instances_.erase(source_);
+>>>>>>> pod/common.hpp
 }
 
 template <typename Dtype>
@@ -605,6 +664,13 @@ DataLayer<Dtype>::~DataLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+  }
+>>>>>>> pod/common.hpp
 
 // This function is called on prefetch thread
 template<typename Dtype>
@@ -649,6 +715,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
 =======
 
+<<<<<<< HEAD
 // This function is called on prefetch thread
 template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
@@ -659,6 +726,18 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
+=======
+    ++iter_;
+    if (iter_ == dataset_->end()) {
+      iter_ = dataset_->begin();
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+  }
+}
+>>>>>>> pod/common.hpp
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -671,12 +750,24 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   top_shape[0] = batch_size;
   batch->data_.Reshape(top_shape);
 
+<<<<<<< HEAD
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
 
 >>>>>>> master
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
+=======
+  // Loaders share queues in case of multiple sources
+  for(int i = 1; i < param.data_param().source().size(); ++i) {
+    ld = new DataLoader(param.data_param(), i, loaders_free_, loaders_full_);
+    loaders_.push_back(shared_ptr<DataLoader>(ld));
+<<<<<<< HEAD
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   }
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
@@ -694,6 +785,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     trans_time += timer.MicroSeconds();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -729,6 +821,8 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
     reader_.free().push(const_cast<Datum*>(&datum));
 >>>>>>> caffe
+=======
+>>>>>>> pod/common.hpp
 =======
     reader_.free().push(const_cast<Datum*>(&datum));
 >>>>>>> master
@@ -5843,6 +5937,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
     read_time += timer.MicroSeconds();
     timer.Start();
@@ -5853,6 +5948,37 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+
+  // Look at first data point to initialize the top blob.
+  Datum* datum = loaders_full_->peek();
+
+  if (DecodeDatum(datum))
+    LOG(INFO) << "Decoding Datum";
+
+  // image
+  const int crop_size = this->layer_param_.transform_param().crop_size();
+  const int batch_size = this->layer_param_.data_param().batch_size();
+  if (crop_size > 0) {
+    top[0]->Reshape(batch_size, datum->channels(), crop_size, crop_size);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+	    this->prefetch_[i].data_.Reshape(batch_size, datum->channels(),
+	        crop_size, crop_size);
+	  }
+    this->transformed_data_.Reshape(1, datum->channels(),
+        crop_size, crop_size);
+  } else {
+    top[0]->Reshape(batch_size, datum->channels(),
+        datum->height(), datum->width());
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    	this->prefetch_[i].data_.Reshape(batch_size, datum->channels(),
+    	    datum->height(), datum->width());
+>>>>>>> pod/common.hpp
     }
     trans_time += timer.MicroSeconds();
 
@@ -5869,6 +5995,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 =======
@@ -5884,6 +6011,10 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     reader_.free().push(const_cast<Datum*>(&datum));
 =======
     loaders_free_->push((Datum*) &datum);
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
     loaders_free_->push((Datum*) &datum);
@@ -5897,6 +6028,14 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    vector<int> label_shape(1, batch_size);
+    top[1]->Reshape(label_shape);
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(label_shape);
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> origin/BVLC/parallel
   }
@@ -5911,6 +6050,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -5926,6 +6066,18 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+    top[1]->Reshape(batch_size, 1, 1, 1);
+    for(int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+    }
+>>>>>>> pod/common.hpp
   }
   timer.Stop();
   batch_timer.Stop();
@@ -5937,7 +6089,11 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+template<typename Dtype>
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -6011,8 +6167,13 @@ INSTANTIATE_CLASS(DataLayer);
 REGISTER_LAYER_CLASS(DATA, DataLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 // This function is called on prefetch thread
 template<typename Dtype>
+=======
+template <typename Dtype>
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
@@ -6021,6 +6182,13 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/common.hpp
 
   // Reshape according to the first datum of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -6033,9 +6201,27 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   top_shape[0] = batch_size;
   batch->data_.Reshape(top_shape);
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/common.hpp
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
@@ -6043,6 +6229,27 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // get a datum
     Datum& datum = *(reader_.full().pop("Waiting for data"));
+<<<<<<< HEAD
+=======
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+  const int batch_size = this->layer_param_.data_param().batch_size();
+  for (int item_id = 0; item_id < batch_size; ++item_id) {
+    timer.Start();
+    const Datum& datum = *(loaders_full_->pop("Waiting on data loader"));
+
+<<<<<<< HEAD
+    cv::Mat cv_img;
+    if (datum.encoded()) {
+       cv_img = DecodeDatumToCVMat(datum);
+    }
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply data transformations (mirror, scale, crop...)
@@ -6058,11 +6265,25 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     reader_.free().push(const_cast<Datum*>(&datum));
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    reader_.free().push(const_cast<Datum*>(&datum));
+>>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/caffe-merge
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    loaders_free_->push((Datum*) &datum);
+>>>>>>> origin/BVLC/parallel
+=======
+    loaders_free_->push((Datum*) &datum);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod/common.hpp
   }
   timer.Stop();
   batch_timer.Stop();

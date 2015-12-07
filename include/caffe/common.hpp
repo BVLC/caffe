@@ -776,6 +776,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/common.hpp
 =======
@@ -787,6 +788,8 @@ class Caffe {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/common.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
