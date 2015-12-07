@@ -28,15 +28,15 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(num_spatial_axes_, 2)
         << "kernel_h & kernel_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.kernel_size_size())
-        << "Either kernel_size or kernel_h/w should be specified; not both.";
+        << "Either kernel_size or kernel_h/w should be specified, not both.";
     kernel_shape_data[0] = conv_param.kernel_h();
     kernel_shape_data[1] = conv_param.kernel_w();
   } else {
     const int num_kernel_dims = conv_param.kernel_size_size();
     CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
         << "kernel_size must be specified once, or once per spatial dimension "
-        << "(kernel_size specified " << num_kernel_dims << " times; "
-        << num_spatial_axes_ << " spatial dims);";
+        << "(kernel_size specified " << num_kernel_dims << " times "
+        << num_spatial_axes_ << " spatial dims).";
       for (int i = 0; i < num_spatial_axes_; ++i) {
         kernel_shape_data[i] =
             conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
@@ -52,7 +52,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(num_spatial_axes_, 2)
         << "stride_h & stride_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.stride_size())
-        << "Either stride or stride_h/w should be specified; not both.";
+        << "Either stride or stride_h/w should be specified, not both.";
     stride_data[0] = conv_param.stride_h();
     stride_data[1] = conv_param.stride_w();
   } else {
@@ -60,8 +60,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
           num_stride_dims == num_spatial_axes_)
         << "stride must be specified once, or once per spatial dimension "
-        << "(stride specified " << num_stride_dims << " times; "
-        << num_spatial_axes_ << " spatial dims);";
+        << "(stride specified " << num_stride_dims << " times "
+        << num_spatial_axes_ << " spatial dims).";
     const int kDefaultStride = 1;
     for (int i = 0; i < num_spatial_axes_; ++i) {
       stride_data[i] = (num_stride_dims == 0) ? kDefaultStride :
@@ -76,7 +76,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(num_spatial_axes_, 2)
         << "pad_h & pad_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.pad_size())
-        << "Either pad or pad_h/w should be specified; not both.";
+        << "Either pad or pad_h/w should be specified, not both.";
     pad_data[0] = conv_param.pad_h();
     pad_data[1] = conv_param.pad_w();
   } else {
@@ -84,8 +84,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
           num_pad_dims == num_spatial_axes_)
         << "pad must be specified once, or once per spatial dimension "
-        << "(pad specified " << num_pad_dims << " times; "
-        << num_spatial_axes_ << " spatial dims);";
+        << "(pad specified " << num_pad_dims << " times "
+        << num_spatial_axes_ << " spatial dims)";
     const int kDefaultPad = 0;
     for (int i = 0; i < num_spatial_axes_; ++i) {
       pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
@@ -98,9 +98,9 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int num_dilation_dims = conv_param.dilation_size();
   CHECK(num_dilation_dims == 0 || num_dilation_dims == 1 ||
         num_dilation_dims == num_spatial_axes_)
-  << "dilation must be specified once, or once per spatial dimension "
-  << "(dilation specified " << num_dilation_dims << " times; "
-  << num_spatial_axes_ << " spatial dims);";
+      << "dilation must be specified once, or once per spatial dimension "
+      << "(dilation specified " << num_dilation_dims << " times "
+      << num_spatial_axes_ << " spatial dims).";
   const int kDefaultDilation = 1;
   for (int i = 0; i < num_spatial_axes_; ++i) {
     dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :

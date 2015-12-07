@@ -39,12 +39,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     const LayerParameter& param) {
   ConvolutionParameter conv_param = param.convolution_param();
   ConvolutionParameter_Engine engine = conv_param.engine();
+#ifdef USE_CUDNN
   bool use_dilation = false;
   for (int i = 0; i < conv_param.dilation_size(); ++i) {
     if (conv_param.dilation(i) > 1) {
       use_dilation = true;
     }
   }
+#endif
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
 #ifdef USE_CUDNN

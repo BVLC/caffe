@@ -114,7 +114,7 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num_spatial_axes_; ++i) {
     top_shape[channel_axis_] *= kernel_shape_data[i];
     const int input_dim = bottom[0]->shape(channel_axis_ + i + 1);
-    int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
+    const int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
     const int output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
         / stride_data[i] + 1;
     top_shape[channel_axis_ + i + 1] = output_dim;
@@ -153,7 +153,7 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          top_data + n * top_dim_);
+          dilation_.cpu_data(), top_data + n * top_dim_);
     }
   }
 }
@@ -178,7 +178,7 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          bottom_diff + n * bottom_dim_);
+          dilation_.cpu_data(), bottom_diff + n * bottom_dim_);
     }
   }
 }

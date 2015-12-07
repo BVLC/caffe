@@ -26,7 +26,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           num_kernels, bottom[0]->gpu_shape() + channel_axis_,
           top[0]->gpu_shape() + channel_axis_,
           kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-          top_data + n * top_dim_);
+          dilation_.gpu_data(), top_data + n * top_dim_);
     }
   }
 }
@@ -51,7 +51,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           bottom[0]->gpu_shape() + channel_axis_,
           top[0]->gpu_shape() + channel_axis_,
           kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
-          bottom_diff + n * bottom_dim_);
+          dilation_.gpu_data(), bottom_diff + n * bottom_dim_);
     }
   }
 }
