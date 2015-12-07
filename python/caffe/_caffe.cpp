@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -50,17 +51,22 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
@@ -78,6 +84,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -108,6 +115,11 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -129,6 +141,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -146,6 +159,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 // these need to be included after boost on OS X
@@ -165,6 +180,7 @@
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2785,9 +2801,19 @@ namespace bp = boost::python;
 namespace bp = boost::python;
 
 =======
+namespace bp = boost::python;
+
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+namespace bp = boost::python;
+
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
 namespace caffe {
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 
 void Net_Save(const Net<Dtype>& net, string filename) {
@@ -4446,6 +4472,152 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       static_cast<Dtype*>(PyArray_DATA(labels_arr)),
       PyArray_DIMS(data_arr)[0]);
 }
+=======
+>>>>>>> pod/device/blob.hpp
+
+Solver<Dtype>* GetSolverFromFile(const string& filename) {
+  SolverParameter param;
+  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  return SolverRegistry<Dtype>::CreateSolver(param);
+}
+
+struct NdarrayConverterGenerator {
+  template <typename T> struct apply;
+};
+
+<<<<<<< HEAD
+template <>
+struct NdarrayConverterGenerator::apply<Dtype*> {
+  struct type {
+    PyObject* operator() (Dtype* data) const {
+      // Just store the data pointer, and add the shape information in postcall.
+      return PyArray_SimpleNewFromData(0, NULL, NPY_DTYPE, data);
+=======
+<<<<<<< HEAD
+=======
+=======
+namespace bp = boost::python;
+
+namespace caffe {
+
+// For Python, for now, we'll just always use float as the type.
+typedef float Dtype;
+const int NPY_DTYPE = NPY_FLOAT32;
+
+// Selecting mode.
+void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
+void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+// For convenience, check that input files can be opened, and raise an
+// exception that boost will send to Python if not (caffe could still crash
+// later if the input files are disturbed before they are actually used, but
+// this saves frustration in most cases).
+static void CheckFile(const string& filename) {
+    std::ifstream f(filename.c_str());
+    if (!f.good()) {
+      f.close();
+      throw std::runtime_error("Could not open file " + filename);
+>>>>>>> pod/device/blob.hpp
+    }
+    const PyTypeObject* get_pytype() {
+      return &PyArray_Type;
+    }
+  };
+};
+
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+void CheckContiguousArray(PyArrayObject* arr, string name,
+    int channels, int height, int width) {
+  if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
+    throw std::runtime_error(name + " must be C contiguous");
+<<<<<<< HEAD
+  }
+  if (PyArray_NDIM(arr) != 4) {
+    throw std::runtime_error(name + " must be 4-d");
+  }
+  if (PyArray_TYPE(arr) != NPY_FLOAT32) {
+    throw std::runtime_error(name + " must be float32");
+  }
+  if (PyArray_DIMS(arr)[1] != channels) {
+    throw std::runtime_error(name + " has wrong number of channels");
+  }
+  if (PyArray_DIMS(arr)[2] != height) {
+    throw std::runtime_error(name + " has wrong height");
+  }
+  if (PyArray_DIMS(arr)[3] != width) {
+    throw std::runtime_error(name + " has wrong width");
+  }
+}
+
+// Net constructor for passing phase as int
+shared_ptr<Net<Dtype> > Net_Init(
+    string param_file, int phase) {
+  CheckFile(param_file);
+
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
+      static_cast<Phase>(phase)));
+  return net;
+}
+
+// Net construct-and-load convenience constructor
+shared_ptr<Net<Dtype> > Net_Init_Load(
+    string param_file, string pretrained_param_file, int phase) {
+  CheckFile(param_file);
+  CheckFile(pretrained_param_file);
+
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
+      static_cast<Phase>(phase)));
+  net->CopyTrainedLayersFrom(pretrained_param_file);
+  return net;
+}
+
+void Net_Save(const Net<Dtype>& net, string filename) {
+  NetParameter net_param;
+  net.ToProto(&net_param, false);
+  WriteProtoToBinaryFile(net_param, filename.c_str());
+}
+
+void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
+    bp::object labels_obj) {
+  // check that this network has an input MemoryDataLayer
+  shared_ptr<MemoryDataLayer<Dtype> > md_layer =
+    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
+  if (!md_layer) {
+    throw std::runtime_error("set_input_arrays may only be called if the"
+        " first layer is a MemoryDataLayer");
+  }
+
+  // check that we were passed appropriately-sized contiguous memory
+  PyArrayObject* data_arr =
+      reinterpret_cast<PyArrayObject*>(data_obj.ptr());
+  PyArrayObject* labels_arr =
+      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  CheckContiguousArray(data_arr, "data array", md_layer->channels(),
+      md_layer->height(), md_layer->width());
+  CheckContiguousArray(labels_arr, "labels array", 1, 1, 1);
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+    throw std::runtime_error("data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
+    throw std::runtime_error("first dimensions of input arrays must be a"
+        " multiple of batch size");
+  }
+
+  md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
+      static_cast<Dtype*>(PyArray_DATA(labels_arr)),
+      PyArray_DIMS(data_arr)[0]);
+}
 
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
@@ -4470,6 +4642,7 @@ struct NdarrayConverterGenerator::apply<Dtype*> {
   };
 };
 
+>>>>>>> pod/device/blob.hpp
 struct NdarrayCallPolicies : public bp::default_call_policies {
   typedef NdarrayConverterGenerator result_converter;
   PyObject* postcall(PyObject* pyargs, PyObject* result) {
@@ -4498,6 +4671,8 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   }
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
   }
   if (PyArray_NDIM(arr) != 4) {
     throw std::runtime_error(name + " must be 4-d");
@@ -4651,6 +4826,274 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
+=======
+bp::object PyBlobWrap::get_data() {
+  npy_intp dims[] = {num(), channels(), height(), width()};
+
+  PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+                                            blob_->mutable_cpu_data());
+  PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+  Py_INCREF(self_);
+  bp::handle<> h(obj);
+
+  return bp::object(h);
+}
+
+bp::object PyBlobWrap::get_diff() {
+  npy_intp dims[] = {num(), channels(), height(), width()};
+
+  PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+                                            blob_->mutable_cpu_diff());
+  PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+  Py_INCREF(self_);
+  bp::handle<> h(obj);
+
+  return bp::object(h);
+}
+
+PyNet::PyNet(string param_file, string pretrained_param_file) {
+  Init(param_file);
+  CheckFile(pretrained_param_file);
+  net_->CopyTrainedLayersFrom(pretrained_param_file);
+}
+
+void PyNet::Init(string param_file) {
+  CheckFile(param_file);
+  net_.reset(new Net<float>(param_file));
+}
+
+void PyNet::check_contiguous_array(PyArrayObject* arr, string name,
+    int channels, int height, int width) {
+  if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
+    throw std::runtime_error(name + " must be C contiguous");
+  }
+  if (PyArray_NDIM(arr) != 4) {
+    throw std::runtime_error(name + " must be 4-d");
+  }
+  if (PyArray_TYPE(arr) != NPY_FLOAT32) {
+    throw std::runtime_error(name + " must be float32");
+  }
+  if (PyArray_DIMS(arr)[1] != channels) {
+    throw std::runtime_error(name + " has wrong number of channels");
+  }
+  if (PyArray_DIMS(arr)[2] != height) {
+    throw std::runtime_error(name + " has wrong height");
+  }
+  if (PyArray_DIMS(arr)[3] != width) {
+    throw std::runtime_error(name + " has wrong width");
+  }
+}
+
+void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj) {
+  // check that this network has an input MemoryDataLayer
+  shared_ptr<MemoryDataLayer<float> > md_layer =
+    boost::dynamic_pointer_cast<MemoryDataLayer<float> >(net_->layers()[0]);
+  if (!md_layer) {
+    throw std::runtime_error("set_input_arrays may only be called if the"
+        " first layer is a MemoryDataLayer");
+  }
+
+  // check that we were passed appropriately-sized contiguous memory
+  PyArrayObject* data_arr =
+      reinterpret_cast<PyArrayObject*>(data_obj.ptr());
+  PyArrayObject* labels_arr =
+      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  check_contiguous_array(data_arr, "data array", md_layer->channels(),
+      md_layer->height(), md_layer->width());
+  check_contiguous_array(labels_arr, "labels array", 1, 1, 1);
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+    throw std::runtime_error("data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
+    throw std::runtime_error("first dimensions of input arrays must be a"
+        " multiple of batch size");
+  }
+
+  // hold references
+  input_data_ = data_obj;
+  input_labels_ = labels_obj;
+
+  md_layer->Reset(static_cast<float*>(PyArray_DATA(data_arr)),
+      static_cast<float*>(PyArray_DATA(labels_arr)),
+      PyArray_DIMS(data_arr)[0]);
+}
+
+PySGDSolver::PySGDSolver(const string& param_file) {
+  // as in PyNet, (as a convenience, not a guarantee), create a Python
+  // exception if param_file can't be opened
+  CheckFile(param_file);
+  solver_.reset(new SGDSolver<float>(param_file));
+  // we need to explicitly store the net wrapper, rather than constructing
+  // it on the fly, so that it can hold references to Python objects
+  net_.reset(new PyNet(solver_->net()));
+  for (int i = 0; i < solver_->test_nets().size(); ++i) {
+    test_nets_.push_back(boost::make_shared<PyNet>(solver_->test_nets()[i]));
+  }
+}
+
+void PySGDSolver::SolveResume(const string& resume_file) {
+  CheckFile(resume_file);
+  return solver_->Solve(resume_file);
+}
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
+  }
+  if (PyArray_NDIM(arr) != 4) {
+    throw std::runtime_error(name + " must be 4-d");
+  }
+  if (PyArray_TYPE(arr) != NPY_FLOAT32) {
+    throw std::runtime_error(name + " must be float32");
+  }
+  if (PyArray_DIMS(arr)[1] != channels) {
+    throw std::runtime_error(name + " has wrong number of channels");
+  }
+  if (PyArray_DIMS(arr)[2] != height) {
+    throw std::runtime_error(name + " has wrong height");
+  }
+  if (PyArray_DIMS(arr)[3] != width) {
+    throw std::runtime_error(name + " has wrong width");
+  }
+}
+
+// Net constructor for passing phase as int
+shared_ptr<Net<Dtype> > Net_Init(
+    string param_file, int phase) {
+  CheckFile(param_file);
+
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
+      static_cast<Phase>(phase)));
+  return net;
+}
+
+// Net construct-and-load convenience constructor
+shared_ptr<Net<Dtype> > Net_Init_Load(
+    string param_file, string pretrained_param_file, int phase) {
+  CheckFile(param_file);
+  CheckFile(pretrained_param_file);
+
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
+      static_cast<Phase>(phase)));
+  net->CopyTrainedLayersFrom(pretrained_param_file);
+  return net;
+}
+
+void Net_Save(const Net<Dtype>& net, string filename) {
+  NetParameter net_param;
+  net.ToProto(&net_param, false);
+  WriteProtoToBinaryFile(net_param, filename.c_str());
+}
+
+void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
+    bp::object labels_obj) {
+  // check that this network has an input MemoryDataLayer
+  shared_ptr<MemoryDataLayer<Dtype> > md_layer =
+    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
+  if (!md_layer) {
+    throw std::runtime_error("set_input_arrays may only be called if the"
+        " first layer is a MemoryDataLayer");
+  }
+
+  // check that we were passed appropriately-sized contiguous memory
+  PyArrayObject* data_arr =
+      reinterpret_cast<PyArrayObject*>(data_obj.ptr());
+  PyArrayObject* labels_arr =
+      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  CheckContiguousArray(data_arr, "data array", md_layer->channels(),
+      md_layer->height(), md_layer->width());
+  CheckContiguousArray(labels_arr, "labels array", 1, 1, 1);
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+    throw std::runtime_error("data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
+    throw std::runtime_error("first dimensions of input arrays must be a"
+        " multiple of batch size");
+  }
+
+  md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
+      static_cast<Dtype*>(PyArray_DATA(labels_arr)),
+      PyArray_DIMS(data_arr)[0]);
+}
+
+Solver<Dtype>* GetSolverFromFile(const string& filename) {
+  SolverParameter param;
+  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  return SolverRegistry<Dtype>::CreateSolver(param);
+}
+
+struct NdarrayConverterGenerator {
+  template <typename T> struct apply;
+};
+
+template <>
+struct NdarrayConverterGenerator::apply<Dtype*> {
+  struct type {
+    PyObject* operator() (Dtype* data) const {
+      // Just store the data pointer, and add the shape information in postcall.
+      return PyArray_SimpleNewFromData(0, NULL, NPY_DTYPE, data);
+    }
+    const PyTypeObject* get_pytype() {
+      return &PyArray_Type;
+    }
+  };
+};
+
+struct NdarrayCallPolicies : public bp::default_call_policies {
+  typedef NdarrayConverterGenerator result_converter;
+  PyObject* postcall(PyObject* pyargs, PyObject* result) {
+    bp::object pyblob = bp::extract<bp::tuple>(pyargs)()[0];
+    shared_ptr<Blob<Dtype> > blob =
+      bp::extract<shared_ptr<Blob<Dtype> > >(pyblob);
+    // Free the temporary pointer-holding array, and construct a new one with
+    // the shape information from the blob.
+    void* data = PyArray_DATA(reinterpret_cast<PyArrayObject*>(result));
+    Py_DECREF(result);
+    const int num_axes = blob->num_axes();
+    vector<npy_intp> dims(blob->shape().begin(), blob->shape().end());
+    PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
+                                                  NPY_FLOAT32, data);
+    // SetBaseObject steals a ref, so we need to INCREF.
+    Py_INCREF(pyblob.ptr());
+    PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(arr_obj),
+        pyblob.ptr());
+    return arr_obj;
+  }
+};
+
+bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
+  if (bp::len(kwargs) > 0) {
+    throw std::runtime_error("Blob.reshape takes no kwargs");
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
+  Blob<Dtype>* self = bp::extract<Blob<Dtype>*>(args[0]);
+  vector<int> shape(bp::len(args) - 1);
+  for (int i = 1; i < bp::len(args); ++i) {
+    shape[i - 1] = bp::extract<int>(args[i]);
+  }
+  self->Reshape(shape);
+  // We need to explicitly return None to use bp::raw_function.
+  return bp::object();
+}
+
+bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
+  if (bp::len(kwargs) > 0) {
+    throw std::runtime_error("BlobVec.add_blob takes no kwargs");
+  }
+  typedef vector<shared_ptr<Blob<Dtype> > > BlobVec;
+  BlobVec* self = bp::extract<BlobVec*>(args[0]);
+  vector<int> shape(bp::len(args) - 1);
+  for (int i = 1; i < bp::len(args); ++i) {
+    shape[i - 1] = bp::extract<int>(args[i]);
+  }
+  self->push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+  // We need to explicitly return None to use bp::raw_function.
+  return bp::object();
+}
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
+<<<<<<< HEAD
 =======
 bp::object PyBlobWrap::get_data() {
   npy_intp dims[] = {num(), channels(), height(), width()};
@@ -4945,10 +5388,15 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 <<<<<<< HEAD
 >>>>>>> caffe
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -4957,15 +5405,21 @@ BOOST_PYTHON_MODULE(_caffe) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
@@ -5095,6 +5549,9 @@ BOOST_PYTHON_MODULE(_caffe) {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   bp::class_<PyNet, shared_ptr<PyNet> >(
@@ -5163,6 +5620,10 @@ BOOST_PYTHON_MODULE(_caffe) {
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp

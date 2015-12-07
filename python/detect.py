@@ -55,6 +55,9 @@ def main(argv):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -63,6 +66,7 @@ def main(argv):
 >>>>>>> pod/device/blob.hpp
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -98,6 +102,10 @@ def main(argv):
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+                "../models/bvlc_reference_caffenet/deploy.prototxt"),
+=======
+>>>>>>> pod/device/blob.hpp
 =======
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 =======
@@ -107,6 +115,7 @@ def main(argv):
 =======
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -137,6 +146,8 @@ def main(argv):
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -77,6 +78,11 @@
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 #include <boost/thread.hpp>
@@ -85,6 +91,7 @@
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -100,6 +107,9 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 #include <string>
 #include <vector>
 
@@ -108,6 +118,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -150,6 +161,8 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
@@ -165,10 +178,14 @@ BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
       transform_param_(param.transform_param()) {
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -186,10 +203,15 @@ BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
       transform_param_(param.transform_param()) {
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+      transform_param_(param.transform_param()) {
+=======
+>>>>>>> pod/device/blob.hpp
       transform_param_(param.transform_param()),
       data_transformer_(transform_param_) {
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
       transform_param_(param.transform_param()) {
 >>>>>>> caffe
@@ -235,6 +257,10 @@ BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+      transform_param_(param.transform_param()) {
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
       transform_param_(param.transform_param()) {
 >>>>>>> caffe
@@ -258,6 +284,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1024,6 +1051,11 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
   CHECK(StopInternalThread()) << "Stop thread failed";
 =======
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
   data_transformer_.reset(
@@ -1033,8 +1065,11 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
   DataLayerSetUp(bottom, top);
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
   // The subclasses should setup the size of bottom and top
@@ -1045,6 +1080,9 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1064,9 +1102,12 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1076,6 +1117,9 @@ template <typename Dtype>
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1083,6 +1127,7 @@ template <typename Dtype>
   for (int i = 0; i < PREFETCH_COUNT; ++i) {
     prefetch_free_.push(&prefetch_[i]);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1099,6 +1144,8 @@ BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
       prefetch_free_(), prefetch_full_(), device_() {
   for(int i = 0; i < PREFETCH_COUNT; ++i)
     prefetch_free_.push(&prefetch_[i]);
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
@@ -1194,6 +1241,16 @@ BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
       prefetch_free_(), prefetch_full_(), device_() {
   for(int i = 0; i < PREFETCH_COUNT; ++i)
     prefetch_free_.push(&prefetch_[i]);
+=======
+<<<<<<< HEAD
+=======
+      prefetch_free_(), prefetch_full_(), device_() {
+  for(int i = 0; i < PREFETCH_COUNT; ++i)
+    prefetch_free_.push(&prefetch_[i]);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -1339,10 +1396,18 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> origin/BVLC/parallel
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+>>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
@@ -1374,6 +1439,9 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
   DLOG(INFO) << "Prefetch initialized.";
 }
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 
 template <typename Dtype>
 =======
@@ -1386,10 +1454,14 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
 =======
 
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Before starting the prefetch thread, we make cpu_data and gpu_data
   // calls so that the prefetch thread does not accidentally make simultaneous
   // cudaMalloc calls when the main thread is running. In some GPUs this
   // seems to cause failures if we do not so.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1405,16 +1477,31 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
 <<<<<<< HEAD
 >>>>>>> caffe
 =======
+<<<<<<< HEAD
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+  for (int i = 0; i < PREFETCH_COUNT; ++i) {
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+<<<<<<< HEAD
   for(int i = 0; i < PREFETCH_COUNT; ++i) {
 >>>>>>> origin/BVLC/parallel
 =======
   for(int i = 0; i < PREFETCH_COUNT; ++i) {
 >>>>>>> origin/BVLC/parallel
+=======
+  for(int i = 0; i < PREFETCH_COUNT; ++i) {
+>>>>>>> origin/BVLC/parallel
+=======
+  for (int i = 0; i < PREFETCH_COUNT; ++i) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     prefetch_[i].data_.mutable_cpu_data();
     if (this->output_labels_) {
       prefetch_[i].label_.mutable_cpu_data();
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1426,6 +1513,17 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
       device_ = -1;
       break;
     case Caffe::GPU:
+=======
+<<<<<<< HEAD
+  }
+=======
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #ifndef CPU_ONLY
       for(int i = 0; i < PREFETCH_COUNT; ++i) {
         prefetch_[i].data_.mutable_gpu_data();
@@ -1439,6 +1537,7 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
   }
 
   DLOG(INFO) << "Initializing prefetch";
+<<<<<<< HEAD
   this->phase_ = Caffe::phase();
   this->data_transformer_.InitRand();
   CHECK(StartInternalThread()) << "Thread execution failed";
@@ -1446,6 +1545,11 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
+=======
+  this->data_transformer_->InitRand();
+  StartInternalThread();
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
   }
 =======
@@ -1555,7 +1659,43 @@ BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
   this->data_transformer_.InitRand();
   CHECK(StartInternalThread()) << "Thread execution failed";
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+  }
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+  switch (Caffe::mode()) {
+    case Caffe::CPU:
+      device_ = -1;
+      break;
+    case Caffe::GPU:
+#ifndef CPU_ONLY
+      for(int i = 0; i < PREFETCH_COUNT; ++i) {
+        prefetch_[i].data_.mutable_gpu_data();
+        if (this->output_labels_) {
+          prefetch_[i].label_.mutable_gpu_data();
+        }
+      }
+      CUDA_CHECK(cudaGetDevice(&device_));
+#endif
+      break;
+  }
+
+  DLOG(INFO) << "Initializing prefetch";
+  this->phase_ = Caffe::phase();
+  this->data_transformer_.InitRand();
+  CHECK(StartInternalThread()) << "Thread execution failed";
+>>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   DLOG(INFO) << "Prefetch initialized.";
 >>>>>>> pod-caffe-pod.hpp-merge
 }
@@ -1569,6 +1709,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
@@ -1591,9 +1732,12 @@ template <typename Dtype>
 >>>>>>> pod/common.hpp
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1603,6 +1747,8 @@ template <typename Dtype>
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   cudaStream_t stream;
@@ -1671,6 +1817,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1743,6 +1890,8 @@ template <typename Dtype>
 =======
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
   CHECK(StopInternalThread()) << "Stop thread failed";
 }
@@ -1752,6 +1901,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
@@ -1839,7 +1989,24 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
 >>>>>>> origin/BVLC/parallel
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer() {
+  CHECK(StopInternalThread()) << "Stop thread failed";
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   cudaStream_t stream;
@@ -1860,6 +2027,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
     prefetch_full_.push(batch);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1884,6 +2052,13 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> device-abstraction
@@ -1937,6 +2112,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -1944,9 +2120,12 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -1987,6 +2166,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
   // Copy the data
@@ -2004,6 +2185,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2014,6 +2196,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2023,6 +2207,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
       top[0]->mutable_cpu_data());
   if (this->output_labels_) {
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
@@ -2109,6 +2294,9 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 =======
 >>>>>>> pod/caffe-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
 
   caffe_copy(batch->data_.count(), batch->data_.cpu_data(),
       top[0]->mutable_cpu_data());
@@ -2156,7 +2344,13 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
       top[0]->mutable_cpu_data());
   if (this->output_labels_) {
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     caffe_copy(batch->label_.count(), batch->label_.cpu_data(),
         top[1]->mutable_cpu_data());
   }
@@ -2181,6 +2375,7 @@ INSTANTIATE_CLASS(BaseDataLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSTANTIATE_CLASS(Batch);
 =======
 <<<<<<< HEAD
@@ -2248,15 +2443,25 @@ INSTANTIATE_CLASS(Batch);
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+INSTANTIATE_CLASS(Batch);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 INSTANTIATE_CLASS(Batch);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

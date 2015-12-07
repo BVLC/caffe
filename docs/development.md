@@ -13,6 +13,9 @@ Caffe is developed with active participation of the community.<br>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -21,6 +24,7 @@ Caffe is developed with active participation of the community.<br>
 >>>>>>> pod/device/blob.hpp
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -56,6 +60,10 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 =======
@@ -65,6 +73,7 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions
 =======
 The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -95,6 +104,8 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) brewers welcome all contributions!
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -143,6 +154,9 @@ BVLC maintainers will periodically make releases by marking stable checkpoints a
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -152,6 +166,7 @@ BVLC maintainers will periodically make releases by marking stable checkpoints a
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -193,6 +208,11 @@ Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report 
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
+Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
@@ -202,6 +222,7 @@ Use Github Issues to report [bugs], propose features, and ask development [quest
 Large-scale development work is guided by [milestones], which are sets of Issues selected for concurrent release (integration from `dev` to `master`).
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -239,6 +260,8 @@ Large-scale development work is guided by [milestones], which are sets of Issues
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report [bugs], and discuss framework code.
@@ -260,6 +283,7 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -301,17 +325,22 @@ We do release things as soon as a reasonable technical report may be written, an
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 - Develop in [feature branches] with descriptive names. Branch off of the latest `master`.
@@ -325,6 +354,7 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -355,6 +385,11 @@ We do release things as soon as a reasonable technical report may be written, an
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -378,6 +413,7 @@ We do release things as soon as a reasonable technical report may be written, an
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -398,6 +434,8 @@ We do release things as soon as a reasonable technical report may be written, an
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

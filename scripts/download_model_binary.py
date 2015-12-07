@@ -53,6 +53,7 @@ def parse_readme_frontmatter(dirname):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     bottom = lines.index('---', top + 1)
@@ -128,6 +129,19 @@ def parse_readme_frontmatter(dirname):
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+    bottom = lines.index('---', top + 1)
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    bottom = lines.index('---', top + 1)
+=======
+    bottom = lines[top + 1:].index('---')
+>>>>>>> origin/BVLC/parallel
+=======
+    bottom = lines.index('---', top + 1)
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
     bottom = lines.index('---', top + 1)
 =======

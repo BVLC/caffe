@@ -65,6 +65,7 @@ INSTANTIATE_CLASS(BNLLLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -134,6 +135,20 @@ REGISTER_LAYER_CLASS(BNLL);
 REGISTER_LAYER_CLASS(BNLL);
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+REGISTER_LAYER_CLASS(BNLL);
+
+=======
+REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+REGISTER_LAYER_CLASS(BNLL);
+
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD

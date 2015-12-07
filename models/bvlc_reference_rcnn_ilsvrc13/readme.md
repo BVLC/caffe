@@ -11,6 +11,9 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -19,6 +22,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.
 >>>>>>> pod/device/blob.hpp
 license: unrestricted
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -54,6 +58,10 @@ license: unrestricted
 license: unrestricted
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+license: unrestricted
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 license: unrestricted
 =======
@@ -63,6 +71,7 @@ license: non-commercial
 =======
 license: unrestricted
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -93,6 +102,8 @@ license: unrestricted
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -119,6 +130,9 @@ This model was trained by Ross Girshick @rbgirshick
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -127,6 +141,7 @@ This model was trained by Ross Girshick @rbgirshick
 >>>>>>> pod/device/blob.hpp
 This model is released for unrestricted use.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -162,6 +177,10 @@ This model is released for unrestricted use.
 This model is released for unrestricted use.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+This model is released for unrestricted use.
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 This model is released for unrestricted use.
 =======
@@ -171,6 +190,7 @@ The data used to train this model comes from the ImageNet project, which distrib
 Accordingly, this model is distributed under a non-commercial license.
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -205,6 +225,8 @@ This model is released for unrestricted use.
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 This model is released for unrestricted use.

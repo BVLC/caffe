@@ -293,6 +293,7 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
@@ -302,6 +303,20 @@ class CuDNNSoftmaxLayerTest : public ::testing::Test {
 =======
 class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 >>>>>>> caffe
+=======
+class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
+=======
+class CuDNNSoftmaxLayerTest : public ::testing::Test {
+>>>>>>> origin/BVLC/parallel
+=======
+class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 =======
@@ -355,6 +370,7 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -371,10 +387,17 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   Caffe::set_mode(Caffe::GPU);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -398,6 +421,9 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 =======
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -440,6 +466,7 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -450,14 +477,20 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 =======
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   Caffe::set_mode(Caffe::GPU);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -469,6 +502,8 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

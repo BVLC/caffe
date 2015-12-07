@@ -20,6 +20,9 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -37,6 +40,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -67,6 +71,10 @@ layer {
     source: "examples/cifar10/cifar10_train_lmdb"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    source: "examples/cifar10/cifar10_train_lmdb"
+=======
+>>>>>>> pod/device/blob.hpp
 =======
     source: "examples/cifar10/cifar10_train_lmdb"
 =======
@@ -98,6 +106,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -124,6 +133,8 @@ layer {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
@@ -147,9 +158,13 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+    source: "examples/cifar10/cifar10_test_lmdb"
+>>>>>>> pod/device/blob.hpp
 =======
     source: "examples/cifar10/cifar10_test_lmdb"
 >>>>>>> pod/device/blob.hpp
@@ -163,6 +178,7 @@ layer {
     backend: LMDB
   }
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -201,6 +217,8 @@ layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     source: "examples/cifar10/cifar10_test_lmdb"
 =======
     source: "examples/cifar10/cifar10_test_leveldb"
@@ -208,6 +226,7 @@ layer {
     batch_size: 100
     backend: LMDB
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -218,6 +237,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -227,6 +249,7 @@ layer {
   include: { phase: TEST }
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -259,10 +282,13 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     source: "examples/cifar10/cifar10_test_lmdb"
     batch_size: 100
     backend: LMDB
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> device-abstraction
@@ -276,6 +302,10 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge

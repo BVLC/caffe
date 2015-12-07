@@ -21,6 +21,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -30,6 +33,7 @@
  * and its type is its C++ class name, but without the "Layer" at the end
  * ("MyAwesomeLayer" -> "MyAwesome").
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -71,6 +75,11 @@
  * ("MyAwesomeLayer" -> "MyAwesome").
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+ * and its type is its C++ class name, but without the "Layer" at the end
+ * ("MyAwesomeLayer" -> "MyAwesome").
+=======
+>>>>>>> pod/device/blob.hpp
 =======
  * and its type is its C++ class name, but without the "Layer" at the end
  * ("MyAwesomeLayer" -> "MyAwesome").
@@ -96,6 +105,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -120,6 +130,8 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
  *
  * If the layer is going to be created simply by its constructor, in your c++
@@ -134,6 +146,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -142,6 +157,7 @@
 >>>>>>> pod/device/blob.hpp
  *    REGISTER_LAYER_CLASS(MyAwesome);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -177,6 +193,10 @@
  *    REGISTER_LAYER_CLASS(MyAwesome);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+ *    REGISTER_LAYER_CLASS(MyAwesome);
+=======
+>>>>>>> pod/device/blob.hpp
 =======
  *    REGISTER_LAYER_CLASS(MyAwesome);
 =======
@@ -186,6 +206,7 @@
 =======
  *    REGISTER_LAYER_CLASS(MyAwesome);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -216,6 +237,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -240,6 +263,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -248,6 +274,7 @@
 >>>>>>> pod/device/blob.hpp
  * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -283,6 +310,10 @@
  * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+ * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
+=======
+>>>>>>> pod/device/blob.hpp
 =======
  * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
 =======
@@ -292,6 +323,7 @@
 =======
  * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -322,6 +354,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -342,6 +376,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -351,6 +388,7 @@
 #include <string>
 #include <vector>
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -392,11 +430,17 @@
 #include <vector>
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include <string>
+#include <vector>
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 #include <string>
 #include <vector>
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -419,6 +463,9 @@
 #include <string>
 #include <vector>
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
@@ -467,6 +514,9 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -476,6 +526,7 @@ class LayerRegistry {
   typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -567,6 +618,17 @@ class LayerRegistry {
 >>>>>>> pod/device/blob.hpp
   typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
+=======
+  typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+  typedef std::map<string, Creator> CreatorRegistry;
+=======
+  typedef Layer<Dtype>* (*Creator)(const LayerParameter&);
+  typedef std::map<LayerParameter_LayerType, Creator> CreatorRegistry;
+>>>>>>> origin/BVLC/parallel
+=======
+  typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+  typedef std::map<string, Creator> CreatorRegistry;
+>>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 
@@ -585,6 +647,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -709,8 +772,11 @@ class LayerRegistry {
 =======
 =======
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   static void AddCreator(const string& type, Creator creator) {
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -726,6 +792,17 @@ class LayerRegistry {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  static void AddCreator(const string& type, Creator creator) {
+=======
+  static void AddCreator(const LayerParameter_LayerType& type,
+                         Creator creator) {
+>>>>>>> origin/BVLC/parallel
+=======
+  static void AddCreator(const string& type, Creator creator) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 0)
         << "Layer type " << type << " already registered.";
@@ -733,6 +810,7 @@ class LayerRegistry {
   }
 
   // Get a layer using a LayerParameter.
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -746,10 +824,15 @@ class LayerRegistry {
 =======
 <<<<<<< HEAD
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
@@ -780,6 +863,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -810,6 +894,11 @@ class LayerRegistry {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -835,6 +924,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -855,6 +945,8 @@ class LayerRegistry {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -871,6 +963,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -912,17 +1005,22 @@ class LayerRegistry {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 
@@ -945,6 +1043,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -956,10 +1055,15 @@ class LayerRegistry {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1008,12 +1112,15 @@ class LayerRegistry {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 };
 
 
 template <typename Dtype>
 class LayerRegisterer {
  public:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1116,6 +1223,22 @@ class LayerRegisterer {
   LayerRegisterer(const string& type,
                   shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
 =======
+  LayerRegisterer(const string& type,
+                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+=======
+  LayerRegisterer(const LayerParameter_LayerType& type,
+                  Layer<Dtype>* (*creator)(const LayerParameter&)) {
+>>>>>>> origin/BVLC/parallel
+=======
+  LayerRegisterer(const string& type,
+                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+>>>>>>> pod/device/blob.hpp
+=======
+  LayerRegisterer(const string& type,
+                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
   LayerRegisterer(const string& type,
                   shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
 =======
@@ -1144,6 +1267,7 @@ class LayerRegisterer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1185,17 +1309,22 @@ class LayerRegisterer {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
@@ -1215,6 +1344,7 @@ class LayerRegisterer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1245,6 +1375,11 @@ class LayerRegisterer {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1284,6 +1419,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1304,6 +1440,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge

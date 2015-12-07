@@ -73,6 +73,9 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -81,6 +84,7 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 >>>>>>> pod/device/blob.hpp
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -116,6 +120,10 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
@@ -125,6 +133,7 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -155,6 +164,8 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -181,6 +192,9 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -189,6 +203,7 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 >>>>>>> pod/device/blob.hpp
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -249,6 +264,8 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 =======
   usleep(300 * 1000);
@@ -258,9 +275,12 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
