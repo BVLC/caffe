@@ -128,8 +128,7 @@ namespace caffe {
                                    dev_info_[cur_device].free);
       dev_info_[i].free = std::min(props.totalGlobalMem,
                                    dev_info_[cur_device].free);
-     }
-
+    }
 
     switch ( mode_ ) {
       case CubPool:
