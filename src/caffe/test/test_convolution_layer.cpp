@@ -46,13 +46,17 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
   } else {
     stride_h = stride_w = conv_param->stride_size() ? conv_param->stride(0) : 1;
   }
-  int kernel_d, pad_d, stride_d;
+  int dilation_h, dilation_w;
+  dilation_h = dilation_w = conv_param->dilation_size() ?
+                            conv_param->dilation(0) : 1;
+  int kernel_d, pad_d, stride_d, dilation_d;
   if (has_depth) {
     kernel_d = kernel_h;
     stride_d = stride_h;
     pad_d = pad_h;
+    dilation_d = dilation_h;
   } else {
-    kernel_d = stride_d = 1;
+    kernel_d = stride_d = dilation_d = 1;
     pad_d = 0;
   }
   // Groups
@@ -77,9 +81,9 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
                 for (int r = 0; r < kernel_d; r++) {
                   for (int p = 0; p < kernel_h; p++) {
                     for (int q = 0; q < kernel_w; q++) {
-                      int in_z = z * stride_d - pad_d + r;
-                      int in_y = y * stride_h - pad_h + p;
-                      int in_x = x * stride_w - pad_w + q;
+                      int in_z = z * stride_d - pad_d + r * dilation_d;
+                      int in_y = y * stride_h - pad_h + p * dilation_h;
+                      int in_x = x * stride_w - pad_w + q * dilation_w;
                       if (in_z >= 0 && in_z < (has_depth ? in->shape(2) : 1)
                           && in_y >= 0 && in_y < in->shape(2 + has_depth)
                           && in_x >= 0 && in_x < in->shape(3 + has_depth)) {
