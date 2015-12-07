@@ -222,6 +222,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
+  bp::def("enumerate_devices", &Caffe::EnumerateDevices);
 
   bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
 
