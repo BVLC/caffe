@@ -218,6 +218,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -390,6 +391,11 @@ class Solver {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param, bool skip_test_nets);
+>>>>>>> origin/BVLC/parallel
   void InitTrainNet();
   void InitTestNets();
 
@@ -431,6 +437,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -708,6 +715,11 @@ class Solver {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  inline int iter() { return iter_; }
+  inline int *iter_total() { return iter_total_; }
+  inline void iter_total(int *value) { iter_total_ = value; }
+>>>>>>> origin/BVLC/parallel
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -917,6 +929,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   // Points to iter_ by default, but can be overriden, e.g. to a global
@@ -994,6 +1007,11 @@ class Solver {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  // Points to iter_ by default, but can be overriden, e.g. to a global
+  // counter if multiple solvers contribute iterations to the same model.
+  int *iter_total_;
+>>>>>>> origin/BVLC/parallel
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
@@ -1235,6 +1253,7 @@ class WorkerSolver : public Solver<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1309,6 +1328,8 @@ class WorkerSolver : public Solver<Dtype> {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
   explicit SGDSolver(const SolverParameter& param, bool skip_test_nets = false)
       : Solver<Dtype>(param, skip_test_nets) {}
   explicit SGDSolver(const string& param_file)

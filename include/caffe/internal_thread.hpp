@@ -947,6 +947,10 @@ class InternalThread {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 
+  bool must_stop() {
+    return must_stop_;
+  }
+
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
@@ -1048,6 +1052,7 @@ class InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1181,6 +1186,8 @@ class InternalThread {
   shared_ptr<boost::thread> thread_;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> origin/BVLC/parallel
 };
 
 }  // namespace caffe
