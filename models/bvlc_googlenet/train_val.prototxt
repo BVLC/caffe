@@ -9,6 +9,7 @@ name: "GoogleNet"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -68,11 +69,14 @@ name: "GoogleNet"
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "data"
   type: "Data"
   top: "data"
   top: "label"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -169,6 +173,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   include {
     phase: TRAIN
   }
@@ -189,6 +195,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -248,6 +255,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   data_param {
     source: "examples/imagenet/ilsvrc12_train_lmdb"
     batch_size: 32
@@ -259,6 +268,7 @@ layer {
   type: "Data"
   top: "data"
   top: "label"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -356,6 +366,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   include {
     phase: TEST
   }
@@ -366,6 +378,7 @@ layers {
     mean_value: 117
     mean_value: 123
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -435,6 +448,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   data_param {
     source: "examples/imagenet/ilsvrc12_val_lmdb"
     batch_size: 50
@@ -462,6 +477,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -550,6 +566,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     pad: 3
@@ -567,6 +585,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -652,6 +671,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -659,6 +680,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -678,6 +700,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "conv1/relu_7x7"
   type: "ReLU"
@@ -689,6 +713,7 @@ layer {
   type: "Pooling"
   bottom: "conv1/7x7_s2"
   top: "pool1/3x3_s2"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -721,12 +746,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -746,11 +774,14 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "pool1/norm1"
   type: "LRN"
   bottom: "pool1/3x3_s2"
   top: "pool1/norm1"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -777,12 +808,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   lrn_param {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -802,6 +836,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "conv2/3x3_reduce"
   type: "Convolution"
@@ -815,6 +851,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -845,11 +882,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -868,6 +908,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -875,6 +917,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -937,6 +980,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "conv2/relu_3x3_reduce"
   type: "ReLU"
@@ -956,6 +1001,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -992,6 +1038,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 192
     pad: 1
@@ -1001,6 +1049,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -1023,6 +1072,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -1030,6 +1081,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1138,6 +1190,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "conv2/relu_3x3"
   type: "ReLU"
@@ -1149,6 +1203,7 @@ layer {
   type: "LRN"
   bottom: "conv2/3x3"
   top: "conv2/norm2"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1181,12 +1236,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   lrn_param {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1206,11 +1264,14 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "pool2/3x3_s2"
   type: "Pooling"
   bottom: "conv2/norm2"
   top: "pool2/3x3_s2"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1230,6 +1291,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -1246,6 +1309,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1381,6 +1445,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/1x1"
   type: "Convolution"
@@ -1394,6 +1460,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1424,11 +1491,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1454,11 +1524,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -1538,6 +1611,10 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/relu_1x1"
   type: "ReLU"
@@ -1549,7 +1626,10 @@ layer {
   type: "Convolution"
   bottom: "pool2/3x3_s2"
   top: "inception_3a/3x3_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1558,6 +1638,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1763,6 +1844,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 96
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -1770,6 +1858,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1832,6 +1921,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/relu_3x3_reduce"
   type: "ReLU"
@@ -1851,6 +1942,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1887,12 +1979,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     pad: 1
     kernel_size: 3
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1918,6 +2013,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -1925,6 +2022,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1962,6 +2060,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/relu_3x3"
   type: "ReLU"
@@ -1973,7 +2073,10 @@ layer {
   type: "Convolution"
   bottom: "pool2/3x3_s2"
   top: "inception_3a/5x5_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1982,6 +2085,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2197,6 +2301,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 16
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -2204,6 +2315,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2266,6 +2378,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/relu_5x5_reduce"
   type: "ReLU"
@@ -2285,6 +2399,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -2321,12 +2436,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2352,6 +2470,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -2359,6 +2479,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2468,6 +2589,8 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/relu_5x5"
   type: "ReLU"
@@ -2479,6 +2602,7 @@ layer {
   type: "Pooling"
   bottom: "pool2/3x3_s2"
   top: "inception_3a/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -2511,11 +2635,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 1
     pad: 1
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -2581,6 +2708,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/pool_proj"
   type: "Convolution"
@@ -2594,6 +2725,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -2624,11 +2756,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 32
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2654,11 +2789,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -2818,6 +2956,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3a/relu_pool_proj"
   type: "ReLU"
@@ -2827,6 +2969,7 @@ layer {
 layer {
   name: "inception_3a/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -2855,6 +2998,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_3a/1x1"
   bottom: "inception_3a/3x3"
   bottom: "inception_3a/5x5"
@@ -2862,6 +3007,7 @@ layers {
   top: "inception_3a/output"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 <<<<<<< HEAD
@@ -2891,13 +3037,18 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "inception_3b/1x1"
   type: "Convolution"
   bottom: "inception_3a/output"
   top: "inception_3b/1x1"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -2906,6 +3057,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3116,6 +3268,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -3123,6 +3282,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3142,6 +3302,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/relu_1x1"
   type: "ReLU"
@@ -3161,6 +3323,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -3197,11 +3360,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3220,6 +3386,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -3227,6 +3395,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3289,6 +3458,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/relu_3x3_reduce"
   type: "ReLU"
@@ -3308,6 +3479,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -3344,12 +3516,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 192
     pad: 1
     kernel_size: 3
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3375,6 +3550,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -3382,6 +3559,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3419,6 +3597,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/relu_3x3"
   type: "ReLU"
@@ -3430,7 +3610,10 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/output"
   top: "inception_3b/5x5_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -3439,6 +3622,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3641,11 +3825,14 @@ layers {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 32
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -3658,6 +3845,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -3665,6 +3854,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3744,6 +3934,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/relu_5x5_reduce"
   type: "ReLU"
@@ -3755,7 +3947,10 @@ layer {
   type: "Convolution"
   bottom: "inception_3b/5x5_reduce"
   top: "inception_3b/5x5"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -3764,6 +3959,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3886,10 +4082,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 96
     pad: 2
     kernel_size: 5
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
     weight_filler {
       type: "xavier"
@@ -3987,6 +4186,10 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -4004,6 +4207,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4041,6 +4245,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/relu_5x5"
   type: "ReLU"
@@ -4052,6 +4258,7 @@ layer {
   type: "Pooling"
   bottom: "inception_3a/output"
   top: "inception_3b/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -4084,6 +4291,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -4091,6 +4300,7 @@ layers {
     pad: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -4142,12 +4352,17 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/pool_proj"
   type: "Convolution"
   bottom: "inception_3b/pool"
   top: "inception_3b/pool_proj"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -4156,6 +4371,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4362,6 +4578,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -4379,6 +4602,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4416,6 +4640,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_3b/relu_pool_proj"
   type: "ReLU"
@@ -4425,6 +4651,7 @@ layer {
 layer {
   name: "inception_3b/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -4453,11 +4680,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_3b/1x1"
   bottom: "inception_3b/3x3"
   bottom: "inception_3b/5x5"
   bottom: "inception_3b/pool_proj"
   top: "inception_3b/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -4495,12 +4725,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "pool3/3x3_s2"
   type: "Pooling"
   bottom: "inception_3b/output"
   top: "pool3/3x3_s2"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -4530,12 +4763,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -4573,12 +4809,17 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/1x1"
   type: "Convolution"
   bottom: "pool3/3x3_s2"
   top: "inception_4a/1x1"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -4587,6 +4828,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4802,6 +5044,13 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 192
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -4809,6 +5058,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4968,6 +5218,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/relu_1x1"
   type: "ReLU"
@@ -4987,6 +5239,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -5023,11 +5276,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 96
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5053,11 +5309,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -5123,6 +5382,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/relu_3x3_reduce"
   type: "ReLU"
@@ -5142,6 +5405,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -5178,6 +5442,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 208
     pad: 1
@@ -5187,6 +5453,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -5209,6 +5476,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -5216,6 +5485,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -5247,6 +5517,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/relu_3x3"
   type: "ReLU"
@@ -5258,7 +5530,10 @@ layer {
   type: "Convolution"
   bottom: "pool3/3x3_s2"
   top: "inception_4a/5x5_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -5267,6 +5542,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5479,6 +5755,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  convolution_param {
+    num_output: 16
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -5486,6 +5769,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5505,6 +5789,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/relu_5x5_reduce"
   type: "ReLU"
@@ -5524,6 +5810,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -5560,12 +5847,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 48
     pad: 2
     kernel_size: 5
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5584,6 +5874,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -5601,6 +5893,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5638,6 +5931,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/relu_5x5"
   type: "ReLU"
@@ -5649,6 +5944,7 @@ layer {
   type: "Pooling"
   bottom: "pool3/3x3_s2"
   top: "inception_4a/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -5681,6 +5977,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -5688,6 +5986,7 @@ layers {
     pad: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -5725,6 +6024,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/pool_proj"
   type: "Convolution"
@@ -5738,6 +6039,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -5768,11 +6070,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5798,6 +6103,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -5805,6 +6112,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -5960,6 +6268,8 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4a/relu_pool_proj"
   type: "ReLU"
@@ -5969,6 +6279,7 @@ layer {
 layer {
   name: "inception_4a/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -5997,11 +6308,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_4a/1x1"
   bottom: "inception_4a/3x3"
   bottom: "inception_4a/5x5"
   bottom: "inception_4a/pool_proj"
   top: "inception_4a/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6021,12 +6335,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "loss1/ave_pool"
   type: "Pooling"
   bottom: "inception_4a/output"
   top: "loss1/ave_pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -6056,12 +6373,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: AVE
     kernel_size: 5
     stride: 3
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -6094,12 +6414,17 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss1/conv"
   type: "Convolution"
   bottom: "loss1/ave_pool"
   top: "loss1/conv"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -6108,6 +6433,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6214,11 +6540,14 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6306,6 +6635,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -6313,6 +6644,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6395,6 +6727,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss1/relu_conv"
   type: "ReLU"
@@ -6406,7 +6740,10 @@ layer {
   type: "InnerProduct"
   bottom: "loss1/conv"
   top: "loss1/fc"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -6415,6 +6752,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6607,10 +6945,13 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   inner_product_param {
     num_output: 1024
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -6625,6 +6966,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -6632,6 +6975,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6694,6 +7038,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss1/relu_fc"
   type: "ReLU"
@@ -6705,6 +7051,7 @@ layer {
   type: "Dropout"
   bottom: "loss1/fc"
   top: "loss1/fc"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -6737,10 +7084,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   dropout_param {
     dropout_ratio: 0.7
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -6778,12 +7128,17 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss1/classifier"
   type: "InnerProduct"
   bottom: "loss1/fc"
   top: "loss1/classifier"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -6792,6 +7147,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7060,6 +7416,12 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  inner_product_param {
+    num_output: 1000
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -7067,6 +7429,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7086,6 +7449,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss1/loss"
   type: "SoftmaxWithLoss"
@@ -7100,6 +7465,7 @@ layer {
   bottom: "loss1/classifier"
   bottom: "label"
   top: "loss1/top-1"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -7135,10 +7501,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   include {
     phase: TEST
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -7176,6 +7545,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss1/top-5"
   type: "Accuracy"
@@ -7194,7 +7565,10 @@ layer {
   type: "Convolution"
   bottom: "inception_4a/output"
   top: "inception_4b/1x1"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -7203,6 +7577,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7423,6 +7798,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 160
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -7430,6 +7812,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7512,6 +7895,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4b/relu_1x1"
   type: "ReLU"
@@ -7523,7 +7908,10 @@ layer {
   type: "Convolution"
   bottom: "inception_4a/output"
   top: "inception_4b/3x3_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -7532,6 +7920,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7747,6 +8136,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 112
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -7754,6 +8150,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7816,6 +8213,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4b/relu_3x3_reduce"
   type: "ReLU"
@@ -7835,6 +8234,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -7871,12 +8271,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 224
     pad: 1
     kernel_size: 3
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7902,6 +8305,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -7909,6 +8314,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -8054,6 +8460,8 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4b/relu_3x3"
   type: "ReLU"
@@ -8073,6 +8481,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -8109,11 +8518,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 24
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -8139,6 +8551,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -8146,6 +8560,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -8165,6 +8580,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4b/relu_5x5_reduce"
   type: "ReLU"
@@ -8184,6 +8601,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -8220,12 +8638,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     pad: 2
     kernel_size: 5
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -8251,6 +8672,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -8258,6 +8681,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -8295,6 +8719,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4b/relu_5x5"
   type: "ReLU"
@@ -8306,6 +8732,7 @@ layer {
   type: "Pooling"
   bottom: "inception_4a/output"
   top: "inception_4b/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -18523,6 +18950,20 @@ layer {
   type: "Convolution"
   bottom: "inception_4e/5x5_reduce"
   top: "inception_4e/5x5"
+=======
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+layer {
+  name: "inception_4b/pool_proj"
+  type: "Convolution"
+  bottom: "inception_4b/pool"
+  top: "inception_4b/pool_proj"
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -18531,6 +18972,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -18724,6 +19166,13 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -18731,6 +19180,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -18913,11 +19363,23 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+layer {
+  name: "inception_4b/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_4b/pool_proj"
+  top: "inception_4b/pool_proj"
+}
+layer {
+  name: "inception_4b/output"
+  type: "Concat"
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_4b/1x1"
   bottom: "inception_4b/3x3"
   bottom: "inception_4b/5x5"
   bottom: "inception_4b/pool_proj"
   top: "inception_4b/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -18986,13 +19448,18 @@ layer {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "inception_4c/1x1"
   type: "Convolution"
   bottom: "inception_4b/output"
   top: "inception_4c/1x1"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -19001,6 +19468,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19107,11 +19575,14 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19199,6 +19670,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -19206,6 +19679,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19391,6 +19865,8 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/relu_1x1"
   type: "ReLU"
@@ -19410,6 +19886,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -19446,11 +19923,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19476,6 +19956,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -19483,6 +19965,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19606,6 +20089,8 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/relu_3x3_reduce"
   type: "ReLU"
@@ -19625,6 +20110,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -19661,12 +20147,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 256
     pad: 1
     kernel_size: 3
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19692,6 +20181,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -19699,6 +20190,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19718,6 +20210,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/relu_3x3"
   type: "ReLU"
@@ -19737,6 +20231,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -19773,11 +20268,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 24
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19803,11 +20301,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -19873,6 +20374,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/relu_5x5_reduce"
   type: "ReLU"
@@ -19892,6 +20397,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -19928,12 +20434,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     pad: 2
     kernel_size: 5
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19959,6 +20468,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -19966,6 +20477,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19985,6 +20497,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/relu_5x5"
   type: "ReLU"
@@ -19996,6 +20510,7 @@ layer {
   type: "Pooling"
   bottom: "inception_4b/output"
   top: "inception_4c/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -20028,6 +20543,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -20035,6 +20552,7 @@ layers {
     pad: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -20066,12 +20584,17 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/pool_proj"
   type: "Convolution"
   bottom: "inception_4c/pool"
   top: "inception_4c/pool_proj"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -20080,6 +20603,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20279,6 +20803,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -20286,6 +20817,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20348,6 +20880,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4c/relu_pool_proj"
   type: "ReLU"
@@ -20357,6 +20891,7 @@ layer {
 layer {
   name: "inception_4c/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -20385,11 +20920,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_4c/1x1"
   bottom: "inception_4c/3x3"
   bottom: "inception_4c/5x5"
   bottom: "inception_4c/pool_proj"
   top: "inception_4c/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -20427,13 +20965,18 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "inception_4d/1x1"
   type: "Convolution"
   bottom: "inception_4c/output"
   top: "inception_4d/1x1"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -20442,6 +20985,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20522,11 +21066,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 112
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20552,6 +21099,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -20559,6 +21108,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20578,6 +21128,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/relu_1x1"
   type: "ReLU"
@@ -20597,6 +21149,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -20770,6 +21323,13 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 144
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -20777,6 +21337,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -20859,6 +21420,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/relu_3x3_reduce"
   type: "ReLU"
@@ -20870,7 +21433,10 @@ layer {
   type: "Convolution"
   bottom: "inception_4d/3x3_reduce"
   top: "inception_4d/3x3"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -20879,6 +21445,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21002,6 +21569,10 @@ layers {
   convolution_param {
     num_output: 288
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 288
+>>>>>>> BVLC/device-abstraction
     pad: 1
     kernel_size: 3
     weight_filler {
@@ -21016,6 +21587,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21087,6 +21659,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -21094,6 +21668,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21144,6 +21719,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/relu_3x3"
   type: "ReLU"
@@ -21163,6 +21740,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -21199,6 +21777,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 32
     kernel_size: 1
@@ -21208,6 +21788,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
       std: 0.2
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -21230,6 +21811,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -21237,6 +21820,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21295,6 +21879,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/relu_5x5_reduce"
   type: "ReLU"
@@ -21306,7 +21892,10 @@ layer {
   type: "Convolution"
   bottom: "inception_4d/5x5_reduce"
   top: "inception_4d/5x5"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -21315,6 +21904,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21436,10 +22026,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
     pad: 2
     kernel_size: 5
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
     weight_filler {
       type: "xavier"
@@ -21530,6 +22123,10 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -21537,6 +22134,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21599,6 +22197,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/relu_5x5"
   type: "ReLU"
@@ -21610,6 +22210,7 @@ layer {
   type: "Pooling"
   bottom: "inception_4c/output"
   top: "inception_4d/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -21642,6 +22243,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -21649,6 +22252,7 @@ layers {
     pad: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -21686,12 +22290,17 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/pool_proj"
   type: "Convolution"
   bottom: "inception_4d/pool"
   top: "inception_4d/pool_proj"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -21700,6 +22309,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21908,6 +22518,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -21925,6 +22542,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -21962,6 +22580,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4d/relu_pool_proj"
   type: "ReLU"
@@ -21971,6 +22591,7 @@ layer {
 layer {
   name: "inception_4d/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -21999,11 +22620,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_4d/1x1"
   bottom: "inception_4d/3x3"
   bottom: "inception_4d/5x5"
   bottom: "inception_4d/pool_proj"
   top: "inception_4d/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22023,12 +22647,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "loss2/ave_pool"
   type: "Pooling"
   bottom: "inception_4d/output"
   top: "loss2/ave_pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -22058,12 +22685,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: AVE
     kernel_size: 5
     stride: 3
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -22101,6 +22731,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss2/conv"
   type: "Convolution"
@@ -22114,6 +22746,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -22144,11 +22777,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22174,6 +22810,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -22181,6 +22819,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -22293,6 +22932,8 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss2/relu_conv"
   type: "ReLU"
@@ -22312,6 +22953,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -22348,10 +22990,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   inner_product_param {
     num_output: 1024
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22377,11 +23022,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -22433,6 +23081,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss2/relu_fc"
   type: "ReLU"
@@ -22444,6 +23096,7 @@ layer {
   type: "Dropout"
   bottom: "loss2/fc"
   top: "loss2/fc"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -22476,10 +23129,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   dropout_param {
     dropout_ratio: 0.7
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22499,6 +23155,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss2/classifier"
   type: "InnerProduct"
@@ -22512,6 +23170,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -22542,10 +23201,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   inner_product_param {
     num_output: 1000
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22571,6 +23233,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -22578,6 +23242,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -22616,6 +23281,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss2/loss"
   type: "SoftmaxWithLoss"
@@ -22630,6 +23297,7 @@ layer {
   bottom: "loss2/classifier"
   bottom: "label"
   top: "loss2/top-1"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -22699,6 +23367,12 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  include {
+    phase: TEST
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss2/top-5"
   type: "Accuracy"
@@ -22717,7 +23391,10 @@ layer {
   type: "Convolution"
   bottom: "inception_4d/output"
   top: "inception_4e/1x1"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -22726,6 +23403,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22942,6 +23620,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  convolution_param {
+    num_output: 256
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -22949,6 +23634,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22968,6 +23654,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/relu_1x1"
   type: "ReLU"
@@ -22987,6 +23675,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -23023,11 +23712,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 160
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23046,6 +23738,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -23061,6 +23755,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23101,6 +23796,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/relu_3x3_reduce"
   type: "ReLU"
@@ -23120,6 +23817,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -23156,12 +23854,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 320
     pad: 1
     kernel_size: 3
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23180,6 +23881,8 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -23187,6 +23890,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23360,6 +24064,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/relu_3x3"
   type: "ReLU"
@@ -23379,6 +24085,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -23415,11 +24122,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 32
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23445,6 +24155,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -23452,6 +24164,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -23484,6 +24197,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/relu_5x5_reduce"
   type: "ReLU"
@@ -23495,7 +24210,10 @@ layer {
   type: "Convolution"
   bottom: "inception_4e/5x5_reduce"
   top: "inception_4e/5x5"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -23504,6 +24222,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23621,10 +24340,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     pad: 2
     kernel_size: 5
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
     weight_filler {
       type: "xavier"
@@ -23722,6 +24444,10 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -23729,6 +24455,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -23791,6 +24518,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/relu_5x5"
   type: "ReLU"
@@ -23802,6 +24531,7 @@ layer {
   type: "Pooling"
   bottom: "inception_4d/output"
   top: "inception_4e/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -23834,6 +24564,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -23841,6 +24573,7 @@ layers {
     pad: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -23878,12 +24611,17 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/pool_proj"
   type: "Convolution"
   bottom: "inception_4e/pool"
   top: "inception_4e/pool_proj"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -23892,6 +24630,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -24098,12 +24837,20 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -24136,6 +24883,9 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_4e/relu_pool_proj"
   type: "ReLU"
@@ -24145,6 +24895,7 @@ layer {
 layer {
   name: "inception_4e/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -24173,11 +24924,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_4e/1x1"
   bottom: "inception_4e/3x3"
   bottom: "inception_4e/5x5"
   bottom: "inception_4e/pool_proj"
   top: "inception_4e/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -24212,12 +24966,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "pool4/3x3_s2"
   type: "Pooling"
   bottom: "inception_4e/output"
   top: "pool4/3x3_s2"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -24247,11 +25004,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 <<<<<<< HEAD
@@ -24316,6 +25076,9 @@ layer {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/1x1"
   type: "Convolution"
@@ -24329,6 +25092,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -24359,6 +25123,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 256
     kernel_size: 1
@@ -24367,6 +25133,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -24389,6 +25156,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -24396,6 +25165,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -24415,12 +25185,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/relu_1x1"
   type: "ReLU"
   bottom: "inception_5a/1x1"
   top: "inception_5a/1x1"
 }
+<<<<<<< HEAD
 layer {
   name: "inception_5a/3x3_reduce"
   type: "Convolution"
@@ -24493,6 +25266,13 @@ layers {
   name: "inception_5a/3x3_reduce"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+layer {
+  name: "inception_5a/3x3_reduce"
+  type: "Convolution"
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/3x3_reduce"
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -24501,6 +25281,7 @@ layers {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -24660,6 +25441,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 160
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -24667,6 +25455,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -24729,6 +25518,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/relu_3x3_reduce"
   type: "ReLU"
@@ -24748,6 +25539,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -24784,12 +25576,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 320
     pad: 1
     kernel_size: 3
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -24815,6 +25610,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -24822,6 +25619,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -24859,6 +25657,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/relu_3x3"
   type: "ReLU"
@@ -24870,7 +25670,10 @@ layer {
   type: "Convolution"
   bottom: "pool4/3x3_s2"
   top: "inception_5a/5x5_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -24879,6 +25682,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25099,6 +25903,13 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 32
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -25106,6 +25917,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25188,6 +26000,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/relu_5x5_reduce"
   type: "ReLU"
@@ -25199,7 +26013,10 @@ layer {
   type: "Convolution"
   bottom: "inception_5a/5x5_reduce"
   top: "inception_5a/5x5"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -25208,6 +26025,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25370,12 +26188,15 @@ layers {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     pad: 2
     kernel_size: 5
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25432,6 +26253,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -25439,6 +26262,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25560,6 +26384,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/relu_5x5"
   type: "ReLU"
@@ -25571,6 +26397,7 @@ layer {
   type: "Pooling"
   bottom: "pool4/3x3_s2"
   top: "inception_5a/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -25637,6 +26464,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -25654,6 +26483,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25691,6 +26521,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/pool_proj"
   type: "Convolution"
@@ -25704,6 +26536,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -25734,11 +26567,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25764,6 +26600,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -25771,6 +26609,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25790,6 +26629,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5a/relu_pool_proj"
   type: "ReLU"
@@ -25799,6 +26640,7 @@ layer {
 layer {
   name: "inception_5a/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -25827,11 +26669,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_5a/1x1"
   bottom: "inception_5a/3x3"
   bottom: "inception_5a/5x5"
   bottom: "inception_5a/pool_proj"
   top: "inception_5a/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -25869,6 +26714,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "inception_5b/1x1"
@@ -25883,6 +26730,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -25916,11 +26764,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 384
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -25946,6 +26797,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -25953,6 +26806,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -25984,6 +26838,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/relu_1x1"
   type: "ReLU"
@@ -25995,7 +26851,10 @@ layer {
   type: "Convolution"
   bottom: "inception_5a/output"
   top: "inception_5b/3x3_reduce"
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   param {
     lr_mult: 1
     decay_mult: 1
@@ -26004,6 +26863,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26179,6 +27039,13 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  convolution_param {
+    num_output: 192
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -26186,6 +27053,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26239,6 +27107,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/relu_3x3_reduce"
   type: "ReLU"
@@ -26258,6 +27128,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -26294,10 +27165,13 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 384
     pad: 1
     kernel_size: 3
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
     weight_filler {
       type: "xavier"
@@ -26337,6 +27211,10 @@ layers {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    weight_filler {
+      type: "xavier"
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -26344,6 +27222,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26526,6 +27405,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/relu_3x3"
   type: "ReLU"
@@ -26545,6 +27426,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -26581,11 +27463,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 48
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26611,6 +27496,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -26618,6 +27505,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26637,6 +27525,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/relu_5x5_reduce"
   type: "ReLU"
@@ -26656,6 +27546,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -26692,12 +27583,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     pad: 2
     kernel_size: 5
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -26723,6 +27617,8 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
@@ -26730,6 +27626,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -26800,6 +27697,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/relu_5x5"
   type: "ReLU"
@@ -26811,6 +27710,7 @@ layer {
   type: "Pooling"
   bottom: "inception_5a/output"
   top: "inception_5b/pool"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -26882,11 +27782,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 1
     pad: 1
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -27034,6 +27937,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/pool_proj"
   type: "Convolution"
@@ -27047,6 +27954,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -27077,11 +27985,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27107,11 +28018,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     }
     bias_filler {
       type: "constant"
       value: 0.2
     }
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   }
 }
@@ -27162,6 +28076,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+}
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "inception_5b/relu_pool_proj"
   type: "ReLU"
@@ -27171,6 +28089,7 @@ layer {
 layer {
   name: "inception_5b/output"
   type: "Concat"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -27199,11 +28118,14 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   bottom: "inception_5b/1x1"
   bottom: "inception_5b/3x3"
   bottom: "inception_5b/5x5"
   bottom: "inception_5b/pool_proj"
   top: "inception_5b/output"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27223,12 +28145,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 }
 layer {
   name: "pool5/7x7_s1"
   type: "Pooling"
   bottom: "inception_5b/output"
   top: "pool5/7x7_s1"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -27258,12 +28183,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   pooling_param {
     pool: AVE
     kernel_size: 7
     stride: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -27301,11 +28229,14 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "pool5/drop_7x7_s1"
   type: "Dropout"
   bottom: "pool5/7x7_s1"
   top: "pool5/7x7_s1"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -27332,12 +28263,15 @@ layers {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   dropout_param {
     dropout_ratio: 0.4
   }
 }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27361,6 +28295,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss3/classifier"
   type: "InnerProduct"
@@ -27374,6 +28310,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27469,6 +28406,8 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   inner_product_param {
     num_output: 1000
     weight_filler {
@@ -27480,6 +28419,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27549,6 +28489,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss3/loss3"
   type: "SoftmaxWithLoss"
@@ -27563,6 +28505,7 @@ layer {
   bottom: "loss3/classifier"
   bottom: "label"
   top: "loss3/top-1"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27663,10 +28606,13 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   include {
     phase: TEST
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27736,6 +28682,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 layer {
   name: "loss3/top-5"
   type: "Accuracy"
@@ -27748,6 +28696,7 @@ layer {
   accuracy_param {
     top_k: 5
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -27846,4 +28795,6 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 }

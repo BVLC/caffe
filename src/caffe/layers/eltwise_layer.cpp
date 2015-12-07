@@ -17,6 +17,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -90,6 +91,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 =======
@@ -381,11 +384,15 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype EltwiseLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -525,6 +532,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
     this->device_->mul(count, bottom[0]->const_data(),
@@ -539,6 +548,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     for (int i = 0; i < bottom.size(); ++i) {
       this->device_->axpy(count, coeffs_[i], bottom[i]->const_data(),
                           top_data);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -884,6 +894,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
         }
       }
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     }
     break;
   default:
@@ -894,6 +906,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int num = bottom[0]->num();
@@ -936,6 +949,8 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 =======
@@ -980,6 +995,7 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int* mask = NULL;
   const int count = top[0]->count();
+<<<<<<< HEAD
   const Dtype* top_data = top[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
   for (int i = 0; i < bottom.size(); ++i) {
@@ -1002,6 +1018,24 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
         } else {
           caffe_div(count, top_data, bottom_data, bottom_diff);
+=======
+  const Dtype* top_data = top[0]->const_data();
+  const Dtype* top_diff = top[0]->const_diff();
+  for (int i = 0; i < bottom->size(); ++i) {
+    if (propagate_down[i]) {
+      const Dtype* bottom_data = (*bottom)[i]->const_data();
+      Dtype* bottom_diff = (*bottom)[i]->mutable_diff();
+      switch (op_) {
+      case EltwiseParameter_EltwiseOp_PROD:
+        this->device_->div(count, top_data, bottom_data, bottom_diff);
+        this->device_->mul(count, bottom_diff, top_diff, bottom_diff);
+        break;
+      case EltwiseParameter_EltwiseOp_SUM:
+        if (coeffs_[i] == Dtype(1)) {
+          this->device_->copy(count, top_diff, bottom_diff);
+        } else {
+          this->device_->scale(count, coeffs_[i], top_diff, bottom_diff);
+>>>>>>> BVLC/device-abstraction
         }
         caffe_mul(count, bottom_diff, top_diff, bottom_diff);
 <<<<<<< HEAD
@@ -1211,6 +1245,7 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+<<<<<<< HEAD
 template <typename Dtype>
 >>>>>>> master
 =======
@@ -4372,6 +4407,8 @@ void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(EltwiseLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD

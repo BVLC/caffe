@@ -191,6 +191,7 @@
 >>>>>>> pod/device/blob.hpp
 =======
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -219,6 +220,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/lrn_layer.hpp"

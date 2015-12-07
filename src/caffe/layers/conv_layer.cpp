@@ -16,6 +16,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -238,6 +239,11 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/device.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/conv_layer.hpp"
@@ -3601,6 +3607,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -3642,6 +3649,11 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < bottom.size(); ++i) {
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  for (int i = 0; i < bottom.size(); ++i) {
+>>>>>>> BVLC/device-abstraction
     const Dtype* bottom_data = bottom[i]->const_data();
     Dtype* top_data = (*top)[i]->mutable_data();
     Dtype* col_data = col_buffer_.mutable_data();
@@ -3659,6 +3671,7 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
         this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, K_,
             (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
             (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -3695,17 +3708,23 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           (Dtype)0., top_data + top[i]->offset(n) + top_offset * g);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
       }
       // Add bias.
       if (bias_term_) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
         this->device_->gemm(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
             bias_multiplier_.const_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
@@ -3852,12 +3871,15 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
       }
     }
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3880,6 +3902,8 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 =======
@@ -4091,6 +4115,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       if (!top_diff) {
         top_diff = top[i]->const_diff();
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
       }
 <<<<<<< HEAD
@@ -4139,6 +4164,19 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      }
+      Dtype* col_data = col_buffer_.mutable_data();
+      Dtype* col_diff = col_buffer_.mutable_diff();
+      const Dtype* bottom_data = (*bottom)[i]->const_data();
+      Dtype* bottom_diff = (*bottom)[i]->mutable_diff();
+      for (int n = 0; n < num_; ++n) {
+        // Since we saved memory in the forward pass by not storing all col
+        // data, we will need to recompute them.
+        this->device_->im2col(bottom_data + (*bottom)[i]->offset(n), channels_,
+            height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+            stride_h_, stride_w_, col_data);
+>>>>>>> BVLC/device-abstraction
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {
@@ -4223,12 +4261,15 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
           // col2im back to the data
 <<<<<<< HEAD
+<<<<<<< HEAD
           this->device_->col2im(col_diff, channels_, height_, width_,
               kernel_h_, kernel_w_, pad_h_, pad_w_,
               stride_h_, stride_w_, bottom_diff + (*bottom)[i]->offset(n));
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
           this->device_->col2im(col_diff, channels_, height_, width_,
               kernel_h_, kernel_w_, pad_h_, pad_w_,
               stride_h_, stride_w_, bottom_diff + (*bottom)[i]->offset(n));
@@ -4451,7 +4492,10 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(ConvolutionLayer);
 }  // namespace caffe

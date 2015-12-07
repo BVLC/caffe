@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -140,6 +141,10 @@
 =======
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1158,6 +1163,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 =======
@@ -1196,6 +1202,8 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype SoftmaxWithLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
 <<<<<<< HEAD
@@ -1432,6 +1440,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 =======
@@ -1473,6 +1482,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
 void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
 <<<<<<< HEAD
@@ -1565,6 +1576,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     caffe_copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = bottom[1]->cpu_data();
     int dim = prob_.count() / outer_num_;
@@ -1627,6 +1639,8 @@ STUB_GPU(SoftmaxWithLossLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> BVLC/device-abstraction
     GetDevice<Dtype>(Caffe::CPU)->copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = (*bottom)[1]->cpu_data();
 =======
@@ -1646,6 +1660,7 @@ STUB_GPU(SoftmaxWithLossLayer);
     // Scale down gradient
     GetDevice<Dtype>(Caffe::CPU)->scal(prob_.count(), Dtype(1) / num,
                                        bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5324,6 +5339,11 @@ STUB_GPU(SoftmaxWithLossLayer);
 #endif
 
 >>>>>>> BVLC/master
+=======
+  }
+}
+
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD

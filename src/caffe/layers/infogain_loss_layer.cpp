@@ -30,6 +30,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -48,6 +49,8 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
@@ -241,6 +244,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -321,6 +325,8 @@ Dtype InfogainLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype InfogainLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 >>>>>>> pod/device/blob.hpp

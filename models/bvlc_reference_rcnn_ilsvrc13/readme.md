@@ -12,6 +12,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -107,6 +108,9 @@ license: unrestricted
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+license: unrestricted
+>>>>>>> BVLC/device-abstraction
 sha1: bdd8abb885819cba5e2fe1eb36235f2319477e64
 caffe_commit: a7e397abbda52c0b90323c23ab95bdeabee90a98
 ---
@@ -121,6 +125,7 @@ This model was trained by Ross Girshick @rbgirshick
 
 ## License
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -232,3 +237,6 @@ This model is released for unrestricted use.
 This model is released for unrestricted use.
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+This model is released for unrestricted use.
+>>>>>>> BVLC/device-abstraction

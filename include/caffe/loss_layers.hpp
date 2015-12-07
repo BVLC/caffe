@@ -153,6 +153,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -224,6 +225,8 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ACCURACY;
@@ -421,6 +424,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -801,6 +805,8 @@ class AccuracyLayer : public Layer<Dtype> {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   int top_k_;
 
   /// Whether to ignore instances with a certain label.
@@ -1843,12 +1849,15 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
@@ -1934,6 +1943,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2060,6 +2070,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> diff_;
 >>>>>>> pod/device/blob.hpp
 };
@@ -2224,9 +2236,15 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
   }
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2360,6 +2378,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+};
+>>>>>>> BVLC/device-abstraction
 
 <<<<<<< HEAD
 =======
@@ -2382,8 +2403,15 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+<<<<<<< HEAD
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+=======
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+     vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
@@ -2438,6 +2466,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> master
@@ -2659,6 +2688,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+ protected:
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> infogain_;
 >>>>>>> pod/device/blob.hpp
 };
@@ -2783,11 +2815,15 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -2795,10 +2831,13 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -2941,6 +2980,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 };
 
 <<<<<<< HEAD
@@ -3045,6 +3086,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
+<<<<<<< HEAD
 <<<<<<< HEAD
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
@@ -3231,6 +3273,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
@@ -3342,6 +3387,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3467,6 +3513,14 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> diff_;
+=======
+  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
+  // sigmoid_output stores the output of the sigmoid layer.
+  shared_ptr<Blob<Dtype> > sigmoid_output_;
+  // Vector holders to call the underlying sigmoid layer forward and backward.
+  vector<Blob<Dtype>*> sigmoid_bottom_vec_;
+  vector<Blob<Dtype>*> sigmoid_top_vec_;
+>>>>>>> BVLC/device-abstraction
 };
 >>>>>>> pod/device/blob.hpp
 
@@ -3691,6 +3745,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+<<<<<<< HEAD
      vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -3796,6 +3851,11 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 3; }
   virtual inline const char* type() const { return "ContrastiveLoss"; }
 =======
+=======
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   virtual inline int ExactNumBottomBlobs() const { return 3; }
   virtual inline LayerParameter_LayerType type() const {
@@ -3816,6 +3876,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
   /// @copydoc ContrastiveLossLayer
 =======
@@ -7684,6 +7745,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
  protected:
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
   // prob stores the output probability of the layer.
 =======

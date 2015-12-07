@@ -171,6 +171,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // Test that the layer setup got the correct parameters.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -322,6 +323,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);

@@ -21,6 +21,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/layer_factory.hpp"
@@ -211,6 +212,9 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -415,6 +419,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -492,6 +497,8 @@ class Layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
     : layer_param_(param), device_(GetDevice<Dtype>()) {
       // The only thing we do is to copy blobs if there are any.
 =======
@@ -2290,6 +2297,7 @@ class Layer {
   // functions.
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
+<<<<<<< HEAD
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
@@ -3014,6 +3022,10 @@ class Layer {
   inline void Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+>>>>>>> BVLC/device-abstraction
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
 
@@ -3525,11 +3537,14 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
   vector<Dtype> loss_;
+=======
+>>>>>>> BVLC/device-abstraction
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -3970,6 +3985,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -4389,6 +4405,9 @@ class Layer {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      vector<Blob<Dtype>*>* bottom) { return; }
+>>>>>>> BVLC/device-abstraction
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
@@ -4640,6 +4659,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -4719,6 +4739,8 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 >>>>>>> pod/caffe-merge

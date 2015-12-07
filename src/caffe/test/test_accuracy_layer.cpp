@@ -456,6 +456,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+<<<<<<< HEAD
   LayerParameter layer_param;
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -930,6 +931,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
+>>>>>>> BVLC/device-abstraction
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
 =======

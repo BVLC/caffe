@@ -980,6 +980,7 @@ Dtype Blob<Dtype>::asum_diff() const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
     return asum;
@@ -994,11 +995,15 @@ Dtype Blob<Dtype>::asum_diff() const {
 >>>>>>> pod/device/blob.hpp
     return asum;
 <<<<<<< HEAD
+=======
+    return asum;
+>>>>>>> BVLC/device-abstraction
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
     return asum;
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1011,10 +1016,13 @@ Dtype Blob<Dtype>::asum_diff() const {
   case SyncedMemory::UNINITIALIZED:
     return asum;
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
   return asum;
+<<<<<<< HEAD
 }
 
 template <> unsigned int Blob<unsigned int>::sumsq_data() const {
@@ -1025,6 +1033,8 @@ template <> unsigned int Blob<unsigned int>::sumsq_data() const {
 template <> int Blob<int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
+=======
+>>>>>>> BVLC/device-abstraction
 }
 
 <<<<<<< HEAD
@@ -1033,6 +1043,7 @@ template <> int Blob<int>::sumsq_data() const {
 <<<<<<< HEAD
 =======
 template <typename Dtype>
+<<<<<<< HEAD
 Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq;
   const Dtype* data;
@@ -1057,6 +1068,24 @@ Dtype Blob<Dtype>::sumsq_data() const {
     return asum;
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
+=======
+void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
+  if (num_ != source.num() || channels_ != source.channels() ||
+      height_ != source.height() || width_ != source.width()) {
+    if (reshape) {
+      Reshape(source.num(), source.channels(), source.height(), source.width());
+    } else {
+      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+    }
+  }
+
+  if (copy_diff) {
+    GetDevice<Dtype>()->copy(count_, source.const_diff(),
+                             static_cast<Dtype*>(diff_->mutable_data()));
+  } else {
+    GetDevice<Dtype>()->copy(count_, source.const_data(),
+                             static_cast<Dtype*>(data_->mutable_data()));
+>>>>>>> BVLC/device-abstraction
   }
 <<<<<<< HEAD
   return sumsq;
@@ -1075,6 +1104,7 @@ template <> int Blob<int>::sumsq_data() const {
   return 0;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 template <> int Blob<int>::sumsq_diff() const {
   NOT_IMPLEMENTED;
@@ -19127,6 +19157,8 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   }
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
 template class Blob<unsigned int>;
@@ -19138,6 +19170,7 @@ template class Blob<unsigned int>;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19157,4 +19190,6 @@ template class Blob<unsigned int>;
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 }  // namespace caffe

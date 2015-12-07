@@ -77,6 +77,7 @@
 <<<<<<< HEAD
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
+<<<<<<< HEAD
 #include "caffe/vision_layers.hpp"
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -125,6 +126,8 @@
 <<<<<<< HEAD
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -564,6 +567,7 @@ template <typename Dtype>
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -592,6 +596,8 @@ Dtype EuclideanLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype EuclideanLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 =======
@@ -613,6 +619,7 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -679,11 +686,14 @@ void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -1377,10 +1387,13 @@ void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const Dtype sign = (i == 0) ? 1 : -1;
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
       this->device_->axpby(
           (*bottom)[i]->count(),              // count
           sign / (*bottom)[i]->num(),         // alpha
           diff_.const_data(),                 // a
+<<<<<<< HEAD
 <<<<<<< HEAD
           Dtype(0),                           // beta
           (*bottom)[i]->mutable_diff());      // b
@@ -1516,10 +1529,15 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+          Dtype(0),                           // beta
+          (*bottom)[i]->mutable_diff());      // b
+>>>>>>> BVLC/device-abstraction
     }
   }
 }
 
+<<<<<<< HEAD
 INSTANTIATE_CLASS(EuclideanLossLayer);
 <<<<<<< HEAD
 =======
@@ -1534,6 +1552,8 @@ REGISTER_LAYER_CLASS(EuclideanLoss);
 
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(EuclideanLossLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD

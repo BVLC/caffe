@@ -11465,6 +11465,7 @@ class Im2colLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -11855,6 +11856,8 @@ class Im2colLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "Im2col"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+=======
+>>>>>>> BVLC/device-abstraction
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -11866,6 +11869,7 @@ class Im2colLayer : public Layer<Dtype> {
   virtual ~CuDNNLRNLayer();
 
  protected:
+<<<<<<< HEAD
 =======
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
@@ -11921,6 +11925,10 @@ template <typename Dtype>
   int top_dim_;
 
   int channel_axis_;
+=======
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
+>>>>>>> BVLC/device-abstraction
   int num_;
   int channels_;
 
@@ -11969,6 +11977,7 @@ template <typename Dtype> class SplitLayer;
 template <typename Dtype>
 class CuDNNLRNLayer : public LRNLayer<Dtype> {
  public:
+<<<<<<< HEAD
   explicit CuDNNLRNLayer(const LayerParameter& param)
       : LRNLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -11990,6 +11999,26 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
   int size_;
   Dtype alpha_, beta_, k_;
+=======
+  explicit EltwiseLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_ELTWISE;
+  }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  EltwiseParameter_EltwiseOp op_;
+  vector<Dtype> coeffs_;
+>>>>>>> BVLC/device-abstraction
 };
 
 template <typename Dtype>
@@ -12008,6 +12037,7 @@ template <typename Dtype>
 template <typename Dtype>
 class CuDNNLRNLayer : public LRNLayer<Dtype> {
  public:
+<<<<<<< HEAD
   explicit CuDNNLRNLayer(const LayerParameter& param)
       : LRNLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -12015,6 +12045,16 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNLRNLayer();
+=======
+  explicit Im2colLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -12074,6 +12114,7 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   virtual ~CuDNNLRNLayer();
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -12086,6 +12127,14 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
   int size_;
   Dtype alpha_, beta_, k_;
+=======
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
+  int channels_;
+  int height_;
+  int width_;
+  int pad_h_, pad_w_;
+>>>>>>> BVLC/device-abstraction
 };
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12099,6 +12148,7 @@ template <typename Dtype>
 template <typename Dtype>
 class CuDNNLRNLayer : public LRNLayer<Dtype> {
  public:
+<<<<<<< HEAD
   explicit CuDNNLRNLayer(const LayerParameter& param)
       : LRNLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -12106,6 +12156,16 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNLRNLayer();
+=======
+  explicit InnerProductLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -12144,6 +12204,7 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   virtual ~CuDNNLRNLayer();
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -12156,6 +12217,13 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
   int size_;
   Dtype alpha_, beta_, k_;
+=======
+  int M_;
+  int K_;
+  int N_;
+  bool bias_term_;
+  Blob<Dtype> bias_multiplier_;
+>>>>>>> BVLC/device-abstraction
 };
 
 template <typename Dtype>

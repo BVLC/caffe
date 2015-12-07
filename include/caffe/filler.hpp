@@ -160,6 +160,7 @@
 >>>>>>> pod/device/blob.hpp
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 <<<<<<< HEAD
@@ -213,6 +214,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
@@ -577,6 +580,7 @@ class XavierFiller : public Filler<Dtype> {
     Dtype scale = sqrt(Dtype(3) / fan_in);
     GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
                                               blob->mutable_cpu_data());
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -1237,6 +1241,8 @@ class MSRAFiller : public Filler<Dtype> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }

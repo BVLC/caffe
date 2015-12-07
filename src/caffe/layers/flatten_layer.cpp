@@ -761,6 +761,7 @@ void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   top[0]->ShareData(*bottom[0]);
@@ -776,6 +777,8 @@ template <typename Dtype>
 =======
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype FlattenLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   (*top)[0]->ShareData(*bottom[0]);
@@ -784,9 +787,12 @@ Dtype FlattenLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 void FlattenLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   (*bottom)[0]->ShareDiff(*top[0]);
@@ -902,6 +908,7 @@ void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   bottom[0]->ShareDiff(*top[0]);
 }
 
+<<<<<<< HEAD
 >>>>>>> master
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -1397,6 +1404,8 @@ INSTANTIATE_CLASS(FlattenLayer);
 }
 >>>>>>> pod/device/blob.hpp
 
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(FlattenLayer);
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
