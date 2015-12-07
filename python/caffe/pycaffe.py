@@ -224,7 +224,7 @@ def _Net_backward_all(self, diffs=None, start=None, end=None, **kwargs):
     return all_diffs
 
 
-def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
+def _Net_forward_backward_all(self, blobs=None, diffs=None, start=None, end=None, **kwargs):
     """
     Run net forward + backward in batches.
 
@@ -232,6 +232,10 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     ----------
     blobs: list of blobs to extract as in forward()
     diffs: list of diffs to extract as in backward()
+    start : optional name of layer at which to begin the forward pass
+            and finish the backward pass (inclusive)
+    end : optional name of layer at which to finish the forward pass
+          (inclusive) and begin the backward pass
     kwargs: Keys are input (for forward) and output (for backward) blob names
             and values are ndarrays. Refer to forward() and backward().
             Prefilled variants are called for lack of input or output blobs.
@@ -250,8 +254,8 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
                                     for out in self.outputs if out in kwargs})
     # Collect outputs from batches (and heed lack of forward/backward batches).
     for fb, bb in izip_longest(forward_batches, backward_batches, fillvalue={}):
-        batch_blobs = self.forward(blobs=blobs, **fb)
-        batch_diffs = self.backward(diffs=diffs, **bb)
+        batch_blobs = self.forward(blobs=blobs, start=start, end=end, **fb)
+        batch_diffs = self.backward(diffs=diffs, start=end, end=start, **bb)
         for out, out_blobs in batch_blobs.iteritems():
             all_outs[out].extend(out_blobs.copy())
         for diff, out_diffs in batch_diffs.iteritems():
