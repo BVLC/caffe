@@ -92,6 +92,20 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
+  // Setup dilation dimensions (dilation_).
+  dilation_.Reshape(spatial_dim_blob_shape);
+  int* dilation_data = dilation_.mutable_cpu_data();
+  const int num_dilation_dims = conv_param.dilation_size();
+  CHECK(num_dilation_dims == 0 || num_dilation_dims == 1 ||
+        num_dilation_dims == num_spatial_axes_)
+  << "dilation must be specified once, or once per spatial dimension "
+  << "(dilation specified " << num_dilation_dims << " times; "
+  << num_spatial_axes_ << " spatial dims);";
+  const int kDefaultDilation = 1;
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
+                       conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
+  }
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
   is_1x1_ = true;
