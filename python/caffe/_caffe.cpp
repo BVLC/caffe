@@ -135,7 +135,7 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
 
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
-  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  ReadSolverParamsFromTextFile(filename, &param);
   return SolverRegistry<Dtype>::CreateSolver(param);
 }
 

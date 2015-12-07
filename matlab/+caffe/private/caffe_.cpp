@@ -189,7 +189,7 @@ static void get_solver(MEX_ARGS) {
   char* solver_file = mxArrayToString(prhs[0]);
   mxCHECK_FILE_EXIST(solver_file);
   SolverParameter solver_param;
-  ReadSolverParamsFromTextFileOrDie(solver_file, &solver_param);
+  ReadSolverParamsFromTextFile(solver_file, &solver_param);
   shared_ptr<Solver<float> > solver(
       SolverRegistry<float>::CreateSolver(solver_param));
   solvers_.push_back(solver);

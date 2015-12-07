@@ -63,17 +63,15 @@ bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
   return success;
 }
 
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
+void ReadNetParamsFromTextFile(const string& param_file,
                                     NetParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
+  ReadProtoFromTextFile(param_file, param);
   UpgradeNetAsNeeded(param_file, param);
 }
 
-void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+void ReadNetParamsFromBinaryFile(const string& param_file,
                                       NetParameter* param) {
-  CHECK(ReadProtoFromBinaryFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
+  ReadProtoFromBinaryFile(param_file, param);
   UpgradeNetAsNeeded(param_file, param);
 }
 
@@ -1004,10 +1002,9 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
 }
 
 // Read parameters from a file into a SolverParameter proto message.
-void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+void ReadSolverParamsFromTextFile(const string& param_file,
                                        SolverParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse SolverParameter file: " << param_file;
+  ReadProtoFromTextFile(param_file, param);
   UpgradeSolverAsNeeded(param_file, param);
 }
 
