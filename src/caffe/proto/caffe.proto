@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: halide_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -376,6 +376,7 @@ message LayerParameter {
   optional EmbedParameter embed_param = 137;
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
+  optional HalideParameter halide_param = 147;
   optional HDF5DataParameter hdf5_data_param = 112;
   optional HDF5OutputParameter hdf5_output_param = 113;
   optional HingeLossParameter hinge_loss_param = 114;
@@ -741,6 +742,16 @@ message FlattenParameter {
   // May be negative to index from the end (e.g., the default -1 for the last
   // axis).
   optional int32 end_axis = 2 [default = -1];
+}
+
+// Message that stores parameters used by HalideLayer
+message HalideParameter {
+  optional string library = 1;
+  optional string layer = 2;
+  // This value is set to the attribute `param_str` of the `HalideLayer` instace
+  // in C++ before calling the `setup()` method. This is a string. You may parse
+  // this string in `setup` method and use it in `forward` and `backward`.
+  optional string param_str = 3 [default = ''];
 }
 
 // Message that stores parameters used by HDF5DataLayer
