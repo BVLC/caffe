@@ -432,9 +432,9 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       }
     }
     applyColorMap(label_map, label_map, COLORMAP_JET);
-    addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+    //addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
 
-    circle(label_map, meta.objpos, 3, CV_RGB(100,100,100), -1);
+    //circle(label_map, meta.objpos, 3, CV_RGB(100,100,100), -1);
     
     char imagename [100];
     sprintf(imagename, "augment_%04d_label_center.jpg", counter);
