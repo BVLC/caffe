@@ -91,7 +91,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(hashtag, "#");
     // read image path
     string image_path;
-    infile >> image_path;
+    std::getline(infile, image_path);
     image_path = root_folder + image_path;
     // read image dimensions
     vector<int> image_size(3);
