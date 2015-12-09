@@ -38,6 +38,19 @@ class Data(DataLayer):
         if transform is not None:
             self.p.transform_param.CopyFrom(transform.transform_param)
 
+class Deconvolution(Convolution):
+    def __init__(self, name, **kwargs):
+        kernel_dim = kwargs['kernel_dim']
+        num_output = kwargs['num_output']
+
+        del kwargs['kernel_dim']
+        del kwargs['num_output']
+            
+        l = Convolution(name, kernel_dim, num_output, None, None, **kwargs)
+        self.p = l.p
+        self.p.type = 'Deconvolution'
+       
+
 class Dropout(Layer):
     def __init__(self, name, dropout_ratio, **kwargs):
         kwargs['dropout_ratio'] = dropout_ratio
