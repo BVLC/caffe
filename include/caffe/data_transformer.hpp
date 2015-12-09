@@ -188,6 +188,7 @@ class DataTransformer {
   void TransformJoints(Joints& joints);
   void clahe(Mat& img, int, int);
   void putGaussianMaps(Dtype* entry, Point2f center, int stride, int grid_x, int grid_y, float sigma);
+  void dumpEverything(Dtype* transformed_data, Dtype* transformed_label, MetaData);
 
   // Tranformation parameters
   TransformationParameter param_;

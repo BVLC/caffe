@@ -7,7 +7,9 @@
 
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 using namespace cv;
+using namespace std;
 
 #include <string>
 #include <sstream>
@@ -421,28 +423,12 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   }
 
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
-  if(param_.visualize()){
-    static int counter = 3;
-    int grid_x = img_aug.cols;
-    int grid_y = img_aug.rows;
-    Mat label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
-    for (int g_y = 0; g_y < grid_y; g_y++){
-      for (int g_x = 0; g_x < grid_x; g_x++){
-        label_map.at<uchar>(g_y,g_x) = (int)(transformed_data[3*offset + g_y*grid_x + g_x]*255);
-      }
-    }
-    applyColorMap(label_map, label_map, COLORMAP_JET);
-    //addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
-
-    //circle(label_map, meta.objpos, 3, CV_RGB(100,100,100), -1);
-    
-    char imagename [100];
-    sprintf(imagename, "augment_%04d_label_center.jpg", counter);
-    //LOG(INFO) << "filename is " << imagename;
-    imwrite(imagename, label_map);
-    counter += 4;
-  }
   generateLabelMap(transformed_label, img_aug, meta);
+
+  //starts to visualize everything (transformed_data in 4 ch, label) fed into conv1
+  //if(param_.visualize()){
+    //dumpEverything(transformed_data, transformed_label, meta);
+  //}
 }
 
 template<typename Dtype>
@@ -460,7 +446,7 @@ float DataTransformer<Dtype>::augmentation_scale(Mat& img_src, Mat& img_temp, Me
   }
   float scale_abs = param_.target_dist()/meta.scale_self;
   float scale = scale_abs * scale_multiplier;
-  resize(img_src, img_temp, Size(), scale, scale, INTER_LINEAR);
+  resize(img_src, img_temp, Size(), scale, scale, INTER_CUBIC);
   //modify meta data
   meta.objpos *= scale;
   for(int i=0; i<np; i++){
@@ -617,7 +603,7 @@ float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, Me
   R.at<double>(1,2) += bbox.height/2.0 - center.y;
   //LOG(INFO) << "R=[" << R.at<double>(0,0) << " " << R.at<double>(0,1) << " " << R.at<double>(0,2) << ";" 
   //          << R.at<double>(1,0) << " " << R.at<double>(1,1) << " " << R.at<double>(1,2) << "]";
-  warpAffine(img_src, img_dst, R, bbox.size(), INTER_LINEAR, BORDER_CONSTANT, Scalar(128,128,128));
+  warpAffine(img_src, img_dst, R, bbox.size(), INTER_CUBIC, BORDER_CONSTANT, Scalar(128,128,128));
   
   //adjust meta data
   RotatePoint(meta.objpos, R);
@@ -680,11 +666,11 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   //put background channel
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
-      float sum = 0;
+      float maximum = 0;
       for (int i = 0; i < np; i++){
-        sum += transformed_label[i*channelOffset + g_y*grid_x + g_x];
+        maximum = (maximum > transformed_label[i*channelOffset + g_y*grid_x + g_x]) ? maximum : transformed_label[i*channelOffset + g_y*grid_x + g_x];
       }
-      transformed_label[np*channelOffset + g_y*grid_x + g_x] = max(1.0-sum, 0.0);
+      transformed_label[np*channelOffset + g_y*grid_x + g_x] = max(1.0-maximum, 0.0);
     }
   }
 
@@ -702,9 +688,9 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
           //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
         }
       }
-      resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
-      applyColorMap(label_map, label_map, COLORMAP_JET);
-      addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+      //resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
+      //applyColorMap(label_map, label_map, COLORMAP_JET);
+      //addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
       
       //center = center * (1.0/(float)param_.stride());
       //circle(label_map, center, 3, CV_RGB(255,0,255), -1);
@@ -722,7 +708,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
         //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
       }
     }
-    resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
+    resize(label_map, label_map, Size(), stride, stride, INTER_CUBIC);
     applyColorMap(label_map, label_map, COLORMAP_JET);
     addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
 
@@ -1217,6 +1203,32 @@ void DataTransformer<Dtype>::clahe(Mat& bgr_image, int tileSize, int clipLimit) 
   cvtColor(lab_image, image_clahe, CV_Lab2BGR);
   bgr_image = image_clahe.clone();
 }
+
+template <typename Dtype>
+void DataTransformer<Dtype>::dumpEverything(Dtype* transformed_data, Dtype* transformed_label, MetaData meta){
+  
+  char filename[100];
+  sprintf(filename, "transformed_data_%04d_%02d", meta.annolist_index, meta.people_index);
+  ofstream myfile;
+  myfile.open(filename);
+  int data_length = param_.crop_size_y() * param_.crop_size_x() * 4;
+  
+  //LOG(INFO) << "before copy data: " << filename << "  " << data_length;
+  for(int i = 0; i<data_length; i++){
+    myfile << transformed_data[i] << " ";
+  }
+  //LOG(INFO) << "after copy data: " << filename << "  " << data_length;
+  myfile.close();
+
+  sprintf(filename, "transformed_label_%04d_%02d", meta.annolist_index, meta.people_index);
+  myfile.open(filename);
+  int label_length = param_.crop_size_y() * param_.crop_size_x() / param_.stride() / param_.stride() * (param_.num_parts()+1);
+  for(int i = 0; i<label_length; i++){
+    myfile << transformed_label[i] << " ";
+  }
+  myfile.close();
+}
+
 
 INSTANTIATE_CLASS(DataTransformer);
 
