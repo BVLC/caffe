@@ -27,6 +27,17 @@ class SGDSolver : public Solver<Dtype> {
     ApplyUpdate();
     ++this->iter_;
   }
+  
+  void UpdateDiff() {
+    Dtype rate = GetLearningRate();
+    ClipGradients();
+    for (int param_id = 0; param_id < this->net_->learnable_params().size();
+        ++param_id) {
+      Normalize(param_id);
+      Regularize(param_id);
+      ComputeUpdateValue(param_id, rate);
+    }
+  }
 
  protected:
   void PreSolve();

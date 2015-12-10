@@ -13,22 +13,24 @@ int Msg::MergeMsg(shared_ptr<Msg> m)
 
     int blob_index = blob_index_by_name(src_blob.blob_name());
     
-    if (blob_index >= 0) {   //atatching the blobs to the packet
+    //atatching the blobs to the packet
+    if (blob_index >= 0) {
       BlobInfo *tgt_blob = header_.mutable_blobs(blob_index); 
       
-      for (int k = 0; k < src_blob.fragment_offset_size(); k++) {
-        tgt_blob->add_fragment_offset(src_blob.fragment_offset(k));
+      for (int k = 0; k < src_blob.logical_offset_size(); k++) {
+        tgt_blob->add_logical_offset(src_blob.logical_offset(k));
         
         int msg_index = AppendZmsg(m->GetZmsg(src_blob.msg_index(k)));
         tgt_blob->add_msg_index(msg_index);
       }
 
-    } else {    //add a new blob
-      //add message data
+    } else {
       BlobInfo new_blob(src_blob);
       
-      for (int k = 0; k < src_blob.fragment_offset_size(); k++) {
-        new_blob.set_msg_index(k, AppendZmsg(m->GetZmsg(src_blob.msg_index(k))));
+      // keep the logical offset but ajust physical offset
+      new_blob.clear_msg_index();
+      for (int k = 0; k < src_blob.msg_index_size(); k++) {
+        new_blob.add_msg_index(AppendZmsg(m->GetZmsg(src_blob.msg_index(k))));
       }
 
       add_blob_info(new_blob);
@@ -64,7 +66,6 @@ shared_ptr<Msg> Msg::ExtractMsg(const string blob_name)
   BlobInfo new_blob;
   
   new_blob.set_blob_name(chosen_blob.blob_name());
-  new_blob.set_num_fragments(chosen_blob.num_fragments());
 
   for (int i = 0; i < chosen_blob.msg_index_size(); i++) {
     int msg_index = chosen_blob.msg_index(i);
@@ -72,7 +73,7 @@ shared_ptr<Msg> Msg::ExtractMsg(const string blob_name)
     zmsg_vec_[msg_index] = NULL;
 
     new_blob.add_msg_index(m->AppendZmsg(pmsg));
-    new_blob.add_fragment_offset(chosen_blob.fragment_offset(i)); 
+    new_blob.add_logical_offset(chosen_blob.logical_offset(i)); 
   }
 
   m->add_blob_info(new_blob);
@@ -90,13 +91,12 @@ shared_ptr<Msg> Msg::ExtractMsg(const string blob_name)
     BlobInfo update_blob;
     
     update_blob.set_blob_name(old_blob.blob_name());
-    update_blob.set_num_fragments(old_blob.num_fragments());
 
     for (int j = 0; j < old_blob.msg_index_size(); j++) {
       update_blob.add_msg_index( update_msg.size() );
       update_msg.push_back( zmsg_vec_[old_blob.msg_index(j)] );
       
-      update_blob.add_fragment_offset(old_blob.fragment_offset(j));
+      update_blob.add_logical_offset(old_blob.logical_offset(j));
     }
 
     update_info.push_back(update_blob);
@@ -117,15 +117,51 @@ shared_ptr<Msg> Msg::ExtractMsg(const string blob_name)
 
 void Msg::AddNewBlob(const string& blob_name, const void *data, int sz)
 {
+  CHECK(!has_blob(blob_name));
   BlobInfo info;
   info.set_blob_name(blob_name);
-  info.set_num_fragments(1);
-  info.add_fragment_offset(0);
+  info.add_logical_offset(0);
 
   int msg_index = AppendData(data, sz);
   info.add_msg_index(msg_index);
 
   add_blob_info(info);
+}
+
+void Msg::AppendBlob(const string& blob_name, const void *data, int sz)
+{
+  if (!has_blob(blob_name)) {
+    return AddNewBlob(blob_name, data, sz);
+  }
+
+  int blob_idx = blob_index_by_name(blob_name);
+  BlobInfo *pblob = header_.mutable_blobs(blob_idx);
+
+  int logical_offset = pblob->logical_offset_size();
+  pblob->add_logical_offset(logical_offset);
+
+  int msg_idx = AppendData(data, sz);
+  pblob->add_msg_index(msg_idx);
+}
+
+void *Msg::AllocBlob(const string& blob_name, int sz)
+{
+  CHECK(!has_blob(blob_name)) << "allocating an exists blob: " << blob_name;
+  
+  zmq_msg_t *m = new zmq_msg_t;
+  zmq_msg_init_size(m, sz);
+
+  int idx = zmsg_vec_.size();
+  zmsg_vec_.push_back(m);
+  
+  BlobInfo info;
+  info.set_blob_name(blob_name);
+  info.add_logical_offset(0);
+  info.add_msg_index(idx);
+
+  add_blob_info(info);
+
+  return zmq_msg_data(m);
 }
 
 void Msg::CopyBlob(const string& blob_name, void *data, int sz)
@@ -140,7 +176,7 @@ void Msg::CopyBlob(const string& blob_name, void *data, int sz)
   int msg_data_size = 0;
   //sequetialize the messages
   for (int i = 0; i < bi.msg_index_size(); i++) {
-    msgs[bi.fragment_offset(i)] = bi.msg_index(i);
+    msgs[bi.logical_offset(i)] = bi.msg_index(i);
     msg_data_size += ZmsgSize(bi.msg_index(i));
   }
 

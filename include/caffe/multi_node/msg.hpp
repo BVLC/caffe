@@ -17,8 +17,7 @@ using std::vector;
 using std::string;
 using std::map;
 
-const int REQ_SERVER_ID = 3;
-const int PS_ID = 2;
+const int REQ_SERVER_ID = 2;
 const int ROOT_THREAD_ID = 1;
 const int INVALID_ID = -1;
 
@@ -36,6 +35,7 @@ public:
     set_src(m->src());
     set_dst(m->dst());
     set_msg_id(m->msg_id());
+    set_clock(m->clock());
     set_type(m->type());
     set_conv_id(m->conv_id());
   }
@@ -44,6 +44,7 @@ public:
     set_src(p->src());
     set_dst(p->dst());
     set_msg_id(p->msg_id());
+    set_clock(p->clock());
     set_type(p->type());
     set_conv_id(p->conv_id());
   }
@@ -72,6 +73,14 @@ public:
     return header_.dst();
   }
   
+  int clock() const {
+    return header_.clock();
+  }
+
+  void set_clock(int clock) {
+    header_.set_clock(clock);
+  }
+
   int64_t msg_id() {
     return header_.msg_id();
   }
@@ -184,7 +193,15 @@ public:
   }
 
   void AddNewBlob(const string& blob_name, const void *data, int sz);
+  
   void CopyBlob(const string& blob_name, void *data, int sz);
+  
+  // return the pointer to the allocated blob
+  void *AllocBlob(const string& blob_name, int sz);
+
+  /// Append a block of data to a blob
+  /// Allocate a new blob if the blob doen't exist
+  void AppendBlob(const string& blob_name, const void *data, int sz);
 
   int ZmsgSize(int i) 
   {

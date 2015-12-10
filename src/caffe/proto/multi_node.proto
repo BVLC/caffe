@@ -3,45 +3,85 @@ syntax = "proto2";
 
 package caffe;
 
+import "caffe.proto";
+
 enum NodeRole {
-  INVALID_ROLE = 0;
-  CONV_CLIENT = 1;
-  PARAM_SERVER = 2;
-  FC_NODE = 3;      // nodes that runs a part of FC models
+  INVALID_ROLE  = 0;
+  CONV_CLIENT   = 1;
+  PARAM_SERVER  = 2;
+
+  // nodes that runs a part of FC models
+  FC_NODE       = 3;
+
+  // the gateway to a all the fc nodes
+  FC_GATEWAY    = 4;
+  
+  // Nodes that collect weights and run tests
+  TEST_NODE     = 5;
 }
 
 message NodeInfo {
   optional string ip = 1 [default = "127.0.0.1"];
   
   //port # less or equal than 0 means it is invalid & un-initialized
-  required int32 router_port = 2 [default = 0];
-  required int32 pub_port = 3 [default = 0];
+  optional int32 router_port = 2 [default = 0];
+  optional int32 pub_port = 3 [default = 0];
   
   //which part of the layer it has
   optional int32 position = 4 [default = 0];
   //used by zmq to identify node
   optional int32 node_id = 5 [default = 0];
   
-  optional NodeRole role = 6 [default = INVALID_ROLE];
+  optional NodeRole node_role = 6 [default = INVALID_ROLE];
+  
+  // all the layers in the sub-model
+  // inserted by model server in BFS order
+  repeated string layers = 7;
+
+  // typically staleness is used by parameter server to sync with workers
+  optional int32 staleness = 8 [default = 0];
 }
 
 
 message RouteInfo {
-  //upstream and downstream nodes in the network
+  // the upstream nodes
   repeated NodeInfo prev_nodes = 1;
-  repeated NodeInfo next_nodes = 2;
 
-  //usually the loss layer in the network
-  repeated NodeInfo bottom_nodes = 3;
+  // broadcast a blob to downstream nodes
+  repeated NodeInfo bcast_nodes = 2;
+  
+  // the name of the broadcasting blob
+  optional string bcast_blob = 3;
 
-  //
-  optional int32 train_batch_size = 4 [default = 0];
+  // some blobs needs to be directly forwarded to other nodes
+  // without any processing
+  repeated NodeInfo fwrd_nodes = 4;
+
+  // name of the blobs needed to be forwarded
+  repeated string fwrd_blob = 5;
+  
+  // gateway of FC nodes
+  optional NodeInfo gateway_node = 6;
+
+  // list of all the parameter servers
+  repeated NodeInfo ps_nodes = 7;
+
+  // list of all the FC nodes
+  repeated NodeInfo fc_nodes = 8;
+  
+  // sub solver that a node needs to run
+  required SolverParameter solver_param = 9;
 }
 
 
 message ModelRequest {
-  required string start_layer = 1;
-  required string end_layer = 2;
+  // a node can have only 1 starting layers
+  optional string start_layer = 1;
+
+  // multiple end layers
+  repeated string end_layers = 2;
+
+  // a layer can be splitted to multiple parts (model parallel)
   optional int32 num_splits = 3 [default = 1];
 
   required NodeInfo node_info = 4;
@@ -49,45 +89,46 @@ message ModelRequest {
 
 
 enum MsgType {
-  PING = 0;
-  PONG = 1;
+  PING            = 0;
+  PONG            = 1;
   GET_TRAIN_MODEL = 2;
-  GET_FULL_MODEL = 3;
-  GET_PARAM = 4;
-  PUT_PARAM = 5;
-  PUT_GRADIENT = 6;
-  FORWARD = 7;
-  BACKWARD = 8;
-  INVALID_MSG = 9;
+  REGISTER_NODE   = 3;
+  GET_PARAM       = 4;
+  PUT_PARAM       = 5;
+  PUT_GRADIENT    = 6;
+  FORWARD         = 7;
+  BACKWARD        = 8;
+  TRAIN_ITER      = 9;
+  INVALID_MSG     = 10;
 }
 
 message BlobInfo {
   optional string blob_name = 1;
-
-  //total number of fragments (logically)
-  optional int32 num_fragments = 2 [default = 1];
   
   //the logical position of the fragment in the blob
-  repeated int32 fragment_offset = 3;
+  repeated int32 logical_offset = 2;
 
   //the message index of fragment in the vector
-  repeated int32 msg_index = 4;
+  repeated int32 msg_index = 3;
 }
 
 
 message MsgHeader {
-  //the source node which generates these series of packet
+  // the source node which generates these series of packet
   optional int32 src = 1 [default = 0];
 
-  //dst is used as next hop in routing
+  // dst is used as next hop in routing
   optional int32 dst = 2 [default = 0];
   optional int64 msg_id = 3 [default = 0];
   required MsgType type = 4 [default = INVALID_MSG];
 
   repeated BlobInfo blobs = 5;
   
-  //the id of the convolution thread
+  // id of the convolution thread
   optional int64 conv_id = 6 [default = 0];
+
+  // the clock at the client, used by parameter server
+  optional int32 clock = 7;
 }
 
 

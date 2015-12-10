@@ -46,6 +46,16 @@ class Solver {
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
+  
+  void TestAll(int iter) {
+    iter_ = iter;
+    TestAll();
+  }
+  
+  void Snapshot(int iter) {
+    iter_ = iter;
+    Snapshot();
+  }
 
   // Client of the Solver optionally may call this in order to set the function
   // that the solver uses to see what action it should take (e.g. snapshot or

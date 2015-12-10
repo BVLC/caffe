@@ -1,5 +1,6 @@
 
 #include "caffe/multi_node/conv_thread.hpp"
+#include "caffe/multi_node/param_helper.hpp"
 
 namespace caffe {
 
@@ -12,9 +13,11 @@ int64_t ConvThread<Dtype>::conv_id_ = 0;
 template <typename Dtype>
 shared_ptr<Msg> ConvThread<Dtype>::ConvForward()
 {
-  WorkerSolver<Dtype> *pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();
+  SGDSolver<Dtype> *pconv = (SGDSolver<Dtype> *)NodeEnv::Instance()->PopFreeSolver();
   if (NULL == pconv) {
-    pconv = (WorkerSolver<Dtype> *)this->NewSolver();
+    Solver<Dtype> *root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
+    const SolverParameter& solver_param = NodeEnv::Instance()->SolverParam();
+    pconv = (SGDSolver<Dtype> *)this->NewSolver(root_solver, solver_param);
   }
 
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
@@ -23,12 +26,14 @@ shared_ptr<Msg> ConvThread<Dtype>::ConvForward()
   
   //copyout the activations
   shared_ptr<Msg> m(new Msg());
-  this->CopyOutputData(conv_net, m);
+  ParamHelper<Dtype>::CopyOutputDataToMsg(conv_net, m);
   
   m->set_src(NodeEnv::Instance()->ID());
   int64_t conv_id = NewConvId();
   m->set_type(FORWARD);
   m->set_conv_id(conv_id);
+  // always use the 0th clock
+  m->set_clock(ps_clocks_[0]);
   NodeEnv::Instance()->PutSolver(conv_id, pconv);
 
   return m;
@@ -37,23 +42,55 @@ shared_ptr<Msg> ConvThread<Dtype>::ConvForward()
 template <typename Dtype>
 int ConvThread<Dtype>::ConvBackward(shared_ptr<Msg> m)
 {
-  WorkerSolver<Dtype> *pconv = (WorkerSolver<Dtype> *)NodeEnv::Instance()->FindSolver(m->conv_id());
+  SGDSolver<Dtype> *pconv = (SGDSolver<Dtype> *)NodeEnv::Instance()->FindSolver(m->conv_id());
   CHECK(pconv != NULL);
   
+  int64_t conv_id = m->conv_id();
+
   shared_ptr<Net<Dtype> > conv_net = pconv->net();
-  this->GetOutputDiff(conv_net, m);
+  ParamHelper<Dtype>::CopyOutputDiffFromMsg(conv_net, m);
 
   //copy activations
   conv_net->Backward();
+  pconv->UpdateDiff();
   
-  //notify the param thread that delta is ready
-  shared_ptr<Msg> notify(new Msg(m));
+  /// update the clocks to each parameter server
+  for (int i = 0; i < ps_clocks_.size(); i++) {
+    ps_clocks_[i]++;
+  }
+
+  /// send the gradient to parameter servers
+  for (int i = 0; i < ps_ids_.size(); i++) {
+    shared_ptr<Msg> ps_msg(new Msg());
+    ps_msg->set_type(PUT_GRADIENT);
+    ps_msg->set_dst(ps_ids_[i]);
+    ps_msg->set_src(NodeEnv::Instance()->ID());
+    ps_msg->set_clock(ps_clocks_[i]);
+    
+    const vector<string>& ps_layers = NodeEnv::Instance()->FindPSLayer(ps_ids_[i]);
+    ParamHelper<Dtype>::CopyParamDiffToMsg(conv_net, ps_layers, ps_msg);
+    
+    this->SendMsg(ps_msg);
+  }
   
-  notify->set_dst(ROOT_THREAD_ID);
-  notify->set_type(PUT_GRADIENT);
-  notify->AppendData(&pconv, sizeof(pconv));
+  // wait for the response from parameter servers
+  int num_param_update = 0;
+  while ((m = this->RecvMsg(true)) != NULL) {
+    if (m->type() == PUT_PARAM) {
+      map<int, int>::iterator map_iter = ps_id_map_.find(m->src());
+      CHECK(map_iter != ps_id_map_.end());
+
+      ParamHelper<Dtype>::CopyParamDataFromMsg(conv_net, m);
+      
+      num_param_update++;
+      if (num_param_update >= ps_ids_.size()) {
+        break;
+      }
+    }
+  }
   
-  this->SendMsg(notify);
+  NodeEnv::Instance()->DeleteSolver(conv_id);
+  NodeEnv::Instance()->PushFreeSolver(pconv);
 
   return 0;
 }
@@ -62,15 +99,14 @@ int ConvThread<Dtype>::ConvBackward(shared_ptr<Msg> m)
 template <typename Dtype>
 void ConvThread<Dtype>::Run()
 {
-
   while (!this->must_stop()) {
     shared_ptr<Msg> f = ConvForward();
     this->SendMsg(f);
 
     shared_ptr<Msg> r;
-    while ( (r = this->RecvMsg(false)) != NULL) {  //unblocked
-    //if ( (r = this->RecvMsg(true)) != NULL) {        //blocked
-      ConvBackward(r);      
+    //while ( (r = this->RecvMsg(false)) != NULL) {  //unblocked
+    if ( (r = this->RecvMsg(true)) != NULL) {        //blocked
+      ConvBackward(r); 
     }
   }
 }
@@ -82,18 +118,21 @@ int ConvParamThread<Dtype>::PutGradient(shared_ptr<Msg> m)
   WorkerSolver<Dtype> *psolver = (WorkerSolver<Dtype> *)NodeEnv::Instance()->FindSolver(m->conv_id());
   CHECK(psolver != NULL);
   
-  shared_ptr<Msg> ps_msg(new Msg());
-  ps_msg->set_type(PUT_GRADIENT);
-  ps_msg->set_dst(PS_ID);
-  ps_msg->set_src(NodeEnv::Instance()->ID());
-
-  const vector<Blob<Dtype>*>& net_params = psolver->net()->learnable_params();
-  for (int i = 0; i < net_params.size(); i++) {
-    ps_msg->AppendData(net_params[i]->cpu_diff(), net_params[i]->count() * sizeof(Dtype));
-  }
+  shared_ptr<Net<Dtype> > net = psolver->net();
   
-  this->SendMsg(ps_msg);
- 
+  /// send the gradient to parameter servers
+  for (int i = 0; i < ps_ids_.size(); i++) {
+    shared_ptr<Msg> ps_msg(new Msg());
+    ps_msg->set_type(PUT_GRADIENT);
+    ps_msg->set_dst(ps_ids_[i]);
+    ps_msg->set_src(NodeEnv::Instance()->ID());
+    
+    const vector<string>& ps_layers = NodeEnv::Instance()->FindPSLayer(ps_ids_[i]);
+    ParamHelper<Dtype>::CopyParamDiffToMsg(net, ps_layers, ps_msg);
+    
+    this->SendMsg(ps_msg);
+  }
+
   NodeEnv::Instance()->DeleteSolver(m->conv_id());
   NodeEnv::Instance()->PushFreeSolver(psolver);
 
@@ -105,16 +144,9 @@ int ConvParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
 {
   WorkerSolver<Dtype> *root_solver = (WorkerSolver<Dtype> *) NodeEnv::Instance()->GetRootSolver();
   
-  const vector<Blob<Dtype>*>& root_params = root_solver->net()->learnable_params();
+  /// TODO: add flow control when computation is faster than PS communication
+  ParamHelper<Dtype>::CopyParamDataFromMsg(root_solver->net(), m);
   
-  CHECK_EQ(root_params.size(), m->ZmsgCnt());
-
-  for (int i = 0; i < root_params.size(); i++) {
-    CHECK_EQ(root_params[i]->count() * sizeof(Dtype), m->ZmsgSize(i));
-
-    memcpy(root_params[i]->mutable_cpu_data(), m->ZmsgData(i), m->ZmsgSize(i));
-  }
-
   return 0;
 }
 

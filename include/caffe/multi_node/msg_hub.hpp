@@ -56,39 +56,42 @@ public:
   /// monitor the incoming and outgoing messages
   int Poll();
   
-  //initing the contex for each thread, e.g. create caffe solver etc.
-  //and connect the nodes together.
+  // initing the contex for each thread, e.g. create caffe solver etc.
+  // and connect the nodes together.
   virtual int Init() = 0;
 
-  //scheduling incoming & out-going message
+  // scheduling incoming & out-going message
   virtual int RouteMsg() = 0;
   
-  //use the internal threads to process message
-  int ProcessMsg(shared_ptr<Msg> m);
+  // use the internal threads to process message
+  int ScheduleMsg(shared_ptr<Msg> m);
 
 protected:
   virtual int SetUpPoll();
   int StartThreads();
 
+  // enqueue a message to a worker thread
+  void Enqueue(int thrd_id, shared_ptr<Msg> m) {
+    sockp_arr_[thrd_id]->SendMsg(m);
+    threads_[thrd_id]->Enqueue();
+  }
+
 protected:
-  //total number of threads
+  // total number of threads
   int nthreads_;
-  //number of threads used as workers
+  // number of threads used as workers
   int nworkers_;
   vector<shared_ptr<WorkerThread<Dtype> > > threads_;
 
-  //pair sockets to communicate with the work threads
+  // pair sockets to communicate with the work threads
   vector<shared_ptr<SkSock> > sockp_arr_;
 
-  //for message polling
+  // for message polling
   zmq_pollitem_t *poll_items_;
   int num_poll_items_;
 
   string node_ip_;
   
-  //use hash map to store message
-  unordered_map<int64_t, shared_ptr<Msg> > id_to_msg_;
-
 private:
   MsgHub() {  }
 

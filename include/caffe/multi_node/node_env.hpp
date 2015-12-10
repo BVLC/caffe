@@ -29,9 +29,14 @@ using boost::unordered_map;
 
 namespace caffe {
 
+const int GATEWAY_PORT = 935;
+const int TRAIN_NOTIFY_INTERVAL = 100;
+
 class NodeEnv {
 
 ////NOTE: all the public funcations are constants
+public:
+  static NodeEnv *Instance();
 
 public:
   const string& IP() { return node_ip_; }
@@ -43,20 +48,39 @@ public:
   ///
   const SolverParameter& SolverParam() { return solver_param_; }
 
+  /// For connection with upstream nodes
+  const vector<string>& sub_addrs() { return sub_addrs_; }
+  const vector<string>& prev_router_addrs() { return prev_router_addrs_; }
+  const vector<int>& prev_node_ids() { return prev_node_ids_; }
+  
+  /// We broadcast blobs to downstream nodes
+  const vector<string>& bcast_addrs() { return bcast_addrs_; }
+  
+  /// for forwarding some blobs
+  const vector<string>& forward_addrs() { return fwrd_addrs_; }
+  const vector<int>& forward_ids() { return fwrd_ids_; }
+  
+  /// name of blobs that need to be forwarded
+  const vector<string>& forward_blobs() { return fwrd_blobs_; }
+  
+  // for parameter server nodes
+  const vector<string>& ps_addrs() { return ps_addrs_; }
+  const vector<int>& ps_ids() { return ps_ids_; }
 
-  static NodeEnv *Instance();
+  const vector<string>& FindPSLayer(int ps_id) {
+    map<int, int>::iterator iter = ps_id_to_layers_id_.find(ps_id);
+    CHECK(iter != ps_id_to_layers_id_.end()) 
+      << "ERROR: cannot find layer for PS id: " << ps_id;
+    return ps_layers_[iter->second];
+  }
+  
+  const vector<string>& fc_addrs() { return fc_addrs_; }
 
-  ////
-  const vector<string>& SubAddrs() { return sub_addrs_; }
-  const vector<string>& DealerAddrs() { return dealer_addrs_; }
-  const vector<string>& ClientAddrs() { return client_addrs_; }
-  const vector<int>& DealerIDs() { return dealer_ids_; }
-  const vector<string>& BottomAddrs() { return bottom_addrs_; }
-  const vector<int>& BottomIDs() { return bottom_ids_; }
+  const vector<int>& fc_ids() { return fc_ids_; }
 
-  int NumInputBlobs() { return num_input_blobs_; }
+  shared_ptr<Msg> model_server_msg() { return model_server_msg_; }
 
-  string PubAddr() {
+  string pub_addr() {
     string addr = "tcp://*:";
     addr += boost::lexical_cast<string>(pub_port_);
     
@@ -64,13 +88,24 @@ public:
   }
 
 
-  string RouterAddr() {
+  string router_addr() {
     string addr = "tcp://*:";
     addr += boost::lexical_cast<string>(router_port_);
 
     return addr;
   }
-
+  
+  const string& fc_gateway_addr() {
+    return fc_gateway_addr_;
+  }
+  
+  int get_staleness() {
+    if (model_request_.node_info().has_staleness()) {
+      return model_request_.node_info().staleness();
+    } else {
+      return 0;
+    }
+  }
 
   void *FindSolver(int64_t msg_id) {
     boost::mutex::scoped_lock lock(id_map_mutex_);
@@ -142,10 +177,6 @@ public:
     }
   }
   
-  int GetTrainBatchSize() {
-    return rt_info_.train_batch_size();
-  }
-  
 
 public:
   static inline void set_id_server(const string& addr) {
@@ -155,9 +186,15 @@ public:
   static inline void set_model_server(const string& addr) {
     model_server_addr_ = addr;
   }
+  
+  static inline void set_model_request(const ModelRequest& rq) {
+    model_request_.CopyFrom(rq);
+    has_model_request_ = true;
+  }
 
   static inline void set_request_file(const string& addr) {
-    request_file_addr_ = addr;
+    ReadProtoFromTextFileOrDie(addr, &model_request_);
+    has_model_request_ = true;
   }
 
   static inline void set_node_role(const NodeRole role) {
@@ -170,10 +207,6 @@ public:
 
   static inline const string& model_server_addr() {
     return model_server_addr_;
-  }
-
-  static inline const string& request_file_addr() {
-    return request_file_addr_;
   }
 
   static inline NodeRole node_role() {
@@ -235,12 +268,33 @@ protected:
     return;
   }
 
-
+  static string RouterAddr(const NodeInfo& node_info) {
+    string addr = "tcp://";
+    addr += node_info.ip();
+    addr += ":";
+    addr += boost::lexical_cast<string>(node_info.router_port());
+    
+    return addr;
+  }
+  
+  static string PubAddr(const NodeInfo& node_info) {
+    string addr = "tcp://";
+    addr += node_info.ip();
+    addr += ":";
+    addr += boost::lexical_cast<string>(node_info.pub_port());
+    
+    return addr;
+  }
+  
+ 
 protected: 
   static void InitNode(void);
   int InitNodeID();
   int InitModel();
   int InitIP();
+
+protected:
+  void InitPSNodes();
 
 
 private:
@@ -259,34 +313,59 @@ protected:
 
   int server_port_;
   
-  //parameters from server
+  // sub_solver parameters got from server
   SolverParameter solver_param_;
   RouteInfo rt_info_;
+  
+  // message got from model server
+  shared_ptr<Msg> model_server_msg_;
 
-  //routing addresses
+  // routing addresses
 
-  //addresses of the SUB sockets to receive broadcasting messages
+  // addresses of the SUB sockets to receive broadcasting messages
   vector<string> sub_addrs_;
 
-  //address of the dealer sockets to send message to upstream node
-  vector<string> dealer_addrs_;
+  // address of the dealer sockets to send message to upstream node
+  vector<string> prev_router_addrs_;
   
-  //ID of the dealers
-  vector<int> dealer_ids_;
+  // ID of the prev nodes, we use dealers to connect upstream nodes
+  vector<int> prev_node_ids_;
 
-  //address of the clients
-  vector<string> client_addrs_;
+  // In FC nodes, we broadcast the blobs to downstream nodes
+  vector<string> bcast_addrs_;
 
-  //listen address in the loss layer
-  vector<string> bottom_addrs_;
+  // the name of blobs that need to be forwarded
+  vector<string> fwrd_blobs_;
+
+  // addresses for the blobs that need to be forwared
+  vector<string> fwrd_addrs_;
   
-  //node ID in the bottom nodes, used for routing
-  vector<int> bottom_ids_;
+  // node ID of the nodes
+  vector<int> fwrd_ids_;
 
-  //number of input blobs
+  // the address of parameter servers
+  vector<string> ps_addrs_;
+
+  // the node id of parameter servers
+  vector<int> ps_ids_;
+
+  // the ZMQ addresses of all the FC nodes
+  vector<string> fc_addrs_;
+  
+  // the node id of FC nodes
+  vector<int> fc_ids_;
+  
+  vector<vector<string> > ps_layers_;
+
+  map<int, int> ps_id_to_layers_id_;
+
+  // FC gateway
+  string fc_gateway_addr_;
+
+  // number of input blobs
   int num_input_blobs_;
   
-  //mapping message id to solver
+  // mapping message id to solver
   unordered_map<int64_t, void *> id_to_solver_;
   boost::mutex  id_map_mutex_;
   
@@ -303,9 +382,10 @@ private:
 
   static string model_server_addr_;
   
-  // request file is sent to model server for model splitting
-  static string request_file_addr_;
+  static bool has_model_request_;
 
+  static ModelRequest model_request_;
+  
   static NodeRole node_role_;
 
 DISABLE_COPY_AND_ASSIGN(NodeEnv);

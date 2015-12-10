@@ -1,16 +1,17 @@
 
 #include "caffe/multi_node/ps_node.hpp"
+#include "caffe/multi_node/param_helper.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-ParamServer<Dtype>::ParamServer(int nthreads, const string& ps_bind_addr) : MsgHub<Dtype>(nthreads, nthreads)
+ParamServer<Dtype>::ParamServer(int nthreads) : MsgHub<Dtype>(nthreads, nthreads)
 {
   ps_router_.reset(new SkServer());
-  ps_router_->Bind(ps_bind_addr);
+  ps_bind_addr_ = NodeEnv::Instance()->router_addr();
+  ps_router_->Bind(ps_bind_addr_);
 
   ps_sock_index_ = nthreads;
-  ps_bind_addr_ = ps_bind_addr;
 }
 
 template <typename Dtype>
@@ -24,6 +25,12 @@ int ParamServer<Dtype>::Init()
   //set up solvers
   Caffe::set_root_solver(true);
   SGDSolver<Dtype> *root_solver = new SGDSolver<Dtype>(param);
+
+  // init root net
+  root_solver->net()->ClearParamDiffs();
+  ParamHelper<Dtype>::CopyParamDataFromMsg(root_solver->net(), 
+        NodeEnv::Instance()->model_server_msg());
+  
   NodeEnv::Instance()->PushFreeSolver(root_solver);
 
   return this->StartThreads(); 
@@ -34,8 +41,8 @@ int ParamServer<Dtype>::RouteMsg()
 {
   if (this->poll_items_[ps_sock_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = ps_router_->RecvMsg(true);
-        
-    this->sockp_arr_[0]->SendMsg(m);
+
+    this->ScheduleMsg(m);
   }
 
   for (int i = 0; i < this->nthreads_; i++) {

@@ -4,13 +4,15 @@
 #define MULTI_NODE_MODEL_MAP_H_
 
 #include "caffe/multi_node/msg.hpp"
+#include "caffe/multi_node/param_helper.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/util/insert_splits.hpp"
 
 #include "caffe/proto/multi_node.pb.h"
-
+#include <map>
+#include <string>
 
 namespace caffe {
 
@@ -22,7 +24,9 @@ public:
   ModelMap(const string full_solver) {
     ReadProtoFromTextFileOrDie(full_solver, &solver_param_);
     
-    orig_solver_param_.CopyFrom(solver_param_);
+    // init test solver
+    // test node should run in the same machine with model server
+    test_solver_.CopyFrom(solver_param_);
 
     //clear test net in the solver param
     solver_param_.clear_test_net();
@@ -33,21 +37,19 @@ public:
     Caffe::set_root_solver(true);
     psolver_ = SolverRegistry<Dtype>::CreateSolver(solver_param_);
     
-    //we only deal with the net parameter is specified by a txt path
+    // currently we only deal with the net parameter is specified by a txt path
     CHECK(solver_param_.has_net());
 
-    //init the net parameter
-    NetParameter in_param;
-    ReadNetParamsFromTextFileOrDie(solver_param_.net(), &in_param);
-
-    //add the parameter to the original solver param
-    orig_solver_param_.clear_net();
-    orig_solver_param_.mutable_net_param()->CopyFrom(in_param);
+    // init the net parameter
+    NetParameter net_param;
+    ReadNetParamsFromTextFileOrDie(solver_param_.net(), &net_param);
 
     //init net parameter
     net_ = psolver_->net();
 
-    InitTrainNetParam(in_param);
+    InitTrainNetParam(net_param);
+
+    status_ = WAIT_REQUESTS;
 
     LOG(INFO) << "Model map inited";
   }
@@ -57,9 +59,6 @@ public:
   }
 
   int GetModel(shared_ptr<Msg> m);
-  
-  //return full model and all the nodes in FC layer
-  int GetFullModel(shared_ptr<Msg> m);
 
   const vector<shared_ptr<Msg> > &Replies() { return replies_; }
 
@@ -68,124 +67,185 @@ public:
 protected:
   void InitTrainNetParam(NetParameter &in_param) 
   {
+    // filter test net
     NetState net_state;
     net_state.set_phase(TRAIN);
     net_state.MergeFrom(in_param.state());
     net_state.MergeFrom(solver_param_.train_state());
     in_param.mutable_state()->CopyFrom(net_state);
 
-    NetParameter filtered_param;
-    net_->FilterNet(in_param, &filtered_param);
+    net_->FilterNet(in_param, &net_param_);
     
-    //we only deal with train net in this class
-    InsertSplits(filtered_param, &net_param_);
-    
-    //check we have the same number of layers
-    CHECK(net_param_.layer_size() == net_->layers().size());
+    BuildNetGraph();
 
-    const LayerParameter& first_layer = net_param_.layer(0);
-
-    //the first layer should be Data layer and should has the data param
-    CHECK(first_layer.type() == string("Data"));
-    CHECK(first_layer.has_data_param());
-    
-    train_batch_size_ = first_layer.data_param().batch_size();
-    
-    const vector<shared_ptr<Layer<Dtype> > > &layers = net_->layers();
-    
-    //init the size of the request table
-    requests_.resize(layers.size());
-
-    //find the first FC layer
-    first_fc_ = -1;
-    for (int i = 0; i < layers.size(); i++) {
-      shared_ptr<Layer<Dtype> > l = layers[i];
-
-      LOG(INFO) << "layer index: " << i << " name: " << net_->layer_names()[i] << " type: " << l->type();
-      if ( 0 == strcmp(l->type(), "InnerProduct") ) {
-        first_fc_ = i;
-        break;
-      }
-    }
-
-    CHECK( first_fc_ >= 0 );
-    
-    //generate a clean solver(without any net)
+    // generate a clean solver(without any net)
     clear_solver_.CopyFrom(solver_param_);
 
-    //delete all the existing nets...
+    // delete all the existing nets...
     clear_solver_.release_train_net_param();
     clear_solver_.clear_train_net();
     clear_solver_.clear_net_param();
     clear_solver_.clear_net();
 
-    //generate clean net without any layers
-    clear_net_.CopyFrom(net_param_);
-    clear_net_.clear_layer();
-
-    fc_filled_ = false;
+    // generate clean net without any layers
+    NetParameter clear_net;
+    clear_net.CopyFrom(net_param_);
+    clear_net.clear_layer();
+    
+    // TRICK to make caffe backward without loss layers
+    clear_net.set_force_backward(true);
+    
+    clear_solver_.mutable_net_param()->CopyFrom(clear_net);
   }
-
+  
+  void BuildNetGraph();
 
 protected:
-  int FindLayer(string name);
+  int FindLayer(const string& name);
 
-  //generate a virtual net from first to end
-  int GenerateSolver(SolverParameter &sparam, shared_ptr<ModelRequest> r);
+  // generate input and output blobs
+  void ParseInputOutput(int node_idx);
   
-  //Generating Rout infomation for a layer
-  //note that all the sublayers in a layer have the same route infor
-  int GenerateRoute(RouteInfo &rt, vector<shared_ptr<ModelRequest> > *pre, vector<shared_ptr<ModelRequest> > *next);
+  // add a subnet to the graph
+  // we need to guarantee that each layer has the same number of splits
+  void AddModelRequest(shared_ptr<ModelRequest> rq);
 
-  //check the integrity of the FC layers
+  // check the integrity of the FC layers
   bool CheckIntegrity();
+  
+  // remove the gateway's input from its forwarding list
+  void FilterGatewayForwards(int gateway_idx);
 
-  //prepare messages containing models and routing infomation
-  int PrepareMessages();
-
-  int PrepareFullModel();
-
+  // prepare messages containing models and routing infomation
+  int PrepareRoutes();
+  
+  /// process route request from conv nodes
   int ProcessConv(shared_ptr<Msg> m);
 
+  /// process route request from nodes FC nodes or PS nodes
+  /// models in FC and PS nodes should formulate a full graph
+  int ProcessModels(shared_ptr<Msg> m);
+
+  /// process requests from test nodes
+  int ProcessTests(shared_ptr<Msg> m);
+
+  // generate message for fc nodes
+  void PrepareFCMsg();
+  
+  void PreparePSMsg();
+
+  void PrepareConvMsg();
+
+  void PrepareTestMsg();
+
+  void PrepareConvSolver();
+
+  void PrintRouteInfo();
+  
+  void AddLayers(NetParameter *pnet, int node_idx);
+
+  void AddInputs(NetParameter *pnet, int node_idx);
+
+  void AddRoutes(RouteInfo *proute, int node_idx);
+  
+  void AddSolver(RouteInfo *proute, int node_idx);
+
+
 protected:
+  enum Status {
+    WAIT_REQUESTS = 0,
+    WAIT_FC_GATEWAY,
+    INITED
+  };
+
+  Status status_;
+
   //we use the full solver to generate layers
   //ParaSolver *psolver_;
   Solver<Dtype> *psolver_;
   SolverParameter solver_param_;
-  //with test nets
-  SolverParameter orig_solver_param_;
 
-  //clear solver parameter without net param, only have solver param
+  //clear solver parameter without layers, only have solver param
   SolverParameter clear_solver_;
+
+  // solver for conv. nodes
+  SolverParameter conv_solver_;
+
+  // solver parameter for test nodes
+  SolverParameter test_solver_;
   
   shared_ptr<Net<Dtype> > net_;
   NetParameter net_param_;
-  
-  //clear net parameter without layers, only have net params
-  NetParameter clear_net_;
 
-  int first_fc_;
-
-  //store the model requests in a 2D vector
-  vector<vector<shared_ptr<ModelRequest> > > requests_;
-  
-  //all the nodes in FC layers
-  vector<shared_ptr<ModelRequest> > fc_requests_;
-
-  //the full request message
-  shared_ptr<Msg> full_request_msg_;
-
-  //the generated message for FC layers
-  vector<shared_ptr<Msg> > replies_;
-
-  //whether the FC layers are fully occupied.
-  bool fc_filled_;
-
-  //node in the bottom: usually loss nodes and need labels
-  vector<NodeInfo> bottom_nodes_;
+  // all the layers
+  vector<LayerParameter> layer_params_;
 
   //
-  int train_batch_size_;
+  vector<bool> layers_filled_;
+
+  // map of layer names
+  map<string, int> layer_name_idx_;
+
+  // net forward graph
+  vector<vector<int> > net_forward_graph_;
+
+  // layers of the net is modeled as a graph
+  vector<vector<int> > net_backward_graph_;
+  
+  // sub net forward graph
+  vector<vector<int> > sub_forward_graph_;
+
+  // sub net backward graph
+  vector<vector<int> > sub_backward_graph_;
+
+  // some blobs are not used by a node, it only need to forward the blobs
+  vector<vector<int> > sub_skip_graph_;
+
+  // the name of blobs that need to be forwarded
+  vector<vector<string> > sub_skip_blobs_;
+ 
+  // layers in a sub graph (sorted in BFS)
+  vector<vector<int> > sub_solver_layers_;
+
+  // the name of sub layers
+  vector<vector<string> > sub_solver_layer_names_;
+
+  // input, output and forward blobs are used for routing
+
+  // name of input blobs for a sub graph
+  vector<vector<string> > sub_input_blobs_;
+  
+  vector<vector<string> > sub_output_blobs_;
+
+  // name of blobs that need to be forwarded to other nodes
+  vector<string> gateway_fwd_blobs_;
+
+  // 
+  vector<int> gateway_fwd_nodes_;
+
+  // indices to parameter server nodes
+  vector<int> ps_nodes_;
+  
+  // indices to FC nodes
+  vector<int> fc_nodes_;
+
+  shared_ptr<ModelRequest> fc_gateway_;
+
+  // output nodes
+  vector<int> output_nodes_;
+
+  // store the model requests in a 2D vector
+  vector<vector<shared_ptr<ModelRequest> > > requests_;
+  
+  // store the conv client request from data parallel cliens
+  vector<shared_ptr<ModelRequest> > conv_requests_;
+  
+  // requests from testing nodes
+  vector<shared_ptr<ModelRequest> > test_requests_;
+
+  // the generated message for FC layers
+  vector<shared_ptr<Msg> > replies_;
+  
 
 DISABLE_COPY_AND_ASSIGN(ModelMap);
 };

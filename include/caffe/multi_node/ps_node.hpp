@@ -13,7 +13,7 @@ class ParamServer : public MsgHub<Dtype>
 {
 
 public:
-  ParamServer(int nthreads, const string& ps_bind_addr);
+  ParamServer(int nthreads);
   virtual ~ParamServer() { }
 
 public:

@@ -5,9 +5,10 @@
 
 #include "caffe/multi_node/msg.hpp"
 #include "caffe/multi_node/sk_server.hpp"
-#include "caffe/multi_node/node_env.hpp"
+#include "caffe/caffe.hpp"
 
 #include <boost/thread.hpp>
+#include <boost/atomic.hpp>
 
 namespace caffe {
 /**
@@ -20,6 +21,7 @@ class WorkerThread : public InternalThread
 public:
   WorkerThread() {
     worker_id_ = -1;
+    queue_size_ = 0;
   }
 
   virtual ~WorkerThread() {
@@ -36,7 +38,9 @@ public:
   }
 
   shared_ptr<Msg> RecvMsg(bool blocked) {
-    return sk_client_->RecvMsg(blocked);
+    shared_ptr<Msg> m = sk_client_->RecvMsg(blocked);
+    Dequeue();
+    return m;
   }
 
   virtual void InternalThreadEntry() {
@@ -48,20 +52,25 @@ public:
   
   /// should be reimplented in the working threads
   virtual void Run() = 0;
+  
+  inline void Enqueue() { queue_size_++; }
+  inline int QueueSize() { return queue_size_; }
 
 protected:
-  Solver<Dtype> *NewSolver() {
+  inline void Dequeue() { queue_size_--; }
+  
+  virtual Solver<Dtype> *NewSolver(Solver<Dtype> *proot, const SolverParameter& solver_param) {
     boost::mutex::scoped_lock lock(new_solver_mutex_);
-    Solver<Dtype> *root_solver = (Solver<Dtype> *)NodeEnv::Instance()->GetRootSolver();
-    const vector<Blob<Dtype>*>& root_params = root_solver->net()->learnable_params();
+    const vector<Blob<Dtype>*>& root_params = proot->net()->learnable_params();
 
-    Solver<Dtype> *new_solver = CreateSolver();
+    Solver<Dtype> *new_solver = CreateSolver(proot, solver_param);
     if (new_solver == NULL) {
       return new_solver;
     }
 
-    const vector<Blob<Dtype>*>& new_params = new_solver->net()->learnable_params();
+    new_solver_cnt_++;
     
+    const vector<Blob<Dtype>*>& new_params = new_solver->net()->learnable_params();
     /// share parameters with root solver
     for (int i = 0; i < new_params.size(); i++) {
       CHECK_EQ(new_params[i]->count(), root_params[i]->count());
@@ -71,54 +80,7 @@ protected:
     return new_solver;
   }
 
-  virtual Solver<Dtype> *CreateSolver() = 0;
-  
-  ///move these functions to caffe::Net?
-
-  /// net get input blob data from message
-  static void GetInputData(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
-    for (int i = 0; i < net->num_inputs(); i++) {
-      int blob_index = net->input_blob_indices()[i];
-      const string& blob_name = net->blob_names()[blob_index];
-      Blob<Dtype>* pblob = net->input_blobs()[i];
-
-      m->CopyBlob(blob_name, pblob->mutable_cpu_data(), pblob->count() * sizeof(Dtype));
-    }
-  }
-
-  /// net get output blob diffs from message
-  static void GetOutputDiff(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
-    for (int i = 0; i < net->num_outputs(); i++) {
-      int blob_index = net->output_blob_indices()[i];
-      const string& blob_name = net->blob_names()[blob_index];
-      Blob<Dtype>* pblob = net->output_blobs()[i];
-
-      m->CopyBlob(blob_name, pblob->mutable_cpu_diff(), pblob->count() * sizeof(Dtype));
-    }
-  }
-  
-  /// net copy input blob diffs to message
-  static void CopyInputDiff(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
-    for (int i = 0; i < net->num_inputs(); i++) {
-      int blob_index = net->input_blob_indices()[i];
-      const string& blob_name = net->blob_names()[blob_index];
-      Blob<Dtype>* pblob = net->input_blobs()[i];
-
-      m->AddNewBlob(blob_name, pblob->cpu_diff(), pblob->count() * sizeof(Dtype));
-    }
-  }
-  
-  /// net copy output blob data to a message
-  static void CopyOutputData(shared_ptr<Net<Dtype> > net, shared_ptr<Msg> m) {
-    for (int i = 0; i < net->num_outputs(); i++) {
-      int blob_index = net->output_blob_indices()[i];
-      const string& blob_name = net->blob_names()[blob_index];
-      Blob<Dtype>* pblob = net->output_blobs()[i];
-
-      m->AddNewBlob(blob_name, pblob->cpu_data(), pblob->count() * sizeof(Dtype));
-    }
-  }
-  
+  virtual Solver<Dtype> *CreateSolver(const Solver<Dtype> *root_solver, const SolverParameter& solver_param) = 0;
 
 protected:
   int worker_id_;
@@ -126,9 +88,14 @@ protected:
   string addr_;
   shared_ptr<SkSock> sk_client_;
 
+  // rough count of the queue's length
+  boost::atomic_int queue_size_;
+
 protected:
-  //serialize creating new solver within a process
-  static boost::mutex  new_solver_mutex_;
+  // serialize creating new solver within a process
+  static boost::mutex       new_solver_mutex_;
+  // number of solvers created
+  static boost::atomic_int  new_solver_cnt_;
 
 DISABLE_COPY_AND_ASSIGN(WorkerThread);
 };

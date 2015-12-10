@@ -1,6 +1,7 @@
 
 
 #include "caffe/multi_node/fc_node.hpp"
+#include "caffe/multi_node/param_helper.hpp"
 
 
 namespace caffe {
@@ -21,20 +22,21 @@ int FcNode<Dtype>::SetUpPoll()
 template <typename Dtype>
 int FcNode<Dtype>::Init()
 {
-  const vector<string>& next = NodeEnv::Instance()->ClientAddrs();
+  const vector<string>& next = NodeEnv::Instance()->bcast_addrs();
   
   for (int i = 0; i < this->nworkers_; i++) {
+    // if it doesn't broadcast, it means it has loss layer
     if (next.size() > 0) {
       this->threads_[i].reset(new FcThread<Dtype>());
     } else {
-      this->threads_[i].reset(new FcEndThread<Dtype>());
+      this->threads_[i].reset(new FcLossThread<Dtype>());
     }
   }
   
-  //the last slot for param thread
+  // the last slot for param thread
   this->threads_[param_thread_index_].reset(new FcParamThread<Dtype>());
   
-  //wait for the downstream nodes to connect
+  // wait for the downstream nodes to connect
   for (int i = 0; i < next.size(); i++) {
     shared_ptr<Msg> m = sock_back_->RecvMsg(true);
 
@@ -47,51 +49,110 @@ int FcNode<Dtype>::Init()
   num_next_hops_ = next.size();
   
   const SolverParameter& param = NodeEnv::Instance()->SolverParam();
-  //set up solvers
+  // set up solvers
   SGDSolver<Dtype> *pfc0 = new SGDSolver<Dtype>(param);
+  
+  // init input blobs
+  shared_ptr<Net<Dtype> > net = pfc0->net();
+  for (int i = 0; i < net->num_inputs(); i++) {
+    int blob_index = net->input_blob_indices()[i];
+    const string& blob_name = net->blob_names()[blob_index];
+    input_blob_name_map_[blob_name] = true;
+  }
+
+  // clear root net's diff
+  net->ClearParamDiffs();
+  ParamHelper<Dtype>::CopyParamDataFromMsg(net, NodeEnv::Instance()->model_server_msg());
   NodeEnv::Instance()->PushFreeSolver(pfc0);
 
-  //init the threads
+  // init the threads
   return this->StartThreads();
 }
 
 template <typename Dtype>
+void FcNode<Dtype>::PrepareInputData(shared_ptr<Msg> m)
+{
+  /// check we got what we need
+  for (int i = 0; i < m->num_blobs(); i++) {
+    const BlobInfo& blob_info = m->blob_info(i);
+    const string& blob_name = blob_info.blob_name();
+
+    CHECK(is_input_blob(blob_name)) << "fatal: unknown blob: " << blob_name;
+  }
+  
+  if (num_inputs() > m->num_blobs()) {
+    // merge inputs together
+    int64_t msg_id = m->msg_id();
+    unordered_map<int64_t, shared_ptr<Msg> >::iterator iter = id_to_msg_.find(msg_id);
+
+    if (iter == id_to_msg_.end()) {
+      id_to_msg_[msg_id] = m;
+    } else {
+      // move the blobs in m to the buffer
+      iter->second->MergeMsg(m);
+    }
+    
+    // double check the hashed msg
+    iter = id_to_msg_.find(msg_id);
+    CHECK(iter != id_to_msg_.end()) << "cannot find msg id: " << msg_id;
+    m = iter->second;
+
+    if (m->num_blobs() == num_inputs()) {
+      // remove the message from buffer and send it to workers
+      id_to_msg_.erase(iter);
+      this->ScheduleMsg(m);
+    } else {
+      // wait for more messages
+      return;
+    }
+    
+  } else {
+    // do nothing for we've got all the inputs
+    this->ScheduleMsg(m);
+  }
+}
+
+
+template <typename Dtype>
 int FcNode<Dtype>::RouteMsg()
 {
-  //Got messages from the work threads:
+  // Got messages from the work threads:
   for (int i = 0; i < this->nworkers_; i++) {
     //
     if (this->poll_items_[i].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = this->sockp_arr_[i]->RecvMsg(true);
       
-      //route the msg to root thread for updating parameter
+      // route the msg to root thread for updating parameter
       if (m->dst() == ROOT_THREAD_ID) {
-        this->sockp_arr_[param_thread_index_]->SendMsg(m);
+        this->Enqueue(param_thread_index_, m);
       } else {
         SendOutMsg(m);
       }
     }
   }
   
-  //Paramter update thread
+  // Paramter update thread
   if (this->poll_items_[param_thread_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = this->sockp_arr_[param_thread_index_]->RecvMsg(true);
     
-    //the parameter thread shouldn't send out any message
-    LOG(ERROR) << "Received unsupported message";
+    if (m->type() == PUT_PARAM || m->type() == TRAIN_ITER) {
+      sock_back_->SendMsg(m);
+    } else {
+      LOG(ERROR) << "Received unsupported message";
+    }
   }
 
-  //only deal with the backward packets from rear REP socket
+  // only deal with the backward packets from rear REP socket
   if (this->poll_items_[back_sock_index_].revents & ZMQ_POLLIN) {
     shared_ptr<Msg> m = sock_back_->RecvMsg(true);
     
-    LOG(INFO) << "back server received message";
-    
-    //forward packets in the back server usually the labels
+    // forward packets in the back server usually the labels
     if (m->type() == FORWARD) {
-      this->ProcessMsg(m);
+      this->PrepareInputData(m);
     } else if (m->type() == BACKWARD) {
-      this->ProcessMsg(m);
+      this->ScheduleMsg(m);
+    } else if (m->type() == GET_PARAM) {
+      this->Enqueue(param_thread_index_, m);
     } else {
       LOG(ERROR) << "unknown message: ";
       m->PrintHeader();
@@ -126,18 +187,18 @@ int FcNode<Dtype>::SendOutMsg(shared_ptr<Msg> m)
 template <typename Dtype>
 int FcNode<Dtype>::InitRoute()
 {
-  const vector<string>& dealer_addrs = NodeEnv::Instance()->DealerAddrs();
-  const vector<int>& dealer_ids = NodeEnv::Instance()->DealerIDs();
+  const vector<string>& prev_addrs = NodeEnv::Instance()->prev_router_addrs();
+  const vector<int>& prev_ids = NodeEnv::Instance()->prev_node_ids();
   
-  for (int i = 0; i < dealer_addrs.size(); i++) {
+  for (int i = 0; i < prev_addrs.size(); i++) {
     //connect ROUTER node
     shared_ptr<SkSock> dealer(new SkSock(ZMQ_DEALER));
     dealer->SetId(node_id_);
-    dealer->Connect(dealer_addrs[i]);
+    dealer->Connect(prev_addrs[i]);
     
     //Unique CHECK
-    CHECK(node_to_sock_.find(dealer_ids[i]) == node_to_sock_.end());
-    node_to_sock_[dealer_ids[i]] = dealer;
+    CHECK(node_to_sock_.find(prev_ids[i]) == node_to_sock_.end());
+    node_to_sock_[prev_ids[i]] = dealer;
     
     //send notification to upstream node
     shared_ptr<Msg> m(new Msg());
@@ -157,7 +218,7 @@ template <typename Dtype>
 int FcClient<Dtype>::Init()
 {
   //Connect Upstream ROUTER & PUB nodes
-  const vector<string>& sub_addrs = NodeEnv::Instance()->SubAddrs();
+  const vector<string>& sub_addrs = NodeEnv::Instance()->sub_addrs();
 
   for (int i = 0; i < sub_addrs.size(); i++) {
     //connect PUB node
@@ -205,7 +266,7 @@ int FcClient<Dtype>::RouteMsg()
       
       LOG(INFO) << "sub received msg id: " << m->msg_id();
 
-      this->ProcessMsg(m);
+      this->PrepareInputData(m);
     }
   }
 
@@ -215,19 +276,34 @@ int FcClient<Dtype>::RouteMsg()
 template <typename Dtype>
 int FcGateway<Dtype>::Init()
 {
-  //connect to the bottom layer (usally the loss layer)
-  const vector<string>& bottom_addrs = NodeEnv::Instance()->BottomAddrs();
-  const vector<int>& bottom_ids = NodeEnv::Instance()->BottomIDs();
+  //some blobs need to be forwarded to other nodes (usally the loss layer)
+  const vector<string>& fwrd_addrs = NodeEnv::Instance()->forward_addrs();
+  const vector<int>& fwrd_ids = NodeEnv::Instance()->forward_ids();
+  const vector<string>& fwrd_blobs = NodeEnv::Instance()->forward_blobs();
+  
+  CHECK_EQ(fwrd_addrs.size(), fwrd_ids.size());
+  CHECK_EQ(fwrd_addrs.size(), fwrd_blobs.size());
 
-  for (int i = 0; i < bottom_addrs.size(); i++) {
+  for (int i = 0; i < fwrd_addrs.size(); i++) {
     shared_ptr<SkSock> dealer(new SkSock(ZMQ_DEALER));
     dealer->SetId(this->node_id_);
-    dealer->Connect(bottom_addrs[i]);
+    dealer->Connect(fwrd_addrs[i]);
     //Unique CHECK
-    CHECK(this->node_to_sock_.find(bottom_ids[i]) == this->node_to_sock_.end() );
-    this->node_to_sock_[bottom_ids[i]] = dealer;
+    CHECK(this->node_to_sock_.find(fwrd_ids[i]) == this->node_to_sock_.end() );
+    this->node_to_sock_[fwrd_ids[i]] = dealer;
 
-    bottom_socks_.push_back(dealer);
+    fwrd_socks_.push_back(dealer);
+
+    const string& blob_name = fwrd_blobs[i];
+    unordered_map<string, shared_ptr<vector<int> > >::iterator iter = 
+        fwrd_blob_name_to_ids_.find(blob_name);
+    if (iter == fwrd_blob_name_to_ids_.end()) {
+      shared_ptr<vector<int> > pvec(new vector<int>);
+      pvec->push_back(fwrd_ids[i]);
+      fwrd_blob_name_to_ids_[blob_name] = pvec;
+    } else {
+      iter->second->push_back(fwrd_ids[i]);
+    }
   }
 
   this->InitRoute();
@@ -255,6 +331,35 @@ int FcGateway<Dtype>::SetUpPoll()
 }
 
 template <typename Dtype>
+void FcGateway<Dtype>::DemuxMsg(shared_ptr<Msg> m)
+{
+  for (int i = 0; i < m->num_blobs(); i++) {
+    const BlobInfo& blob_info = m->blob_info(i);
+    const string& blob_name = blob_info.blob_name();
+    
+    unordered_map<string, shared_ptr<vector<int> > >::iterator iter = 
+      fwrd_blob_name_to_ids_.find(blob_name);
+
+    // passthrough the non-forwardable blobs
+    if (iter == fwrd_blob_name_to_ids_.end()) {
+      continue;
+    }
+
+    // 
+    shared_ptr<Msg> f = m->ExtractMsg(blob_name);
+    shared_ptr<vector<int> > pids = iter->second;
+    for (int j = 0; j < pids->size(); j++) {
+      f->set_dst(pids->at(j));
+      this->SendOutMsg(f);
+    }
+  }
+  
+  if (m->num_blobs() > 0) {
+    this->PrepareInputData(m);
+  }
+}
+
+template <typename Dtype>
 int FcGateway<Dtype>::RouteMsg()
 {
   //process the packets comes from the convolution clients
@@ -265,7 +370,7 @@ int FcGateway<Dtype>::RouteMsg()
     msg_id_++;
     m->set_msg_id(msg_id_);
     
-    this->ProcessMsg(m);
+    this->DemuxMsg(m);
   }
 
   return FcNode<Dtype>::RouteMsg();

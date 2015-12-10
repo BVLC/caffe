@@ -59,35 +59,21 @@ int MsgHub<Dtype>::Poll()
 
 //Worker threads process the incoming packets
 template <typename Dtype>
-int MsgHub<Dtype>::ProcessMsg(shared_ptr<Msg> m)
-{ 
-  int num_inputs = NodeEnv::Instance()->NumInputBlobs();
+int MsgHub<Dtype>::ScheduleMsg(shared_ptr<Msg> m)
+{
+  // we always put the message to the thread with minimal queue length
+  int min_queue_size = threads_[0]->QueueSize();
+  int min_queue_thread = 0;
 
-  if (num_inputs == 1 || num_inputs == 0) {
-    sockp_arr_[0]->SendMsg(m);
-  } else if (num_inputs == 2) {
-    unordered_map<int64_t, shared_ptr<Msg> >::iterator iter = id_to_msg_.find(m->msg_id());
-
-    if (iter == id_to_msg_.end()) {
-        id_to_msg_[m->msg_id()] = m;
-    } else {
-        shared_ptr<Msg> s = iter->second;
-        m->MergeMsg(s);
+  for (int i = 1; i < nworkers_; i++) {
+    int s = threads_[i]->QueueSize();
+    if (s < min_queue_size) {
+      min_queue_size = s;
+      min_queue_thread = i;
     }
-    
-    //double check the new msg
-    iter = id_to_msg_.find(m->msg_id());
-    shared_ptr<Msg> new_msg = iter->second;
-
-    if (new_msg->num_blobs() == 2) {
-        id_to_msg_.erase(iter);
-        sockp_arr_[0]->SendMsg(m);
-    }
-  } else {
-    LOG(ERROR) << "Cannot deal with input number: " << num_inputs;
-    return -1;
   }
 
+  Enqueue(min_queue_thread, m);
   return 0;
 }
 
