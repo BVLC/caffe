@@ -520,7 +520,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Solver<Dtype>);
 
 
-  bp::class_<SolverParameter>("SolverParam", bp::no_init)
+  bp::class_<SolverParameter>("SolverParameter", bp::init<>())
     .add_property("base_lr",   &SolverParameter::base_lr,
                                &SolverParameter::set_base_lr)
     .add_property("max_iter",  &SolverParameter::max_iter,
@@ -570,7 +570,12 @@ BOOST_PYTHON_MODULE(_caffe) {
                        bp::make_function(&SolverParameter::net,
                        bp::return_value_policy<bp::copy_const_reference>()),
                        static_cast<void (SolverParameter::*)(const string&)>(
-                               &SolverParameter::set_net));
+                               &SolverParameter::set_net))
+    .add_property("train_net",
+                       bp::make_function(&SolverParameter::train_net,
+                       bp::return_value_policy<bp::copy_const_reference>()),
+                       static_cast<void (SolverParameter::*)(const string&)>(
+                               &SolverParameter::set_train_net));
 
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
