@@ -1,4 +1,4 @@
-## Refer to http://caffe.berkeleyvision.org/installation.html
+# Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
@@ -98,6 +98,9 @@ DISTRIBUTE_DIR := distribute
 
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
+
+# Uncomment to disable OpenMP support.
+# USE_OPENMP := 0
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0
