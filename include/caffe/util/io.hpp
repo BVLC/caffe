@@ -21,13 +21,22 @@ namespace caffe {
 using ::google::protobuf::Message;
 using ::boost::filesystem::path;
 
+inline bool MakeDir(const char* dirname, int perms = 0777) {
+  bool success = boost::filesystem::create_directory(dirname);
+  if (success) {
+    boost::filesystem::permissions(
+        dirname, static_cast<boost::filesystem::perms>(perms));
+  }
+  return success;
+}
+
 inline void MakeTempDir(string* temp_dirname) {
   temp_dirname->clear();
   const path& model =
     boost::filesystem::temp_directory_path()/"caffe_test.%%%%-%%%%";
   for ( int i = 0; i < CAFFE_TMP_DIR_RETRIES; i++ ) {
     const path& dir = boost::filesystem::unique_path(model).string();
-    bool done = boost::filesystem::create_directory(dir);
+    bool done = MakeDir(dir.string().c_str());
     if ( done ) {
       *temp_dirname = dir.string();
       return;
