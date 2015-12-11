@@ -54,13 +54,8 @@ It is best NOT to use Hyperthreading . So either disable it in BIOS or limit Ope
 significant as when not relying on HT.
 
 ##### Example of running:
-###### Xeon E5 , two sockets, 18 cpu cores in each socket
+###### Intel(R) Xeon(R) E5-2699 v3 @ 2.30GHz, two sockets, 18 cpu cores in each socket
 *OMP_NUM_THREADS=36 ./build/tools/caffe time -iterations 20  --model=models/bvlc_googlenet/train_val.prototxt*  
-###### Xeon E3 , one socket, 4 cpu cores in each socket
-*OMP_NUM_THREADS=4 ./build/tools/caffe time -iterations 20  --model=models/bvlc_googlenet/train_val.prototxt*   
-###### Brix i7-4770R (Haswell), one socket, 4 cpu cores in each socket
-*OMP_NUM_THREADS=4 ./build/tools/caffe time -iterations 20  --model=models/bvlc_googlenet/train_val.prototxt*   
-
 
 ##### Notes:
 To check if you have HT enabled:
