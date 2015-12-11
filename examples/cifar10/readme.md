@@ -22,9 +22,8 @@ Prepare the Dataset
 
 You will first need to download and convert the data format from the [CIFAR-10 website](http://www.cs.toronto.edu/~kriz/cifar.html). To do this, simply run the following commands:
 
-    cd $CAFFE_ROOT/data/cifar10
-    ./get_cifar10.sh
     cd $CAFFE_ROOT
+    ./data/cifar10/get_cifar10.sh
     ./examples/cifar10/create_cifar10.sh
 
 If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be the dataset, `./cifar10-leveldb`, and the data set image mean `./mean.binaryproto`.

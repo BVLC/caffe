@@ -20,23 +20,26 @@ def blobproto_to_array(blob, return_diff=False):
     Convert a blob proto to an array. In default, we will just return the data,
     unless return_diff is True, in which case we will return the diff.
     """
+    # Read the data into an array
     if return_diff:
-        return np.array(blob.diff).reshape(
-            blob.num, blob.channels, blob.height, blob.width)
+        data = np.array(blob.diff)
     else:
-        return np.array(blob.data).reshape(
-            blob.num, blob.channels, blob.height, blob.width)
+        data = np.array(blob.data)
 
+    # Reshape the array
+    if blob.HasField('num') or blob.HasField('channels') or blob.HasField('height') or blob.HasField('width'):
+        # Use legacy 4D shape
+        return data.reshape(blob.num, blob.channels, blob.height, blob.width)
+    else:
+        return data.reshape(blob.shape.dim)
 
 def array_to_blobproto(arr, diff=None):
-    """Converts a 4-dimensional array to blob proto. If diff is given, also
+    """Converts a N-dimensional array to blob proto. If diff is given, also
     convert the diff. You need to make sure that arr and diff have the same
     shape, and this function does not do sanity check.
     """
-    if arr.ndim != 4:
-        raise ValueError('Incorrect array shape.')
     blob = caffe_pb2.BlobProto()
-    blob.num, blob.channels, blob.height, blob.width = arr.shape
+    blob.shape.dim.extend(arr.shape)
     blob.data.extend(arr.astype(float).flat)
     if diff is not None:
         blob.diff.extend(diff.astype(float).flat)
@@ -175,9 +178,9 @@ class Transformer:
         if raw_scale is not None:
             decaf_in /= raw_scale
         if channel_swap is not None:
-            decaf_in = decaf_in[channel_swap, :, :]
+            decaf_in = decaf_in[np.argsort(channel_swap), :, :]
         if transpose is not None:
-            decaf_in = decaf_in.transpose([transpose[t] for t in transpose])
+            decaf_in = decaf_in.transpose(np.argsort(transpose))
         return decaf_in
 
     def set_transpose(self, in_, order):
@@ -329,7 +332,7 @@ def resize_image(im, new_dims, interp_order=1):
             return ret
     else:
         # ndimage interpolates anything but more slowly.
-        scale = tuple(np.array(new_dims) / np.array(im.shape[:2]))
+        scale = tuple(np.array(new_dims, dtype=float) / np.array(im.shape[:2]))
         resized_im = zoom(im, scale + (1,), order=interp_order)
     return resized_im.astype(np.float32)
 

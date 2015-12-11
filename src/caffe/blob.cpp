@@ -24,11 +24,16 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
+  if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int)) {
+    shape_data_.reset(new SyncedMemory(shape.size() * sizeof(int)));
+  }
+  int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
     count_ *= shape[i];
     shape_[i] = shape[i];
+    shape_data[i] = shape[i];
   }
   if (count_ > capacity_) {
     capacity_ = count_;
@@ -65,6 +70,12 @@ Blob<Dtype>::Blob(const vector<int>& shape)
   // capacity_ must be initialized before calling Reshape
   : capacity_(0) {
   Reshape(shape);
+}
+
+template <typename Dtype>
+const int* Blob<Dtype>::gpu_shape() const {
+  CHECK(shape_data_);
+  return (const int*)shape_data_->gpu_data();
 }
 
 template <typename Dtype>
@@ -456,10 +467,25 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   }
   // copy data
   Dtype* data_vec = mutable_cpu_data();
-  for (int i = 0; i < count_; ++i) {
-    data_vec[i] = proto.data(i);
+  if (proto.double_data_size() > 0) {
+    CHECK_EQ(count_, proto.double_data_size());
+    for (int i = 0; i < count_; ++i) {
+      data_vec[i] = proto.double_data(i);
+    }
+  } else {
+    CHECK_EQ(count_, proto.data_size());
+    for (int i = 0; i < count_; ++i) {
+      data_vec[i] = proto.data(i);
+    }
   }
-  if (proto.diff_size() > 0) {
+  if (proto.double_diff_size() > 0) {
+    CHECK_EQ(count_, proto.double_diff_size());
+    Dtype* diff_vec = mutable_cpu_diff();
+    for (int i = 0; i < count_; ++i) {
+      diff_vec[i] = proto.double_diff(i);
+    }
+  } else if (proto.diff_size() > 0) {
+    CHECK_EQ(count_, proto.diff_size());
     Dtype* diff_vec = mutable_cpu_diff();
     for (int i = 0; i < count_; ++i) {
       diff_vec[i] = proto.diff(i);
@@ -467,20 +493,40 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   }
 }
 
-template <typename Dtype>
-void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
+template <>
+void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const {
+  proto->clear_shape();
+  for (int i = 0; i < shape_.size(); ++i) {
+    proto->mutable_shape()->add_dim(shape_[i]);
+  }
+  proto->clear_double_data();
+  proto->clear_double_diff();
+  const double* data_vec = cpu_data();
+  for (int i = 0; i < count_; ++i) {
+    proto->add_double_data(data_vec[i]);
+  }
+  if (write_diff) {
+    const double* diff_vec = cpu_diff();
+    for (int i = 0; i < count_; ++i) {
+      proto->add_double_diff(diff_vec[i]);
+    }
+  }
+}
+
+template <>
+void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->clear_shape();
   for (int i = 0; i < shape_.size(); ++i) {
     proto->mutable_shape()->add_dim(shape_[i]);
   }
   proto->clear_data();
   proto->clear_diff();
-  const Dtype* data_vec = cpu_data();
+  const float* data_vec = cpu_data();
   for (int i = 0; i < count_; ++i) {
     proto->add_data(data_vec[i]);
   }
   if (write_diff) {
-    const Dtype* diff_vec = cpu_diff();
+    const float* diff_vec = cpu_diff();
     for (int i = 0; i < count_; ++i) {
       proto->add_diff(diff_vec[i]);
     }

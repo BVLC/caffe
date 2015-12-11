@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/eltwise_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -80,7 +80,7 @@ TYPED_TEST(EltwiseLayerTest, TestProd) {
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
   for (int i = 0; i < count; ++i) {
-    EXPECT_EQ(data[i], in_data_a[i] * in_data_b[i] * in_data_c[i]);
+    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i] * in_data_c[i], 1e-4);
   }
 }
 
@@ -99,7 +99,7 @@ TYPED_TEST(EltwiseLayerTest, TestSum) {
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
   for (int i = 0; i < count; ++i) {
-    EXPECT_EQ(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i]);
+    EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i], 1e-4);
   }
 }
 

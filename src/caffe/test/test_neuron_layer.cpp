@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cstring>
 #include <vector>
 
 #include "google/protobuf/text_format.h"
@@ -8,7 +7,25 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+
+#include "caffe/layers/absval_layer.hpp"
+#include "caffe/layers/bnll_layer.hpp"
+#include "caffe/layers/dropout_layer.hpp"
+#include "caffe/layers/exp_layer.hpp"
+#include "caffe/layers/inner_product_layer.hpp"
+#include "caffe/layers/log_layer.hpp"
+#include "caffe/layers/power_layer.hpp"
+#include "caffe/layers/prelu_layer.hpp"
+#include "caffe/layers/relu_layer.hpp"
+#include "caffe/layers/sigmoid_layer.hpp"
+#include "caffe/layers/tanh_layer.hpp"
+#include "caffe/layers/threshold_layer.hpp"
+
+#ifdef USE_CUDNN
+#include "caffe/layers/cudnn_relu_layer.hpp"
+#include "caffe/layers/cudnn_sigmoid_layer.hpp"
+#include "caffe/layers/cudnn_tanh_layer.hpp"
+#endif
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

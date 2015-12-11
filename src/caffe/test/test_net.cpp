@@ -1107,11 +1107,10 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   EXPECT_EQ(this->net_->layer_names()[2], "innerproduct2");
   Blob<Dtype>* ip1_weights = this->net_->layers()[1]->blobs()[0].get();
   Blob<Dtype>* ip2_weights = this->net_->layers()[2]->blobs()[0].get();
-  // Check that data blobs of shared weights share the same location in memory.
+  // Check that data and diff blobs of shared weights share the same memory
+  // locations.
   EXPECT_EQ(ip1_weights->cpu_data(), ip2_weights->cpu_data());
-  // Check that diff blobs of shared weights are at different locations in
-  // memory.  (The diffs should be accumulated at update time.)
-  EXPECT_NE(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
+  EXPECT_EQ(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
   this->net_->Forward(bottom);
   this->net_->Backward();
   // Compute the expected update as the data minus the two diffs.
@@ -1124,11 +1123,7 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
   // Make sure the diffs are non-trivial.
   for (int i = 0; i < count; ++i) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
-    EXPECT_NE(0, ip2_weights->cpu_diff()[i]);
-    EXPECT_NE(ip1_weights->cpu_diff()[i], ip2_weights->cpu_diff()[i]);
   }
-  caffe_axpy(count, Dtype(1), ip2_weights->cpu_diff(),
-             shared_params.mutable_cpu_diff());
   caffe_axpy(count, Dtype(-1), shared_params.cpu_diff(),
              shared_params.mutable_cpu_data());
   const Dtype* expected_updated_params = shared_params.cpu_data();
@@ -1165,8 +1160,8 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
     EXPECT_NE(0, ip1_weights->cpu_diff()[i]);
     EXPECT_NE(0, ip2_weights->cpu_diff()[i]);
     EXPECT_NE(ip1_weights->cpu_diff()[i], ip2_weights->cpu_diff()[i]);
-    EXPECT_EQ(ip1_weights->cpu_diff()[i] + ip2_weights->cpu_diff()[i],
-              shared_params.cpu_diff()[i]);
+    EXPECT_FLOAT_EQ(ip1_weights->cpu_diff()[i] + ip2_weights->cpu_diff()[i],
+                    shared_params.cpu_diff()[i]);
   }
   caffe_axpy(count, Dtype(-1), ip1_weights->cpu_diff(),
              unshared_params1.mutable_cpu_data());
@@ -1196,11 +1191,10 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
   EXPECT_EQ(this->net_->layer_names()[2], "innerproduct2");
   Blob<Dtype>* ip1_weights = this->net_->layers()[1]->blobs()[0].get();
   Blob<Dtype>* ip2_weights = this->net_->layers()[2]->blobs()[0].get();
-  // Check that data blobs of shared weights share the same location in memory.
+  // Check that data and diff blobs of shared weights share the same memory
+  // locations.
   EXPECT_EQ(ip1_weights->cpu_data(), ip2_weights->cpu_data());
-  // Check that diff blobs of shared weights are at different locations in
-  // memory.  (The diffs should be accumulated at update time.)
-  EXPECT_NE(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
+  EXPECT_EQ(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
   this->net_->ForwardBackward(bottom);
   this->net_->Update();
   Blob<Dtype> shared_params;
@@ -1223,14 +1217,13 @@ TYPED_TEST(NetTest, TestSharedWeightsResume) {
   ASSERT_FALSE(NULL == ip1_weights);
   ASSERT_FALSE(NULL == ip2_weights);
   EXPECT_NE(ip1_weights, ip2_weights);
-  // Check that data blobs of shared weights share the same location in memory.
+  // Check that data and diff blobs of shared weights share the same memory
+  // locations.
   EXPECT_EQ(ip1_weights->cpu_data(), ip2_weights->cpu_data());
+  EXPECT_EQ(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
   for (int i = 0; i < count; ++i) {
     EXPECT_FLOAT_EQ(shared_params.cpu_data()[i], ip1_weights->cpu_data()[i]);
   }
-  // Check that diff blobs of shared weights are at different locations in
-  // memory.  (The diffs should be accumulated at update time.)
-  EXPECT_NE(ip1_weights->cpu_diff(), ip2_weights->cpu_diff());
 }
 
 TYPED_TEST(NetTest, TestParamPropagateDown) {
@@ -2269,15 +2262,17 @@ TEST_F(FilterNetTest, TestFilterInOutByExcludeMultiRule) {
 TYPED_TEST(NetTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
   // We set up bottom blobs of two different sizes, switch between
-  // them, and check that forward and backward both run and the results
-  // are the same.
+  // them, check that forward and backward both run and the results
+  // are the same, and check that the output shapes change.
   Caffe::set_random_seed(this->seed_);
   Caffe::set_mode(Caffe::CPU);
   FillerParameter filler_param;
   filler_param.set_std(1);
   GaussianFiller<Dtype> filler(filler_param);
-  Blob<Dtype> blob1(4, 3, 9, 11);
-  Blob<Dtype> blob2(2, 3, 12, 10);
+  // Check smaller shape first as larger first could hide realloc failures.
+  Blob<Dtype> blob1(2, 3, 12, 10);
+  Blob<Dtype> blob2(4, 3, 9, 11);
+  ASSERT_LT(blob1.count(), blob2.count());
   filler.Fill(&blob1);
   filler.Fill(&blob2);
 
@@ -2311,7 +2306,7 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   for (int i = 0; i < output1.count(); ++i) {
-    CHECK_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
+    EXPECT_FLOAT_EQ(*(output1.cpu_data() + i), *(output_blob->cpu_data() + i));
   }
 
   input_blob->Reshape(blob2.num(), blob2.channels(), blob2.height(),
@@ -2320,8 +2315,20 @@ TYPED_TEST(NetTest, TestReshape) {
   this->net_->ForwardPrefilled();
   this->net_->Backward();
   for (int i = 0; i < output2.count(); ++i) {
-    CHECK_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
+    EXPECT_FLOAT_EQ(*(output2.cpu_data() + i), *(output_blob->cpu_data() + i));
   }
+
+  EXPECT_EQ(output1.num(), blob1.num());
+  EXPECT_EQ(output2.num(), blob2.num());
+  bool same_spatial_shape = true;
+  const int kFirstSpatialAxis = 2;
+  for (int i = kFirstSpatialAxis; i < output1.num_axes(); ++i) {
+    if (output1.shape(i) != output2.shape(i)) {
+      same_spatial_shape = false;
+      break;
+    }
+  }
+  EXPECT_FALSE(same_spatial_shape);
 }
 
 TYPED_TEST(NetTest, TestSkipPropagateDown) {

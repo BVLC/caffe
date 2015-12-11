@@ -11,6 +11,8 @@ message BlobProto {
   optional BlobShape shape = 7;
   repeated float data = 5 [packed = true];
   repeated float diff = 6 [packed = true];
+  repeated double double_data = 8 [packed = true];
+  repeated double double_diff = 9 [packed = true];
 
   // 4D dimensions -- deprecated.  Use "shape" instead.
   optional int32 num = 1 [default = 0];
@@ -96,7 +98,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 37 (last added: iter_size)
+// SolverParameter next available ID: 41 (last added: type)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -151,7 +153,23 @@ message SolverParameter {
   optional int32 max_iter = 7; // the maximum number of iterations
   // accumulate gradients over `iter_size` x `batch_size` instances
   optional int32 iter_size = 36 [default = 1];
-  optional string lr_policy = 8; // The learning rate decay policy.
+
+  // The learning rate decay policy. The currently implemented learning rate
+  // policies are as follows:
+  //    - fixed: always return base_lr.
+  //    - step: return base_lr * gamma ^ (floor(iter / step))
+  //    - exp: return base_lr * gamma ^ iter
+  //    - inv: return base_lr * (1 + gamma * iter) ^ (- power)
+  //    - multistep: similar to step but it allows non uniform steps defined by
+  //      stepvalue
+  //    - poly: the effective learning rate follows a polynomial decay, to be
+  //      zero by the max_iter. return base_lr (1 - iter/max_iter) ^ (power)
+  //    - sigmoid: the effective learning rate follows a sigmod decay
+  //      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
+  //
+  // where base_lr, max_iter, gamma, step, stepvalue and power are defined
+  // in the solver parameter protocol buffer, and iter is the current iteration.
+  optional string lr_policy = 8;
   optional float gamma = 9; // The parameter to compute the learning rate.
   optional float power = 10; // The parameter to compute the learning rate.
   optional float momentum = 11; // The momentum value.
@@ -173,6 +191,11 @@ message SolverParameter {
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
   optional bool snapshot_diff = 16 [default = false];
+  enum SnapshotFormat {
+    HDF5 = 0;
+    BINARYPROTO = 1;
+  }
+  optional SnapshotFormat snapshot_format = 37 [default = BINARYPROTO];
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
   enum SolverMode {
     CPU = 0;
@@ -186,15 +209,17 @@ message SolverParameter {
   // (and by default) initialize using a seed derived from the system clock.
   optional int64 random_seed = 20 [default = -1];
 
-  // Solver type
-  enum SolverType {
-    SGD = 0;
-    NESTEROV = 1;
-    ADAGRAD = 2;
-  }
-  optional SolverType solver_type = 30 [default = SGD];
-  // numerical stability for AdaGrad
+  // type of the solver
+  optional string type = 40 [default = "SGD"];
+
+  // numerical stability for RMSProp, AdaGrad and AdaDelta and Adam
   optional float delta = 31 [default = 1e-8];
+  // parameters for the Adam solver
+  optional float momentum2 = 39 [default = 0.999];
+
+  // RMSProp decay value
+  // MeanSquare(t) = rms_decay*MeanSquare(t-1) + (1-rms_decay)*SquareGradient(t)
+  optional float rms_decay = 38;
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
@@ -202,6 +227,18 @@ message SolverParameter {
 
   // If false, don't save a snapshot after training finishes.
   optional bool snapshot_after_train = 28 [default = true];
+
+  // DEPRECATED: old solver enum types, use string instead
+  enum SolverType {
+    SGD = 0;
+    NESTEROV = 1;
+    ADAGRAD = 2;
+    RMSPROP = 3;
+    ADADELTA = 4;
+    ADAM = 5;
+  }
+  // DEPRECATED: use type instead of solver_type
+  optional SolverType solver_type = 30 [default = SGD];
 }
 
 // A message that stores the solver snapshots
@@ -269,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 137 (last added: reduction_param)
+// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -290,7 +327,7 @@ message LayerParameter {
 
   // The blobs containing the numeric parameters of the layer.
   repeated BlobProto blobs = 7;
-  
+
   // Specifies on which bottoms the backpropagation should be skipped.
   // The size must be either 0 or equal to the number of bottoms.
   repeated bool propagate_down = 11;
@@ -318,6 +355,7 @@ message LayerParameter {
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
+  optional BatchNormParameter batch_norm_param = 139;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -325,6 +363,7 @@ message LayerParameter {
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
+  optional EmbedParameter embed_param = 137;
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
   optional HDF5DataParameter hdf5_data_param = 112;
@@ -350,6 +389,7 @@ message LayerParameter {
   optional SliceParameter slice_param = 126;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
+  optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
 }
 
@@ -380,9 +420,27 @@ message TransformationParameter {
 message LossParameter {
   // If specified, ignore instances with the given label.
   optional int32 ignore_label = 1;
-  // If true, normalize each batch across all instances (including spatial
-  // dimesions, but not ignored instances); else, divide by batch size only.
-  optional bool normalize = 2 [default = true];
+  // How to normalize the loss for loss layers that aggregate across batches,
+  // spatial dimensions, or other dimensions.  Currently only implemented in
+  // SoftmaxWithLoss layer.
+  enum NormalizationMode {
+    // Divide by the number of examples in the batch times spatial dimensions.
+    // Outputs that receive the ignore label will NOT be ignored in computing
+    // the normalization factor.
+    FULL = 0;
+    // Divide by the total number of output locations that do not take the 
+    // ignore_label.  If ignore_label is not set, this behaves like FULL.
+    VALID = 1;
+    // Divide by the batch size.
+    BATCH_SIZE = 2;
+    // Do not normalize the loss.
+    NONE = 3;
+  }
+  optional NormalizationMode normalization = 3 [default = VALID];
+  // Deprecated.  Ignored if normalization is specified.  If normalization
+  // is not specified, then setting this to false will be equivalent to
+  // normalization = BATCH_SIZE to be consistent with previous behavior.
+  optional bool normalize = 2;
 }
 
 // Messages that store parameters used by individual layer types follow, in
@@ -409,6 +467,11 @@ message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
   optional uint32 top_k = 2 [default = 1];
+  // The axis along which to maximise -- may be negative to index from the
+  // end (e.g., -1 for the last axis).
+  // By default ArgMaxLayer maximizes over the flattened trailing dimensions
+  // for each index of the first / num dimension.
+  optional int32 axis = 3;
 }
 
 message ConcatParameter {
@@ -422,6 +485,18 @@ message ConcatParameter {
   optional uint32 concat_dim = 1 [default = 1];
 }
 
+message BatchNormParameter {
+  // If false, accumulate global mean/variance values via a moving average. If
+  // true, use those accumulated values instead of computing mean/variance
+  // across the batch.
+  optional bool use_global_stats = 1;
+  // How much does the moving average decay each iteration?
+  optional float moving_average_fraction = 2 [default = .999];
+  // Small value to add to the variance estimate so that we don't divide by
+  // zero.
+  optional float eps = 3 [default = 1e-5];
+}
+
 message ContrastiveLossParameter {
   // margin for dissimilar pair
   optional float margin = 1 [default = 1.0];
@@ -431,24 +506,30 @@ message ContrastiveLossParameter {
   // Hadsell paper. New models should probably use this version.
   // legacy_version = true uses (margin - d^2). This is kept to support /
   // reproduce existing models and results
-  optional bool legacy_version = 2 [default = false]; 
+  optional bool legacy_version = 2 [default = false];
 }
 
 message ConvolutionParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
+
   // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in height and width or as Y, X pairs.
-  optional uint32 pad = 3 [default = 0]; // The padding size (equal in Y, X)
-  optional uint32 pad_h = 9 [default = 0]; // The padding height
-  optional uint32 pad_w = 10 [default = 0]; // The padding width
-  optional uint32 kernel_size = 4; // The kernel size (square)
-  optional uint32 kernel_h = 11; // The kernel height
-  optional uint32 kernel_w = 12; // The kernel width
+  // dimensions in all spatial dimensions, or once per spatial dimension.
+  repeated uint32 pad = 3; // The padding size; defaults to 0
+  repeated uint32 kernel_size = 4; // The kernel size
+  repeated uint32 stride = 6; // The stride; defaults to 1
+
+  // For 2D convolution only, the *_h and *_w versions may also be used to
+  // specify both spatial dimensions.
+  optional uint32 pad_h = 9 [default = 0]; // The padding height (2D only)
+  optional uint32 pad_w = 10 [default = 0]; // The padding width (2D only)
+  optional uint32 kernel_h = 11; // The kernel height (2D only)
+  optional uint32 kernel_w = 12; // The kernel width (2D only)
+  optional uint32 stride_h = 13; // The stride height (2D only)
+  optional uint32 stride_w = 14; // The stride width (2D only)
+
   optional uint32 group = 5 [default = 1]; // The group size for group conv
-  optional uint32 stride = 6 [default = 1]; // The stride (equal in Y, X)
-  optional uint32 stride_h = 13; // The stride height
-  optional uint32 stride_w = 14; // The stride width
+
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
   enum Engine {
@@ -457,6 +538,24 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
+
+  // The axis to interpret as "channels" when performing convolution.
+  // Preceding dimensions are treated as independent inputs;
+  // succeeding dimensions are treated as "spatial".
+  // With (N, C, H, W) inputs, and axis == 1 (the default), we perform
+  // N independent 2D convolutions, sliding C-channel (or (C/g)-channels, for
+  // groups g>1) filters across the spatial axes (H, W) of the input.
+  // With (N, C, D, H, W) inputs, and axis == 1, we perform
+  // N independent 3D convolutions, sliding (C/g)-channels
+  // filters across the spatial axes (D, H, W) of the input.
+  optional int32 axis = 16 [default = 1];
+
+  // Whether to force use of the general ND convolution, even if a specific
+  // implementation for blobs of the appropriate number of spatial dimensions
+  // is available. (Currently, there is only a 2D-specific convolution
+  // implementation; for input blobs with num_axes != 2, this option is
+  // ignored and the ND implementation will be used.)
+  optional bool force_nd_im2col = 17 [default = false];
 }
 
 message DataParameter {
@@ -472,6 +571,7 @@ message DataParameter {
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the database.
+  // DEPRECATED. Each solver accesses a different subset of the database.
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
@@ -487,6 +587,9 @@ message DataParameter {
   optional bool mirror = 6 [default = false];
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
+  // Prefetch queue (Number of batches to prefetch to host memory, increase if
+  // data access bandwidth varies).
+  optional uint32 prefetch = 10 [default = 4];
 }
 
 message DropoutParameter {
@@ -526,6 +629,21 @@ message EltwiseParameter {
   optional bool stable_prod_grad = 3 [default = true];
 }
 
+// Message that stores parameters used by EmbedLayer
+message EmbedParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  // The input is given as integers to be interpreted as one-hot
+  // vector indices with dimension num_input.  Hence num_input should be
+  // 1 greater than the maximum possible input value.
+  optional uint32 input_dim = 2;
+
+  optional bool bias_term = 3 [default = true]; // Whether to use a bias term
+  optional FillerParameter weight_filler = 4; // The filler for the weight
+  optional FillerParameter bias_filler = 5; // The filler for the bias
+
+}
+
+// Message that stores parameters used by ExpLayer
 message ExpParameter {
   // ExpLayer computes outputs y = base ^ (shift + scale * x), for base > 0.
   // Or if base is set to the default (-1), base is set to e,
@@ -579,7 +697,7 @@ message ImageDataParameter {
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
-  optional uint32 batch_size = 4;
+  optional uint32 batch_size = 4 [default = 1];
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
@@ -644,6 +762,12 @@ message LRNParameter {
   }
   optional NormRegion norm_region = 4 [default = ACROSS_CHANNELS];
   optional float k = 5 [default = 1.];
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 6 [default = DEFAULT];
 }
 
 message MemoryDataParameter {
@@ -703,6 +827,15 @@ message PowerParameter {
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
+  // This value is set to the attribute `param_str` of the `PythonLayer` object
+  // in Python before calling the `setup()` method. This could be a number,
+  // string, dictionary in Python dict format, JSON, etc. You may parse this
+  // string in `setup` method and use it in `forward` and `backward`.
+  optional string param_str = 3 [default = ''];
+  // Whether this PythonLayer is shared among worker solvers during data parallelism.
+  // If true, each worker solver sequentially run forward from this layer.
+  // This value should be set true if you are using it as a data layer.
+  optional bool share_in_parallel = 4 [default = false];
 }
 
 // Message that stores parameters used by ReductionLayer
@@ -858,6 +991,16 @@ message TanHParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
+// Message that stores parameters used by TileLayer
+message TileParameter {
+  // The index of the axis to tile.
+  optional int32 axis = 1 [default = 1];
+
+  // The number of copies (tiles) of the blob to output.
+  optional int32 tiles = 2;
+}
+
+// Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
 }

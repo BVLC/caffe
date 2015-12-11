@@ -1,7 +1,7 @@
 """Python net specification.
 
 This module provides a way to write nets directly in Python, using a natural,
-functional style. See examples/python_nets/caffenet.py for an example.
+functional style. See examples/pycaffe/caffenet.py for an example.
 
 Currently this works as a thin wrapper around the Python protobuf interface,
 with layers and parameters automatically generated for the "layers" and
@@ -18,10 +18,11 @@ for specifying nets. In particular, the automatically generated layer names
 are not guaranteed to be forward-compatible.
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 
 from .proto import caffe_pb2
 from google import protobuf
+import six
 
 
 def param_name_dict():
@@ -43,10 +44,8 @@ def to_proto(*tops):
     """Generate a NetParameter that contains all layers needed to compute
     all arguments."""
 
-    if not isinstance(tops, tuple):
-        tops = (tops,)
     layers = OrderedDict()
-    autonames = {}
+    autonames = Counter()
     for top in tops:
         top.fn._to_proto(layers, {}, autonames)
     net = caffe_pb2.NetParameter()
@@ -57,18 +56,24 @@ def to_proto(*tops):
 def assign_proto(proto, name, val):
     """Assign a Python object to a protobuf message, based on the Python
     type (in recursive fashion). Lists become repeated fields/messages, dicts
-    become messages, and other types are assigned directly."""
+    become messages, and other types are assigned directly. For convenience,
+    repeated fields whose values are not lists are converted to single-element
+    lists; e.g., `my_repeated_int_field=3` is converted to
+    `my_repeated_int_field=[3]`."""
 
+    is_repeated_field = hasattr(getattr(proto, name), 'extend')
+    if is_repeated_field and not isinstance(val, list):
+        val = [val]
     if isinstance(val, list):
         if isinstance(val[0], dict):
             for item in val:
                 proto_item = getattr(proto, name).add()
-                for k, v in item.iteritems():
+                for k, v in six.iteritems(item):
                     assign_proto(proto_item, k, v)
         else:
             getattr(proto, name).extend(val)
     elif isinstance(val, dict):
-        for k, v in val.iteritems():
+        for k, v in six.iteritems(val):
             assign_proto(getattr(proto, name), k, v)
     else:
         setattr(proto, name, val)
@@ -88,6 +93,9 @@ class Top(object):
 
         return to_proto(self)
 
+    def _to_proto(self, layers, names, autonames):
+        return self.fn._to_proto(layers, names, autonames)
+
 
 class Function(object):
     """A Function specifies a layer, its parameters, and its inputs (which
@@ -106,11 +114,18 @@ class Function(object):
             del self.params['in_place']
         self.tops = tuple(Top(self, n) for n in range(self.ntop))
 
-    def _get_name(self, top, names, autonames):
+    def _get_name(self, names, autonames):
+        if self not in names and self.ntop > 0:
+            names[self] = self._get_top_name(self.tops[0], names, autonames)
+        elif self not in names:
+            autonames[self.type_name] += 1
+            names[self] = self.type_name + str(autonames[self.type_name])
+        return names[self]
+
+    def _get_top_name(self, top, names, autonames):
         if top not in names:
-            n = autonames.setdefault(top.fn.type_name, 1)
             autonames[top.fn.type_name] += 1
-            names[top] = top.fn.type_name + str(n)
+            names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
         return names[top]
 
     def _to_proto(self, layers, names, autonames):
@@ -118,7 +133,7 @@ class Function(object):
             return
         bottom_names = []
         for inp in self.inputs:
-            inp.fn._to_proto(layers, names, autonames)
+            inp._to_proto(layers, names, autonames)
             bottom_names.append(layers[inp.fn].top[inp.n])
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type_name
@@ -128,10 +143,10 @@ class Function(object):
             layer.top.extend(layer.bottom)
         else:
             for top in self.tops:
-                layer.top.append(self._get_name(top, names, autonames))
-        layer.name = self._get_name(self.tops[0], names, autonames)
+                layer.top.append(self._get_top_name(top, names, autonames))
+        layer.name = self._get_name(names, autonames)
 
-        for k, v in self.params.iteritems():
+        for k, v in six.iteritems(self.params):
             # special case to handle generic *params
             if k.endswith('param'):
                 assign_proto(layer, k, v)
@@ -161,11 +176,11 @@ class NetSpec(object):
         return self.tops[name]
 
     def to_proto(self):
-        names = {v: k for k, v in self.tops.iteritems()}
-        autonames = {}
+        names = {v: k for k, v in six.iteritems(self.tops)}
+        autonames = Counter()
         layers = OrderedDict()
-        for name, top in self.tops.iteritems():
-            top.fn._to_proto(layers, names, autonames)
+        for name, top in six.iteritems(self.tops):
+            top._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
         net.layer.extend(layers.values())
         return net
@@ -179,7 +194,9 @@ class Layers(object):
     def __getattr__(self, name):
         def layer_fn(*args, **kwargs):
             fn = Function(name, args, kwargs)
-            if fn.ntop == 1:
+            if fn.ntop == 0:
+                return fn
+            elif fn.ntop == 1:
                 return fn.tops[0]
             else:
                 return fn.tops
