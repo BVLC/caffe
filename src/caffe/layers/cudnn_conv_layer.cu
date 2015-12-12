@@ -513,6 +513,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -584,6 +585,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
 #if CUDNN_VERSION_MIN(4, 0, 0)
         CUDNN_CHECK(cudnnAddTensor(handle_[g],
               cudnn::dataType<Dtype>::one,
@@ -591,6 +594,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
               cudnn::dataType<Dtype>::one,
               top_descs_[i], top_data + top_offset_ * g));
 #else
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -606,11 +610,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
         CUDNN_CHECK(cudnnAddTensor(handle_[g], CUDNN_ADD_SAME_C,
               cudnn::dataType<Dtype>::one,
               bias_desc_, bias_data + bias_offset_ * g,
               cudnn::dataType<Dtype>::one,
               top_descs_[i], top_data + top_offset_ * g));
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -722,6 +729,9 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+#endif
+>>>>>>> BVLC/master
 =======
 #endif
 >>>>>>> BVLC/master
