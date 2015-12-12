@@ -14,6 +14,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -57,11 +58,14 @@ layer {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -69,6 +73,8 @@ layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -93,6 +99,9 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -119,6 +128,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -169,6 +179,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -193,6 +205,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -220,6 +233,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
@@ -227,6 +242,7 @@ layer {
   type: "Data"
   top: "data"
   top: "label"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -280,11 +296,14 @@ layer {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -292,6 +311,8 @@ layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -316,6 +337,9 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -331,8 +355,11 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -347,6 +374,7 @@ layer {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -405,6 +433,8 @@ layer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -415,6 +445,7 @@ layer {
   include: { phase: TEST }
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -456,6 +487,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     batch_size: 100
     backend: LMDB
   }
@@ -463,9 +496,12 @@ layer {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

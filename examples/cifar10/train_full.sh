@@ -18,6 +18,9 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -28,6 +31,7 @@ $TOOLS/caffe train \
 >>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -64,6 +68,10 @@ $TOOLS/caffe train \
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
+=======
+>>>>>>> pod/device/blob.hpp
 =======
     --snapshot=examples/cifar10/cifar10_full_iter_60000.solverstate.h5
 =======
@@ -87,6 +95,7 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -112,6 +121,8 @@ $TOOLS/caffe train \
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 # reduce learning rate by factor of 10
@@ -127,6 +138,9 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -137,6 +151,7 @@ $TOOLS/caffe train \
 >>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate.h5
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -200,6 +215,8 @@ $TOOLS/caffe train \
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate.h5
 =======
     --snapshot=examples/cifar10/cifar10_full_iter_65000.solverstate
@@ -210,9 +227,12 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

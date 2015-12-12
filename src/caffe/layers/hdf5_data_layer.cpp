@@ -55,6 +55,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -173,16 +174,39 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 
   const int MIN_DATA_DIM = 1;
   const int MAX_DATA_DIM = INT_MAX;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+
+  const int MIN_DATA_DIM = 1;
+  const int MAX_DATA_DIM = 4;
+
+>>>>>>> origin/BVLC/parallel
+=======
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+
+  const int MIN_DATA_DIM = 1;
+  const int MAX_DATA_DIM = INT_MAX;
+
+<<<<<<< HEAD
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 
@@ -238,6 +262,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -281,11 +306,14 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -293,6 +321,8 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -324,6 +354,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -354,6 +385,11 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -382,6 +418,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -402,6 +439,8 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -422,6 +461,9 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   // Refuse transformation parameters since HDF5 is totally generic.
@@ -432,6 +474,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -470,6 +513,8 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
   // Refuse transformation parameters since HDF5 is totally generic.
   CHECK(!this->layer_param_.has_transform_param()) <<
       this->type() << " does not transform data.";
@@ -480,6 +525,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(!this->layer_param_.has_transform_param()) <<
       this->type() << " does not transform data.";
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -536,6 +582,8 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->type() << " does not transform data.";
 >>>>>>> caffe
 <<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -569,6 +617,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -625,11 +674,16 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 
   file_permutation_.clear();
@@ -651,6 +705,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -697,9 +752,14 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -715,6 +775,8 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -738,6 +800,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -782,6 +845,11 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
   vector<int> top_shape;
@@ -792,6 +860,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       top_shape[j] = hdf_blobs_[i]->shape(j);
     }
     top[i]->Reshape(top_shape);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1539,6 +1608,29 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 =======
 =======
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+  for (int i = 0; i < top_size; ++i) {
+    top[i]->Reshape(batch_size, hdf_blobs_[i]->channels(),
+                    hdf_blobs_[i]->height(), hdf_blobs_[i]->width());
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+=======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> BVLC/device-abstraction
 Dtype HDF5DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -1639,6 +1731,9 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
           DLOG(INFO) << "Looping around to first file.";
@@ -1660,6 +1755,7 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1714,6 +1810,8 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     }
 >>>>>>> pod-caffe-pod.hpp-merge
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
@@ -1722,6 +1820,7 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1820,8 +1919,13 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     }
@@ -1855,6 +1959,7 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -1910,10 +2015,13 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/device-abstraction
 =======
 =======
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
@@ -1928,6 +2036,8 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -1955,6 +2065,9 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   }
@@ -1973,6 +2086,7 @@ INSTANTIATE_CLASS(HDF5DataLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2019,6 +2133,11 @@ INSTANTIATE_CLASS(HDF5DataLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD

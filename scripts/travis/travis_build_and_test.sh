@@ -9,6 +9,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -20,6 +23,7 @@
 # Script called by Travis to build and test Caffe.
 # Travis CI tests are CPU-only for lack of compatible hardware.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -62,6 +66,11 @@
 # Travis CI tests are CPU-only for lack of compatible hardware.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+# Script called by Travis to build and test Caffe.
+# Travis CI tests are CPU-only for lack of compatible hardware.
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 # Script called by Travis to build and test Caffe.
 # Travis CI tests are CPU-only for lack of compatible hardware.
@@ -88,6 +97,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -114,6 +124,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 set -e
@@ -122,6 +134,7 @@ MAKE="make --jobs=$NUM_THREADS --keep-going"
 if $WITH_CMAKE; then
   mkdir build
   cd build
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -175,11 +188,14 @@ if $WITH_CMAKE; then
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -187,6 +203,8 @@ if $WITH_CMAKE; then
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -215,6 +233,7 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -245,6 +264,11 @@ if $WITH_CMAKE; then
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -270,6 +294,7 @@ if $WITH_CMAKE; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -290,6 +315,8 @@ if $WITH_CMAKE; then
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -315,6 +342,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -358,11 +386,14 @@ else
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -370,6 +401,8 @@ else
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -387,6 +420,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -414,10 +448,15 @@ else
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
@@ -457,6 +496,8 @@ else
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   $MAKE all test pycaffe warn lint || true
   if ! $WITH_CUDA; then
     $MAKE runtest
@@ -474,6 +515,7 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -547,6 +589,12 @@ else
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  $MAKE pytest
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
   $MAKE pytest
 =======
 >>>>>>> origin/BVLC/parallel
@@ -556,9 +604,12 @@ else
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

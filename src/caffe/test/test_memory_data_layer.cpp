@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -51,11 +52,14 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -63,6 +67,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -79,6 +85,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -97,9 +104,14 @@
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -142,6 +154,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -280,6 +294,9 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -290,6 +307,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -326,6 +344,10 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 #ifdef USE_OPENCV
 =======
@@ -338,6 +360,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -369,6 +392,8 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -395,6 +420,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -438,11 +464,14 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -450,6 +479,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -469,6 +500,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -499,6 +531,11 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -528,6 +565,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -548,6 +586,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -573,6 +613,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -606,6 +647,12 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -622,6 +669,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -652,6 +700,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -671,6 +721,9 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -682,6 +735,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   for (int iter = 0; iter < num_iter; ++iter) {
     int offset = this->batch_size_ * iter;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -751,6 +805,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   for (int iter = 0; iter < num_iter; ++iter) {
     int offset = this->batch_size_ * iter;
 =======
@@ -761,6 +817,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
     int offset = this->batch_size_ * iter;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -787,6 +844,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
     int offset = this->batch_size_ * iter;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
@@ -802,6 +861,9 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -813,6 +875,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
       const string& data_string = datum_vector[offset + i].data();
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -855,6 +918,11 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      const string& data_string = datum_vector[offset + i].data();
+      EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
+=======
+>>>>>>> pod/device/blob.hpp
 =======
       const string& data_string = datum_vector[offset + i].data();
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
@@ -873,6 +941,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       const string& data_string = datum_vector[offset + i].data();
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
 >>>>>>> caffe
@@ -907,6 +976,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -939,6 +1010,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -982,11 +1054,14 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -994,6 +1069,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1132,12 +1209,17 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1151,6 +1233,7 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -1198,6 +1281,8 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

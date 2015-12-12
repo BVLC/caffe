@@ -20,6 +20,9 @@ In this tutorial, we will extract features using a pre-trained model with the in
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -30,6 +33,7 @@ In this tutorial, we will extract features using a pre-trained model with the in
 >>>>>>> pod/device/blob.hpp
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -66,6 +70,10 @@ Note that we recommend using the Python interface for this task, as for example 
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
@@ -79,6 +87,7 @@ Note that we recommend using the Python interface for this task, as for example 
 =======
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -110,6 +119,8 @@ Note that we recommend using the Python interface for this task, as for example 
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

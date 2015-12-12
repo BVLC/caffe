@@ -12,6 +12,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -22,6 +25,7 @@
 >>>>>>> pod/device/blob.hpp
 #include "boost/scoped_ptr.hpp"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -58,6 +62,10 @@
 #include "boost/scoped_ptr.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "boost/scoped_ptr.hpp"
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 #include "boost/scoped_ptr.hpp"
 =======
@@ -70,6 +78,7 @@
 =======
 #include "boost/scoped_ptr.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -105,11 +114,14 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -190,11 +202,14 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
@@ -242,6 +257,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 #include "caffe/data_layers.hpp"
@@ -264,6 +281,9 @@
 #include "caffe/util/io.hpp"
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -309,6 +329,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -317,6 +338,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -334,6 +357,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -341,6 +365,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -356,6 +382,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -370,6 +397,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -383,6 +412,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     db->Open(*filename_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -416,6 +446,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -444,6 +476,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -487,11 +520,14 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -499,6 +535,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -517,6 +555,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -547,6 +586,11 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -574,6 +618,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -594,6 +639,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -801,6 +848,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -851,6 +899,14 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+    }  // destroy 1st data layer and unlock the db
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+    }  // destroy 1st data layer and unlock the db
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
     }  // destroy 1st data layer and unlock the db
 =======
 >>>>>>> pod/device/blob.hpp
@@ -859,6 +915,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
     }  // destroy 1st data layer and unlock the db
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -890,6 +947,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -960,6 +1019,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -970,6 +1032,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> pod/device/blob.hpp
     }  // destroy 1st data layer and unlock the db
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1051,6 +1114,15 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+    }  // destroy 1st data layer and unlock the db
+=======
+    }  // destroy 1st data layer and unlock the dataset
+>>>>>>> origin/BVLC/parallel
+=======
+    }  // destroy 1st data layer and unlock the db
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
@@ -1112,6 +1184,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1151,10 +1224,15 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
   this->TestReadCrop(TRAIN);
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  this->TestReadCrop(TRAIN);
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
   this->TestReadCrop(TRAIN);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1163,6 +1241,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
   this->TestReadCrop(TRAIN);
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1172,6 +1252,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 =======
   this->TestReadCrop(TRAIN);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1203,6 +1284,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1239,6 +1322,9 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1249,6 +1335,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TEST);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1319,6 +1406,15 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+  this->TestReadCrop(TEST);
+=======
+  this->TestReadCrop();
+>>>>>>> origin/BVLC/parallel
+=======
+  this->TestReadCrop(TEST);
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
   this->TestReadCrop(TEST);
 =======
@@ -1365,6 +1461,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TRAIN);
@@ -1437,6 +1534,10 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
   this->TestReadCrop(TRAIN);
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  this->TestReadCrop(TRAIN);
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
   this->TestReadCrop(TRAIN);
@@ -1449,9 +1550,12 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1487,6 +1591,9 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1497,6 +1604,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
 >>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TEST);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1560,6 +1668,8 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   this->TestReadCrop(TEST);
 =======
   this->TestReadCrop();
@@ -1570,9 +1680,12 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

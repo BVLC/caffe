@@ -25,6 +25,9 @@ using std::endl;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -35,6 +38,7 @@ using std::endl;
 >>>>>>> pod/device/blob.hpp
   #include "caffe_config.h"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -71,6 +75,10 @@ using std::endl;
   #include "caffe_config.h"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  #include "caffe_config.h"
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   #include "caffe_config.h"
 =======
@@ -84,6 +92,7 @@ using std::endl;
 =======
   #include "caffe_config.h"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -115,6 +124,8 @@ using std::endl;
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

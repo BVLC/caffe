@@ -36,6 +36,9 @@ You will first need to prepare some auxiliary data for training. This data can b
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -46,6 +49,7 @@ You will first need to prepare some auxiliary data for training. This data can b
 >>>>>>> pod/device/blob.hpp
     ./data/ilsvrc12/get_ilsvrc_aux.sh
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -82,6 +86,10 @@ You will first need to prepare some auxiliary data for training. This data can b
     ./data/ilsvrc12/get_ilsvrc_aux.sh
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    ./data/ilsvrc12/get_ilsvrc_aux.sh
+=======
+>>>>>>> pod/device/blob.hpp
 =======
     ./data/ilsvrc12/get_ilsvrc_aux.sh
 =======
@@ -95,6 +103,7 @@ You will first need to prepare some auxiliary data for training. This data can b
 =======
     ./data/ilsvrc12/get_ilsvrc_aux.sh
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -126,6 +135,8 @@ You will first need to prepare some auxiliary data for training. This data can b
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -162,11 +173,26 @@ Model Definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+
+We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf).
+
+The network definition (`models/bvlc_reference_caffenet/train_val.prototxt`) follows the one in Krizhevsky et al.
+Note that if you deviated from file paths suggested in this guide, you'll need to adjust the relevant paths in the `.prototxt` files.
+
+If you look carefully at `models/bvlc_reference_caffenet/train_val.prototxt`, you will notice several `include` sections specifying either `phase: TRAIN` or `phase: TEST`. These sections allow us to define two closely related networks in one file: the network used for training and the network used for testing. These two networks are almost identical, sharing all layers except for those marked with `include { phase: TRAIN }` or `include { phase: TEST }`. In this case, only the input layers and one output layer are different.
+
+**Input layer differences:** The training network's `data` input layer draws its data from `examples/imagenet/ilsvrc12_train_leveldb` and randomly mirrors the input image. The testing network's `data` layer takes data from `examples/imagenet/ilsvrc12_val_leveldb` and does not perform random mirroring.
+
+=======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 
 We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf).
@@ -179,6 +205,7 @@ If you look carefully at `models/bvlc_reference_caffenet/train_val.prototxt`, yo
 **Input layer differences:** The training network's `data` input layer draws its data from `examples/imagenet/ilsvrc12_train_leveldb` and randomly mirrors the input image. The testing network's `data` layer takes data from `examples/imagenet/ilsvrc12_val_leveldb` and does not perform random mirroring.
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -314,6 +341,8 @@ If you look carefully at `models/bvlc_reference_caffenet/train_val.prototxt`, yo
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 
 We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf).
 
@@ -326,6 +355,9 @@ If you look carefully at `models/bvlc_reference_caffenet/train_val.prototxt`, yo
 
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -361,6 +393,7 @@ Ready? Let's train.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -426,11 +459,16 @@ On a K40 machine, every 20 iterations take about 26.5 seconds to run (while a on
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
 Sit back and enjoy!
 
 On a K40 machine, every 20 iterations take about 26.5 seconds to run (while a on a K20 this takes 36 seconds), so effectively about 5.2 ms per image for the full forward-backward pass. About 2 ms of this is on forward, and the rest is backward. If you are interested in dissecting the computation time, you can run
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -460,6 +498,10 @@ On a K40 machine, every 20 iterations take about 26.5 seconds to run (while a on
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+
+=======
+>>>>>>> pod/device/blob.hpp
 
 =======
 
@@ -469,6 +511,7 @@ Sit back and enjoy!
 On a K40 machine, every 20 iterations take about 26.5 seconds to run (while a on a K20 this takes 36 seconds), so effectively about 5.2 ms per image for the full forward-backward pass. About 2 ms of this is on forward, and the rest is backward. If you are interested in dissecting the computation time, you can run
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -504,6 +547,9 @@ On a K40 machine, every 20 iterations take about 26.5 seconds to run (while a on
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
     ./build/tools/caffe time --model=models/bvlc_reference_caffenet/train_val.prototxt
@@ -521,6 +567,7 @@ We all experience times when the power goes out, or we feel like rewarding ourse
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
     ./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_iter_10000.solverstate
@@ -664,14 +711,37 @@ where in the script `caffenet_train_iter_10000.solverstate` is the solver state 
 where in the script `caffenet_train_10000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/device/blob.hpp
+
+    ./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_iter_10000.solverstate
+
+where in the script `caffenet_train_iter_10000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
+<<<<<<< HEAD
+>>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+<<<<<<< HEAD
+
+<<<<<<< HEAD
+    ./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_iter_10000.solverstate
+
+where in the script `caffenet_train_iter_10000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
+=======
+    ./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate
+
+where in the script `caffenet_train_10000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
+>>>>>>> origin/BVLC/parallel
+=======
 
     ./build/tools/caffe train --solver=models/bvlc_reference_caffenet/solver.prototxt --snapshot=models/bvlc_reference_caffenet/caffenet_train_iter_10000.solverstate
 
 where in the script `caffenet_train_iter_10000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
 >>>>>>> caffe
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
@@ -692,6 +762,9 @@ Many researchers have gone further since the ILSVRC 2012 challenge, changing the
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -702,6 +775,7 @@ Many researchers have gone further since the ILSVRC 2012 challenge, changing the
 >>>>>>> pod/device/blob.hpp
 And since now you have a trained network, check out how to use it with the Python interface for [classifying ImageNet](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -765,6 +839,8 @@ And since now you have a trained network, check out how to use it with the Pytho
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 And since now you have a trained network, check out how to use it with the Python interface for [classifying ImageNet](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 =======
 And since now you have a trained network, check out how to use it with the Python interface for [classifying ImageNet](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/classification.ipynb).
@@ -775,9 +851,12 @@ And since now you have a trained network, check out how to use it with the Pytho
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

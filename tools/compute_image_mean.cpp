@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -41,6 +42,12 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -68,6 +75,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -88,6 +96,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -108,6 +118,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -151,11 +162,14 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -163,6 +177,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -179,6 +195,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -197,9 +214,14 @@
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -242,6 +264,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -263,6 +287,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -273,6 +298,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -308,10 +335,15 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -355,6 +387,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -370,6 +403,95 @@ int main(int argc, char** argv) {
 =======
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  if (argc < 2 || argc > 3) {
+    gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/compute_image_mean");
+    return 1;
+  }
+
+  scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
+  db->Open(argv[1], db::READ);
+  scoped_ptr<db::Cursor> cursor(db->NewCursor());
+
+  BlobProto sum_blob;
+  int count = 0;
+  // load first datum
+  Datum datum;
+  datum.ParseFromString(cursor->value());
+
+  if (DecodeDatumNative(&datum)) {
+=======
+using caffe::Dataset;
+using caffe::Datum;
+using caffe::BlobProto;
+using std::max;
+using std::pair;
+
+
+DEFINE_string(backend, "lmdb", "The backend for containing the images");
+
+int main(int argc, char** argv) {
+  ::google::InitGoogleLogging(argv[0]);
+
+#ifndef GFLAGS_GFLAGS_H_
+  namespace gflags = google;
+#endif
+
+  gflags::SetUsageMessage("Compute the mean_image of a set of images given by"
+        " a leveldb/lmdb or a list of images\n"
+        "Usage:\n"
+        "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
+
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  if (argc < 2 || argc > 3) {
+    gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/compute_image_mean");
+    return 1;
+  }
+
+  std::string db_backend = FLAGS_backend;
+
+  caffe::shared_ptr<Dataset<std::string, Datum> > dataset =
+      caffe::DatasetFactory<std::string, Datum>(db_backend);
+
+  // Open db
+  CHECK(dataset->open(argv[1], Dataset<std::string, Datum>::ReadOnly));
+
+  BlobProto sum_blob;
+  int count = 0;
+  // load first datum
+  Dataset<std::string, Datum>::const_iterator iter = dataset->begin();
+  Datum datum = iter->value;
+
+  if (DecodeDatum(&datum)) {
+>>>>>>> origin/BVLC/parallel
+=======
+using namespace caffe;  // NOLINT(build/namespaces)
+
+using std::max;
+using std::pair;
+using boost::scoped_ptr;
+
+DEFINE_string(backend, "lmdb",
+        "The backend {leveldb, lmdb} containing the images");
+
+int main(int argc, char** argv) {
+  ::google::InitGoogleLogging(argv[0]);
+
+#ifdef USE_OPENCV
+#ifndef GFLAGS_GFLAGS_H_
+  namespace gflags = google;
+#endif
+
+  gflags::SetUsageMessage("Compute the mean_image of a set of images given by"
+        " a leveldb/lmdb\n"
+        "Usage:\n"
+        "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
+
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -389,6 +511,7 @@ int main(int argc, char** argv) {
   datum.ParseFromString(cursor->value());
 
   if (DecodeDatumNative(&datum)) {
+<<<<<<< HEAD
 =======
 using caffe::Dataset;
 using caffe::Datum;
@@ -663,6 +786,9 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
@@ -691,6 +817,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -734,11 +861,14 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -746,6 +876,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -762,6 +894,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -792,6 +925,11 @@ int main(int argc, char** argv) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -819,6 +957,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -839,6 +978,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -876,6 +1017,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     cursor->Next();
@@ -951,6 +1093,12 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+    cursor->Next();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
     cursor->Next();
 =======
 >>>>>>> origin/BVLC/parallel
@@ -960,9 +1108,12 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -992,6 +1143,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1014,6 +1166,10 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1052,6 +1208,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1072,6 +1229,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1103,6 +1262,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1132,6 +1292,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp

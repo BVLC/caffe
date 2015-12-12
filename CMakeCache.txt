@@ -365,6 +365,7 @@ CUDA_npps_LIBRARY:FILEPATH=/usr/local/cuda/lib/libnpps.dylib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 //Path to CUDNN include directory.
 CUDNN_INCLUDE:PATH=/usr/local/cuda/samples/7_CUDALibraries/cuda/include/cudnn.h
 
@@ -395,6 +396,8 @@ mnistCUDNN_ROOT:PATH=/usr/local/cuda/samples/7_CUDALibraries/mnistCUDNN
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
+=======
+>>>>>>> pod/device/blob.hpp
 //Path to cuDNN include directory.
 CUDNN_INCLUDE:PATH=CUDNN_INCLUDE-NOTFOUND
 
@@ -403,6 +406,7 @@ CUDNN_LIBRARY:FILEPATH=CUDNN_LIBRARY-NOTFOUND
 
 //CUDNN root folder
 CUDNN_ROOT:PATH=
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -422,6 +426,8 @@ CUDNN_ROOT:PATH=
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
+=======
+>>>>>>> pod/device/blob.hpp
 
 //Value Computed by CMake
 Caffe_BINARY_DIR:STATIC=/Users/Shared/Jenkins/caffe

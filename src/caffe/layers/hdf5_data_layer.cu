@@ -40,6 +40,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -120,6 +121,10 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
 =======
+=======
+    if (current_row_ == hdf_blobs_[0]->shape(0)) {
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -130,6 +135,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -148,6 +156,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -191,11 +200,14 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -203,6 +215,8 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -220,16 +234,25 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
         }
         LoadHDF5FileData(
             hdf_filenames_[file_permutation_[current_file_]].c_str());
 =======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+        }
+        LoadHDF5FileData(
+            hdf_filenames_[file_permutation_[current_file_]].c_str());
+=======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -334,6 +357,8 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LoadHDF5FileData(
             hdf_filenames_[file_permutation_[current_file_]].c_str());
 =======
+=======
+>>>>>>> pod/device/blob.hpp
           DLOG(INFO) << "Looping around to first file.";
         }
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
@@ -342,6 +367,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
         LoadHDF5FileData(
             hdf_filenames_[file_permutation_[current_file_]].c_str());
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -363,6 +391,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -397,12 +426,15 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
     }
 =======
 <<<<<<< HEAD
     }
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
     }
@@ -423,6 +455,8 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
     }
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
@@ -433,6 +467,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -472,6 +507,8 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

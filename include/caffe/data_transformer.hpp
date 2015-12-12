@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -44,6 +45,12 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -63,6 +70,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -93,6 +101,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -123,6 +133,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 =======
 <<<<<<< HEAD
@@ -220,12 +231,23 @@ class DataTransformer {
 <<<<<<< HEAD
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 =======
+=======
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+=======
+>>>>>>> pod/device/blob.hpp
   explicit DataTransformer(const TransformationParameter& param);
 >>>>>>> origin/BVLC/parallel
 =======
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
   virtual ~DataTransformer() {}
 
@@ -270,6 +292,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -313,11 +336,14 @@ class DataTransformer {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -325,6 +351,8 @@ class DataTransformer {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -351,6 +379,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -380,9 +409,14 @@ class DataTransformer {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -416,6 +450,8 @@ class DataTransformer {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -441,6 +477,9 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -452,6 +491,7 @@ class DataTransformer {
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -484,6 +524,11 @@ class DataTransformer {
 #endif  // USE_OPENCV
 =======
 >>>>>>> pod/caffe-merge
+=======
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif  // USE_OPENCV
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
@@ -494,6 +539,7 @@ class DataTransformer {
 #endif
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
@@ -548,6 +594,11 @@ class DataTransformer {
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif
 >>>>>>> origin/BVLC/parallel
+=======
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif  // USE_OPENCV
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
@@ -583,6 +634,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -626,11 +678,14 @@ class DataTransformer {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -638,6 +693,8 @@ class DataTransformer {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -691,6 +748,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -721,6 +779,11 @@ class DataTransformer {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -738,6 +801,7 @@ class DataTransformer {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -768,6 +832,8 @@ class DataTransformer {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -796,8 +862,12 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   Phase phase_;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -888,6 +958,15 @@ class DataTransformer {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+  Phase phase_;
+=======
+  Caffe::Phase phase_;
+>>>>>>> origin/BVLC/parallel
+=======
+  Phase phase_;
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
+=======
   Phase phase_;
 =======
   Caffe::Phase phase_;
@@ -914,6 +993,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -947,6 +1027,12 @@ class DataTransformer {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -963,6 +1049,7 @@ class DataTransformer {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -993,6 +1080,8 @@ class DataTransformer {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

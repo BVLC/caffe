@@ -21,6 +21,7 @@ We will go over the details of these components in more detail.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -64,11 +65,14 @@ We will go over the details of these components in more detail.
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -76,6 +80,8 @@ We will go over the details of these components in more detail.
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -102,6 +108,7 @@ Parameter blob dimensions vary according to the type and configuration of the la
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -132,6 +139,11 @@ Parameter blob dimensions vary according to the type and configuration of the la
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -171,6 +183,7 @@ Parameter blob dimensions vary according to the type and configuration of the la
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -191,6 +204,8 @@ Parameter blob dimensions vary according to the type and configuration of the la
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -274,6 +289,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     layer {
       name: "mnist"
       type: "Data"
@@ -407,6 +423,27 @@ is defined by
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+    layer {
+      name: "mnist"
+      type: "Data"
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    layer {
+      name: "mnist"
+      type: "Data"
+=======
+    layers {
+      name: "mnist"
+      type: DATA
+>>>>>>> origin/BVLC/parallel
+=======
+    layer {
+      name: "mnist"
+      type: "Data"
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
       top: "data"
@@ -426,6 +463,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -490,6 +528,8 @@ is defined by
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     layer {
       name: "ip"
       type: "InnerProduct"
@@ -497,10 +537,13 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     layer {
@@ -516,6 +559,7 @@ is defined by
       name: "ip"
       type: "InnerProduct"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -534,6 +578,8 @@ is defined by
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -555,10 +601,13 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     layer {
@@ -571,6 +620,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -580,6 +630,8 @@ is defined by
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     layer {
       name: "loss"
       type: "SoftmaxWithLoss"
@@ -587,6 +639,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -599,11 +652,14 @@ is defined by
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
     layers {
       name: "loss"
       type: SOFTMAX_LOSS
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
     layer {
       name: "loss"
       type: "SoftmaxWithLoss"
@@ -672,6 +728,13 @@ is defined by
       name: "loss"
       type: SOFTMAX_LOSS
 >>>>>>> origin/BVLC/parallel
+=======
+    layer {
+      name: "loss"
+      type: "SoftmaxWithLoss"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
     layer {
       name: "loss"
@@ -707,6 +770,9 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -717,6 +783,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> pod/device/blob.hpp
     I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -787,6 +854,15 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
+=======
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 1 1 1 (64)
+>>>>>>> origin/BVLC/parallel
+=======
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
     I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
 =======
@@ -820,6 +896,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
@@ -891,6 +968,10 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+    I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
@@ -903,9 +984,12 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -926,6 +1010,9 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -936,6 +1023,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> pod/device/blob.hpp
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -999,6 +1087,8 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 =======
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: 1 1 1 1 (1)
@@ -1009,9 +1099,12 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

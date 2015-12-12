@@ -13,6 +13,9 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -23,6 +26,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.
 >>>>>>> pod/device/blob.hpp
 license: unrestricted
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -59,6 +63,10 @@ license: unrestricted
 license: unrestricted
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+license: unrestricted
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 license: unrestricted
 =======
@@ -82,6 +90,7 @@ license: unrestricted
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -111,6 +120,9 @@ license: unrestricted
 =======
 license: unrestricted
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 sha1: bdd8abb885819cba5e2fe1eb36235f2319477e64
 caffe_commit: a7e397abbda52c0b90323c23ab95bdeabee90a98
 ---
@@ -136,6 +148,9 @@ This model was trained by Ross Girshick @rbgirshick
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -146,6 +161,7 @@ This model was trained by Ross Girshick @rbgirshick
 >>>>>>> pod/device/blob.hpp
 This model is released for unrestricted use.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -182,6 +198,10 @@ This model is released for unrestricted use.
 This model is released for unrestricted use.
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+This model is released for unrestricted use.
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 This model is released for unrestricted use.
 =======
@@ -199,6 +219,7 @@ Accordingly, this model is distributed under a non-commercial license.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 This model is released for unrestricted use.
 >>>>>>> caffe
 <<<<<<< HEAD
@@ -240,3 +261,8 @@ This model is released for unrestricted use.
 =======
 This model is released for unrestricted use.
 >>>>>>> BVLC/device-abstraction
+=======
+This model is released for unrestricted use.
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp

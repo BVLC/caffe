@@ -15,6 +15,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -33,6 +36,7 @@
 #include "caffe/util/math_functions.hpp"
 =======
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -63,6 +67,9 @@
 =======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,6 +98,10 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -118,6 +129,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -146,6 +158,11 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -197,6 +214,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 =======
@@ -207,6 +225,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -222,6 +242,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -230,6 +251,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -259,6 +282,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -279,6 +303,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -303,6 +329,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -346,11 +373,14 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -358,6 +388,8 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -376,6 +408,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -406,6 +439,11 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -430,6 +468,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -450,6 +489,8 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -499,6 +540,7 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -614,6 +656,8 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -649,6 +693,9 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -663,9 +710,61 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 <<<<<<< HEAD
+=======
+    bias_multiplier_.Reshape(1, 1, 1, M_);
+    GetDevice<Dtype>(Caffe::CPU)->set(M_, Dtype(1),
+                                      bias_multiplier_.mutable_cpu_data());
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    bias_multiplier_.Reshape(1, 1, 1, M_);
+    GetDevice<Dtype>(Caffe::CPU)->set(M_, Dtype(1),
+                                      bias_multiplier_.mutable_cpu_data());
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+  // Set up the bias multiplier
+  if (bias_term_) {
+>>>>>>> caffe
+    vector<int> bias_shape(1, M_);
+    bias_multiplier_.Reshape(bias_shape);
+    caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+}
+
+template <typename Dtype>
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -1655,6 +1754,8 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1701,6 +1802,7 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, N_, K_, (Dtype)1.,
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -1844,6 +1946,35 @@ void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> BVLC/device-abstraction
+Dtype InnerProductLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+  const Dtype* weight = this->blobs_[0]->const_data();
+  this->device_->gemm(CblasNoTrans, CblasTrans, M_, N_, K_, (Dtype)1.,
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+      bottom_data, weight, (Dtype)0., top_data);
+  if (bias_term_) {
+    this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
+        reinterpret_cast<const Dtype*>(bias_multiplier_.const_data()),
+        this->blobs_[1]->const_data(), (Dtype)1., top_data);
+  }
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (this->param_propagate_down_[0]) {
@@ -1852,14 +1983,108 @@ void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     // Gradient with respect to weight
     this->device_->gemm(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
         top_diff, bottom_data, (Dtype)0., this->blobs_[0]->mutable_diff());
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  if (this->param_propagate_down_[0]) {
+    const Dtype* top_diff = top[0]->cpu_diff();
+    const Dtype* bottom_data = bottom[0]->cpu_data();
+    // Gradient with respect to weight
+    caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
+        top_diff, bottom_data, (Dtype)1., this->blobs_[0]->mutable_cpu_diff());
+<<<<<<< HEAD
+=======
+void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (this->param_propagate_down_[0]) {
+    const Dtype* top_diff = top[0]->const_diff();
+    const Dtype* bottom_data = (*bottom)[0]->const_data();
+    // Gradient with respect to weight
+    this->device_->gemm(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
+        top_diff, bottom_data, (Dtype)0., this->blobs_[0]->mutable_diff());
+>>>>>>> BVLC/device-abstraction
+>>>>>>> pod/device/blob.hpp
+=======
+void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (this->param_propagate_down_[0]) {
+    const Dtype* top_diff = top[0]->const_diff();
+    const Dtype* bottom_data = (*bottom)[0]->const_data();
+    // Gradient with respect to weight
+    this->device_->gemm(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
+        top_diff, bottom_data, (Dtype)0., this->blobs_[0]->mutable_diff());
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   }
   if (bias_term_ && this->param_propagate_down_[1]) {
     const Dtype* top_diff = top[0]->const_diff();
     // Gradient with respect to bias
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    caffe_cpu_gemv<Dtype>(CblasTrans, M_, N_, (Dtype)1., top_diff,
+        bias_multiplier_.cpu_data(), (Dtype)1.,
+        this->blobs_[1]->mutable_cpu_diff());
+=======
+>>>>>>> pod/device/blob.hpp
     this->device_->gemv(CblasTrans, M_, N_, (Dtype)1., top_diff,
         bias_multiplier_.const_data(), (Dtype)0.,
         this->blobs_[1]->mutable_diff());
 >>>>>>> BVLC/device-abstraction
+=======
+    this->device_->gemv(CblasTrans, M_, N_, (Dtype)1., top_diff,
+        bias_multiplier_.const_data(), (Dtype)0.,
+        this->blobs_[1]->mutable_diff());
+>>>>>>> BVLC/device-abstraction
+=======
+    this->device_->gemv(CblasTrans, M_, N_, (Dtype)1., top_diff,
+        bias_multiplier_.const_data(), (Dtype)0.,
+        this->blobs_[1]->mutable_diff());
+=======
+    caffe_cpu_gemv<Dtype>(CblasTrans, M_, N_, (Dtype)1., top_diff,
+        bias_multiplier_.cpu_data(), (Dtype)1.,
+        this->blobs_[1]->mutable_cpu_diff());
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->const_diff();
@@ -1879,6 +2104,7 @@ void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
@@ -2038,6 +2264,8 @@ void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
         (*bottom)[0]->mutable_diff());
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
         top_diff, this->blobs_[0]->cpu_data(), (Dtype)0.,
         bottom[0]->mutable_cpu_diff());
@@ -2099,6 +2327,54 @@ void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
         top_diff, this->blobs_[0]->const_data(), (Dtype)0.,
         (*bottom)[0]->mutable_diff());
 >>>>>>> BVLC/device-abstraction
+=======
+    this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
+        top_diff, this->blobs_[0]->const_data(), (Dtype)0.,
+        (*bottom)[0]->mutable_diff());
+>>>>>>> BVLC/device-abstraction
+=======
+    this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
+        top_diff, this->blobs_[0]->const_data(), (Dtype)0.,
+        (*bottom)[0]->mutable_diff());
+=======
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
+        top_diff, this->blobs_[0]->cpu_data(), (Dtype)0.,
+        bottom[0]->mutable_cpu_diff());
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
@@ -2113,6 +2389,7 @@ INSTANTIATE_CLASS(InnerProductLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2156,11 +2433,14 @@ INSTANTIATE_CLASS(InnerProductLayer);
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -2168,6 +2448,8 @@ INSTANTIATE_CLASS(InnerProductLayer);
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

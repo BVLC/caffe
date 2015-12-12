@@ -17,6 +17,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -35,6 +38,7 @@
 #include "caffe/util/math_functions.hpp"
 =======
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -65,6 +69,9 @@
 =======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -93,6 +100,10 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -119,6 +130,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -147,6 +159,11 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -185,6 +202,7 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> master
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -230,6 +248,11 @@
 =======
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
 >>>>>>> master
 =======
 #include "caffe/neuron_layers.hpp"
@@ -239,6 +262,7 @@
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -269,6 +293,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -333,6 +359,7 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (this->phase_ == TRAIN) {
 =======
 <<<<<<< HEAD
@@ -425,6 +452,19 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+    if (this->phase_ == TRAIN) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    if (this->phase_ == TRAIN) {
+=======
+    if (Caffe::phase() == Caffe::TRAIN) {
+>>>>>>> origin/BVLC/parallel
+=======
+    if (this->phase_ == TRAIN) {
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
       const unsigned int* mask = rand_vec_.cpu_data();
@@ -457,6 +497,7 @@ INSTANTIATE_CLASS(DropoutLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -482,6 +523,11 @@ INSTANTIATE_CLASS(DropoutLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -498,6 +544,7 @@ REGISTER_LAYER_CLASS(Dropout);
 REGISTER_LAYER_CLASS(DROPOUT, DropoutLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -528,6 +575,8 @@ REGISTER_LAYER_CLASS(DROPOUT, DropoutLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

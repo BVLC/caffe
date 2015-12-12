@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -51,11 +52,14 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -63,6 +67,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -80,6 +86,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -110,6 +117,11 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -136,6 +148,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -156,6 +169,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -187,6 +202,7 @@ InternalThread::~InternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -220,9 +236,12 @@ InternalThread::~InternalThread() {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -240,6 +259,8 @@ InternalThread::~InternalThread() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 }
@@ -276,6 +297,7 @@ void InternalThread::StartInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -286,7 +308,10 @@ void InternalThread::StartInternalThread() {
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+>>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/device/blob.hpp
@@ -321,6 +346,7 @@ bool InternalThread::StartInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -333,6 +359,8 @@ bool InternalThread::StartInternalThread() {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod/common.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
@@ -344,6 +372,7 @@ bool InternalThread::StartInternalThread() {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -368,6 +397,8 @@ bool InternalThread::StartInternalThread() {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
   try {
     thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
           rand_seed, solver_count, root_solver));
@@ -389,6 +420,7 @@ bool InternalThread::StartInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -410,6 +442,8 @@ bool InternalThread::StartInternalThread() {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -443,6 +477,9 @@ void InternalThread::StopInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -463,6 +500,7 @@ bool InternalThread::StopInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -475,12 +513,17 @@ bool InternalThread::StopInternalThread() {
 >>>>>>> pod/common.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -510,6 +553,9 @@ bool InternalThread::StopInternalThread() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
   if (is_started()) {
     thread_->interrupt();
     try {
@@ -527,6 +573,7 @@ bool InternalThread::StopInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -571,6 +618,11 @@ bool InternalThread::StopInternalThread() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> origin/BVLC/parallel
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
   if (thread_ != NULL) {
     delete thread_;
   }
@@ -614,6 +666,7 @@ bool InternalThread::StopInternalThread() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -634,6 +687,8 @@ bool InternalThread::StopInternalThread() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

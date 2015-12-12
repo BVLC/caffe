@@ -56,6 +56,7 @@ class GradientChecker {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -99,11 +100,14 @@ class GradientChecker {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -111,6 +115,8 @@ class GradientChecker {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -127,6 +133,7 @@ class GradientChecker {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -145,9 +152,14 @@ class GradientChecker {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -190,6 +202,8 @@ class GradientChecker {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -243,6 +257,9 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -253,6 +270,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -289,6 +307,10 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  vector<bool> propagate_down(bottom.size(), check_bottom == -1);
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
@@ -312,6 +334,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -337,6 +360,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < layer->blobs().size(); ++i) {
     Blob<Dtype>* blob = layer->blobs()[i].get();
@@ -353,6 +378,9 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -374,6 +402,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -387,6 +416,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -404,6 +435,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -418,6 +450,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -433,6 +467,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   if (check_bottom == -1) {
@@ -465,11 +500,14 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   if (check_bottom == -1) {
     for (int i = 0; i < bottom.size(); ++i) {
       blobs_to_check.push_back(bottom[i]);
     }
   } else if (check_bottom >= 0) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -484,6 +522,10 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge

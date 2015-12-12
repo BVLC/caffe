@@ -8,6 +8,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -18,6 +21,7 @@
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -54,6 +58,10 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 #ifdef USE_OPENCV
 =======
@@ -66,6 +74,7 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -97,6 +106,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -151,6 +162,7 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -194,11 +206,14 @@ class DataTransformTest : public ::testing::Test {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -206,6 +221,8 @@ class DataTransformTest : public ::testing::Test {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -222,6 +239,7 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -252,6 +270,11 @@ class DataTransformTest : public ::testing::Test {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -279,6 +302,7 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -299,6 +323,8 @@ class DataTransformTest : public ::testing::Test {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -365,6 +391,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
@@ -418,6 +445,14 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param);
@@ -425,6 +460,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -456,6 +492,8 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -494,6 +532,9 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -504,6 +545,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -584,6 +626,8 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
       new DataTransformer<TypeParam>(transform_param);
@@ -591,6 +635,9 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   transformer->InitRand();
@@ -627,10 +674,14 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -680,6 +731,10 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+>>>>>>> pod/device/blob.hpp
+=======
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 >>>>>>> pod/device/blob.hpp
@@ -688,6 +743,7 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -719,6 +775,8 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -762,6 +820,9 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -772,6 +833,7 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
 >>>>>>> pod/device/blob.hpp
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -859,6 +921,16 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+=======
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_LT(num_matches, size * this->num_iter_);
@@ -887,6 +959,7 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
@@ -923,10 +996,15 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
 >>>>>>> pod/device/blob.hpp
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -934,6 +1012,8 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -944,6 +1024,7 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
 =======
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -975,6 +1056,8 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1005,6 +1088,9 @@ TYPED_TEST(DataTransformTest, TestMirrorTrain) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1015,6 +1101,7 @@ TYPED_TEST(DataTransformTest, TestMirrorTrain) {
 >>>>>>> pod/device/blob.hpp
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1106,6 +1193,16 @@ TYPED_TEST(DataTransformTest, TestMirrorTrain) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+=======
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_LT(num_matches, size * this->num_iter_);
@@ -1133,6 +1230,7 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
@@ -1203,6 +1301,8 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
 <<<<<<< HEAD
@@ -1210,6 +1310,9 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1222,9 +1325,12 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1255,6 +1361,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1298,11 +1405,14 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1310,6 +1420,8 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1328,6 +1440,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1358,6 +1471,11 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1387,6 +1505,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1407,6 +1526,8 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1438,6 +1559,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1481,11 +1603,14 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1493,6 +1618,8 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1510,6 +1637,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1540,6 +1668,11 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1569,6 +1702,7 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1589,6 +1723,8 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1623,6 +1759,7 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
@@ -1695,11 +1832,16 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 =======
+=======
+>>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
       new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param);
@@ -1710,9 +1852,12 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1750,6 +1895,9 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1760,6 +1908,7 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1832,6 +1981,15 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+      new DataTransformer<TypeParam>(transform_param);
+>>>>>>> origin/BVLC/parallel
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
@@ -1900,6 +2058,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
@@ -1953,6 +2112,14 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+      new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param);
@@ -1960,6 +2127,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1991,6 +2159,8 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2014,6 +2184,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2087,6 +2258,12 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#endif  // USE_OPENCV
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 #endif  // USE_OPENCV
 =======
 >>>>>>> origin/BVLC/parallel
@@ -2096,9 +2273,12 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

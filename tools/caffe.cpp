@@ -205,10 +205,13 @@ int train() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -226,6 +229,7 @@ int train() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 
@@ -239,6 +243,11 @@ int train() {
 =======
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -252,6 +261,7 @@ int train() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -262,6 +272,8 @@ int train() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
     CopyLayers(solver.get(), FLAGS_weights);
@@ -289,6 +301,7 @@ int train() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -474,6 +487,8 @@ int train() {
   }
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 
   LOG(INFO) << "Starting Optimization";
   shared_ptr<caffe::Solver<float> >
@@ -487,6 +502,9 @@ int train() {
     solver->net()->CopyTrainedLayersFrom(FLAGS_weights);
     solver->Solve();
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
   } else {
 >>>>>>> origin/BVLC/parallel
@@ -497,10 +515,14 @@ int train() {
     solver->Restore(FLAGS_snapshot.c_str());
   } else if (FLAGS_weights.size()) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
     CopyLayers(solver.get(), FLAGS_weights);
   }
@@ -510,6 +532,7 @@ int train() {
     sync.run(gpus);
   } else {
     LOG(INFO) << "Starting Optimization";
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> caffe
@@ -579,6 +602,11 @@ int train() {
 >>>>>>> pod/device/blob.hpp
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -653,6 +681,9 @@ int test() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -664,6 +695,7 @@ int test() {
     const float loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -750,6 +782,18 @@ int test() {
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+    const float loss_weight = caffe_net.blob_loss_weights()[
+        caffe_net.output_blob_indices()[test_score_output_id[i]]];
+=======
+    const float loss_weight =
+        caffe_net.blob_loss_weights()[caffe_net.output_blob_indices()[i]];
+>>>>>>> origin/BVLC/parallel
+=======
+    const float loss_weight = caffe_net.blob_loss_weights()[
+        caffe_net.output_blob_indices()[test_score_output_id[i]]];
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 =======
     const float loss_weight = caffe_net.blob_loss_weights()[
@@ -839,6 +883,7 @@ int time() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -872,6 +917,12 @@ int time() {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -890,6 +941,7 @@ int time() {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -920,6 +972,8 @@ int time() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -949,6 +1003,7 @@ int time() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -984,11 +1039,14 @@ int time() {
   }
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   }
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
   }
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
   }
@@ -996,6 +1054,8 @@ int time() {
 <<<<<<< HEAD
 <<<<<<< HEAD
   }
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
@@ -1018,6 +1078,7 @@ int time() {
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1057,10 +1118,13 @@ int time() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   }
 >>>>>>> origin/BVLC/parallel
 =======
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1071,6 +1135,8 @@ int time() {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1086,6 +1152,7 @@ int time() {
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1127,6 +1194,8 @@ int time() {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp

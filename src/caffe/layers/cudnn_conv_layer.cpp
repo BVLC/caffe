@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include <algorithm>
@@ -72,10 +73,19 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
 #include <algorithm>
 #include <vector>
 
 =======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+#include <algorithm>
+#include <vector>
+
+=======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
@@ -83,6 +93,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -99,6 +111,7 @@
 #include <vector>
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -141,6 +154,9 @@
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod/caffe-merge
 =======
@@ -178,6 +194,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -221,11 +238,14 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -233,6 +253,8 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -271,6 +293,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -282,10 +305,15 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
@@ -337,6 +365,8 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
@@ -353,6 +383,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -396,11 +427,14 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -408,6 +442,8 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -440,6 +476,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -470,6 +507,11 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -499,6 +541,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -508,6 +553,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -533,6 +579,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -558,6 +607,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 
@@ -630,6 +680,11 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   handles_setup_ = true;
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+
+  handles_setup_ = true;
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -641,6 +696,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   handles_setup_ = true;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -882,12 +938,15 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 }
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -917,11 +976,16 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 =======
 <<<<<<< HEAD
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
   CHECK_EQ(2, this->num_spatial_axes_)
       << "CuDNNConvolution input must have 2 spatial axes "
@@ -948,6 +1012,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
   bottom_offset_ = (this->channels_ / this->group_)
@@ -958,6 +1025,10 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 =======
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -966,6 +1037,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
         this->num_,
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -980,10 +1052,15 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 =======
 <<<<<<< HEAD
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
         this->channels_ / this->group_, height, width,
@@ -1101,6 +1178,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1131,6 +1209,11 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1169,6 +1252,7 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1189,6 +1273,8 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1215,6 +1301,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1258,11 +1345,14 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1270,6 +1360,8 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1292,6 +1384,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1322,6 +1415,11 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1352,6 +1450,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1372,6 +1471,8 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1395,6 +1496,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1438,11 +1540,14 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1450,6 +1555,8 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1471,6 +1578,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1501,6 +1609,11 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1526,6 +1639,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1546,6 +1660,8 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

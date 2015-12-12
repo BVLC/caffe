@@ -59,6 +59,7 @@ Optional dependencies:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 Pycaffe and Matcaffe interfaces have their own natural needs.
@@ -247,6 +248,14 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 =======
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
+=======
+>>>>>>> pod/device/blob.hpp
+
+=======
+<<<<<<< HEAD
+
+<<<<<<< HEAD
+Pycaffe and Matcaffe interfaces have their own natural needs.
 
 =======
 <<<<<<< HEAD
@@ -258,6 +267,29 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
 **cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+=======
+* [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
+* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
+* [OpenCV](http://opencv.org/).
+* [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 and 1.56 are tested)
+* `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`, `lmdb`
+* For the Python wrapper
+    * `Python 2.7`, `numpy (>= 1.7)`, boost-provided `boost.python`
+* For the MATLAB wrapper
+    * MATLAB with the `mex` compiler.
+
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic.
+>>>>>>> origin/BVLC/parallel
+=======
+
+Pycaffe and Matcaffe interfaces have their own natural needs.
+
+>>>>>>> pod-caffe-pod.hpp-merge
+* For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
+* For MATLAB Caffe: MATLAB with the `mex` compiler.
+
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+<<<<<<< HEAD
 =======
 * [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
@@ -358,6 +390,9 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
@@ -386,6 +421,7 @@ There are several implementations of this library. The choice is yours:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -419,6 +455,12 @@ There are several implementations of this library. The choice is yours:
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -437,6 +479,7 @@ There are several implementations of this library. The choice is yours:
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -467,6 +510,8 @@ There are several implementations of this library. The choice is yours:
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -497,6 +542,7 @@ You can install the dependencies with
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -595,6 +641,14 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    for req in $(cat requirements.txt); do pip install $req; done
+
+but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
     for req in $(cat requirements.txt); do pip install $req; done
 
 but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
@@ -617,9 +671,12 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -644,6 +701,9 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -654,6 +714,7 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 >>>>>>> pod/device/blob.hpp
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -912,6 +973,179 @@ At this point, you should be running the latest Homebrew packages and your Caffe
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
+=======
+*Caffe's MATLAB interface works with versions 2012b, 2013a/b, and 2014a.*
+
+### The rest of the dependencies
+
+#### Linux
+
+On **Ubuntu**, most of the dependencies can be installed with
+
+    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
+
+and for **Ubuntu 14.04** the rest of the dependencies can be installed with
+
+    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
+
+Keep reading to find out how to manually build and install the Google flags library, Google logging library and LMDB on **Ubuntu 12.04**.
+
+On **CentOS / RHEL / Fedora**, most of the dependencies can be installed with
+
+    sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
+
+The Google flags library, Google logging library and LMDB already made their ways into newer versions of **CentOS / RHEL / Fedora** so it is better to first attempt to install them using `yum`
+
+    sudo yum install gflags-devel glog-devel lmdb-devel
+
+**Finally** in case you couldn't find those extra libraries mentioned above in your distribution's repositories, here are the instructions to follow for manually building and installing them on **Ubuntu 12.04 / CentOS / RHEL / Fedora** (or practically on any Linux distribution)
+
+    # glog
+    wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
+    tar zxvf glog-0.3.3.tar.gz
+    cd glog-0.3.3
+    ./configure
+    make && make install
+    # gflags
+    wget https://github.com/schuhschuh/gflags/archive/master.zip
+    unzip master.zip
+    cd gflags-master
+    mkdir build && cd build
+    export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1
+    make && make install
+    # lmdb
+    git clone git://gitorious.org/mdb/mdb.git
+    cd mdb/libraries/liblmdb
+    make && make install
+
+Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.
+
+#### OS X
+
+On **OS X**, we highly recommend using the [Homebrew](http://brew.sh/) package manager, and ideally starting from a clean install of the OS (or from a wiped `/usr/local`) to avoid conflicts.
+In the following, we assume that you're using Anaconda Python and Homebrew.
+
+To install the OpenCV dependency, we'll need to provide an additional source for Homebrew:
+
+    brew tap homebrew/science
+
+If using Anaconda Python, a modification is required to the OpenCV formula.
+Do `brew edit opencv` and change the lines that look like the two lines below to exactly the two lines below.
+
+      -DPYTHON_LIBRARY=#{py_prefix}/lib/libpython2.7.dylib
+      -DPYTHON_INCLUDE_DIR=#{py_prefix}/include/python2.7
+
+**NOTE**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
+In other `ENV` settings, things may not work as expected.
+
+**NOTE**: There is currently a conflict between boost 1.56 and CUDA in some configurations. Check the [conflict description](https://github.com/BVLC/caffe/issues/1193#issuecomment-57491906) and try downgrading to 1.55.
+
+#### 10.8-specific Instructions
+
+Simply run the following:
+
+    brew install --build-from-source boost boost-python
+    brew install --with-python protobuf
+    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew install $x; done
+
+Building boost from source is needed to link against your local Python (exceptions might be raised during some OS X installs, but **ignore** these and continue). If you do not need the Python wrapper, simply doing `brew install boost` is fine.
+
+**Note** that the HDF5 dependency is provided by Anaconda Python in this case.
+If you're not using Anaconda, include `hdf5` in the list above.
+
+#### 10.9-specific Instructions
+
+In OS X 10.9, clang++ is the default C++ compiler and uses `libc++` as the standard library.
+However, NVIDIA CUDA (even version 6.0) currently links only with `libstdc++`.
+This makes it necessary to change the compilation settings for each of the dependencies.
+
+We do this by modifying the Homebrew formulae before installing any packages.
+Make sure that Homebrew doesn't install any software dependencies in the background; all packages must be linked to `libstdc++`.
+
+The prerequisite Homebrew formulae are
+
+    boost snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv
+
+For each of these formulas, `brew edit FORMULA`, and add the ENV definitions as shown:
+
+      def install
+          # ADD THE FOLLOWING:
+          ENV.append "CXXFLAGS", "-stdlib=libstdc++"
+          ENV.append "CFLAGS", "-stdlib=libstdc++"
+          ENV.append "LDFLAGS", "-stdlib=libstdc++ -lstdc++"
+          # The following is necessary because libtool likes to strip LDFLAGS:
+          ENV["CXX"] = "/usr/bin/clang++ -stdlib=libstdc++"
+          ...
+
+To edit the formulae in turn, run
+
+    for x in snappy leveldb protobuf gflags glog szip boost boost-python lmdb homebrew/science/opencv; do brew edit $x; done
+
+After this, run
+
+    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+    brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
+    brew install --build-from-source --fresh -vd boost boost-python
+
+**Note** that `brew install --build-from-source --fresh -vd boost` is fine if you do not need the Caffe Python wrapper.
+
+**Note** that the HDF5 dependency is provided by Anaconda Python in this case.
+If you're not using Anaconda, include `hdf5` in the list above.
+
+**Note** that in order to build the Caffe Python wrappers you must install `boost` and `boost-python`:
+
+    brew install --build-from-source --fresh -vd boost boost-python
+
+**Note** that Homebrew maintains itself as a separate git repository and making the above `brew edit FORMULA` changes will change files in your local copy of homebrew's master branch. By default, this will prevent you from updating Homebrew using `brew update`, as you will get an error message like the following:
+
+    $ brew update
+    error: Your local changes to the following files would be overwritten by merge:
+      Library/Formula/lmdb.rb
+    Please, commit your changes or stash them before you can merge.
+    Aborting
+    Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
+
+One solution is to commit your changes to a separate Homebrew branch, run `brew update`, and rebase your changes onto the updated master. You'll have to do this both for the main Homebrew repository in `/usr/local/` and the Homebrew science repository that contains OpenCV in  `/usr/local/Library/Taps/homebrew/homebrew-science`, as follows:
+
+    cd /usr/local
+    git checkout -b caffe
+    git add .
+    git commit -m "Update Caffe dependencies to use libstdc++"
+    cd /usr/local/Library/Taps/homebrew/homebrew-science
+    git checkout -b caffe
+    git add .
+    git commit -m "Update Caffe dependencies"
+
+Then, whenever you want to update homebrew, switch back to the master branches, do the update, rebase the caffe branches onto master and fix any conflicts:
+
+    # Switch batch to homebrew master branches
+    cd /usr/local
+    git checkout master
+    cd /usr/local/Library/Taps/homebrew/homebrew-science
+    git checkout master
+    
+    # Update homebrew; hopefully this works without errors!
+    brew update
+    
+    # Switch back to the caffe branches with the forumlae that you modified earlier
+    cd /usr/local
+    git rebase master caffe
+    # Fix any merge conflicts and commit to caffe branch
+    cd /usr/local/Library/Taps/homebrew/homebrew-science
+    git rebase master caffe
+    # Fix any merge conflicts and commit to caffe branch
+    
+    # Done!            
+
+At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.
+>>>>>>> origin/BVLC/parallel
+=======
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 
 #### Windows
 
@@ -929,6 +1163,9 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -939,6 +1176,7 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 >>>>>>> pod/device/blob.hpp
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1020,12 +1258,19 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 =======
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 =======
+=======
+Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+=======
+>>>>>>> pod/device/blob.hpp
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup (you should especially uncomment and set `BLAS_LIB` accordingly on distributions like **CentOS / RHEL / Fedora** where ATLAS is installed under `/usr/lib[64]/atlas`)
 The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 >>>>>>> origin/BVLC/parallel
 =======
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 >>>>>>> caffe
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
@@ -1045,6 +1290,7 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1119,6 +1365,15 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 - For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 =======
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
+>>>>>>> pod/device/blob.hpp
+=======
 To compile with cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 
 If there is no GPU in your machine, you should switch to CPU-only Caffe by uncommenting `CPU_ONLY := 1` in `Makefile.config`.
@@ -1127,6 +1382,7 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 - For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -1159,6 +1415,8 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 >>>>>>> caffe
 <<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1176,6 +1434,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1477,6 +1736,11 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 
 **Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
@@ -1540,9 +1804,15 @@ The basic steps are as follows:
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge

@@ -8,6 +8,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -18,6 +21,7 @@
 >>>>>>> pod/device/blob.hpp
 #ifdef USE_OPENCV
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -54,6 +58,10 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 #ifdef USE_OPENCV
 =======
@@ -66,6 +74,7 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -97,6 +106,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -403,6 +414,9 @@ TEST_F(IOTest, TestDecodeDatum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -414,6 +428,7 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -456,6 +471,11 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_FALSE(DecodeDatum(&datum, true));
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  EXPECT_TRUE(DecodeDatum(&datum, true));
+  EXPECT_FALSE(DecodeDatum(&datum, true));
+=======
+>>>>>>> pod/device/blob.hpp
 =======
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
@@ -473,6 +493,7 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -505,6 +526,8 @@ TEST_F(IOTest, TestDecodeDatum) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -538,6 +561,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -581,11 +605,14 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -593,6 +620,8 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -700,6 +729,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -730,6 +760,11 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -785,6 +820,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -805,6 +841,8 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -836,6 +874,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -909,6 +948,12 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#endif  // USE_OPENCV
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 #endif  // USE_OPENCV
 =======
 >>>>>>> origin/BVLC/parallel
@@ -918,9 +963,12 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

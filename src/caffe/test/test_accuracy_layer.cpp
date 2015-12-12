@@ -161,6 +161,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -216,6 +217,13 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
+=======
+TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -228,6 +236,10 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
@@ -255,6 +267,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -305,6 +318,12 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+=======
+  Caffe::set_mode(Caffe::CPU);
+>>>>>>> BVLC/device-abstraction
+>>>>>>> pod/device/blob.hpp
+=======
+TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   Caffe::set_mode(Caffe::CPU);
 >>>>>>> BVLC/device-abstraction
 >>>>>>> pod/device/blob.hpp
@@ -396,6 +415,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
+<<<<<<< HEAD
 >>>>>>> master
 =======
   LayerParameter layer_param;
@@ -738,10 +758,14 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod/device/blob.hpp
   Caffe::set_mode(Caffe::CPU);
 =======
 >>>>>>> BVLC/master
   LayerParameter layer_param;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -757,6 +781,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -908,6 +934,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   AccuracyLayer<TypeParam> layer(layer_param);
@@ -919,11 +946,14 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
 =======
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
@@ -942,6 +972,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   AccuracyLayer<TypeParam> layer(layer_param);
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -986,6 +1018,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -993,6 +1026,8 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

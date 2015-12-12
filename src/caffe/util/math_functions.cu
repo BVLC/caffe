@@ -337,26 +337,32 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
-=======
->>>>>>> caffe
-=======
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-=======
-<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-<<<<<<< HEAD
+=======
+=======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -388,6 +394,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -398,6 +405,8 @@ template <typename Dtype>
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp

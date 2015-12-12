@@ -30,6 +30,9 @@ snapshot: 5000
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -40,6 +43,7 @@ snapshot: 5000
 >>>>>>> pod/device/blob.hpp
 snapshot_format: HDF5
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,6 +80,10 @@ snapshot_format: HDF5
 snapshot_format: HDF5
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+snapshot_format: HDF5
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 snapshot_format: HDF5
 =======
@@ -88,6 +96,7 @@ snapshot_format: HDF5
 =======
 snapshot_format: HDF5
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -119,6 +128,8 @@ snapshot_format: HDF5
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

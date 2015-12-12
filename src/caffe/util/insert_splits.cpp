@@ -74,6 +74,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -84,6 +87,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> pod/device/blob.hpp
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -120,6 +124,10 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      LayerParameter* split_layer_param = param_split->add_layer();
+=======
+>>>>>>> pod/device/blob.hpp
 =======
       LayerParameter* split_layer_param = param_split->add_layer();
 =======
@@ -133,6 +141,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 =======
       LayerParameter* split_layer_param = param_split->add_layer();
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -164,6 +173,8 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -207,6 +218,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -284,6 +296,12 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+        LayerParameter* split_layer_param = param_split->add_layer();
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
         LayerParameter* split_layer_param = param_split->add_layer();
 =======
         LayerParameter* split_layer_param = param_split->add_layers();
@@ -294,9 +312,12 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

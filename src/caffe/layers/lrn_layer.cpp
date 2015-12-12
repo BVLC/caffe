@@ -17,6 +17,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -29,6 +32,7 @@
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -46,10 +50,13 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -72,6 +79,15 @@
 #include "caffe/layer.hpp"
 >>>>>>> pod/caffe-merge
 =======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> pod/device/blob.hpp
+=======
 =======
 >>>>>>> BVLC/master
 =======
@@ -92,6 +108,7 @@
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/util/math_functions.hpp"
@@ -209,6 +226,11 @@
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/lrn_layer.hpp"
@@ -294,6 +316,7 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
 =======
@@ -385,6 +408,11 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
 =======
+=======
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
+=======
+>>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
@@ -396,6 +424,9 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       << "corresponding to (num, channels, height, width)";
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -493,6 +524,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -585,6 +617,8 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
                                     top_data);
   return Dtype(0.);
 =======
+=======
+>>>>>>> pod/device/blob.hpp
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 >>>>>>> pod/caffe-merge
@@ -594,6 +628,8 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
                                      top_data);
   GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,
@@ -666,6 +702,10 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 =======
 =======
 >>>>>>> BVLC/device-abstraction
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> pod/device/blob.hpp
   GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
                                      top_data);
   GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,
@@ -674,6 +714,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 =======
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
 =======
@@ -687,6 +728,42 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 }
@@ -812,6 +889,7 @@ INSTANTIATE_CLASS(LRNLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -842,6 +920,11 @@ INSTANTIATE_CLASS(LRNLayer);
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -856,6 +939,7 @@ REGISTER_LAYER_CLASS(LRN, LRNLayer);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -886,6 +970,8 @@ REGISTER_LAYER_CLASS(LRN, LRNLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======

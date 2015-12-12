@@ -17,6 +17,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -50,6 +51,12 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -78,6 +85,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -98,6 +106,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -120,6 +130,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -163,11 +174,14 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -175,6 +189,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -191,6 +207,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -221,6 +238,11 @@
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -245,6 +267,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -265,6 +288,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -288,6 +313,9 @@ using std::pair;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -298,6 +326,7 @@ using std::pair;
 >>>>>>> pod/device/blob.hpp
 using boost::scoped_ptr;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -366,6 +395,14 @@ using boost::scoped_ptr;
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+using boost::scoped_ptr;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+using boost::scoped_ptr;
+>>>>>>> caffe
+>>>>>>> pod/device/blob.hpp
 =======
 using boost::scoped_ptr;
 =======
@@ -398,6 +435,9 @@ DEFINE_bool(shuffle, false,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -409,6 +449,7 @@ DEFINE_bool(shuffle, false,
 DEFINE_string(backend, "lmdb",
         "The backend {lmdb, leveldb} for storing the result");
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -451,6 +492,11 @@ DEFINE_string(backend, "lmdb",
         "The backend {lmdb, leveldb} for storing the result");
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+DEFINE_string(backend, "lmdb",
+        "The backend {lmdb, leveldb} for storing the result");
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 DEFINE_string(backend, "lmdb",
         "The backend {lmdb, leveldb} for storing the result");
@@ -477,6 +523,7 @@ DEFINE_string(backend, "lmdb",
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -503,6 +550,8 @@ DEFINE_string(backend, "lmdb",
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
@@ -510,6 +559,7 @@ DEFINE_bool(check_size, false,
     "When this option is on, check that all the datum have the same size");
 DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -618,12 +668,25 @@ DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+DEFINE_string(encode_type, "",
+    "Optional: What type should we encode the image as ('png','jpg',...).");
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+DEFINE_string(encode_type, "",
+    "Optional: What type should we encode the image as ('png','jpg',...).");
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 >>>>>>> caffe
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -642,6 +705,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -746,6 +810,21 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+  // Print output to stderr (while still logging)
+  FLAGS_alsologtostderr = 1;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  // Print output to stderr (while still logging)
+  FLAGS_alsologtostderr = 1;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+  // Print output to stderr (while still logging)
+  FLAGS_alsologtostderr = 1;
+>>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 
@@ -771,6 +850,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -823,6 +903,14 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+  if (argc < 4) {
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+  if (argc < 4) {
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
   if (argc < 4) {
 =======
 >>>>>>> pod/device/blob.hpp
@@ -831,6 +919,7 @@ int main(int argc, char** argv) {
 =======
   if (argc < 4) {
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -862,6 +951,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -884,6 +975,9 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -892,6 +986,7 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
   const string encode_type = FLAGS_encode_type;
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -963,6 +1058,10 @@ int main(int argc, char** argv) {
   const string encode_type = FLAGS_encode_type;
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  const string encode_type = FLAGS_encode_type;
+=======
+>>>>>>> pod/device/blob.hpp
 >>>>>>> origin/BVLC/parallel
 =======
   const string encode_type = FLAGS_encode_type;
@@ -970,9 +1069,12 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1003,6 +1105,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1046,11 +1149,14 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1058,6 +1164,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1074,6 +1182,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 =======
@@ -1099,6 +1208,11 @@ int main(int argc, char** argv) {
 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
 
 >>>>>>> pod/caffe-merge
 =======
@@ -1248,8 +1362,39 @@ int main(int argc, char** argv) {
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+  const std::string& db_backend = FLAGS_backend;
+  const char* db_path = argv[3];
+
+  if (encoded) {
+    CHECK_EQ(FLAGS_resize_height, 0) << "With encoded don't resize images";
+    CHECK_EQ(FLAGS_resize_width, 0) << "With encoded don't resize images";
+    CHECK(!check_size) << "With encoded cannot check_size";
+  }
+
+  int resize_height = std::max<int>(0, FLAGS_resize_height);
+  int resize_width = std::max<int>(0, FLAGS_resize_width);
+
+  // Open new db
+  shared_ptr<Dataset<string, Datum> > dataset =
+      DatasetFactory<string, Datum>(db_backend);
+
+  // Open db
+  CHECK(dataset->open(db_path, Dataset<string, Datum>::New));
+>>>>>>> origin/BVLC/parallel
+=======
+
+>>>>>>> pod-caffe-pod.hpp-merge
+  // Create new DB
+  scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
+  db->Open(argv[3], db::NEW);
+  scoped_ptr<db::Transaction> txn(db->NewTransaction());
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
@@ -1274,6 +1419,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1317,11 +1463,14 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1329,6 +1478,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1354,6 +1505,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1384,6 +1536,11 @@ int main(int argc, char** argv) {
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 =======
 <<<<<<< HEAD
@@ -1414,6 +1571,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1434,6 +1592,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1461,6 +1621,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1468,6 +1629,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1481,6 +1644,7 @@ int main(int argc, char** argv) {
 
     if (++count % 1000 == 0) {
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1655,6 +1819,8 @@ int main(int argc, char** argv) {
       LOG(ERROR) << "Processed " << count << " files.";
 >>>>>>> origin/BVLC/parallel
 =======
+=======
+>>>>>>> pod/device/blob.hpp
     string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
 
     // Put in db
@@ -1672,8 +1838,38 @@ int main(int argc, char** argv) {
       LOG(INFO) << "Processed " << count << " files.";
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+    int length = snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+        lines[line_id].first.c_str());
+
+    // Put in db
+    CHECK(dataset->put(string(key_cstr, length), datum));
+
+    if (++count % 1000 == 0) {
+      // Commit txn
+      CHECK(dataset->commit());
+      LOG(ERROR) << "Processed " << count << " files.";
+>>>>>>> origin/BVLC/parallel
+=======
+    string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
+
+    // Put in db
+    string out;
+    CHECK(datum.SerializeToString(&out));
+    txn->Put(key_str, out);
+
+    if (++count % 1000 == 0) {
+>>>>>>> pod-caffe-pod.hpp-merge
+      // Commit db
+      txn->Commit();
+      txn.reset(db->NewTransaction());
+      LOG(INFO) << "Processed " << count << " files.";
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
@@ -1692,6 +1888,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1702,6 +1899,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1723,9 +1922,12 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1745,6 +1947,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -1759,6 +1962,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1773,6 +1978,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
     txn->Commit();
@@ -1806,12 +2012,15 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
     txn->Commit();
     LOG(INFO) << "Processed " << count << " files.";
   }
 #else
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1826,6 +2035,10 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
