@@ -19,6 +19,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1453,6 +1454,11 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -1509,9 +1515,12 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
@@ -1602,6 +1611,7 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1641,12 +1651,22 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     GetDevice<Dtype>(Caffe::CPU)->dot(count, bottom_diff, bottom_diff, &dot);
     return dot / num;
 >>>>>>> BVLC/device-abstraction
+=======
+    Dtype asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(count, bottom_diff, &asum);
+    return asum / num;
+  case HingeLossParameter_Norm_L2:
+    Dtype dot;
+    GetDevice<Dtype>(Caffe::CPU)->dot(count, bottom_diff, bottom_diff, &dot);
+    return dot / num;
+>>>>>>> BVLC/device-abstraction
   default:
     LOG(FATAL) << "Unknown Norm";
   }
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1704,6 +1724,8 @@ void HingeLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 void HingeLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 <<<<<<< HEAD
@@ -1975,6 +1997,7 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       caffe_cpu_sign(count, bottom_diff, bottom_diff);
@@ -2253,6 +2276,13 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      GetDevice<Dtype>(Caffe::CPU)->sign(count, bottom_diff, bottom_diff);
+      GetDevice<Dtype>(Caffe::CPU)->scal(count, Dtype(1. / num), bottom_diff);
+      break;
+    case HingeLossParameter_Norm_L2:
+      GetDevice<Dtype>(Caffe::CPU)->scal(count, Dtype(2. / num), bottom_diff);
+>>>>>>> BVLC/device-abstraction
       break;
     default:
       LOG(FATAL) << "Unknown Norm";

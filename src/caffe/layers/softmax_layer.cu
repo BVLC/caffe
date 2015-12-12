@@ -22,6 +22,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -107,6 +108,8 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -733,6 +736,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int dim = bottom[0]->count() / bottom[0]->num();
   GetDevice<Dtype>(Caffe::GPU)->copy(bottom[0]->count(), bottom_data, top_data);
 <<<<<<< HEAD
+<<<<<<< HEAD
   // we need to subtract the max to avoid numerical issues, compute the exp,
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -1812,6 +1816,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   GetDevice<Dtype>(Caffe::GPU)->copy(bottom[0]->count(), bottom_data, top_data);
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   // we need to subtract the max to avoid numerical issues, compute the exp,
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -1984,6 +1990,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       count, top_data, top_data);
   // sum after exp
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2001,6 +2008,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
   GetDevice<Dtype>(Caffe::GPU)->gemv(CblasNoTrans, num, dim, 1., top_data,
@@ -2549,6 +2558,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int num = top[0]->num();
   int dim = top[0]->count() / top[0]->num();
   GetDevice<Dtype>(Caffe::GPU)->copy(top[0]->count(), top_diff, bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   // cuda dot returns the result to cpu, so we temporarily change the pointer
@@ -3533,6 +3543,8 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   GetDevice<Dtype>(Caffe::GPU)->copy(top[0]->count(), top_diff, bottom_diff);
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   // cuda dot returns the result to cpu, so we temporarily change the pointer
   // mode
@@ -3554,6 +3566,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -3784,6 +3797,8 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   // elementwise multiplication
   GetDevice<Dtype>(Caffe::GPU)->mul(top[0]->count(), bottom_diff, top_data,
                                     bottom_diff);

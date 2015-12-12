@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -163,6 +164,10 @@
 >>>>>>> pod/device/blob.hpp
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2502,6 +2507,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Blob<Dtype>* blob = top[i];
       const Dtype* top_diff = blob->gpu_diff();
 <<<<<<< HEAD
+<<<<<<< HEAD
       GetDevice<Dtype>(Caffe::GPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
 =======
@@ -2513,6 +2519,10 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                  bottom_diff + bottom[0]->offset(offset_num));
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      GetDevice<Dtype>(Caffe::GPU)->copy(blob->count(), top_diff,
+          bottom_diff + (*bottom)[0]->offset(offset_num));
+>>>>>>> BVLC/device-abstraction
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -2522,6 +2532,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const Dtype* top_diff = blob->gpu_diff();
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
+<<<<<<< HEAD
 <<<<<<< HEAD
         GetDevice<Dtype>(Caffe::GPU)->copy(num_elem, top_diff + blob->offset(n),
             bottom_diff +  (*bottom)[0]->offset(n, offset_channel));
@@ -2534,6 +2545,10 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                    bottom_diff +  bottom[0]->offset(n, offset_channel));
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+        GetDevice<Dtype>(Caffe::GPU)->copy(num_elem, top_diff + blob->offset(n),
+            bottom_diff +  (*bottom)[0]->offset(n, offset_channel));
+>>>>>>> BVLC/device-abstraction
       }
       offset_channel += blob->channels();
     }

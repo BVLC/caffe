@@ -19,6 +19,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -209,6 +210,10 @@
 <<<<<<< HEAD
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/common_layers.hpp"
@@ -2256,6 +2261,7 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
 =======
@@ -2371,6 +2377,10 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
 >>>>>>> BVLC/device-abstraction
+=======
+      GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
+          bottom_diff + (*bottom)[0]->offset(offset_num));
+>>>>>>> BVLC/device-abstraction
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -2384,6 +2394,7 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2782,6 +2793,10 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         GetDevice<Dtype>(Caffe::CPU)->copy(num_elem,
             bottom_data + bottom[0]->offset(n, offset_channel),
             top_data + blob->offset(n));
+=======
+        GetDevice<Dtype>(Caffe::CPU)->copy(num_elem, top_diff + blob->offset(n),
+            bottom_diff + (*bottom)[0]->offset(n, offset_channel));
+>>>>>>> BVLC/device-abstraction
       }
       offset_channel += blob->channels();
     }

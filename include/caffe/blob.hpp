@@ -23,6 +23,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -296,6 +297,8 @@ const int kMaxBlobAxes = 32;
 const int kMaxBlobAxes = 32;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 

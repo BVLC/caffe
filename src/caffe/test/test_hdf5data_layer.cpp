@@ -160,6 +160,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 
   // Test that the layer setup got the correct parameters.
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -383,6 +384,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);

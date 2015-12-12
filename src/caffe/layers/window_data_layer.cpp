@@ -168,6 +168,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -255,6 +256,9 @@
 =======
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/layer.hpp"
 #include "caffe/util/benchmark.hpp"
 >>>>>>> origin/BVLC/parallel
@@ -1592,6 +1596,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   CPUTimer batch_timer;
@@ -2100,6 +2105,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
 >>>>>>> BVLC/device-abstraction
@@ -2230,6 +2237,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
@@ -2792,6 +2800,9 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
+>>>>>>> BVLC/device-abstraction
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -3432,6 +3443,7 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -3585,6 +3597,8 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(WindowDataLayer);
 REGISTER_LAYER_CLASS(WindowData);
 

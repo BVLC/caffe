@@ -892,6 +892,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
+<<<<<<< HEAD
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
 >>>>>>> master
@@ -997,6 +998,10 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 >>>>>>> origin/BVLC/parallel
 =======
   LayerParameter layer_param;
+=======
+  Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
+>>>>>>> BVLC/device-abstraction
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);

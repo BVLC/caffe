@@ -1213,6 +1213,7 @@ class SyncedMemory {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
@@ -1697,6 +1698,10 @@ class SyncedMemory {
 #endif
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  const void* const_data();
+  void* mutable_data();
+>>>>>>> BVLC/device-abstraction
 
  private:
   void to_cpu();

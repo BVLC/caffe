@@ -66,6 +66,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -157,6 +158,8 @@ Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 =======
@@ -287,6 +290,7 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   SaveBlobs();
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -455,6 +459,8 @@ INSTANTIATE_CLASS(HDF5OutputLayer);
 INSTANTIATE_CLASS(HDF5OutputLayer);
 =======
 >>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(HDF5OutputLayer);
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
