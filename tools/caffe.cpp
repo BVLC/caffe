@@ -227,7 +227,7 @@ int train() {
     caffe::P2PSync<float> sync(solver, NULL, solver->param());
     std::vector<device*> devices;
     for (int_tp i = 0; i < gpus.size(); ++i) {
-      devices.push_back(Caffe::Get().GetDevice(i));
+      devices.push_back(Caffe::Get().GetDevice(i, true));
     }
     sync.run(devices);
   } else {
@@ -260,7 +260,7 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<float> caffe_net(FLAGS_model, caffe::TEST);
+  Net<float> caffe_net(FLAGS_model, caffe::TEST, Caffe::GetDefaultDevice());
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
@@ -330,7 +330,7 @@ int time() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
+  Net<float> caffe_net(FLAGS_model, caffe::TRAIN, Caffe::GetDefaultDevice());
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.

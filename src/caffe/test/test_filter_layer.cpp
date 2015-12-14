@@ -25,7 +25,7 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_labels_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
-    Caffe::set_random_seed(1890);
+    Caffe::set_random_seed(1890, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     // fill the selector blob

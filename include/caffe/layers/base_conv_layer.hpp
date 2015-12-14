@@ -12,7 +12,6 @@
 #include "caffe/greentea/greentea_im2col.hpp"
 #endif
 
-
 namespace caffe {
 
 /**
@@ -67,7 +66,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void backward_gpu_bias(Dtype* bias, const Dtype* input,
                          const int_tp input_off);
 
-  shared_ptr< Blob<Dtype> > col_buffer();
+  shared_ptr<Blob<Dtype> > col_buffer();
 #endif
 
   /// @brief The spatial dimensions of the input.
@@ -115,28 +114,28 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      im2col_cpu(data, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1], col_buff);
+      im2col_cpu(data, conv_in_channels_, conv_input_shape_.cpu_data()[1],
+                 conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
+                 kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
+                 pad_.cpu_data()[1], stride_.cpu_data()[0],
+                 stride_.cpu_data()[1], col_buff);
     } else {
       im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
-          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
-          pad_.cpu_data(), stride_.cpu_data(), col_buff);
+                    col_buffer_shape_.data(), kernel_shape_.cpu_data(),
+                    pad_.cpu_data(), stride_.cpu_data(), col_buff);
     }
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      col2im_cpu(col_buff, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1], data);
+      col2im_cpu(col_buff, conv_in_channels_, conv_input_shape_.cpu_data()[1],
+                 conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
+                 kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
+                 pad_.cpu_data()[1], stride_.cpu_data()[0],
+                 stride_.cpu_data()[1], data);
     } else {
       col2im_nd_cpu(col_buff, num_spatial_axes_, conv_input_shape_.cpu_data(),
-          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
-          pad_.cpu_data(), stride_.cpu_data(), data);
+                    col_buffer_shape_.data(), kernel_shape_.cpu_data(),
+                    pad_.cpu_data(), stride_.cpu_data(), data);
     }
   }
 
@@ -177,24 +176,25 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       if (this->use_skernel_) {
         col2im_sk_gpu(col_buff, conv_in_channels_,
-            conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-            kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-            pad_.cpu_data()[0], pad_.cpu_data()[1],
-            stride_.cpu_data()[0], stride_.cpu_data()[1],
-            kstride_.cpu_data()[0], kstride_.cpu_data()[1], data);
+                      conv_input_shape_.cpu_data()[1],
+                      conv_input_shape_.cpu_data()[2],
+                      kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+                      pad_.cpu_data()[0], pad_.cpu_data()[1],
+                      stride_.cpu_data()[0], stride_.cpu_data()[1],
+                      kstride_.cpu_data()[0], kstride_.cpu_data()[1], data);
       } else {
-        col2im_gpu(col_buff, conv_in_channels_,
-            conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-            kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-            pad_.cpu_data()[0], pad_.cpu_data()[1],
-            stride_.cpu_data()[0], stride_.cpu_data()[1], data);
+        col2im_gpu(col_buff, conv_in_channels_, conv_input_shape_.cpu_data()[1],
+                   conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
+                   kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
+                   pad_.cpu_data()[1], stride_.cpu_data()[0],
+                   stride_.cpu_data()[1], data);
       }
     } else {
       if (this->use_skernel_) {
         col2im_ndsk_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
-                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-                      kernel_shape_.gpu_data(), pad_.gpu_data(),
-                      stride_.gpu_data(), kstride_.gpu_data(), data);
+                        conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+                        kernel_shape_.gpu_data(), pad_.gpu_data(),
+                        stride_.gpu_data(), kstride_.gpu_data(), data);
       } else {
         col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
                       conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
@@ -210,8 +210,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        const int_tp col_buff_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       if (this->use_skernel_) {
@@ -251,9 +250,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                         (cl_mem) col_buff, col_buff_off);
       } else {
         greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                      num_spatial_axes_,
-                                      0,
-                                      num_kernels_im2col_,
+                                      num_spatial_axes_, 0, num_kernels_im2col_,
                                       (cl_mem) (conv_input_shape_.gpu_data()),
                                       (cl_mem) (col_buffer_.gpu_shape()),
                                       (cl_mem) (kernel_shape_.gpu_data()),
@@ -269,8 +266,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                        const int_tp data_off) {
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
+
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       if (this->use_skernel_) {
@@ -308,20 +305,17 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                                         (cl_mem) (pad_.gpu_data()),
                                         (cl_mem) (stride_.gpu_data()),
                                         (cl_mem) (kstride_.gpu_data()),
-                                        (cl_mem) data,
-                                        data_off);
+                                        (cl_mem) data, data_off);
       } else {
         greentea_col2im_nd_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
-                                      col_buff_off, num_spatial_axes_,
-                                      0,
+                                      col_buff_off, num_spatial_axes_, 0,
                                       num_kernels_col2im_,
                                       (cl_mem) (conv_input_shape_.gpu_data()),
                                       (cl_mem) (col_buffer_.gpu_shape()),
                                       (cl_mem) (kernel_shape_.gpu_data()),
                                       (cl_mem) (pad_.gpu_data()),
                                       (cl_mem) (stride_.gpu_data()),
-                                      (cl_mem) data,
-                                      data_off);
+                                      (cl_mem) data, data_off);
       }
     }
   }

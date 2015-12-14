@@ -17,14 +17,15 @@ static boost::mutex bodies_mutex_;
 
 DataReader::DataReader(const LayerParameter& param)
     : queue_pair_(new QueuePair(  //
-        param.data_param().prefetch() * param.data_param().batch_size())) {
+        param.data_param().prefetch() * param.data_param().batch_size())),
+      device_(Caffe::GetDevice(param.device(), true)) {
   // Get or create a body
   boost::mutex::scoped_lock lock(bodies_mutex_);
   string key = source_key(param);
   weak_ptr<Body>& weak = bodies_[key];
   body_ = weak.lock();
   if (!body_) {
-    body_.reset(new Body(param));
+    body_.reset(new Body(param, device_));
     bodies_[key] = weak_ptr<Body>(body_);
   }
   body_->new_queue_pairs_.push(queue_pair_);
@@ -60,10 +61,10 @@ DataReader::QueuePair::~QueuePair() {
 
 //
 
-DataReader::Body::Body(const LayerParameter& param)
+DataReader::Body::Body(const LayerParameter& param, device* device_context)
     : param_(param),
       new_queue_pairs_() {
-  StartInternalThread(Caffe::Get().GetDefaultDevice());
+  StartInternalThread(device_context);
 }
 
 DataReader::Body::~Body() {

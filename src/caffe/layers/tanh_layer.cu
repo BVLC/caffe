@@ -35,8 +35,7 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
         CL_KERNEL_SELECT("tanh_forward"));
@@ -81,8 +80,7 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_->id());
+      viennacl::ocl::program &program = this->device_->program();
 
       viennacl::ocl::kernel &oclk_tanh = program.get_kernel(
           CL_KERNEL_SELECT("tanh_backward"));

@@ -9,7 +9,7 @@
 #define CAFFE_device_HPP_
 
 #ifdef CMAKE_BUILD
-  #include "caffe_config.h"
+#include "caffe_config.h"
 #endif
 
 #include <boost/shared_ptr.hpp>
@@ -17,7 +17,6 @@
 #include <vector>
 #include "caffe/blob.hpp"
 #include "caffe/greentea/greentea.hpp"
-
 
 using std::vector;
 
@@ -39,7 +38,7 @@ class device {
 #endif  // USE_GREENTEA
 
   template<typename Dtype>
-  shared_ptr< Blob<Dtype> > Buffer(int id);
+  shared_ptr<Blob<Dtype> > Buffer(int id);
 
   int num_queues();
   void SwitchQueue(int id);
@@ -62,8 +61,8 @@ class device {
   Backend backend_;
   uint_tp memory_usage_;
   uint_tp peak_memory_usage_;
-  std::vector< shared_ptr< Blob<float> > > buff_f_;
-  std::vector< shared_ptr< Blob<double> > > buff_d_;
+  std::vector<shared_ptr<Blob<float> > > buff_f_;
+  std::vector<shared_ptr<Blob<double> > > buff_d_;
 #ifdef USE_GREENTEA
   viennacl::ocl::program ocl_program_;
 #endif  // USE_GREENTEA

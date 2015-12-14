@@ -73,13 +73,13 @@ void SGDSolver<Dtype>::PreSolve() {
     const vector<int_tp>& shape = net_params[i]->shape();
     history_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
+            new Blob<Dtype>(shape, this->device_)));
     update_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
+            new Blob<Dtype>(shape, this->device_)));
     temp_.push_back(
         shared_ptr<Blob<Dtype>>(
-            new Blob<Dtype>(shape, Caffe::GetDefaultDevice())));
+            new Blob<Dtype>(shape, this->device_)));
   }
 }
 

@@ -18,10 +18,10 @@ namespace caffe {
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
 
-void CaffeMallocHost(void** ptr, int_tp size) {
+void CaffeMallocHost(void** ptr, int_tp size, device* device_context) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       CUDA_CHECK(cudaMallocHost(ptr, size));
       return;
@@ -40,10 +40,10 @@ void CaffeMallocHost(void** ptr, int_tp size) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
-void CaffeFreeHost(void* ptr) {
+void CaffeFreeHost(void* ptr, device* device_context) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       cudaFreeHost(ptr);
       return;
@@ -90,7 +90,7 @@ SyncedMemory::~SyncedMemory() {
 #endif  // !CPU_ONLY
   // Free host memory
   if (cpu_ptr_ && own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
+    CaffeFreeHost(cpu_ptr_, device_);
     cpu_ptr_ = nullptr;
   }
 }
@@ -98,7 +98,7 @@ SyncedMemory::~SyncedMemory() {
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
     case UNINITIALIZED: {
-      CaffeMallocHost(&cpu_ptr_, size_);
+      CaffeMallocHost(&cpu_ptr_, size_, device_);
       caffe_memset(size_, 0, cpu_ptr_);
       head_ = HEAD_AT_CPU;
       own_cpu_data_ = true;
@@ -107,7 +107,7 @@ inline void SyncedMemory::to_cpu() {
     case HEAD_AT_GPU: {
 #ifndef CPU_ONLY
       if (cpu_ptr_ == nullptr) {
-        CaffeMallocHost(&cpu_ptr_, size_);
+        CaffeMallocHost(&cpu_ptr_, size_, device_);
         own_cpu_data_ = true;
       }
       if (device_->backend() == Backend::BACKEND_CUDA) {
@@ -228,7 +228,7 @@ const void* SyncedMemory::cpu_data() {
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
   if (cpu_ptr_ && own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
+    CaffeFreeHost(cpu_ptr_, device_);
   }
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;

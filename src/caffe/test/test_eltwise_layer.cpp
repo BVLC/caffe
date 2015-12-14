@@ -24,7 +24,7 @@ class EltwiseLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_a_);

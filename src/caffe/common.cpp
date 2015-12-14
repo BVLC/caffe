@@ -77,12 +77,22 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
-device *Caffe::GetDevice(int id) {
-  // The default device context is thread-local
-  // The list of device contexts is global
-  return
-      id == -1 ?
-          Get().default_device_ : Get().devices_[id].get();
+
+device *Caffe::GetDevice(int id, bool listId) {
+  if (listId) {
+    return
+        id == -1 ?
+            Get().default_device_ :
+            Get().devices_[id % Get().devices_.size()].get();
+  } else {
+    for (int i = 0; i < Get().devices_.size(); ++i) {
+      device* device = Get().devices_[i].get();
+      if (device->id() == id) {
+        return device;
+      }
+    }
+    return GetDefaultDevice();
+  }
 }
 
 device *Caffe::GetDefaultDevice() {
@@ -94,28 +104,28 @@ device *Caffe::GetCPUDevice() {
 }
 
 // Copy constructor for thread-local copy
-Caffe::Caffe(const Caffe &obj) {
+Caffe::Caffe(const Caffe &obj)
+    :
+#ifdef USE_CUDA
+      cublas_handle_(NULL),
+      curand_generator_(NULL),
+      curand_generator64_(NULL),
+#endif  // USE_CUDA
+      random_generator_(),
+      mode_(Caffe::CPU),
+      cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
+      default_device_(cpu_device_.get()),
+      solver_count_(1),
+      root_solver_(true) {
   mode_ = obj.mode_;
   default_device_ = obj.default_device_;
   cpu_device_ = obj.cpu_device_;
   root_solver_ = obj.root_solver_;
   solver_count_ = obj.solver_count_;
+}
 
-  // Try to create a cublas handler, and report an error if failed (but we will
-  // keep the program running as one might just want to run CPU code).
-#ifdef USE_CUDA
-  if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
-    LOG(ERROR)<< "Cannot create Cublas handle. Cublas won't be available.";
-  }
-  // Try to create a curand handler.
-  if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
-      != CURAND_STATUS_SUCCESS
-      || curandSetPseudoRandomGeneratorSeed(curand_generator_,
-                                            cluster_seedgen())
-          != CURAND_STATUS_SUCCESS) {
-    LOG(ERROR)<< "Cannot create Curand generator. Curand won't be available.";
-  }
-#endif  // USE_CUDA
+void Caffe::SelectDevice(int id, bool listId) {
+  Caffe::SelectDevice(GetDevice(id, listId));
 }
 
 void Caffe::SelectDevice(device* device_context) {
@@ -125,10 +135,42 @@ void Caffe::SelectDevice(device* device_context) {
   if (device_context->backend() == Backend::BACKEND_CUDA) {
 #ifdef USE_CUDA
     CUDA_CHECK(cudaSetDevice(device_context->id()));
+
+    if (Get().cublas_handle_) {
+      CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
+    }
+    if (Get().curand_generator_) {
+      CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
+    }
+    if (Get().curand_generator64_) {
+      CURAND_CHECK(curandDestroyGenerator(Get().curand_generator64_));
+    }
+    CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
+
+    if (cublasCreate(&(Get().cublas_handle_)) != CUBLAS_STATUS_SUCCESS) {
+      LOG(ERROR)<< "Cannot create Cublas handle. Cublas won't be available.";
+    }
+    // Try to create a curand handler.
+    if (curandCreateGenerator(&(Get().curand_generator_),
+                              CURAND_RNG_PSEUDO_DEFAULT)
+        != CURAND_STATUS_SUCCESS
+        || curandSetPseudoRandomGeneratorSeed((Get().curand_generator_),
+                                              cluster_seedgen())
+            != CURAND_STATUS_SUCCESS) {
+      LOG(ERROR)<< "Cannot create Curand generator. Curand won't be available.";
+    }
+    if (curandCreateGenerator(&(Get().curand_generator64_),
+                              CURAND_RNG_QUASI_SOBOL64)
+        != CURAND_STATUS_SUCCESS) {
+      LOG(ERROR)<< "Cannot create Curand generator. Curand won't be available.";
+    }
+
 #endif  // USE_CUDA
   } else if (device_context->backend() == Backend::BACKEND_OpenCL) {
 #ifdef USE_GREENTEA
-
+#ifdef USE_CLBLAS
+    clblasSetup();
+#endif  // USE_CLBLAS
 #endif  // USE_GREENTEA
   }
 #endif  // !CPU_ONLY
@@ -194,32 +236,13 @@ Caffe::Caffe()
 #ifdef USE_CUDA
       cublas_handle_(NULL),
       curand_generator_(NULL),
+      curand_generator64_(NULL),
 #endif  // USE_CUDA
       random_generator_(),
       mode_(Caffe::CPU),
       cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
       default_device_(cpu_device_.get()),
       solver_count_(1), root_solver_(true) {
-  // Try to create a cublas handler, and report an error if failed (but we will
-  // keep the program running as one might just want to run CPU code).
-#ifdef USE_CUDA
-  if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
-    LOG(ERROR)<< "Cannot create Cublas handle. Cublas won't be available.";
-  }
-  // Try to create a curand handler.
-  if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
-      != CURAND_STATUS_SUCCESS ||
-      curandSetPseudoRandomGeneratorSeed(curand_generator_, cluster_seedgen())
-      != CURAND_STATUS_SUCCESS) {
-    LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
-  }
-  if (curandCreateGenerator(&curand_generator64_, CURAND_RNG_QUASI_SOBOL64)
-      != CURAND_STATUS_SUCCESS ||
-      curandSetPseudoRandomGeneratorSeed(curand_generator64_, cluster_seedgen())
-      != CURAND_STATUS_SUCCESS) {
-    LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
-  }
-#endif  // USE_CUDA
 }
 
 Caffe::~Caffe() {
@@ -236,11 +259,15 @@ Caffe::~Caffe() {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
     curand_generator_ = nullptr;
   }
+  if (curand_generator64_) {
+    CURAND_CHECK(curandDestroyGenerator(curand_generator64_));
+    curand_generator64_ = nullptr;
+  }
 #endif  // USE_CUDA
 }
 
-void Caffe::set_random_seed(const size_t seed) {
-  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+void Caffe::set_random_seed(const size_t seed, device* device_context) {
+  if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     // Curand seed
     static bool g_curand_availability_logged = false;
@@ -248,6 +275,15 @@ void Caffe::set_random_seed(const size_t seed) {
       CURAND_CHECK(
           curandSetPseudoRandomGeneratorSeed(curand_generator(), seed));
       CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
+    } else {
+      if (!g_curand_availability_logged) {
+        LOG(ERROR)<<
+        "Curand not available. Skipping setting the curand seed.";
+        g_curand_availability_logged = true;
+      }
+    }
+    if (Get().curand_generator64_) {
+      CURAND_CHECK(curandSetGeneratorOffset(curand_generator64(), 0));
     } else {
       if (!g_curand_availability_logged) {
         LOG(ERROR)<<
@@ -267,7 +303,7 @@ void Caffe::set_random_seed(const size_t seed) {
 
 void Caffe::Synchronize(int device_id) {
   if (Caffe::mode() == Brew::GPU) {
-    device * device_context = Caffe::GetDevice(device_id);
+    device * device_context = Caffe::GetDevice(device_id, true);
     if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       cudaDeviceSynchronize();
@@ -275,7 +311,7 @@ void Caffe::Synchronize(int device_id) {
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          GetDevice(device_id)->id());
+          GetDevice(device_id, true)->id());
       ctx.get_queue().finish();
 #endif
     }
@@ -439,16 +475,10 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
     }
   }
 #endif  // USE_GREENTEA
-}
 
-#ifdef USE_GREENTEA
-viennacl::ocl::program & Caffe::GetDeviceProgram(int id) {
-  return
-      id == -1 ?
-          Get().default_device_->program() :
-          Get().GetDevice(id)->program();
+  Get().default_device_ = GetDevice(0, true);
+  Caffe::SelectDevice(Get().default_device_);
 }
-#endif  // USE_GREENTEA
 
 void Caffe::SetDevice(const int device_id) {
   // Fix for compability to python and other interfaces that do not
@@ -458,38 +488,7 @@ void Caffe::SetDevice(const int device_id) {
     Caffe::SetDevices(std::vector<int> { device_id });
   }
 
-  Get().default_device_ = GetDevice(device_id);
-
-  if (Get().default_device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-    int current_device;
-    CUDA_CHECK(cudaGetDevice(&current_device));
-    if (current_device == Get().default_device_->id()) {
-      return;
-    }
-// The call to cudaSetDevice must come before any calls to Get, which
-// may perform initialization using the GPU.
-    CUDA_CHECK(cudaSetDevice(Get().default_device_->id()));
-    if (Get().cublas_handle_)
-      CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
-    if (Get().curand_generator_) {
-      CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
-    }
-    CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
-    CURAND_CHECK(
-        curandCreateGenerator(&Get().curand_generator_,
-                              CURAND_RNG_PSEUDO_DEFAULT));
-    CURAND_CHECK(
-        curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
-                                           cluster_seedgen()));
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_GREENTEA
-#ifdef USE_CLBLAS
-    clblasSetup();
-#endif  // USE_CLBLAS
-#endif  // USE_GREENTEA
-  }
+  Get().default_device_ = GetDevice(0, true);
 }
 
 // TODO: Fix this for the new backend

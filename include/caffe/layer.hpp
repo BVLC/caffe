@@ -44,13 +44,13 @@ class Layer {
    */
   explicit Layer(const LayerParameter& param)
       : layer_param_(param), is_shared_(false) {
-    device_ = Caffe::GetDevice(layer_param_.device());
+    device_ = Caffe::GetDevice(layer_param_.device(), true);
     // Set phase and copy blobs (if there are any).
     phase_ = param.phase();
     if (layer_param_.blobs_size() > 0) {
       blobs_.resize(layer_param_.blobs_size());
       for (int_tp i = 0; i < layer_param_.blobs_size(); ++i) {
-        blobs_[i].reset(new Blob<Dtype>());
+        blobs_[i].reset(new Blob<Dtype>(device_));
         blobs_[i]->FromProto(layer_param_.blobs(i));
       }
     }

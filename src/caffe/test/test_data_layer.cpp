@@ -175,7 +175,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype scale = 3;
     LayerParameter param;
     param.set_phase(phase);
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
 
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
@@ -239,7 +239,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701.
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     vector<vector<Dtype> > crop_sequence;
     {
       DataLayer<Dtype> layer1(param);
@@ -262,7 +262,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
     // Get crop sequence after reseeding Caffe with 1701.
     // Check that the sequence is the same as the original.
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     DataLayer<Dtype> layer2(param);
     layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
     for (int_tp iter = 0; iter < 2; ++iter) {
@@ -294,7 +294,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701, srand seed 1701.
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     srand(seed_);
     vector<vector<Dtype> > crop_sequence;
     {

@@ -42,7 +42,7 @@ void InternalThread::entry(device* device_context, Caffe::Brew mode,
                            int_tp solver_count, bool root_solver) {
   Caffe::SelectDevice(device_context);
   Caffe::set_mode(mode);
-  Caffe::set_random_seed(rand_seed);
+  Caffe::set_random_seed(rand_seed, thread_device_);
   Caffe::set_solver_count(solver_count);
   Caffe::set_root_solver(root_solver);
 

@@ -172,13 +172,13 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(1 + bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
     if (weight_shape != this->blobs_[0]->shape()) {
-      Blob<Dtype> weight_shaped_blob(weight_shape);
+      Blob<Dtype> weight_shaped_blob(weight_shape, this->device_);
       LOG(FATAL) << "Incorrect weight shape: expected shape "
       << weight_shaped_blob.shape_string() << "; instead, shape was "
       << this->blobs_[0]->shape_string();
     }
     if (bias_term_ && bias_shape != this->blobs_[1]->shape()) {
-      Blob<Dtype> bias_shaped_blob(bias_shape);
+      Blob<Dtype> bias_shaped_blob(bias_shape, this->device_);
       LOG(FATAL) << "Incorrect bias shape: expected shape "
       << bias_shaped_blob.shape_string() << "; instead, shape was "
       << this->blobs_[1]->shape_string();
@@ -192,13 +192,13 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     // Initialize and fill the weights:
     // output channels x input channels per-group x kernel height x kernel width
-    this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
+    this->blobs_[0].reset(new Blob<Dtype>(weight_shape, this->device_));
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
             this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the biases.
     if (bias_term_) {
-      this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
+      this->blobs_[1].reset(new Blob<Dtype>(bias_shape, this->device_));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
               this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());

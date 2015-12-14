@@ -19,7 +19,7 @@ class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
       : blob_bottom_(new Blob<Dtype>(10, 10, 20, 20)),
         blob_top_(new Blob<Dtype>()),
         top_k_(5) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);

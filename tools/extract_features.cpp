@@ -95,7 +95,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
    */
   std::string feature_extraction_proto(argv[++arg_pos]);
   boost::shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_proto, caffe::TEST));
+      new Net<Dtype>(feature_extraction_proto, caffe::TEST,
+                     Caffe::GetDefaultDevice()));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
   std::string extract_feature_blob_names(argv[++arg_pos]);

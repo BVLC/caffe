@@ -23,14 +23,16 @@ namespace caffe {
 
 
 template<typename Dtype>
-Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
-    : root_net_(root_net) {
+Net<Dtype>::Net(const NetParameter& param, device* device_context,
+                const Net* root_net)
+    : device_(device_context), root_net_(root_net) {
   Init(param);
 }
 
 template<typename Dtype>
-Net<Dtype>::Net(const string& param_file, Phase phase, const Net* root_net)
-    : root_net_(root_net) {
+Net<Dtype>::Net(const string& param_file, Phase phase, device* device_context,
+                const Net* root_net)
+    : device_(device_context), root_net_(root_net) {
   NetParameter param;
   ReadNetParamsFromTextFileOrDie(param_file, &param);
   param.mutable_state()->set_phase(phase);
@@ -92,7 +94,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       param.mutable_layer(layer_id)->set_phase(phase_);
     }
     // Setup layer.
-    const LayerParameter& layer_param = param.layer(layer_id);
+    const LayerParameter& c_layer_param = param.layer(layer_id);
+
+    LayerParameter layer_param = c_layer_param;
+
+    // Set device
+    layer_param.set_device(Caffe::GetDefaultDevice()->list_id());
+
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
           layer_param.bottom_size())<< "propagate_down param must be specified "
@@ -1047,14 +1055,14 @@ void Net<Dtype>::ClearParamDiffs() {
       break;
     case Caffe::GPU:
 #ifndef CPU_ONLY
-      if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+      if (device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
                     blob->mutable_gpu_diff());
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-          greentea_gpu_set(Caffe::GetDefaultDevice()->id(),
+          greentea_gpu_set(device_->id(),
                            blob->count(), static_cast<Dtype>(0),
                            (cl_mem)(blob->mutable_gpu_diff()), 0);
 #endif  // USE_GREENTEA
