@@ -44,7 +44,7 @@ class DataTransformTest : public ::testing::Test {
         new DataTransformer<Dtype>(transform_param, phase,
                                    Caffe::GetDefaultDevice());
     const int_tp crop_size = transform_param.crop_size();
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     transformer->InitRand();
     Blob<Dtype>* blob =
         new Blob<Dtype>(1, datum.channels(), datum.height(), datum.width());

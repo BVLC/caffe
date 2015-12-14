@@ -34,10 +34,10 @@ TEST_F(CommonTest, TestBrewMode) {
 TEST_F(CommonTest, TestRandSeedCPU) {
   SyncedMemory data_a(10 * sizeof(int), Caffe::GetDefaultDevice());
   SyncedMemory data_b(10 * sizeof(int), Caffe::GetDefaultDevice());
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   caffe_rng_bernoulli(10, 0.5, static_cast<int*>(data_a.mutable_cpu_data()));
 
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   caffe_rng_bernoulli(10, 0.5, static_cast<int*>(data_b.mutable_cpu_data()));
 
   for (int i = 0; i < 10; ++i) {
@@ -57,10 +57,10 @@ TEST_F(CommonTest, TestRandSeedGPU) {
                         Caffe::GetDefaultDevice());
     SyncedMemory data_b(10 * sizeof(unsigned int),
                         Caffe::GetDefaultDevice());
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
           static_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
           static_cast<unsigned int*>(data_b.mutable_gpu_data()), 10));
     for (int i = 0; i < 10; ++i) {

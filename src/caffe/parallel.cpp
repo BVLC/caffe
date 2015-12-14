@@ -300,7 +300,8 @@ void P2PSync<Dtype>::InternalThreadEntry() {
     // everyone doesn't have the same seed.  We seem to have some
     // solver instability if we have everyone with the same seed
     Caffe::set_random_seed(
-        solver_->param().random_seed() + solver_->param().device_id());
+        solver_->param().random_seed() + solver_->param().device_id(),
+        solver_->get_device());
   }
   solver_->Step(solver_->param().max_iter() - initial_iter_);
 }
@@ -448,7 +449,7 @@ void P2PSync<Dtype>::run(const vector<device*>& gpus) {
   LOG(INFO)<< "Starting Optimization";
 
   for (int i = 1; i < syncs.size(); ++i) {
-    syncs[i]->StartInternalThread(Caffe::GetDefaultDevice());
+    syncs[i]->StartInternalThread(solver_->get_device());
   }
 
   // Run root solver on current thread

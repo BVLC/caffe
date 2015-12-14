@@ -5,6 +5,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/python.hpp>
+#include <boost/python/exception_translator.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <numpy/arrayobject.h>
@@ -15,6 +16,7 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
+#include "caffe/definitions.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
@@ -37,6 +39,14 @@ const int NPY_DTYPE = NPY_FLOAT32;
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+void select_device(int id, bool listId) { Caffe::SelectDevice(id, listId); }
+void set_devices(bp::tuple args) {
+  vector<int> devices(bp::len(args));
+  for (int i = 0; i < bp::len(args); ++i) {
+    devices[i] = bp::extract<int>(args[i]);
+  }
+  Caffe::SetDevices(devices);
+}
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -82,7 +92,7 @@ shared_ptr<Net<Dtype> > Net_Init(
   CheckFile(param_file);
 
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+      static_cast<Phase>(phase), Caffe::GetDefaultDevice()));
   return net;
 }
 
@@ -93,7 +103,7 @@ shared_ptr<Net<Dtype> > Net_Init_Load(
   CheckFile(pretrained_param_file);
 
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+      static_cast<Phase>(phase), Caffe::GetDefaultDevice()));
   net->CopyTrainedLayersFrom(pretrained_param_file);
   return net;
 }
@@ -213,15 +223,56 @@ bp::object BlobVec_add_blob(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+void exception_translator(std::exception ex) {
+  std::cout << ex.what() << std::endl;
+}
+
+// NOLINT_NEXT_LINE(runtime/references)
+Dtype ForwardFromTo_NoGIL(Net<Dtype>& net, int_tp start, int_tp end) {
+  Dtype loss;
+  Py_BEGIN_ALLOW_THREADS
+  loss = net.ForwardFromTo(start, end);
+  Py_END_ALLOW_THREADS
+  return loss;
+}
+
+// NOLINT_NEXT_LINE(runtime/references)
+void BackwardFromTo_NoGIL(Net<Dtype>& net, int_tp start, int_tp end) {
+  Py_BEGIN_ALLOW_THREADS
+  net.BackwardFromTo(start, end);
+  Py_END_ALLOW_THREADS
+}
+
+// NOLINT_NEXT_LINE(runtime/references)
+Dtype Step_NoGIL(Solver<Dtype>& solver, int_tp iters) {
+  Dtype smoothed_loss;
+  Py_BEGIN_ALLOW_THREADS
+  smoothed_loss = solver.Step(iters);
+  Py_END_ALLOW_THREADS
+  return smoothed_loss;
+}
+
+// NOLINT_NEXT_LINE(runtime/references)
+void Solve_NoGIL(Solver<Dtype>& solver, const char* resume_file) {
+  Py_BEGIN_ALLOW_THREADS
+  solver.Solve(resume_file);
+  Py_END_ALLOW_THREADS
+}
+
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
+  bp::register_exception_translator<std::exception>(&exception_translator);
+
   // below, we prepend an underscore to methods that will be replaced
   // in Python
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
+  bp::def("set_devices", &set_devices);
+  bp::def("select_device", &select_device);
   bp::def("enumerate_devices", &Caffe::EnumerateDevices);
 
   bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
@@ -230,8 +281,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     bp::no_init)
     .def("__init__", bp::make_constructor(&Net_Init))
     .def("__init__", bp::make_constructor(&Net_Init_Load))
-    .def("_forward", &Net<Dtype>::ForwardFromTo)
-    .def("_backward", &Net<Dtype>::BackwardFromTo)
+    .def("_forward", &ForwardFromTo_NoGIL)
+    .def("_backward", &BackwardFromTo_NoGIL)
     .def("reshape", &Net<Dtype>::Reshape)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
@@ -296,11 +347,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("iter", &Solver<Dtype>::iter)
     .add_property("solver_params", &Solver<Dtype>::GetSolverParams,
                                    &Solver<Dtype>::UpdateSolverParams)
-    .def("step",
-      static_cast<Dtype (Solver<Dtype>::*)(const int_tp)>(&Solver<Dtype>::Step))
-    .def("solve",
-      static_cast<void (Solver<Dtype>::*)(const char*)>(
-          &Solver<Dtype>::Solve), SolveOverloads())
+    .def("step", &Step_NoGIL)
+    .def("solve", &Solve_NoGIL)
     .def("restore", &Solver<Dtype>::Restore)
     .def("snapshot", &Solver<Dtype>::Snapshot);
 
@@ -398,8 +446,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype> > >, true>());
   bp::class_<vector<string> >("StringVec")
     .def(bp::vector_indexing_suite<vector<string> >());
-  bp::class_<vector<int_tp> >("IntVec")
+  bp::class_<vector<int_tp> >("IntTpVec")
     .def(bp::vector_indexing_suite<vector<int_tp> >());
+  bp::class_<vector<int> >("IntVec")
+    .def(bp::vector_indexing_suite<vector<int> >());
   bp::class_<vector<Dtype> >("DtypeVec")
     .def(bp::vector_indexing_suite<vector<Dtype> >());
   bp::class_<vector<shared_ptr<Net<Dtype> > > >("NetVec")

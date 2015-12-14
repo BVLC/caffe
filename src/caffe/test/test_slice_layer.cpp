@@ -24,7 +24,7 @@ class SliceLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_2_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);

@@ -23,7 +23,7 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {
   }
   virtual void SetUp() {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     vector<int_tp> sz;
     sz.push_back(5);
     sz.push_back(4);

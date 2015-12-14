@@ -31,8 +31,8 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
         viennacl::ocl::context &ctx = viennacl::ocl::get_context(
             this->device_->id());
-        viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-            this->device_->id());
+        viennacl::ocl::program &program = this->device_->program();
+
         viennacl::ocl::kernel &oclk_gpu_set = program.get_kernel(
             CL_KERNEL_SELECT("gpu_set"));
         viennacl::ocl::enqueue(

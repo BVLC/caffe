@@ -6,6 +6,7 @@
  */
 
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
@@ -62,7 +63,8 @@ namespace caffe {
 void greentea_memset(const int_tp ctx_id, const uint_tp N, const int_tp alpha,
                      cl_mem X, const int_tp offX) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   // OpenCL Version >= 1.2 approach
   // clEnqueueFillBuffer(ctx.get_queue().handle().get(),
@@ -207,10 +209,10 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
 
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::matrix_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::matrix_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::matrix_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::matrix_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     size_type A_size1 = static_cast<size_type>((TransA == CblasTrans) ? K : M);
     size_type A_size2 = static_cast<size_type>((TransA == CblasTrans) ? M : K);
@@ -335,10 +337,10 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<Dtype, uint_tp, int_tp> v1(
         x, size_type((TransA == CblasTrans) ? M : N), size_type(offx),
@@ -420,10 +422,10 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(N),
                                                      size_type(offX),
@@ -464,7 +466,8 @@ void greentea_gpu_mul(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, const cl_mem b, const int_tp offb,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_mul = program.get_kernel(CL_KERNEL_SELECT("mul"));
   viennacl::ocl::enqueue(
@@ -487,7 +490,8 @@ void greentea_gpu_div(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, const cl_mem b, const int_tp offb,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_div = program.get_kernel(CL_KERNEL_SELECT("div"));
   viennacl::ocl::enqueue(
@@ -522,10 +526,10 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<Dtype, uint_tp, int_tp> v1(x, size_type(N),
                                                      size_type(offx),
@@ -595,10 +599,10 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
 
   } else {
 #ifndef USE_CLBLAS
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
                                                      size_type(offX),
@@ -663,10 +667,10 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
                                                      size_type(offX),
@@ -731,10 +735,10 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
   } else {
 #ifndef USE_CLBLAS
 
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type size_type;
-    typedef typename viennacl::vector_base<Dtype, uint_tp, int_tp>
-        ::size_type difference_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type size_type;
+    typedef typename viennacl::vector_base<Dtype,
+        uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
                                                      size_type(offX),
@@ -779,7 +783,8 @@ template<typename Dtype>
 void greentea_gpu_set(const int_tp ctx_id, const int_tp N, const Dtype alpha,
                       cl_mem Y, const int_tp offY) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
   // OpenCL Version >= 1.2 approach
   // clEnqueueFillBuffer(ctx.get_queue().handle().get(),
   //                  Y, &alpha, sizeof(Dtype),
@@ -806,7 +811,8 @@ template<typename Dtype>
 void greentea_gpu_add_scalar(const int_tp ctx_id, const int_tp N,
                              const Dtype alpha, cl_mem Y, const int_tp offY) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_add_scalar = program.get_kernel(
       CL_KERNEL_SELECT("add_scalar"));
@@ -827,7 +833,8 @@ void greentea_gpu_add(const int_tp ctx_id, const int_tp n, const cl_mem a,
                       const int_tp offa, const cl_mem b, const int_tp offb,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_add = program.get_kernel(CL_KERNEL_SELECT("add"));
   viennacl::ocl::enqueue(
@@ -850,7 +857,8 @@ void greentea_gpu_sub(const int_tp ctx_id, const int_tp n, const cl_mem a,
                       const int_tp offa, const cl_mem b, const int_tp offb,
                       cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_sub = program.get_kernel(CL_KERNEL_SELECT("sub"));
   viennacl::ocl::enqueue(
@@ -872,7 +880,8 @@ template<typename Dtype>
 void greentea_gpu_abs(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_abs = program.get_kernel(CL_KERNEL_SELECT("abs"));
   viennacl::ocl::enqueue(
@@ -891,7 +900,8 @@ template<typename Dtype>
 void greentea_gpu_exp(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_exp = program.get_kernel(CL_KERNEL_SELECT("exp"));
   viennacl::ocl::enqueue(
@@ -911,7 +921,8 @@ void greentea_gpu_powx(const int_tp ctx_id, const int_tp N, const cl_mem a,
                        const int_tp offa, const Dtype alpha, cl_mem y,
                        const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_powx = program.get_kernel(
       CL_KERNEL_SELECT("powx"));
@@ -933,7 +944,8 @@ template<typename Dtype>
 void greentea_gpu_log(const int_tp ctx_id, const int_tp N, const cl_mem a,
                       const int_tp offa, cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_log = program.get_kernel(CL_KERNEL_SELECT("log"));
   viennacl::ocl::enqueue(
@@ -953,7 +965,8 @@ void greentea_gpu_sign(const int_tp ctx_id, const int_tp n, const cl_mem x,
 int_tp offx,
                        cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_sign = program.get_kernel(
       CL_KERNEL_SELECT("sign"));
@@ -974,7 +987,8 @@ void greentea_gpu_sgnbit(const int_tp ctx_id, const int_tp n, const cl_mem x,
 int_tp offx,
                          cl_mem y, const int_tp offy) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  viennacl::ocl::program &program = (Caffe::Get().GetDevice(ctx_id, false))
+      ->program();
 
   viennacl::ocl::kernel &oclk_sgnbit = program.get_kernel(
       CL_KERNEL_SELECT("sgnbit"));

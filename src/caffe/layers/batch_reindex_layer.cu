@@ -43,8 +43,7 @@ void BatchReindexLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     viennacl::ocl::kernel &oclk_br = program.get_kernel(
         CL_KERNEL_SELECT("br_forward"));
@@ -102,10 +101,10 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
   // length of that list.
   vector<int_tp> shape;
   shape.push_back(bottom[1]->count());
-  Blob<Dtype> top_indexes(shape);
+  Blob<Dtype> top_indexes(shape, this->device_);
   shape[0] = bottom[0]->shape(0);
-  Blob<Dtype> counts(shape);
-  Blob<Dtype> begins(shape);
+  Blob<Dtype> counts(shape, this->device_);
+  Blob<Dtype> begins(shape, this->device_);
   Dtype* t_i_data = top_indexes.mutable_cpu_data();
   Dtype* c_data = counts.mutable_cpu_data();
   Dtype* b_data = begins.mutable_cpu_data();
@@ -135,8 +134,7 @@ void BatchReindexLayer<Dtype>::Backward_gpu(
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     viennacl::ocl::kernel &oclk_br = program.get_kernel(
         CL_KERNEL_SELECT("br_backward"));

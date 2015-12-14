@@ -32,7 +32,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
                               Caffe::GetDefaultDevice())) {}
 
   virtual void SetUp() {
-    Caffe::set_random_seed(this->seed_);
+    Caffe::set_random_seed(this->seed_, Caffe::GetDefaultDevice());
   }
 
   Dtype sample_mean(const Dtype* const seqs, const int_tp sample_size) {

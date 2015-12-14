@@ -84,8 +84,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD: {
@@ -219,8 +218,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     for (int_tp i = 0; i < bottom.size(); ++i) {
       if (propagate_down[i]) {

@@ -160,12 +160,14 @@ class Caffe {
   // it personally but better to note it here in the header file.
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the random seed of both boost and curand
-  static void set_random_seed(const size_t seed);
+  static void set_random_seed(const size_t seed, device* device_context);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
   // Switch the current device
   static void SelectDevice(device* device_context);
+  static void SelectDevice(int id, bool listId);
+
   // Prints the current GPU status.
   static void DeviceQuery();
   // Parallel training info
@@ -186,12 +188,7 @@ class Caffe {
   static void Synchronize(int device_id);
 
   // Get a device context
-  static device *GetDevice(int id);
-
-  // Get a device OpenCL program
-#ifdef USE_GREENTEA
-  viennacl::ocl::program & GetDeviceProgram(int id);
-#endif
+  static device *GetDevice(int id, bool listId);
 
  protected:
 #ifndef CPU_ONLY

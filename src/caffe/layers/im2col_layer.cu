@@ -42,8 +42,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     for (int_tp n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
@@ -104,8 +103,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
-    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
 
     for (int_tp n = 0; n < top[0]->num(); ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {

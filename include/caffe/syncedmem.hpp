@@ -12,9 +12,9 @@
 
 namespace caffe {
 
-void CaffeMallocHost(void** ptr, int_tp size);
+void CaffeMallocHost(void** ptr, int_tp size, device* device_context);
 
-void CaffeFreeHost(void* ptr);
+void CaffeFreeHost(void* ptr, device* device_context);
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
@@ -25,16 +25,6 @@ void CaffeFreeHost(void* ptr);
 class SyncedMemory {
  public:
 #ifdef USE_GREENTEA
-  SyncedMemory()
-      : cpu_ptr_(NULL),
-        gpu_ptr_(NULL),
-        size_(0),
-        head_(UNINITIALIZED),
-        own_cpu_data_(false),
-        own_gpu_data_(false),
-        device_(Caffe::GetDefaultDevice()),
-        cl_gpu_mem_(NULL) {
-  }
   explicit SyncedMemory(device *device_context)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),
@@ -56,15 +46,6 @@ class SyncedMemory {
         cl_gpu_mem_(NULL) {
   }
 #else
-  SyncedMemory()
-      : cpu_ptr_(NULL),
-        gpu_ptr_(NULL),
-        size_(0),
-        head_(UNINITIALIZED),
-        own_cpu_data_(false),
-        own_gpu_data_(false),
-        device_(Caffe::GetDefaultDevice()) {
-  }
   explicit SyncedMemory(device *device_context)
       : cpu_ptr_(NULL),
         gpu_ptr_(NULL),

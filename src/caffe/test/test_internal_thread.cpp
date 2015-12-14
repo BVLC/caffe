@@ -34,17 +34,17 @@ class TestThreadB : public InternalThread {
 
 TEST_F(InternalThreadTest, TestRandomSeed) {
   TestThreadA t1;
-  Caffe::set_random_seed(9658361);
+  Caffe::set_random_seed(9658361, Caffe::GetDefaultDevice());
   t1.StartInternalThread(Caffe::Get().GetDefaultDevice());
   t1.StopInternalThread();
 
   TestThreadA t2;
-  Caffe::set_random_seed(9658361);
+  Caffe::set_random_seed(9658361, Caffe::GetDefaultDevice());
   t2.StartInternalThread(Caffe::Get().GetDefaultDevice());
   t2.StopInternalThread();
 
   TestThreadB t3;
-  Caffe::set_random_seed(3435563);
+  Caffe::set_random_seed(3435563, Caffe::GetDefaultDevice());
   t3.StartInternalThread(Caffe::Get().GetDefaultDevice());
   t3.StopInternalThread();
 }

@@ -53,8 +53,7 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_->id());
+      viennacl::ocl::program &program = this->device_->program();
 
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));
@@ -96,8 +95,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           this->device_->id());
-      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_->id());
+      viennacl::ocl::program &program = this->device_->program();
 
       viennacl::ocl::kernel &oclk_slice = program.get_kernel(
           CL_KERNEL_SELECT("slice"));

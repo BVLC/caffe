@@ -29,7 +29,7 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
   }
 
   virtual void SetUp() {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     this->blob_bottom_->Reshape(11, 17, 19, 23);
     this->blob_top_->Reshape(11, 17, 19, 23);
     // fill the values

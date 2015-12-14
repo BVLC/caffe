@@ -279,8 +279,8 @@ void MalisLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Expected inputs:
   // Required (bottom 0 to 2):
   // Bottom 0: Predicted affinity, shaped     (batch size, #edges, (Z), (Y), X)
-  // Bottom 1: Segmented ground truth, shaped (batch size, 1,      (Z), (Y), X)
-  // Bottom 2: Ground truth affinity, shaped  (batch size, #edges, (Z), (Y), X)
+  // Bottom 1: Ground truth affinity, shaped  (batch size, #edges, (Z), (Y), X)
+  // Bottom 2: Segmented ground truth, shaped (batch size, 1,      (Z), (Y), X)
 
   // Optional (bottom 3):
   // Bottom 3: Edge connectivity, size #edges * 3, shaped (Z,Y,X);(Z,Y,X);...

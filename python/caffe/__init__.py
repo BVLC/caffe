@@ -1,5 +1,5 @@
 from .pycaffe import SolverParameter, Net, SGDSolver, NesterovSolver, AdaGradSolver, RMSPropSolver, AdaDeltaSolver, AdamSolver
-from ._caffe import set_mode_cpu, set_mode_gpu, set_device, enumerate_devices, Layer, get_solver, layer_type_list
+from ._caffe import set_mode_cpu, set_mode_gpu, set_device, set_devices, select_device, enumerate_devices, Layer, get_solver, layer_type_list
 from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
 from .detector import Detector

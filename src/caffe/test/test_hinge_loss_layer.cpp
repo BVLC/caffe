@@ -23,7 +23,7 @@ class HingeLossLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     filler_param.set_std(10);
     GaussianFiller<Dtype> filler(filler_param);

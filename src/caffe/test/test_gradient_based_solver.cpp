@@ -183,7 +183,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     if (snapshot) {
       proto << "snapshot: " << num_iters << " ";
     }
-    Caffe::set_random_seed(this->seed_);
+    Caffe::set_random_seed(this->seed_, Caffe::GetDefaultDevice());
     this->InitSolverFromProtoString(proto.str());
     if (from_snapshot != NULL) {
       this->solver_->Restore(from_snapshot);
@@ -198,11 +198,11 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       LOG(INFO)<< "Multi-GPU test on " << devices << " devices";
       vector<device*> gpus;
       // put current device at the beginning
-      device* dc = Caffe::GetDevice(solver_->param().device_id());
+      device* dc = Caffe::GetDevice(solver_->param().device_id(), true);
       gpus.push_back(dc);
       for (int i = 0; gpus.size() < devices; ++i) {
         if (i != device_id)
-        gpus.push_back(Caffe::GetDevice(i));
+        gpus.push_back(Caffe::GetDevice(i, true));
       }
       Caffe::set_solver_count(gpus.size());
       this->sync_.reset(new P2PSync<Dtype>(
