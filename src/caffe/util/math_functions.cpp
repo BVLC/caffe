@@ -7,6 +7,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace caffe {
 
 template<>
@@ -59,6 +63,10 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
     memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     return;
   }
+#ifdef _OPENMP
+  #pragma omp parallel if (omp_in_parallel() == 0)
+  #pragma omp for
+#endif
   for (int i = 0; i < N; ++i) {
     Y[i] = alpha;
   }
