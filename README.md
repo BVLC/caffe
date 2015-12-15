@@ -24,6 +24,9 @@ git clone git@github.com:MSRDL/caffe.git
 cd caffe
 git clone git@github.com:MSRDL/wincaffe-3rdparty.git 3rdparty
 ```
+
+Download `cuDNN v3` [from nVidia website](https://developer.nvidia.com/cudnn). Then run `.\scripts\installCuDNN.ps1 $downloadedZipFile` in PowerShell where `$downloadedZipFile` is the path to your downloaded cuDNN file. Example: `.\scripts\installCuDNN.ps1 ~\Downloads\cudnn-7.0-win-x64-v3.0-prod.zip`
+
 Now, you should be able to build `caffe.sln` 
 
 ## Development
