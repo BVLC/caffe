@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/loss_layers.hpp"
+#include "caffe/layers/accuracy_layer.hpp"
 #include "caffe/util/rng.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
