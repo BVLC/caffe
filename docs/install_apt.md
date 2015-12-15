@@ -41,8 +41,8 @@ These dependencies need manual installation in 12.04.
     export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1
     make && make install
     # lmdb
-    git clone https://gitorious.org/mdb/mdb.git
-    cd mdb/libraries/liblmdb
+    git clone https://github.com/LMDB/lmdb
+    cd lmdb/libraries/liblmdb
     make && make install
 
 Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.

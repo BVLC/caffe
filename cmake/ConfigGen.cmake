@@ -56,6 +56,21 @@ function(caffe_generate_export_configs)
     list(APPEND Caffe_DEFINITIONS -DCPU_ONLY)
   endif()
 
+  if(USE_OPENCV)
+    list(APPEND Caffe_DEFINITIONS -DUSE_OPENCV)
+  endif()
+
+  if(USE_LMDB)
+    list(APPEND Caffe_DEFINITIONS -DUSE_LMDB)
+    if (ALLOW_LMDB_NOLOCK)
+        list(APPEND Caffe_DEFINITIONS -DALLOW_LMDB_NOLOCK)
+    endif()
+  endif()
+
+  if(USE_LEVELDB)
+    list(APPEND Caffe_DEFINITIONS -DUSE_LEVELDB)
+  endif()
+
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
   else()

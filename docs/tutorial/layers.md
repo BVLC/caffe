@@ -39,7 +39,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
     - `n * c_i * h_i * w_i`
 * Output
     - `n * c_o * h_o * w_o`, where `h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1` and `w_o` likewise.
-* Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
+* Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "conv1"
@@ -83,7 +83,7 @@ The `Convolution` layer convolves the input image with a set of learnable filter
     - `n * c * h_i * w_i`
 * Output
     - `n * c * h_o * w_o`, where h_o and w_o are computed in the same way as convolution.
-* Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
+* Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "pool1"
@@ -197,7 +197,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 * Parameters (`ReLUParameter relu_param`)
     - Optional
         - `negative_slope` [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
-* Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
+* Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "relu1"
@@ -213,7 +213,7 @@ Given an input value x, The `ReLU` layer computes the output as x if x > 0 and n
 * Layer type: `Sigmoid`
 * CPU implementation: `./src/caffe/layers/sigmoid_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/sigmoid_layer.cu`
-* Sample (as seen in `./examples/imagenet/mnist_autoencoder.prototxt`)
+* Sample (as seen in `./examples/mnist/mnist_autoencoder.prototxt`)
 
       layer {
         name: "encode1neuron"
