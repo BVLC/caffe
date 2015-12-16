@@ -131,6 +131,7 @@ class CPMDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
     DataReader reader_;
     Blob<Dtype> transformed_label_; // add another blob
+    //Blob<Dtype> transformed_label_all_; // all peaks, including others
 };
 
 

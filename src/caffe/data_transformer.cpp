@@ -50,7 +50,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
     DecodeFloats(data, offset3+5*offset1+4*i, &isVisible, 1);
     meta.joint_self.isVisible[i] = (isVisible == 0) ? 0 : 1;
     if(meta.joint_self.joints[i].x <= 0 || meta.joint_self.joints[i].y <= 0){
-      meta.joint_self.isVisible[i] = 2; // 2 means cropped, 1 means occluded by still on image
+      meta.joint_self.isVisible[i] = 2; // 2 means cropped, 0 means occluded by still on image
     }
   }
   
@@ -616,7 +616,6 @@ float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, Me
       RotatePoint(meta.joint_others[p].joints[i], R);
     }
   }
-
   return degree;
 }
 
@@ -633,6 +632,8 @@ void DataTransformer<Dtype>::putGaussianMaps(Dtype* entry, Point2f center, int s
         continue;
       }
       entry[g_y*grid_x + g_x] += exp(-exponent);
+      if(entry[g_y*grid_x + g_x] > 1) 
+        entry[g_y*grid_x + g_x] = 1;
     }
   }
 }
@@ -649,7 +650,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   // clear out transformed_label, it may remain things for last batch
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
-      for (int i = 0; i < np+1; i++){
+      for (int i = 0; i < 2*(np+1); i++){
         transformed_label[i*channelOffset + g_y*grid_x + g_x] = 0;
       }
     }
@@ -658,9 +659,19 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   static int counter = 3;
   for (int i = 0; i < np; i++){
     Point2f center = meta.joint_self.joints[i];
-    if(meta.joint_self.isVisible[i] == 1){
+    if(meta.joint_self.isVisible[i] <= 1){
       putGaussianMaps(transformed_label + i*channelOffset, center, param_.stride(), 
-                      grid_x, grid_y, param_.sigma());
+                      grid_x, grid_y, param_.sigma()); //self
+      putGaussianMaps(transformed_label + (i+np+1)*channelOffset, center, param_.stride(), 
+                      grid_x, grid_y, param_.sigma()); //self
+    }
+    //plot others
+    for(int j = 0; j < meta.numOtherPeople; j++){ //for every other person
+      Point2f center = meta.joint_others[j].joints[i];
+      if(meta.joint_others[j].isVisible[i] <= 1){
+        putGaussianMaps(transformed_label + (i+np+1)*channelOffset, center, param_.stride(), 
+                        grid_x, grid_y, param_.sigma());
+      }
     }
   }
   //put background channel
@@ -671,13 +682,19 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
         maximum = (maximum > transformed_label[i*channelOffset + g_y*grid_x + g_x]) ? maximum : transformed_label[i*channelOffset + g_y*grid_x + g_x];
       }
       transformed_label[np*channelOffset + g_y*grid_x + g_x] = max(1.0-maximum, 0.0);
+      //second background channel
+      maximum = 0;
+      for (int i = np+1; i < 2*np+1; i++){
+        maximum = (maximum > transformed_label[i*channelOffset + g_y*grid_x + g_x]) ? maximum : transformed_label[i*channelOffset + g_y*grid_x + g_x];
+      }
+      transformed_label[(2*np+1)*channelOffset + g_y*grid_x + g_x] = max(1.0-maximum, 0.0);
     }
   }
 
   //visualize
   if(param_.visualize()){
     Mat label_map;
-    for(int i = 0; i < np; i++){      
+    for(int i = 0; i < 2*(np+1); i++){      
       label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
       //int MPI_index = MPI_to_ours[i];
       //Point2f center = meta.joint_self.joints[MPI_index];
@@ -688,9 +705,9 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
           //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
         }
       }
-      //resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
-      //applyColorMap(label_map, label_map, COLORMAP_JET);
-      //addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+      resize(label_map, label_map, Size(), stride, stride, INTER_LINEAR);
+      applyColorMap(label_map, label_map, COLORMAP_JET);
+      addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
       
       //center = center * (1.0/(float)param_.stride());
       //circle(label_map, center, 3, CV_RGB(255,0,255), -1);
@@ -700,26 +717,26 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
       imwrite(imagename, label_map);
     }
     
-    label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
-    for (int g_y = 0; g_y < grid_y; g_y++){
-      //printf("\n");
-      for (int g_x = 0; g_x < grid_x; g_x++){
-        label_map.at<uchar>(g_y,g_x) = (int)(transformed_label[np*channelOffset + g_y*grid_x + g_x]*255);
-        //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
-      }
-    }
-    resize(label_map, label_map, Size(), stride, stride, INTER_CUBIC);
-    applyColorMap(label_map, label_map, COLORMAP_JET);
-    addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
+    // label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
+    // for (int g_y = 0; g_y < grid_y; g_y++){
+    //   //printf("\n");
+    //   for (int g_x = 0; g_x < grid_x; g_x++){
+    //     label_map.at<uchar>(g_y,g_x) = (int)(transformed_label[np*channelOffset + g_y*grid_x + g_x]*255);
+    //     //printf("%f ", transformed_label_entry[g_y*grid_x + g_x]*255);
+    //   }
+    // }
+    // resize(label_map, label_map, Size(), stride, stride, INTER_CUBIC);
+    // applyColorMap(label_map, label_map, COLORMAP_JET);
+    // addWeighted(label_map, 0.5, img_aug, 0.5, 0.0, label_map);
 
-    for(int i=0;i<np;i++){
-      Point2f center = meta.joint_self.joints[i];// * (1.0/param_.stride());
-      circle(label_map, center, 3, CV_RGB(100,100,100), -1);
-    }
-    char imagename [100];
-    sprintf(imagename, "augment_%04d_label_part_back.jpg", counter);
-    //LOG(INFO) << "filename is " << imagename;
-    imwrite(imagename, label_map);
+    // for(int i=0;i<np;i++){
+    //   Point2f center = meta.joint_self.joints[i];// * (1.0/param_.stride());
+    //   circle(label_map, center, 3, CV_RGB(100,100,100), -1);
+    // }
+    // char imagename [100];
+    // sprintf(imagename, "augment_%04d_label_part_back.jpg", counter);
+    // //LOG(INFO) << "filename is " << imagename;
+    // imwrite(imagename, label_map);
   }
   counter += 4;
 }
@@ -760,11 +777,11 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
     //if(meta.joint_self.isVisible[i])
     if(i < 14){
       if(i==2 || i==3 || i==4 || i==8 || i==9 || i==10)
-        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,255), -1);
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,0,255), -1);
       else if(i==5 || i==6 || i==7 || i==11 || i==12 || i==13)
-        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,255), -1);
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
       else
-        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,150,255), -1);
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,255,0), -1);
     }
     else if(i < 16)
       circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,255,0), -1);
@@ -774,7 +791,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
       else if(i==20 || i==21 || i==22 || i==25 || i==26)
         circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,100), -1);
       else
-        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,150,150), -1);
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,200,200), -1);
     }
   }
   line(img_vis, meta.objpos+Point2f(-368/2,-368/2), meta.objpos+Point2f(368/2,-368/2), CV_RGB(0,255,0), 2);
@@ -795,7 +812,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
       //     R arms: 10(wrist), 11(elbow), 12(shoulder)
       //     L arms: 13(wrist), 14(elbow), 15(shoulder)
       //if(i==0 || i==1 || i==2 || i==10 || i==11 || i==12)
-      circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,0,255), -1);
+      circle(img_vis, meta.joint_others[p].joints[i], 2, CV_RGB(0,0,0), -1);
       //else if(i==5 || i==4 || i==3 || i==13 || i==14 || i==15)
         //circle(img_vis, meta.joint_others[p].joints[i], 3, CV_RGB(0,255,255), -1);
       //else
@@ -808,12 +825,17 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
     std::stringstream ss;
     // ss << "Augmenting with:" << (as.flip ? "flip" : "no flip") << "; Rotate " << as.degree << " deg; scaling: " << as.scale << "; crop: " 
     //    << as.crop.height << "," << as.crop.width;
-    ss << "index:" << meta.annolist_index << "p:" << meta.people_index 
-       << "; o_scale: " << meta.scale_self << "; mult: " << as.scale << ";rot: " << as.degree;
-    std::string str_info = ss.str();
+    ss << "index:" << meta.annolist_index << "; p:" << meta.people_index 
+       << "; o_scale: " << meta.scale_self;
+    string str_info = ss.str();
     setLabel(img_vis, str_info, Point(0, 20));
 
-    rectangle(img_vis, Point(0,0+img_vis.rows), Point(param_.crop_size_x(), param_.crop_size_y()+img_vis.rows), Scalar(255,255,255), 1);
+    stringstream ss2; 
+    ss2 << "mult: " << as.scale << "; rot: " << as.degree << "; flip: " << (as.flip?"true":"ori");
+    str_info = ss2.str();
+    setLabel(img_vis, str_info, Point(0, 40));
+
+    rectangle(img_vis, Point(0, 0+img_vis.rows), Point(param_.crop_size_x(), param_.crop_size_y()+img_vis.rows), Scalar(255,255,255), 1);
 
     char imagename [100];
     sprintf(imagename, "augment_%04d.jpg", counter);
