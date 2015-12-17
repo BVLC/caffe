@@ -13,9 +13,9 @@ void im2col_cpu(const Dtype* data_im, const int channels,
     const int dilation_h, const int dilation_w,
     Dtype* data_col) {
   const int height_col = (height + 2 * pad_h -
-      (dilation_h * (kernel_h - 1)  + 1)) / stride_h + 1;
+      (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
   const int width_col = (width + 2 * pad_w -
-      (dilation_w * (kernel_w - 1)  + 1)) / stride_w + 1;
+      (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   const int channels_col = channels * kernel_h * kernel_w;
   for (int c_col = 0; c_col < channels_col; ++c_col) {
     int w_offset = c_col % kernel_w;
@@ -147,9 +147,9 @@ void col2im_cpu(const Dtype* data_col, const int channels,
     Dtype* data_im) {
   caffe_set(height * width * channels, Dtype(0), data_im);
   const int height_col = (height + 2 * pad_h -
-      (dilation_h * (kernel_h - 1)  + 1)) / stride_h + 1;
+      (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
   const int width_col = (width + 2 * pad_w -
-      (dilation_w * (kernel_w - 1)  + 1)) / stride_w + 1;
+      (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   const int channels_col = channels * kernel_h * kernel_w;
   for (int c_col = 0; c_col < channels_col; ++c_col) {
     int w_offset = c_col % kernel_w;

@@ -48,9 +48,9 @@ void im2col_gpu(const Dtype* data_im, const int channels,
   // We are going to launch channels * height_col * width_col kernels, each
   // kernel responsible for copying a single-channel grid.
   int height_col = (height + 2 * pad_h -
-      (dilation_h * (kernel_h - 1)  + 1)) / stride_h + 1;
+      (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
   int width_col = (width + 2 * pad_w -
-      (dilation_w * (kernel_w - 1)  + 1)) / stride_w + 1;
+      (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   int num_kernels = channels * height_col * width_col;
   // NOLINT_NEXT_LINE(whitespace/operators)
   im2col_gpu_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels),
@@ -290,9 +290,9 @@ void col2im_gpu(const Dtype* data_col, const int channels,
     const int pad_h, const int pad_w, const int stride_h,
     const int stride_w, const int dilation_h, const int dilation_w,
     Dtype* data_im) {
-  int height_col = (height + 2 * pad_h - (dilation_h * (kernel_h - 1)  + 1)) /
+  int height_col = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) /
       stride_h + 1;
-  int width_col = (width + 2 * pad_w - (dilation_w * (kernel_w - 1)  + 1)) /
+  int width_col = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) /
       stride_w + 1;
   int num_kernels = channels * height * width;
   // To avoid involving atomic operations, we will launch one kernel per
