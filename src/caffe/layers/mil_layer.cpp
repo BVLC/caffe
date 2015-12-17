@@ -1,22 +1,17 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <vector>
-#include <cmath>
-#include <cfloat>
-
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
-#include "caffe/filler.hpp"
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/util/math_functions.hpp"
+#include <caffe/layers/mil_layer.hpp>
+#include <caffe/layer_factory.hpp>
 
 using std::max;
 using std::min;
 
 namespace caffe {
+  template <typename Dtype>
+  MILLayer<Dtype>::MILLayer(const LayerParameter& param): Layer<Dtype>(param) {}
 
-template <typename Dtype>
+  template <typename Dtype>
 void MILLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(bottom.size(), 1) << "MIL Layer takes a single blob as input.";
@@ -28,7 +23,16 @@ void MILLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
 }
 
-template <typename Dtype>
+  template <typename Dtype>
+  const char* MILLayer<Dtype>::type() const { return "MIL"; }
+
+  template <typename Dtype>
+  int MILLayer<Dtype>::ExactNumBottomBlobs() const { return 1; }
+
+  template <typename Dtype>
+  int MILLayer<Dtype>::ExactNumTopBlobs() const { return 1; }
+
+  template <typename Dtype>
 void MILLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();

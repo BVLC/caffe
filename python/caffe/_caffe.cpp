@@ -15,7 +15,9 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
-#include "caffe/python_layer.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
+#include "caffe/layers/python_layer.hpp"
+#include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -133,8 +135,8 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
 
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
-  ReadProtoFromTextFileOrDie(filename, &param);
-  return GetSolver<Dtype>(param);
+  ReadSolverParamsFromTextFileOrDie(filename, &param);
+  return SolverRegistry<Dtype>::CreateSolver(param);
 }
 
 struct NdarrayConverterGenerator {
@@ -286,7 +288,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
     .def("step", &Solver<Dtype>::Step)
-    .def("restore", &Solver<Dtype>::Restore);
+    .def("restore", &Solver<Dtype>::Restore)
+    .def("snapshot", &Solver<Dtype>::Snapshot);
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(

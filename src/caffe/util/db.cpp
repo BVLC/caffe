@@ -4,38 +4,39 @@
 
 #include <string>
 
-namespace caffe { namespace db {
+namespace caffe {
+  namespace db {
 
-DB* GetDB(DataParameter::DB backend) {
-  switch (backend) {
+    DB* GetDB(DataParameter::DB backend) {
+      switch (backend) {
 #ifdef USE_LEVELDB
-  case DataParameter_DB_LEVELDB:
-    return new LevelDB();
+      case DataParameter_DB_LEVELDB:
+        return new LevelDB();
 #endif  // USE_LEVELDB
 #ifdef USE_LMDB
-  case DataParameter_DB_LMDB:
-    return new LMDB();
+      case DataParameter_DB_LMDB:
+        return new LMDB();
 #endif  // USE_LMDB
-  default:
-    LOG(FATAL) << "Unknown database backend";
-    return nullptr;
-  }
-}
+      default:
+        LOG(FATAL) << "Unknown database backend";
+        return NULL;
+      }
+    }
 
-DB* GetDB(const string& backend) {
+    DB* GetDB(const string& backend) {
 #ifdef USE_LEVELDB
-  if (backend == "leveldb") {
-    return new LevelDB();
-  }
+      if (backend == "leveldb") {
+        return new LevelDB();
+      }
 #endif  // USE_LEVELDB
 #ifdef USE_LMDB
-  if (backend == "lmdb") {
-    return new LMDB();
-  }
+      if (backend == "lmdb") {
+        return new LMDB();
+      }
 #endif  // USE_LMDB
-  LOG(FATAL) << "Unknown database backend";
-  return nullptr;
-}
+      LOG(FATAL) << "Unknown database backend";
+      return NULL;
+    }
 
-}  // namespace db
+  }  // namespace db
 }  // namespace caffe
