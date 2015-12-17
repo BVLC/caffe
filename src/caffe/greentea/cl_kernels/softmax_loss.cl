@@ -41,20 +41,19 @@ __kernel void TEMPLATE(softmax_loss_backward,Dtype)(const int_tp nthreads,
 
   for (int_tp index = get_global_id(0); index < nthreads; index +=
       get_global_size(0)) {
-    {
-      const int_tp n = index / spatial_dim;
-      const int_tp s = index % spatial_dim;
-      const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);
 
-      if (has_ignore_label_ == 1 && label_value == ignore_label_) {
-        for (int_tp c = 0; c < channels; ++c) {
-          bottom_diff[n * dim + c * spatial_dim + s] = 0;
-        }
-        counts[index] = 0;
-      } else {
-        bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;
-        counts[index] = 1;
+    const int_tp n = index / spatial_dim;
+    const int_tp s = index % spatial_dim;
+    const int_tp label_value = (int_tp) (label[n * spatial_dim + s]);
+
+    if (has_ignore_label_ == 1 && label_value == ignore_label_) {
+      for (int_tp c = 0; c < channels; ++c) {
+        bottom_diff[n * dim + c * spatial_dim + s] = 0;
       }
+      counts[index] = 0;
+    } else {
+      bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;
+      counts[index] = 1;
     }
   }
 }

@@ -72,7 +72,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     }
     top[0]->mutable_cpu_data()[0] = loss
         / get_normalizer(normalization_, valid_count);
-    if (top.size() == 2) {
+    if (top.size() >= 2) {
       top[1]->ShareData(prob_);
     }
 
@@ -113,7 +113,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     }
     top[0]->mutable_cpu_data()[0] = loss
         / get_normalizer(normalization_, valid_count);
-    if (top.size() == 2) {
+    if (top.size() >= 2) {
       top[1]->ShareData(prob_);
     }
 #endif  // USE_GREENTEA
@@ -177,8 +177,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
           ignore_label_, counts);
 
       Dtype valid_count = -1;
-      // Only launch another CUDA kernel if we actually need the count of valid
-      // outputs.
       if (normalization_ == LossParameter_NormalizationMode_VALID &&
           has_ignore_label_) {
         caffe_gpu_asum(nthreads, counts, &valid_count);
@@ -213,8 +211,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
           ctx.get_queue());
 
       Dtype valid_count = -1;
-      // Only launch another CUDA kernel if we actually need the count of valid
-      // outputs.
       if (normalization_ == LossParameter_NormalizationMode_VALID &&
           has_ignore_label_) {
         greentea_gpu_asum<Dtype>(this->device_->id(),
