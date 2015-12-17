@@ -17,7 +17,7 @@ namespace caffe {
 
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
-  this->StopInternalThread();
+  this->JoinPrefetchThread();
 }
 
 template <typename Dtype>
@@ -70,14 +70,11 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   if (crop_size > 0) {
     top[0]->Reshape(batch_size, channels, crop_size, crop_size);
-    for (int i = 0; i < this->PREFETCH_COUNT; ++i)
-      this->prefetch_[i].data_.Reshape(batch_size, channels,
-          crop_size, crop_size);
+    this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
     this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
   } else {
     top[0]->Reshape(batch_size, channels, height, width);
-    for (int i = 0; i < this->PREFETCH_COUNT; ++i)
-      this->prefetch_[i].data_.Reshape(batch_size, channels, height, width);
+    this->prefetch_data_.Reshape(batch_size, channels, height, width);
     this->transformed_data_.Reshape(1, channels, height, width);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -86,9 +83,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].label_.Reshape(label_shape);
-  }
+  this->prefetch_label_.Reshape(label_shape);
 }
 
 template <typename Dtype>
@@ -98,15 +93,15 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
 
-// This function is called on prefetch thread
+// This function is used to create a thread that prefetches the data.
 template <typename Dtype>
-void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
+void ImageDataLayer<Dtype>::InternalThreadEntry() {
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
   double trans_time = 0;
   CPUTimer timer;
-  CHECK(batch->data_.count());
+  CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
@@ -120,14 +115,14 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (batch_size == 1 && crop_size == 0 && new_height == 0 && new_width == 0) {
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         0, 0, is_color);
-    batch->data_.Reshape(1, cv_img.channels(),
+    this->prefetch_data_.Reshape(1, cv_img.channels(),
         cv_img.rows, cv_img.cols);
     this->transformed_data_.Reshape(1, cv_img.channels(),
         cv_img.rows, cv_img.cols);
   }
 
-  Dtype* prefetch_data = batch->data_.mutable_cpu_data();
-  Dtype* prefetch_label = batch->label_.mutable_cpu_data();
+  Dtype* prefetch_data = this->prefetch_data_.mutable_cpu_data();
+  Dtype* prefetch_label = this->prefetch_label_.mutable_cpu_data();
 
   // datum scales
   const int lines_size = lines_.size();
@@ -141,7 +136,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
-    int offset = batch->data_.offset(item_id);
+    int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
