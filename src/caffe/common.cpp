@@ -415,11 +415,6 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
         Get().devices_.emplace_back(dev);
         dev->Init();
         ++initcount;
-      } else {
-        // Temporary until device abstraction is done
-        shared_ptr<device> dev(new device());
-        Get().devices_.emplace_back(dev);
-        ++initcount;
       }
     }
   }
@@ -458,11 +453,6 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
                                   initcount, Backend::BACKEND_OpenCL));
             Get().devices_.emplace_back(dev);
             dev->Init();
-            ++initcount;
-          } else {
-            // Temporary until device abstraction is done
-            shared_ptr<device> dev(new device());
-            Get().devices_.emplace_back(dev);
             ++initcount;
           }
         }
