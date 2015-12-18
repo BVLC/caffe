@@ -62,7 +62,7 @@ There are several implementations of this library. The choice is yours:
 
 ### OpenMP (optional)
 
-Caffe can use OpenMP for parallel execution of CPU layers. OpenMP is supported (and delivered) by most of [compilers](http://openmp.org/wp/openmp-compilers/). To have Caffe use OpenMP uncomment USE_OPENMP := 1 Makefile.config (when using cmake, add -DUSE_OPENMP=ON to your commandline invoking cmake)
+Caffe can use OpenMP for parallel execution of CPU layers. OpenMP is supported (and delivered) by most of [compilers](http://openmp.org/wp/openmp-compilers/). Caffe is using OpenMP be default, to have it disabled please uncomment USE_OPENMP := 0 Makefile.config (when using cmake, add -DUSE_OPENMP=OFF to your commandline invoking cmake)
 
 ### Python and/or MATLAB Caffe (optional)
 
