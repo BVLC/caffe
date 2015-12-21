@@ -23,10 +23,10 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Scale the error element-wise
   if (bottom.size() == 3) {
     caffe_mul<Dtype>(count, diff_.mutable_cpu_data(), bottom[2]->gpu_data(),
-                         diff_.mutable_gpu_data());
+                     diff_.mutable_cpu_data());
   }
   Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
-  Dtype loss = dot / bottom[0]->shape(0) / Dtype(2);
+  Dtype loss = dot / bottom[0]->count(0) / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
 }
 
@@ -38,11 +38,11 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->shape(0);
-      caffe_cpu_axpby(bottom[i]->count(),              // count
+      caffe_cpu_axpby(bottom[i]->count(),     // count
           alpha,                              // alpha
           diff_.cpu_data(),                   // a
           Dtype(0),                           // beta
-          bottom[i]->mutable_cpu_diff());  // b
+          bottom[i]->mutable_cpu_diff());     // b
     }
   }
 }
