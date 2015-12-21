@@ -92,12 +92,38 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
+  // Setup kernel_stride dimensions (kernel_stride_).
+  kernel_stride_.Reshape(spatial_dim_blob_shape);
+  int* kernel_stride_data = kernel_stride_.mutable_cpu_data();
+  if (conv_param.has_kernel_stride_h() || conv_param.has_kernel_stride_w()) {
+    CHECK_EQ(num_spatial_axes_, 2)
+        << "kernel_stride_h & kernel_stride_w can only be used for 2D convolution.";
+    CHECK_EQ(0, conv_param.kernel_stride_size())
+        << "Either kernel_stride or kernel_stride_h/w should be specified; not both.";
+    kernel_stride_data[0] = conv_param.kernel_stride_h();
+    kernel_stride_data[1] = conv_param.kernel_stride_w();
+  } else {
+    const int num_kernel_stride_dims = conv_param.kernel_stride_size();
+    CHECK(num_kernel_stride_dims == 0 || num_kernel_stride_dims == 1 ||
+          num_kernel_stride_dims == num_spatial_axes_)
+        << "kernel_stride must be specified once, or once per spatial dimension "
+        << "(kernel_stride specified " << num_kernel_stride_dims << " times; "
+        << num_spatial_axes_ << " spatial dims);";
+    const int kDefaultkernel_stride = 1;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      kernel_stride_data[i] = (num_kernel_stride_dims == 0) ? kDefaultkernel_stride :
+          conv_param.kernel_stride((num_kernel_stride_dims == 1) ? 0 : i);
+      CHECK_GT(kernel_stride_data[i], 0) << "kernel_stride dimensions must be nonzero.";
+    }
+  }
   // Special case: im2col is the identity for 1x1 convolution with stride 1
-  // and no padding, so flag for skipping the buffer and transformation.
+  // and no padding and kernel stride 1,
+  // so flag for skipping the buffer and transformation.
   is_1x1_ = true;
   for (int i = 0; i < num_spatial_axes_; ++i) {
     is_1x1_ &=
-        kernel_shape_data[i] == 1 && stride_data[i] == 1 && pad_data[i] == 0;
+        kernel_shape_data[i] == 1 && stride_data[i] == 1
+        && pad_data[i] == 0 && kernel_stride_data[i] == 1;
     if (!is_1x1_) { break; }
   }
   // Configure output channels and groups.
