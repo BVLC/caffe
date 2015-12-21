@@ -25,7 +25,6 @@ void EuclideanLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       caffe_gpu_mul<Dtype>(count, diff_.mutable_gpu_data(),
                            bottom[2]->gpu_data(), diff_.mutable_gpu_data());
     }
-    Dtype dot;
     caffe_gpu_dot<Dtype>(count, diff_.gpu_data(), diff_.gpu_data(), &dot);
 #endif  // USE_CUDA
   } else {
