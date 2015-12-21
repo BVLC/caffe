@@ -11,10 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{537EF951-4B02-4103-A310-52A6F7C8D748}</ProjectGuid>
+    <ProjectGuid>{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>caffe</RootNamespace>
-    <ProjectName>caffe</ProjectName>
+    <ProjectName>RunTests</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -111,9 +111,6 @@ exit 0</Command>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\tools\caffe.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="caffelib.vcxproj">
       <Project>{7f271127-d68a-4b9b-acce-1369394ed6e5}</Project>
       <Private>false</Private>
@@ -122,6 +119,79 @@ exit 0</Command>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\caffe\test\test_caffe_main.hpp" />
+    <ClInclude Include="..\include\caffe\test\test_gradient_check_util.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\caffe\test\test_accuracy_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_argmax_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_batch_norm_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_batch_reindex_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_benchmark.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_blob.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_caffe_main.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_common.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_concat_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_contrastive_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_convolution_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_data_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_data_transformer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_db.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_deconvolution_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_dummy_data_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_eltwise_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_embed_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_euclidean_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_filler.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_filter_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_flatten_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_gradient_based_solver.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_hdf5data_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_hdf5_output_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_hinge_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_im2col_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_image_data_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_infogain_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_inner_product_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_internal_thread.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_io.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_layer_factory.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_lrn_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_math_functions.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_maxpool_dropout_layers.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_memory_data_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_multinomial_logistic_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_mvn_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_net.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_neuron_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_platform.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_pooling_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_power_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_protobuf.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_random_number_generator.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_reduction_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_reshape_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_sigmoid_cross_entropy_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_slice_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_softmax_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_softmax_with_loss_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_solver.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_solver_factory.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_split_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_spp_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_stochastic_pooling.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_syncedmem.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_tanh_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_threshold_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_tile_layer.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_upgrade_proto.cpp" />
+    <ClCompile Include="..\src\caffe\test\test_util_blas.cpp" />
+    <ClCompile Include="..\src\gtest\gtest-all.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\caffe\test\test_im2col_kernel.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

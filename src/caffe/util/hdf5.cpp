@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <hdf5/H5LTpublic.h>
 
 namespace caffe {
 

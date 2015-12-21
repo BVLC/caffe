@@ -32,7 +32,7 @@ Now, you should be able to build `caffe.sln`
 ## Development
 
 ### Common issues when pulling new commits from BVLC's branch
-- If compilation fails: regenerate `caffe.pb.h` and `caffe.pb.cc` files. This can be done by removing `src\caffe\proto\caffe.pb.h` file. The build process will regenerate if this file is missing.
+- Remove `src\caffe\proto\caffe.pb.h` file before compiling so that new the new file can be regenerated.
 - If linking fails: it's likely that there are new `cpp` files that need to be added to the `caffelib` project.
 
 ## License and Citation

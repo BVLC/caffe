@@ -105,19 +105,6 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
 
-//Cross entropy loss layer, without computing sigmoid
-template <typename Dtype>
-class CrossEntropyLossLayer : public LossLayer<Dtype> {
-public:
-  explicit CrossEntropyLossLayer(const LayerParameter& param) : LossLayer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) override;
-
-protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) override;
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) override;
-};
-
 }  // namespace caffe
 
 #endif  // CAFFE_SIGMOID_CROSS_ENTROPY_LOSS_LAYER_HPP_
