@@ -7526,6 +7526,7 @@ template<typename Dtype>
 =======
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
@@ -7635,6 +7636,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
@@ -7649,10 +7652,13 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
         (*top)[1]->mutable_data());
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
   }
@@ -7731,6 +7737,7 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 //  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 INSTANTIATE_CLASS(DataLayer);
 REGISTER_LAYER_CLASS(DATA, DataLayer);
@@ -7884,6 +7891,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
 >>>>>>> BVLC/device-abstraction
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======

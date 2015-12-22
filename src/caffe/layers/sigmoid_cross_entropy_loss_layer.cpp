@@ -115,6 +115,7 @@
 =======
 <<<<<<< HEAD
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -198,6 +199,8 @@
 =======
 >>>>>>> BVLC/device-abstraction
 #include "caffe/layer.hpp"
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
@@ -361,6 +364,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -384,6 +388,8 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
 >>>>>>> BVLC/device-abstraction
@@ -1116,6 +1122,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
 =======
@@ -1389,6 +1396,13 @@ REGISTER_LAYER_CLASS(SigmoidCrossEntropyLoss);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/master
+=======
+    // Scale down gradient
+    this->device_->scal(count, Dtype(1) / num, bottom_diff);
+  }
+}
+
+>>>>>>> BVLC/device-abstraction
 =======
     // Scale down gradient
     this->device_->scal(count, Dtype(1) / num, bottom_diff);

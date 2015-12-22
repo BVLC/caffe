@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -31,6 +32,8 @@
 
 >>>>>>> pod/caffe-merge
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -11316,6 +11319,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   Dtype weight_decay = this->param_.weight_decay();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   string regularization_type = this->param_.regularization_type();
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -11430,6 +11434,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Device<Dtype>* device = GetDevice<Dtype>();
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     // Compute the value to history, and then copy them to the blob's diff.
@@ -11443,6 +11449,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       device->axpy(net_params[param_id]->count(), local_decay * local_rate,
           net_params[param_id]->const_data(),
           history_[param_id]->mutable_data());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     }
@@ -11745,10 +11752,16 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> pod/device/blob.hpp
 =======
     }
+=======
+    }
+>>>>>>> BVLC/device-abstraction
     // copy
     device->copy(net_params[param_id]->count(),
         history_[param_id]->const_data(),
         net_params[param_id]->mutable_diff());
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
   }
 >>>>>>> BVLC/device-abstraction

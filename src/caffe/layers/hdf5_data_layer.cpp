@@ -984,12 +984,15 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1118,6 +1121,7 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
 <<<<<<< HEAD
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
@@ -1595,12 +1599,15 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
     this->device_->copy(data_count,
         &data_blob_.cpu_data()[current_row_ * data_count],
         &(*top)[0]->mutable_data()[i * data_count]);
     this->device_->copy(label_data_count,
         &label_blob_.cpu_data()[current_row_ * label_data_count],
         &(*top)[1]->mutable_data()[i * label_data_count]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
   }
@@ -1628,9 +1635,12 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   }
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 template <typename Dtype>
 <<<<<<< HEAD
@@ -2083,6 +2093,8 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======

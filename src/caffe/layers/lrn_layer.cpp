@@ -19,6 +19,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -232,6 +233,10 @@
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> BVLC/device-abstraction
 =======
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
@@ -531,6 +536,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -609,6 +615,8 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
                                      top_data);
   GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,

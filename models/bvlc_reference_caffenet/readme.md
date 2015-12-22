@@ -15,6 +15,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_caffenet.caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -127,6 +128,9 @@ license: unrestricted
 =======
 license: unrestricted
 >>>>>>> BVLC/device-abstraction
+=======
+license: unrestricted
+>>>>>>> BVLC/device-abstraction
 sha1: 4c8d77deb20ea792f84eb5e6d0a11ca0a8660a46
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
@@ -146,6 +150,7 @@ This model was trained by Jeff Donahue @jeffdonahue
 
 ## License
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -276,6 +281,9 @@ This model is released for unrestricted use.
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+This model is released for unrestricted use.
+>>>>>>> BVLC/device-abstraction
 =======
 This model is released for unrestricted use.
 >>>>>>> BVLC/device-abstraction

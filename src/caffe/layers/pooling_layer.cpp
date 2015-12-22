@@ -121,6 +121,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -273,6 +274,8 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
@@ -710,6 +713,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_mask = (*top)[1]->mutable_cpu_data();
       GetDevice<Dtype>(Caffe::CPU)->set(top_count, Dtype(-1), top_mask);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -806,6 +810,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
     } else {
@@ -919,6 +925,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1167,6 +1174,10 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  GetDevice<Dtype>(Caffe::CPU)->set((*bottom)[0]->count(), Dtype(0),
+                                    bottom_diff);
+>>>>>>> BVLC/device-abstraction
 =======
   GetDevice<Dtype>(Caffe::CPU)->set((*bottom)[0]->count(), Dtype(0),
                                     bottom_diff);

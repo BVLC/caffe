@@ -28633,6 +28633,9 @@ class SilenceLayer : public Layer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
                         const vector<bool>& propagate_down,
                         vector<Blob<Dtype>*>* bottom) { NOT_IMPLEMENTED; }
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
 =======
@@ -28699,6 +28702,7 @@ class ReshapeLayer : public Layer<Dtype> {
  protected:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -28718,6 +28722,8 @@ class ReshapeLayer : public Layer<Dtype> {
   int count_;
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   bool out_max_val_;
   size_t top_k_;
 >>>>>>> BVLC/device-abstraction
@@ -28804,6 +28810,13 @@ class SilenceLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+=======
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+<<<<<<< HEAD
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 =======
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -28910,6 +28923,7 @@ class SoftmaxLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -29432,6 +29446,8 @@ class ReductionLayer : public Layer<Dtype> {
   int axis_;
   /// @brief the number of reductions performed
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> col_bob_;
   int count_;
 >>>>>>> BVLC/device-abstraction
@@ -29482,6 +29498,9 @@ class ReshapeLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Reshape"; }
@@ -29489,6 +29508,7 @@ class ReshapeLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -29506,6 +29526,8 @@ class ReshapeLayer : public Layer<Dtype> {
   /// @brief the product of the "constant" output dimensions
   int constant_count_;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   int count_;
 >>>>>>> BVLC/device-abstraction
 };
@@ -29539,6 +29561,7 @@ class ReductionLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -29642,6 +29665,8 @@ class ReductionLayer : public Layer<Dtype> {
   Blob<Dtype> sum_multiplier_;
 };
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
@@ -30073,6 +30098,7 @@ class SplitLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -30188,12 +30214,15 @@ class SplitLayer : public Layer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Split"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -30434,6 +30463,8 @@ class SplitLayer : public Layer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
   int count_;

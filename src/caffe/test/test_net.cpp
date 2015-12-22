@@ -24,6 +24,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/filler.hpp"
@@ -271,6 +272,9 @@
 #include "caffe/filler.hpp"
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 =======
 #include "caffe/device.hpp"
 >>>>>>> BVLC/device-abstraction
@@ -3366,6 +3370,7 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -3387,10 +3392,13 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   GetDevice<Dtype>()->axpy(count, Dtype(1), ip2_weights->const_diff(),
                            shared_params.mutable_diff());
   GetDevice<Dtype>()->axpy(count, Dtype(-1), shared_params.const_diff(),
                            shared_params.mutable_data());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3580,6 +3588,8 @@ TYPED_TEST(NetTest, TestSharedWeightsUpdate) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -3822,12 +3832,15 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     const Dtype param_asum =
        caffe_cpu_asum(params2[i]->count(), params2[i]->cpu_diff());
     EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -4260,6 +4273,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   const vector<shared_ptr<Blob<Dtype> > >& params2 = this->net_->params();
   ASSERT_EQ(num_params, params2.size());
   for (int i = 0; i < num_params; ++i) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4414,6 +4428,8 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   const vector<shared_ptr<Blob<Dtype> > >& params3 = this->net_->params();
   ASSERT_EQ(num_params, params3.size());
   for (int i = 0; i < num_params; ++i) {
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======

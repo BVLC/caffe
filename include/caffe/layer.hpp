@@ -24,6 +24,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/layer_factory.hpp"
@@ -271,6 +272,9 @@
 #include "caffe/layer_factory.hpp"
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 =======
 #include "caffe/device.hpp"
 >>>>>>> BVLC/device-abstraction
@@ -2915,6 +2919,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
@@ -3647,6 +3652,10 @@ class Layer {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
+=======
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+>>>>>>> BVLC/device-abstraction
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
 
@@ -4160,6 +4169,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
   /** The vector that indicates whether each top blob has a non-zero weight in
@@ -4489,6 +4499,8 @@ class Layer {
       const vector<Blob<Dtype>*>& top) {
 =======
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 
@@ -4611,6 +4623,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -5520,6 +5533,9 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
       vector<Blob<Dtype>*>* bottom) { return; }
 >>>>>>> BVLC/device-abstraction
+=======
+      vector<Blob<Dtype>*>* bottom) { return; }
+>>>>>>> BVLC/device-abstraction
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
@@ -5631,6 +5647,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -5686,6 +5703,8 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,

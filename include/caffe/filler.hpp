@@ -238,6 +238,7 @@
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
@@ -261,6 +262,8 @@
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
@@ -645,6 +648,7 @@ class XavierFiller : public Filler<Dtype> {
                                               blob->mutable_cpu_data());
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -935,6 +939,8 @@ class MSRAFiller : public Filler<Dtype> {
         blob->mutable_cpu_data());
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
     CHECK_EQ(this->filler_param_.sparse(), -1)

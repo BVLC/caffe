@@ -143,6 +143,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -363,6 +364,10 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  GetDevice<TypeParam>(Caffe::CPU)->fabs(n, x,
+      this->blob_bottom_->mutable_cpu_diff());
+>>>>>>> BVLC/device-abstraction
 =======
   GetDevice<TypeParam>(Caffe::CPU)->fabs(n, x,
       this->blob_bottom_->mutable_cpu_diff());
@@ -410,6 +415,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -586,6 +592,9 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
 =======
   GetDevice<TypeParam>(Caffe::CPU)->copy(n, bottom_data, top_data);
 >>>>>>> BVLC/device-abstraction
+=======
+  GetDevice<TypeParam>(Caffe::CPU)->copy(n, bottom_data, top_data);
+>>>>>>> BVLC/device-abstraction
   for (int i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
   }
@@ -674,6 +683,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
 
 TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   int n = this->blob_bottom_->count();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1139,6 +1149,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   GetDevice<TypeParam>(Caffe::GPU)->sgnbit(n, this->blob_bottom_->gpu_data(),
       this->blob_bottom_->mutable_gpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
@@ -1150,6 +1162,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
 
 TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   int n = this->blob_bottom_->count();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1260,6 +1273,10 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   GetDevice<TypeParam>(Caffe::GPU)->fabs(n, this->blob_bottom_->gpu_data(),
       this->blob_bottom_->mutable_gpu_diff());
 >>>>>>> BVLC/device-abstraction
+=======
+  GetDevice<TypeParam>(Caffe::GPU)->fabs(n, this->blob_bottom_->gpu_data(),
+      this->blob_bottom_->mutable_gpu_diff());
+>>>>>>> BVLC/device-abstraction
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int i = 0; i < n; ++i) {
@@ -1284,6 +1301,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   const int n = this->blob_bottom_->count();
   const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
   TypeParam* top_data = this->blob_top_->mutable_gpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1454,6 +1472,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   caffe_copy(n, bottom_data, top_data);
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  GetDevice<TypeParam>(Caffe::GPU)->copy(n, bottom_data, top_data);
+>>>>>>> BVLC/device-abstraction
 =======
   GetDevice<TypeParam>(Caffe::GPU)->copy(n, bottom_data, top_data);
 >>>>>>> BVLC/device-abstraction

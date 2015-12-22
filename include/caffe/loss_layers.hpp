@@ -8281,6 +8281,9 @@ class AccuracyLayer : public Layer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
                         const vector<bool>& propagate_down,
                         vector<Blob<Dtype>*>* bottom) { NOT_IMPLEMENTED; }
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
   virtual inline int ExactNumBottomBlobs() const { return 3; }
@@ -8307,6 +8310,7 @@ class AccuracyLayer : public Layer<Dtype> {
   }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
   /// @copydoc ContrastiveLossLayer
 >>>>>>> pod/device/blob.hpp
@@ -8425,6 +8429,8 @@ class AccuracyLayer : public Layer<Dtype> {
   Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
   Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   int top_k_;
 >>>>>>> BVLC/device-abstraction
 };
@@ -8532,12 +8538,15 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 
@@ -8625,6 +8634,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -8723,6 +8733,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> diff_;
 };
 
@@ -8817,9 +8829,15 @@ class HingeLossLayer : public LossLayer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -9133,6 +9151,8 @@ class HingeLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -9204,6 +9224,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -9270,6 +9291,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 >>>>>>> caffe
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
@@ -9281,6 +9304,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
@@ -9465,6 +9489,9 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 =======
  protected:
 >>>>>>> BVLC/device-abstraction
+=======
+ protected:
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> infogain_;
 };
 
@@ -9564,6 +9591,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -9579,10 +9607,13 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -9745,6 +9776,8 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -9798,6 +9831,9 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
@@ -9819,6 +9855,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10125,6 +10162,8 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
   /// sigmoid_output stores the output of the SigmoidLayer.
   shared_ptr<Blob<Dtype> > sigmoid_output_;
@@ -10240,6 +10279,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
       : LossLayer<Dtype>(param),
@@ -10250,6 +10290,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 
@@ -10305,6 +10347,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10595,6 +10638,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction

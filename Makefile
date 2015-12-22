@@ -450,6 +450,7 @@ DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -507,6 +508,8 @@ DEVICE_BUILD_DIR := $(OBJ_BUILD_DIR)/devices
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
@@ -1756,6 +1759,12 @@ $(DEVICE_BUILD_DIR)/%.o: src/$(PROJECT)/devices/%.cpp $(HXX_SRCS) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ echo
 
+$(DEVICE_BUILD_DIR)/%.o: src/$(PROJECT)/devices/%.cpp $(HXX_SRCS) \
+		| $(DEVICE_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ echo
+
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		| $(PROTO_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
@@ -1826,6 +1835,7 @@ $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo
 >>>>>>> origin/BVLC/parallel
 
+<<<<<<< HEAD
 =======
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
@@ -2140,6 +2150,8 @@ $(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) \
 >>>>>>> pod-caffe-pod.hpp-merge
 		| $(LAYER_BUILD_DIR)
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
 		| $(DEVICE_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
@@ -2147,6 +2159,9 @@ $(DEVICE_BUILD_DIR)/%.cuo: src/$(PROJECT)/devices/%.cu $(HXX_SRCS) \
 	@ echo
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
 >>>>>>> BVLC/device-abstraction
 =======

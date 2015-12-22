@@ -1080,6 +1080,7 @@ Dtype Blob<Dtype>::asum_diff() const {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1088,11 +1089,15 @@ Dtype Blob<Dtype>::asum_diff() const {
 =======
     return asum;
 >>>>>>> BVLC/device-abstraction
+=======
+    return asum;
+>>>>>>> BVLC/device-abstraction
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
     return asum;
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1135,12 +1140,15 @@ Dtype Blob<Dtype>::asum_diff() const {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
   return asum;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1156,6 +1164,8 @@ template <> unsigned int Blob<unsigned int>::sumsq_data() const {
 template <> int Blob<int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1212,6 +1222,9 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   } else {
     GetDevice<Dtype>()->copy(count_, source.const_data(),
                              static_cast<Dtype*>(data_->mutable_data()));
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
   }
 <<<<<<< HEAD

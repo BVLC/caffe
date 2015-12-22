@@ -13668,6 +13668,39 @@ class HDF5OutputLayer : public Layer<Dtype> {
 };
 
 
+template <typename Dtype>
+class HDF5OutputLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5OutputLayer(const LayerParameter& param);
+  virtual ~HDF5OutputLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_HDF5_OUTPUT;
+  }
+  // TODO: no limit on the number of blobs
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 0; }
+
+  inline std::string file_name() const { return file_name_; }
+
+ protected:
+  virtual void SaveBlobs();
+
+  std::string file_name_;
+  hid_t file_id_;
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
+};
+
+
 // TODO: DataLayer, ImageDataLayer, and WindowDataLayer all have the
 // same basic structure and a lot of duplicated code.
 >>>>>>> BVLC/device-abstraction
@@ -13707,6 +13740,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   virtual void load_batch(Batch<Dtype>* batch);
@@ -13796,6 +13830,8 @@ class BasePrefetchingDataLayer :
 
  protected:
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
   virtual void CreatePrefetchThread();
@@ -13970,6 +14006,7 @@ class DummyDataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -13998,6 +14035,8 @@ class DummyDataLayer : public Layer<Dtype> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -14129,6 +14168,7 @@ class DummyDataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14219,6 +14259,8 @@ class DummyDataLayer : public Layer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   vector<shared_ptr<Filler<Dtype> > > fillers_;
   vector<bool> refill_;
 };
@@ -14296,6 +14338,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -14324,6 +14367,8 @@ class HDF5DataLayer : public Layer<Dtype> {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -14455,6 +14500,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14585,6 +14631,8 @@ class HDF5DataLayer : public Layer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   virtual void LoadHDF5FileData(const char* filename);
 
   std::vector<std::string> hdf_filenames_;
@@ -14638,6 +14686,7 @@ class HDF5DataLayer : public Layer<Dtype> {
  * TODO(dox): thorough documentation for Forward and proto params.
  */
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14765,6 +14814,8 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -14946,6 +14997,7 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -14990,6 +15042,9 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  }
+>>>>>>> BVLC/device-abstraction
 =======
   }
 >>>>>>> BVLC/device-abstraction
@@ -15096,6 +15151,7 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15267,6 +15323,8 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -15383,6 +15441,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -15586,6 +15645,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -15834,6 +15895,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int width() { return width_; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -16182,6 +16244,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 =======
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Dtype* data_;
   Dtype* labels_;
   int n_;
@@ -16330,6 +16394,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -16535,6 +16600,9 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 =======
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  }
+>>>>>>> BVLC/device-abstraction
 =======
   }
 >>>>>>> BVLC/device-abstraction
@@ -16599,6 +16667,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -16791,6 +16860,8 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
   virtual void CreatePrefetchThread();

@@ -2303,6 +2303,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -2678,6 +2679,8 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(ImageDataLayer);

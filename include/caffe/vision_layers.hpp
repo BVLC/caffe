@@ -13065,6 +13065,7 @@ class Im2colLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -13398,6 +13399,8 @@ class Im2colLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+=======
+>>>>>>> BVLC/device-abstraction
 
 =======
 
@@ -13406,6 +13409,7 @@ class Im2colLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -13515,6 +13519,8 @@ class Im2colLayer : public Layer<Dtype> {
 
   int channel_axis_;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
 >>>>>>> BVLC/device-abstraction
@@ -13588,6 +13594,9 @@ class EltwiseLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
 <<<<<<< HEAD
@@ -13604,6 +13613,7 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
  protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -13617,6 +13627,8 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   int size_;
   Dtype alpha_, beta_, k_;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   EltwiseParameter_EltwiseOp op_;
   vector<Dtype> coeffs_;
 >>>>>>> BVLC/device-abstraction
@@ -13637,6 +13649,9 @@ class Im2colLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
 template <typename Dtype>
@@ -13679,6 +13694,7 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
  protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -13692,6 +13708,8 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   int size_;
   Dtype alpha_, beta_, k_;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int channels_;
@@ -13729,6 +13747,9 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
  protected:
@@ -13769,6 +13790,7 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
  protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -13782,6 +13804,8 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   int size_;
   Dtype alpha_, beta_, k_;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   int M_;
   int K_;
   int N_;

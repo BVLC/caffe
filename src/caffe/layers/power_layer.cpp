@@ -79,6 +79,7 @@
 >>>>>>> BVLC/device-abstraction
 <<<<<<< HEAD
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 #include "caffe/vision_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -116,6 +117,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 #include "caffe/layer.hpp"
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -276,6 +279,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -538,6 +542,11 @@ void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> BVLC/device-abstraction
 =======
 Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
@@ -566,6 +575,7 @@ Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     caffe_set(count, value, top_data);
@@ -762,6 +772,8 @@ Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
     this->device_->set(count, value, top_data);
@@ -845,6 +857,7 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2114,6 +2127,15 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const Dtype* bottom_data = bottom[0]->cpu_data();
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    const int count = (*bottom)[0]->count();
+    const Dtype* top_diff = top[0]->const_diff();
+    if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
+      this->device_->set(count, diff_scale_, bottom_diff);
+    } else {
+      const Dtype* bottom_data = (*bottom)[0]->const_data();
+>>>>>>> BVLC/device-abstraction
 =======
     Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     const int count = (*bottom)[0]->count();

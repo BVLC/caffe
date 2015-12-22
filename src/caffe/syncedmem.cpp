@@ -440,6 +440,7 @@ inline void SyncedMemory::to_cpu() {
     CaffeMallocHost(&cpu_ptr_, size_);
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -483,6 +484,8 @@ inline void SyncedMemory::to_cpu() {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
     head_ = HEAD_AT_CPU;
@@ -1257,6 +1260,7 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
@@ -1299,12 +1303,15 @@ void* SyncedMemory::mutable_gpu_data() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
     return cpu_data();
   case Caffe::GPU:
     return gpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -1321,11 +1328,14 @@ const void* SyncedMemory::const_data() {
 =======
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   default:
     LOG(FATAL) << "Unknown caffe mode.";
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1344,6 +1354,8 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
 void* SyncedMemory::mutable_data() {
   switch (Caffe::mode()) {
@@ -1353,7 +1365,10 @@ void* SyncedMemory::mutable_data() {
     return mutable_gpu_data();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1363,6 +1378,7 @@ void* SyncedMemory::mutable_data() {
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2552,6 +2568,9 @@ void* SyncedMemory::mutable_data() {
 
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+
+>>>>>>> BVLC/device-abstraction
 =======
 
 >>>>>>> BVLC/device-abstraction

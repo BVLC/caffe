@@ -759,6 +759,9 @@ class ExpLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 
 <<<<<<< HEAD
@@ -778,6 +781,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
   /**
    * @param bottom input Blob vector (length 1)
@@ -828,6 +832,8 @@ class ExpLayer : public NeuronLayer<Dtype> {
 
   Dtype inner_scale_, outer_scale_;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   Dtype power_;
   Dtype scale_;
   Dtype shift_;
