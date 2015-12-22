@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -19,6 +20,38 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+train_net: "examples/hdf5_classification/logreg_auto_train.prototxt"
+test_net: "examples/hdf5_classification/logreg_auto_test.prototxt"
+test_iter: 250
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -35,35 +68,6 @@ test_iter: 250
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/caffe-merge
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-train_net: "examples/hdf5_classification/logreg_auto_train.prototxt"
-test_net: "examples/hdf5_classification/logreg_auto_test.prototxt"
-test_iter: 250
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -84,6 +88,8 @@ test_iter: 250
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 net: "examples/hdf5_classification/train_val.prototxt"
 test_iter: 1000
 >>>>>>> origin/BVLC/parallel
@@ -92,6 +98,7 @@ train_net: "examples/hdf5_classification/logreg_auto_train.prototxt"
 test_net: "examples/hdf5_classification/logreg_auto_test.prototxt"
 test_iter: 250
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -143,6 +150,8 @@ train_net: "examples/hdf5_classification/logreg_auto_train.prototxt"
 test_net: "examples/hdf5_classification/logreg_auto_test.prototxt"
 test_iter: 250
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 test_interval: 1000
 base_lr: 0.01
 lr_policy: "step"

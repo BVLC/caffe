@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -83,6 +84,10 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
 TOOLS=build/tools
@@ -100,6 +105,7 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -145,11 +151,15 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 ./build/tools/compute_image_mean examples/imagenet/ilsvrc12_train_leveldb \
   data/ilsvrc12/imagenet_mean.binaryproto
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -192,5 +202,7 @@ $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 echo "Done."

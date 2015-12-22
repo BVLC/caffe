@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/bnll_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -22,6 +23,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -77,6 +81,7 @@ INSTANTIATE_CLASS(BNLLLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -97,12 +102,15 @@ INSTANTIATE_CLASS(BNLLLayer);
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(BNLL);
 
 =======
 REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -192,5 +200,9 @@ REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 REGISTER_LAYER_CLASS(BNLL);
 
 >>>>>>> pod/device/blob.hpp
+=======
+REGISTER_LAYER_CLASS(BNLL);
+
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> caffe
 }  // namespace caffe

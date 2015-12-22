@@ -14,6 +14,7 @@ name: "FlickrStyleCaffeNet"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -86,6 +87,10 @@ name: "FlickrStyleCaffeNet"
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "data"
   type: "ImageData"
@@ -112,6 +117,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -157,6 +163,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   name: "data"
   type: IMAGE_DATA
@@ -176,6 +185,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -212,6 +222,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   image_data_param {
     source: "data/flickr_style/train.txt"
     batch_size: 50
@@ -233,6 +245,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -305,6 +318,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "data"
@@ -332,6 +349,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -377,6 +395,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   transform_param {
     crop_size: 227
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
@@ -392,6 +413,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -532,6 +554,18 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+  image_data_param {
+    source: "data/flickr_style/test.txt"
+    batch_size: 50
+    new_height: 256
+    new_width: 256
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "conv1"
@@ -559,6 +593,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -604,6 +639,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   transform_param {
     crop_size: 227
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
@@ -634,6 +672,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -670,6 +709,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 96
     kernel_size: 11
@@ -699,6 +740,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -754,6 +796,10 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "relu1"
   type: "ReLU"
@@ -770,6 +816,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -797,6 +844,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   name: "relu1"
   type: RELU
@@ -816,6 +866,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -840,10 +891,44 @@ layers {
 >>>>>>> caffe
 =======
 =======
+=======
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+layer {
+  name: "norm1"
+  type: "LRN"
+=======
+layers {
+  name: "norm1"
+  type: LRN
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "norm1"
+  type: "LRN"
+>>>>>>> caffe
+  bottom: "pool1"
+  top: "norm1"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -892,10 +977,78 @@ layers {
 }
 layers {
   name: "pool1"
+=======
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "norm1"
+  top: "conv2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  name: "conv2"
+  type: CONVOLUTION
+  bottom: "norm1"
+  top: "conv2"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 256
+    pad: 2
+    kernel_size: 5
+    group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu2"
+  type: RELU
+  bottom: "conv2"
+  top: "conv2"
+}
+layers {
+  name: "pool2"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: POOLING
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -910,12 +1063,17 @@ layers {
 >>>>>>> BVLC/device-abstraction
   bottom: "conv1"
   top: "pool1"
+=======
+  bottom: "conv2"
+  top: "pool2"
+>>>>>>> pod-caffe-pod.hpp-merge
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1192,6 +1350,37 @@ layer {
   type: "Convolution"
   bottom: "norm1"
   top: "conv2"
+=======
+layer {
+  name: "norm2"
+  type: "LRN"
+=======
+layers {
+  name: "norm2"
+  type: LRN
+>>>>>>> origin/BVLC/parallel
+=======
+layer {
+  name: "norm2"
+  type: "LRN"
+>>>>>>> caffe
+  bottom: "pool2"
+  top: "norm2"
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "norm2"
+  top: "conv3"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1200,6 +1389,117 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+layers {
+  name: "conv3"
+  type: CONVOLUTION
+  bottom: "norm2"
+  top: "conv3"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "relu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+}
+layer {
+  name: "conv4"
+  type: "Convolution"
+  bottom: "conv3"
+  top: "conv4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu3"
+  type: RELU
+  bottom: "conv3"
+  top: "conv3"
+}
+layers {
+  name: "conv4"
+  type: CONVOLUTION
+  bottom: "conv3"
+  top: "conv4"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "relu4"
+  type: "ReLU"
+  bottom: "conv4"
+  top: "conv4"
+}
+layer {
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+>>>>>>> pod-caffe-pod.hpp-merge
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1263,6 +1563,20 @@ layers {
   type: CONVOLUTION
   bottom: "norm1"
   top: "conv2"
+=======
+=======
+layers {
+  name: "relu4"
+  type: RELU
+  bottom: "conv4"
+  top: "conv4"
+}
+layers {
+  name: "conv5"
+  type: CONVOLUTION
+  bottom: "conv4"
+  top: "conv5"
+>>>>>>> pod-caffe-pod.hpp-merge
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -1270,6 +1584,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1321,6 +1636,12 @@ layers {
     num_output: 256
     pad: 2
     kernel_size: 5
+=======
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+>>>>>>> pod-caffe-pod.hpp-merge
     group: 2
     weight_filler {
       type: "gaussian"
@@ -1332,6 +1653,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1547,12 +1869,42 @@ layers {
 >>>>>>> BVLC/device-abstraction
   bottom: "conv2"
   top: "pool2"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "relu5"
+  type: "ReLU"
+  bottom: "conv5"
+  top: "conv5"
+}
+layer {
+  name: "pool5"
+  type: "Pooling"
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu5"
+  type: RELU
+  bottom: "conv5"
+  top: "conv5"
+}
+layers {
+  name: "pool5"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "conv5"
+  top: "pool5"
+>>>>>>> pod-caffe-pod.hpp-merge
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3399,6 +3751,15 @@ layer {
   bottom: "fc6"
   top: "fc7"
   # Note that lr_mult can be set to 0 to disable any fine-tuning of this, and any other, layer
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "fc6"
+  type: "InnerProduct"
+  bottom: "pool5"
+  top: "fc6"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -3407,6 +3768,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -3431,6 +3793,14 @@ layers {
   bottom: "fc6"
   top: "fc7"
   # Note that blobs_lr can be set to 0 to disable any fine-tuning of this, and any other, layer
+=======
+=======
+layers {
+  name: "fc6"
+  type: INNER_PRODUCT
+  bottom: "pool5"
+  top: "fc6"
+>>>>>>> pod-caffe-pod.hpp-merge
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -3449,6 +3819,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3485,6 +3856,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 4096
     weight_filler {
@@ -3497,6 +3870,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3659,10 +4033,34 @@ layers {
 }
 layers {
   name: "drop7"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "relu6"
+  type: "ReLU"
+  bottom: "fc6"
+  top: "fc6"
+}
+layer {
+  name: "drop6"
+  type: "Dropout"
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu6"
+  type: RELU
+  bottom: "fc6"
+  top: "fc6"
+}
+layers {
+  name: "drop6"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: DROPOUT
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3712,6 +4110,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   bottom: "fc7"
   top: "fc7"
+=======
+  bottom: "fc6"
+  top: "fc6"
+>>>>>>> pod-caffe-pod.hpp-merge
   dropout_param {
     dropout_ratio: 0.5
   }
@@ -3731,6 +4133,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3754,10 +4157,56 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "fc7"
+  type: "InnerProduct"
+  bottom: "fc6"
+  top: "fc7"
+  # Note that lr_mult can be set to 0 to disable any fine-tuning of this, and any other, layer
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  name: "fc7"
+  type: INNER_PRODUCT
+  bottom: "fc6"
+  top: "fc7"
+  # Note that blobs_lr can be set to 0 to disable any fine-tuning of this, and any other, layer
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3803,6 +4252,41 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+layer {
+  name: "relu7"
+  type: "ReLU"
+  bottom: "fc7"
+  top: "fc7"
+}
+layer {
+  name: "drop7"
+  type: "Dropout"
+<<<<<<< HEAD
+=======
+layers {
+  name: "relu7"
+  type: RELU
+  bottom: "fc7"
+  top: "fc7"
+}
+layers {
+  name: "drop7"
+  type: DROPOUT
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "fc7"
+  top: "fc7"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "fc8_flickr"
   type: "InnerProduct"
@@ -3830,6 +4314,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3875,6 +4360,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   name: "fc8_flickr"
   type: INNER_PRODUCT
@@ -3899,6 +4387,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3935,6 +4424,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 20
     weight_filler {
@@ -3962,6 +4453,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4034,6 +4526,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "accuracy"
   type: "Accuracy"
@@ -4063,6 +4559,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4108,6 +4605,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   name: "loss"
   type: SOFTMAX_LOSS
@@ -4135,6 +4635,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -4171,4 +4672,6 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }

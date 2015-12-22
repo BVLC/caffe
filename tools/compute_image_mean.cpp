@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -62,11 +63,15 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -109,6 +114,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <stdint.h>
 #include <algorithm>
 #include <string>
@@ -127,6 +134,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -195,6 +203,10 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
@@ -210,6 +222,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -232,9 +245,12 @@
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -289,6 +305,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -308,6 +326,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -324,6 +343,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 using namespace caffe;  // NOLINT(build/namespaces)
 
 using std::max;
@@ -356,6 +377,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -425,6 +447,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc < 2 || argc > 3) {
@@ -473,6 +497,7 @@ int main(int argc, char** argv) {
   }
 
   std::string db_backend = FLAGS_backend;
+<<<<<<< HEAD
 
   caffe::shared_ptr<Dataset<std::string, Datum> > dataset =
       caffe::DatasetFactory<std::string, Datum>(db_backend);
@@ -587,6 +612,9 @@ int main(int argc, char** argv) {
 
   std::string db_backend = FLAGS_backend;
 
+=======
+
+>>>>>>> pod-caffe-pod.hpp-merge
   caffe::shared_ptr<Dataset<std::string, Datum> > dataset =
       caffe::DatasetFactory<std::string, Datum>(db_backend);
 
@@ -625,6 +653,7 @@ int main(int argc, char** argv) {
         "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -639,6 +668,8 @@ int main(int argc, char** argv) {
         "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
 
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc < 2 || argc > 3) {
@@ -650,6 +681,7 @@ int main(int argc, char** argv) {
   db->Open(argv[1], db::READ);
   scoped_ptr<db::Cursor> cursor(db->NewCursor());
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   BlobProto sum_blob;
@@ -805,10 +837,16 @@ int main(int argc, char** argv) {
   int count = 0;
   // load first datum
 >>>>>>> pod/post-rebase-error-fix
+=======
+  BlobProto sum_blob;
+  int count = 0;
+  // load first datum
+>>>>>>> pod-caffe-pod.hpp-merge
   Datum datum;
   datum.ParseFromString(cursor->value());
 
   if (DecodeDatumNative(&datum)) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -867,6 +905,9 @@ int main(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
     LOG(INFO) << "Decoding Datum";
   }
 
@@ -894,6 +935,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -962,6 +1004,10 @@ int main(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   while (cursor->valid()) {
     Datum datum;
     datum.ParseFromString(cursor->value());
@@ -977,6 +1023,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1022,6 +1069,9 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   for (Dataset<std::string, Datum>::const_iterator iter = dataset->begin();
       iter != dataset->end(); ++iter) {
     Datum datum = iter->value;
@@ -1040,6 +1090,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1071,6 +1122,8 @@ int main(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),
@@ -1106,6 +1159,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     cursor->Next();
@@ -1187,12 +1241,15 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     cursor->Next();
 =======
 >>>>>>> origin/BVLC/parallel
 =======
     cursor->Next();
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1213,6 +1270,8 @@ int main(int argc, char** argv) {
 =======
     cursor->Next();
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   if (count % 10000 != 0) {
@@ -1240,6 +1299,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1274,6 +1334,8 @@ int main(int argc, char** argv) {
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   const int channels = sum_blob.channels();
   const int dim = sum_blob.height() * sum_blob.width();
@@ -1305,6 +1367,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1336,6 +1399,8 @@ int main(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   const int channels = sum_blob.channels();
   const int dim = sum_blob.height() * sum_blob.width();
@@ -1365,6 +1430,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1408,5 +1474,8 @@ int main(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   return 0;
 }

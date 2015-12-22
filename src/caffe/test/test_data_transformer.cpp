@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -72,10 +73,15 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -121,6 +127,8 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <string>
 #include <vector>
 
@@ -173,6 +181,7 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -241,6 +250,10 @@ class DataTransformTest : public ::testing::Test {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
       const Datum& datum, Phase phase) {
     // Get crop sequence with Caffe seed 1701.
     DataTransformer<Dtype>* transformer =
@@ -256,6 +269,7 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -301,6 +315,9 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       const Datum& datum) {
     // Get crop sequence with Caffe seed 1701.
     DataTransformer<Dtype>* transformer =
@@ -319,6 +336,7 @@ class DataTransformTest : public ::testing::Test {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -350,6 +368,8 @@ class DataTransformTest : public ::testing::Test {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     const int crop_size = transform_param.crop_size();
     Caffe::set_random_seed(seed_);
     transformer->InitRand();
@@ -414,6 +434,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
@@ -527,6 +548,14 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> pod/post-rebase-error-fix
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+      new DataTransformer<TypeParam>(transform_param);
+>>>>>>> origin/BVLC/parallel
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+>>>>>>> caffe
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -545,6 +574,50 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
   const int channels = 3;
   const int height = 4;
   const int width = 5;
+
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Blob<TypeParam>* blob = new Blob<TypeParam>(1, 3, 4, 5);
+  DataTransformer<TypeParam>* transformer =
+<<<<<<< HEAD
+<<<<<<< HEAD
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+      new DataTransformer<TypeParam>(transform_param);
+>>>>>>> origin/BVLC/parallel
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  transformer->InitRand();
+  transformer->Transform(datum, blob);
+  EXPECT_EQ(blob->num(), 1);
+  EXPECT_EQ(blob->channels(), datum.channels());
+  EXPECT_EQ(blob->height(), datum.height());
+  EXPECT_EQ(blob->width(), datum.width());
+  for (int j = 0; j < blob->count(); ++j) {
+<<<<<<< HEAD
+    EXPECT_EQ(blob->cpu_data()[j], label);
+  }
+}
+
+TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+=======
+    EXPECT_EQ(blob->cpu_data()[j], j);
+  }
+}
+
+TYPED_TEST(DataTransformTest, TestCropSize) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = false;  // all pixels the same equal to label
+>>>>>>> pod-caffe-pod.hpp-merge
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+<<<<<<< HEAD
 
   Datum datum;
   FillDatum(label, channels, height, width, unique_pixels, &datum);
@@ -604,11 +677,24 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 >>>>>>> pod/caffe-merge
+=======
+  const int crop_size = 2;
+
+  transform_param.set_crop_size(crop_size);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  DataTransformer<TypeParam>* transformer =
+<<<<<<< HEAD
+<<<<<<< HEAD
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -690,12 +776,135 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
 TYPED_TEST(DataTransformTest, TestCropSize) {
   TransformationParameter transform_param;
   const bool unique_pixels = false;  // all pixels the same equal to label
+=======
+  transformer->InitRand();
+  Blob<TypeParam>* blob =
+      new Blob<TypeParam>(1, channels, crop_size, crop_size);
+  for (int iter = 0; iter < this->num_iter_; ++iter) {
+    transformer->Transform(datum, blob);
+    EXPECT_EQ(blob->num(), 1);
+    EXPECT_EQ(blob->channels(), datum.channels());
+    EXPECT_EQ(blob->height(), crop_size);
+    EXPECT_EQ(blob->width(), crop_size);
+    for (int j = 0; j < blob->count(); ++j) {
+      EXPECT_EQ(blob->cpu_data()[j], label);
+    }
+  }
+}
+
+TYPED_TEST(DataTransformTest, TestCropTrain) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int crop_size = 2;
+  const int size = channels * crop_size * crop_size;
+
+  transform_param.set_crop_size(crop_size);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+<<<<<<< HEAD
+<<<<<<< HEAD
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+=======
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+>>>>>>> caffe
+  EXPECT_LT(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TestCropTest) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int crop_size = 2;
+  const int size = channels * crop_size * crop_size;
+
+  transform_param.set_crop_size(crop_size);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+<<<<<<< HEAD
+<<<<<<< HEAD
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
+=======
+  Caffe::set_phase(Caffe::TEST);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
+>>>>>>> caffe
+  EXPECT_EQ(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TestMirrorTrain) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int size = channels * height * width;
+
+  transform_param.set_mirror(true);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+<<<<<<< HEAD
+<<<<<<< HEAD
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+=======
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
+>>>>>>> caffe
+  EXPECT_LT(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TestMirrorTest) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int size = channels * height * width;
+
+  transform_param.set_mirror(true);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+<<<<<<< HEAD
+<<<<<<< HEAD
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
+=======
+  Caffe::set_phase(Caffe::TEST);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+  int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
+>>>>>>> caffe
+  EXPECT_LT(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+>>>>>>> pod-caffe-pod.hpp-merge
   const int label = 0;
   const int channels = 3;
   const int height = 4;
   const int width = 5;
   const int crop_size = 2;
 
+<<<<<<< HEAD
   transform_param.set_crop_size(crop_size);
   Datum datum;
   FillDatum(label, channels, height, width, unique_pixels, &datum);
@@ -2101,6 +2310,89 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  transform_param.set_crop_size(crop_size);
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  int num_matches_crop = this->NumSequenceMatches(
+      transform_param, datum, TRAIN);
+
+  transform_param.set_mirror(true);
+  int num_matches_crop_mirror =
+      this->NumSequenceMatches(transform_param, datum, TRAIN);
+<<<<<<< HEAD
+=======
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches_crop = this->NumSequenceMatches(transform_param, datum);
+
+  transform_param.set_mirror(true);
+  int num_matches_crop_mirror =
+      this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  // When doing crop and mirror we expect less num_matches than just crop
+  EXPECT_LE(num_matches_crop_mirror, num_matches_crop);
+}
+
+TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int crop_size = 2;
+
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  transform_param.set_crop_size(crop_size);
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  int num_matches_crop = this->NumSequenceMatches(transform_param, datum, TEST);
+
+  transform_param.set_mirror(true);
+  int num_matches_crop_mirror =
+      this->NumSequenceMatches(transform_param, datum, TEST);
+<<<<<<< HEAD
+=======
+  Caffe::set_phase(Caffe::TEST);
+  int num_matches_crop = this->NumSequenceMatches(transform_param, datum);
+
+  transform_param.set_mirror(true);
+  int num_matches_crop_mirror =
+      this->NumSequenceMatches(transform_param, datum);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  // When doing crop and mirror we expect less num_matches than just crop
+  EXPECT_LT(num_matches_crop_mirror, num_matches_crop);
+}
+
+
+TYPED_TEST(DataTransformTest, TestMeanValue) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = false;  // pixels are equal to label
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int mean_value = 2;
+
+  transform_param.add_mean_value(mean_value);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Blob<TypeParam>* blob = new Blob<TypeParam>(1, channels, height, width);
+  DataTransformer<TypeParam>* transformer =
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
       new DataTransformer<TypeParam>(transform_param);
@@ -2108,8 +2400,35 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+  transformer->InitRand();
+  transformer->Transform(datum, blob);
+  for (int j = 0; j < blob->count(); ++j) {
+    EXPECT_EQ(blob->cpu_data()[j], label - mean_value);
+  }
+}
+
+TYPED_TEST(DataTransformTest, TestMeanValues) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = false;  // pixels are equal to label
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+
+  transform_param.add_mean_value(0);
+  transform_param.add_mean_value(1);
+  transform_param.add_mean_value(2);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Blob<TypeParam>* blob = new Blob<TypeParam>(1, channels, height, width);
+  DataTransformer<TypeParam>* transformer =
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
       new DataTransformer<TypeParam>(transform_param);
@@ -2117,6 +2436,7 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -2125,6 +2445,8 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int c = 0; c < channels; ++c) {
@@ -2177,6 +2499,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       new DataTransformer<TypeParam>(transform_param, TEST);
@@ -2240,11 +2563,16 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
       new DataTransformer<TypeParam>(transform_param, TEST);
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+      new DataTransformer<TypeParam>(transform_param, TEST);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       new DataTransformer<TypeParam>(transform_param);
 >>>>>>> origin/BVLC/parallel
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2290,6 +2618,8 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 =======
       new DataTransformer<TypeParam>(transform_param, TEST);
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {
@@ -2311,6 +2641,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2390,12 +2721,15 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #endif  // USE_OPENCV
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 #endif  // USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2416,3 +2750,5 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
 =======
 #endif  // USE_OPENCV
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

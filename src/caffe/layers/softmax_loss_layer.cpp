@@ -25,6 +25,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -231,6 +232,10 @@
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/loss_layers.hpp"
@@ -238,11 +243,17 @@
 >>>>>>> BVLC/master
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -251,9 +262,12 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> master
 =======
 #include "caffe/loss_layers.hpp"
@@ -283,6 +297,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -325,6 +340,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -345,6 +362,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -375,10 +393,13 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   LayerParameter softmax_param(this->layer_param_);
   softmax_param.set_type("Softmax");
   softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_param);
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -393,12 +414,15 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
   LayerParameter softmax_param(this->layer_param_);
   softmax_param.set_type("Softmax");
   softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_param);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -485,6 +509,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   softmax_param.set_type("Softmax");
   softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_param);
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
   softmax_top_vec_.clear();
@@ -503,6 +529,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -571,6 +598,10 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   has_ignore_label_ =
     this->layer_param_.loss_param().has_ignore_label();
@@ -591,33 +622,34 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
-=======
 <<<<<<< HEAD
 =======
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/caffe-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/caffe-merge
-=======
-=======
->>>>>>> pod/device/blob.hpp
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-<<<<<<< HEAD
-<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
+=======
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
 =======
 =======
 =======
@@ -659,6 +691,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> master
 =======
@@ -674,6 +708,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -689,25 +724,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
-  }
-  if (!this->layer_param_.loss_param().has_normalization() &&
-      this->layer_param_.loss_param().has_normalize()) {
-    normalization_ = this->layer_param_.loss_param().normalize() ?
-                     LossParameter_NormalizationMode_VALID :
-                     LossParameter_NormalizationMode_BATCH_SIZE;
-  } else {
-    normalization_ = this->layer_param_.loss_param().normalization();
-<<<<<<< HEAD
-  }
 =======
-<<<<<<< HEAD
-<<<<<<< HEAD
-  }
-=======
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   if (!this->layer_param_.loss_param().has_normalization() &&
       this->layer_param_.loss_param().has_normalize()) {
@@ -719,6 +737,32 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
   }
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+  }
+=======
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+  }
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  if (!this->layer_param_.loss_param().has_normalization() &&
+      this->layer_param_.loss_param().has_normalize()) {
+    normalization_ = this->layer_param_.loss_param().normalize() ?
+                     LossParameter_NormalizationMode_VALID :
+                     LossParameter_NormalizationMode_BATCH_SIZE;
+  } else {
+    normalization_ = this->layer_param_.loss_param().normalization();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  }
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -727,12 +771,17 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 >>>>>>> BVLC/master
 =======
 =======
 >>>>>>> master
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   if (!this->layer_param_.loss_param().has_normalization() &&
       this->layer_param_.loss_param().has_normalize()) {
@@ -741,6 +790,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
                      LossParameter_NormalizationMode_BATCH_SIZE;
   } else {
     normalization_ = this->layer_param_.loss_param().normalization();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -762,6 +812,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 <<<<<<< HEAD
 >>>>>>> BVLC/master
@@ -776,6 +828,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 >>>>>>> master
 =======
 >>>>>>> master
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
   }
   if (!this->layer_param_.loss_param().has_normalization() &&
@@ -820,6 +873,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   if (!this->layer_param_.loss_param().has_normalization() &&
       this->layer_param_.loss_param().has_normalize()) {
@@ -828,6 +883,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
                      LossParameter_NormalizationMode_BATCH_SIZE;
   } else {
     normalization_ = this->layer_param_.loss_param().normalization();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1086,6 +1142,16 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> caffe
+=======
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> master
 =======
 >>>>>>> master
@@ -1109,6 +1175,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1137,6 +1204,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 =======
   }
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -1144,6 +1213,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
   softmax_layer_->Reshape(softmax_bottom_vec_, softmax_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1211,6 +1281,10 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   softmax_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
   outer_num_ = bottom[0]->count(0, softmax_axis_);
@@ -1229,6 +1303,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1240,9 +1315,12 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -1337,6 +1415,11 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
     // softmax output
     top[1]->ReshapeLike(*bottom[0]);
 >>>>>>> pod/post-rebase-error-fix
+=======
+  if (top.size() >= 2) {
+    // softmax output
+    top[1]->ReshapeLike(*bottom[0]);
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   // Some users will have no labels for some examples in order to 'turn off' a
   // particular loss in a multi-task setup. The max prevents NaNs in that case.
@@ -1344,6 +1427,7 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1408,6 +1492,13 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward(
 >>>>>>> pod/caffe-merge
 =======
 =======
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype SoftmaxWithLossLayer<Dtype>::Forward(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -1427,6 +1518,7 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward(
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
 Dtype SoftmaxWithLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
@@ -1437,6 +1529,8 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
     LossParameter_NormalizationMode normalization_mode, int valid_count) {
   Dtype normalizer;
@@ -1462,6 +1556,7 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
           << LossParameter_NormalizationMode_Name(normalization_mode);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   if (top.size() >= 2) {
     // softmax output
@@ -1471,6 +1566,8 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   // Some users will have no labels for some examples in order to 'turn off' a
   // particular loss in a multi-task setup. The max prevents NaNs in that case.
@@ -1481,11 +1578,16 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
+=======
+void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1525,6 +1627,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1544,6 +1647,8 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   // The forward pass computes the softmax prob values.
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
   const Dtype* prob_data = prob_.cpu_data();
@@ -1552,6 +1657,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   int dim = prob_.count() / outer_num_;
   int count = 0;
   Dtype loss = 0;
@@ -1572,6 +1678,11 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+  int dim = prob_.count() / outer_num_;
+  int count = 0;
+  Dtype loss = 0;
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < outer_num_; ++i) {
     for (int j = 0; j < inner_num_; j++) {
       const int label_value = static_cast<int>(label[i * inner_num_ + j]);
@@ -1611,6 +1722,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1630,6 +1742,8 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   int count = 0;
   Dtype loss = 0;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < outer_num_; ++i) {
     for (int j = 0; j < inner_num_; j++) {
       const int label_value = static_cast<int>(label[i * inner_num_ + j]);
@@ -1651,6 +1765,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1670,6 +1785,9 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   if (top.size() == 2) {
     top[1]->ShareData(prob_);
   }
@@ -1688,6 +1806,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 =======
@@ -1741,6 +1860,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
 <<<<<<< HEAD
@@ -1752,6 +1873,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -1763,10 +1885,13 @@ void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/caffe-merge
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 >>>>>>> BVLC/master
 =======
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
 =======
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -1779,7 +1904,15 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 >>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+>>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -1819,6 +1952,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1832,6 +1966,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if (propagate_down[1]) {
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
@@ -1839,6 +1975,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const Dtype* prob_data = prob_.cpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1925,6 +2062,8 @@ STUB_GPU(SoftmaxWithLossLayer);
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     GetDevice<Dtype>(Caffe::CPU)->copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = (*bottom)[1]->cpu_data();
 =======
@@ -1944,6 +2083,7 @@ STUB_GPU(SoftmaxWithLossLayer);
     // Scale down gradient
     GetDevice<Dtype>(Caffe::CPU)->scal(prob_.count(), Dtype(1) / num,
                                        bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6319,9 +6459,287 @@ INSTANTIATE_CLASS(SoftmaxWithLossLayer);
 REGISTER_LAYER_CLASS(SoftmaxWithLoss);
 
 =======
+  }
+}
+
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> caffe
+    // Scale gradient
+    Dtype loss_weight = top[0]->cpu_diff()[0] /
+                        get_normalizer(normalization_, count);
+    caffe_scal(prob_.count(), loss_weight, bottom_diff);
+  }
+}
+
+<<<<<<< HEAD
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> master
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> BVLC/master
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> master
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> caffe
+    // Scale gradient
+    Dtype loss_weight = top[0]->cpu_diff()[0] /
+                        get_normalizer(normalization_, count);
+    caffe_scal(prob_.count(), loss_weight, bottom_diff);
+  }
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> master
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+>>>>>>> master
+    // Scale gradient
+    Dtype loss_weight = top[0]->cpu_diff()[0] /
+                        get_normalizer(normalization_, count);
+    caffe_scal(prob_.count(), loss_weight, bottom_diff);
+=======
+    // Scale gradient
+    const Dtype loss_weight = top[0]->cpu_diff()[0];
+    caffe_scal(prob_.count(), loss_weight / num / spatial_dim, bottom_diff);
+>>>>>>> origin/BVLC/parallel
+  }
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    const Dtype* label = bottom[1]->cpu_data();
+    int dim = prob_.count() / outer_num_;
+    int count = 0;
+    for (int i = 0; i < outer_num_; ++i) {
+      for (int j = 0; j < inner_num_; ++j) {
+        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+        if (has_ignore_label_ && label_value == ignore_label_) {
+          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+            bottom_diff[i * dim + c * inner_num_ + j] = 0;
+          }
+        } else {
+          bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+          ++count;
+        }
+      }
+    }
+    // Scale gradient
+    Dtype loss_weight = top[0]->cpu_diff()[0] /
+                        get_normalizer(normalization_, count);
+    caffe_scal(prob_.count(), loss_weight, bottom_diff);
+  }
+}
+
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+#ifdef CPU_ONLY
+STUB_GPU(SoftmaxWithLossLayer);
+#endif
+
+>>>>>>> BVLC/master
+INSTANTIATE_CLASS(SoftmaxWithLossLayer);
+<<<<<<< HEAD
+<<<<<<< HEAD
+REGISTER_LAYER_CLASS(SoftmaxWithLoss);
+
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 REGISTER_LAYER_CLASS(SOFTMAX_LOSS, SoftmaxWithLossLayer);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -6333,6 +6751,8 @@ INSTANTIATE_CLASS(SoftmaxWithLossLayer);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(SoftmaxWithLoss);
 
 >>>>>>> caffe

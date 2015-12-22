@@ -591,6 +591,7 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -891,6 +892,8 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 
@@ -904,6 +907,7 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
@@ -946,6 +950,10 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
     if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     if (net_param.layers(i).type() == LayerParameter_LayerType_DATA) {
 >>>>>>> origin/BVLC/parallel
       DataParameter layer_param = net_param.layers(i).data_param();
@@ -1151,12 +1159,511 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
       LOG(FATAL) << "Unknown blob_share_mode: "
                  << v1_layer_param.blob_share_mode(i);
       break;
+<<<<<<< HEAD
     }
     layer_param->mutable_param(i)->set_share_mode(mode);
   }
   for (int i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
     while (layer_param->param_size() <= i) { layer_param->add_param(); }
     layer_param->mutable_param(i)->set_lr_mult(v1_layer_param.blobs_lr(i));
+=======
+    }
+    layer_param->mutable_param(i)->set_share_mode(mode);
+  }
+  for (int i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_lr_mult(v1_layer_param.blobs_lr(i));
+  }
+  for (int i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_decay_mult(
+        v1_layer_param.weight_decay(i));
+  }
+  for (int i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
+    layer_param->add_loss_weight(v1_layer_param.loss_weight(i));
+  }
+  if (v1_layer_param.has_accuracy_param()) {
+    layer_param->mutable_accuracy_param()->CopyFrom(
+        v1_layer_param.accuracy_param());
+  }
+  if (v1_layer_param.has_argmax_param()) {
+    layer_param->mutable_argmax_param()->CopyFrom(
+        v1_layer_param.argmax_param());
+  }
+  if (v1_layer_param.has_concat_param()) {
+    layer_param->mutable_concat_param()->CopyFrom(
+        v1_layer_param.concat_param());
+  }
+  if (v1_layer_param.has_contrastive_loss_param()) {
+    layer_param->mutable_contrastive_loss_param()->CopyFrom(
+        v1_layer_param.contrastive_loss_param());
+  }
+  if (v1_layer_param.has_convolution_param()) {
+    layer_param->mutable_convolution_param()->CopyFrom(
+        v1_layer_param.convolution_param());
+  }
+  if (v1_layer_param.has_data_param()) {
+    layer_param->mutable_data_param()->CopyFrom(
+        v1_layer_param.data_param());
+  }
+  if (v1_layer_param.has_dropout_param()) {
+    layer_param->mutable_dropout_param()->CopyFrom(
+        v1_layer_param.dropout_param());
+  }
+  if (v1_layer_param.has_dummy_data_param()) {
+    layer_param->mutable_dummy_data_param()->CopyFrom(
+        v1_layer_param.dummy_data_param());
+  }
+  if (v1_layer_param.has_eltwise_param()) {
+    layer_param->mutable_eltwise_param()->CopyFrom(
+        v1_layer_param.eltwise_param());
+  }
+  if (v1_layer_param.has_exp_param()) {
+    layer_param->mutable_exp_param()->CopyFrom(
+        v1_layer_param.exp_param());
+  }
+  if (v1_layer_param.has_hdf5_data_param()) {
+    layer_param->mutable_hdf5_data_param()->CopyFrom(
+        v1_layer_param.hdf5_data_param());
+  }
+  if (v1_layer_param.has_hdf5_output_param()) {
+    layer_param->mutable_hdf5_output_param()->CopyFrom(
+        v1_layer_param.hdf5_output_param());
+  }
+  if (v1_layer_param.has_hinge_loss_param()) {
+    layer_param->mutable_hinge_loss_param()->CopyFrom(
+        v1_layer_param.hinge_loss_param());
+  }
+  if (v1_layer_param.has_image_data_param()) {
+    layer_param->mutable_image_data_param()->CopyFrom(
+        v1_layer_param.image_data_param());
+  }
+  if (v1_layer_param.has_infogain_loss_param()) {
+    layer_param->mutable_infogain_loss_param()->CopyFrom(
+        v1_layer_param.infogain_loss_param());
+  }
+  if (v1_layer_param.has_inner_product_param()) {
+    layer_param->mutable_inner_product_param()->CopyFrom(
+        v1_layer_param.inner_product_param());
+  }
+  if (v1_layer_param.has_lrn_param()) {
+    layer_param->mutable_lrn_param()->CopyFrom(
+        v1_layer_param.lrn_param());
+  }
+  if (v1_layer_param.has_memory_data_param()) {
+    layer_param->mutable_memory_data_param()->CopyFrom(
+        v1_layer_param.memory_data_param());
+  }
+  if (v1_layer_param.has_mvn_param()) {
+    layer_param->mutable_mvn_param()->CopyFrom(
+        v1_layer_param.mvn_param());
+  }
+  if (v1_layer_param.has_pooling_param()) {
+    layer_param->mutable_pooling_param()->CopyFrom(
+        v1_layer_param.pooling_param());
+  }
+  if (v1_layer_param.has_power_param()) {
+    layer_param->mutable_power_param()->CopyFrom(
+        v1_layer_param.power_param());
+  }
+  if (v1_layer_param.has_relu_param()) {
+    layer_param->mutable_relu_param()->CopyFrom(
+        v1_layer_param.relu_param());
+  }
+  if (v1_layer_param.has_sigmoid_param()) {
+    layer_param->mutable_sigmoid_param()->CopyFrom(
+        v1_layer_param.sigmoid_param());
+  }
+  if (v1_layer_param.has_softmax_param()) {
+    layer_param->mutable_softmax_param()->CopyFrom(
+        v1_layer_param.softmax_param());
+  }
+  if (v1_layer_param.has_slice_param()) {
+    layer_param->mutable_slice_param()->CopyFrom(
+        v1_layer_param.slice_param());
+  }
+  if (v1_layer_param.has_tanh_param()) {
+    layer_param->mutable_tanh_param()->CopyFrom(
+        v1_layer_param.tanh_param());
+  }
+  if (v1_layer_param.has_threshold_param()) {
+    layer_param->mutable_threshold_param()->CopyFrom(
+        v1_layer_param.threshold_param());
+  }
+  if (v1_layer_param.has_window_data_param()) {
+    layer_param->mutable_window_data_param()->CopyFrom(
+        v1_layer_param.window_data_param());
+<<<<<<< HEAD
+  }
+  if (v1_layer_param.has_transform_param()) {
+    layer_param->mutable_transform_param()->CopyFrom(
+        v1_layer_param.transform_param());
+  }
+  if (v1_layer_param.has_loss_param()) {
+    layer_param->mutable_loss_param()->CopyFrom(
+        v1_layer_param.loss_param());
+  }
+  if (v1_layer_param.has_layer()) {
+    LOG(ERROR) << "Input NetParameter has V0 layer -- ignoring.";
+    is_fully_compatible = false;
+  }
+  return is_fully_compatible;
+}
+
+<<<<<<< HEAD
+const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
+  switch (type) {
+  case V1LayerParameter_LayerType_NONE:
+    return "";
+  case V1LayerParameter_LayerType_ABSVAL:
+    return "AbsVal";
+  case V1LayerParameter_LayerType_ACCURACY:
+    return "Accuracy";
+  case V1LayerParameter_LayerType_ARGMAX:
+    return "ArgMax";
+  case V1LayerParameter_LayerType_BNLL:
+    return "BNLL";
+  case V1LayerParameter_LayerType_CONCAT:
+    return "Concat";
+  case V1LayerParameter_LayerType_CONTRASTIVE_LOSS:
+    return "ContrastiveLoss";
+  case V1LayerParameter_LayerType_CONVOLUTION:
+    return "Convolution";
+  case V1LayerParameter_LayerType_DECONVOLUTION:
+    return "Deconvolution";
+  case V1LayerParameter_LayerType_DATA:
+    return "Data";
+  case V1LayerParameter_LayerType_DROPOUT:
+    return "Dropout";
+  case V1LayerParameter_LayerType_DUMMY_DATA:
+    return "DummyData";
+  case V1LayerParameter_LayerType_EUCLIDEAN_LOSS:
+    return "EuclideanLoss";
+  case V1LayerParameter_LayerType_ELTWISE:
+    return "Eltwise";
+  case V1LayerParameter_LayerType_EXP:
+    return "Exp";
+  case V1LayerParameter_LayerType_FLATTEN:
+    return "Flatten";
+  case V1LayerParameter_LayerType_HDF5_DATA:
+    return "HDF5Data";
+  case V1LayerParameter_LayerType_HDF5_OUTPUT:
+    return "HDF5Output";
+  case V1LayerParameter_LayerType_HINGE_LOSS:
+    return "HingeLoss";
+  case V1LayerParameter_LayerType_IM2COL:
+    return "Im2col";
+  case V1LayerParameter_LayerType_IMAGE_DATA:
+    return "ImageData";
+  case V1LayerParameter_LayerType_INFOGAIN_LOSS:
+    return "InfogainLoss";
+  case V1LayerParameter_LayerType_INNER_PRODUCT:
+    return "InnerProduct";
+  case V1LayerParameter_LayerType_LRN:
+    return "LRN";
+  case V1LayerParameter_LayerType_MEMORY_DATA:
+    return "MemoryData";
+  case V1LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
+    return "MultinomialLogisticLoss";
+  case V1LayerParameter_LayerType_MVN:
+    return "MVN";
+  case V1LayerParameter_LayerType_POOLING:
+    return "Pooling";
+  case V1LayerParameter_LayerType_POWER:
+    return "Power";
+  case V1LayerParameter_LayerType_RELU:
+    return "ReLU";
+  case V1LayerParameter_LayerType_SIGMOID:
+    return "Sigmoid";
+  case V1LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS:
+    return "SigmoidCrossEntropyLoss";
+  case V1LayerParameter_LayerType_SILENCE:
+    return "Silence";
+  case V1LayerParameter_LayerType_SOFTMAX:
+    return "Softmax";
+  case V1LayerParameter_LayerType_SOFTMAX_LOSS:
+    return "SoftmaxWithLoss";
+  case V1LayerParameter_LayerType_SPLIT:
+    return "Split";
+  case V1LayerParameter_LayerType_SLICE:
+    return "Slice";
+  case V1LayerParameter_LayerType_TANH:
+    return "TanH";
+  case V1LayerParameter_LayerType_WINDOW_DATA:
+    return "WindowData";
+  case V1LayerParameter_LayerType_THRESHOLD:
+    return "Threshold";
+  default:
+    LOG(FATAL) << "Unknown V1LayerParameter layer type: " << type;
+    return "";
+=======
+>>>>>>> caffe
+  }
+  if (v1_layer_param.has_transform_param()) {
+    layer_param->mutable_transform_param()->CopyFrom(
+        v1_layer_param.transform_param());
+  }
+  if (v1_layer_param.has_loss_param()) {
+    layer_param->mutable_loss_param()->CopyFrom(
+        v1_layer_param.loss_param());
+  }
+  if (v1_layer_param.has_layer()) {
+    LOG(ERROR) << "Input NetParameter has V0 layer -- ignoring.";
+    is_fully_compatible = false;
+  }
+  return is_fully_compatible;
+}
+
+<<<<<<< HEAD
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
+  if (solver_param.has_solver_type()) {
+    return true;
+  }
+  return false;
+}
+
+bool UpgradeSolverType(SolverParameter* solver_param) {
+  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
+      << "Failed to upgrade solver: old solver_type field (enum) and new type "
+      << "field (string) cannot be both specified in solver proto text.";
+  if (solver_param->has_solver_type()) {
+    string type;
+    switch (solver_param->solver_type()) {
+    case SolverParameter_SolverType_SGD:
+      type = "SGD";
+      break;
+    case SolverParameter_SolverType_NESTEROV:
+      type = "Nesterov";
+      break;
+    case SolverParameter_SolverType_ADAGRAD:
+      type = "AdaGrad";
+      break;
+    case SolverParameter_SolverType_RMSPROP:
+      type = "RMSProp";
+      break;
+    case SolverParameter_SolverType_ADADELTA:
+      type = "AdaDelta";
+      break;
+    case SolverParameter_SolverType_ADAM:
+      type = "Adam";
+      break;
+    default:
+      LOG(FATAL) << "Unknown SolverParameter solver_type: " << type;
+    }
+    solver_param->set_type(type);
+    solver_param->clear_solver_type();
+  } else {
+    LOG(ERROR) << "Warning: solver type already up to date. ";
+    return false;
+  }
+  return true;
+}
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
+  bool success = true;
+  // Try to upgrade old style solver_type enum fields into new string type
+  if (SolverNeedsTypeUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "'solver_type' field (enum)': " << param_file;
+    if (!UpgradeSolverType(param)) {
+      success = false;
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+                 << "SolverType (see above).";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "'solver_type' field (enum) to 'type' field (string).";
+      LOG(WARNING) << "Note that future Caffe releases will only support "
+                   << "'type' field (string) for a solver's type.";
+    }
+=======
+const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
+  switch (type) {
+  case V1LayerParameter_LayerType_NONE:
+    return "";
+  case V1LayerParameter_LayerType_ABSVAL:
+    return "AbsVal";
+  case V1LayerParameter_LayerType_ACCURACY:
+    return "Accuracy";
+  case V1LayerParameter_LayerType_ARGMAX:
+    return "ArgMax";
+  case V1LayerParameter_LayerType_BNLL:
+    return "BNLL";
+  case V1LayerParameter_LayerType_CONCAT:
+    return "Concat";
+  case V1LayerParameter_LayerType_CONTRASTIVE_LOSS:
+    return "ContrastiveLoss";
+  case V1LayerParameter_LayerType_CONVOLUTION:
+    return "Convolution";
+  case V1LayerParameter_LayerType_DECONVOLUTION:
+    return "Deconvolution";
+  case V1LayerParameter_LayerType_DATA:
+    return "Data";
+  case V1LayerParameter_LayerType_DROPOUT:
+    return "Dropout";
+  case V1LayerParameter_LayerType_DUMMY_DATA:
+    return "DummyData";
+  case V1LayerParameter_LayerType_EUCLIDEAN_LOSS:
+    return "EuclideanLoss";
+  case V1LayerParameter_LayerType_ELTWISE:
+    return "Eltwise";
+  case V1LayerParameter_LayerType_EXP:
+    return "Exp";
+  case V1LayerParameter_LayerType_FLATTEN:
+    return "Flatten";
+  case V1LayerParameter_LayerType_HDF5_DATA:
+    return "HDF5Data";
+  case V1LayerParameter_LayerType_HDF5_OUTPUT:
+    return "HDF5Output";
+  case V1LayerParameter_LayerType_HINGE_LOSS:
+    return "HingeLoss";
+  case V1LayerParameter_LayerType_IM2COL:
+    return "Im2col";
+  case V1LayerParameter_LayerType_IMAGE_DATA:
+    return "ImageData";
+  case V1LayerParameter_LayerType_INFOGAIN_LOSS:
+    return "InfogainLoss";
+  case V1LayerParameter_LayerType_INNER_PRODUCT:
+    return "InnerProduct";
+  case V1LayerParameter_LayerType_LRN:
+    return "LRN";
+  case V1LayerParameter_LayerType_MEMORY_DATA:
+    return "MemoryData";
+  case V1LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
+    return "MultinomialLogisticLoss";
+  case V1LayerParameter_LayerType_MVN:
+    return "MVN";
+  case V1LayerParameter_LayerType_POOLING:
+    return "Pooling";
+  case V1LayerParameter_LayerType_POWER:
+    return "Power";
+  case V1LayerParameter_LayerType_RELU:
+    return "ReLU";
+  case V1LayerParameter_LayerType_SIGMOID:
+    return "Sigmoid";
+  case V1LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS:
+    return "SigmoidCrossEntropyLoss";
+  case V1LayerParameter_LayerType_SILENCE:
+    return "Silence";
+  case V1LayerParameter_LayerType_SOFTMAX:
+    return "Softmax";
+  case V1LayerParameter_LayerType_SOFTMAX_LOSS:
+    return "SoftmaxWithLoss";
+  case V1LayerParameter_LayerType_SPLIT:
+    return "Split";
+  case V1LayerParameter_LayerType_SLICE:
+    return "Slice";
+  case V1LayerParameter_LayerType_TANH:
+    return "TanH";
+  case V1LayerParameter_LayerType_WINDOW_DATA:
+    return "WindowData";
+  case V1LayerParameter_LayerType_THRESHOLD:
+    return "Threshold";
+  default:
+    LOG(FATAL) << "Unknown V1LayerParameter layer type: " << type;
+    return "";
+>>>>>>> caffe
+  }
+  return success;
+}
+
+<<<<<<< HEAD
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse SolverParameter file: " << param_file;
+  UpgradeSolverAsNeeded(param_file, param);
+=======
+void UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
+  if (NetNeedsUpgrade(*param)) {
+    // NetParameter was specified using the old style (V0LayerParameter); try to
+    // upgrade it.
+    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
+               << "V0LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV0Net(original_param, param)) {
+=======
+// Return true iff the solver contains any old solver_type specified as enums
+bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
+  if (solver_param.has_solver_type()) {
+    return true;
+  }
+  return false;
+}
+
+bool UpgradeSolverType(SolverParameter* solver_param) {
+  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
+      << "Failed to upgrade solver: old solver_type field (enum) and new type "
+      << "field (string) cannot be both specified in solver proto text.";
+  if (solver_param->has_solver_type()) {
+    string type;
+    switch (solver_param->solver_type()) {
+    case SolverParameter_SolverType_SGD:
+      type = "SGD";
+      break;
+    case SolverParameter_SolverType_NESTEROV:
+      type = "Nesterov";
+      break;
+    case SolverParameter_SolverType_ADAGRAD:
+      type = "AdaGrad";
+      break;
+    case SolverParameter_SolverType_RMSPROP:
+      type = "RMSProp";
+      break;
+    case SolverParameter_SolverType_ADADELTA:
+      type = "AdaDelta";
+      break;
+    case SolverParameter_SolverType_ADAM:
+      type = "Adam";
+      break;
+    default:
+      LOG(FATAL) << "Unknown SolverParameter solver_type: " << type;
+    }
+    solver_param->set_type(type);
+    solver_param->clear_solver_type();
+  } else {
+    LOG(ERROR) << "Warning: solver type already up to date. ";
+    return false;
+  }
+  return true;
+}
+
+// Check for deprecations and upgrade the SolverParameter as needed.
+bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
+  bool success = true;
+  // Try to upgrade old style solver_type enum fields into new string type
+  if (SolverNeedsTypeUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "'solver_type' field (enum)': " << param_file;
+    if (!UpgradeSolverType(param)) {
+      success = false;
+>>>>>>> caffe
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+                 << "SolverType (see above).";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "'solver_type' field (enum) to 'type' field (string).";
+      LOG(WARNING) << "Note that future Caffe releases will only support "
+                   << "'type' field (string) for a solver's type.";
+    }
+<<<<<<< HEAD
+    LOG(ERROR) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
+        << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
+        << "weights upgrade this and any other net protos to the new format.";
+  }
+  // NetParameter uses old style data transformation fields; try to upgrade it.
+  if (NetNeedsDataUpgrade(*param)) {
+    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
+               << "transformation parameters: " << param_file;
+    UpgradeNetDataTransformation(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "data transformation parameters.";
+    LOG(ERROR) << "Note that future Caffe releases will only support "
+               << "transform_param messages for transformation fields.";
+>>>>>>> pod-caffe-pod.hpp-merge
   }
   for (int i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
     while (layer_param->param_size() <= i) { layer_param->add_param(); }
@@ -1306,6 +1813,7 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1378,7 +1886,33 @@ void UpgradeNetDataTransformation(NetParameter* net_param) {
     CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
     CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
     CONVERT_LAYER_TRANSFORM_PARAM(WINDOW_DATA, WindowData, window_data);
+=======
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
+}
+
+void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+                                      NetParameter* param) {
+  CHECK(ReadProtoFromBinaryFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
+  return success;
+}
+
+// Read parameters from a file into a SolverParameter proto message.
+void ReadSolverParamsFromTextFileOrDie(const string& param_file,
+                                       SolverParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse SolverParameter file: " << param_file;
+  UpgradeSolverAsNeeded(param_file, param);
+>>>>>>> caffe
 }
 
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {

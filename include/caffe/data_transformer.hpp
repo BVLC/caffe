@@ -14,6 +14,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -65,6 +66,9 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #ifndef OSX
 #include <opencv2/core/core.hpp>
 #endif
@@ -72,6 +76,7 @@
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -114,6 +119,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -142,6 +149,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 =======
 <<<<<<< HEAD
@@ -176,11 +184,16 @@ class DataTransformer {
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   explicit DataTransformer(const TransformationParameter& param);
 >>>>>>> origin/BVLC/parallel
 =======
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -263,6 +276,8 @@ class DataTransformer {
 =======
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual ~DataTransformer() {}
 
   /**
@@ -309,6 +324,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -377,6 +393,10 @@ class DataTransformer {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 #ifdef USE_OPENCV
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -402,6 +422,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -435,9 +456,12 @@ class DataTransformer {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -483,6 +507,8 @@ class DataTransformer {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
@@ -506,6 +532,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -615,6 +642,8 @@ class DataTransformer {
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
 =======
@@ -626,6 +655,7 @@ class DataTransformer {
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
@@ -646,12 +676,15 @@ class DataTransformer {
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   /**
    * @brief Applies the same transformation defined in the data layer's
    * transform_param block to all the num images in a input_blob.
    *
    * @param input_blob
+<<<<<<< HEAD
    *    A Blob containing the data to be transformed. It applies the same
    *    transformation to all the num images in the blob.
    * @param transformed_blob
@@ -741,6 +774,20 @@ class DataTransformer {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+   *    A Blob containing the data to be transformed. It applies the same
+   *    transformation to all the num images in the blob.
+   * @param transformed_blob
+   *    This is destination blob, it will contain as many images as the
+   *    input blob. It can be part of top blob's data.
+   */
+  void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -793,6 +840,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -838,6 +886,9 @@ class DataTransformer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
@@ -845,6 +896,7 @@ class DataTransformer {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -887,6 +939,8 @@ class DataTransformer {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
    * @param n
    *    The upperbound (exclusive) value of the random number.
    * @return
@@ -913,6 +967,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   Phase phase_;
@@ -1017,6 +1072,8 @@ class DataTransformer {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Phase phase_;
 =======
   Caffe::Phase phase_;
@@ -1024,6 +1081,7 @@ class DataTransformer {
 =======
   Phase phase_;
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1032,6 +1090,8 @@ class DataTransformer {
 =======
   Phase phase_;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
 };
@@ -1052,6 +1112,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1103,10 +1164,14 @@ class DataTransformer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1149,3 +1214,5 @@ class DataTransformer {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

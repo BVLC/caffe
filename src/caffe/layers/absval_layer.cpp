@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -63,10 +64,14 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/layer.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -124,6 +129,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -145,6 +153,7 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
@@ -207,11 +216,16 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   CHECK_NE(top[0], bottom[0]) << this->type_name() << " Layer does not "
 >>>>>>> origin/BVLC/parallel
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -257,6 +271,8 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     "allow in-place computation.";
 }
 
@@ -299,6 +315,7 @@ INSTANTIATE_CLASS(AbsValLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -384,6 +401,8 @@ REGISTER_LAYER_CLASS(AbsVal);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(AbsVal);
 
 =======
@@ -393,6 +412,7 @@ REGISTER_LAYER_CLASS(ABSVAL, AbsValLayer);
 REGISTER_LAYER_CLASS(AbsVal);
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -415,4 +435,6 @@ REGISTER_LAYER_CLASS(AbsVal);
 REGISTER_LAYER_CLASS(AbsVal);
 
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe

@@ -16,6 +16,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -93,6 +94,11 @@
 #include "caffe/util/math_functions.hpp"
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/loss_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -102,6 +108,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -150,6 +157,8 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -190,6 +199,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -302,6 +312,8 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
 =======
@@ -310,6 +322,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -320,6 +333,8 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
     if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
@@ -338,6 +353,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -359,10 +375,54 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 >>>>>>> pod/caffe-merge
 =======
 =======
+=======
+=======
+>>>>>>> caffe
+      if (legacy_version) {
+        loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
+      } else {
+        Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]),
+                              Dtype(0.0));
+        loss += dist*dist;
+      }
+<<<<<<< HEAD
+=======
+      loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+    }
+  }
+  loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
+  top[0]->mutable_cpu_data()[0] = loss;
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+__global__ void CLLBackward(const int count, const int channels,
+    const Dtype margin, const bool legacy_version, const Dtype alpha,
+=======
+__global__ void CLLForward(const int count, const int channels,
+    const Dtype margin, const Dtype alpha,
+>>>>>>> origin/BVLC/parallel
+=======
+__global__ void CLLBackward(const int count, const int channels,
+    const Dtype margin, const bool legacy_version, const Dtype alpha,
+>>>>>>> caffe
+    const Dtype* y, const Dtype* diff, const Dtype* dist_sq,
+    Dtype *bottom_diff) {
+  CUDA_KERNEL_LOOP(i, count) {
+    int n = i / channels;  // the num index, to access y and dist_sq
+    if (static_cast<int>(y[n])) {  // similar pairs
+      bottom_diff[i] = alpha * diff[i];
+    } else {  // dissimilar pairs
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -817,11 +877,28 @@ __global__ void CLLBackward(const int count, const int channels,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+      Dtype mdist(0.0);
+      Dtype beta(0.0);
+      if (legacy_version) {
+        mdist = (margin - dist_sq[n]);
+        beta = -alpha;
+      } else {
+        Dtype dist = sqrt(dist_sq[n]);
+        mdist = (margin - dist);
+        beta = -alpha * mdist / (dist + Dtype(1e-4)) * diff[i];
+      }
+      if (mdist > 0.0) {
+        bottom_diff[i] = beta;
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       if ((margin-dist_sq[n]) > 0.0) {
         bottom_diff[i] = -alpha * diff[i];
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -864,6 +941,8 @@ __global__ void CLLBackward(const int count, const int channels,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       } else {
         bottom_diff[i] = 0;
       }
@@ -892,6 +971,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1005,6 +1085,8 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       const bool legacy_version =
           this->layer_param_.contrastive_loss_param().legacy_version();
 =======
@@ -1013,6 +1095,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool legacy_version =
           this->layer_param_.contrastive_loss_param().legacy_version();
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1023,6 +1106,8 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool legacy_version =
           this->layer_param_.contrastive_loss_param().legacy_version();
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
           static_cast<Dtype>(bottom[0]->num());
@@ -1040,6 +1125,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1111,10 +1197,16 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           count, channels, margin, legacy_version, alpha,
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+      CLLBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, channels, margin, legacy_version, alpha,
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       CLLForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
           count, channels, margin, alpha,
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1172,6 +1264,11 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       CLLBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
           count, channels, margin, legacy_version, alpha,
 >>>>>>> pod/post-rebase-error-fix
+=======
+      CLLBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, channels, margin, legacy_version, alpha,
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
           bottom[2]->gpu_data(),  // pair similarity 0 or 1
           diff_.gpu_data(),  // the cached eltwise difference between a and b
           dist_sq_.gpu_data(),  // the cached square distance between a and b

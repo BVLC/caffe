@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/mvn_layer.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19,6 +20,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 

@@ -23,6 +23,7 @@ def reporthook(count, block_size, total_size):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     duration = (time.time() - start_time) or 0.01
 =======
     duration = time.time() - start_time
@@ -39,6 +40,9 @@ def reporthook(count, block_size, total_size):
 =======
     duration = time.time() - start_time
 >>>>>>> pod/post-rebase-error-fix
+=======
+    duration = time.time() - start_time
+>>>>>>> pod-caffe-pod.hpp-merge
     progress_size = int(count * block_size)
     speed = int(progress_size / (1024 * duration))
     percent = int(count * block_size * 100 / total_size)
@@ -65,6 +69,7 @@ def parse_readme_frontmatter(dirname):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     bottom = lines.index('---', top + 1)
@@ -145,6 +150,8 @@ def parse_readme_frontmatter(dirname):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     bottom = lines.index('---', top + 1)
 =======
     bottom = lines[top + 1:].index('---')
@@ -152,6 +159,7 @@ def parse_readme_frontmatter(dirname):
 =======
     bottom = lines.index('---', top + 1)
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
     bottom = lines.index('---', top + 1)
@@ -186,6 +194,8 @@ def parse_readme_frontmatter(dirname):
 =======
     bottom = lines.index('---', top + 1)
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))
     assert all(key in frontmatter for key in required_keys)
     return dirname, frontmatter

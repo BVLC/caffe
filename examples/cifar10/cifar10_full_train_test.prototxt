@@ -24,6 +24,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -94,6 +95,15 @@ layer {
     batch_size: 100
     backend: LMDB
   }
+=======
+    source: "examples/cifar10/cifar10_train_lmdb"
+=======
+    source: "examples/cifar10/cifar10_train_leveldb"
+>>>>>>> origin/BVLC/parallel
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
   transform_param {
@@ -107,6 +117,7 @@ layer {
     backend: LMDB
   }
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -161,6 +172,8 @@ layer {
     backend: LMDB
   }
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "cifar"
@@ -187,6 +200,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     source: "examples/cifar10/cifar10_test_lmdb"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -281,12 +295,24 @@ layer {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    source: "examples/cifar10/cifar10_test_lmdb"
+=======
+    source: "examples/cifar10/cifar10_test_leveldb"
+>>>>>>> origin/BVLC/parallel
+    batch_size: 100
+    backend: LMDB
+  }
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   transform_param {
     mean_file: "examples/cifar10/mean.binaryproto"
   }
   include: { phase: TEST }
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -325,10 +351,13 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     source: "examples/cifar10/cifar10_test_lmdb"
     batch_size: 100
     backend: LMDB
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -368,6 +397,9 @@ layer {
     backend: LMDB
   }
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
   name: "conv1"

@@ -25,6 +25,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -139,6 +140,8 @@
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
@@ -158,6 +161,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -201,6 +205,9 @@
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
@@ -229,6 +236,7 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> master
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -286,6 +294,11 @@
 =======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/loss_layers.hpp"
+#include "caffe/util/math_functions.hpp"
 >>>>>>> master
 =======
 #include "caffe/loss_layers.hpp"
@@ -295,6 +308,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -337,6 +351,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -371,6 +387,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -487,6 +504,11 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Forward(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+Dtype MultinomialLogisticLossLayer<Dtype>::Forward(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 >>>>>>> BVLC/master
@@ -531,6 +553,7 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
@@ -656,6 +679,11 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
   int num = bottom[0]->num();
@@ -668,6 +696,7 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     loss -= log(prob);
   }
   top[0]->mutable_cpu_data()[0] = loss / num;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 }
@@ -832,6 +861,8 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -847,6 +878,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* bottom_label = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -857,6 +889,9 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -897,6 +932,12 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
     const Dtype* bottom_data = (*bottom)[0]->cpu_data();
     const Dtype* bottom_label = (*bottom)[1]->cpu_data();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
@@ -924,6 +965,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -964,6 +1006,10 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -990,6 +1036,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> device-abstraction
@@ -1006,6 +1053,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 =======
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* bottom_label = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -1031,6 +1080,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1041,6 +1091,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -1064,6 +1116,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1257,6 +1310,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       Dtype prob = std::max(
@@ -1280,6 +1335,7 @@ INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1348,6 +1404,10 @@ INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 REGISTER_LAYER_CLASS(MultinomialLogisticLoss);
 
 =======

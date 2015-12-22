@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -76,10 +77,15 @@
 #include "caffe/util/math_functions.hpp"
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#include "caffe/util/math_functions.hpp"
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #include "caffe/util/math_functions.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -125,6 +131,8 @@
 =======
 #include "caffe/util/math_functions.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -149,6 +157,7 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -217,6 +226,10 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   thread.StartInternalThread();
   EXPECT_TRUE(thread.is_started());
   thread.StopInternalThread();
@@ -263,6 +276,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -308,6 +322,9 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   EXPECT_TRUE(thread.StartInternalThread());
   EXPECT_TRUE(thread.is_started());
   EXPECT_TRUE(thread.WaitForInternalThreadToExit());
@@ -317,6 +334,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -359,5 +377,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }  // namespace caffe
 

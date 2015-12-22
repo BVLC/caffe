@@ -30,6 +30,7 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -91,11 +92,16 @@ type: "Nesterov"
 type: "Nesterov"
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+type: "Nesterov"
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 solver_type: NESTEROV
 >>>>>>> origin/BVLC/parallel
 =======
 type: "Nesterov"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -141,3 +147,5 @@ type: "Nesterov"
 =======
 type: "Nesterov"
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

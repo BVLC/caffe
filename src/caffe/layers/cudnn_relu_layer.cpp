@@ -12,6 +12,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include <vector>
@@ -90,6 +91,11 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#include <vector>
+
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <algorithm>
 #include <vector>
 
@@ -99,6 +105,7 @@
 #include <vector>
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -162,6 +169,9 @@
 
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 
@@ -186,6 +196,7 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -265,12 +276,15 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   handles_setup_ = true;
 =======
 >>>>>>> origin/BVLC/parallel
 =======
   handles_setup_ = true;
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -291,6 +305,8 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   handles_setup_ = true;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -320,6 +336,7 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -388,6 +405,10 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
@@ -404,6 +425,7 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -449,11 +471,15 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
   cudnnDestroyTensor4dDescriptor(this->top_desc_);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -496,6 +522,8 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   cudnnDestroy(this->handle_);
 }
 

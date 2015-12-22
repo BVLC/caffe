@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,6 +80,10 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 if(NOT HAVE_PYTHON)
   message(STATUS "Python interface is disabled or not all required dependencies found. Building without it...")
   return()
@@ -122,6 +127,7 @@ install(DIRECTORY caffe/imagenet caffe/proto caffe/test DESTINATION python/caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -167,6 +173,9 @@ install(DIRECTORY caffe/imagenet caffe/proto caffe/test DESTINATION python/caffe
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 project( Python )
 
 #    Python
@@ -237,6 +246,7 @@ install(TARGETS pycaffe DESTINATION python/caffe)
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -268,5 +278,7 @@ install(TARGETS pycaffe DESTINATION python/caffe)
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 

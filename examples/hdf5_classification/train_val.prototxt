@@ -12,6 +12,7 @@ name: "LogisticRegressionNet"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -750,6 +751,111 @@ layer {
   name: "loss"
   type: "SoftmaxWithLoss"
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "data"
+  type: "HDF5Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+<<<<<<< HEAD
+=======
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  hdf5_data_param {
+    source: "examples/hdf5_classification/data/train.txt"
+    batch_size: 10
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "data"
+  type: "HDF5Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+<<<<<<< HEAD
+=======
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  hdf5_data_param {
+    source: "examples/hdf5_classification/data/test.txt"
+    batch_size: 10
+  }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "fc1"
+  type: "InnerProduct"
+  bottom: "data"
+  top: "fc1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 2
+    weight_filler {
+      type: "xavier"
+<<<<<<< HEAD
+=======
+  include: { phase: TEST }
+}
+layers {
+  name: "fc1"
+  type: INNER_PRODUCT
+  bottom: "data"
+  top: "fc1"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 layer {
@@ -765,6 +871,7 @@ layer {
   name: "loss"
   type: "SoftmaxWithLoss"
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -792,6 +899,8 @@ layer {
   name: "loss"
   type: "SoftmaxWithLoss"
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   bottom: "fc1"
   bottom: "label"
   top: "loss"
@@ -809,6 +918,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -877,6 +987,10 @@ layer {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "accuracy"
   type: "Accuracy"
@@ -897,6 +1011,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -942,6 +1057,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   name: "accuracy"
   type: ACCURACY
@@ -963,6 +1081,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -994,4 +1113,6 @@ layers {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }

@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/tanh_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -24,6 +25,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 

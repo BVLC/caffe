@@ -15,6 +15,7 @@ input: "data"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -87,6 +88,10 @@ input: "data"
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 input_shape {
   dim: 10
   dim: 3
@@ -119,6 +124,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -164,6 +170,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 input_dim: 10
 input_dim: 3
 input_dim: 224
@@ -191,6 +200,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -227,6 +237,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 64
     pad: 3
@@ -257,6 +269,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -329,6 +342,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "conv1/relu_7x7"
   type: "ReLU"
@@ -353,6 +370,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -398,6 +416,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   bottom: "conv1/7x7_s2"
   top: "conv1/7x7_s2"
@@ -412,6 +433,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -552,6 +574,18 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "pool1/norm1"
   type: "LRN"
@@ -570,6 +604,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -615,6 +650,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   bottom: "pool1/3x3_s2"
   top: "pool1/norm1"
@@ -634,6 +672,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -670,6 +709,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   lrn_param {
     local_size: 5
     alpha: 0.0001
@@ -691,6 +732,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -737,10 +779,55 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "conv2/3x3_reduce"
+  type: "Convolution"
+  bottom: "pool1/norm1"
+  top: "conv2/3x3_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "pool1/norm1"
+  top: "conv2/3x3_reduce"
+  name: "conv2/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -758,6 +845,19 @@ layer {
   type: "Convolution"
   bottom: "pool1/norm1"
   top: "conv2/3x3_reduce"
+=======
+layer {
+  name: "conv2/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "conv2/3x3_reduce"
+  top: "conv2/3x3_reduce"
+}
+layer {
+  name: "conv2/3x3"
+  type: "Convolution"
+  bottom: "conv2/3x3_reduce"
+  top: "conv2/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -766,6 +866,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -816,6 +917,112 @@ layer {
   type: "Convolution"
   bottom: "pool1/norm1"
   top: "conv2/3x3_reduce"
+=======
+=======
+layers {
+  bottom: "conv2/3x3_reduce"
+  top: "conv2/3x3_reduce"
+  name: "conv2/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "conv2/3x3_reduce"
+  top: "conv2/3x3"
+  name: "conv2/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 192
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "conv2/relu_3x3"
+  type: "ReLU"
+  bottom: "conv2/3x3"
+  top: "conv2/3x3"
+}
+layer {
+  name: "conv2/norm2"
+  type: "LRN"
+  bottom: "conv2/3x3"
+  top: "conv2/norm2"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "conv2/3x3"
+  top: "conv2/3x3"
+  name: "conv2/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "conv2/3x3"
+  top: "conv2/norm2"
+  name: "conv2/norm2"
+  type: LRN
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "pool2/3x3_s2"
+  type: "Pooling"
+  bottom: "conv2/norm2"
+  top: "pool2/3x3_s2"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "conv2/norm2"
+  top: "pool2/3x3_s2"
+  name: "pool2/3x3_s2"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/1x1"
+  type: "Convolution"
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -824,6 +1031,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -849,6 +1057,13 @@ layers {
   bottom: "pool1/norm1"
   top: "conv2/3x3_reduce"
   name: "conv2/3x3_reduce"
+=======
+=======
+layers {
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/1x1"
+  name: "inception_3a/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -868,6 +1083,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -904,12 +1120,18 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 64
     kernel_size: 1
     weight_filler {
       type: "xavier"
+<<<<<<< HEAD
       std: 0.1
+=======
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -917,6 +1139,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1015,6 +1238,21 @@ layer {
   type: "Convolution"
   bottom: "conv2/3x3_reduce"
   top: "conv2/3x3"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_3a/1x1"
+  top: "inception_3a/1x1"
+}
+layer {
+  name: "inception_3a/3x3_reduce"
+  type: "Convolution"
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/3x3_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1023,6 +1261,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1091,6 +1330,18 @@ layers {
   bottom: "conv2/3x3_reduce"
   top: "conv2/3x3"
   name: "conv2/3x3"
+=======
+=======
+layers {
+  bottom: "inception_3a/1x1"
+  top: "inception_3a/1x1"
+  name: "inception_3a/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/3x3_reduce"
+  name: "inception_3a/3x3_reduce"
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -1099,6 +1350,64 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+  convolution_param {
+    num_output: 96
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_3a/3x3_reduce"
+  top: "inception_3a/3x3_reduce"
+}
+layer {
+  name: "inception_3a/3x3"
+  type: "Convolution"
+  bottom: "inception_3a/3x3_reduce"
+  top: "inception_3a/3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3a/3x3_reduce"
+  top: "inception_3a/3x3_reduce"
+  name: "inception_3a/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_3a/3x3_reduce"
+  top: "inception_3a/3x3"
+  name: "inception_3a/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1148,6 +1457,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 192
+=======
+  convolution_param {
+    num_output: 128
+>>>>>>> pod-caffe-pod.hpp-merge
     pad: 1
     kernel_size: 3
     weight_filler {
@@ -1160,6 +1473,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1198,10 +1512,67 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_3a/3x3"
+  top: "inception_3a/3x3"
+}
+layer {
+  name: "inception_3a/5x5_reduce"
+  type: "Convolution"
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/5x5_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3a/3x3"
+  top: "inception_3a/3x3"
+  name: "inception_3a/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/5x5_reduce"
+  name: "inception_3a/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 16
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1362,8 +1733,222 @@ layers {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
+=======
+layer {
+  name: "inception_3a/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_3a/5x5_reduce"
+  top: "inception_3a/5x5_reduce"
+}
+layer {
+  name: "inception_3a/5x5"
+  type: "Convolution"
+  bottom: "inception_3a/5x5_reduce"
+  top: "inception_3a/5x5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3a/5x5_reduce"
+  top: "inception_3a/5x5_reduce"
+  name: "inception_3a/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_3a/5x5_reduce"
+  top: "inception_3a/5x5"
+  name: "inception_3a/5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 32
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
   }
 }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_3a/5x5"
+  top: "inception_3a/5x5"
+}
+layer {
+  name: "inception_3a/pool"
+  type: "Pooling"
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3a/5x5"
+  top: "inception_3a/5x5"
+  name: "inception_3a/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "pool2/3x3_s2"
+  top: "inception_3a/pool"
+  name: "inception_3a/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/pool_proj"
+  type: "Convolution"
+  bottom: "inception_3a/pool"
+  top: "inception_3a/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3a/pool"
+  top: "inception_3a/pool_proj"
+  name: "inception_3a/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 32
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3a/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_3a/pool_proj"
+  top: "inception_3a/pool_proj"
+}
+layer {
+  name: "inception_3a/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3a/pool_proj"
+  top: "inception_3a/pool_proj"
+  name: "inception_3a/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_3a/1x1"
+  bottom: "inception_3a/3x3"
+  bottom: "inception_3a/5x5"
+  bottom: "inception_3a/pool_proj"
+  top: "inception_3a/output"
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "inception_3b/1x1"
+  type: "Convolution"
+  bottom: "inception_3a/output"
+  top: "inception_3b/1x1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+  name: "inception_3a/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_3a/output"
+  top: "inception_3b/1x1"
+  name: "inception_3b/1x1"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+}
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1415,8 +2000,63 @@ layers {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3b/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_3b/1x1"
+  top: "inception_3b/1x1"
+}
+layer {
+  name: "inception_3b/3x3_reduce"
+  type: "Convolution"
+  bottom: "inception_3a/output"
+  top: "inception_3b/3x3_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/1x1"
+  top: "inception_3b/1x1"
+  name: "inception_3b/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "inception_3a/output"
+  top: "inception_3b/3x3_reduce"
+  name: "inception_3b/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1547,8 +2187,215 @@ layers {
     pool: MAX
     kernel_size: 3
     stride: 2
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3b/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_3b/3x3_reduce"
+  top: "inception_3b/3x3_reduce"
+}
+layer {
+  name: "inception_3b/3x3"
+  type: "Convolution"
+  bottom: "inception_3b/3x3_reduce"
+  top: "inception_3b/3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/3x3_reduce"
+  top: "inception_3b/3x3_reduce"
+  name: "inception_3b/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_3b/3x3_reduce"
+  top: "inception_3b/3x3"
+  name: "inception_3b/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 192
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
   }
 }
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3b/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_3b/3x3"
+  top: "inception_3b/3x3"
+}
+layer {
+  name: "inception_3b/5x5_reduce"
+  type: "Convolution"
+  bottom: "inception_3a/output"
+  top: "inception_3b/5x5_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/3x3"
+  top: "inception_3b/3x3"
+  name: "inception_3b/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "inception_3a/output"
+  top: "inception_3b/5x5_reduce"
+  name: "inception_3b/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 32
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3b/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_3b/5x5_reduce"
+  top: "inception_3b/5x5_reduce"
+}
+layer {
+  name: "inception_3b/5x5"
+  type: "Convolution"
+  bottom: "inception_3b/5x5_reduce"
+  top: "inception_3b/5x5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/5x5_reduce"
+  top: "inception_3b/5x5_reduce"
+  name: "inception_3b/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_3b/5x5_reduce"
+  top: "inception_3b/5x5"
+  name: "inception_3b/5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 96
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3b/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_3b/5x5"
+  top: "inception_3b/5x5"
+}
+layer {
+  name: "inception_3b/pool"
+  type: "Pooling"
+  bottom: "inception_3a/output"
+  top: "inception_3b/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/5x5"
+  top: "inception_3b/5x5"
+  name: "inception_3b/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "inception_3a/output"
+  top: "inception_3b/pool"
+  name: "inception_3b/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+}
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1584,10 +2431,55 @@ layers {
 >>>>>>> pod/caffe-merge
 =======
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_3b/pool_proj"
+  type: "Convolution"
+  bottom: "inception_3b/pool"
+  top: "inception_3b/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/pool"
+  top: "inception_3b/pool_proj"
+  name: "inception_3b/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1615,10 +2507,39 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+=======
+layer {
+  name: "inception_3b/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_3b/pool_proj"
+  top: "inception_3b/pool_proj"
+}
+layer {
+  name: "inception_3b/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_3b/pool_proj"
+  top: "inception_3b/pool_proj"
+  name: "inception_3b/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_3b/1x1"
+  bottom: "inception_3b/3x3"
+  bottom: "inception_3b/5x5"
+  bottom: "inception_3b/pool_proj"
+  top: "inception_3b/output"
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1648,10 +2569,28 @@ layers {
   bottom: "conv2/norm2"
   top: "pool2/3x3_s2"
   name: "pool2/3x3_s2"
+=======
+}
+layer {
+  name: "pool3/3x3_s2"
+  type: "Pooling"
+  bottom: "inception_3b/output"
+  top: "pool3/3x3_s2"
+<<<<<<< HEAD
+=======
+  name: "inception_3b/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_3b/output"
+  top: "pool3/3x3_s2"
+  name: "pool3/3x3_s2"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: POOLING
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1666,12 +2605,15 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1709,6 +2651,15 @@ layer {
   type: "Convolution"
   bottom: "pool2/3x3_s2"
   top: "inception_3a/1x1"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4a/1x1"
+  type: "Convolution"
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1717,6 +2668,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1779,6 +2731,13 @@ layers {
   bottom: "pool2/3x3_s2"
   top: "inception_3a/1x1"
   name: "inception_3a/1x1"
+=======
+=======
+layers {
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/1x1"
+  name: "inception_4a/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -1787,6 +2746,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1836,6 +2796,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 64
+=======
+  convolution_param {
+    num_output: 192
+>>>>>>> pod-caffe-pod.hpp-merge
     kernel_size: 1
     weight_filler {
       type: "xavier"
@@ -1847,6 +2811,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1945,6 +2910,20 @@ layer {
   type: "Convolution"
   bottom: "pool2/3x3_s2"
   top: "inception_3a/3x3_reduce"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4a/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_4a/1x1"
+  top: "inception_4a/1x1"
+}
+layer {
+  name: "inception_4a/3x3_reduce"
+  type: "Convolution"
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/3x3_reduce"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -1953,6 +2932,64 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4a/1x1"
+  top: "inception_4a/1x1"
+  name: "inception_4a/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/3x3_reduce"
+  name: "inception_4a/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 96
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4a/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_4a/3x3_reduce"
+  top: "inception_4a/3x3_reduce"
+}
+layer {
+  name: "inception_4a/3x3"
+  type: "Convolution"
+  bottom: "inception_4a/3x3_reduce"
+  top: "inception_4a/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2021,6 +3058,19 @@ layers {
   bottom: "pool2/3x3_s2"
   top: "inception_3a/3x3_reduce"
   name: "inception_3a/3x3_reduce"
+=======
+=======
+layers {
+  bottom: "inception_4a/3x3_reduce"
+  top: "inception_4a/3x3_reduce"
+  name: "inception_4a/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4a/3x3_reduce"
+  top: "inception_4a/3x3"
+  name: "inception_4a/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -2029,6 +3079,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2082,6 +3133,15 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.09
+=======
+  convolution_param {
+    num_output: 208
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -2104,6 +3164,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2179,6 +3240,21 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/3x3_reduce"
   top: "inception_3a/3x3"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4a/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_4a/3x3"
+  top: "inception_4a/3x3"
+}
+layer {
+  name: "inception_4a/5x5_reduce"
+  type: "Convolution"
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/5x5_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -2187,6 +3263,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2242,6 +3319,55 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/3x3_reduce"
   top: "inception_3a/3x3"
+=======
+=======
+layers {
+  bottom: "inception_4a/3x3"
+  top: "inception_4a/3x3"
+  name: "inception_4a/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/5x5_reduce"
+  name: "inception_4a/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 16
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4a/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_4a/5x5_reduce"
+  top: "inception_4a/5x5_reduce"
+}
+layer {
+  name: "inception_4a/5x5"
+  type: "Convolution"
+  bottom: "inception_4a/5x5_reduce"
+  top: "inception_4a/5x5"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -2250,6 +3376,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2280,6 +3407,19 @@ layers {
   bottom: "inception_3a/3x3_reduce"
   top: "inception_3a/3x3"
   name: "inception_3a/3x3"
+=======
+=======
+layers {
+  bottom: "inception_4a/5x5_reduce"
+  top: "inception_4a/5x5_reduce"
+  name: "inception_4a/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4a/5x5_reduce"
+  top: "inception_4a/5x5"
+  name: "inception_4a/5x5"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -2288,6 +3428,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2339,6 +3480,12 @@ layers {
     num_output: 128
     pad: 1
     kernel_size: 3
+=======
+  convolution_param {
+    num_output: 48
+    pad: 2
+    kernel_size: 5
+>>>>>>> pod-caffe-pod.hpp-merge
     weight_filler {
       type: "xavier"
       std: 0.03
@@ -2364,6 +3511,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2387,10 +3535,49 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4a/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_4a/5x5"
+  top: "inception_4a/5x5"
+}
+layer {
+  name: "inception_4a/pool"
+  type: "Pooling"
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4a/5x5"
+  top: "inception_4a/5x5"
+  name: "inception_4a/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "pool3/3x3_s2"
+  top: "inception_4a/pool"
+  name: "inception_4a/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -2410,10 +3597,53 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_4a/pool_proj"
+  type: "Convolution"
+  bottom: "inception_4a/pool"
+  top: "inception_4a/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4a/pool"
+  top: "inception_4a/pool_proj"
+  name: "inception_4a/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2447,6 +3677,44 @@ layer {
   type: "Convolution"
   bottom: "pool2/3x3_s2"
   top: "inception_3a/5x5_reduce"
+=======
+layer {
+  name: "inception_4a/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_4a/pool_proj"
+  top: "inception_4a/pool_proj"
+}
+layer {
+  name: "inception_4a/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4a/pool_proj"
+  top: "inception_4a/pool_proj"
+  name: "inception_4a/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_4a/1x1"
+  bottom: "inception_4a/3x3"
+  bottom: "inception_4a/5x5"
+  bottom: "inception_4a/pool_proj"
+  top: "inception_4a/output"
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "inception_4b/1x1"
+  type: "Convolution"
+  bottom: "inception_4a/output"
+  top: "inception_4b/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -2455,6 +3723,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2523,6 +3792,16 @@ layers {
   bottom: "pool2/3x3_s2"
   top: "inception_3a/5x5_reduce"
   name: "inception_3a/5x5_reduce"
+=======
+=======
+  name: "inception_4a/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_4a/output"
+  top: "inception_4b/1x1"
+  name: "inception_4b/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -2531,6 +3810,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2584,6 +3864,14 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.2
+=======
+  convolution_param {
+    num_output: 160
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -2591,6 +3879,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2689,6 +3978,21 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/5x5_reduce"
   top: "inception_3a/5x5"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4b/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_4b/1x1"
+  top: "inception_4b/1x1"
+}
+layer {
+  name: "inception_4b/3x3_reduce"
+  type: "Convolution"
+  bottom: "inception_4a/output"
+  top: "inception_4b/3x3_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -2697,6 +4001,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2765,6 +4070,19 @@ layers {
   bottom: "inception_3a/5x5_reduce"
   top: "inception_3a/5x5"
   name: "inception_3a/5x5"
+=======
+=======
+layers {
+  bottom: "inception_4b/1x1"
+  top: "inception_4b/1x1"
+  name: "inception_4b/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "inception_4a/output"
+  top: "inception_4b/3x3_reduce"
+  name: "inception_4b/3x3_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -2773,6 +4091,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2827,6 +4146,14 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.03
+=======
+  convolution_param {
+    num_output: 112
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -2849,6 +4176,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2872,10 +4200,68 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4b/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_4b/3x3_reduce"
+  top: "inception_4b/3x3_reduce"
+}
+layer {
+  name: "inception_4b/3x3"
+  type: "Convolution"
+  bottom: "inception_4b/3x3_reduce"
+  top: "inception_4b/3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4b/3x3_reduce"
+  top: "inception_4b/3x3_reduce"
+  name: "inception_4b/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4b/3x3_reduce"
+  top: "inception_4b/3x3"
+  name: "inception_4b/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 224
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -2895,10 +4281,65 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_4b/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_4b/3x3"
+  top: "inception_4b/3x3"
+}
+layer {
+  name: "inception_4b/5x5_reduce"
+  type: "Convolution"
+  bottom: "inception_4a/output"
+  top: "inception_4b/5x5_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4b/3x3"
+  top: "inception_4b/3x3"
+  name: "inception_4b/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "inception_4a/output"
+  top: "inception_4b/5x5_reduce"
+  name: "inception_4b/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 24
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3009,6 +4450,88 @@ layers {
   bottom: "pool2/3x3_s2"
   top: "inception_3a/pool"
   name: "inception_3a/pool"
+=======
+layer {
+  name: "inception_4b/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_4b/5x5_reduce"
+  top: "inception_4b/5x5_reduce"
+}
+layer {
+  name: "inception_4b/5x5"
+  type: "Convolution"
+  bottom: "inception_4b/5x5_reduce"
+  top: "inception_4b/5x5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4b/5x5_reduce"
+  top: "inception_4b/5x5_reduce"
+  name: "inception_4b/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4b/5x5_reduce"
+  top: "inception_4b/5x5"
+  name: "inception_4b/5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4b/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_4b/5x5"
+  top: "inception_4b/5x5"
+}
+layer {
+  name: "inception_4b/pool"
+  type: "Pooling"
+  bottom: "inception_4a/output"
+  top: "inception_4b/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4b/5x5"
+  top: "inception_4b/5x5"
+  name: "inception_4b/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "inception_4a/output"
+  top: "inception_4b/pool"
+  name: "inception_4b/pool"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: POOLING
 >>>>>>> origin/BVLC/parallel
 =======
@@ -3024,6 +4547,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3060,6 +4584,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   pooling_param {
     pool: MAX
     kernel_size: 3
@@ -3082,6 +4608,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3105,10 +4632,55 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4b/pool_proj"
+  type: "Convolution"
+  bottom: "inception_4b/pool"
+  top: "inception_4b/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4b/pool"
+  top: "inception_4b/pool_proj"
+  name: "inception_4b/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3159,6 +4731,44 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/pool"
   top: "inception_3a/pool_proj"
+=======
+layer {
+  name: "inception_4b/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_4b/pool_proj"
+  top: "inception_4b/pool_proj"
+}
+layer {
+  name: "inception_4b/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4b/pool_proj"
+  top: "inception_4b/pool_proj"
+  name: "inception_4b/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_4b/1x1"
+  bottom: "inception_4b/3x3"
+  bottom: "inception_4b/5x5"
+  bottom: "inception_4b/pool_proj"
+  top: "inception_4b/output"
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "inception_4c/1x1"
+  type: "Convolution"
+  bottom: "inception_4b/output"
+  top: "inception_4c/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -3167,6 +4777,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3229,6 +4840,16 @@ layers {
   bottom: "inception_3a/pool"
   top: "inception_3a/pool_proj"
   name: "inception_3a/pool_proj"
+=======
+=======
+  name: "inception_4b/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_4b/output"
+  top: "inception_4c/1x1"
+  name: "inception_4c/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -3237,6 +4858,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3290,6 +4912,14 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.1
+=======
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -3297,6 +4927,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3335,10 +4966,67 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4c/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_4c/1x1"
+  top: "inception_4c/1x1"
+}
+layer {
+  name: "inception_4c/3x3_reduce"
+  type: "Convolution"
+  bottom: "inception_4b/output"
+  top: "inception_4c/3x3_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/1x1"
+  top: "inception_4c/1x1"
+  name: "inception_4c/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "inception_4b/output"
+  top: "inception_4c/3x3_reduce"
+  name: "inception_4c/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3531,10 +5219,179 @@ layers {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+layer {
+  name: "inception_4c/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_4c/3x3_reduce"
+  top: "inception_4c/3x3_reduce"
+}
+layer {
+  name: "inception_4c/3x3"
+  type: "Convolution"
+  bottom: "inception_4c/3x3_reduce"
+  top: "inception_4c/3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/3x3_reduce"
+  top: "inception_4c/3x3_reduce"
+  name: "inception_4c/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4c/3x3_reduce"
+  top: "inception_4c/3x3"
+  name: "inception_4c/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+layer {
+  name: "inception_4c/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_4c/3x3"
+  top: "inception_4c/3x3"
+}
+layer {
+  name: "inception_4c/5x5_reduce"
+  type: "Convolution"
+  bottom: "inception_4b/output"
+  top: "inception_4c/5x5_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/3x3"
+  top: "inception_4c/3x3"
+  name: "inception_4c/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "inception_4b/output"
+  top: "inception_4c/5x5_reduce"
+  name: "inception_4c/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 24
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4c/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_4c/5x5_reduce"
+  top: "inception_4c/5x5_reduce"
+}
+layer {
+  name: "inception_4c/5x5"
+  type: "Convolution"
+  bottom: "inception_4c/5x5_reduce"
+  top: "inception_4c/5x5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/5x5_reduce"
+  top: "inception_4c/5x5_reduce"
+  name: "inception_4c/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4c/5x5_reduce"
+  top: "inception_4c/5x5"
+  name: "inception_4c/5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 <<<<<<< HEAD
@@ -3551,10 +5408,47 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_4c/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_4c/5x5"
+  top: "inception_4c/5x5"
+}
+layer {
+  name: "inception_4c/pool"
+  type: "Pooling"
+  bottom: "inception_4b/output"
+  top: "inception_4c/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/5x5"
+  top: "inception_4c/5x5"
+  name: "inception_4c/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "inception_4b/output"
+  top: "inception_4c/pool"
+  name: "inception_4c/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3574,10 +5468,53 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_4c/pool_proj"
+  type: "Convolution"
+  bottom: "inception_4c/pool"
+  top: "inception_4c/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/pool"
+  top: "inception_4c/pool_proj"
+  name: "inception_4c/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3606,6 +5543,44 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/output"
   top: "inception_3b/1x1"
+=======
+layer {
+  name: "inception_4c/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_4c/pool_proj"
+  top: "inception_4c/pool_proj"
+}
+layer {
+  name: "inception_4c/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4c/pool_proj"
+  top: "inception_4c/pool_proj"
+  name: "inception_4c/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_4c/1x1"
+  bottom: "inception_4c/3x3"
+  bottom: "inception_4c/5x5"
+  bottom: "inception_4c/pool_proj"
+  top: "inception_4c/output"
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "inception_4d/1x1"
+  type: "Convolution"
+  bottom: "inception_4c/output"
+  top: "inception_4d/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -3614,6 +5589,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3679,6 +5655,16 @@ layers {
   bottom: "inception_3a/output"
   top: "inception_3b/1x1"
   name: "inception_3b/1x1"
+=======
+=======
+  name: "inception_4c/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_4c/output"
+  top: "inception_4d/1x1"
+  name: "inception_4d/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -3687,6 +5673,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3736,6 +5723,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
+=======
+  convolution_param {
+    num_output: 112
+>>>>>>> pod-caffe-pod.hpp-merge
     kernel_size: 1
     weight_filler {
       type: "xavier"
@@ -3747,6 +5738,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3845,6 +5837,21 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/output"
   top: "inception_3b/3x3_reduce"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4d/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_4d/1x1"
+  top: "inception_4d/1x1"
+}
+layer {
+  name: "inception_4d/3x3_reduce"
+  type: "Convolution"
+  bottom: "inception_4c/output"
+  top: "inception_4d/3x3_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -3853,6 +5860,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3921,6 +5929,19 @@ layers {
   bottom: "inception_3a/output"
   top: "inception_3b/3x3_reduce"
   name: "inception_3b/3x3_reduce"
+=======
+=======
+layers {
+  bottom: "inception_4d/1x1"
+  top: "inception_4d/1x1"
+  name: "inception_4d/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "inception_4c/output"
+  top: "inception_4d/3x3_reduce"
+  name: "inception_4d/3x3_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -3929,6 +5950,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3978,6 +6000,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 128
+=======
+  convolution_param {
+    num_output: 144
+>>>>>>> pod-caffe-pod.hpp-merge
     kernel_size: 1
     weight_filler {
       type: "xavier"
@@ -3989,6 +6015,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4087,6 +6114,21 @@ layer {
   type: "Convolution"
   bottom: "inception_3b/3x3_reduce"
   top: "inception_3b/3x3"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4d/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_4d/3x3_reduce"
+  top: "inception_4d/3x3_reduce"
+}
+layer {
+  name: "inception_4d/3x3"
+  type: "Convolution"
+  bottom: "inception_4d/3x3_reduce"
+  top: "inception_4d/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -4095,6 +6137,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4220,6 +6263,29 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 192
+=======
+=======
+layers {
+  bottom: "inception_4d/3x3_reduce"
+  top: "inception_4d/3x3_reduce"
+  name: "inception_4d/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4d/3x3_reduce"
+  top: "inception_4d/3x3"
+  name: "inception_4d/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 288
+>>>>>>> pod-caffe-pod.hpp-merge
     pad: 1
     kernel_size: 3
     weight_filler {
@@ -4232,6 +6298,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4330,6 +6397,21 @@ layer {
   type: "Convolution"
   bottom: "inception_3a/output"
   top: "inception_3b/5x5_reduce"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4d/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_4d/3x3"
+  top: "inception_4d/3x3"
+}
+layer {
+  name: "inception_4d/5x5_reduce"
+  type: "Convolution"
+  bottom: "inception_4c/output"
+  top: "inception_4d/5x5_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -4338,6 +6420,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4406,6 +6489,19 @@ layers {
   bottom: "inception_3a/output"
   top: "inception_3b/5x5_reduce"
   name: "inception_3b/5x5_reduce"
+=======
+=======
+layers {
+  bottom: "inception_4d/3x3"
+  top: "inception_4d/3x3"
+  name: "inception_4d/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "inception_4c/output"
+  top: "inception_4d/5x5_reduce"
+  name: "inception_4d/5x5_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -4425,6 +6521,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -4461,6 +6558,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   convolution_param {
     num_output: 32
     kernel_size: 1
@@ -4489,6 +6588,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4572,6 +6672,21 @@ layer {
   type: "Convolution"
   bottom: "inception_3b/5x5_reduce"
   top: "inception_3b/5x5"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4d/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_4d/5x5_reduce"
+  top: "inception_4d/5x5_reduce"
+}
+layer {
+  name: "inception_4d/5x5"
+  type: "Convolution"
+  bottom: "inception_4d/5x5_reduce"
+  top: "inception_4d/5x5"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -4580,6 +6695,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4648,6 +6764,19 @@ layers {
   bottom: "inception_3b/5x5_reduce"
   top: "inception_3b/5x5"
   name: "inception_3b/5x5"
+=======
+=======
+layers {
+  bottom: "inception_4d/5x5_reduce"
+  top: "inception_4d/5x5_reduce"
+  name: "inception_4d/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4d/5x5_reduce"
+  top: "inception_4d/5x5"
+  name: "inception_4d/5x5"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -4656,6 +6785,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4705,6 +6835,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 96
+=======
+  convolution_param {
+    num_output: 64
+>>>>>>> pod-caffe-pod.hpp-merge
     pad: 2
     kernel_size: 5
     weight_filler {
@@ -4717,6 +6851,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4755,10 +6890,49 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4d/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_4d/5x5"
+  top: "inception_4d/5x5"
+}
+layer {
+  name: "inception_4d/pool"
+  type: "Pooling"
+  bottom: "inception_4c/output"
+  top: "inception_4d/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4d/5x5"
+  top: "inception_4d/5x5"
+  name: "inception_4d/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "inception_4c/output"
+  top: "inception_4d/pool"
+  name: "inception_4d/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -5033,6 +7207,12 @@ layer {
   type: "Convolution"
   bottom: "inception_3b/pool"
   top: "inception_3b/pool_proj"
+=======
+layer {
+  name: "inception_4d/pool_proj"
+  type: "Convolution"
+  bottom: "inception_4d/pool"
+  top: "inception_4d/pool_proj"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -5041,6 +7221,83 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4d/pool"
+  top: "inception_4d/pool_proj"
+  name: "inception_4d/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4d/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_4d/pool_proj"
+  top: "inception_4d/pool_proj"
+}
+layer {
+  name: "inception_4d/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4d/pool_proj"
+  top: "inception_4d/pool_proj"
+  name: "inception_4d/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_4d/1x1"
+  bottom: "inception_4d/3x3"
+  bottom: "inception_4d/5x5"
+  bottom: "inception_4d/pool_proj"
+  top: "inception_4d/output"
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "inception_4e/1x1"
+  type: "Convolution"
+  bottom: "inception_4d/output"
+  top: "inception_4e/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5103,6 +7360,16 @@ layers {
   bottom: "inception_3b/pool"
   top: "inception_3b/pool_proj"
   name: "inception_3b/pool_proj"
+=======
+=======
+  name: "inception_4d/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_4d/output"
+  top: "inception_4e/1x1"
+  name: "inception_4e/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -5111,6 +7378,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5164,6 +7432,14 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.1
+=======
+  convolution_param {
+    num_output: 256
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -5186,6 +7462,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5207,10 +7484,67 @@ layers {
 >>>>>>> pod/caffe-merge
 =======
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4e/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_4e/1x1"
+  top: "inception_4e/1x1"
+}
+layer {
+  name: "inception_4e/3x3_reduce"
+  type: "Convolution"
+  bottom: "inception_4d/output"
+  top: "inception_4e/3x3_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/1x1"
+  top: "inception_4e/1x1"
+  name: "inception_4e/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "inception_4d/output"
+  top: "inception_4e/3x3_reduce"
+  name: "inception_4e/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 160
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
@@ -5229,10 +7563,66 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_4e/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_4e/3x3_reduce"
+  top: "inception_4e/3x3_reduce"
+}
+layer {
+  name: "inception_4e/3x3"
+  type: "Convolution"
+  bottom: "inception_4e/3x3_reduce"
+  top: "inception_4e/3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/3x3_reduce"
+  top: "inception_4e/3x3_reduce"
+  name: "inception_4e/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4e/3x3_reduce"
+  top: "inception_4e/3x3"
+  name: "inception_4e/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 320
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5299,10 +7689,65 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+=======
+layer {
+  name: "inception_4e/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_4e/3x3"
+  top: "inception_4e/3x3"
+}
+layer {
+  name: "inception_4e/5x5_reduce"
+  type: "Convolution"
+  bottom: "inception_4d/output"
+  top: "inception_4e/5x5_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/3x3"
+  top: "inception_4e/3x3"
+  name: "inception_4e/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "inception_4d/output"
+  top: "inception_4e/5x5_reduce"
+  name: "inception_4e/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 32
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 layer {
@@ -5410,10 +7855,66 @@ layers {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+layer {
+  name: "inception_4e/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_4e/5x5_reduce"
+  top: "inception_4e/5x5_reduce"
+}
+layer {
+  name: "inception_4e/5x5"
+  type: "Convolution"
+  bottom: "inception_4e/5x5_reduce"
+  top: "inception_4e/5x5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/5x5_reduce"
+  top: "inception_4e/5x5_reduce"
+  name: "inception_4e/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_4e/5x5_reduce"
+  top: "inception_4e/5x5"
+  name: "inception_4e/5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 <<<<<<< HEAD
@@ -5430,10 +7931,47 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_4e/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_4e/5x5"
+  top: "inception_4e/5x5"
+}
+layer {
+  name: "inception_4e/pool"
+  type: "Pooling"
+  bottom: "inception_4d/output"
+  top: "inception_4e/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/5x5"
+  top: "inception_4e/5x5"
+  name: "inception_4e/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "inception_4d/output"
+  top: "inception_4e/pool"
+  name: "inception_4e/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -5550,6 +8088,97 @@ layers {
   bottom: "inception_3b/output"
   top: "pool3/3x3_s2"
   name: "pool3/3x3_s2"
+=======
+layer {
+  name: "inception_4e/pool_proj"
+  type: "Convolution"
+  bottom: "inception_4e/pool"
+  top: "inception_4e/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/pool"
+  top: "inception_4e/pool_proj"
+  name: "inception_4e/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_4e/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_4e/pool_proj"
+  top: "inception_4e/pool_proj"
+}
+layer {
+  name: "inception_4e/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_4e/pool_proj"
+  top: "inception_4e/pool_proj"
+  name: "inception_4e/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_4e/1x1"
+  bottom: "inception_4e/3x3"
+  bottom: "inception_4e/5x5"
+  bottom: "inception_4e/pool_proj"
+  top: "inception_4e/output"
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+}
+layer {
+  name: "pool4/3x3_s2"
+  type: "Pooling"
+  bottom: "inception_4e/output"
+  top: "pool4/3x3_s2"
+<<<<<<< HEAD
+=======
+  name: "inception_4e/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_4e/output"
+  top: "pool4/3x3_s2"
+  name: "pool4/3x3_s2"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: POOLING
 >>>>>>> origin/BVLC/parallel
 =======
@@ -5565,6 +8194,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -5601,12 +8231,15 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5699,6 +8332,15 @@ layer {
   type: "Convolution"
   bottom: "pool3/3x3_s2"
   top: "inception_4a/1x1"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5a/1x1"
+  type: "Convolution"
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -5707,6 +8349,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5769,6 +8412,13 @@ layers {
   bottom: "pool3/3x3_s2"
   top: "inception_4a/1x1"
   name: "inception_4a/1x1"
+=======
+=======
+layers {
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/1x1"
+  name: "inception_5a/1x1"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -5777,6 +8427,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5826,6 +8477,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
   convolution_param {
     num_output: 192
+=======
+  convolution_param {
+    num_output: 256
+>>>>>>> pod-caffe-pod.hpp-merge
     kernel_size: 1
     weight_filler {
       type: "xavier"
@@ -5837,6 +8492,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5935,6 +8591,20 @@ layer {
   type: "Convolution"
   bottom: "pool3/3x3_s2"
   top: "inception_4a/3x3_reduce"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5a/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_5a/1x1"
+  top: "inception_5a/1x1"
+}
+layer {
+  name: "inception_5a/3x3_reduce"
+  type: "Convolution"
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/3x3_reduce"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -5943,6 +8613,64 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5a/1x1"
+  top: "inception_5a/1x1"
+  name: "inception_5a/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/3x3_reduce"
+  name: "inception_5a/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 160
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5a/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_5a/3x3_reduce"
+  top: "inception_5a/3x3_reduce"
+}
+layer {
+  name: "inception_5a/3x3"
+  type: "Convolution"
+  bottom: "inception_5a/3x3_reduce"
+  top: "inception_5a/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6011,6 +8739,19 @@ layers {
   bottom: "pool3/3x3_s2"
   top: "inception_4a/3x3_reduce"
   name: "inception_4a/3x3_reduce"
+=======
+=======
+layers {
+  bottom: "inception_5a/3x3_reduce"
+  top: "inception_5a/3x3_reduce"
+  name: "inception_5a/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_5a/3x3_reduce"
+  top: "inception_5a/3x3"
+  name: "inception_5a/3x3"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -6019,6 +8760,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6072,6 +8814,15 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.09
+=======
+  convolution_param {
+    num_output: 320
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -6079,6 +8830,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6177,6 +8929,21 @@ layer {
   type: "Convolution"
   bottom: "inception_4a/3x3_reduce"
   top: "inception_4a/3x3"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5a/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_5a/3x3"
+  top: "inception_5a/3x3"
+}
+layer {
+  name: "inception_5a/5x5_reduce"
+  type: "Convolution"
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/5x5_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -6185,6 +8952,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6253,6 +9021,19 @@ layers {
   bottom: "inception_4a/3x3_reduce"
   top: "inception_4a/3x3"
   name: "inception_4a/3x3"
+=======
+=======
+layers {
+  bottom: "inception_5a/3x3"
+  top: "inception_5a/3x3"
+  name: "inception_5a/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/5x5_reduce"
+  name: "inception_5a/5x5_reduce"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -6261,6 +9042,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6315,6 +9097,14 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.03
+=======
+  convolution_param {
+    num_output: 32
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -6322,6 +9112,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6420,6 +9211,21 @@ layer {
   type: "Convolution"
   bottom: "pool3/3x3_s2"
   top: "inception_4a/5x5_reduce"
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5a/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_5a/5x5_reduce"
+  top: "inception_5a/5x5_reduce"
+}
+layer {
+  name: "inception_5a/5x5"
+  type: "Convolution"
+  bottom: "inception_5a/5x5_reduce"
+  top: "inception_5a/5x5"
+>>>>>>> pod-caffe-pod.hpp-merge
   param {
     lr_mult: 1
     decay_mult: 1
@@ -6428,6 +9234,7 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6496,6 +9303,19 @@ layers {
   bottom: "pool3/3x3_s2"
   top: "inception_4a/5x5_reduce"
   name: "inception_4a/5x5_reduce"
+=======
+=======
+layers {
+  bottom: "inception_5a/5x5_reduce"
+  top: "inception_5a/5x5_reduce"
+  name: "inception_5a/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_5a/5x5_reduce"
+  top: "inception_5a/5x5"
+  name: "inception_5a/5x5"
+>>>>>>> pod-caffe-pod.hpp-merge
   type: CONVOLUTION
   blobs_lr: 1
   blobs_lr: 2
@@ -6504,6 +9324,7 @@ layers {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6557,6 +9378,15 @@ layers {
     weight_filler {
       type: "xavier"
       std: 0.2
+=======
+  convolution_param {
+    num_output: 128
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     bias_filler {
       type: "constant"
@@ -6564,6 +9394,7 @@ layers {
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19279,10 +22110,49 @@ layers {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5a/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_5a/5x5"
+  top: "inception_5a/5x5"
+}
+layer {
+  name: "inception_5a/pool"
+  type: "Pooling"
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5a/5x5"
+  top: "inception_5a/5x5"
+  name: "inception_5a/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "pool4/3x3_s2"
+  top: "inception_5a/pool"
+  name: "inception_5a/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 <<<<<<< HEAD
@@ -19299,10 +22169,53 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_5a/pool_proj"
+  type: "Convolution"
+  bottom: "inception_5a/pool"
+  top: "inception_5a/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5a/pool"
+  top: "inception_5a/pool_proj"
+  name: "inception_5a/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -19322,10 +22235,39 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_5a/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_5a/pool_proj"
+  top: "inception_5a/pool_proj"
+}
+layer {
+  name: "inception_5a/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5a/pool_proj"
+  top: "inception_5a/pool_proj"
+  name: "inception_5a/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_5a/1x1"
+  bottom: "inception_5a/3x3"
+  bottom: "inception_5a/5x5"
+  bottom: "inception_5a/pool_proj"
+  top: "inception_5a/output"
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19468,6 +22410,276 @@ layers {
 >>>>>>> BVLC/device-abstraction
   dropout_param {
     dropout_ratio: 0.4
+=======
+}
+layer {
+  name: "inception_5b/1x1"
+  type: "Convolution"
+  bottom: "inception_5a/output"
+  top: "inception_5b/1x1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+  name: "inception_5a/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_5a/output"
+  top: "inception_5b/1x1"
+  name: "inception_5b/1x1"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 384
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5b/relu_1x1"
+  type: "ReLU"
+  bottom: "inception_5b/1x1"
+  top: "inception_5b/1x1"
+}
+layer {
+  name: "inception_5b/3x3_reduce"
+  type: "Convolution"
+  bottom: "inception_5a/output"
+  top: "inception_5b/3x3_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/1x1"
+  top: "inception_5b/1x1"
+  name: "inception_5b/relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "inception_5a/output"
+  top: "inception_5b/3x3_reduce"
+  name: "inception_5b/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 192
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5b/relu_3x3_reduce"
+  type: "ReLU"
+  bottom: "inception_5b/3x3_reduce"
+  top: "inception_5b/3x3_reduce"
+}
+layer {
+  name: "inception_5b/3x3"
+  type: "Convolution"
+  bottom: "inception_5b/3x3_reduce"
+  top: "inception_5b/3x3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/3x3_reduce"
+  top: "inception_5b/3x3_reduce"
+  name: "inception_5b/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_5b/3x3_reduce"
+  top: "inception_5b/3x3"
+  name: "inception_5b/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5b/relu_3x3"
+  type: "ReLU"
+  bottom: "inception_5b/3x3"
+  top: "inception_5b/3x3"
+}
+layer {
+  name: "inception_5b/5x5_reduce"
+  type: "Convolution"
+  bottom: "inception_5a/output"
+  top: "inception_5b/5x5_reduce"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/3x3"
+  top: "inception_5b/3x3"
+  name: "inception_5b/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "inception_5a/output"
+  top: "inception_5b/5x5_reduce"
+  name: "inception_5b/5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 48
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5b/relu_5x5_reduce"
+  type: "ReLU"
+  bottom: "inception_5b/5x5_reduce"
+  top: "inception_5b/5x5_reduce"
+}
+layer {
+  name: "inception_5b/5x5"
+  type: "Convolution"
+  bottom: "inception_5b/5x5_reduce"
+  top: "inception_5b/5x5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/5x5_reduce"
+  top: "inception_5b/5x5_reduce"
+  name: "inception_5b/relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "inception_5b/5x5_reduce"
+  top: "inception_5b/5x5"
+  name: "inception_5b/5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    pad: 2
+    kernel_size: 5
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 }
 <<<<<<< HEAD
@@ -19485,6 +22697,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19508,10 +22721,93 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+=======
+>>>>>>> caffe
+layer {
+  name: "inception_5b/relu_5x5"
+  type: "ReLU"
+  bottom: "inception_5b/5x5"
+  top: "inception_5b/5x5"
+}
+layer {
+  name: "inception_5b/pool"
+  type: "Pooling"
+  bottom: "inception_5a/output"
+  top: "inception_5b/pool"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/5x5"
+  top: "inception_5b/5x5"
+  name: "inception_5b/relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "inception_5a/output"
+  top: "inception_5b/pool"
+  name: "inception_5b/pool"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+layer {
+  name: "inception_5b/pool_proj"
+  type: "Convolution"
+  bottom: "inception_5b/pool"
+  top: "inception_5b/pool_proj"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/pool"
+  top: "inception_5b/pool_proj"
+  name: "inception_5b/pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -19531,10 +22827,68 @@ layers {
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+layer {
+  name: "inception_5b/relu_pool_proj"
+  type: "ReLU"
+  bottom: "inception_5b/pool_proj"
+  top: "inception_5b/pool_proj"
+}
+layer {
+  name: "inception_5b/output"
+  type: "Concat"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "inception_5b/pool_proj"
+  top: "inception_5b/pool_proj"
+  name: "inception_5b/relu_pool_proj"
+  type: RELU
+}
+layers {
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  bottom: "inception_5b/1x1"
+  bottom: "inception_5b/3x3"
+  bottom: "inception_5b/5x5"
+  bottom: "inception_5b/pool_proj"
+  top: "inception_5b/output"
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+}
+layer {
+  name: "pool5/7x7_s1"
+  type: "Pooling"
+  bottom: "inception_5b/output"
+  top: "pool5/7x7_s1"
+<<<<<<< HEAD
+=======
+  name: "inception_5b/output"
+  type: CONCAT
+}
+layers {
+  bottom: "inception_5b/output"
+  top: "pool5/7x7_s1"
+  name: "pool5/7x7_s1"
+  type: POOLING
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  pooling_param {
+    pool: AVE
+    kernel_size: 7
+    stride: 1
+  }
+}
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19557,6 +22911,31 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+layer {
+  name: "pool5/drop_7x7_s1"
+  type: "Dropout"
+  bottom: "pool5/7x7_s1"
+  top: "pool5/7x7_s1"
+<<<<<<< HEAD
+=======
+layers {
+  bottom: "pool5/7x7_s1"
+  top: "pool5/7x7_s1"
+  name: "pool5/drop_7x7_s1"
+  type: DROPOUT
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  dropout_param {
+    dropout_ratio: 0.4
+  }
+}
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "loss3/classifier"
   type: "InnerProduct"
@@ -19583,6 +22962,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19628,6 +23008,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   bottom: "pool5/7x7_s1"
   top: "loss3/classifier"
@@ -19651,6 +23034,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19687,6 +23071,8 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   inner_product_param {
     num_output: 1000
     weight_filler {
@@ -19713,6 +23099,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19785,6 +23172,10 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 layer {
   name: "prob"
   type: "Softmax"
@@ -19804,6 +23195,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -19849,6 +23241,9 @@ layer {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 layers {
   name: "prob"
   type: SOFTMAX
@@ -19869,6 +23264,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19905,3 +23301,5 @@ layers {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

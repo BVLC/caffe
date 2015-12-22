@@ -24,6 +24,7 @@ We will go over the details of these components in more detail.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -92,6 +93,10 @@ We will go over the details of these components in more detail.
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is an N-dimensional array stored in a C-contiguous fashion.
 
 Caffe stores and communicates data using blobs. Blobs provide a unified memory interface holding data; e.g., batches of images, model parameters, and derivatives for optimization.
@@ -117,6 +122,7 @@ Parameter blob dimensions vary according to the type and configuration of the la
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -162,6 +168,9 @@ Parameter blob dimensions vary according to the type and configuration of the la
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is a 4-dimensional array that stores things in the order of (Num, Channels, Height and Width), from major to minor, and stored in a C-contiguous fashion.  The main reason for putting Num (the name is due to legacy reasons, and is equivalent to the notation of "batch" as in minibatch SGD).
 
 Caffe stores and communicates data in 4-dimensional arrays called blobs. Blobs provide a unified memory interface, holding data e.g. batches of images, model parameters, and derivatives for optimization.
@@ -192,6 +201,7 @@ Parameter blob dimensions vary according to the type and configuration of the la
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -223,6 +233,8 @@ Parameter blob dimensions vary according to the type and configuration of the la
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 For custom data it may be necessary to hack your own input preparation tool or data layer. However once your data is in your job is done. The modularity of layers accomplishes the rest of the work for you.
 
@@ -304,6 +316,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     layer {
       name: "mnist"
       type: "Data"
@@ -332,10 +345,13 @@ is defined by
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layer {
       name: "mnist"
       type: "Data"
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -343,6 +359,8 @@ is defined by
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layers {
       name: "mnist"
       type: DATA
@@ -352,6 +370,7 @@ is defined by
       name: "mnist"
       type: "Data"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1034,11 +1053,91 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
 =======
+      top: "data"
+      top: "label"
+      data_param {
+        source: "input_leveldb"
+        batch_size: 64
+      }
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+    layer {
+      name: "ip"
+      type: "InnerProduct"
+=======
+    layers {
+      name: "ip"
+      type: INNER_PRODUCT
+>>>>>>> origin/BVLC/parallel
+=======
+    layer {
+      name: "ip"
+      type: "InnerProduct"
+>>>>>>> caffe
+      bottom: "data"
+      top: "ip"
+      inner_product_param {
+        num_output: 2
+      }
+    }
+<<<<<<< HEAD
+<<<<<<< HEAD
+    layer {
+      name: "loss"
+      type: "SoftmaxWithLoss"
+=======
+    layers {
+      name: "loss"
+      type: SOFTMAX_LOSS
+>>>>>>> origin/BVLC/parallel
+=======
+    layer {
+      name: "loss"
+      type: "SoftmaxWithLoss"
+>>>>>>> caffe
+      bottom: "ip"
+      bottom: "label"
+      top: "loss"
+    }
+
+Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers' `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:
+
+    I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
+    name: "LogReg"
+    [...model prototxt printout...]
+    # construct the network layer-by-layer
+    I0902 22:52:17.932152 2079114000 net.cpp:67] Creating Layer mnist
+    I0902 22:52:17.932165 2079114000 net.cpp:356] mnist -> data
+    I0902 22:52:17.932188 2079114000 net.cpp:356] mnist -> label
+    I0902 22:52:17.932200 2079114000 net.cpp:96] Setting up mnist
+    I0902 22:52:17.935807 2079114000 data_layer.cpp:135] Opening leveldb input_leveldb
+    I0902 22:52:17.937155 2079114000 data_layer.cpp:195] output data size: 64,1,28,28
+    I0902 22:52:17.938570 2079114000 net.cpp:103] Top shape: 64 1 28 28 (50176)
+<<<<<<< HEAD
+<<<<<<< HEAD
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
+=======
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 1 1 1 (64)
+>>>>>>> origin/BVLC/parallel
+=======
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
+>>>>>>> caffe
+    I0902 22:52:17.938611 2079114000 net.cpp:67] Creating Layer ip
+    I0902 22:52:17.938617 2079114000 net.cpp:394] ip <- data
+    I0902 22:52:17.939177 2079114000 net.cpp:356] ip -> ip
+    I0902 22:52:17.939196 2079114000 net.cpp:96] Setting up ip
+<<<<<<< HEAD
+<<<<<<< HEAD
+    I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 1 1 (128)
 >>>>>>> origin/BVLC/parallel
 =======
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1058,6 +1157,8 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     I0902 22:52:17.941270 2079114000 net.cpp:67] Creating Layer loss
     I0902 22:52:17.941305 2079114000 net.cpp:394] loss <- ip
     I0902 22:52:17.941314 2079114000 net.cpp:394] loss <- label
@@ -1077,6 +1178,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1155,6 +1257,8 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 =======
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: 1 1 1 1 (1)
@@ -1162,6 +1266,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1182,6 +1287,8 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     I0902 22:52:17.941329 2079114000 net.cpp:109]     with loss weight 1
     I0902 22:52:17.941779 2079114000 net.cpp:170] loss needs backward computation.
     I0902 22:52:17.941787 2079114000 net.cpp:170] ip needs backward computation.

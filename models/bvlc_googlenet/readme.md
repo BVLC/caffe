@@ -17,6 +17,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -25,6 +26,38 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+license: unrestricted
+sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
+caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -41,35 +74,6 @@ caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod-caffe-pod.hpp-merge
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-license: unrestricted
-sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
-caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -90,6 +94,8 @@ caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 license: non-commercial
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
 caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
@@ -111,6 +117,7 @@ caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -162,6 +169,8 @@ license: unrestricted
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
 caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 ---
 
 This model is a replication of the model described in the [GoogleNet](http://arxiv.org/abs/1409.4842) publication. We would like to thank Christian Szegedy for all his help in the replication of GoogleNet model.
@@ -201,6 +210,7 @@ This model was trained by Sergio Guadarrama @sguada
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -262,6 +272,10 @@ This model is released for unrestricted use.
 This model is released for unrestricted use.
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+This model is released for unrestricted use.
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
 "Researcher shall use the Database only for non-commercial research and educational purposes."
 Accordingly, this model is distributed under a non-commercial license.
@@ -272,6 +286,7 @@ Accordingly, this model is distributed under a non-commercial license.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 This model is released for unrestricted use.
 >>>>>>> caffe
 <<<<<<< HEAD
@@ -327,3 +342,7 @@ This model is released for unrestricted use.
 =======
 This model is released for unrestricted use.
 >>>>>>> BVLC/device-abstraction
+=======
+This model is released for unrestricted use.
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge

@@ -25,6 +25,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -246,6 +247,33 @@
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/pooling_layer.hpp"
@@ -604,6 +632,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -901,28 +930,58 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> device-abstraction
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   const int count = (*bottom)[0]->count();
   GetDevice<Dtype>(Caffe::GPU)->set(count, Dtype(0.), bottom_diff);
+=======
+<<<<<<< HEAD
+>>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  const int count = bottom[0]->count();
+  caffe_gpu_set(count, Dtype(0.), bottom_diff);
+>>>>>>> BVLC/master
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-  const int count = bottom[0]->count();
-  caffe_gpu_set(count, Dtype(0.), bottom_diff);
->>>>>>> BVLC/master
-<<<<<<< HEAD
-<<<<<<< HEAD
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
-=======
->>>>>>> BVLC/device-abstraction
-=======
->>>>>>> BVLC/device-abstraction
-=======
->>>>>>> device-abstraction
-=======
->>>>>>> BVLC/device-abstraction
-=======
->>>>>>> pod/post-rebase-error-fix
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;

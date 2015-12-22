@@ -36,6 +36,7 @@ class NeuronLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,6 +80,9 @@ class NeuronLayer : public Layer<Dtype> {
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 
 >>>>>>> pod-caffe-pod.hpp-merge
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -215,6 +219,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 
@@ -229,6 +234,8 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 =======
 =======
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 =======
 
@@ -277,11 +284,15 @@ class AbsValLayer : public NeuronLayer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 
 =======
 
 >>>>>>> master
+=======
+
+>>>>>>> pod-caffe-pod.hpp-merge
  protected:
   /// @copydoc AbsValLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -314,6 +325,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> master
 =======
 >>>>>>> master
@@ -331,6 +343,8 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 
 >>>>>>> master
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> master
@@ -351,6 +365,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 =======
 
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 
@@ -368,6 +383,46 @@ class AbsValLayer : public NeuronLayer<Dtype> {
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+=======
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+<<<<<<< HEAD
+ protected:
+  /// @copydoc AbsValLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+>>>>>>> origin/BVLC/parallel
+  /**
+   * @brief Computes the error gradient w.r.t. the absolute value inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x} =
+   *            \mathrm{sign}(x) \frac{\partial E}{\partial y}
+   *      @f$ if propagate_down[0]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 /**
@@ -389,6 +444,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "AbsVal"; }
+<<<<<<< HEAD
 =======
 
 >>>>>>> pod/post-rebase-error-fix
@@ -407,13 +463,62 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 =======
 /**
  * @brief Computes @f$ y = |x| @f$
+=======
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  /// @copydoc AbsValLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the absolute value inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x} =
+   *            \mathrm{sign}(x) \frac{\partial E}{\partial y}
+   *      @f$ if propagate_down[0]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
+>>>>>>> caffe
+/**
+ * @brief Computes @f$ y = x + \log(1 + \exp(-x)) @f$ if @f$ x > 0 @f$;
+ *        @f$ y = \log(1 + \exp(x)) @f$ otherwise.
+>>>>>>> pod-caffe-pod.hpp-merge
  *
  * @param bottom input Blob vector (length 1)
  *   -# @f$ (N \times C \times H \times W) @f$
  *      the inputs @f$ x @f$
  * @param top output Blob vector (length 1)
  *   -# @f$ (N \times C \times H \times W) @f$
+<<<<<<< HEAD
  *      the computed outputs @f$ y = |x| @f$
+=======
+ *      the computed outputs @f$
+ *      y = \left\{
+ *         \begin{array}{ll}
+ *            x + \log(1 + \exp(-x)) & \mbox{if } x > 0 \\
+ *            \log(1 + \exp(x)) & \mbox{otherwise}
+ *         \end{array} \right.
+ *      @f$
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class AbsValLayer : public NeuronLayer<Dtype> {
@@ -549,6 +654,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 
 <<<<<<< HEAD
+<<<<<<< HEAD
  protected:
   /// @copydoc AbsValLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -574,10 +680,14 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 =======
   virtual inline const char* type() const { return "BNLL"; }
 >>>>>>> pod/post-rebase-error-fix
+=======
+  virtual inline const char* type() const { return "BNLL"; }
+>>>>>>> pod-caffe-pod.hpp-merge
 
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   /// @copydoc AbsValLayer
@@ -590,11 +700,15 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 =======
   /// @copydoc BNLLLayer
 >>>>>>> pod/post-rebase-error-fix
+=======
+  /// @copydoc BNLLLayer
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -608,6 +722,10 @@ class AbsValLayer : public NeuronLayer<Dtype> {
   /**
    * @brief Computes the error gradient w.r.t. the BNLL inputs.
 >>>>>>> pod/post-rebase-error-fix
+=======
+  /**
+   * @brief Computes the error gradient w.r.t. the BNLL inputs.
+>>>>>>> pod-caffe-pod.hpp-merge
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
@@ -621,6 +739,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
    *      gradients @f$
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
    *        \frac{\partial E}{\partial x} =
    *            \mathrm{sign}(x) \frac{\partial E}{\partial y}
 =======
@@ -629,6 +748,9 @@ class AbsValLayer : public NeuronLayer<Dtype> {
 =======
    *        \frac{\partial E}{\partial x}
 >>>>>>> pod/post-rebase-error-fix
+=======
+   *        \frac{\partial E}{\partial x}
+>>>>>>> pod-caffe-pod.hpp-merge
    *      @f$ if propagate_down[0]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -637,6 +759,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -714,6 +837,8 @@ class BNLLLayer : public NeuronLayer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief During training only, sets a random portion of @f$x@f$ to 0, adjusting
  *        the rest of the vector magnitude accordingly.
@@ -780,6 +905,89 @@ class DropoutLayer : public NeuronLayer<Dtype> {
 };
 
 <<<<<<< HEAD
+=======
+/**
+ * @brief Computes @f$ y = \gamma ^ {\alpha x + \beta} @f$,
+ *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
+ *        and base @f$ \gamma @f$.
+ */
+template <typename Dtype>
+class ExpLayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides ExpParameter exp_param,
+   *     with ExpLayer options:
+   *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
+   *   - shift (\b optional, default 0) the shift @f$ \beta @f$
+   *   - base (\b optional, default -1 for a value of @f$ e \approx 2.718 @f$)
+   *         the base @f$ \gamma @f$
+   */
+  explicit ExpLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+  virtual inline const char* type() const { return "Exp"; }
+=======
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_EXP;
+  }
+>>>>>>> origin/BVLC/parallel
+=======
+  virtual inline const char* type() const { return "Exp"; }
+>>>>>>> caffe
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs @f$
+   *        y = \gamma ^ {\alpha x + \beta}
+   *      @f$
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the exp inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x} =
+   *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
+   *      @f$ if propagate_down[0]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  Dtype inner_scale_, outer_scale_;
+};
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -789,10 +997,15 @@ class DropoutLayer : public NeuronLayer<Dtype> {
 >>>>>>> master
 =======
 =======
->>>>>>> master
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> master
 =======
+>>>>>>> master
+=======
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> master
@@ -858,24 +1071,31 @@ class AbsValLayer : public NeuronLayer<Dtype> {
  * @brief Computes @f$ y = \gamma ^ {\alpha x + \beta} @f$,
  *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
  *        and base @f$ \gamma @f$.
+=======
+>>>>>>> caffe
+
+/**
+ * @brief Computes @f$ y = log_{\gamma}(\alpha x + \beta) @f$,
+ *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
+ *        and base @f$ \gamma @f$.
  */
 template <typename Dtype>
-class ExpLayer : public NeuronLayer<Dtype> {
+class LogLayer : public NeuronLayer<Dtype> {
  public:
   /**
-   * @param param provides ExpParameter exp_param,
-   *     with ExpLayer options:
+   * @param param provides LogParameter log_param,
+   *     with LogLayer options:
    *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
    *   - shift (\b optional, default 0) the shift @f$ \beta @f$
    *   - base (\b optional, default -1 for a value of @f$ e \approx 2.718 @f$)
    *         the base @f$ \gamma @f$
    */
-  explicit ExpLayer(const LayerParameter& param)
+  explicit LogLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "Exp"; }
+  virtual inline const char* type() const { return "Log"; }
 
  protected:
   /**
@@ -885,7 +1105,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the computed outputs @f$
-   *        y = \gamma ^ {\alpha x + \beta}
+   *        y = log_{\gamma}(\alpha x + \beta)
    *      @f$
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -914,9 +1134,28 @@ class ExpLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
 
-  Dtype inner_scale_, outer_scale_;
+  Dtype base_scale_;
+  Dtype input_scale_, input_shift_;
+  Dtype backward_num_scale_;
 };
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+/**
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
 
 /**
  * @brief Computes @f$ y = log_{\gamma}(\alpha x + \beta) @f$,
@@ -984,6 +1223,726 @@ class LogLayer : public NeuronLayer<Dtype> {
   Dtype backward_num_scale_;
 };
 
+/**
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+=======
+>>>>>>> master
+
+  Dtype base_scale_;
+  Dtype input_scale_, input_shift_;
+  Dtype backward_num_scale_;
+};
+
+/**
+<<<<<<< HEAD
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+
+/**
+>>>>>>> master
+=======
+=======
+>>>>>>> master
+
+/**
+ * @brief Computes @f$ y = log_{\gamma}(\alpha x + \beta) @f$,
+ *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
+ *        and base @f$ \gamma @f$.
+ */
+template <typename Dtype>
+class LogLayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides LogParameter log_param,
+   *     with LogLayer options:
+   *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
+   *   - shift (\b optional, default 0) the shift @f$ \beta @f$
+   *   - base (\b optional, default -1 for a value of @f$ e \approx 2.718 @f$)
+   *         the base @f$ \gamma @f$
+   */
+  explicit LogLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Log"; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs @f$
+   *        y = log_{\gamma}(\alpha x + \beta)
+   *      @f$
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the exp inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x} =
+   *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
+   *      @f$ if propagate_down[0]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  Dtype base_scale_;
+  Dtype input_scale_, input_shift_;
+  Dtype backward_num_scale_;
+};
+
+/**
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+
+/**
+ * @brief Computes @f$ y = log_{\gamma}(\alpha x + \beta) @f$,
+ *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
+ *        and base @f$ \gamma @f$.
+ */
+template <typename Dtype>
+class LogLayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides LogParameter log_param,
+   *     with LogLayer options:
+   *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
+   *   - shift (\b optional, default 0) the shift @f$ \beta @f$
+   *   - base (\b optional, default -1 for a value of @f$ e \approx 2.718 @f$)
+   *         the base @f$ \gamma @f$
+   */
+  explicit LogLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Log"; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs @f$
+   *        y = log_{\gamma}(\alpha x + \beta)
+   *      @f$
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the exp inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x} =
+   *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
+   *      @f$ if propagate_down[0]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  Dtype base_scale_;
+  Dtype input_scale_, input_shift_;
+  Dtype backward_num_scale_;
+};
+
+/**
+>>>>>>> master
+=======
+
+/**
+>>>>>>> origin/BVLC/parallel
+=======
+
+/**
+>>>>>>> caffe
+ * @brief Computes @f$ y = (\alpha x + \beta) ^ \gamma @f$,
+ *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
+ *        and power @f$ \gamma @f$.
+>>>>>>> pod-caffe-pod.hpp-merge
+ */
+template <typename Dtype>
+class ExpLayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+<<<<<<< HEAD
+   * @param param provides ExpParameter exp_param,
+   *     with ExpLayer options:
+   *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
+   *   - shift (\b optional, default 0) the shift @f$ \beta @f$
+   *   - base (\b optional, default -1 for a value of @f$ e \approx 2.718 @f$)
+   *         the base @f$ \gamma @f$
+   */
+  explicit ExpLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Exp"; }
+
+ protected:
+=======
+   * @param param provides PowerParameter power_param,
+   *     with PowerLayer options:
+   *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
+   *   - shift (\b optional, default 0) the shift @f$ \beta @f$
+   *   - power (\b optional, default 1) the power @f$ \gamma @f$
+   */
+  explicit PowerLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> BVLC/master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> BVLC/master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> BVLC/master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> caffe
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> BVLC/master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> master
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> origin/BVLC/parallel
+=======
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> caffe
+
+  virtual inline const char* type() const { return "Power"; }
+
+ protected:
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs @f$
+<<<<<<< HEAD
+   *        y = \gamma ^ {\alpha x + \beta}
+=======
+   *        y = (\alpha x + \beta) ^ \gamma
+>>>>>>> pod-caffe-pod.hpp-merge
+   *      @f$
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+<<<<<<< HEAD
+   * @brief Computes the error gradient w.r.t. the exp inputs.
+=======
+   * @brief Computes the error gradient w.r.t. the power inputs.
+>>>>>>> pod-caffe-pod.hpp-merge
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x} =
+<<<<<<< HEAD
+   *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
+=======
+   *            \frac{\partial E}{\partial y}
+   *            \alpha \gamma (\alpha x + \beta) ^ {\gamma - 1} =
+   *            \frac{\partial E}{\partial y}
+   *            \frac{\alpha \gamma y}{\alpha x + \beta}
+>>>>>>> pod-caffe-pod.hpp-merge
+   *      @f$ if propagate_down[0]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+<<<<<<< HEAD
+  Dtype inner_scale_, outer_scale_;
+};
+
+/**
+ * @brief Computes @f$ y = log_{\gamma}(\alpha x + \beta) @f$,
+ *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
+ *        and base @f$ \gamma @f$.
+=======
+  /// @brief @f$ \gamma @f$ from layer_param_.power_param()
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  Dtype power_;
+  /// @brief @f$ \alpha @f$ from layer_param_.power_param()
+  Dtype scale_;
+  /// @brief @f$ \beta @f$ from layer_param_.power_param()
+  Dtype shift_;
+  /// @brief Result of @f$ \alpha \gamma @f$
+  Dtype diff_scale_;
+};
+
+/**
+ * @brief Rectified Linear Unit non-linearity @f$ y = \max(0, x) @f$.
+ *        The simple max is fast to compute, and the function does not saturate.
+>>>>>>> pod-caffe-pod.hpp-merge
+ */
+template <typename Dtype>
+class LogLayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+<<<<<<< HEAD
+   * @param param provides LogParameter log_param,
+   *     with LogLayer options:
+   *   - scale (\b optional, default 1) the scale @f$ \alpha @f$
+   *   - shift (\b optional, default 0) the shift @f$ \beta @f$
+   *   - base (\b optional, default -1 for a value of @f$ e \approx 2.718 @f$)
+   *         the base @f$ \gamma @f$
+   */
+  explicit LogLayer(const LayerParameter& param)
+=======
+   * @param param provides ReLUParameter relu_param,
+   *     with ReLULayer options:
+   *   - negative_slope (\b optional, default 0).
+   *     the value @f$ \nu @f$ by which negative values are multiplied.
+   */
+  explicit ReLULayer(const LayerParameter& param)
+>>>>>>> pod-caffe-pod.hpp-merge
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+<<<<<<< HEAD
+  virtual inline const char* type() const { return "Log"; }
+=======
+  virtual inline const char* type() const { return "ReLU"; }
+>>>>>>> pod-caffe-pod.hpp-merge
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs @f$
+<<<<<<< HEAD
+   *        y = log_{\gamma}(\alpha x + \beta)
+   *      @f$
+=======
+   *        y = \max(0, x)
+   *      @f$ by default.  If a non-zero negative_slope @f$ \nu @f$ is provided,
+   *      the computed outputs are @f$ y = \max(0, x) + \nu \min(0, x) @f$.
+>>>>>>> pod-caffe-pod.hpp-merge
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+<<<<<<< HEAD
+   * @brief Computes the error gradient w.r.t. the exp inputs.
+=======
+   * @brief Computes the error gradient w.r.t. the ReLU inputs.
+>>>>>>> pod-caffe-pod.hpp-merge
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+<<<<<<< HEAD
+   *        \frac{\partial E}{\partial x} =
+   *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
+   *      @f$ if propagate_down[0]
+=======
+   *        \frac{\partial E}{\partial x} = \left\{
+   *        \begin{array}{lr}
+   *            0 & \mathrm{if} \; x \le 0 \\
+   *            \frac{\partial E}{\partial y} & \mathrm{if} \; x > 0
+   *        \end{array} \right.
+   *      @f$ if propagate_down[0], by default.
+   *      If a non-zero negative_slope @f$ \nu @f$ is provided,
+   *      the computed gradients are @f$
+   *        \frac{\partial E}{\partial x} = \left\{
+   *        \begin{array}{lr}
+   *            \nu \frac{\partial E}{\partial y} & \mathrm{if} \; x \le 0 \\
+   *            \frac{\partial E}{\partial y} & \mathrm{if} \; x > 0
+   *        \end{array} \right.
+   *      @f$.
+>>>>>>> pod-caffe-pod.hpp-merge
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+
+  Dtype base_scale_;
+  Dtype input_scale_, input_shift_;
+  Dtype backward_num_scale_;
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+};
+
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of ReLULayer.
+ */
+template <typename Dtype>
+class CuDNNReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CuDNNReLULayer(const LayerParameter& param)
+      : ReLULayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNReLULayer();
+<<<<<<< HEAD
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+};
+#endif
+
+<<<<<<< HEAD
+=======
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of ReLULayer.
+ */
+template <typename Dtype>
+class CuDNNReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CuDNNReLULayer(const LayerParameter& param)
+      : ReLULayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNReLULayer();
+>>>>>>> master
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+};
+#endif
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+};
+#endif
+
+>>>>>>> master
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of ReLULayer.
+ */
+template <typename Dtype>
+class CuDNNReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CuDNNReLULayer(const LayerParameter& param)
+      : ReLULayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNReLULayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of ReLULayer.
+ */
+template <typename Dtype>
+class CuDNNReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CuDNNReLULayer(const LayerParameter& param)
+      : ReLULayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNReLULayer();
+
+<<<<<<< HEAD
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+>>>>>>> master
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+};
+#endif
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of ReLULayer.
+ */
+template <typename Dtype>
+class CuDNNReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CuDNNReLULayer(const LayerParameter& param)
+<<<<<<< HEAD
+<<<<<<< HEAD
+      : ReLULayer<Dtype>(param), handles_setup_(false) {}
+=======
+      : ReLULayer<Dtype>(param) {}
+>>>>>>> origin/BVLC/parallel
+=======
+      : ReLULayer<Dtype>(param), handles_setup_(false) {}
+>>>>>>> caffe
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNReLULayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+<<<<<<< HEAD
 /**
  * @brief Computes @f$ y = (\alpha x + \beta) ^ \gamma @f$,
  *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
@@ -1053,6 +2012,38 @@ class ExpLayer : public NeuronLayer<Dtype> {
  * @brief Computes @f$ y = log_{\gamma}(\alpha x + \beta) @f$,
  *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
  *        and base @f$ \gamma @f$.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+};
+#endif
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+  cudnnHandle_t             handle_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
+};
+#endif
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+/**
+ * @brief Sigmoid function non-linearity @f$
+ *         y = (1 + \exp(-x))^{-1}
+ *     @f$, a classic choice in neural networks.
+ *
+ * Note that the gradient vanishes as the values move away from 0.
+ * The ReLULayer is often a better choice for this reason.
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class LogLayer : public NeuronLayer<Dtype> {
@@ -1093,10 +2084,14 @@ class LogLayer : public NeuronLayer<Dtype> {
 =======
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ABSVAL;
   }
 =======
+=======
+  virtual inline const char* type() const { return "Sigmoid"; }
+>>>>>>> pod-caffe-pod.hpp-merge
 
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1106,6 +2101,7 @@ class LogLayer : public NeuronLayer<Dtype> {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
  protected:
+<<<<<<< HEAD
   /// @copydoc AbsValLayer
 =======
  protected:
@@ -1117,6 +2113,25 @@ class LogLayer : public NeuronLayer<Dtype> {
 =======
   /**
    * @brief Computes the error gradient w.r.t. the exp inputs.
+=======
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs @f$
+   *        y = (1 + \exp(-x))^{-1}
+   *      @f$
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the sigmoid inputs.
+>>>>>>> pod-caffe-pod.hpp-merge
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
@@ -1128,14 +2143,20 @@ class LogLayer : public NeuronLayer<Dtype> {
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the inputs @f$ x @f$; Backward fills their diff with
    *      gradients @f$
+<<<<<<< HEAD
    *        \frac{\partial E}{\partial x} =
    *            \frac{\partial E}{\partial y} y \alpha \log_e(gamma)
+=======
+   *        \frac{\partial E}{\partial x}
+   *            = \frac{\partial E}{\partial y} y (1 - y)
+>>>>>>> pod-caffe-pod.hpp-merge
    *      @f$ if propagate_down[0]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
 
   Dtype base_scale_;
   Dtype input_scale_, input_shift_;
@@ -1147,6 +2168,193 @@ class LogLayer : public NeuronLayer<Dtype> {
  *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
  *        and power @f$ \gamma @f$.
 >>>>>>> device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+};
+
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of SigmoidLayer.
+ */
+template <typename Dtype>
+class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
+ public:
+  explicit CuDNNSigmoidLayer(const LayerParameter& param)
+<<<<<<< HEAD
+<<<<<<< HEAD
+      : SigmoidLayer<Dtype>(param), handles_setup_(false) {}
+=======
+      : SigmoidLayer<Dtype>(param) {}
+>>>>>>> origin/BVLC/parallel
+=======
+      : SigmoidLayer<Dtype>(param), handles_setup_(false) {}
+>>>>>>> caffe
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNSigmoidLayer();
+<<<<<<< HEAD
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+};
+#endif
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> master
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+};
+#endif
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of SigmoidLayer.
+ */
+template <typename Dtype>
+class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
+ public:
+  explicit CuDNNSigmoidLayer(const LayerParameter& param)
+      : SigmoidLayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNSigmoidLayer();
+
+=======
+
+>>>>>>> caffe
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+<<<<<<< HEAD
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of SigmoidLayer.
+ */
+template <typename Dtype>
+class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
+ public:
+  explicit CuDNNSigmoidLayer(const LayerParameter& param)
+      : SigmoidLayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNSigmoidLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+>>>>>>> BVLC/master
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of SigmoidLayer.
+ */
+template <typename Dtype>
+class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
+ public:
+  explicit CuDNNSigmoidLayer(const LayerParameter& param)
+      : SigmoidLayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNSigmoidLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+>>>>>>> master
+=======
+>>>>>>> caffe
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+};
+#endif
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+
+  cudnnHandle_t             handle_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
+};
+#endif
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+/**
+ * @brief TanH hyperbolic tangent non-linearity @f$
+ *         y = \frac{\exp(2x) - 1}{\exp(2x) + 1}
+ *     @f$, popular in auto-encoders.
+ *
+ * Note that the gradient vanishes as the values move away from 0.
+ * The ReLULayer is often a better choice for this reason.
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class ExpLayer : public NeuronLayer<Dtype> {
@@ -1200,6 +2408,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual inline const char* type() const { return "Exp"; }
 =======
 <<<<<<< HEAD
@@ -1243,6 +2452,11 @@ class ExpLayer : public NeuronLayer<Dtype> {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+  virtual inline const char* type() const { return "TanH"; }
+
+ protected:
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @param bottom input Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
@@ -1250,6 +2464,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the computed outputs @f$
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
    *        y = \gamma ^ {\alpha x + \beta}
@@ -1266,11 +2481,17 @@ class ExpLayer : public NeuronLayer<Dtype> {
    *      @f$
    */
 >>>>>>> pod/post-rebase-error-fix
+=======
+   *        y = \frac{\exp(2x) - 1}{\exp(2x) + 1}
+   *      @f$
+   */
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1288,6 +2509,10 @@ class ExpLayer : public NeuronLayer<Dtype> {
   /**
    * @brief Computes the error gradient w.r.t. the power inputs.
 >>>>>>> pod/post-rebase-error-fix
+=======
+  /**
+   * @brief Computes the error gradient w.r.t. the sigmoid inputs.
+>>>>>>> pod-caffe-pod.hpp-merge
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
@@ -1295,6 +2520,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
    *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
    *      with respect to computed outputs @f$ y @f$
    * @param propagate_down see Layer::Backward.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
    * @param bottom input Blob vector (length 2)
@@ -1326,12 +2552,23 @@ class ExpLayer : public NeuronLayer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; Backward fills their diff with
+   *      gradients @f$
+   *        \frac{\partial E}{\partial x}
+   *            = \frac{\partial E}{\partial y}
+   *              \left(1 - \left[\frac{\exp(2x) - 1}{exp(2x) + 1} \right]^2 \right)
+   *            = \frac{\partial E}{\partial y} (1 - y^2)
+>>>>>>> pod-caffe-pod.hpp-merge
    *      @f$ if propagate_down[0]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1357,6 +2594,21 @@ class ExpLayer : public NeuronLayer<Dtype> {
   /// @brief Result of @f$ \alpha \gamma @f$
   Dtype diff_scale_;
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 };
 <<<<<<< HEAD
 
@@ -1383,6 +2635,7 @@ class LogLayer : public NeuronLayer<Dtype> {
 
   virtual inline const char* type() const { return "Log"; }
 
+<<<<<<< HEAD
  protected:
   /**
    * @param bottom input Blob vector (length 1)
@@ -1439,10 +2692,64 @@ class LogLayer : public NeuronLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of TanHLayer.
+ */
+template <typename Dtype>
+class CuDNNTanHLayer : public TanHLayer<Dtype> {
+ public:
+  explicit CuDNNTanHLayer(const LayerParameter& param)
+<<<<<<< HEAD
+<<<<<<< HEAD
+      : TanHLayer<Dtype>(param), handles_setup_(false) {}
+=======
+      : TanHLayer<Dtype>(param) {}
+>>>>>>> origin/BVLC/parallel
+=======
+      : TanHLayer<Dtype>(param), handles_setup_(false) {}
+>>>>>>> caffe
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNTanHLayer();
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
 >>>>>>> master
 =======
@@ -1464,11 +2771,132 @@ class LogLayer : public NeuronLayer<Dtype> {
  * @brief Rectified Linear Unit non-linearity @f$ y = \max(0, x) @f$.
  *        The simple max is fast to compute, and the function does not saturate.
 >>>>>>> pod/post-rebase-error-fix
+=======
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+<<<<<<< HEAD
+=======
+>>>>>>> BVLC/master
+};
+#endif
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of TanHLayer.
+ */
+template <typename Dtype>
+class CuDNNTanHLayer : public TanHLayer<Dtype> {
+ public:
+  explicit CuDNNTanHLayer(const LayerParameter& param)
+      : TanHLayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNTanHLayer();
+>>>>>>> BVLC/master
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+};
+#endif
+
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+=======
+
+>>>>>>> BVLC/master
+=======
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+>>>>>>> master
+=======
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+>>>>>>> master
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
+};
+#endif
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+  cudnnHandle_t             handle_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
+};
+#endif
+
+>>>>>>> origin/BVLC/parallel
+=======
+};
+#endif
+
+>>>>>>> caffe
+/**
+ * @brief Tests whether the input exceeds a threshold: outputs 1 for inputs
+ *        above threshold; 0 otherwise.
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class LogLayer : public NeuronLayer<Dtype> {
  public:
   /**
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
    * @param param provides LogParameter log_param,
@@ -1489,10 +2917,19 @@ class LogLayer : public NeuronLayer<Dtype> {
    */
   explicit ReLULayer(const LayerParameter& param)
 >>>>>>> device-abstraction
+=======
+   * @param param provides ThresholdParameter threshold_param,
+   *     with ThresholdLayer options:
+   *   - threshold (\b optional, default 0).
+   *     the threshold value @f$ t @f$ to which the input values are compared.
+   */
+  explicit ThresholdLayer(const LayerParameter& param)
+>>>>>>> pod-caffe-pod.hpp-merge
       : NeuronLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   virtual inline const char* type() const { return "Log"; }
@@ -1502,6 +2939,9 @@ class LogLayer : public NeuronLayer<Dtype> {
 =======
   virtual inline const char* type() const { return "ReLU"; }
 >>>>>>> pod/post-rebase-error-fix
+=======
+  virtual inline const char* type() const { return "Threshold"; }
+>>>>>>> pod-caffe-pod.hpp-merge
 
  protected:
   /**
@@ -1511,6 +2951,7 @@ class LogLayer : public NeuronLayer<Dtype> {
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the computed outputs @f$
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
    *        y = log_{\gamma}(\alpha x + \beta)
@@ -1525,11 +2966,20 @@ class LogLayer : public NeuronLayer<Dtype> {
    *      @f$ by default.  If a non-zero negative_slope @f$ \nu @f$ is provided,
    *      the computed outputs are @f$ y = \max(0, x) + \nu \min(0, x) @f$.
 >>>>>>> pod/post-rebase-error-fix
+=======
+   *       y = \left\{
+   *       \begin{array}{lr}
+   *         0 & \mathrm{if} \; x \le t \\
+   *         1 & \mathrm{if} \; x > t
+   *       \end{array} \right.
+   *      @f$
+>>>>>>> pod-caffe-pod.hpp-merge
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
 
   /**
 <<<<<<< HEAD
@@ -1593,6 +3043,13 @@ class LogLayer : public NeuronLayer<Dtype> {
 >>>>>>> master
 =======
 >>>>>>> caffe
+=======
+  /// @brief Not implemented (non-differentiable function)
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
 
   Dtype base_scale_;
   Dtype input_scale_, input_shift_;
@@ -17527,6 +18984,91 @@ class CuDNNTanHLayer : public TanHLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+/**
+ * @brief Parameterized Rectified Linear Unit non-linearity @f$
+ *        y_i = \max(0, x_i) + a_i \min(0, x_i)
+ *        @f$. The differences from ReLULayer are 1) negative slopes are
+ *        learnable though backprop and 2) negative slopes can vary across
+ *        channels. The number of axes of input blob should be greater than or
+ *        equal to 2. The 1st axis (0-based) is seen as channels.
+ */
+template <typename Dtype>
+class PReLULayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides PReLUParameter prelu_param,
+   *     with PReLULayer options:
+   *   - filler (\b optional, FillerParameter,
+   *     default {'type': constant 'value':0.25}).
+   *   - channel_shared (\b optional, default false).
+   *     negative slopes are shared across channels.
+   */
+  explicit PReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "PReLU"; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times ...) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times ...) @f$
+   *      the computed outputs for each channel @f$i@f$ @f$
+   *        y_i = \max(0, x_i) + a_i \min(0, x_i)
+   *      @f$.
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the PReLU inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times ...) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times ...) @f$
+   *      the inputs @f$ x @f$; For each channel @f$i@f$, backward fills their
+   *      diff with gradients @f$
+   *        \frac{\partial E}{\partial x_i} = \left\{
+   *        \begin{array}{lr}
+   *            a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\
+   *            \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0
+   *        \end{array} \right.
+   *      @f$.
+   *      If param_propagate_down_[0] is true, it fills the diff with gradients
+   *      @f$
+   *        \frac{\partial E}{\partial a_i} = \left\{
+   *        \begin{array}{lr}
+   *            \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\
+   *            0 & \mathrm{if} \; x_i > 0
+   *        \end{array} \right.
+   *      @f$.
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool channel_shared_;
+  Blob<Dtype> multiplier_;  // dot multiplier for backward computation of params
+  Blob<Dtype> backward_buff_;  // temporary buffer for backward computation
+  Blob<Dtype> bottom_memory_;  // memory for in-place computation
+};
+
 /**
  * @brief Parameterized Rectified Linear Unit non-linearity @f$
  *        y_i = \max(0, x_i) + a_i \min(0, x_i)

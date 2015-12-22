@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifdef USE_OPENCV
 #include <opencv2/highgui/highgui_c.h>
 =======
@@ -47,11 +48,17 @@
 #include <opencv2/highgui/highgui_c.h>
 =======
 >>>>>>> pod/caffe-merge
+=======
+#ifdef USE_OPENCV
+#include <opencv2/highgui/highgui_c.h>
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 #include <opencv2/highgui/highgui_c.h>
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -148,6 +155,8 @@
 #ifdef USE_OPENCV
 #include <opencv2/highgui/highgui_c.h>
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <stdint.h>
 
 #include <algorithm>
@@ -160,6 +169,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -382,6 +392,8 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 =======
@@ -424,6 +436,7 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -439,11 +452,14 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/benchmark.hpp"
 >>>>>>> master
 =======
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -566,12 +582,16 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
+=======
+#include "caffe/layer.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/util/benchmark.hpp"
 >>>>>>> origin/BVLC/parallel
 =======
 #include "caffe/data_layers.hpp"
 #include "caffe/util/benchmark.hpp"
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -728,6 +748,10 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "Number of images: " << image_index+1;
 <<<<<<< HEAD
 >>>>>>> pod/common.hpp
+=======
+#include "caffe/util/io.hpp"
+#include "caffe/util/rng.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 // caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
@@ -741,6 +765,7 @@ namespace caffe {
 
 template <typename Dtype>
 WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -939,6 +964,8 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   this->StopInternalThread();
 =======
   this->InternalThread::StopInternalThread();
@@ -946,10 +973,13 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 =======
   this->StopInternalThread();
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
   this->StopInternalThread();
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 template <typename Dtype>
@@ -994,6 +1024,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     prefetch_rng_.reset();
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
@@ -1028,6 +1059,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   std::ifstream infile(this->layer_param_.window_data_param().source().c_str());
@@ -1110,8 +1143,11 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } while (infile >> hashtag >> image_index);
 
   LOG(INFO) << "Number of images: " << image_index+1;
+<<<<<<< HEAD
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   for (map<int, int>::iterator it = label_hist.begin();
       it != label_hist.end(); ++it) {
@@ -1151,6 +1187,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1177,6 +1214,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < this->PREFETCH_COUNT; ++i)
@@ -1187,6 +1226,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_[i].data_.Reshape(batch_size, channels, crop_size, crop_size);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1520,6 +1560,34 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i)
+    this->prefetch_[i].data_.Reshape(
+        batch_size, channels, crop_size, crop_size);
+>>>>>>> caffe
+
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
+  // label
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  vector<int> label_shape(1, batch_size);
+  top[1]->Reshape(label_shape);
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].label_.Reshape(label_shape);
+  }
+<<<<<<< HEAD
+=======
+  top[1]->Reshape(batch_size, 1, 1, 1);
+  for(int i = 0; i < this->PREFETCH_COUNT; ++i)
+    this->prefetch_[i].label_.Reshape(batch_size, 1, 1, 1);
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // data mean
   has_mean_file_ = this->transform_param_.has_mean_file();
@@ -1538,6 +1606,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     LOG(INFO) << "Loading mean file from: " << mean_file;
@@ -1608,6 +1677,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     LOG(INFO) << "Loading mean file from: " << mean_file;
 =======
     LOG(INFO) << "Loading mean file from" << mean_file;
@@ -1615,6 +1686,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
     LOG(INFO) << "Loading mean file from: " << mean_file;
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1629,6 +1701,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
     LOG(INFO) << "Loading mean file from: " << mean_file;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
@@ -1663,6 +1737,7 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2224,6 +2299,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
 =======
@@ -2249,6 +2326,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2256,6 +2334,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
@@ -2277,10 +2357,15 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod/common.hpp
 =======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -2302,6 +2387,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> origin/BVLC/parallel
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -2310,6 +2396,9 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   const Dtype scale = this->layer_param_.window_data_param().scale();
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   const int context_pad = this->layer_param_.window_data_param().context_pad();
@@ -2337,8 +2426,11 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2349,6 +2441,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
   GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < this->PREFETCH_COUNT; ++i)
@@ -2372,6 +2465,11 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+  caffe_set(batch->data_.count(), Dtype(0), top_data);
+>>>>>>> BVLC/master
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 >>>>>>> BVLC/master
 =======
@@ -2398,11 +2496,15 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 >>>>>>> master
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2930,6 +3032,10 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+  caffe_set(batch->data_.count(), Dtype(0), top_data);
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -2969,6 +3075,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -3048,6 +3155,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
         cv_img = DecodeDatumToCVMat(image_cached.second, true);
 =======
         cv_img = DecodeDatumToCVMat(image_cached.second);
@@ -3055,6 +3164,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
         cv_img = DecodeDatumToCVMat(image_cached.second, true);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3074,6 +3184,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
         cv_img = DecodeDatumToCVMat(image_cached.second, true);
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
       } else {
         cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
         if (!cv_img.data) {
@@ -3270,6 +3382,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -3369,6 +3482,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 template <typename Dtype>
 WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
   JoinPrefetchThread();
@@ -3589,6 +3704,7 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -3614,6 +3730,9 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -3635,6 +3754,7 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3756,6 +3876,8 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 INSTANTIATE_CLASS(WindowDataLayer);
 REGISTER_LAYER_CLASS(WindowData);
 

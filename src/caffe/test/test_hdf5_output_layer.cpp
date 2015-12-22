@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/hdf5_output_layer.hpp"
 =======
 #include "caffe/data_layers.hpp"
@@ -26,6 +27,9 @@
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
@@ -128,6 +132,7 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -179,10 +184,14 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -225,6 +234,8 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   file_id = H5Fopen(this->output_file_name_.c_str(), H5F_ACC_RDONLY,

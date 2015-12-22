@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/hdf5_output_layer.hpp"
 =======
 #include "caffe/data_layers.hpp"
@@ -24,6 +25,9 @@
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 

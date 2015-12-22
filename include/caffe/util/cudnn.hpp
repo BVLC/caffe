@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define CUDNN_VERSION_MIN(major, minor, patch) \
     (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
 
@@ -22,6 +23,8 @@
 >>>>>>> BVLC/master
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #define CUDNN_CHECK(condition) \
   do { \
     cudnnStatus_t status = condition; \
@@ -78,6 +81,7 @@ template<> class dataType<float>  {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -151,11 +155,17 @@ template<> class dataType<float>  {
   static const void *one, *zero;
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  static float oneval, zeroval;
+  static const void *one, *zero;
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
   static float oneval, zeroval;
   static const void *one, *zero;
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -204,6 +214,8 @@ template<> class dataType<float>  {
   static float oneval, zeroval;
   static const void *one, *zero;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 };
 template<> class dataType<double> {
  public:
@@ -221,6 +233,7 @@ template<> class dataType<double> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -289,6 +302,10 @@ template<> class dataType<double> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   static double oneval, zeroval;
   static const void *one, *zero;
 };
@@ -319,6 +336,7 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -364,6 +382,9 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 };
 
 template <typename Dtype>
@@ -395,6 +416,7 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -426,12 +448,15 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     int n, int c, int h, int w) {
   const int stride_w = 1;
   const int stride_h = w * stride_w;
   const int stride_c = h * stride_h;
   const int stride_n = c * stride_c;
   setTensor4dDesc<Dtype>(desc, n, c, h, w,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -994,6 +1019,59 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+                         stride_n, stride_c, stride_h, stride_w);
+=======
+      stride_n, stride_c, stride_h, stride_w);
+>>>>>>> origin/BVLC/parallel
+=======
+                         stride_n, stride_c, stride_h, stride_w);
+>>>>>>> caffe
+}
+
+template <typename Dtype>
+inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
+    int n, int c, int h, int w) {
+  CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
+<<<<<<< HEAD
+<<<<<<< HEAD
+  CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
+=======
+  CUDNN_CHECK(cudnnSetFilterDescriptor(*desc, dataType<Dtype>::type,
+>>>>>>> origin/BVLC/parallel
+=======
+  CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
+>>>>>>> caffe
+      n, c, h, w));
+}
+
+template <typename Dtype>
+inline void createConvolutionDesc(cudnnConvolutionDescriptor_t* conv) {
+  CUDNN_CHECK(cudnnCreateConvolutionDescriptor(conv));
+}
+
+template <typename Dtype>
+inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
+<<<<<<< HEAD
+<<<<<<< HEAD
+    cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    int pad_h, int pad_w, int stride_h, int stride_w) {
+  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
+=======
+    cudnnTensor4dDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    int pad_h, int pad_w, int stride_h, int stride_w) {
+  CUDNN_CHECK(cudnnSetConvolutionDescriptor(*conv, bottom, filter,
+>>>>>>> origin/BVLC/parallel
+=======
+    cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    int pad_h, int pad_w, int stride_h, int stride_w) {
+  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
+>>>>>>> caffe
+      pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
+}
+
+template <typename Dtype>
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
@@ -1009,6 +1087,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
     int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1027,6 +1106,8 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
     int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;
@@ -1045,6 +1126,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1138,11 +1220,15 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
 >>>>>>> pod/device/blob.hpp
 =======
+    *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
     *mode = CUDNN_POOLING_AVERAGE;
 >>>>>>> origin/BVLC/parallel
 =======
     *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1157,6 +1243,8 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 =======
     *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
@@ -1174,6 +1262,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1217,6 +1306,8 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
   CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
         pad_h, pad_w, stride_h, stride_w));
@@ -1227,6 +1318,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -1247,11 +1339,14 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(conv));
   CUDNN_CHECK(cudnnSetPoolingDescriptor(*conv, *mode, h, w,
         stride_h, stride_w));
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1295,10 +1390,13 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
   CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
         pad_h, pad_w, stride_h, stride_w));
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1323,6 +1421,8 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
   CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
         pad_h, pad_w, stride_h, stride_w));
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 }  // namespace cudnn

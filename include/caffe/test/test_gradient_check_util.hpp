@@ -59,6 +59,7 @@ class GradientChecker {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -127,6 +128,10 @@ class GradientChecker {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Checks the gradient of a single output with respect to particular input
   // blob(s).  If check_bottom = i >= 0, check only the ith bottom Blob.
   // If check_bottom == -1, check everything -- all bottom Blobs and all
@@ -142,6 +147,7 @@ class GradientChecker {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -164,9 +170,12 @@ class GradientChecker {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -221,6 +230,8 @@ class GradientChecker {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   void CheckGradientSingle(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom, int top_id, int top_data_id, bool element_wise = false);
@@ -272,6 +283,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -333,11 +345,16 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  vector<bool> propagate_down(bottom.size(), check_bottom == -1);
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   vector<bool> propagate_down(bottom.size(), check_bottom < 0);
 >>>>>>> origin/BVLC/parallel
 =======
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -383,6 +400,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 =======
   vector<bool> propagate_down(bottom.size(), check_bottom == -1);
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   for (int i = 0; i < layer->blobs().size(); ++i) {
     Blob<Dtype>* blob = layer->blobs()[i].get();
     caffe_set(blob->count(), static_cast<Dtype>(0), blob->mutable_cpu_diff());
@@ -401,6 +420,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -444,6 +464,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if (check_bottom == -1) {
     for (int i = 0; i < bottom.size(); ++i) {
       blobs_to_check.push_back(bottom[i]);
@@ -458,6 +480,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -478,6 +501,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if (check_bottom < 0) {
     for (int i = 0; i < bottom.size(); ++i) {
       blobs_to_check.push_back(bottom[i]);
@@ -490,6 +515,9 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
   if (check_bottom == -1) {
@@ -498,6 +526,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     }
   } else if (check_bottom >= 0) {
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -570,6 +599,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     }
   } else if (check_bottom >= 0) {
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     CHECK_LT(check_bottom, bottom.size());
     blobs_to_check.push_back(bottom[check_bottom]);
     propagate_down[check_bottom] = true;

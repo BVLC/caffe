@@ -26,6 +26,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -94,10 +95,15 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Datum;
 using caffe::Net;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -140,10 +146,14 @@ namespace db = caffe::db;
 using boost::shared_ptr;
 =======
 >>>>>>> BVLC/master
+=======
+using boost::shared_ptr;
+>>>>>>> pod-caffe-pod.hpp-merge
 using std::string;
 namespace db = caffe::db;
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -158,6 +168,8 @@ namespace db = caffe::db;
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 using boost::shared_ptr;
 using caffe::Blob;
 using caffe::Caffe;
@@ -168,6 +180,7 @@ using caffe::Net;
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -216,6 +229,8 @@ using boost::shared_ptr;
 using std::string;
 namespace db = caffe::db;
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
@@ -251,6 +266,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     " multiple feature blob names and dataset names separated by ','."
@@ -314,11 +330,16 @@ int feature_extraction_pipeline(int argc, char** argv) {
     " multiple feature blob names and dataset names separated by ','."
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    " multiple feature blob names and dataset names separated by ','."
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     " multiple feature blob names and dataset names seperated by ','."
 >>>>>>> origin/BVLC/parallel
 =======
     " multiple feature blob names and dataset names separated by ','."
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -364,6 +385,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
     " multiple feature blob names and dataset names separated by ','."
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     " The names cannot contain white space characters and the number of blobs"
     " and datasets must be equal.";
     return 1;
@@ -421,6 +444,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   boost::shared_ptr<Net<Dtype> > feature_extraction_net(
 =======
   shared_ptr<Net<Dtype> > feature_extraction_net(
@@ -434,6 +458,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
   shared_ptr<Net<Dtype> > feature_extraction_net(
 >>>>>>> pod/post-rebase-error-fix
+=======
+  shared_ptr<Net<Dtype> > feature_extraction_net(
+>>>>>>> pod-caffe-pod.hpp-merge
       new Net<Dtype>(feature_extraction_proto, caffe::TEST));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
@@ -475,6 +502,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -505,6 +533,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   std::vector<shared_ptr<db::DB> > feature_dbs;
   std::vector<shared_ptr<db::Transaction> > txns;
   const char* db_type = argv[++arg_pos];
@@ -525,6 +555,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     feature_dbs.push_back(dataset);
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
   std::vector<shared_ptr<db::DB> > feature_dbs;
@@ -627,11 +658,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   std::vector<shared_ptr<db::DB> > feature_dbs;
   std::vector<shared_ptr<db::Transaction> > txns;
   const char* db_type = argv[++arg_pos];
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -771,15 +805,21 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     shared_ptr<db::DB> db(db::GetDB(db_type));
     db->Open(dataset_names.at(i), db::NEW);
     feature_dbs.push_back(db);
     shared_ptr<db::Transaction> txn(db->NewTransaction());
     txns.push_back(txn);
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   LOG(ERROR)<< "Extacting Features";
@@ -798,6 +838,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -849,11 +890,15 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -896,6 +941,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   std::vector<Blob<float>*> input_vec;
   std::vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
@@ -930,6 +977,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -998,6 +1046,10 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
         string key_str = caffe::format_int(image_indices[i], 10);
 
         string out;
@@ -1018,6 +1070,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -1048,6 +1101,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           txns.at(i)->Commit();
@@ -1057,6 +1112,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         int length = snprintf(key_str, kMaxKeyStrLength, "%d",
             image_indices[i]);
         CHECK(feature_dbs.at(i)->put(std::string(key_str, length), datum));
+<<<<<<< HEAD
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
 <<<<<<< HEAD
@@ -1202,6 +1258,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
           txns.at(i)->Commit();
           txns.at(i).reset(feature_dbs.at(i)->NewTransaction());
 >>>>>>> pod/post-rebase-error-fix
+=======
+        ++image_indices[i];
+        if (image_indices[i] % 1000 == 0) {
+          CHECK(feature_dbs.at(i)->commit());
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
         }
@@ -1224,6 +1288,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       txns.at(i)->Commit();
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1251,10 +1316,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
       txns.at(i)->Commit();
 >>>>>>> pod/post-rebase-error-fix
+=======
+      txns.at(i)->Commit();
+>>>>>>> pod-caffe-pod.hpp-merge
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
         " query images for feature blob " << blob_names[i];
     feature_dbs.at(i)->Close();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -1368,6 +1437,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+      CHECK(feature_dbs.at(i)->commit());
+    }
+    LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+        " query images for feature blob " << blob_names[i];
+>>>>>>> pod-caffe-pod.hpp-merge
     feature_dbs.at(i)->close();
 >>>>>>> origin/BVLC/parallel
 =======
@@ -1388,6 +1464,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1419,6 +1496,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   }
 
   LOG(ERROR)<< "Successfully extracted the features!";

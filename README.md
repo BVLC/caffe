@@ -12,6 +12,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -59,6 +60,8 @@ To push your changes to the documentation to the gh-pages branch of your or the 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
@@ -111,6 +114,7 @@ Please cite Caffe in your publications if it helps your research:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
 <<<<<<< HEAD
@@ -165,17 +169,24 @@ Please cite Caffe in your publications if it helps your research:
 =======
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # Caffe Documentation
 
 To generate the documentation, run `$CAFFE_ROOT/scripts/build_docs.sh`.
 
 To push your changes to the documentation to the gh-pages branch of your or the BVLC repo, run `$CAFFE_ROOT/scripts/deploy_docs.sh <repo_name>`.
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/gh-pages
 =======
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -219,3 +230,5 @@ To push your changes to the documentation to the gh-pages branch of your or the 
 =======
 >>>>>>> BVLC/gh-pages
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge

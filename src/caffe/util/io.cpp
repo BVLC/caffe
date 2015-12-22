@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -76,10 +77,15 @@
 #ifdef USE_OPENCV
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+#ifdef USE_OPENCV
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
 #ifdef USE_OPENCV
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -125,6 +131,8 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -2220,10 +2228,19 @@ cv::Mat ReadImageToCVMat(const string& filename,
   return ReadImageToCVMat(filename, height, width, true);
 }
 
+<<<<<<< HEAD
 cv::Mat ReadImageToCVMat(const string& filename,
     const bool is_color) {
   return ReadImageToCVMat(filename, 0, 0, is_color);
 }
+=======
+bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
+  int fd = open(filename, O_RDONLY);
+  CHECK_NE(fd, -1) << "File not found: " << filename;
+  ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+  CodedInputStream* coded_input = new CodedInputStream(raw_input);
+  coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
+>>>>>>> pod-caffe-pod.hpp-merge
 
 cv::Mat ReadImageToCVMat(const string& filename) {
   return ReadImageToCVMat(filename, 0, 0, true);
@@ -2330,6 +2347,31 @@ bool ReadFileToDatum(const string& filename, const int label,
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+#ifdef USE_OPENCV
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width, const bool is_color) {
+=======
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width, const bool is_color) {
+  cv::Mat cv_img;
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
+  if (!cv_img_origin.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return cv_img_origin;
+  }
+  if (height > 0 && width > 0) {
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+    cv_img = cv_img_origin;
+  }
+  return cv_img;
+}
+
+>>>>>>> pod-caffe-pod.hpp-merge
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
@@ -2370,6 +2412,7 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum,
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color) {
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 #ifdef USE_OPENCV
@@ -2381,10 +2424,13 @@ cv::Mat ReadImageToCVMat(const string& filename,
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color) {
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img;
   CHECK(datum.encoded()) << "Datum not encoded";
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2398,11 +2444,16 @@ cv::Mat ReadImageToCVMat(const string& filename,
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
     return cv_img_origin;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2506,6 +2557,8 @@ bool ReadFileToDatum(const string& filename, const int label,
 =======
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   if (height > 0 && width > 0) {
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
   } else {
@@ -2588,6 +2641,7 @@ bool ReadFileToDatum(const string& filename, const int label,
 =======
   const string& data = datum.data();
   std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
+<<<<<<< HEAD
   if (height > 0 && width > 0) {
     cv::Mat cv_img_origin = cv::imdecode(cv::Mat(vec_data), cv_read_flag);
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
@@ -2842,6 +2896,96 @@ bool ReadFileToDatum(const string& filename, const int label,
     return false;
   }
 >>>>>>> pod/post-rebase-error-fix
+=======
+  if (height > 0 && width > 0) {
+    cv::Mat cv_img_origin = cv::imdecode(cv::Mat(vec_data), cv_read_flag);
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+    cv_img = cv::imdecode(vec_data, cv_read_flag);
+>>>>>>> origin/BVLC/parallel
+=======
+  if (height > 0 && width > 0) {
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+    cv_img = cv_img_origin;
+  }
+  return cv_img;
+}
+
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width) {
+  return ReadImageToCVMat(filename, height, width, true);
+}
+
+cv::Mat ReadImageToCVMat(const string& filename,
+    const bool is_color) {
+  return ReadImageToCVMat(filename, 0, 0, is_color);
+}
+
+cv::Mat ReadImageToCVMat(const string& filename) {
+  return ReadImageToCVMat(filename, 0, 0, true);
+}
+
+// Do the file extension and encoding match?
+static bool matchExt(const std::string & fn,
+                     std::string en) {
+  size_t p = fn.rfind('.');
+  std::string ext = p != fn.npos ? fn.substr(p) : fn;
+  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  std::transform(en.begin(), en.end(), en.begin(), ::tolower);
+  if ( ext == en )
+    return true;
+  if ( en == "jpg" && ext == "jpeg" )
+    return true;
+  return false;
+}
+
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color,
+    const std::string & encoding, Datum* datum) {
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
+  if (cv_img.data) {
+    if (encoding.size()) {
+      if ( (cv_img.channels() == 3) == is_color && !height && !width &&
+          matchExt(filename, encoding) )
+        return ReadFileToDatum(filename, label, datum);
+      std::vector<uchar> buf;
+      cv::imencode("."+encoding, cv_img, buf);
+      datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
+                      buf.size()));
+      datum->set_label(label);
+      datum->set_encoded(true);
+      return true;
+    }
+    CVMatToDatum(cv_img, datum);
+    datum->set_label(label);
+    return true;
+  } else {
+    return false;
+  }
+}
+#endif  // USE_OPENCV
+
+bool ReadFileToDatum(const string& filename, const int label,
+    Datum* datum) {
+  std::streampos size;
+
+  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
+  if (file.is_open()) {
+    size = file.tellg();
+    std::string buffer(size, ' ');
+    file.seekg(0, ios::beg);
+    file.read(&buffer[0], size);
+    file.close();
+    datum->set_data(buffer);
+    datum->set_label(label);
+    datum->set_encoded(true);
+    return true;
+  } else {
+    return false;
+>>>>>>> caffe
+  }
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 #ifdef USE_OPENCV
@@ -2856,6 +3000,7 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
   }
   return cv_img;
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2906,6 +3051,10 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   cv::Mat cv_img;
   CHECK(datum.encoded()) << "Datum not encoded";
@@ -2931,6 +3080,7 @@ bool DecodeDatumNative(Datum* datum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2955,6 +3105,9 @@ bool DecodeDatumNative(Datum* datum) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
 // if height and width are set it will resize it
@@ -2967,11 +3120,14 @@ bool DecodeDatum(const int height, const int width, const bool is_color,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     CVMatToDatum(cv_img, datum);
     return true;
   } else {
@@ -2989,8 +3145,11 @@ bool DecodeDatum(Datum* datum, bool is_color) {
   } else {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     return false;
   }
 }
@@ -3001,6 +3160,7 @@ bool DecodeDatum(Datum* datum, bool is_color) {
 bool DecodeDatum(Datum* datum, bool is_color) {
   if (datum->encoded()) {
     cv::Mat cv_img = DecodeDatumToCVMat((*datum), is_color);
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3039,12 +3199,15 @@ bool DecodeDatum(Datum* datum, bool is_color) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
     CVMatToDatum(cv_img, datum);
     return true;
   } else {
     return false;
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3167,6 +3330,9 @@ bool DecodeDatum(Datum* datum, bool is_color) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
@@ -3204,6 +3370,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3255,6 +3422,9 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
@@ -3344,6 +3514,7 @@ void hdf5_save_nd_dataset<double>(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -3375,6 +3546,8 @@ void hdf5_save_nd_dataset<double>(
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 #endif  // USE_OPENCV
 }  // namespace caffe

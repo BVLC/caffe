@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/cudnn_lrn_layer.hpp"
 =======
 #include "caffe/vision_layers.hpp"
@@ -22,6 +23,9 @@
 =======
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 
 namespace caffe {
 

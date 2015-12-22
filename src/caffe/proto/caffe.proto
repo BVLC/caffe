@@ -111,6 +111,7 @@ message NetParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -152,11 +153,16 @@ message NetParameter {
 // SolverParameter next available ID: 41 (last added: type)
 =======
 >>>>>>> pod/caffe-merge
+=======
+// SolverParameter next available ID: 41 (last added: type)
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // SolverParameter next available ID: 35 (last added: stepvalue)
 >>>>>>> origin/BVLC/parallel
 =======
 // SolverParameter next available ID: 41 (last added: type)
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -216,6 +222,8 @@ message NetParameter {
 =======
 // SolverParameter next available ID: 41 (last added: type)
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -311,6 +319,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -379,6 +388,10 @@ message SolverParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -395,6 +408,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -417,9 +431,12 @@ message SolverParameter {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -474,6 +491,8 @@ message SolverParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
@@ -510,6 +529,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -578,6 +598,10 @@ message SolverParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // type of the solver
   optional string type = 40 [default = "SGD"];
 
@@ -600,6 +624,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -645,6 +670,9 @@ message SolverParameter {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   // Solver type
   enum SolverType {
     SGD = 0;
@@ -668,6 +696,7 @@ message SolverParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -699,6 +728,8 @@ message SolverParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
@@ -768,6 +799,7 @@ message NetStateRule {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -836,6 +868,10 @@ message NetStateRule {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // Specifies training parameters (multipliers on global learning constants,
@@ -872,6 +908,7 @@ message ParamSpec {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -894,9 +931,12 @@ message ParamSpec {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -951,6 +991,8 @@ message ParamSpec {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // NOTE
@@ -969,6 +1011,7 @@ message ParamSpec {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1016,11 +1059,16 @@ message ParamSpec {
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // LayerParameter next available ID: 42 (last added: exp_param)
 >>>>>>> origin/BVLC/parallel
 =======
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1088,6 +1136,8 @@ message ParamSpec {
 =======
 // LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -1127,6 +1177,7 @@ message LayerParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1190,6 +1241,11 @@ message LayerParameter {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;
 =======
@@ -1339,7 +1395,10 @@ message LayerParameter {
 =======
 >>>>>>> origin/BVLC/parallel
 
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;
@@ -1393,6 +1452,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1563,6 +1623,9 @@ message LayerParameter {
 }
 
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters used to apply transformation
 // to the data layer's data
 message TransformationParameter {
@@ -1587,10 +1650,13 @@ message TransformationParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 <<<<<<< HEAD
@@ -1613,6 +1679,7 @@ message LossParameter {
     BATCH_SIZE = 2;
     // Do not normalize the loss.
     NONE = 3;
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
   }
   optional LayerType type = 5; // the layer type from the enum above
@@ -1631,6 +1698,19 @@ message LossParameter {
   // to each top blob.
   repeated float loss_weight = 35;
 =======
+=======
+  }
+  optional NormalizationMode normalization = 3 [default = VALID];
+  // Deprecated.  Ignored if normalization is specified.  If normalization
+  // is not specified, then setting this to false will be equivalent to
+  // normalization = BATCH_SIZE to be consistent with previous behavior.
+  optional bool normalize = 2;
+}
+
+// Messages that store parameters used by individual layer types follow, in
+// alphabetical order.
+
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 // Message that stores parameters used to apply transformation
 // to the data layer's data
@@ -1656,6 +1736,7 @@ message TransformationParameter {
 =======
 }
 
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 }
@@ -1665,6 +1746,8 @@ message TransformationParameter {
 }
 
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters shared by loss layers
 message LossParameter {
   // If specified, ignore instances with the given label.
@@ -1698,6 +1781,7 @@ message LossParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1705,11 +1789,15 @@ message LossParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 message AccuracyParameter {
   // When computing accuracy, count as correct by comparing the true label to
   // the top k scoring classes.  By default, only compare to the top scoring
   // class (i.e. argmax).
   optional uint32 top_k = 1 [default = 1];
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1807,10 +1895,34 @@ message AccuracyParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+
+  // The "label" axis of the prediction blob, whose argmax corresponds to the
+  // predicted label -- may be negative to index from the end (e.g., -1 for the
+  // last axis).  For example, if axis == 1 and the predictions are
+  // (N x C x H x W), the label blob is expected to contain N*H*W ground truth
+  // labels with integer values in {0, 1, ..., C-1}.
+  optional int32 axis = 2 [default = 1];
+
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 3;
+}
+
+message ArgMaxParameter {
+  // If true produce pairs (argmax, maxval)
+  optional bool out_max_val = 1 [default = false];
+  optional uint32 top_k = 2 [default = 1];
+  // The axis along which to maximise -- may be negative to index from the
+  // end (e.g., -1 for the last axis).
+  // By default ArgMaxLayer maximizes over the flattened trailing dimensions
+  // for each index of the first / num dimension.
+  optional int32 axis = 3;
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 =======
 >>>>>>> origin/BVLC/parallel
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1954,6 +2066,47 @@ message BatchNormParameter {
 =======
 <<<<<<< HEAD
 =======
+=======
+message ConcatParameter {
+  // The axis along which to concatenate -- may be negative to index from the
+  // end (e.g., -1 for the last axis).  Other axes must have the
+  // same dimension for all the bottom blobs.
+  // By default, ConcatLayer concatenates blobs along the "channels" axis (1).
+  optional int32 axis = 2 [default = 1];
+
+  // DEPRECATED: alias for "axis" -- does not support negative indexing.
+  optional uint32 concat_dim = 1 [default = 1];
+}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+message BatchNormParameter {
+  // If false, accumulate global mean/variance values via a moving average. If
+  // true, use those accumulated values instead of computing mean/variance
+  // across the batch.
+  optional bool use_global_stats = 1;
+  // How much does the moving average decay each iteration?
+  optional float moving_average_fraction = 2 [default = .999];
+  // Small value to add to the variance estimate so that we don't divide by
+  // zero.
+  optional float eps = 3 [default = 1e-5];
+}
+
+message ContrastiveLossParameter {
+  // margin for dissimilar pair
+  optional float margin = 1 [default = 1.0];
+  // The first implementation of this cost did not exactly match the cost of
+  // Hadsell et al 2006 -- using (margin - d^2) instead of (margin - d)^2.
+  // legacy_version = false (the default) uses (margin - d)^2 as proposed in the
+  // Hadsell paper. New models should probably use this version.
+  // legacy_version = true uses (margin - d^2). This is kept to support /
+  // reproduce existing models and results
+  optional bool legacy_version = 2 [default = false];
+}
+
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
 // Message that stores parameters used by ContrastiveLossLayer
@@ -1966,6 +2119,7 @@ message ContrastiveLossParameter {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 message ConvolutionParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
@@ -2018,6 +2172,29 @@ message ConvolutionParameter {
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
 =======
+=======
+message ConvolutionParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in all spatial dimensions, or once per spatial dimension.
+  repeated uint32 pad = 3; // The padding size; defaults to 0
+  repeated uint32 kernel_size = 4; // The kernel size
+  repeated uint32 stride = 6; // The stride; defaults to 1
+
+  // For 2D convolution only, the *_h and *_w versions may also be used to
+  // specify both spatial dimensions.
+  optional uint32 pad_h = 9 [default = 0]; // The padding height (2D only)
+  optional uint32 pad_w = 10 [default = 0]; // The padding width (2D only)
+  optional uint32 kernel_h = 11; // The kernel height (2D only)
+  optional uint32 kernel_w = 12; // The kernel width (2D only)
+  optional uint32 stride_h = 13; // The stride height (2D only)
+  optional uint32 stride_w = 14; // The stride width (2D only)
+
+  optional uint32 group = 5 [default = 1]; // The group size for group conv
+
+>>>>>>> pod-caffe-pod.hpp-merge
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
   enum Engine {
@@ -2026,6 +2203,7 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -2137,12 +2315,30 @@ message ConvolutionParameter {
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
 =======
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+
+  // The axis to interpret as "channels" when performing convolution.
+  // Preceding dimensions are treated as independent inputs;
+  // succeeding dimensions are treated as "spatial".
+  // With (N, C, H, W) inputs, and axis == 1 (the default), we perform
+  // N independent 2D convolutions, sliding C-channel (or (C/g)-channels, for
+  // groups g>1) filters across the spatial axes (H, W) of the input.
+  // With (N, C, D, H, W) inputs, and axis == 1, we perform
+  // N independent 3D convolutions, sliding (C/g)-channels
+  // filters across the spatial axes (D, H, W) of the input.
+  optional int32 axis = 16 [default = 1];
+
+>>>>>>> pod-caffe-pod.hpp-merge
   // Whether to force use of the general ND convolution, even if a specific
   // implementation for blobs of the appropriate number of spatial dimensions
   // is available. (Currently, there is only a 2D-specific convolution
   // implementation; for input blobs with num_axes != 2, this option is
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -4818,6 +5014,20 @@ message DataParameter {
 
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+}
+
+=======
+}
+
+// Message that stores parameters used by DataLayer
+// next available ID: 10 (last added: prefetch)
+>>>>>>> origin/BVLC/parallel
+=======
+}
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 message DataParameter {
   enum DB {
     LEVELDB = 0;
@@ -4825,9 +5035,12 @@ message DataParameter {
   }
   // Specify the data source.
 <<<<<<< HEAD
+<<<<<<< HEAD
   repeated string source = 1;
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   optional string source = 1;
 <<<<<<< HEAD
 =======
@@ -4835,6 +5048,7 @@ message DataParameter {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
   // Specify the batch size.
   optional uint32 batch_size = 4;
@@ -4846,6 +5060,10 @@ message DataParameter {
   // Specify the batch size.
   optional uint32 batch_size = 4;
 >>>>>>> pod/post-rebase-error-fix
+=======
+  // Specify the batch size.
+  optional uint32 batch_size = 4;
+>>>>>>> pod-caffe-pod.hpp-merge
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
@@ -4853,16 +5071,20 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   // DEPRECATED. Each solver accesses a different subset of the database.
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   // DEPRECATED. Each solver accesses a different subset of the database.
 =======
 >>>>>>> origin/BVLC/parallel
 =======
   // DEPRECATED. Each solver accesses a different subset of the database.
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
   // DEPRECATED. Each solver accesses a different subset of the database.
@@ -4870,6 +5092,8 @@ message DataParameter {
 =======
   // DEPRECATED. Each solver accesses a different subset of the database.
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
@@ -4886,6 +5110,7 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
   // Prefetch queue (Number of batches to prefetch).
@@ -4910,6 +5135,10 @@ message DataParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
   // Prefetch queue (Number of batches to prefetch to host memory, increase if
@@ -4918,6 +5147,7 @@ message DataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -4947,16 +5177,21 @@ message DataParameter {
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
   // Prefetch queue (Number of batches to prefetch).
   optional uint32 prefetch = 9 [default = 4];
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 message DropoutParameter {
@@ -5009,6 +5244,7 @@ message EltwiseParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5077,6 +5313,10 @@ message EltwiseParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters used by EmbedLayer
 message EmbedParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
@@ -5102,6 +5342,7 @@ message EmbedParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5124,9 +5365,12 @@ message EmbedParameter {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5181,6 +5425,8 @@ message EmbedParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters used by ExpLayer
 message ExpParameter {
   // ExpLayer computes outputs y = base ^ (shift + scale * x), for base > 0.
@@ -5202,6 +5448,7 @@ message ExpParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5270,6 +5517,10 @@ message ExpParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 /// Message that stores parameters used by FlattenLayer
@@ -5293,6 +5544,7 @@ message FlattenParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5315,9 +5567,12 @@ message FlattenParameter {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5372,6 +5627,8 @@ message FlattenParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // Message that stores parameters used by HDF5DataLayer
@@ -5419,6 +5676,7 @@ message ImageDataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -5450,6 +5708,10 @@ message ImageDataParameter {
   optional uint32 batch_size = 4 [default = 1];
 =======
 >>>>>>> pod/caffe-merge
+=======
+  optional uint32 batch_size = 4 [default = 1];
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   optional uint32 batch_size = 4 [default = 1];
 =======
@@ -5459,6 +5721,7 @@ message ImageDataParameter {
 =======
   optional uint32 batch_size = 4 [default = 1];
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5540,6 +5803,8 @@ message ImageDataParameter {
 =======
   optional uint32 batch_size = 4 [default = 1];
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
@@ -5617,6 +5882,7 @@ message LRNParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5685,6 +5951,10 @@ message LRNParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -5702,6 +5972,7 @@ message LRNParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5724,9 +5995,12 @@ message LRNParameter {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5781,6 +6055,8 @@ message LRNParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 message MemoryDataParameter {
@@ -5909,6 +6185,7 @@ message ReLUParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5977,6 +6254,10 @@ message ReLUParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 message ReshapeParameter {
   // Specify the output dimensions. If some of the dimensions are set to 0,
   // the corresponding dimension from the bottom layer is used (unchanged).
@@ -6052,6 +6333,7 @@ message ReshapeParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6097,10 +6379,14 @@ message ReshapeParameter {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters used by SigmoidLayer
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6143,6 +6429,8 @@ message ReshapeParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 message SigmoidParameter {
   enum Engine {
     DEFAULT = 0;
@@ -6210,6 +6498,7 @@ message ThresholdParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 <<<<<<< HEAD
@@ -6273,10 +6562,13 @@ message ThresholdParameter {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -6286,6 +6578,8 @@ message ThresholdParameter {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
 message SoftmaxParameter {
   enum Engine {
@@ -6317,6 +6611,7 @@ message ThresholdParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
 // Message that stores parameters used by WindowDataLayer
@@ -6379,6 +6674,8 @@ message ThresholdParameter {
 }
 
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 >>>>>>> pod/device/blob.hpp
@@ -6388,6 +6685,7 @@ message ThresholdParameter {
 }
 
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
@@ -6411,6 +6709,8 @@ message ThresholdParameter {
 }
 
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 message WindowDataParameter {
   // Specify the data source.
   optional string source = 1;
@@ -6455,6 +6755,7 @@ message WindowDataParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6523,6 +6824,10 @@ message WindowDataParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 message SPPParameter {
@@ -6643,6 +6948,7 @@ message V1LayerParameter {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6665,9 +6971,12 @@ message V1LayerParameter {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -6722,6 +7031,8 @@ message V1LayerParameter {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters

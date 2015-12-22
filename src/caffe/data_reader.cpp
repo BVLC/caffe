@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/data_reader.hpp"
 #include "caffe/layers/data_layer.hpp"
 =======
@@ -31,6 +32,10 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/data_reader.hpp"
 >>>>>>> pod/post-rebase-error-fix
+=======
+#include "caffe/data_layers.hpp"
+#include "caffe/data_reader.hpp"
+>>>>>>> pod-caffe-pod.hpp-merge
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {

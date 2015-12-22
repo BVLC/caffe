@@ -20,8 +20,11 @@ const float kLOG_THRESHOLD = 1e-20;
  */
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 template <typename Dtype>
 class AccuracyLayer : public Layer<Dtype> {
  public:
@@ -50,6 +53,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -149,6 +153,8 @@ class AccuracyLayer : public Layer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
@@ -173,6 +179,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -203,6 +210,9 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> caffe
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -222,6 +232,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -258,6 +269,8 @@ class AccuracyLayer : public Layer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ACCURACY;
@@ -276,6 +289,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -319,6 +333,9 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/master
 =======
@@ -344,6 +361,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> device-abstraction
@@ -364,6 +382,8 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -386,6 +406,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -400,6 +421,8 @@ class AccuracyLayer : public Layer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -421,6 +444,7 @@ class AccuracyLayer : public Layer<Dtype> {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -463,6 +487,8 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   virtual inline const char* type() const { return "Accuracy"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
@@ -482,6 +508,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -555,6 +582,11 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
 >>>>>>> BVLC/master
@@ -578,6 +610,7 @@ class AccuracyLayer : public Layer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -614,6 +647,8 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * @param bottom input Blob vector (length 2)
    *   -# @f$ (N \times C \times H \times W) @f$
@@ -664,6 +699,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/device-abstraction
@@ -722,6 +758,9 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/master
 =======
@@ -741,6 +780,7 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 >>>>>>> master
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
@@ -754,6 +794,9 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   int top_k_;
 
   /// Whether to ignore instances with a certain label.
@@ -793,6 +836,7 @@ class LossLayer : public Layer<Dtype> {
   virtual inline bool AutoTopBlobs() const { return true; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
   /**
    * @param bottom input Blob vector (length 2)
@@ -822,11 +866,16 @@ class LossLayer : public Layer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * We usually cannot backpropagate to the labels; ignore force_backward for
    * these inputs.
    */
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     return bottom_index != 1;
   }
@@ -839,19 +888,26 @@ class LossLayer : public Layer<Dtype> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
  *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 +
  *              \left(1-y\right) \max \left(margin-d, 0\right)^2
  *          @f$ where @f$
  *          d = \left| \left| a_n - b_n \right| \right|_2 @f$. This can be
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
  *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
  *              \left(1-y\right) \max \left(margin-d, 0\right)
@@ -860,9 +916,12 @@ class LossLayer : public Layer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
  *          used to train siamese networks.
  *
  * @param bottom input Blob vector (length 3)
@@ -880,19 +939,26 @@ class LossLayer : public Layer<Dtype> {
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
  *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 +
  *          \left(1-y\right) \max \left(margin-d, 0\right)^2
  *          @f$ where @f$
  *          d = \left| \left| a_n - b_n \right| \right|_2 @f$.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
  *          \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d +
  *          \left(1-y\right) \max \left(margin-d, 0\right)
@@ -901,9 +967,12 @@ class LossLayer : public Layer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
  * This can be used to train siamese networks.
  */
 template <typename Dtype>
@@ -912,6 +981,7 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   explicit ContrastiveLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), diff_() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
       const vector<Blob<Dtype>*>& top);
@@ -2028,6 +2098,230 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> caffe
 
+=======
+      const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline const char* type() const { return "ContrastiveLoss"; }
+  /**
+   * Unlike most loss layers, in the ContrastiveLossLayer we can backpropagate
+   * to the first two inputs.
+   */
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return bottom_index != 2;
+  }
+
+ protected:
+  /// @copydoc ContrastiveLossLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the Contrastive error gradient w.r.t. the inputs.
+   *
+   * Computes the gradients with respect to the two input vectors (bottom[0] and
+   * bottom[1]), but not the similarity label (bottom[2]).
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
+   *      This Blob's diff will simply contain the loss_weight* @f$ \lambda @f$,
+   *      as @f$ \lambda @f$ is the coefficient of this layer's output
+   *      @f$\ell_i@f$ in the overall Net loss
+   *      @f$ E = \lambda_i \ell_i + \mbox{other loss terms}@f$; hence
+   *      @f$ \frac{\partial E}{\partial \ell_i} = \lambda_i @f$.
+   *      (*Assuming that this top Blob is not used as a bottom (input) by any
+   *      other layer of the Net.)
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times 1 \times 1) @f$
+   *      the features @f$a@f$; Backward fills their diff with
+   *      gradients if propagate_down[0]
+   *   -# @f$ (N \times C \times 1 \times 1) @f$
+   *      the features @f$b@f$; Backward fills their diff with gradients if
+   *      propagate_down[1]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+  Blob<Dtype> diff_;  // cached for backward pass
+  Blob<Dtype> dist_sq_;  // cached for backward pass
+  Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
+  Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+};
+
+=======
+=======
+>>>>>>> caffe
+
+  Blob<Dtype> diff_;  // cached for backward pass
+  Blob<Dtype> dist_sq_;  // cached for backward pass
+  Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
+  Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+};
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+=======
+>>>>>>> master
+
+  Blob<Dtype> diff_;  // cached for backward pass
+  Blob<Dtype> dist_sq_;  // cached for backward pass
+  Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
+  Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+};
+
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+
+  Blob<Dtype> diff_;  // cached for backward pass
+  Blob<Dtype> dist_sq_;  // cached for backward pass
+  Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
+  Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+};
+
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+
+=======
+
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline const char* type() const { return "ContrastiveLoss"; }
+=======
+
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_CONTRASTIVE_LOSS;
+  }
+>>>>>>> origin/BVLC/parallel
+=======
+
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline const char* type() const { return "ContrastiveLoss"; }
+>>>>>>> caffe
+  /**
+   * Unlike most loss layers, in the ContrastiveLossLayer we can backpropagate
+   * to the first two inputs.
+   */
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return bottom_index != 2;
+  }
+
+ protected:
+  /// @copydoc ContrastiveLossLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the Contrastive error gradient w.r.t. the inputs.
+<<<<<<< HEAD
+<<<<<<< HEAD
+   *
+   * Computes the gradients with respect to the two input vectors (bottom[0] and
+=======
+   * 
+   * Computes the gradients with respect to the two input vectors (bottom[0] and 
+>>>>>>> origin/BVLC/parallel
+=======
+   *
+   * Computes the gradients with respect to the two input vectors (bottom[0] and
+>>>>>>> caffe
+   * bottom[1]), but not the similarity label (bottom[2]).
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
+   *      This Blob's diff will simply contain the loss_weight* @f$ \lambda @f$,
+   *      as @f$ \lambda @f$ is the coefficient of this layer's output
+   *      @f$\ell_i@f$ in the overall Net loss
+   *      @f$ E = \lambda_i \ell_i + \mbox{other loss terms}@f$; hence
+   *      @f$ \frac{\partial E}{\partial \ell_i} = \lambda_i @f$.
+   *      (*Assuming that this top Blob is not used as a bottom (input) by any
+   *      other layer of the Net.)
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times 1 \times 1) @f$
+   *      the features @f$a@f$; Backward fills their diff with
+   *      gradients if propagate_down[0]
+   *   -# @f$ (N \times C \times 1 \times 1) @f$
+<<<<<<< HEAD
+<<<<<<< HEAD
+   *      the features @f$b@f$; Backward fills their diff with gradients if
+=======
+   *      the features @f$b@f$; Backward fills their diff with gradients if 
+>>>>>>> origin/BVLC/parallel
+=======
+   *      the features @f$b@f$; Backward fills their diff with gradients if
+>>>>>>> caffe
+   *      propagate_down[1]
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+>>>>>>> BVLC/master
+  Blob<Dtype> diff_;  // cached for backward pass
+  Blob<Dtype> dist_sq_;  // cached for backward pass
+  Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
+  Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+};
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+
+=======
+
+>>>>>>> master
+  Blob<Dtype> diff_;  // cached for backward pass
+  Blob<Dtype> dist_sq_;  // cached for backward pass
+  Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
+  Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+};
+
+<<<<<<< HEAD
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+=======
+>>>>>>> caffe
+
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> diff_;  // cached for backward pass
   Blob<Dtype> dist_sq_;  // cached for backward pass
   Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
@@ -2038,6 +2332,7 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
       const vector<Blob<Dtype>*>& top);
@@ -2096,6 +2391,8 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
 };
 
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief Computes the Euclidean (L2) loss @f$
  *          E = \frac{1}{2N} \sum\limits_{n=1}^N \left| \left| \hat{y}_n - y_n
@@ -2130,6 +2427,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -2140,6 +2438,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    */
 =======
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2154,6 +2455,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
@@ -2163,16 +2466,22 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
@@ -2182,9 +2491,12 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   // to both inputs.
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 =======
 >>>>>>> BVLC/master
 =======
@@ -2205,22 +2517,31 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> master
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "EuclideanLoss"; }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /**
    * Unlike most loss layers, in the EuclideanLossLayer we can backpropagate
    * to both inputs -- override to return true and always allow force_backward.
@@ -2237,6 +2558,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -2260,10 +2584,13 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     return true;
   }
@@ -2274,10 +2601,13 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2308,10 +2638,13 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /// @copydoc EuclideanLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -2340,6 +2673,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    * @param propagate_down see Layer::Backward.
    * @param bottom input Blob vector (length 2)
 <<<<<<< HEAD
+<<<<<<< HEAD
    *   -# @f$ (N \times C \times 1 \times 1) @f$
    *      the features @f$a@f$; Backward fills their diff with
    *      gradients if propagate_down[0]
@@ -2359,6 +2693,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
    *      propagate_down[1]
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the predictions @f$\hat{y}@f$; Backward fills their diff with
    *      gradients @f$
@@ -2370,7 +2706,10 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    *      @f$ \frac{\partial E}{\partial y} =
    *          \frac{1}{n} \sum\limits_{n=1}^N (y_n - \hat{y}_n)
    *      @f$ if propagate_down[1]
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
@@ -2378,6 +2717,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 =======
@@ -2421,11 +2761,16 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> diff_;
 >>>>>>> pod/device/blob.hpp
 };
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 
@@ -2474,6 +2819,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
  * (Note: Caffe, and SGD in general, is certainly \b not the best way to solve
  * linear least squares problems! We use it only as an instructive example.)
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief Computes the hinge loss for a one-of-many classification task.
  *
@@ -2516,7 +2863,10 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
  * HingeLossLayer is equivalent to an SVM (assuming it has no other learned
  * outside the InnerProductLayer and no other losses outside the
  * HingeLossLayer).
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class EuclideanLossLayer : public LossLayer<Dtype> {
@@ -2641,13 +2991,33 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/master
 =======
@@ -2667,6 +3037,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> master
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
@@ -2739,6 +3110,12 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual inline const char* type() const { return "HingeLoss"; }
 
  protected:
+=======
+>>>>>>> caffe
+  virtual inline const char* type() const { return "HingeLoss"; }
+
+ protected:
+>>>>>>> pod-caffe-pod.hpp-merge
   /// @copydoc HingeLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -2749,7 +3126,10 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    * Gradients cannot be computed with respect to the label inputs (bottom[1]),
    * so this method ignores bottom[1] and requires !propagate_down[1], crashing
    * if propagate_down[1] is set.
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
@@ -2762,6 +3142,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    *      (*Assuming that this top Blob is not used as a bottom (input) by any
    *      other layer of the Net.)
    * @param propagate_down see Layer::Backward.
+<<<<<<< HEAD
 <<<<<<< HEAD
    * @param bottom input Blob vector (length 2)
    *   -# @f$ (N \times C \times 1 \times 1) @f$
@@ -2788,9 +3169,20 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
    *      propagate_down[1]
+=======
+   *      propagate_down[1] must be false as we can't compute gradients with
+   *      respect to the labels.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the predictions @f$t@f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial t} @f$
+   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *      the labels -- ignored as we can't compute their error gradients
+>>>>>>> pod-caffe-pod.hpp-merge
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
@@ -2811,9 +3203,45 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 };
 >>>>>>> BVLC/device-abstraction
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -2841,6 +3269,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 =======
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief A generalization of MultinomialLogisticLossLayer that takes an
  *        "information gain" (infogain) matrix specifying the "value" of all label
@@ -2879,13 +3309,30 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   explicit InfogainLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), infogain_() {}
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 >>>>>>> pod/post-rebase-error-fix
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
      vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 
@@ -3084,6 +3531,93 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+=======
+>>>>>>> caffe
+
+  // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
+  // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
+  // file specified by LayerParameter.)
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MaxBottomBlobs() const { return 3; }
+<<<<<<< HEAD
+>>>>>>> origin/BVLC/parallel
+
+  // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
+  // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
+  // file specified by LayerParameter.)
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MaxBottomBlobs() const { return 3; }
+=======
+>>>>>>> caffe
+
+  virtual inline const char* type() const { return "InfogainLoss"; }
+
+ protected:
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3116,6 +3650,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
@@ -3138,6 +3673,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   /// @copydoc InfogainLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -3179,6 +3716,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -3192,6 +3730,9 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> infogain_;
 >>>>>>> pod/device/blob.hpp
 };
@@ -3221,6 +3762,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 >>>>>>> pod/device/blob.hpp
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
@@ -3322,6 +3864,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief Computes the multinomial logistic loss for a one-of-many
  *        classification task, directly taking a predicted probability
@@ -3357,9 +3901,25 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 >>>>>>> pod/post-rebase-error-fix
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+  virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
@@ -3367,20 +3927,27 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3395,6 +3962,8 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 =======
 =======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -3444,6 +4013,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 
 >>>>>>> master
 =======
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
 =======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -3453,6 +4023,12 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 >>>>>>> caffe
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual inline const char* type() const { return "MultinomialLogisticLoss"; }
 
  protected:
@@ -3491,8 +4067,11 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3526,6 +4105,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3572,6 +4152,10 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/master
 };
 
+=======
+};
+
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief Computes the cross-entropy (logistic) loss @f$
  *          E = \frac{-1}{n} \sum\limits_{n=1}^N \left[
@@ -3600,7 +4184,10 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
  *                  p_n \log \hat{p}_n + (1 - p_n) \log(1 - \hat{p}_n)
  *              \right]
  *      @f$
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
  */
 template <typename Dtype>
 class EuclideanLossLayer : public LossLayer<Dtype> {
@@ -3672,12 +4259,27 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
           sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
           sigmoid_output_(new Blob<Dtype>()) {}
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3706,6 +4308,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 =======
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+=======
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -3727,10 +4332,6 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
-=======
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
-=======
->>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -3746,8 +4347,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
-<<<<<<< HEAD
 >>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/master
 =======
@@ -3766,6 +4367,61 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> master
 =======
 >>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+<<<<<<< HEAD
+=======
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+=======
+>>>>>>> pod/post-rebase-error-fix
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+=======
+
+  virtual inline const char* type() const { return "SigmoidCrossEntropyLoss"; }
+
+ protected:
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -3786,6 +4442,102 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  /// @copydoc SigmoidCrossEntropyLossLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+=======
+  /// @copydoc SigmoidCrossEntropyLossLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> origin/BVLC/parallel
+=======
+  /// @copydoc SigmoidCrossEntropyLossLayer
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> caffe
+
+  /**
+   * @brief Computes the sigmoid cross-entropy loss error gradient w.r.t. the
+   *        predictions.
+   *
+   * Gradients cannot be computed with respect to the target inputs (bottom[1]),
+   * so this method ignores bottom[1] and requires !propagate_down[1], crashing
+   * if propagate_down[1] is set.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
+   *      This Blob's diff will simply contain the loss_weight* @f$ \lambda @f$,
+   *      as @f$ \lambda @f$ is the coefficient of this layer's output
+   *      @f$\ell_i@f$ in the overall Net loss
+   *      @f$ E = \lambda_i \ell_i + \mbox{other loss terms}@f$; hence
+   *      @f$ \frac{\partial E}{\partial \ell_i} = \lambda_i @f$.
+   *      (*Assuming that this top Blob is not used as a bottom (input) by any
+   *      other layer of the Net.)
+   * @param propagate_down see Layer::Backward.
+   *      propagate_down[1] must be false as gradient computation with respect
+   *      to the targets is not implemented.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the predictions @f$x@f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial x} =
+   *          \frac{1}{n} \sum\limits_{n=1}^N (\hat{p}_n - p_n)
+   *      @f$
+   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *      the labels -- ignored as we can't compute their error gradients
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  /// The internal SigmoidLayer used to map predictions to probabilities.
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
+  /// sigmoid_output stores the output of the SigmoidLayer.
+  shared_ptr<Blob<Dtype> > sigmoid_output_;
+  /// bottom vector holder to call the underlying SigmoidLayer::Forward
+  vector<Blob<Dtype>*> sigmoid_bottom_vec_;
+  /// top vector holder to call the underlying SigmoidLayer::Forward
+  vector<Blob<Dtype>*> sigmoid_top_vec_;
+};
+>>>>>>> pod-caffe-pod.hpp-merge
 
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
@@ -3799,6 +4551,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 
+<<<<<<< HEAD
   virtual inline const char* type() const { return "InfogainLoss"; }
 
  protected:
@@ -7917,6 +8670,8 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
 template <typename Dtype> class SoftmaxLayer;
 
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 /**
  * @brief Computes the multinomial logistic loss for a one-of-many
  *        classification task, passing real-valued predictions through a
@@ -7945,6 +8700,7 @@ template <typename Dtype> class SoftmaxLayer;
  *        \frac{-1}{N} \sum\limits_{n=1}^N \log(\hat{p}_{n,l_n})
  *      @f$, for softmax output class probabilites @f$ \hat{p} @f$
  */
+<<<<<<< HEAD
 <<<<<<< HEAD
 template <typename Dtype>
 class SoftmaxWithLossLayer : public LossLayer<Dtype> {
@@ -10348,6 +11104,11 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 template <typename Dtype>
 class SoftmaxWithLossLayer : public LossLayer<Dtype> {
  public:
+=======
+template <typename Dtype>
+class SoftmaxWithLossLayer : public LossLayer<Dtype> {
+ public:
+>>>>>>> pod-caffe-pod.hpp-merge
    /**
     * @param param provides LossParameter loss_param, with options:
     *  - ignore_label (optional)
@@ -10357,7 +11118,21 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
     *    present; otherwise the loss is simply summed over spatial locations.
     */
   explicit SoftmaxWithLossLayer(const LayerParameter& param)
+<<<<<<< HEAD
 >>>>>>> pod/post-rebase-error-fix
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
       : Layer<Dtype>(param), softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
@@ -10401,13 +11176,29 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 =======
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+<<<<<<< HEAD
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 >>>>>>> pod/post-rebase-error-fix
+=======
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+=======
+      : LossLayer<Dtype>(param),
+        softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+>>>>>>> origin/BVLC/parallel
+>>>>>>> pod-caffe-pod.hpp-merge
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10556,6 +11347,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -10574,6 +11368,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> master
 =======
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -10634,10 +11429,15 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 =======
       : LossLayer<Dtype>(param) {}
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> caffe
+      : LossLayer<Dtype>(param) {}
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -10658,10 +11458,13 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return 1; }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10679,6 +11482,9 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
@@ -10689,13 +11495,17 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
   // prob stores the output probability of the layer.
 =======
 =======
   virtual inline int MaxTopBlobs() const { return 2; }
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -10788,6 +11598,10 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
 
  protected:
 >>>>>>> pod/device/blob.hpp
+=======
+
+ protected:
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
   virtual inline int MaxTopBlobs() const { return 2; }
@@ -10841,12 +11655,16 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   /// @copydoc SoftmaxWithLossLayer
 >>>>>>> origin/BVLC/parallel
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -11014,6 +11832,23 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
    *        predictions.
    *
    * Gradients cannot be computed with respect to the target inputs (bottom[1]),
+=======
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+  /**
+   * @brief Computes the softmax loss error gradient w.r.t. the predictions.
+   *
+   * Gradients cannot be computed with respect to the label inputs (bottom[1]),
+>>>>>>> pod-caffe-pod.hpp-merge
    * so this method ignores bottom[1] and requires !propagate_down[1], crashing
    * if propagate_down[1] is set.
    *
@@ -11028,6 +11863,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
    *      (*Assuming that this top Blob is not used as a bottom (input) by any
    *      other layer of the Net.)
    * @param propagate_down see Layer::Backward.
+<<<<<<< HEAD
    *      propagate_down[1] must be false as gradient computation with respect
    *      to the targets is not implemented.
    * @param bottom input Blob vector (length 2)
@@ -11036,6 +11872,14 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
    *      @f$ \frac{\partial E}{\partial x} =
    *          \frac{1}{n} \sum\limits_{n=1}^N (\hat{p}_n - p_n)
    *      @f$
+=======
+   *      propagate_down[1] must be false as we can't compute gradients with
+   *      respect to the labels.
+   * @param bottom input Blob vector (length 2)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the predictions @f$ x @f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial x} @f$
+>>>>>>> pod-caffe-pod.hpp-merge
    *   -# @f$ (N \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    */
@@ -11044,6 +11888,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+<<<<<<< HEAD
   /// The internal SigmoidLayer used to map predictions to probabilities.
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
@@ -11414,9 +12259,23 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 =======
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> caffe
+  /// Read the normalization mode parameter and compute the normalizer based
+  /// on the blob size.  If normalization_mode is VALID, the count of valid
+  /// outputs will be read from valid_count, unless it is -1 in which case
+  /// all outputs are assumed to be valid.
+  virtual Dtype get_normalizer(
+      LossParameter_NormalizationMode normalization_mode, int valid_count);
+
+>>>>>>> pod-caffe-pod.hpp-merge
   /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -11465,6 +12324,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -11486,6 +12347,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 >>>>>>> master
 =======
   /// The internal SoftmaxLayer used to map predictions to a distribution.
+<<<<<<< HEAD
   shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -11719,6 +12581,13 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+  shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
+  /// prob stores the output probability predictions from the SoftmaxLayer.
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
   Blob<Dtype> prob_;
   /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
   vector<Blob<Dtype>*> softmax_bottom_vec_;

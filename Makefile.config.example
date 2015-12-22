@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
  cuDNN acceleration switch (uncomment to build with cuDNN).
@@ -37,13 +38,19 @@
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> pod-caffe-pod.hpp-merge
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 =======
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> caffe
 =======
 # cuDNN acceleration switch (uncomment to build with cuDNN).
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> master
 =======
 # cuDNN acceleration switch (uncomment to build with cuDNN).
@@ -63,6 +70,7 @@
 =======
  cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -82,11 +90,14 @@
 =======
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -118,6 +129,10 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
@@ -135,6 +150,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
  Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
 =======
@@ -161,6 +177,8 @@
 <<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # Uncomment if you're using OpenCV 3
 =======
  Uncomment if you're using OpenCV 3
@@ -180,15 +198,20 @@
 =======
 # Uncomment if you're using OpenCV 3
 >>>>>>> master
+<<<<<<< HEAD
 =======
  Uncomment if you're using OpenCV 3
 >>>>>>> pod/device/blob.hpp
 # OPENCV_VERSION := 3
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+# OPENCV_VERSION := 3
+>>>>>>> pod-caffe-pod.hpp-merge
+=======
 # Parallelization over InfiniBand or RoCE
 # RDMA := 1
 >>>>>>> origin/BVLC/parallel
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 =======
@@ -262,6 +285,12 @@
 # Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+ Uncomment if you're using OpenCV 3
+# OPENCV_VERSION := 3
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
@@ -319,6 +348,7 @@ PYTHON_LIB := /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -329,6 +359,10 @@ PYTHON_LIB := /usr/lib
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Homebrew installs numpy in a non standard path (keg only)
 # PYTHON_INCLUDE += $(dir $(shell python -c 'import numpy.core; print(numpy.core.__file__)'))/include
@@ -339,17 +373,23 @@ PYTHON_LIB := /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
@@ -358,6 +398,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -368,6 +409,10 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 >>>>>>> device-abstraction
 =======
 >>>>>>> pod/post-rebase-error-fix
+=======
+=======
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
 # INCLUDE_DIRS += $(shell brew --prefix)/include
 # LIBRARY_DIRS += $(shell brew --prefix)/lib
@@ -379,6 +424,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
  Uncomment to use `pkg-config` to specify OpenCV library paths.
@@ -399,13 +445,18 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 <<<<<<< HEAD
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 =======
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> caffe
 =======
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> master
 =======
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
@@ -415,10 +466,13 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 >>>>>>> BVLC/master
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> master
 =======
@@ -426,6 +480,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 >>>>>>> master
 =======
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -441,10 +496,13 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> origin/BVLC/parallel
 =======
  Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> caffe
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 <<<<<<< HEAD
 =======
@@ -464,6 +522,8 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 =======
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 >>>>>>> pod/post-rebase-error-fix
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 
