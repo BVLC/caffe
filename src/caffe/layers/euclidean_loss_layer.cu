@@ -3,6 +3,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/euclidean_loss_layer.hpp"
 =======
 #include "caffe/loss_layers.hpp"
@@ -13,6 +14,9 @@
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> device-abstraction
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

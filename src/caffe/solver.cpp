@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -125,6 +126,10 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+<<<<<<< HEAD
+>>>>>>> device-abstraction
 #include <algorithm>
 #include <cstdio>
 #include <string>
@@ -146,6 +151,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -194,10 +200,13 @@
 
 >>>>>>> BVLC/master
 =======
+>>>>>>> device-abstraction
+=======
 #include <string>
 #include <vector>
 
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 #include <string>
 #include <vector>
@@ -326,6 +335,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -371,6 +382,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -431,6 +443,8 @@ template <typename Dtype>
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
       requested_early_exit_(false) {
@@ -452,6 +466,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
       << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param.DebugString();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1121,10 +1136,17 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  param_ = param;
+  CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
+  CheckSnapshotWritePermissions();
+  if (Caffe::root_solver() && param_.random_seed() >= 0) {
+>>>>>>> device-abstraction
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
   InitTrainNet();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1180,12 +1202,15 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   if (Caffe::root_solver()) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
   }
   iter_ = 0;
   current_step_ = 0;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1290,6 +1315,8 @@ void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -1415,6 +1442,7 @@ void Solver<Dtype>::InitTestNets() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1444,6 +1472,8 @@ void Solver<Dtype>::InitTestNets() {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     if (Caffe::root_solver()) {
       test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     } else {
@@ -1451,6 +1481,7 @@ void Solver<Dtype>::InitTestNets() {
           root_solver_->test_nets_[i].get()));
     }
     test_nets_[i]->set_debug_info(param_.debug_info());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1486,11 +1517,14 @@ void Solver<Dtype>::InitTestNets() {
 >>>>>>> master
 =======
 >>>>>>> BVLC/master
+=======
+>>>>>>> device-abstraction
   }
 }
 
 template <typename Dtype>
 void Solver<Dtype>::Step(int iters) {
+<<<<<<< HEAD
   vector<Blob<Dtype>*> bottom_vec;
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;
@@ -1713,6 +1747,9 @@ void Solver<Dtype>::Step(int iters) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  vector<Blob<Dtype>*> bottom_vec;
+>>>>>>> device-abstraction
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;
   int average_loss = this->param_.average_loss();
@@ -1722,6 +1759,7 @@ void Solver<Dtype>::Step(int iters) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
@@ -1764,12 +1802,16 @@ void Solver<Dtype>::Step(int iters) {
 
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+>>>>>>> device-abstraction
   while (iter_ < stop_iter) {
     // zero-init the params
     net_->ClearParamDiffs();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())
         && Caffe::root_solver()) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1858,10 +1900,13 @@ void Solver<Dtype>::Step(int iters) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
       TestAll();
       if (requested_early_exit_) {
         // Break out of the while loop because stop was requested while testing.
         break;
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -1956,6 +2001,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 =======
 =======
 >>>>>>> caffe
+=======
+      }
+>>>>>>> device-abstraction
     }
   }
 }
@@ -1976,6 +2024,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 >>>>>>> BVLC/master
 =======
 
+<<<<<<< HEAD
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
     ++iter_;
@@ -2008,6 +2057,8 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 >>>>>>> master
 =======
 >>>>>>> caffe
+=======
+>>>>>>> device-abstraction
     for (int i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_start();
     }
@@ -2015,8 +2066,11 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     net_->set_debug_info(display && param_.debug_info());
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
+=======
+>>>>>>> device-abstraction
     // accumulate the loss and gradient
     Dtype loss = 0;
     for (int i = 0; i < param_.iter_size(); ++i) {
@@ -2025,11 +2079,14 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     loss /= param_.iter_size();
     // average the loss across iterations for smoothed reporting
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     Dtype loss = net_->ForwardBackward(bottom_vec);
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+=======
+>>>>>>> device-abstraction
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -2042,6 +2099,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     if (display) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss;
 =======
@@ -2051,6 +2109,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss;
 >>>>>>> caffe
+=======
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss;
+>>>>>>> device-abstraction
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -2067,6 +2129,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
           }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
           LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
 =======
           LOG(INFO) << "    Train net output #"
@@ -2074,10 +2137,14 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 =======
           LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
 >>>>>>> caffe
+=======
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+>>>>>>> device-abstraction
               << score_index++ << ": " << output_name << " = "
               << result_vec[k] << loss_msg_stream.str();
         }
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2272,6 +2339,17 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 >>>>>>> BVLC/master
 =======
+=======
+    }
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    ApplyUpdate();
+
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+>>>>>>> device-abstraction
 
     SolverAction::Enum request = GetRequestedAction();
 
@@ -2299,12 +2377,16 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;
 
+<<<<<<< HEAD
 >>>>>>> master
+=======
+>>>>>>> device-abstraction
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
   }
 
+<<<<<<< HEAD
 =======
 
 =======
@@ -2322,6 +2404,8 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 >>>>>>> master
 =======
 >>>>>>> caffe
+=======
+>>>>>>> device-abstraction
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   Step(param_.max_iter() - iter_);
@@ -2459,6 +2543,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
       }
 <<<<<<< HEAD
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
     for (int i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_gradients_ready();
@@ -10750,6 +10835,52 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 =======
 =======
 template <typename Dtype>
+=======
+  }
+  if (requested_early_exit_) {
+    LOG(INFO)     << "Test interrupted.";
+    return;
+  }
+  if (param_.test_compute_loss()) {
+    loss /= param_.test_iter(test_net_id);
+    LOG(INFO) << "Test loss: " << loss;
+  }
+  for (int i = 0; i < test_score.size(); ++i) {
+    const int output_blob_index =
+        test_net->output_blob_indices()[test_score_output_id[i]];
+    const string& output_name = test_net->blob_names()[output_blob_index];
+    const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
+    ostringstream loss_msg_stream;
+    const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
+    if (loss_weight) {
+      loss_msg_stream << " (* " << loss_weight
+                      << " = " << loss_weight * mean_score << " loss)";
+    }
+    LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
+              << mean_score << loss_msg_stream.str();
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Snapshot() {
+  CHECK(Caffe::root_solver());
+  string model_filename;
+  switch (param_.snapshot_format()) {
+  case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
+    model_filename = SnapshotToBinaryProto();
+    break;
+  case caffe::SolverParameter_SnapshotFormat_HDF5:
+    model_filename = SnapshotToHDF5();
+    break;
+  default:
+    LOG(FATAL) << "Unsupported snapshot format.";
+  }
+
+  SnapshotSolverState(model_filename);
+}
+
+template <typename Dtype>
+>>>>>>> device-abstraction
 void Solver<Dtype>::CheckSnapshotWritePermissions() {
   if (Caffe::root_solver() && param_.snapshot()) {
     CHECK(param_.has_snapshot_prefix())
@@ -10764,6 +10895,7 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
           << param_.snapshot_prefix() << "'.  Make sure "
           << "that the directory exists and is writeable.";
     }
+<<<<<<< HEAD
 >>>>>>> caffe
   }
 }
@@ -11305,6 +11437,19 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  }
+}
+
+template <typename Dtype>
+string Solver<Dtype>::SnapshotFilename(const string extension) {
+  return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
+    + extension;
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
+>>>>>>> device-abstraction
 void SGDSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> pod/device/blob.hpp
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
@@ -11317,6 +11462,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   }
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -11436,6 +11582,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
   Device<Dtype>* device = GetDevice<Dtype>();
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     // Compute the value to history, and then copy them to the blob's diff.
@@ -11449,6 +11597,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       device->axpy(net_params[param_id]->count(), local_decay * local_rate,
           net_params[param_id]->const_data(),
           history_[param_id]->mutable_data());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -11755,10 +11904,14 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 =======
     }
 >>>>>>> BVLC/device-abstraction
+=======
+    }
+>>>>>>> device-abstraction
     // copy
     device->copy(net_params[param_id]->count(),
         history_[param_id]->const_data(),
         net_params[param_id]->mutable_diff());
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
@@ -11769,11 +11922,27 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 
 template <typename Dtype>
 <<<<<<< HEAD
+=======
+  }
+=======
+string Solver<Dtype>::SnapshotToBinaryProto() {
+  string model_filename = SnapshotFilename(".caffemodel");
+  LOG(INFO) << "Snapshotting to binary proto file " << model_filename;
+  NetParameter net_param;
+  net_->ToProto(&net_param, param_.snapshot_diff());
+  WriteProtoToBinaryFile(net_param, model_filename);
+  return model_filename;
+>>>>>>> BVLC/master
+}
+
+template <typename Dtype>
+>>>>>>> device-abstraction
 string Solver<Dtype>::SnapshotToHDF5() {
   string model_filename = SnapshotFilename(".caffemodel.h5");
   LOG(INFO) << "Snapshotting to HDF5 file " << model_filename;
   net_->ToHDF5(model_filename, param_.snapshot_diff());
   return model_filename;
+<<<<<<< HEAD
 =======
 void AdaGradSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
@@ -11947,6 +12116,8 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -11958,6 +12129,7 @@ void Solver<Dtype>::Restore(const char* state_file) {
     RestoreSolverStateFromHDF5(state_filename);
   } else {
     RestoreSolverStateFromBinaryProto(state_filename);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12010,10 +12182,13 @@ void Solver<Dtype>::Restore(const char* state_file) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   }
 }
 
 INSTANTIATE_CLASS(Solver);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -12120,5 +12295,7 @@ INSTANTIATE_CLASS(AdaGradSolver);
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 }  // namespace caffe

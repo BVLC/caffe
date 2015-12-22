@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -113,6 +114,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
@@ -120,6 +123,7 @@
 #include <utility>
 #include <vector>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -195,10 +199,13 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 #include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -295,6 +302,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/format.hpp"
@@ -303,6 +312,7 @@
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -420,11 +430,15 @@ using boost::scoped_ptr;
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+using boost::scoped_ptr;
+>>>>>>> device-abstraction
 
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -553,6 +567,10 @@ DEFINE_string(backend, "lmdb",
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+DEFINE_string(backend, "lmdb",
+        "The backend {lmdb, leveldb} for storing the result");
+>>>>>>> device-abstraction
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 DEFINE_bool(check_size, false,
@@ -570,6 +588,7 @@ DEFINE_bool(encoded, false,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -691,6 +710,10 @@ DEFINE_string(encode_type, "",
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+DEFINE_string(encode_type, "",
+    "Optional: What type should we encode the image as ('png','jpg',...).");
+>>>>>>> device-abstraction
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
@@ -706,6 +729,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -827,6 +851,10 @@ int main(int argc, char** argv) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  // Print output to stderr (while still logging)
+  FLAGS_alsologtostderr = 1;
+>>>>>>> device-abstraction
 
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
@@ -840,6 +868,7 @@ int main(int argc, char** argv) {
         "    http://www.image-net.org/download-images\n");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -958,6 +987,9 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  if (argc < 4) {
+>>>>>>> device-abstraction
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/convert_imageset");
     return 1;
   }
@@ -965,6 +997,7 @@ int main(int argc, char** argv) {
   const bool is_color = !FLAGS_gray;
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1080,6 +1113,9 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  const string encode_type = FLAGS_encode_type;
+>>>>>>> device-abstraction
 
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
@@ -1095,6 +1131,7 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1356,10 +1393,19 @@ int main(int argc, char** argv) {
 =======
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  if (encode_type.size() && !encoded)
+    LOG(INFO) << "encode_type specified, assuming encoded=true.";
+
+  int resize_height = std::max<int>(0, FLAGS_resize_height);
+  int resize_width = std::max<int>(0, FLAGS_resize_width);
+
+>>>>>>> device-abstraction
   // Create new DB
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
   db->Open(argv[3], db::NEW);
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1376,6 +1422,8 @@ int main(int argc, char** argv) {
     CHECK_EQ(FLAGS_resize_width, 0) << "With encoded don't resize images";
     CHECK(!check_size) << "With encoded cannot check_size";
   }
+=======
+>>>>>>> device-abstraction
 
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
@@ -1409,6 +1457,7 @@ int main(int argc, char** argv) {
 
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     bool status;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1484,6 +1533,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     std::string enc = encode_type;
     if (encoded && !enc.size()) {
       // Guess the encoding type from the file name
@@ -1497,6 +1548,7 @@ int main(int argc, char** argv) {
     status = ReadImageToDatum(root_folder + lines[line_id].first,
         lines[line_id].second, resize_height, resize_width, is_color,
         enc, &datum);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1599,6 +1651,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     if (status == false) continue;
     if (check_size) {
       if (!data_size_initialized) {
@@ -1622,6 +1676,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1760,10 +1815,21 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
+
+    // Put in db
+    string out;
+    CHECK(datum.SerializeToString(&out));
+    txn->Put(key_str, out);
+
+    if (++count % 1000 == 0) {
+>>>>>>> device-abstraction
       // Commit db
       txn->Commit();
       txn.reset(db->NewTransaction());
       LOG(INFO) << "Processed " << count << " files.";
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1874,10 +1940,13 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2047,5 +2116,13 @@ int main(int argc, char** argv) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    txn->Commit();
+    LOG(INFO) << "Processed " << count << " files.";
+  }
+#else
+  LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
+#endif  // USE_OPENCV
+>>>>>>> device-abstraction
   return 0;
 }

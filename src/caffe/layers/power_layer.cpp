@@ -17,6 +17,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -122,9 +123,14 @@
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> device-abstraction
+=======
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -249,6 +255,8 @@
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -280,6 +288,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -517,10 +526,16 @@ void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
 >>>>>>> master
 =======
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> device-abstraction
+=======
 void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   Dtype* top_data = top[0]->mutable_cpu_data();
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -557,6 +572,8 @@ Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype* top_data = (*top)[0]->mutable_data();
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
   const int count = bottom[0]->count();
   // Special case where we can ignore the input: scale or power is 0.
   if (diff_scale_ == Dtype(0)) {
@@ -576,6 +593,7 @@ Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     caffe_set(count, value, top_data);
@@ -776,12 +794,15 @@ Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
     this->device_->set(count, value, top_data);
     return Dtype(0);
 =======
     caffe_set(count, value, top_data);
     return;
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
     caffe_set(count, value, top_data);
     return;
@@ -838,6 +859,8 @@ Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   }
   const Dtype* bottom_data = bottom[0]->const_data();
   this->device_->copy(count, bottom_data, top_data);
@@ -872,6 +895,7 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -953,10 +977,13 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
     Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     const int count = (*bottom)[0]->count();
     const Dtype* top_diff = top[0]->const_diff();
 =======
+<<<<<<< HEAD
 >>>>>>> pod/caffe-merge
 =======
 =======
@@ -1001,10 +1028,13 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int count = bottom[0]->count();
     const Dtype* top_diff = top[0]->cpu_diff();
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1056,551 +1086,6 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> BVLC/master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> BVLC/master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> BVLC/master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> caffe
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> BVLC/master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> master
-=======
-#include "caffe/neuron_layers.hpp"
-#include "caffe/util/math_functions.hpp"
->>>>>>> caffe
->>>>>>> pod-caffe-pod.hpp-merge
-
-namespace caffe {
-
-template <typename Dtype>
-void PowerLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  NeuronLayer<Dtype>::LayerSetUp(bottom, top);
-  power_ = this->layer_param_.power_param().power();
-  scale_ = this->layer_param_.power_param().scale();
-  shift_ = this->layer_param_.power_param().shift();
-  diff_scale_ = power_  * scale_;
-}
-
-// Compute y = (shift + scale * x)^power
-template <typename Dtype>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-      const Dtype* bottom_data = bottom[0]->cpu_data();
-=======
-      const Dtype* bottom_data = (*bottom)[0]->const_data();
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/caffe-merge
-<<<<<<< HEAD
-=======
->>>>>>> pod/caffe-merge
-=======
-Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
-  Dtype* top_data = (*top)[0]->mutable_data();
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
-  Dtype* top_data = (*top)[0]->mutable_data();
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> caffe
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> origin/BVLC/parallel
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> caffe
->>>>>>> pod-caffe-pod.hpp-merge
-  const int count = bottom[0]->count();
-  // Special case where we can ignore the input: scale or power is 0.
-  if (diff_scale_ == Dtype(0)) {
-    Dtype value = (power_ == 0) ? Dtype(1) : pow(shift_, power_);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    caffe_set(count, value, top_data);
-    return;
-=======
-=======
->>>>>>> BVLC/device-abstraction
-    this->device_->set(count, value, top_data);
-    return Dtype(0);
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    this->device_->set(count, value, top_data);
-    return Dtype(0);
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> caffe
-=======
-<<<<<<< HEAD
-=======
-Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
-  Dtype* top_data = (*top)[0]->mutable_data();
->>>>>>> BVLC/device-abstraction
-=======
-Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
-  Dtype* top_data = (*top)[0]->mutable_data();
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
-  Dtype* top_data = (*top)[0]->mutable_data();
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> caffe
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> BVLC/master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> master
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> origin/BVLC/parallel
-=======
-void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
->>>>>>> caffe
->>>>>>> pod-caffe-pod.hpp-merge
-  const int count = bottom[0]->count();
-  // Special case where we can ignore the input: scale or power is 0.
-  if (diff_scale_ == Dtype(0)) {
-    Dtype value = (power_ == 0) ? Dtype(1) : pow(shift_, power_);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
-<<<<<<< HEAD
-=======
-=======
->>>>>>> BVLC/device-abstraction
-    this->device_->set(count, value, top_data);
-    return Dtype(0);
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    this->device_->set(count, value, top_data);
-    return Dtype(0);
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> caffe
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
->>>>>>> pod/device/blob.hpp
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> BVLC/master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> master
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> origin/BVLC/parallel
-=======
-    caffe_set(count, value, top_data);
-    return;
->>>>>>> caffe
->>>>>>> pod-caffe-pod.hpp-merge
-  }
-  const Dtype* bottom_data = bottom[0]->const_data();
-  this->device_->copy(count, bottom_data, top_data);
-  if (scale_ != Dtype(1)) {
-    this->device_->scal(count, scale_, top_data);
-  }
-  if (shift_ != Dtype(0)) {
-    this->device_->add_scalar(count, shift_, top_data);
-  }
-  if (power_ != Dtype(1)) {
-    this->device_->powx(count, top_data, power_, top_data);
-  }
-}
-
-template <typename Dtype>
-void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[0]) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    const int count = bottom[0]->count();
-    const Dtype* top_diff = top[0]->cpu_diff();
->>>>>>> pod/device/blob.hpp
-=======
-    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
-    const int count = (*bottom)[0]->count();
-    const Dtype* top_diff = top[0]->const_diff();
-<<<<<<< HEAD
-=======
->>>>>>> pod-caffe-pod.hpp-merge
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
-    const int count = (*bottom)[0]->count();
-    const Dtype* top_diff = top[0]->const_diff();
-=======
-=======
->>>>>>> BVLC/master
-=======
->>>>>>> BVLC/master
-=======
->>>>>>> master
-=======
->>>>>>> caffe
-=======
->>>>>>> master
-=======
->>>>>>> master
-=======
->>>>>>> BVLC/master
-=======
->>>>>>> master
-=======
->>>>>>> master
-=======
->>>>>>> origin/BVLC/parallel
-=======
->>>>>>> caffe
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    const int count = bottom[0]->count();
-    const Dtype* top_diff = top[0]->cpu_diff();
->>>>>>> BVLC/master
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-=======
->>>>>>> pod/device/blob.hpp
-    if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
-      this->device_->set(count, diff_scale_, bottom_diff);
-    } else {
-      const Dtype* bottom_data = (*bottom)[0]->const_data();
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pod-caffe-pod.hpp-merge
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> pod/caffe-merge
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-      const Dtype* bottom_data = (*bottom)[0]->const_data();
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> BVLC/master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> BVLC/master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> BVLC/master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> caffe
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> BVLC/master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> master
-=======
-      const Dtype* bottom_data = bottom[0]->cpu_data();
->>>>>>> origin/BVLC/parallel
-=======
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> pod/device/blob.hpp
-=======
-=======
->>>>>>> BVLC/device-abstraction
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
->>>>>>> BVLC/device-abstraction
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 =======
@@ -1671,6 +1156,551 @@ void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
 >>>>>>> pod/device/blob.hpp
 =======
+>>>>>>> pod/device/blob.hpp
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+=======
+      const Dtype* bottom_data = (*bottom)[0]->const_data();
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
+=======
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> caffe
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  const int count = bottom[0]->count();
+  // Special case where we can ignore the input: scale or power is 0.
+  if (diff_scale_ == Dtype(0)) {
+    Dtype value = (power_ == 0) ? Dtype(1) : pow(shift_, power_);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    caffe_set(count, value, top_data);
+    return;
+=======
+=======
+>>>>>>> BVLC/device-abstraction
+    this->device_->set(count, value, top_data);
+    return Dtype(0);
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    this->device_->set(count, value, top_data);
+    return Dtype(0);
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> caffe
+=======
+<<<<<<< HEAD
+=======
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> BVLC/device-abstraction
+=======
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> caffe
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> BVLC/master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> master
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> origin/BVLC/parallel
+=======
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  const int count = bottom[0]->count();
+  // Special case where we can ignore the input: scale or power is 0.
+  if (diff_scale_ == Dtype(0)) {
+    Dtype value = (power_ == 0) ? Dtype(1) : pow(shift_, power_);
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> BVLC/device-abstraction
+    this->device_->set(count, value, top_data);
+    return Dtype(0);
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    this->device_->set(count, value, top_data);
+    return Dtype(0);
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> caffe
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+>>>>>>> pod/device/blob.hpp
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> BVLC/master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> master
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> origin/BVLC/parallel
+=======
+    caffe_set(count, value, top_data);
+    return;
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+  }
+  const Dtype* bottom_data = bottom[0]->const_data();
+  this->device_->copy(count, bottom_data, top_data);
+  if (scale_ != Dtype(1)) {
+    this->device_->scal(count, scale_, top_data);
+  }
+  if (shift_ != Dtype(0)) {
+    this->device_->add_scalar(count, shift_, top_data);
+  }
+  if (power_ != Dtype(1)) {
+    this->device_->powx(count, top_data, power_, top_data);
+  }
+}
+
+template <typename Dtype>
+void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  if (propagate_down[0]) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+    const int count = bottom[0]->count();
+    const Dtype* top_diff = top[0]->cpu_diff();
+>>>>>>> pod/device/blob.hpp
+=======
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    const int count = (*bottom)[0]->count();
+    const Dtype* top_diff = top[0]->const_diff();
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    const int count = (*bottom)[0]->count();
+    const Dtype* top_diff = top[0]->const_diff();
+=======
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> caffe
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> BVLC/master
+=======
+>>>>>>> master
+=======
+>>>>>>> master
+=======
+>>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> caffe
+    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+    const int count = bottom[0]->count();
+    const Dtype* top_diff = top[0]->cpu_diff();
+>>>>>>> BVLC/master
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/device/blob.hpp
+    if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
+      this->device_->set(count, diff_scale_, bottom_diff);
+    } else {
+      const Dtype* bottom_data = (*bottom)[0]->const_data();
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod-caffe-pod.hpp-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/caffe-merge
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+      const Dtype* bottom_data = (*bottom)[0]->const_data();
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> BVLC/master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> BVLC/master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> BVLC/master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> caffe
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> BVLC/master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> master
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> origin/BVLC/parallel
+=======
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> BVLC/device-abstraction
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> master
+=======
+#include "caffe/neuron_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> caffe
+>>>>>>> pod-caffe-pod.hpp-merge
+
+namespace caffe {
+
+template <typename Dtype>
+void PowerLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  NeuronLayer<Dtype>::LayerSetUp(bottom, top);
+  power_ = this->layer_param_.power_param().power();
+  scale_ = this->layer_param_.power_param().scale();
+  shift_ = this->layer_param_.power_param().shift();
+  diff_scale_ = power_  * scale_;
+}
+
+// Compute y = (shift + scale * x)^power
+template <typename Dtype>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> pod/device/blob.hpp
+=======
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -2145,6 +2175,16 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     } else {
       const Dtype* bottom_data = (*bottom)[0]->const_data();
 >>>>>>> BVLC/device-abstraction
+=======
+    if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
+      this->device_->set(count, diff_scale_, bottom_diff);
+    } else {
+<<<<<<< HEAD
+      const Dtype* bottom_data = (*bottom)[0]->const_data();
+=======
+      const Dtype* bottom_data = bottom[0]->cpu_data();
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
       // Compute dy/dx = scale * power * (shift + scale * x)^(power - 1)
       //               = diff_scale * y / (shift + scale * x)
       if (power_ == Dtype(2)) {
@@ -2186,6 +2226,7 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(PowerLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2283,6 +2324,8 @@ REGISTER_LAYER_CLASS(POWER, PowerLayer);
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(Power);
 
 >>>>>>> caffe

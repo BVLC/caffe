@@ -15,6 +15,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,6 +80,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   include {
     phase: TRAIN
   }
@@ -87,6 +90,7 @@ layer {
   }
   data_param {
     source: "examples/mnist/mnist_train_lmdb"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -236,12 +240,18 @@ layer {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    batch_size: 64
+    backend: LMDB
+  }
+>>>>>>> device-abstraction
 }
 layer {
   name: "mnist"
   type: "Data"
   top: "data"
   top: "label"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -317,6 +327,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   include {
     phase: TEST
   }
@@ -325,6 +337,7 @@ layer {
   }
   data_param {
     source: "examples/mnist/mnist_test_lmdb"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -506,6 +519,11 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> device-abstraction
 }
 layer {
   name: "conv1"

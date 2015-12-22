@@ -189,6 +189,7 @@ Layer definitions can include rules for whether and when they are included in th
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -294,6 +295,9 @@ Layer definitions can include rules for whether and when they are included in th
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    layer {
+>>>>>>> device-abstraction
       // ...layer definition...
       include: { phase: TRAIN }
     }
@@ -305,6 +309,7 @@ In the above example, this layer will be included only in `TRAIN` phase.
 If we change `TRAIN` with `TEST`, then this layer will be used only in test phase.
 By default, that is without layer rules, a layer is always included in the network.
 Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -421,6 +426,9 @@ Also, there is an `Accuracy` layer which is included only in `TEST` phase for re
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Also, there is an `Accuracy` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
+>>>>>>> device-abstraction
 
 ## Define the MNIST Solver
 
@@ -513,6 +521,7 @@ and you will be using CPU for training. Isn't that easy?
 
 MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -623,4 +632,7 @@ MNIST is a small dataset, so training with GPU does not really introduce too muc
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+### How to reduce the learning rate at fixed steps?
+>>>>>>> device-abstraction
 Look at lenet_multistep_solver.prototxt

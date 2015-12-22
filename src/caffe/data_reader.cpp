@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/data_reader.hpp"
 #include "caffe/layers/data_layer.hpp"
 =======
@@ -21,6 +22,10 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/data_reader.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/data_layers.hpp"
+#include "caffe/data_reader.hpp"
+>>>>>>> device-abstraction
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {

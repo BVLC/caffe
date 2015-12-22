@@ -12,6 +12,7 @@ TODO:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/hdf5_data_layer.hpp"
 =======
 #include "caffe/data_layers.hpp"
@@ -22,6 +23,9 @@ TODO:
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -41,6 +45,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
@@ -142,6 +147,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    if (current_row_ == hdf_blobs_[0]->shape(0)) {
+>>>>>>> device-abstraction
       if (num_files_ > 1) {
         current_file_ += 1;
         if (current_file_ == num_files_) {
@@ -157,6 +165,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -221,6 +230,8 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
           if (this->layer_param_.hdf5_data_param().shuffle()) {
             std::random_shuffle(file_permutation_.begin(),
                                 file_permutation_.end());
@@ -235,6 +246,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -373,6 +385,11 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+        }
+        LoadHDF5FileData(
+            hdf_filenames_[file_permutation_[current_file_]].c_str());
+>>>>>>> device-abstraction
       }
       current_row_ = 0;
       if (this->layer_param_.hdf5_data_param().shuffle())
@@ -383,6 +400,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -516,6 +534,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    }
+>>>>>>> device-abstraction
   }
 }
 

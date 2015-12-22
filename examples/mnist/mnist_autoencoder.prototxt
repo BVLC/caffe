@@ -12,6 +12,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,6 +77,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   type: "Data"
   top: "data"
   include {
@@ -99,6 +102,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -258,11 +262,19 @@ layer {
 >>>>>>> pod-caffe-pod.hpp-merge
 }
 layer {
+=======
+    batch_size: 100
+    backend: LMDB
+  }
+}
+layer {
+>>>>>>> device-abstraction
   name: "data"
   type: "Data"
   top: "data"
   include {
     phase: TEST
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -377,10 +389,14 @@ layer {
 =======
     stage: "test-on-train"
 >>>>>>> device-abstraction
+=======
+    stage: "test-on-train"
+>>>>>>> device-abstraction
   }
   transform_param {
     scale: 0.0039215684
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
   data_param {
 <<<<<<< HEAD
@@ -543,10 +559,33 @@ layer {
 =======
     source: "examples/mnist/mnist_train_lmdb"
     batch_size: 100
+=======
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 100
     backend: LMDB
   }
 }
 layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  include {
+    phase: TEST
+    stage: "test-on-test"
+  }
+  transform_param {
+    scale: 0.0039215684
+  }
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 100
+>>>>>>> device-abstraction
+    backend: LMDB
+  }
+}
+layer {
+<<<<<<< HEAD
 =======
   data_param {
 <<<<<<< HEAD
@@ -1020,6 +1059,8 @@ layer {
 }
 layer {
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   name: "flatdata"
   type: "Flatten"
   bottom: "data"
@@ -1286,6 +1327,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1380,6 +1422,8 @@ layer {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   loss_weight: 1
 }
 layer {
@@ -1387,6 +1431,7 @@ layer {
   type: "Sigmoid"
   bottom: "decode1"
   top: "decode1neuron"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1492,6 +1537,8 @@ layer {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 }
 layer {
   name: "loss"
@@ -1499,6 +1546,7 @@ layer {
   bottom: "decode1neuron"
   bottom: "flatdata"
   top: "l2_error"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1604,5 +1652,7 @@ layer {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   loss_weight: 0
 }

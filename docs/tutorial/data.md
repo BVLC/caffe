@@ -21,6 +21,7 @@ This data layer definition
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -85,10 +86,13 @@ This data layer definition
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     layer {
       name: "mnist"
       # Data layer loads leveldb or lmdb storage DBs for high-throughput.
       type: "Data"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -188,10 +192,13 @@ This data layer definition
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
       # the 1st top is the data itself: the name is only convention
       top: "data"
       # the 2nd top is the ground truth: the name is only convention
       top: "label"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -311,6 +318,9 @@ This data layer definition
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      # the Data layer configuration
+>>>>>>> device-abstraction
       data_param {
         # path to the DB
         source: "examples/mnist/mnist_train_lmdb"
@@ -338,6 +348,7 @@ The (data, label) pairing is a convenience for classification models.
 
 **Transformations**: data preprocessing is parametrized by transformation messages within the data layer definition.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -488,6 +499,11 @@ The (data, label) pairing is a convenience for classification models.
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    layer {
+      name: "data"
+      type: "Data"
+>>>>>>> device-abstraction
       [...]
       transform_param {
         scale: 0.1

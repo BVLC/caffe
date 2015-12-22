@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -127,10 +128,13 @@
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> device-abstraction
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 =======
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 =======
@@ -235,6 +239,11 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/loss_layers.hpp"
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -253,6 +262,7 @@ void AccuracyLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -317,6 +327,8 @@ void AccuracyLayer<Dtype>::LayerSetUp(
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
   has_ignore_label_ =
     this->layer_param_.accuracy_param().has_ignore_label();
@@ -332,6 +344,7 @@ void AccuracyLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -409,6 +422,8 @@ void AccuracyLayer<Dtype>::LayerSetUp(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -416,6 +431,7 @@ void AccuracyLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   CHECK_LE(top_k_, bottom[0]->count() / bottom[1]->count())
       << "top_k must be less than or equal to the number of classes.";
@@ -554,6 +570,10 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   CHECK_LE(top_k_, bottom[0]->count() / bottom[1]->count())
       << "top_k must be less than or equal to the number of classes.";
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  CHECK_LE(top_k_, bottom[0]->count() / bottom[1]->count())
+      << "top_k must be less than or equal to the number of classes.";
+>>>>>>> device-abstraction
   label_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.accuracy_param().axis());
   outer_num_ = bottom[0]->count(0, label_axis_);
@@ -573,9 +593,13 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     nums_buffer_.Reshape(top_shape_per_class);
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -627,12 +651,15 @@ template <typename Dtype>
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
 Dtype AccuracyLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
 =======
 void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -1220,6 +1247,8 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   Dtype accuracy = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -1238,6 +1267,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           static_cast<int>(bottom_label[i * inner_num_ + j]);
       if (has_ignore_label_ && label_value == ignore_label_) {
         continue;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1729,6 +1759,29 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      }
+      if (top.size() > 1) ++nums_buffer_.mutable_cpu_data()[label_value];
+      DCHECK_GE(label_value, 0);
+      DCHECK_LT(label_value, num_labels);
+      // Top-k accuracy
+      std::vector<std::pair<Dtype, int> > bottom_data_vector;
+      for (int k = 0; k < num_labels; ++k) {
+        bottom_data_vector.push_back(std::make_pair(
+            bottom_data[i * dim + k * inner_num_ + j], k));
+      }
+      std::partial_sort(
+          bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
+          bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
+      // check if true label is in top k predictions
+      for (int k = 0; k < top_k_; k++) {
+        if (bottom_data_vector[k].second == label_value) {
+          ++accuracy;
+          if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
+          break;
+        }
+      }
+>>>>>>> device-abstraction
       ++count;
     }
   }
@@ -1745,6 +1798,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1806,6 +1860,8 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   top[0]->mutable_cpu_data()[0] = accuracy / count;
   if (top.size() > 1) {
     for (int i = 0; i < top[1]->count(); ++i) {
@@ -1814,6 +1870,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           : top[1]->cpu_data()[i] / nums_buffer_.cpu_data()[i];
     }
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1910,10 +1967,13 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   // Accuracy layer should not be used as a loss function.
 }
 
 INSTANTIATE_CLASS(AccuracyLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1989,6 +2049,8 @@ INSTANTIATE_CLASS(AccuracyLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(Accuracy);
 
 =======

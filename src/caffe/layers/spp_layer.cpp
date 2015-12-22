@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layer.hpp"
 #include "caffe/layers/concat_layer.hpp"
 #include "caffe/layers/flatten_layer.hpp"
@@ -19,6 +20,9 @@
 =======
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -237,6 +241,7 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -246,6 +251,9 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+>>>>>>> device-abstraction
 INSTANTIATE_CLASS(SPPLayer);
 REGISTER_LAYER_CLASS(SPP);
 

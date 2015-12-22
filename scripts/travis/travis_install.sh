@@ -15,6 +15,7 @@ MAKE="make --jobs=$NUM_THREADS"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -108,6 +109,8 @@ MAKE="make --jobs=$NUM_THREADS"
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
 # This ppa is for gflags and glog
@@ -115,6 +118,7 @@ add-apt-repository -y ppa:tuleu/precise-backports
 apt-get -y update
 apt-get install \
     wget git curl \
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -245,6 +249,10 @@ apt-get install \
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    python-dev python-numpy python3-dev\
+    libleveldb-dev libsnappy-dev libopencv-dev \
+>>>>>>> device-abstraction
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev libgflags-dev libgoogle-glog-dev \
@@ -254,6 +262,7 @@ apt-get install \
 # if needed.  By default, Aptitude in Ubuntu 12.04 installs CMake 2.8.7, but
 # Caffe requires a minimum CMake version of 2.8.8.
 if $WITH_CMAKE; then
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -329,10 +338,13 @@ if $WITH_CMAKE; then
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   # cmake 3 will make sure that the python interpreter and libraries match
   wget --no-check-certificate http://www.cmake.org/files/v3.2/cmake-3.2.3-Linux-x86_64.sh -O cmake3.sh
   chmod +x cmake3.sh
   ./cmake3.sh --prefix=/usr/ --skip-license --exclude-subdir
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -431,6 +443,8 @@ if $WITH_CMAKE; then
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 fi
 
 # Install CUDA, if needed
@@ -451,6 +465,7 @@ if $WITH_CUDA; then
 fi
 
 # Install LMDB
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -526,12 +541,15 @@ fi
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 LMDB_URL=https://github.com/LMDB/lmdb/archive/LMDB_0.9.14.tar.gz
 LMDB_FILE=/tmp/lmdb.tar.gz
 pushd .
 wget $LMDB_URL -O $LMDB_FILE
 tar -C /tmp -xzvf $LMDB_FILE
 cd /tmp/lmdb*/libraries/liblmdb/
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -633,10 +651,13 @@ cd /tmp/openldap*/libraries/liblmdb/
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 $MAKE
 $MAKE install
 popd
 rm -f $LMDB_FILE
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -712,6 +733,8 @@ rm -f $LMDB_FILE
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 # Install the Python runtime dependencies via miniconda (this is much faster
 # than using pip for everything).
@@ -762,6 +785,7 @@ fi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -837,3 +861,5 @@ fi
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction

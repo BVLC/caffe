@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/bnll_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -14,6 +15,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -54,6 +58,7 @@ STUB_GPU(BNLLLayer);
 #endif
 
 INSTANTIATE_CLASS(BNLLLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -116,6 +121,8 @@ REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(BNLL);
 
 =======

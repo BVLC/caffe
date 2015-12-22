@@ -16,6 +16,7 @@ if $WITH_CUDA; then
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -123,10 +124,14 @@ if $WITH_CUDA; then
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  # Only generate compute_50.
+>>>>>>> device-abstraction
   GENCODE="-gencode arch=compute_50,code=sm_50"
   GENCODE="$GENCODE -gencode arch=compute_50,code=compute_50"
   echo "CUDA_ARCH := $GENCODE" >> Makefile.config
 fi
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -202,6 +207,8 @@ fi
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 # Remove IO library settings from Makefile.config
 # to avoid conflicts with CI configuration
@@ -230,6 +237,7 @@ EOF
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -305,3 +313,5 @@ EOF
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction

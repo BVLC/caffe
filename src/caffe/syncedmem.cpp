@@ -33,6 +33,7 @@ SyncedMemory::~SyncedMemory() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -93,6 +94,8 @@ SyncedMemory::~SyncedMemory() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
@@ -107,6 +110,7 @@ SyncedMemory::~SyncedMemory() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
@@ -233,6 +237,8 @@ SyncedMemory::~SyncedMemory() {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
@@ -256,6 +262,7 @@ inline void SyncedMemory::to_cpu() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -488,6 +495,14 @@ inline void SyncedMemory::to_cpu() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+    CaffeMallocHost(&cpu_ptr_, size_);
+    GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
+=======
+    CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
+    caffe_memset(size_, 0, cpu_ptr_);
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
     break;
@@ -592,6 +607,7 @@ void SyncedMemory::set_gpu_data(void* data) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1194,6 +1210,8 @@ void SyncedMemory::set_gpu_data(void* data) {
   own_gpu_data_ = false;
 #else
   NO_GPU;
+=======
+>>>>>>> device-abstraction
 #endif
 }
 
@@ -1233,6 +1251,7 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
@@ -1241,6 +1260,8 @@ void* SyncedMemory::mutable_gpu_data() {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 #endif
 }
 
@@ -1261,6 +1282,7 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
@@ -1305,12 +1327,15 @@ void* SyncedMemory::mutable_gpu_data() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
     return cpu_data();
   case Caffe::GPU:
     return gpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1330,6 +1355,8 @@ const void* SyncedMemory::const_data() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
   default:
     LOG(FATAL) << "Unknown caffe mode.";
     return static_cast<void*>(0);
@@ -1337,20 +1364,33 @@ const void* SyncedMemory::const_data() {
 }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
 =======
 #ifndef CPU_ONLY
 void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
+<<<<<<< HEAD
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     own_gpu_data_ = true;
   }
   CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice, stream));
+=======
+    CUDA_CHECK(cudaGetDevice(&gpu_device_));
+    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    own_gpu_data_ = true;
+  }
+  const cudaMemcpyKind put = cudaMemcpyHostToDevice;
+  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+>>>>>>> device-abstraction
   // Assume caller will synchronize on the stream before use
   head_ = SYNCED;
 }
 #endif
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> BVLC/device-abstraction
@@ -2574,4 +2614,20 @@ void* SyncedMemory::mutable_data() {
 =======
 
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+
+void* SyncedMemory::mutable_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<void*>(0);
+  }
+}
+
+>>>>>>> device-abstraction
 }  // namespace caffe

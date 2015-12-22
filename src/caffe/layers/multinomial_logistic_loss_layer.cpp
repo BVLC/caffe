@@ -22,6 +22,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -130,6 +131,8 @@
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> device-abstraction
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
@@ -147,6 +150,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -227,9 +231,12 @@
 <<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
+>>>>>>> device-abstraction
+=======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 #include "caffe/loss_layers.hpp"
@@ -316,6 +323,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 namespace caffe {
 
@@ -347,6 +356,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -614,6 +624,14 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Dtype MultinomialLogisticLossLayer<Dtype>::Forward(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+=======
+void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
   int num = bottom[0]->num();
@@ -626,6 +644,7 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     loss -= log(prob);
   }
   top[0]->mutable_cpu_data()[0] = loss / num;
+<<<<<<< HEAD
 }
 
 template <typename Dtype>
@@ -784,6 +803,8 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
     loss -= log(prob);
   }
   top[0]->mutable_cpu_data()[0] = loss / num;
+=======
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -795,6 +816,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -843,6 +865,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     const Dtype* bottom_data = (*bottom)[0]->cpu_data();
     const Dtype* bottom_label = (*bottom)[1]->cpu_data();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
@@ -867,6 +891,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -946,6 +971,9 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+=======
+>>>>>>> device-abstraction
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* bottom_label = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -953,6 +981,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
     int dim = bottom[0]->count() / bottom[0]->num();
     caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
     const Dtype scale = - top[0]->cpu_diff()[0] / num;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1184,6 +1213,9 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       Dtype prob = std::max(
@@ -1205,6 +1237,7 @@ INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1269,6 +1302,8 @@ INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(MultinomialLogisticLoss);
 
 =======

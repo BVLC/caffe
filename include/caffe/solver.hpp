@@ -21,6 +21,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -85,6 +86,8 @@ namespace caffe {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
   * a client may optionally provide in order to request early termination
@@ -110,6 +113,7 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
  * @brief An interface for classes that perform optimization on Net%s.
  *
  * Requires implementation of ApplyUpdate to compute a parameter update
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -208,11 +212,14 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
  * given the current state of the Net parameters.
  */
 template <typename Dtype>
 class Solver {
  public:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -295,6 +302,8 @@ class Solver {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   explicit Solver(const SolverParameter& param,
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
@@ -468,6 +477,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -501,6 +511,9 @@ class Solver {
 >>>>>>> caffe
   int iter() { return iter_; }
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  int iter() { return iter_; }
+>>>>>>> device-abstraction
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -509,6 +522,9 @@ class Solver {
     virtual void on_gradients_ready() = 0;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
     template <typename T>
     friend class Solver;
   };
@@ -522,6 +538,7 @@ class Solver {
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 =======
@@ -773,6 +790,8 @@ class Solver {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -794,6 +813,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   virtual void SnapshotSolverState(const string& model_filename) = 0;
@@ -1063,6 +1083,11 @@ class WorkerSolver : public Solver<Dtype> {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+  virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
+>>>>>>> device-abstraction
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
@@ -1079,6 +1104,7 @@ class WorkerSolver : public Solver<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   // Points to iter_ by default, but can be overriden, e.g. to a global
@@ -1161,6 +1187,8 @@ class WorkerSolver : public Solver<Dtype> {
   // counter if multiple solvers contribute iterations to the same model.
   int *iter_total_;
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> device-abstraction
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
@@ -1175,6 +1203,7 @@ class WorkerSolver : public Solver<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1196,6 +1225,8 @@ class WorkerSolver : public Solver<Dtype> {
 =======
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
@@ -1211,6 +1242,7 @@ class WorkerSolver : public Solver<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 
@@ -1257,6 +1289,11 @@ class WorkerSolver : public Solver<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+
+  // True iff a request to stop early was received.
+  bool requested_early_exit_;
+>>>>>>> device-abstraction
 
 <<<<<<< HEAD
   // The root solver that holds root nets (actually containing shared layers)
@@ -1274,6 +1311,7 @@ class WorkerSolver : public Solver<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1385,10 +1423,16 @@ class WorkerSolver : public Solver<Dtype> {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+/**
+ * @brief Solver that only computes gradients, used as worker
+ *        for multi-GPU training.
+>>>>>>> device-abstraction
  */
 template <typename Dtype>
 class WorkerSolver : public Solver<Dtype> {
  public:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1663,6 +1707,13 @@ class WorkerSolver : public Solver<Dtype> {
 =======
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
+=======
+  explicit WorkerSolver(const SolverParameter& param,
+      const Solver<Dtype>* root_solver = NULL)
+      : Solver<Dtype>(param, root_solver) {}
+
+ protected:
+>>>>>>> device-abstraction
   void ApplyUpdate() {}
   void SnapshotSolverState(const string& model_filename) {
     LOG(FATAL) << "Should not be called on worker solver.";
@@ -1673,6 +1724,7 @@ class WorkerSolver : public Solver<Dtype> {
   void RestoreSolverStateFromHDF5(const string& state_file) {
     LOG(FATAL) << "Should not be called on worker solver.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1843,6 +1895,10 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+};
+
+>>>>>>> device-abstraction
 }  // namespace caffe
 
 #endif  // CAFFE_SOLVER_HPP_

@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -103,6 +104,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 #include <stdint.h>
 #include <algorithm>
 #include <string>
@@ -119,6 +122,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -183,6 +187,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
 #include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
@@ -196,6 +202,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -271,6 +278,8 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 #include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -288,6 +297,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -473,6 +483,12 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 using std::max;
 using std::pair;
+=======
+using namespace caffe;  // NOLINT(build/namespaces)
+
+using std::max;
+using std::pair;
+>>>>>>> device-abstraction
 using boost::scoped_ptr;
 
 DEFINE_string(backend, "lmdb",
@@ -480,6 +496,7 @@ DEFINE_string(backend, "lmdb",
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
+<<<<<<< HEAD
 
 #ifdef USE_OPENCV
 #ifndef GFLAGS_GFLAGS_H_
@@ -525,11 +542,16 @@ DEFINE_string(backend, "lmdb", "The backend for containing the images");
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
 
+=======
+
+#ifdef USE_OPENCV
+>>>>>>> device-abstraction
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
 #endif
 
   gflags::SetUsageMessage("Compute the mean_image of a set of images given by"
+<<<<<<< HEAD
         " a leveldb/lmdb or a list of images\n"
         "Usage:\n"
         "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
@@ -583,6 +605,12 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+        " a leveldb/lmdb\n"
+        "Usage:\n"
+        "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
+
+>>>>>>> device-abstraction
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc < 2 || argc > 3) {
@@ -594,6 +622,7 @@ int main(int argc, char** argv) {
   db->Open(argv[1], db::READ);
   scoped_ptr<db::Cursor> cursor(db->NewCursor());
 
+<<<<<<< HEAD
   BlobProto sum_blob;
   int count = 0;
   // load first datum
@@ -737,10 +766,16 @@ int main(int argc, char** argv) {
   BlobProto sum_blob;
   int count = 0;
   // load first datum
+=======
+  BlobProto sum_blob;
+  int count = 0;
+  // load first datum
+>>>>>>> device-abstraction
   Datum datum;
   datum.ParseFromString(cursor->value());
 
   if (DecodeDatumNative(&datum)) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -793,6 +828,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     LOG(INFO) << "Decoding Datum";
   }
 
@@ -818,6 +855,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -882,10 +920,13 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   while (cursor->valid()) {
     Datum datum;
     datum.ParseFromString(cursor->value());
     DecodeDatumNative(&datum);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -985,6 +1026,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),
@@ -1007,6 +1050,7 @@ int main(int argc, char** argv) {
     if (count % 10000 == 0) {
       LOG(INFO) << "Processed " << count << " files.";
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1119,6 +1163,9 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    cursor->Next();
+>>>>>>> device-abstraction
   }
 
   if (count % 10000 != 0) {
@@ -1131,6 +1178,7 @@ int main(int argc, char** argv) {
   if (argc == 3) {
     LOG(INFO) << "Write to " << argv[2];
     WriteProtoToBinaryFile(sum_blob, argv[2]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1236,6 +1284,8 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   }
   const int channels = sum_blob.channels();
   const int dim = sum_blob.height() * sum_blob.width();
@@ -1250,6 +1300,7 @@ int main(int argc, char** argv) {
 #else
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1302,5 +1353,7 @@ int main(int argc, char** argv) {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   return 0;
 }

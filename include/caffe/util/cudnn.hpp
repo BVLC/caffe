@@ -7,9 +7,12 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+<<<<<<< HEAD
 #define CUDNN_VERSION_MIN(major, minor, patch) \
     (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
 
+=======
+>>>>>>> device-abstraction
 #define CUDNN_CHECK(condition) \
   do { \
     cudnnStatus_t status = condition; \
@@ -53,6 +56,7 @@ template <typename Dtype> class dataType;
 template<> class dataType<float>  {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_FLOAT;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -182,10 +186,15 @@ template<> class dataType<float>  {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  static float oneval, zeroval;
+  static const void *one, *zero;
+>>>>>>> device-abstraction
 };
 template<> class dataType<double> {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_DOUBLE;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -261,6 +270,8 @@ template<> class dataType<double> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   static double oneval, zeroval;
   static const void *one, *zero;
 };
@@ -280,6 +291,7 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 
 template <typename Dtype>
 inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -392,6 +404,8 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
     int n, int c, int h, int w) {
   const int stride_w = 1;
   const int stride_h = w * stride_w;
@@ -409,6 +423,7 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
                          stride_n, stride_c, stride_h, stride_w);
@@ -512,6 +527,9 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+                         stride_n, stride_c, stride_h, stride_w);
+>>>>>>> device-abstraction
 }
 
 template <typename Dtype>
@@ -529,6 +547,7 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -639,6 +658,9 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+  CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
+>>>>>>> device-abstraction
       n, c, h, w));
 }
 
@@ -660,6 +682,7 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -811,6 +834,11 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    int pad_h, int pad_w, int stride_h, int stride_w) {
+  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
+>>>>>>> device-abstraction
       pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
 }
 
@@ -826,6 +854,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -953,6 +982,11 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
+    PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
+    int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
+>>>>>>> device-abstraction
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;
@@ -969,6 +1003,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1075,10 +1110,14 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+>>>>>>> device-abstraction
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1229,6 +1268,11 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
+  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
+        pad_h, pad_w, stride_h, stride_w));
+>>>>>>> device-abstraction
 }
 
 }  // namespace cudnn

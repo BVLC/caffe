@@ -20,6 +20,7 @@ import pandas as pd
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -124,6 +125,9 @@ from skimage import io
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+from skimage import io
+>>>>>>> device-abstraction
 import multiprocessing
 
 # Flickr returns a special image if the request is unavailable.
@@ -153,6 +157,7 @@ def download_image(args_tuple):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -252,6 +257,9 @@ def download_image(args_tuple):
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+        test_read_image = io.imread(filename)
+>>>>>>> device-abstraction
         return True
     except KeyboardInterrupt:
         raise Exception()  # multiprocessing doesn't catch keyboard exceptions
@@ -284,6 +292,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -348,6 +357,8 @@ if __name__ == '__main__':
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     parser.add_argument(
         '-l', '--labels', type=int, default=0,
         help="if set to a positive value, only sample images from the first number of labels."
@@ -361,6 +372,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -436,6 +448,8 @@ if __name__ == '__main__':
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 
     args = parser.parse_args()
     np.random.seed(args.seed)
@@ -455,6 +469,7 @@ if __name__ == '__main__':
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -563,6 +578,10 @@ if __name__ == '__main__':
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    if args.labels > 0:
+        df = df.loc[df['label'] < args.labels]
+>>>>>>> device-abstraction
     if args.images > 0 and args.images < df.shape[0]:
         df = df.iloc[:args.images]
 

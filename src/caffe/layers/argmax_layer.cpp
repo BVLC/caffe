@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/argmax_layer.hpp"
 =======
 #include "caffe/common_layers.hpp"
@@ -16,12 +17,16 @@
 =======
 #include "caffe/common_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/common_layers.hpp"
+>>>>>>> device-abstraction
 
 namespace caffe {
 
 template <typename Dtype>
 void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -97,6 +102,8 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   const ArgMaxParameter& argmax_param = this->layer_param_.argmax_param();
   out_max_val_ = argmax_param.out_max_val();
   top_k_ = argmax_param.top_k();
@@ -119,6 +126,7 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -666,11 +674,18 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // Produces max_ind and max_val
       shape[1] = 2;
     }
+=======
+  } else {
+    CHECK_LE(top_k_, bottom[0]->count(1))
+      << "top_k must be less than or equal to"
+        " the dimension of the flattened bottom blob per instance.";
+>>>>>>> device-abstraction
   }
   top[0]->Reshape(shape);
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -701,11 +716,17 @@ Dtype ArgMaxLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Dtype ArgMaxLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+=======
+>>>>>>> device-abstraction
 void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   int num_top_axes = bottom[0]->num_axes();
   if ( num_top_axes < 3 ) num_top_axes = 3;
   std::vector<int> shape(num_top_axes, 1);
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -758,12 +779,17 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
   int dim, axis_dist;
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
   if (has_axis_) {
     // Produces max_ind or max_val per axis
     shape = bottom[0]->shape();
     shape[axis_] = top_k_;
   } else {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
     shape[0] = bottom[0]->shape(0);
     // Produces max_ind
     shape[2] = top_k_;
@@ -793,6 +819,7 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -952,6 +979,11 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
+=======
+>>>>>>> BVLC/master
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
+>>>>>>> device-abstraction
   int dim, axis_dist;
   if (has_axis_) {
     dim = bottom[0]->shape(axis_);
@@ -963,6 +995,7 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   int num = bottom[0]->count() / dim;
   std::vector<std::pair<Dtype, int> > bottom_data_vector(dim);
+<<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1001,6 +1034,8 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < dim; ++j) {
       bottom_data_vector[j] = std::make_pair(
@@ -1021,6 +1056,7 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1085,6 +1121,8 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
       if (out_max_val_) {
         if (has_axis_) {
           // Produces max_val per axis
@@ -1099,6 +1137,7 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // Produces max_ind per axis
         top_data[(i / axis_dist * top_k_ + j) * axis_dist + i % axis_dist]
           = bottom_data_vector[j].second;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1199,12 +1238,15 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
       }
     }
   }
 }
 
 INSTANTIATE_CLASS(ArgMaxLayer);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1319,5 +1361,8 @@ REGISTER_LAYER_CLASS(ArgMax);
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+REGISTER_LAYER_CLASS(ArgMax);
+>>>>>>> device-abstraction
 
 }  // namespace caffe

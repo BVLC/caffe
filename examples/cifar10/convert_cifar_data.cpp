@@ -36,6 +36,7 @@ namespace db = caffe::db;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -115,6 +116,8 @@ using caffe::shared_ptr;
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 const int kCIFARSize = 32;
 const int kCIFARImageNBytes = 3072;
@@ -131,6 +134,7 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
 
 void convert_dataset(const string& input_folder, const string& output_folder,
     const string& db_type) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -293,6 +297,11 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  scoped_ptr<db::DB> train_db(db::GetDB(db_type));
+  train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
+  scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
+>>>>>>> device-abstraction
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
@@ -325,6 +334,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -530,6 +540,20 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      string out;
+      CHECK(datum.SerializeToString(&out));
+      txn->Put(caffe::format_int(fileid * kCIFARBatchSize + itemid, 5), out);
+    }
+  }
+  txn->Commit();
+  train_db->Close();
+
+  LOG(INFO) << "Writing Testing data";
+  scoped_ptr<db::DB> test_db(db::GetDB(db_type));
+  test_db->Open(output_folder + "/cifar10_test_" + db_type, db::NEW);
+  txn.reset(test_db->NewTransaction());
+>>>>>>> device-abstraction
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -549,6 +573,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -613,12 +638,15 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
     string out;
     CHECK(datum.SerializeToString(&out));
     txn->Put(caffe::format_int(itemid, 5), out);
   }
   txn->Commit();
   test_db->Close();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -719,6 +747,8 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 }
 
 int main(int argc, char** argv) {

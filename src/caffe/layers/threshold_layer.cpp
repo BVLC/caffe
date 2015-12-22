@@ -3,12 +3,15 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/threshold_layer.hpp"
 =======
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 #include "caffe/neuron_layers.hpp"
 
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -51,6 +54,7 @@ INSTANTIATE_CLASS(ThresholdLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -63,6 +67,8 @@ INSTANTIATE_CLASS(ThresholdLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(Threshold);
 
 =======

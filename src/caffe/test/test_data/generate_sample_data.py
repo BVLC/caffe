@@ -54,6 +54,7 @@ with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     )
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -182,6 +183,9 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    )
+>>>>>>> device-abstraction
     f.create_dataset(
         'label2', data=label2,
         compression='gzip', compression_opts=1,
@@ -212,6 +216,7 @@ print targets
 with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
     f['data'] = data
     f['targets'] = targets
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -264,6 +269,8 @@ with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 with open(script_dir + '/solver_data_list.txt', 'w') as f:
     f.write('src/caffe/test/test_data/solver_data.h5\n')

@@ -26,6 +26,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -232,6 +233,13 @@
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/util/rng.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

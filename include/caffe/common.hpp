@@ -31,6 +31,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -145,6 +146,9 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+// Luckily we will be able to use GFLAGS_GFLAGS_H_ to detect if it is version
+>>>>>>> device-abstraction
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
 // TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
 // remove the following hack.
@@ -201,6 +205,7 @@ private:\
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -273,6 +278,8 @@ namespace cv { class Mat; }
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> device-abstraction
 // See PR #1236
 namespace cv { class Mat; }
 
@@ -342,6 +349,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -436,6 +444,8 @@ class Caffe {
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   inline static Caffe& Get() {
     if (!thread_instance_.get()) {
       thread_instance_.reset(new Caffe());
@@ -457,6 +467,7 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 =======
@@ -586,11 +597,16 @@ class Caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+=======
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 
   // Thread local context for Caffe. Moved to common.cpp instead of
   // including boost/thread.hpp to avoid a boost/NVCC issues (#1009, #1010)
   // on OSX. Also fails on Linux with CUDA 7.0.18.
   static Caffe& Get();
+<<<<<<< HEAD
 
 >>>>>>> BVLC/master
 =======
@@ -782,6 +798,9 @@ class Caffe {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+>>>>>>> device-abstraction
   enum Brew { CPU, GPU };
 
   // This random number generator facade hides boost and CUDA rng
@@ -841,6 +860,7 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1039,6 +1059,10 @@ class Caffe {
   bool root_solver_;
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  int solver_count_;
+  bool root_solver_;
+>>>>>>> device-abstraction
 
  private:
   // The private constructor to avoid duplicate instantiation.

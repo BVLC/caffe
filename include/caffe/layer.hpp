@@ -25,6 +25,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/layer_factory.hpp"
@@ -278,6 +279,12 @@
 =======
 #include "caffe/device.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+#include "caffe/device.hpp"
+=======
+#include "caffe/layer_factory.hpp"
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -290,6 +297,9 @@ namespace boost { class mutex; }
 namespace caffe {
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
 /**
  * @brief An interface for the units of computation which can be composed into a
  *        Net.
@@ -305,6 +315,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -369,11 +380,14 @@ namespace caffe {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
  * Layer%s must implement a Forward function, in which they take their input
  * (bottom) Blob%s (if any) and compute their output Blob%s (if any).
  * They may also implement a Backward function, in which they compute the error
  * gradients with respect to their input Blob%s, given the error gradients with
  * their output Blob%s.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -705,16 +719,32 @@ class Layer {
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+ */
+>>>>>>> device-abstraction
 template <typename Dtype>
 class Layer {
  public:
-  // You should not implement your own constructor. Any set up code should go
-  // to SetUp(), where the dimensions of the bottom blobs are provided to the
-  // layer.
+  /**
+   * You should not implement your own constructor. Any set up code should go
+   * to SetUp(), where the dimensions of the bottom blobs are provided to the
+   * layer.
+   */
   explicit Layer(const LayerParameter& param)
+<<<<<<< HEAD
     : layer_param_(param), device_(GetDevice<Dtype>()) {
       // The only thing we do is to copy blobs if there are any.
 >>>>>>> BVLC/device-abstraction
+=======
+<<<<<<< HEAD
+    : layer_param_(param), device_(GetDevice<Dtype>()) {
+      // The only thing we do is to copy blobs if there are any.
+=======
+    : layer_param_(param), is_shared_(false) {
+      // Set phase and copy blobs (if there are any).
+      phase_ = param.phase();
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
         for (int i = 0; i < layer_param_.blobs_size(); ++i) {
@@ -725,6 +755,9 @@ class Layer {
     }
   virtual ~Layer() {}
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> device-abstraction
 
   /**
    * @brief Implements common layer setup functionality.
@@ -741,6 +774,7 @@ class Layer {
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -854,10 +888,14 @@ class Layer {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    InitMutex();
+>>>>>>> device-abstraction
     CheckBlobCounts(bottom, top);
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2912,10 +2950,59 @@ class Layer {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  }
+
+  /**
+   * @brief Does layer-specific setup: your layer should implement this function
+   *        as well as Reshape.
+   *
+   * @param bottom
+   *     the preshaped input blobs, whose data fields store the input data for
+   *     this layer
+   * @param top
+   *     the allocated but unshaped output blobs
+   *
+   * This method should do one-time layer specific setup. This includes reading
+   * and processing relevent parameters from the <code>layer_param_</code>.
+   * Setting up the shapes of top blobs and internal buffers should be done in
+   * <code>Reshape</code>, which will be called before the forward pass to
+   * adjust the top blob sizes.
+   */
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+  /**
+   * @brief Whether a layer should be shared by multiple nets during data
+   *        parallelism. By default, all layers except for data layers should
+   *        not be shared. data layers should be shared to ensure each worker
+   *        solver access data sequentially during data parallelism.
+   */
+  virtual inline bool ShareInParallel() const { return false; }
+
+  /** @brief Return whether this layer is actually shared by other nets.
+   *         If ShareInParallel() is true and using more than one GPU and the
+   *         net has TRAIN phase, then this function is expected return true.
+   */
+  inline bool IsShared() const { return is_shared_; }
+
+  /** @brief Set whether this layer is actually shared by other nets
+   *         If ShareInParallel() is true and using more than one GPU and the
+   *         net has TRAIN phase, then is_shared should be set true.
+   */
+  inline void SetShared(bool is_shared) {
+    CHECK(ShareInParallel() || !is_shared)
+        << type() << "Layer does not support sharing.";
+    is_shared_ = is_shared;
+  }
+
+<<<<<<< HEAD
+>>>>>>> device-abstraction
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
   // functions.
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3571,6 +3658,13 @@ class Layer {
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
 >>>>>>> caffe
+=======
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+=======
+  /**
+   * @brief Adjust the shapes of top blobs and internal buffers to accommodate
+>>>>>>> device-abstraction
    *        the shapes of the bottom blobs.
    *
    * @param bottom the input blobs, with the requested input shapes
@@ -3581,6 +3675,7 @@ class Layer {
    * and making any other necessary adjustments so that the layer can
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
    * accommodate the bottom blobs.
 =======
    * accomodate the bottom blobs.
@@ -3588,6 +3683,9 @@ class Layer {
 =======
    * accommodate the bottom blobs.
 >>>>>>> caffe
+=======
+   * accommodate the bottom blobs.
+>>>>>>> device-abstraction
    */
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) = 0;
@@ -3633,6 +3731,7 @@ class Layer {
    *
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
    * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
 =======
    * Your layer should implement Forward_cpu and (optionally) Forward_gpu.
@@ -3656,6 +3755,12 @@ class Layer {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
+=======
+   * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
+   */
+  inline void Backward(const vector<Blob<Dtype>*>& top,
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
 
@@ -3681,6 +3786,7 @@ class Layer {
    */
   inline Dtype loss(const int top_index) const {
     return (loss_.size() > top_index) ? loss_[top_index] : Dtype(0);
+<<<<<<< HEAD
 <<<<<<< HEAD
   }
 
@@ -3905,11 +4011,27 @@ class Layer {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  }
+
+  /**
+   * @brief Sets the loss associated with a top blob at a given index.
+   */
+  inline void set_loss(const int top_index, const Dtype value) {
+    if (loss_.size() <= top_index) {
+      loss_.resize(top_index + 1, Dtype(0));
+    }
+    loss_[top_index] = value;
+  }
+
+  /**
+>>>>>>> device-abstraction
    * @brief Returns the layer type.
    */
   virtual inline const char* type() const { return ""; }
 
   /**
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3950,6 +4072,8 @@ class Layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
    * @brief Returns the exact number of bottom blobs required by the layer,
    *        or -1 if no exact number is required.
    *
@@ -4061,6 +4185,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   /** The phase: TRAIN or TEST */
   Phase phase_;
@@ -4149,6 +4274,10 @@ class Layer {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  /** The phase: TRAIN or TEST */
+  Phase phase_;
+>>>>>>> device-abstraction
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
@@ -4170,6 +4299,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
   /** The vector that indicates whether each top blob has a non-zero weight in
@@ -4517,6 +4647,10 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+
+<<<<<<< HEAD
+>>>>>>> device-abstraction
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -4524,6 +4658,7 @@ class Layer {
   // If no gpu code is provided, we will simply use cpu code.
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
@@ -4550,6 +4685,9 @@ class Layer {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
+=======
+=======
+>>>>>>> device-abstraction
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
   vector<Dtype> loss_;
@@ -4563,6 +4701,7 @@ class Layer {
    */
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4599,6 +4738,9 @@ class Layer {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
     // LOG(WARNING) << "Using CPU code as backup.";
     return Forward_cpu(bottom, top);
   }
@@ -4624,6 +4766,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -4955,12 +5098,17 @@ class Layer {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+      vector<Blob<Dtype>*>* bottom) { return; }
+=======
+>>>>>>> device-abstraction
       const vector<Blob<Dtype>*>& bottom) = 0;
   /**
    * @brief Using the GPU device, compute the gradients for any parameters and
    *        for the bottom blobs if propagate_down is true.
    *        Fall back to Backward_cpu() if unavailable.
    */
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
@@ -5536,6 +5684,9 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
       vector<Blob<Dtype>*>* bottom) { return; }
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
@@ -5608,12 +5759,15 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
  private:
   /** Whether this layer is actually shared by other nets*/
   bool is_shared_;
@@ -5629,6 +5783,7 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   void Unlock();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -5636,6 +5791,8 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
   DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
 
@@ -5643,6 +5800,7 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 // gpu specific implementations instead, and should not change these
 // functions.
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5739,12 +5897,18 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 =======
 >>>>>>> caffe
+=======
+Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+=======
+>>>>>>> device-abstraction
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   // Lock during forward to ensure sequential forward
   Lock();
   Dtype loss = 0;
   Reshape(bottom, top);
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5811,6 +5975,9 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/master
+>>>>>>> device-abstraction
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
@@ -5850,6 +6017,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -5951,6 +6119,9 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  Unlock();
+>>>>>>> device-abstraction
   return loss;
 }
 

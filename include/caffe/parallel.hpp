@@ -20,6 +20,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -80,6 +81,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
@@ -122,6 +125,7 @@ class Params {
   const size_t size_;           // Size of buffers
   Dtype* data_;                 // Network parameters
   Dtype* diff_;                 // Gradient
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -479,10 +483,13 @@ class Params {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 DISABLE_COPY_AND_ASSIGN(Params);
 };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -565,6 +572,8 @@ DISABLE_COPY_AND_ASSIGN(Params);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> device-abstraction
 // Params stored in GPU memory.
 template<typename Dtype>
 class GPUParams : public Params<Dtype> {
@@ -635,6 +644,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
 };
 
 }  // namespace caffe
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1279,5 +1289,7 @@ class RawSync : public DistSync<Dtype>, public Threaded {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> device-abstraction
 
 #endif

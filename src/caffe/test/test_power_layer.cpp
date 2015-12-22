@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/power_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -19,6 +20,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> device-abstraction
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -86,6 +90,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
         }
       }
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -214,6 +219,9 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
+>>>>>>> device-abstraction
     checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);
   }
