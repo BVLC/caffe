@@ -37,7 +37,8 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(
   for (int_tp i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
-      const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->shape(0);
+      const Dtype alpha = sign * top[0]->cpu_diff()[0]
+          / static_cast<Dtype>(bottom[0]->count(0));
       caffe_cpu_axpby(bottom[i]->count(),     // count
           alpha,                              // alpha
           diff_.cpu_data(),                   // a
