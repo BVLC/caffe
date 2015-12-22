@@ -7727,7 +7727,10 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
 <<<<<<< HEAD
 template <typename Dtype>
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
@@ -7740,6 +7743,7 @@ Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     this->device_->copy(
         prefetch_label_.count(), prefetch_label_.cpu_data(),
         (*top)[1]->mutable_data());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7931,6 +7935,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 =======
 <<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
+=======
+>>>>>>> BVLC/device-abstraction
   }
   timer.Stop();
   batch_timer.Stop();
@@ -7971,6 +7977,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> pod/device/blob.hpp
 }
 
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 <<<<<<< HEAD
@@ -8003,6 +8010,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 }
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(DataLayer);
 REGISTER_LAYER_CLASS(Data);
 

@@ -964,6 +964,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1095,6 +1096,8 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 >>>>>>> master
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype HDF5DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 >>>>>>> device-abstraction
@@ -1856,6 +1859,7 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/device-abstraction
@@ -1951,12 +1955,15 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
     this->device_->copy(data_count,
         &data_blob_.cpu_data()[current_row_ * data_count],
         &(*top)[0]->mutable_data()[i * data_count]);
     this->device_->copy(label_data_count,
         &label_blob_.cpu_data()[current_row_ * label_data_count],
         &(*top)[1]->mutable_data()[i * label_data_count]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2154,9 +2161,12 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   }
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -2245,6 +2255,8 @@ INSTANTIATE_CLASS(HDF5DataLayer);
   }
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(HDF5DataLayer);
 >>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(HDF5Data);

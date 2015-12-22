@@ -26,6 +26,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -308,6 +309,8 @@ const int kMaxBlobAxes = 32;
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
 namespace caffe {
 

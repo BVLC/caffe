@@ -416,6 +416,7 @@ inline void SyncedMemory::to_cpu() {
 =======
     CaffeMallocHost(&cpu_ptr_, size_);
     GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
+<<<<<<< HEAD
 =======
     CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, cpu_ptr_);
@@ -503,6 +504,8 @@ inline void SyncedMemory::to_cpu() {
     caffe_memset(size_, 0, cpu_ptr_);
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
     break;
@@ -1283,6 +1286,7 @@ void* SyncedMemory::mutable_gpu_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> origin/BVLC/parallel
@@ -1329,12 +1333,15 @@ void* SyncedMemory::mutable_gpu_data() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 const void* SyncedMemory::const_data() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
     return cpu_data();
   case Caffe::GPU:
     return gpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1357,11 +1364,14 @@ const void* SyncedMemory::const_data() {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   default:
     LOG(FATAL) << "Unknown caffe mode.";
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1396,6 +1406,8 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
 void* SyncedMemory::mutable_data() {
   switch (Caffe::mode()) {
@@ -1406,7 +1418,10 @@ void* SyncedMemory::mutable_data() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1418,6 +1433,7 @@ void* SyncedMemory::mutable_data() {
     return static_cast<void*>(0);
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2630,4 +2646,7 @@ void* SyncedMemory::mutable_data() {
 }
 
 >>>>>>> device-abstraction
+=======
+
+>>>>>>> BVLC/device-abstraction
 }  // namespace caffe

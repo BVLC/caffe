@@ -139,6 +139,7 @@
 <<<<<<< HEAD
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/master
@@ -264,6 +265,8 @@
 #include "caffe/util/im2col.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/im2col_layer.hpp"
@@ -1494,11 +1497,15 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype Im2colLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->const_data();
   Dtype* top_data = (*top)[0]->mutable_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2055,6 +2062,8 @@ Dtype Im2colLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   for (int n = 0; n < bottom[0]->num(); ++n) {
     this->device_->im2col(
         bottom_data + bottom[0]->offset(n), channels_, height_,
@@ -2151,6 +2160,7 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3174,10 +3184,13 @@ template <typename Dtype>
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->const_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -3280,6 +3293,8 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   for (int n = 0; n < top[0]->num(); ++n) {
     this->device_->col2im(
         top_diff + top[0]->offset(n), channels_, height_, width_,
@@ -3391,6 +3406,7 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+<<<<<<< HEAD
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3979,6 +3995,8 @@ INSTANTIATE_CLASS(Im2colLayer);
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(Im2colLayer);
 >>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(Im2col);

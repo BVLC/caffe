@@ -1070,6 +1070,7 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> BVLC/device-abstraction
 #include "caffe/layer.hpp"
+<<<<<<< HEAD
 #include "caffe/vision_layers.hpp"
 >>>>>>> BVLC/device-abstraction
 =======
@@ -1632,6 +1633,8 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 #include "caffe/layer.hpp"
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -1693,6 +1696,7 @@ void PowerLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 // Compute y = (shift + scale * x)^power
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1828,6 +1832,11 @@ void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+Dtype PowerLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> BVLC/device-abstraction
   const int count = bottom[0]->count();
   // Special case where we can ignore the input: scale or power is 0.
   if (diff_scale_ == Dtype(0)) {
@@ -1835,9 +1844,12 @@ void PowerLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     caffe_set(count, value, top_data);
     return;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
     this->device_->set(count, value, top_data);
@@ -1927,6 +1939,7 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int count = bottom[0]->count();
     const Dtype* top_diff = top[0]->cpu_diff();
@@ -1993,10 +2006,16 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/master
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    const int count = (*bottom)[0]->count();
+    const Dtype* top_diff = top[0]->const_diff();
+>>>>>>> BVLC/device-abstraction
     if (diff_scale_ == Dtype(0) || power_ == Dtype(1)) {
       this->device_->set(count, diff_scale_, bottom_diff);
     } else {
       const Dtype* bottom_data = (*bottom)[0]->const_data();
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> pod/device/blob.hpp
@@ -2185,6 +2204,8 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const Dtype* bottom_data = bottom[0]->cpu_data();
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
       // Compute dy/dx = scale * power * (shift + scale * x)^(power - 1)
       //               = diff_scale * y / (shift + scale * x)
       if (power_ == Dtype(2)) {

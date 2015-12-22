@@ -272,6 +272,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
 
   // Test that the layer setup got the correct parameters.
+<<<<<<< HEAD
 =======
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> BVLC/master
@@ -405,6 +406,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);

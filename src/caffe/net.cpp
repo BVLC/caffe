@@ -267,10 +267,13 @@
 >>>>>>> BVLC/device-abstraction
 =======
 #include "caffe/util/io.hpp"
+<<<<<<< HEAD
 =======
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -2460,6 +2463,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
   hid_t file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
       H5P_DEFAULT);
@@ -2473,6 +2477,19 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
     diff_hid = H5Gcreate2(file_hid, "diff", H5P_DEFAULT, H5P_DEFAULT,
         H5P_DEFAULT);
     CHECK_GE(diff_hid, 0) << "Error saving weights to " << filename << ".";
+=======
+void Net<Dtype>::Update() {
+  // First, accumulate the diffs of any shared parameters into their owner's
+  // diff. (Assumes that the learning rate, weight decay, etc. have already been
+  // accounted for in the current diff.)
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+    if (debug_info_) { UpdateDebugInfo(i); }
+    const int count = params_[i]->count();
+    const Dtype* this_diff = params_[i]->const_diff();
+    Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
+    GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
+>>>>>>> BVLC/device-abstraction
   }
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
     const LayerParameter& layer_param = layers_[layer_id]->layer_param();

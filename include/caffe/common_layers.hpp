@@ -29805,16 +29805,27 @@ class EmbedLayer : public Layer<Dtype> {
  public:
   explicit EmbedLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+                        vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+                        const vector<bool>& propagate_down,
+                        vector<Blob<Dtype>*>* bottom) { NOT_IMPLEMENTED; }
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Embed"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -29829,6 +29840,10 @@ class EmbedLayer : public Layer<Dtype> {
   int N_;
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
+=======
+  bool out_max_val_;
+  size_t top_k_;
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -29842,16 +29857,26 @@ class FilterLayer : public Layer<Dtype> {
  public:
   explicit FilterLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+=======
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Filter"; }
   virtual inline int MinBottomBlobs() const { return 2; }
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
   /**
    * @param bottom input Blob vector (length 2+)
    *   -# @f$ (N \times C \times H \times W) @f$
@@ -29892,6 +29917,15 @@ class FilterLayer : public Layer<Dtype> {
 
   bool first_reshape_;
   vector<int> indices_to_forward_;
+=======
+  Blob<Dtype> col_bob_;
+  int count_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
+  int concat_dim_;
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -29927,6 +29961,9 @@ class ReshapeLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -29944,6 +29981,7 @@ class ReshapeLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -29974,6 +30012,8 @@ class ReshapeLayer : public Layer<Dtype> {
  *        for an input Blob of arbitrary size, such as the sum, absolute sum,
  *        and sum of squares.
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   int count_;
 =======
   /**
@@ -30073,6 +30113,7 @@ class ReductionLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -30201,6 +30242,12 @@ class ReductionLayer : public Layer<Dtype> {
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+>>>>>>> BVLC/device-abstraction
 
  protected:
   Blob<Dtype> mean_, variance_, temp_;
@@ -30787,6 +30834,7 @@ class SplitLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -30909,12 +30957,15 @@ class SplitLayer : public Layer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline const char* type() const { return "Split"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -31168,6 +31219,8 @@ class SplitLayer : public Layer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   int count_;
 };
 

@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/log_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -16,6 +17,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> BVLC/device-abstraction
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> BVLC/device-abstraction

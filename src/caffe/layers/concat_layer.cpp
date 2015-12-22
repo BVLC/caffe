@@ -21,6 +21,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -96,6 +97,8 @@
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -693,6 +696,7 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 }
@@ -839,6 +843,11 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype* top_data = (*top)[0]->mutable_data();
 >>>>>>> device-abstraction
+=======
+Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype* top_data = (*top)[0]->mutable_data();
+>>>>>>> BVLC/device-abstraction
   if (concat_dim_== 0) {
     int offset_num = 0;
     for (int i = 0; i < bottom.size(); ++i) {
@@ -855,6 +864,7 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       this->device_->copy(num_elem, bottom_data,
                         top_data+(*top)[0]->offset(offset_num));
 =======
@@ -932,6 +942,10 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       this->device_->copy(num_elem, bottom_data,
                         top_data+(*top)[0]->offset(offset_num));
 >>>>>>> device-abstraction
+=======
+      this->device_->copy(num_elem, bottom_data,
+                        top_data+(*top)[0]->offset(offset_num));
+>>>>>>> BVLC/device-abstraction
       offset_num += bottom[i]->num();
     }
   } else if (concat_dim_ == 1) {
@@ -955,6 +969,7 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -987,11 +1002,14 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
         this->device_->copy(num_elem, bottom_data+bottom[i]->offset(n),
           top_data+(*top)[0]->offset(n, offset_channel));
       }
       offset_channel += bottom[i]->channels();
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1053,6 +1071,8 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
   return Dtype(0.);
 =======
@@ -1265,6 +1285,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->const_diff();
@@ -1314,6 +1335,11 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->const_diff();
 >>>>>>> device-abstraction
+=======
+void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* top_diff = top[0]->const_diff();
+>>>>>>> BVLC/device-abstraction
   if (concat_dim_ == 0) {
     int offset_num = 0;
     for (int i = 0; i < bottom.size(); ++i) {
@@ -1322,6 +1348,7 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
         Dtype* bottom_diff = blob->mutable_diff();
         this->device_->copy(blob->count(),
             top_diff + top[0]->offset(offset_num), bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1347,6 +1374,8 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
       }
       offset_num += blob->num();
     }
@@ -1648,6 +1677,7 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+<<<<<<< HEAD
 template <typename Dtype>
 >>>>>>> master
 void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -5610,6 +5640,8 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======

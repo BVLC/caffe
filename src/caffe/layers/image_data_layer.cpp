@@ -1927,6 +1927,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 template <typename Dtype>
+<<<<<<< HEAD
 void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
@@ -2588,6 +2589,8 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 template <typename Dtype>
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
@@ -2604,6 +2607,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 }
 
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -2784,6 +2788,8 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 

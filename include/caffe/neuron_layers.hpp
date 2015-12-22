@@ -980,6 +980,9 @@ class ExpLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -1001,6 +1004,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -1093,6 +1097,8 @@ class ExpLayer : public NeuronLayer<Dtype> {
   /// @brief @f$ \gamma @f$ from layer_param_.power_param()
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Dtype power_;
   /// @brief @f$ \alpha @f$ from layer_param_.power_param()
   Dtype scale_;

@@ -490,6 +490,7 @@ class SyncedMemory {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #ifndef CPU_ONLY
   void async_gpu_push(const cudaStream_t& stream);
 #endif
@@ -1744,6 +1745,10 @@ class SyncedMemory {
 #endif
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+  const void* const_data();
+  void* mutable_data();
+>>>>>>> BVLC/device-abstraction
 
  private:
   void to_cpu();

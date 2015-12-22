@@ -165,6 +165,7 @@ class AccuracyLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -246,6 +247,8 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ACCURACY;
@@ -453,6 +456,7 @@ class AccuracyLayer : public Layer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -723,6 +727,8 @@ class AccuracyLayer : public Layer<Dtype> {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> BVLC/device-abstraction
   int top_k_;
 
   /// Whether to ignore instances with a certain label.
@@ -8751,6 +8757,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -8763,6 +8770,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
@@ -8859,6 +8868,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -8984,6 +8994,8 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> diff_;
 };
 
@@ -9089,9 +9101,15 @@ class HingeLossLayer : public LossLayer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HINGE_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -9433,6 +9451,8 @@ class HingeLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -9504,6 +9524,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
      vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -9584,6 +9605,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
@@ -9737,6 +9760,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 
  protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
   /// @copydoc InfogainLossLayer
@@ -9796,6 +9820,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   Blob<Dtype> infogain_;
 };
 
@@ -9900,6 +9926,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -9919,10 +9946,13 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10098,6 +10128,8 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 };
 
 /**
@@ -10156,6 +10188,9 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> BVLC/device-abstraction
+=======
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
@@ -10179,6 +10214,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10542,6 +10578,8 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   /// The internal SigmoidLayer used to map predictions to probabilities.
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
   /// sigmoid_output stores the output of the SigmoidLayer.
   shared_ptr<Blob<Dtype> > sigmoid_output_;
@@ -10668,6 +10706,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
       : LossLayer<Dtype>(param),
@@ -10684,6 +10723,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
@@ -10745,6 +10786,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -11150,6 +11192,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
   // prob stores the output probability of the layer.
 =======

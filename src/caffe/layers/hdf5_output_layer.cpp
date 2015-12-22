@@ -73,6 +73,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -170,6 +171,8 @@ Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 =======
@@ -303,6 +306,7 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   SaveBlobs();
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -514,6 +518,8 @@ INSTANTIATE_CLASS(HDF5OutputLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/master
+=======
+>>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(HDF5OutputLayer);
 >>>>>>> device-abstraction
 REGISTER_LAYER_CLASS(HDF5Output);

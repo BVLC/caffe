@@ -26,6 +26,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include "caffe/layer_factory.hpp"
@@ -285,6 +286,9 @@
 #include "caffe/layer_factory.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+#include "caffe/device.hpp"
+>>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -296,6 +300,7 @@ namespace boost { class mutex; }
 
 namespace caffe {
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -745,6 +750,17 @@ class Layer {
       phase_ = param.phase();
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+template <typename Dtype>
+class Layer {
+ public:
+  // You should not implement your own constructor. Any set up code should go
+  // to SetUp(), where the dimensions of the bottom blobs are provided to the
+  // layer.
+  explicit Layer(const LayerParameter& param)
+    : layer_param_(param), device_(GetDevice<Dtype>()) {
+      // The only thing we do is to copy blobs if there are any.
+>>>>>>> BVLC/device-abstraction
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
         for (int i = 0; i < layer_param_.blobs_size(); ++i) {
@@ -754,6 +770,7 @@ class Layer {
       }
     }
   virtual ~Layer() {}
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -2910,11 +2927,14 @@ class Layer {
         << type() << "Layer does not support sharing.";
     is_shared_ = is_shared;
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   // SetUp: your function should implement this, and call Layer::SetUp for
   // common SetUp functionality.
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
     CheckBlobCounts(bottom, *top);
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
   }
 
@@ -3343,6 +3363,8 @@ class Layer {
   /**
 >>>>>>> BVLC/master
 =======
+=======
+>>>>>>> BVLC/device-abstraction
   }
 
   /**
@@ -3518,6 +3540,7 @@ class Layer {
   // gpu specific implementations instead, and should not change these
   // functions.
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+<<<<<<< HEAD
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
@@ -3761,6 +3784,10 @@ class Layer {
   inline void Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+>>>>>>> BVLC/device-abstraction
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
 
@@ -4300,6 +4327,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
   /** The vector that indicates whether each top blob has a non-zero weight in
@@ -4553,6 +4581,8 @@ class Layer {
   vector<Dtype> loss_;
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> BVLC/device-abstraction
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -4767,6 +4797,7 @@ class Layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -5687,6 +5718,9 @@ Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+      vector<Blob<Dtype>*>* bottom) { return; }
+>>>>>>> BVLC/device-abstraction
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
@@ -5806,6 +5840,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -5845,6 +5880,8 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 >>>>>>> BVLC/master
 =======
+=======
+>>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,

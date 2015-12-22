@@ -240,6 +240,7 @@
 #include "caffe/device.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
@@ -273,6 +274,8 @@
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 
@@ -768,6 +771,7 @@ class XavierFiller : public Filler<Dtype> {
     Dtype scale = sqrt(Dtype(3) / fan_in);
     GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(), -scale, scale,
                                               blob->mutable_cpu_data());
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> device-abstraction
@@ -919,6 +923,8 @@ class XavierFiller : public Filler<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/device-abstraction
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
