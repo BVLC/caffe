@@ -42,7 +42,7 @@ If using Anaconda Python, HDF5 is bundled and the `hdf5` formula can be skipped.
 If you decide against it, please use Homebrew.
 Check that Caffe and dependencies are linking against the same, desired Python.
 
-Continue with [compilation](installation.html#compilation).
+Continue with [compilation](/docs/installation.md#compilation).
 
 ## libstdc++ installation
 
