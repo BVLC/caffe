@@ -1,10 +1,12 @@
+#ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
+#endif  // USE_OPENCV
 
 #include <string>
 #include <vector>
 
-#include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -113,6 +115,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   }
 }
 
+#ifdef USE_OPENCV
 TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   typedef typename TypeParam::Dtype Dtype;
 
@@ -292,5 +295,5 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
     }
   }
 }
-
+#endif  // USE_OPENCV
 }  // namespace caffe

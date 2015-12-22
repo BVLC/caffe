@@ -1,7 +1,7 @@
 ################################################################################################
 # Command alias for debugging messages
 # Usage:
-#   dmgs(<message>)
+#   dmsg(<message>)
 function(dmsg)
   message(STATUS ${ARGN})
 endfunction()
@@ -19,9 +19,9 @@ macro(caffe_list_unique)
 endmacro()
 
 ################################################################################################
-# Clears variables from lsit
+# Clears variables from list
 # Usage:
-#   caffe_list_unique(<variables_list>)
+#   caffe_clear_vars(<variables_list>)
 macro(caffe_clear_vars)
   foreach(_var ${ARGN})
     unset(${_var})
@@ -118,7 +118,7 @@ macro(caffe_parse_header FILENAME FILE_VAR)
         if(__add_cache)
           set(${name} ${${name}} CACHE INTERNAL "${name} parsed from ${FILENAME}" FORCE)
         elseif(__parnet_scope)
-          set(${name} "${${name}}" PARENT_SCOPE)          
+          set(${name} "${${name}}" PARENT_SCOPE)
         endif()
       else()
         unset(${name} CACHE)
@@ -303,7 +303,7 @@ function(caffe_get_current_cflags cflags_var)
 endfunction()
 
 ################################################################################################
-# Helper function to parse current linker libs into link directoris, libflags and osx frameworks
+# Helper function to parse current linker libs into link directories, libflags and osx frameworks
 # Usage:
 #   caffe_parse_linker_libs(<Caffe_LINKER_LIBS_var> <directories_var> <libflags_var> <frameworks_var>)
 function(caffe_parse_linker_libs Caffe_LINKER_LIBS_variable folders_var flags_var frameworks_var)

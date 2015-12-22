@@ -1,10 +1,12 @@
 # Fully convolutional network version of CaffeNet.
 name: "CaffeNetConv"
 input: "data"
-input_dim: 1
-input_dim: 3
-input_dim: 451
-input_dim: 451
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 451
+  dim: 451
+}
 layer {
   name: "conv1"
   type: "Convolution"
