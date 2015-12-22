@@ -7,7 +7,7 @@ sha1: 4c8d77deb20ea792f84eb5e6d0a11ca0a8660a46
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
 
-This model is the result of following the Caffe [ImageNet model training instructions](http://caffe.berkeleyvision.org/gathered/examples/imagenet.html).
+This model is the result of following the Caffe [ImageNet model training instructions](/examples/imagenet).
 It is a replication of the model described in the [AlexNet](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks) publication with some differences:
 
 - not training with the relighting data-augmentation;
