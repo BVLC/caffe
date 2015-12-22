@@ -11,7 +11,7 @@ Alex's CIFAR-10 tutorial, Caffe style
 
 Alex Krizhevsky's [cuda-convnet](https://code.google.com/p/cuda-convnet/) details the model definitions, parameters, and training procedure for good performance on CIFAR-10. This example reproduces his results in Caffe.
 
-We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
+We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/docs/installation.md). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
 
 We thank @chyojn for the pull request that defined the model schemas and solver configurations.
 
@@ -36,7 +36,7 @@ The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectif
 Training and Testing the "Quick" Model
 --------------------------------------
 
-Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to [MNIST Tutorial](../examples/mnist.html)). Simply run `train_quick.sh`, or the following command directly:
+Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to [MNIST Tutorial](/examples/mnist)). Simply run `train_quick.sh`, or the following command directly:
 
     cd $CAFFE_ROOT
     ./examples/cifar10/train_quick.sh
