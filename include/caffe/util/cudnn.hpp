@@ -8,11 +8,17 @@
 #include "caffe/proto/caffe.pb.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define CUDNN_VERSION_MIN(major, minor, patch) \
     (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
 
 =======
 >>>>>>> device-abstraction
+=======
+#define CUDNN_VERSION_MIN(major, minor, patch) \
+    (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
+
+>>>>>>> BVLC/master
 #define CUDNN_CHECK(condition) \
   do { \
     cudnnStatus_t status = condition; \

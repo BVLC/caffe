@@ -23,6 +23,7 @@ Therefore, we change the name of the last layer from `fc8` to `fc8_flickr` in ou
 Since there is no layer named that in the `bvlc_reference_caffenet`, that layer will begin training with random weights.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 We will also decrease the overall learning rate `base_lr` in the solver prototxt, but boost the `lr_mult` on the newly introduced layer.
 The idea is to have the rest of the model change very slowly with new data, but let the new layer learn fast.
 Additionally, we set `stepsize` in the solver to a lower value than if we were training from scratch, since we're virtually far along in training and therefore want the learning rate to go down faster.
@@ -33,6 +34,12 @@ The idea is to have the rest of the model change very slowly with new data, but 
 Additionally, we set `stepsize` in the solver to a lower value than if we were training from scratch, since we're virtually far along in training and therefore want the learning rate to go down faster.
 Note that we could also entirely prevent fine-tuning of all layers other than `fc8_flickr` by setting their `blobs_lr` to 0.
 >>>>>>> device-abstraction
+=======
+We will also decrease the overall learning rate `base_lr` in the solver prototxt, but boost the `lr_mult` on the newly introduced layer.
+The idea is to have the rest of the model change very slowly with new data, but let the new layer learn fast.
+Additionally, we set `stepsize` in the solver to a lower value than if we were training from scratch, since we're virtually far along in training and therefore want the learning rate to go down faster.
+Note that we could also entirely prevent fine-tuning of all layers other than `fc8_flickr` by setting their `lr_mult` to 0.
+>>>>>>> BVLC/master
 
 ## Procedure
 

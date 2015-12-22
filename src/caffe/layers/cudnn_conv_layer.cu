@@ -534,6 +534,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -597,6 +598,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 =======
 >>>>>>> pod/device/blob.hpp
 =======
+=======
+>>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
 =======
@@ -628,6 +631,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -649,11 +653,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 >>>>>>> BVLC/master
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
         CUDNN_CHECK(cudnnAddTensor(handle_[g], CUDNN_ADD_SAME_C,
               cudnn::dataType<Dtype>::one,
               bias_desc_, bias_data + bias_offset_ * g,
               cudnn::dataType<Dtype>::one,
               top_descs_[i], top_data + top_offset_ * g));
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -793,6 +800,9 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 >>>>>>> BVLC/master
 =======
 >>>>>>> device-abstraction
+=======
+#endif
+>>>>>>> BVLC/master
       }
     }
 
