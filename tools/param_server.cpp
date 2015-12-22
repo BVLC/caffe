@@ -9,8 +9,8 @@ using namespace caffe;
 DEFINE_int32(ps_threads, 1, "number of parameter server threads");
 
 DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
-DEFINE_int32(id_port, 955, "the tcp port of ID server");
-DEFINE_int32(model_port, 957, "the tcp port of model server");
+DEFINE_int32(id_port, 1955, "the tcp port of ID server");
+DEFINE_int32(model_port, 1957, "the tcp port of model server");
 
 DEFINE_string(request_file, "examples/cifar10/ps.prototxt", "the location of the model request configuration file");
 

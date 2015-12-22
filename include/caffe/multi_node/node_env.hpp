@@ -29,7 +29,7 @@ using boost::unordered_map;
 
 namespace caffe {
 
-const int GATEWAY_PORT = 935;
+const int GATEWAY_PORT = 1935;
 const int TRAIN_NOTIFY_INTERVAL = 100;
 
 class NodeEnv {

@@ -6,8 +6,8 @@ end_layers : "pool3"
 num_splits : 1
 
 node_info {
-  router_port : 999
-  pub_port : 1000
+  router_port : 2001
+  pub_port : 2002
   position : 0
   staleness : 0
 }

@@ -196,6 +196,9 @@ void ModelMap<Dtype>::PrepareFCMsg()
       RouteInfo rt;
       AddSolver(&rt, node_idx);
       AddRoutes(&rt, node_idx);
+      
+      // add gateway node
+      rt.mutable_gateway_node()->CopyFrom(fc_gateway_->node_info());
 
       string rt_str;
       rt.SerializeToString(&rt_str);
@@ -432,6 +435,10 @@ int ModelMap<Dtype>::PrepareRoutes()
   for (int i = 0; i < fc_nodes_.size(); i++) {
     ParseInputOutput(fc_nodes_[i]);
   }
+  
+  for (int i = 0; i < ps_nodes_.size(); i++) {
+    ParseInputOutput(ps_nodes_[i]);
+  }
 
   //generate forward map and backward map for fc nodes
   map<string, int> nearest_top_blob_idx;
@@ -467,30 +474,20 @@ int ModelMap<Dtype>::PrepareRoutes()
   }
 
   CHECK_GT(root_fc.size(), 0) << "ERROR: no root fc nodes are found";
-  if (root_fc.size() > 1) {
-    status_ = WAIT_FC_GATEWAY;
-  } else if (root_fc.size() == 1) {
-    if (requests_[root_fc[0]].size() > 1) {
-      status_ = WAIT_FC_GATEWAY;
-    } else {
-      fc_gateway_ = requests_[root_fc[0]][0];
-      FilterGatewayForwards(root_fc[0]);
-      status_ = INITED;
-    }
-  }
   
-  if (status_ == INITED || status_ == WAIT_FC_GATEWAY) {
-    PrintRouteInfo();
-  }
+  /// choose one node as gateway node to conv. clients
+  fc_gateway_ = requests_[root_fc[0]][0];
+  FilterGatewayForwards(root_fc[0]);
+  fc_gateway_->mutable_node_info()->set_node_role(FC_GATEWAY);
+  
+  LOG(INFO) << "Gateway node ip: " << fc_gateway_->node_info().ip() 
+      << ", node id: " << fc_gateway_->node_info().node_id();
 
-  if (status_ == INITED) {
-    return 0;
-  } else if (status_ == WAIT_FC_GATEWAY && fc_gateway_ != NULL) {
-    status_ = INITED;
-    return 0;
-  }
+  status_ = INITED;
+ 
+  PrintRouteInfo();
 
-  return -1;
+  return 0;
 }
 
 template <typename Dtype>

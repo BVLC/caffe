@@ -11,8 +11,8 @@
 using boost::unordered_map;
 using namespace caffe;
 
-DEFINE_string(id_server_req, "tcp://10.239.156.118:955", "the zmq REQ addr of the id / layer-map server");
-DEFINE_string(model_server, "tcp://10.239.156.118:957", "the address of zmq model server");
+DEFINE_string(id_server_req, "tcp://127.0.0.1:1955", "the zmq REQ addr of the id / layer-map server");
+DEFINE_string(model_server, "tcp://127.0.0.1:1957", "the address of zmq model server");
 
 
 int main(int argc, char** argv)

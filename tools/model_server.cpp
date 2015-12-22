@@ -4,8 +4,8 @@
 #include "caffe/multi_node/model_test_node.hpp"
 #include "boost/thread/thread.hpp"
 
-DEFINE_string(id_server_req, "tcp://*:955", "the zmq REQ addr of the id / layer-map server");
-DEFINE_string(model_server, "tcp://*:957", "the address of zmq model server");
+DEFINE_string(id_server_req, "tcp://*:1955", "the zmq REQ addr of the id / layer-map server");
+DEFINE_string(model_server, "tcp://*:1957", "the address of zmq model server");
 
 DEFINE_string(solver, "examples/cifar10/cifar10_full_solver.prototxt", "location of solver");
 

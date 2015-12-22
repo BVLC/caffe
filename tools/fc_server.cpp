@@ -10,8 +10,8 @@ DEFINE_int32(fc_threads, 2, "number of threads in fc server");
 DEFINE_string(function, "fc_gateway", "function list: fc_server, fc_gateway, fc_client");
 
 DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
-DEFINE_int32(id_port, 955, "the tcp port of ID server");
-DEFINE_int32(model_port, 957, "the tcp port of model server");
+DEFINE_int32(id_port, 1955, "the tcp port of ID server");
+DEFINE_int32(model_port, 1957, "the tcp port of model server");
 DEFINE_string(request_file, "examples/cifar10/fc.prototxt", "the location of the model request configuration file");
 
 
