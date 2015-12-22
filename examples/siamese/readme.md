@@ -12,8 +12,8 @@ This example shows how you can use weight sharing and a contrastive loss
 function to learn a model using a siamese network in Caffe.
 
 We will assume that you have caffe successfully compiled. If not, please refer
-to the [Installation page](../../installation.html). This example builds on the
-[MNIST tutorial](mnist.html) so it would be a good idea to read that before
+to the [Installation page](/docs/installation.md). This example builds on the
+[MNIST tutorial](/examples/mnist) so it would be a good idea to read that before
 continuing.
 
 *The guide specifies all paths and assumes all commands are executed from the
@@ -35,7 +35,7 @@ After running the script there should be two datasets,
 First, we will define the model that we want to train using the siamese network.
 We will use the convolutional net defined in
 `./examples/siamese/mnist_siamese.prototxt`. This model is almost
-exactly the same as the [LeNet model](mnist.html), the only difference is that
+exactly the same as the [LeNet model](/examples/mnist.html), the only difference is that
 we have replaced the top layers that produced probabilities over the 10 digit
 classes with a linear "feature" layer that produces a 2 dimensional vector.
 

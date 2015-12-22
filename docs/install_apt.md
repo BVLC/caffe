@@ -47,4 +47,4 @@ These dependencies need manual installation in 12.04.
 
 Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.
 
-Continue with [compilation](installation.html#compilation).
+Continue with [compilation](/docs/installation.md#compilation).

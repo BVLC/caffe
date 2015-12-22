@@ -42,4 +42,4 @@ Install the library and latest driver separately; the driver bundled with the li
 
 **Python** (optional): if you use the default Python you will need to `sudo yum install` the `python-devel` package to have the Python headers for building the pycaffe wrapper.
 
-Continue with [compilation](installation.html#compilation).
+Continue with [compilation](/docs/installation.md#compilation).

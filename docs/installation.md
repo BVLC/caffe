@@ -11,7 +11,7 @@ The official Makefile and `Makefile.config` build are complemented by an automat
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
 - [Hardware](#hardware)
-- Platforms: [Ubuntu guide](install_apt.html), [OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html)
+- Platforms: [Ubuntu guide](/docs/install_apt.md), [OS X guide](/docs/install_osx.md), and [RHEL / CentOS / Fedora guide](/docs/install_yum.md)
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 
@@ -105,7 +105,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 **Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
-Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+Now that you have installed Caffe, check out the [MNIST tutorial](/examples/mnist) and the [reference ImageNet model tutorial](/examples/imagenet).
 
 ### CMake Compilation
 
@@ -126,6 +126,6 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 **CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.
 
-Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
+Once installed, check your times against our [reference performance numbers](performance_hardware.md) to make sure everything is configured properly.
 
 Ask hardware questions on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users).
