@@ -42,7 +42,7 @@ Tutorial presentation.
 Practical guide and framework reference.
 - [arXiv / ACM MM '14 paper](http://arxiv.org/abs/1408.5093)<br>
 A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v1).
-- [Installation instructions](/INSTALL.md)<br>
+- [Installation instructions](/docs/installation.md)<br>
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/docs/model_zoo.md)<br>
 BVLC suggests a standard distribution format for Caffe models, and provides trained models.
