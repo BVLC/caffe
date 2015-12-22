@@ -38,32 +38,54 @@ Consult performance [details](/performance_hardware.html).
 
 - [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br>
 Tutorial presentation.
-- [Tutorial Documentation](/tutorial)<br>
+- [Tutorial Documentation](/docs/tutorial)<br>
 Practical guide and framework reference.
 - [arXiv / ACM MM '14 paper](http://arxiv.org/abs/1408.5093)<br>
 A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v1).
-- [Installation instructions](/installation.html)<br>
+- [Installation instructions](/INSTALL.md)<br>
 Tested on Ubuntu, Red Hat, OS X.
-* [Model Zoo](/model_zoo.html)<br>
+* [Model Zoo](/docs/model_zoo.md)<br>
 BVLC suggests a standard distribution format for Caffe models, and provides trained models.
-* [Developing & Contributing](/development.html)<br>
+* [Developing & Contributing](/docs/development.md)<br>
 Guidelines for development and contributing to Caffe.
-* [API Documentation](/doxygen/annotated.html)<br>
+* [API Documentation](http://caffe.berkeleyvision.org/doxygen/annotated.html)<br>
 Developer documentation automagically generated from code comments.
 
 ### Examples
 
-{% assign examples = site.pages | where:'category','example' | sort: 'priority' %}
-{% for page in examples %}
-- <div><a href="{{page.url}}">{{page.title}}</a><br>{{page.description}}</div>
-{% endfor %}
+- [ImageNet tutorial](/examples/imagenet)<br>
+Train and test "CaffeNet" on ImageNet data.
+- [LeNet MNIST Tutorial](/examples/mnist)<br>
+Train and test "LeNet" on the MNIST handwritten digit data.
+- [CIFAR-10 tutorial](/examples/cifar10)<br>
+Train and test Caffe on CIFAR-10 data.
+- [Fine-tuning for style recognition](/examples/finetune_flickr_style)<br>
+Fine-tune the ImageNet-trained CaffeNet on the "Flickr Style" dataset.
+- [CaffeNet C++ Classification example](/examples/cpp_classification)<br>
+A simple example performing image classification using the low-level C++ API.
+- [Feature extraction with Caffe C++ code](/examples/feature_extraction)<br>
+Extract CaffeNet / AlexNet features using the Caffe utility.
+- [Web demo](/examples/web_demo)<br>
+Image classification demo running as a Flask web server.
+- [Siamese Network Tutorial](/examples/siamese)<br>
+Train and test a siamese network on MNIST data.
 
 ### Notebook Examples
 
-{% assign notebooks = site.pages | where:'category','notebook' | sort: 'priority' %}
-{% for page in notebooks %}
-- <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br>{{page.description}}</div>
-{% endfor %}
+- [Image Classification and Filter Visualization](/examples/00-classification.ipynb)<br>
+Instant recognition with a pre-trained model and a tour of the net interface for visualizing features and parameters layer-by-layer.
+- [Learning LeNet](/examples/01-learning-lenet.ipynb)<br>
+Define, train, and test the classic LeNet with the Python interface.
+- [Off-the-shelf SGD for classification](/examples/02-brewing-logreg.ipynb)<br>
+Use Caffe as a generic SGD optimizer to train logistic regression on non-image HDF5 data.
+- [Fine-tuning for Style Recognition](/examples/03-fine-tuning.ipynb)<br>
+Fine-tune the ImageNet-trained CaffeNet on new data.
+- [Editing model parameters](/examples/net_surgery.ipynb)<br>
+How to do net surgery and manually change model parameters for custom use.
+- [R-CNN detection](/examples/detection.ipynb)<br>
+Run a pretrained model as a detector in Python.
+- [Siamese network embedding](/examples/siamese/mnist_siamese.ipynb)<br>
+Extracting features and plotting the Siamese network embedding.
 
 ## Citing Caffe
 
@@ -101,6 +123,6 @@ The open-source community plays an important and growing role in Caffe's develop
 Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for the full list.
 
 We sincerely appreciate your interest and contributions!
-If you'd like to contribute, please read the [developing & contributing](development.html) guide.
+If you'd like to contribute, please read the [developing & contributing](development.md) guide.
 
 Yangqing would like to give a personal thanks to the NVIDIA Academic program for providing GPUs, [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for discussions along the journey, and BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for advice.
