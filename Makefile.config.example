@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
  cuDNN acceleration switch (uncomment to build with cuDNN).
@@ -66,6 +67,9 @@
 >>>>>>> caffe
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+ cuDNN acceleration switch (uncomment to build with cuDNN).
+>>>>>>> caffe
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
@@ -109,6 +113,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
  Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
 =======
@@ -220,6 +225,8 @@
 <<<<<<< HEAD
 =======
 =======
+=======
+>>>>>>> caffe
  Uncomment if you're using OpenCV 3
 # OPENCV_VERSION := 3
 >>>>>>> caffe
@@ -319,6 +326,7 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
  Uncomment to use `pkg-config` to specify OpenCV library paths.
@@ -392,6 +400,9 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 >>>>>>> caffe
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+ Uncomment to use `pkg-config` to specify OpenCV library paths.
+>>>>>>> caffe
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
 # USE_PKG_CONFIG := 1
 
