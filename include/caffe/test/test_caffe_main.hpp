@@ -27,6 +27,7 @@ using std::endl;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -135,6 +136,9 @@ using std::endl;
 =======
   #include "caffe_config.h"
 >>>>>>> device-abstraction
+=======
+  #include "caffe_config.h"
+>>>>>>> pod/post-rebase-error-fix
 #else
   #define CUDA_TEST_DEVICE -1
   #define CMAKE_SOURCE_DIR "src/"

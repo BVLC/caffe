@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -122,6 +123,9 @@
 =======
 #include "caffe/common_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/common_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -144,6 +148,7 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
                 bottom[i]->mutable_cpu_diff());
@@ -243,6 +248,9 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
                 bottom[i]->mutable_cpu_diff());
 >>>>>>> device-abstraction
+=======
+                bottom[i]->mutable_cpu_diff());
+>>>>>>> pod/post-rebase-error-fix
     }
   }
 }
@@ -264,6 +272,7 @@ INSTANTIATE_CLASS(SilenceLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -376,4 +385,8 @@ REGISTER_LAYER_CLASS(Silence);
 REGISTER_LAYER_CLASS(Silence);
 
 >>>>>>> device-abstraction
+=======
+REGISTER_LAYER_CLASS(Silence);
+
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

@@ -24,6 +24,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -150,6 +151,10 @@
  * and its type is its C++ class name, but without the "Layer" at the end
  * ("MyAwesomeLayer" -> "MyAwesome").
 >>>>>>> device-abstraction
+=======
+ * and its type is its C++ class name, but without the "Layer" at the end
+ * ("MyAwesomeLayer" -> "MyAwesome").
+>>>>>>> pod/post-rebase-error-fix
  *
  * If the layer is going to be created simply by its constructor, in your c++
  * file, add the following line:
@@ -166,6 +171,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -276,6 +282,9 @@
 =======
  *    REGISTER_LAYER_CLASS(MyAwesome);
 >>>>>>> device-abstraction
+=======
+ *    REGISTER_LAYER_CLASS(MyAwesome);
+>>>>>>> pod/post-rebase-error-fix
  *
  * Or, if the layer is going to be created by another creator function, in the
  * format of:
@@ -288,6 +297,7 @@
  * (for example, when your layer has multiple backends, see GetConvolutionLayer
  * for a use case), then you can register the creator function instead, like
  *
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -408,6 +418,9 @@
 =======
  * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
 >>>>>>> device-abstraction
+=======
+ * REGISTER_LAYER_CREATOR(MyAwesome, GetMyAwesomeLayer)
+>>>>>>> pod/post-rebase-error-fix
  *
  * Note that each layer type should only be registered once.
  */
@@ -416,6 +429,7 @@
 #define CAFFE_LAYER_FACTORY_H_
 
 #include <map>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -566,6 +580,12 @@
 
 #include "caffe/common.hpp"
 >>>>>>> device-abstraction
+=======
+#include <string>
+#include <vector>
+
+#include "caffe/common.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -588,6 +608,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -722,6 +743,10 @@ class LayerRegistry {
   typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
 >>>>>>> device-abstraction
+=======
+  typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+  typedef std::map<string, Creator> CreatorRegistry;
+>>>>>>> pod/post-rebase-error-fix
 
   static CreatorRegistry& Registry() {
     static CreatorRegistry* g_registry_ = new CreatorRegistry();
@@ -741,6 +766,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -912,6 +938,9 @@ class LayerRegistry {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+  static void AddCreator(const string& type, Creator creator) {
+>>>>>>> pod/post-rebase-error-fix
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 0)
         << "Layer type " << type << " already registered.";
@@ -919,6 +948,7 @@ class LayerRegistry {
   }
 
   // Get a layer using a LayerParameter.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -954,6 +984,8 @@ class LayerRegistry {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
     if (Caffe::root_solver()) {
       LOG(INFO) << "Creating layer " << param.name();
@@ -975,6 +1007,7 @@ class LayerRegistry {
     return layer_types;
   }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1081,6 +1114,8 @@ class LayerRegistry {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
  private:
   // Layer registry should never be instantiated - everything is done with its
   // static variables.
@@ -1097,6 +1132,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1163,6 +1199,8 @@ class LayerRegistry {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   static string LayerTypeListString() {
     vector<string> layer_types = LayerTypeList();
@@ -1186,6 +1224,7 @@ class LayerRegistry {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1266,6 +1305,8 @@ class LayerRegistry {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 };
 
 
@@ -1284,6 +1325,7 @@ class LayerRegisterer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1422,6 +1464,10 @@ class LayerRegisterer {
   LayerRegisterer(const string& type,
                   shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
 >>>>>>> device-abstraction
+=======
+  LayerRegisterer(const string& type,
+                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+>>>>>>> pod/post-rebase-error-fix
     // LOG(INFO) << "Registering layer type: " << type;
     LayerRegistry<Dtype>::AddCreator(type, creator);
   }
@@ -1441,6 +1487,7 @@ class LayerRegisterer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1507,6 +1554,8 @@ class LayerRegisterer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
   static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)    \
 
@@ -1517,6 +1566,7 @@ class LayerRegisterer {
     return shared_ptr<Layer<Dtype> >(new type##Layer<Dtype>(param));           \
   }                                                                            \
   REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1637,6 +1687,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 }  // namespace caffe
 

@@ -29,6 +29,7 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -137,3 +138,6 @@ type: "Nesterov"
 =======
 type: "Nesterov"
 >>>>>>> device-abstraction
+=======
+type: "Nesterov"
+>>>>>>> pod/post-rebase-error-fix

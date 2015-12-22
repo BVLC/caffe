@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <boost/filesystem.hpp>
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -128,6 +129,9 @@
 =======
 #include <boost/filesystem.hpp>
 >>>>>>> device-abstraction
+=======
+#include <boost/filesystem.hpp>
+>>>>>>> pod/post-rebase-error-fix
 #include <string>
 
 #include "google/protobuf/message.h"
@@ -163,6 +167,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -246,11 +251,14 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 namespace caffe {
 
 using ::google::protobuf::Message;
 using ::boost::filesystem::path;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -304,6 +312,8 @@ inline void MakeTempFilename(string* temp_filename) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 inline void MakeTempFilename(string* temp_filename) {
   temp_filename->clear();
   const path& model = boost::filesystem::temp_directory_path()
@@ -320,6 +330,7 @@ inline void MakeTempDir(string* temp_dirname) {
   CHECK(directoryCreated);
   *temp_dirname = dir.string();
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -425,6 +436,8 @@ inline void MakeTempDir(string* temp_dirname) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
 
@@ -496,6 +509,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, true, datum);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -887,6 +901,10 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 }
 
 >>>>>>> device-abstraction
+=======
+}
+
+>>>>>>> pod/post-rebase-error-fix
 inline bool ReadImageToDatum(const string& filename, const int label,
     const std::string & encoding, Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, true, encoding, datum);
@@ -914,6 +932,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -955,6 +974,8 @@ cv::Mat ReadImageToCVMat(const string& filename,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 cv::Mat ReadImageToCVMat(const string& filename);
 

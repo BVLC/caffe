@@ -21,6 +21,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -83,11 +84,14 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifndef CAFFE_UTIL_BLOCKING_QUEUE_HPP_
 #define CAFFE_UTIL_BLOCKING_QUEUE_HPP_
 
 #include <queue>
 #include <string>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -321,6 +325,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -348,6 +354,7 @@ template<typename T>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -410,6 +417,8 @@ template<typename T>
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 class BlockingQueue {
  public:
   explicit BlockingQueue();
@@ -441,6 +450,7 @@ class BlockingQueue {
   shared_ptr<sync> sync_;
 
 DISABLE_COPY_AND_ASSIGN(BlockingQueue);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -728,6 +738,8 @@ private:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 };
 
 }  // namespace caffe

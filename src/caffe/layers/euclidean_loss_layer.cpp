@@ -17,6 +17,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -200,9 +201,15 @@
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
+=======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -311,6 +318,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -329,6 +338,7 @@ void EuclideanLossLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -456,9 +466,15 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       << "Inputs must have the same dimension.";
   diff_.ReshapeLike(*bottom[0]);
 >>>>>>> caffe
+=======
+  CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
+      << "Inputs must have the same dimension.";
+  diff_.ReshapeLike(*bottom[0]);
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -591,6 +607,14 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+Dtype EuclideanLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+=======
+void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   int count = bottom[0]->count();
   this->device_->sub(count, bottom[0]->const_data(), bottom[1]->const_data(),
                      diff_.mutable_data());
@@ -600,14 +624,18 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   top[0]->mutable_cpu_data()[0] = loss;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -649,11 +677,14 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -971,6 +1002,8 @@ void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       this->device_->axpby(
           (*bottom)[i]->count(),              // count
           sign / (*bottom)[i]->num(),         // alpha
@@ -987,6 +1020,7 @@ void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
           Dtype(0),                           // beta
@@ -1096,11 +1130,17 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> master
 =======
 <<<<<<< HEAD
+=======
+          Dtype(0),                           // beta
+          (*bottom)[i]->mutable_diff());      // b
+=======
+>>>>>>> pod/post-rebase-error-fix
 void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 =======
@@ -1402,6 +1442,8 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
       const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
       caffe_cpu_axpby(
           bottom[i]->count(),              // count
@@ -1409,6 +1451,7 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           diff_.cpu_data(),                   // a
           Dtype(0),                           // beta
           bottom[i]->mutable_cpu_diff());  // b
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1487,10 +1530,14 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           Dtype(0),                           // beta
           (*bottom)[i]->mutable_diff());      // b
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
     }
   }
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 INSTANTIATE_CLASS(EuclideanLossLayer);
@@ -1988,6 +2035,9 @@ REGISTER_LAYER_CLASS(EuclideanLoss);
 >>>>>>> BVLC/device-abstraction
 INSTANTIATE_CLASS(EuclideanLossLayer);
 >>>>>>> device-abstraction
+=======
+INSTANTIATE_CLASS(EuclideanLossLayer);
+>>>>>>> pod/post-rebase-error-fix
 REGISTER_LAYER_CLASS(EuclideanLoss);
 
 >>>>>>> pod/device/blob.hpp

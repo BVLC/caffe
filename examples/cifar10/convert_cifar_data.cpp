@@ -37,6 +37,7 @@ namespace db = caffe::db;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -118,6 +119,8 @@ using caffe::shared_ptr;
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 const int kCIFARSize = 32;
 const int kCIFARImageNBytes = 3072;
@@ -146,6 +149,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -302,6 +306,11 @@ void convert_dataset(const string& input_folder, const string& output_folder,
   train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
   scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
 >>>>>>> device-abstraction
+=======
+  scoped_ptr<db::DB> train_db(db::GetDB(db_type));
+  train_db->Open(output_folder + "/cifar10_train_" + db_type, db::NEW);
+  scoped_ptr<db::Transaction> txn(train_db->NewTransaction());
+>>>>>>> pod/post-rebase-error-fix
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
@@ -335,6 +344,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -541,6 +551,8 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
       string out;
       CHECK(datum.SerializeToString(&out));
       txn->Put(caffe::format_int(fileid * kCIFARBatchSize + itemid, 5), out);
@@ -553,7 +565,10 @@ void convert_dataset(const string& input_folder, const string& output_folder,
   scoped_ptr<db::DB> test_db(db::GetDB(db_type));
   test_db->Open(output_folder + "/cifar10_test_" + db_type, db::NEW);
   txn.reset(test_db->NewTransaction());
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -574,6 +589,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -640,12 +656,15 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     string out;
     CHECK(datum.SerializeToString(&out));
     txn->Put(caffe::format_int(itemid, 5), out);
   }
   txn->Commit();
   test_db->Close();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -749,6 +768,8 @@ void convert_dataset(const string& input_folder, const string& output_folder,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 int main(int argc, char** argv) {

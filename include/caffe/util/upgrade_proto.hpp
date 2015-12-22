@@ -47,6 +47,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -335,6 +336,14 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
 
 >>>>>>> device-abstraction
+=======
+
+V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
+
+// Return true iff any layer contains deprecated data transformation parameters.
+bool NetNeedsDataUpgrade(const NetParameter& net_param);
+
+>>>>>>> pod/post-rebase-error-fix
 // Perform all necessary transformations to upgrade old transformation fields
 // into a TransformationParameter.
 void UpgradeNetDataTransformation(NetParameter* net_param);
@@ -376,6 +385,7 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -417,6 +427,8 @@ void ReadSolverParamsFromTextFileOrDie(const string& param_file,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 }  // namespace caffe
 

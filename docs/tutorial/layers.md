@@ -17,6 +17,7 @@ To create a Caffe model you need to define the model architecture in a protocol 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -127,6 +128,9 @@ Caffe layers and their parameters are defined in the protocol buffer definitions
 =======
 Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
 >>>>>>> device-abstraction
+=======
+Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
+>>>>>>> pod/post-rebase-error-fix
 
 ### Vision Layers
 
@@ -154,6 +158,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -269,6 +274,9 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 =======
 * Layer type: `Convolution`
 >>>>>>> device-abstraction
+=======
+* Layer type: `Convolution`
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Parameters (`ConvolutionParameter convolution_param`)
@@ -298,6 +306,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -364,6 +373,8 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
@@ -375,6 +386,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
         param { lr_mult: 1 decay_mult: 1 }
         # learning rate and decay multipliers for the biases
         param { lr_mult: 2 decay_mult: 0 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -484,6 +496,8 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         convolution_param {
           num_output: 96     # learn 96 filters
           kernel_size: 11    # each filter is 11x11
@@ -511,6 +525,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -577,11 +592,14 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 The `Convolution` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
 
 #### Pooling
 
 * Layer type: `Pooling`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -685,6 +703,8 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
 * Parameters (`PoolingParameter pooling_param`)
@@ -710,6 +730,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -776,11 +797,14 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "pool1"
         type: "Pooling"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -884,6 +908,8 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         bottom: "conv1"
         top: "pool1"
         pooling_param {
@@ -907,6 +933,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1017,6 +1044,9 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 =======
 * Layer type: `LRN`
 >>>>>>> device-abstraction
+=======
+* Layer type: `LRN`
+>>>>>>> pod/post-rebase-error-fix
 * CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
 * CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
 * Parameters (`LRNParameter lrn_param`)
@@ -1030,6 +1060,7 @@ The local response normalization layer performs a kind of "lateral inhibition" b
 
 #### im2col
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1149,6 +1180,9 @@ The local response normalization layer performs a kind of "lateral inhibition" b
 =======
 `Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 >>>>>>> device-abstraction
+=======
+`Im2col` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
+>>>>>>> pod/post-rebase-error-fix
 
 ### Loss Layers
 
@@ -1168,6 +1202,7 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1312,11 +1347,15 @@ The softmax loss layer computes the multinomial logistic loss of the softmax of 
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+* Layer type: `SoftmaxWithLoss`
+>>>>>>> pod/post-rebase-error-fix
 
 The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It's conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.
 
 #### Sum-of-Squares / Euclidean
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1613,11 +1652,15 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+* Layer type: `EuclideanLoss`
+>>>>>>> pod/post-rebase-error-fix
 
 The Euclidean loss layer computes the sum of squares of differences of its two inputs, $$\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2$$.
 
 #### Hinge / Margin
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1648,6 +1691,9 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+* Layer type: `HingeLoss`
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
 * CUDA GPU implementation: none yet
 * Parameters (`HingeLossParameter hinge_loss_param`)
@@ -1661,6 +1707,7 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 * Samples
 
       # L1 Norm
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1725,6 +1772,11 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
         name: "loss"
         type: "HingeLoss"
 >>>>>>> device-abstraction
+=======
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+>>>>>>> pod/post-rebase-error-fix
         bottom: "pred"
         bottom: "label"
       }
@@ -1742,6 +1794,7 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1900,6 +1953,11 @@ The Euclidean loss layer computes the sum of squares of differences of its two i
         name: "loss"
         type: "HingeLoss"
 >>>>>>> device-abstraction
+=======
+      layer {
+        name: "loss"
+        type: "HingeLoss"
+>>>>>>> pod/post-rebase-error-fix
         bottom: "pred"
         bottom: "label"
         top: "loss"
@@ -1924,6 +1982,7 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1990,6 +2049,8 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 `SigmoidCrossEntropyLoss`
 
 #### Infogain
@@ -1999,6 +2060,7 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 #### Accuracy and Top-k
 
 `Accuracy` scores the output as the accuracy of output with respect to target -- it is not actually a loss and has no backward step.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2106,6 +2168,8 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 ### Activation / Neuron Layers
 
@@ -2130,6 +2194,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2236,6 +2301,9 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 =======
 * Layer type: `ReLU`
 >>>>>>> device-abstraction
+=======
+* Layer type: `ReLU`
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/relu_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
 * Parameters (`ReLUParameter relu_param`)
@@ -2253,6 +2321,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2319,11 +2388,14 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
 
       layer {
         name: "relu1"
         type: "ReLU"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2427,6 +2499,8 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         bottom: "conv1"
         top: "conv1"
       }
@@ -2443,6 +2517,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2509,6 +2584,8 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 Given an input value x, The `ReLU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
 #### Sigmoid
@@ -2530,6 +2607,7 @@ The `Sigmoid` layer computes the output as sigmoid(x) for each input element x.
 #### TanH / Hyperbolic Tangent
 
 * Layer type: `TanH`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2649,10 +2727,13 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/tanh_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/tanh_layer.cu`
 * Sample
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2721,6 +2802,8 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/post-rebase-error-fix
       layer {
         name: "layer"
         bottom: "in"
@@ -2733,6 +2816,7 @@ The `TanH` layer computes the output as tanh(x) for each input element x.
 #### Absolute Value
 
 * Layer type: `AbsVal`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2860,6 +2944,8 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/absval_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/absval_layer.cu`
 * Sample
@@ -2876,6 +2962,7 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2942,6 +3029,8 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       layer {
         name: "layer"
         bottom: "in"
@@ -2954,6 +3043,7 @@ The `AbsVal` layer computes the output as abs(x) for each input element x.
 #### Power
 
 * Layer type: `Power`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3064,6 +3154,8 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/power_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/power_layer.cu`
 * Parameters (`PowerParameter power_param`)
@@ -3085,6 +3177,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3151,11 +3244,14 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       layer {
         name: "layer"
         bottom: "in"
         top: "out"
         type: "Power"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3259,6 +3355,8 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         power_param {
           power: 1
           scale: 1
@@ -3278,6 +3376,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3334,11 +3433,14 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/post-rebase-error-fix
 The `Power` layer computes the output as (shift + scale * x) ^ power for each input element x.
 
 #### BNLL
 
 * Layer type: `BNLL`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3415,10 +3517,13 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/bnll_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/bnll_layer.cu`
 * Sample
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3580,6 +3685,9 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 =======
       layer {
 >>>>>>> device-abstraction
+=======
+      layer {
+>>>>>>> pod/post-rebase-error-fix
         name: "layer"
         bottom: "in"
         top: "out"
@@ -3609,6 +3717,7 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -3717,6 +3826,9 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 =======
 * Layer type: `Data`
 >>>>>>> device-abstraction
+=======
+* Layer type: `Data`
+>>>>>>> pod/post-rebase-error-fix
 * Parameters
     - Required
         - `source`: the name of the directory containing the database
@@ -3741,6 +3853,7 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 * Layer type: `MemoryData`
@@ -3835,6 +3948,9 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 =======
 * Layer type: `MemoryData`
 >>>>>>> device-abstraction
+=======
+* Layer type: `MemoryData`
+>>>>>>> pod/post-rebase-error-fix
 * Parameters
     - Required
         - `batch_size`, `channels`, `height`, `width`: specify the size of input chunks to read from memory
@@ -3853,6 +3969,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -3944,6 +4061,9 @@ The memory data layer reads data directly from memory, without copying it. In or
 =======
 * Layer type: `HDF5Data`
 >>>>>>> device-abstraction
+=======
+* Layer type: `HDF5Data`
+>>>>>>> pod/post-rebase-error-fix
 * Parameters
     - Required
         - `source`: the name of the file to read from
@@ -3951,6 +4071,7 @@ The memory data layer reads data directly from memory, without copying it. In or
 
 #### HDF5 Output
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4052,6 +4173,9 @@ The memory data layer reads data directly from memory, without copying it. In or
 =======
 * Layer type: `HDF5Output`
 >>>>>>> device-abstraction
+=======
+* Layer type: `HDF5Output`
+>>>>>>> pod/post-rebase-error-fix
 * Parameters
     - Required
         - `file_name`: name of file to write to
@@ -4060,6 +4184,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 
 #### Images
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4269,6 +4394,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 =======
 * Layer type: `ImageData`
 >>>>>>> device-abstraction
+=======
+* Layer type: `ImageData`
+>>>>>>> pod/post-rebase-error-fix
 * Parameters
     - Required
         - `source`: name of a text file, with each line giving an image filename and label
@@ -4292,6 +4420,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4335,11 +4464,14 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 `WindowData`
 
 #### Dummy
 
 `DummyData` is for development and debugging. See `DummyDataParameter`.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4466,11 +4598,14 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 ### Common Layers
 
 #### Inner Product
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4589,6 +4724,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 =======
 * Layer type: `InnerProduct`
 >>>>>>> device-abstraction
+=======
+* Layer type: `InnerProduct`
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
 * Parameters (`InnerProductParameter inner_product_param`)
@@ -4601,8 +4739,11 @@ The HDF5 output layer performs the opposite function of the other layers in this
         - `bias_term` [default `true`]: specifies whether to learn and apply a set of additive biases to the filter outputs
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * Input
     - `n * c_i * h_i * w_i`
 * Output
@@ -4618,6 +4759,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4670,6 +4812,8 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       layer {
         name: "fc8"
         type: "InnerProduct"
@@ -4677,6 +4821,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
         param { lr_mult: 1 decay_mult: 1 }
         # learning rate and decay multipliers for the biases
         param { lr_mult: 2 decay_mult: 0 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4811,6 +4956,8 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         inner_product_param {
           num_output: 1000
           weight_filler {
@@ -4838,6 +4985,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -4904,6 +5052,8 @@ The HDF5 output layer performs the opposite function of the other layers in this
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 The `InnerProduct` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
 
 #### Splitting
@@ -4956,6 +5106,7 @@ As another example, specifying `reshape_param { shape { dim: 0 dim: -1 } }` make
 #### Concatenation
 
 * Layer type: `Concat`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5067,6 +5218,8 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * CPU implementation: `./src/caffe/layers/concat_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
 * Parameters (`ConcatParameter concat_param`)
@@ -5083,6 +5236,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5149,6 +5303,8 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         - `axis` [default 1]: 0 for concatenation along num and 1 for channels.
 * Input
     - `n_i * c_i * h * w` for each input blob i from 1 to K.
@@ -5158,6 +5314,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 * Sample
 
       layer {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5265,6 +5422,8 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         name: "concat"
         bottom: "in1"
         bottom: "in2"
@@ -5281,6 +5440,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5347,6 +5507,8 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         type: "Concat"
         concat_param {
           axis: 1
@@ -5390,6 +5552,7 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
 #### Softmax
 
 `Softmax`
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5511,6 +5674,8 @@ The `SLICE` layer is a utility layer that slices an input layer to multiple outp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #### Mean-Variance Normalization
 

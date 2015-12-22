@@ -30,6 +30,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -92,6 +93,8 @@ namespace caffe {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
 // The improvement in performance seems negligible in the single GPU case,
@@ -105,6 +108,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
     return;
   }
 #endif
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -359,6 +363,13 @@ inline void CaffeFreeHost(void* ptr) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
+=======
+  *ptr = malloc(size);
+  *use_cuda = false;
+  CHECK(*ptr) << "host allocation of size " << size << " failed";
+}
+
+>>>>>>> pod/post-rebase-error-fix
 inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
@@ -366,8 +377,11 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
     return;
   }
 #endif
+<<<<<<< HEAD
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
   free(ptr);
 #endif
 }
@@ -377,11 +391,14 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 <<<<<<< HEAD
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
  *        and device (GPU).
@@ -400,6 +417,7 @@ class SyncedMemory {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -473,6 +491,14 @@ class SyncedMemory {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+        own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
+        gpu_device_(-1) {}
+  explicit SyncedMemory(size_t size)
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
+        own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false),
+        gpu_device_(-1) {}
+>>>>>>> pod/post-rebase-error-fix
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -484,6 +510,7 @@ class SyncedMemory {
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1737,6 +1764,8 @@ class SyncedMemory {
   void* mutable_data();
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
   const void* const_data();
   void* mutable_data();
 =======
@@ -1744,11 +1773,14 @@ class SyncedMemory {
   void async_gpu_push(const cudaStream_t& stream);
 #endif
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
   const void* const_data();
   void* mutable_data();
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
  private:
   void to_cpu();
@@ -1778,6 +1810,7 @@ class SyncedMemory {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -1970,6 +2003,11 @@ class SyncedMemory {
   bool own_gpu_data_;
   int gpu_device_;
 >>>>>>> device-abstraction
+=======
+  bool cpu_malloc_use_cuda_;
+  bool own_gpu_data_;
+  int gpu_device_;
+>>>>>>> pod/post-rebase-error-fix
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -95,10 +96,13 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <vector>
 
 #include "caffe/neuron_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -174,6 +178,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -246,6 +252,7 @@ INSTANTIATE_CLASS(ExpLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -358,4 +365,8 @@ REGISTER_LAYER_CLASS(Exp);
 REGISTER_LAYER_CLASS(Exp);
 
 >>>>>>> device-abstraction
+=======
+REGISTER_LAYER_CLASS(Exp);
+
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

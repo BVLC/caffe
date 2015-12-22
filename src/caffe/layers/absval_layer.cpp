@@ -14,6 +14,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -120,6 +121,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -128,6 +132,7 @@ template <typename Dtype>
 void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::LayerSetUp(bottom, top);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -249,6 +254,9 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
 >>>>>>> device-abstraction
+=======
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+>>>>>>> pod/post-rebase-error-fix
     "allow in-place computation.";
 }
 
@@ -290,6 +298,7 @@ INSTANTIATE_CLASS(AbsValLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -402,4 +411,8 @@ REGISTER_LAYER_CLASS(AbsVal);
 REGISTER_LAYER_CLASS(AbsVal);
 
 >>>>>>> device-abstraction
+=======
+REGISTER_LAYER_CLASS(AbsVal);
+
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

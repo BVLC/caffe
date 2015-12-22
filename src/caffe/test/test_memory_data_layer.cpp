@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,6 +77,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
@@ -90,6 +93,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -167,11 +171,14 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <string>
 #include <vector>
 
 #include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -185,6 +192,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -305,6 +314,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -412,6 +422,9 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
 =======
 #ifdef USE_OPENCV
 >>>>>>> device-abstraction
+=======
+#ifdef USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix
 TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   typedef typename TypeParam::Dtype Dtype;
 
@@ -435,6 +448,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -501,6 +515,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // We add batch_size*num_iter items, then for each iteration
   // we forward batch_size elements
   int num_iter = 5;
@@ -508,6 +524,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   const size_t count = this->channels_ * this->height_ * this->width_;
   size_t pixel_index = 0;
   for (int i = 0; i < this->batch_size_ * num_iter; ++i) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -612,6 +629,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     datum_vector[i].set_channels(this->channels_);
     datum_vector[i].set_height(this->height_);
     datum_vector[i].set_width(this->width_);
@@ -634,6 +653,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -729,6 +749,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   layer.AddDatumVector(datum_vector);
 
   int data_index;
@@ -745,6 +767,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -874,10 +897,15 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   for (int iter = 0; iter < num_iter; ++iter) {
     int offset = this->batch_size_ * iter;
 >>>>>>> device-abstraction
+=======
+  for (int iter = 0; iter < num_iter; ++iter) {
+    int offset = this->batch_size_ * iter;
+>>>>>>> pod/post-rebase-error-fix
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
     size_t index = 0;
     for (int i = 0; i < this->batch_size_; ++i) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1018,6 +1046,10 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
       const string& data_string = datum_vector[offset + i].data();
       EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
 >>>>>>> device-abstraction
+=======
+      const string& data_string = datum_vector[offset + i].data();
+      EXPECT_EQ(offset + i, this->label_blob_->cpu_data()[i]);
+>>>>>>> pod/post-rebase-error-fix
       for (int c = 0; c < this->channels_; ++c) {
         for (int h = 0; h < this->height_; ++h) {
           for (int w = 0; w < this->width_; ++w) {
@@ -1044,6 +1076,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1110,6 +1143,8 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 TYPED_TEST(MemoryDataLayerTest, AddMatVectorDefaultTransform) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
@@ -1246,6 +1281,7 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1325,4 +1361,6 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

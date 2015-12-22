@@ -15,6 +15,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -131,6 +132,9 @@
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -168,6 +172,7 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
       diff_.mutable_cpu_data());  // a_i-b_i
   const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -302,6 +307,10 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
 >>>>>>> device-abstraction
+=======
+  bool legacy_version =
+      this->layer_param_.contrastive_loss_param().legacy_version();
+>>>>>>> pod/post-rebase-error-fix
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
     dist_sq_.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
@@ -321,6 +330,7 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -387,6 +397,8 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       if (legacy_version) {
         loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
       } else {
@@ -394,6 +406,7 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
           Dtype(0.0));
         loss += dist*dist;
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -493,6 +506,8 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
   }
   loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
@@ -503,6 +518,7 @@ template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -635,6 +651,10 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   bool legacy_version =
       this->layer_param_.contrastive_loss_param().legacy_version();
 >>>>>>> device-abstraction
+=======
+  bool legacy_version =
+      this->layer_param_.contrastive_loss_param().legacy_version();
+>>>>>>> pod/post-rebase-error-fix
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
@@ -664,6 +684,7 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -730,6 +751,8 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
           Dtype mdist(0.0);
           Dtype beta(0.0);
           if (legacy_version) {
@@ -744,6 +767,7 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             caffe_cpu_axpby(
                 channels,
                 beta,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -846,6 +870,8 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
                 diff_.cpu_data() + (j*channels),
                 Dtype(0.0),
                 bout + (j*channels));
@@ -875,6 +901,7 @@ INSTANTIATE_CLASS(ContrastiveLossLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -987,4 +1014,8 @@ REGISTER_LAYER_CLASS(ContrastiveLoss);
 REGISTER_LAYER_CLASS(ContrastiveLoss);
 
 >>>>>>> device-abstraction
+=======
+REGISTER_LAYER_CLASS(ContrastiveLoss);
+
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

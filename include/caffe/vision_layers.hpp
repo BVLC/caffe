@@ -29,6 +29,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -73,11 +74,16 @@ namespace caffe {
  *        ConvolutionLayer and DeconvolutionLayer.
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+ * @brief Abstract base class that factors out the BLAS code common to
+ *        ConvolutionLayer and DeconvolutionLayer.
+>>>>>>> pod/post-rebase-error-fix
  */
 template <typename Dtype>
 class BaseConvolutionLayer : public Layer<Dtype> {
  public:
 <<<<<<< HEAD
+<<<<<<< HEAD
   explicit BaseConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
 >>>>>>> pod/device/blob.hpp
@@ -160,12 +166,18 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  explicit BaseConvolutionLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+<<<<<<< HEAD
+>>>>>>> pod/post-rebase-error-fix
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -228,10 +240,14 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   explicit BaseConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
 >>>>>>> caffe
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -269,12 +285,16 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -13617,6 +13637,8 @@ class EltwiseLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
 =======
@@ -13773,7 +13795,10 @@ class EltwiseLayer : public Layer<Dtype> {
  */
 template <typename Dtype>
 class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
  public:
 <<<<<<< HEAD
   explicit EltwiseLayer(const LayerParameter& param)
@@ -13784,6 +13809,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -13908,6 +13934,77 @@ class Im2colLayer : public Layer<Dtype> {
 template <typename Dtype>
 class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
 >>>>>>> device-abstraction
+=======
+=======
+  /**
+   * @param param provides ConvolutionParameter convolution_param,
+   *    with ConvolutionLayer options:
+   *  - num_output. The number of filters.
+   *  - kernel_size / kernel_h / kernel_w. The filter dimensions, given by
+   *  kernel_size for square filters or kernel_h and kernel_w for rectangular
+   *  filters.
+   *  - stride / stride_h / stride_w (\b optional, default 1). The filter
+   *  stride, given by stride_size for equal dimensions or stride_h and stride_w
+   *  for different strides. By default the convolution is dense with stride 1.
+   *  - pad / pad_h / pad_w (\b optional, default 0). The zero-padding for
+   *  convolution, given by pad for equal dimensions or pad_h and pad_w for
+   *  different padding. Input padding is computed implicitly instead of
+   *  actually padding.
+   *  - group (\b optional, default 1). The number of filter groups. Group
+   *  convolution is a method for reducing parameterization by selectively
+   *  connecting input and output channels. The input and output channel dimensions must be divisible
+   *  by the number of groups. For group @f$ \geq 1 @f$, the
+   *  convolutional filters' input and output channels are separated s.t. each
+   *  group takes 1 / group of the input channels and makes 1 / group of the
+   *  output channels. Concretely 4 input channels, 8 output channels, and
+   *  2 groups separate input channels 1-2 and output channels 1-4 into the
+   *  first group and input channels 3-4 and output channels 5-8 into the second
+   *  group.
+   *  - bias_term (\b optional, default true). Whether to have a bias.
+   *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
+   *    kernels + stream parallelism) engines.
+   */
+  explicit ConvolutionLayer(const LayerParameter& param)
+      : BaseConvolutionLayer<Dtype>(param) {}
+>>>>>>> BVLC/master
+
+  virtual inline const char* type() const { return "Convolution"; }
+
+ protected:
+<<<<<<< HEAD
+  EltwiseParameter_EltwiseOp op_;
+  vector<Dtype> coeffs_;
+=======
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual inline bool reverse_dimensions() { return false; }
+  virtual void compute_output_shape();
+>>>>>>> BVLC/master
+};
+
+/**
+ * @brief Convolve the input with a bank of learned filters, and (optionally)
+ *        add biases, treating filters and convolution parameters in the
+ *        opposite sense as ConvolutionLayer.
+ *
+ *   ConvolutionLayer computes each output value by dotting an input window with
+ *   a filter; DeconvolutionLayer multiplies each input value by a filter
+ *   elementwise, and sums over the resulting output windows. In other words,
+ *   DeconvolutionLayer is ConvolutionLayer with the forward and backward passes
+ *   reversed. DeconvolutionLayer reuses ConvolutionParameter for its
+ *   parameters, but they take the opposite sense as in ConvolutionLayer (so
+ *   padding is removed from the output rather than added to the input, and
+ *   stride results in upsampling rather than downsampling).
+ */
+template <typename Dtype>
+class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
+>>>>>>> pod/post-rebase-error-fix
  public:
 <<<<<<< HEAD
   explicit Im2colLayer(const LayerParameter& param)
@@ -13918,6 +14015,7 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -13990,13 +14088,23 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
       : BaseConvolutionLayer<Dtype>(param) {}
 >>>>>>> BVLC/master
 
+=======
+=======
+  explicit DeconvolutionLayer(const LayerParameter& param)
+      : BaseConvolutionLayer<Dtype>(param) {}
+>>>>>>> BVLC/master
+
+>>>>>>> pod/post-rebase-error-fix
   virtual inline const char* type() const { return "Deconvolution"; }
 
  protected:
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int channels_;
@@ -14004,8 +14112,11 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   int width_;
   int pad_h_, pad_w_;
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
 =======
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -14018,12 +14129,16 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
   virtual inline bool reverse_dimensions() { return true; }
   virtual void compute_output_shape();
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 };
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
+<<<<<<< HEAD
 template <typename Dtype>
 =======
 =======
@@ -14112,6 +14227,75 @@ class Im2colLayer : public Layer<Dtype> {
  public:
   explicit Im2colLayer(const LayerParameter& param)
 >>>>>>> device-abstraction
+=======
+#ifdef USE_CUDNN
+/*
+ * @brief cuDNN implementation of ConvolutionLayer.
+ *        Fallback to ConvolutionLayer for CPU mode.
+ *
+ * cuDNN accelerates convolution through forward kernels for filtering and bias
+ * plus backward kernels for the gradient w.r.t. the filters, biases, and
+ * inputs. Caffe + cuDNN further speeds up the computation through forward
+ * parallelism across groups and backward parallelism across gradients.
+ *
+ * The CUDNN engine does not have memory overhead for matrix buffers. For many
+ * input and filter regimes the CUDNN engine is faster than the CAFFE engine,
+ * but for fully-convolutional models and large inputs the CAFFE engine can be
+ * faster as long as it fits in memory.
+*/
+template <typename Dtype>
+class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
+ public:
+  explicit CuDNNConvolutionLayer(const LayerParameter& param)
+      : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNConvolutionLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool handles_setup_;
+  cudnnHandle_t* handle_;
+  cudaStream_t*  stream_;
+
+  // algorithms for forward and backwards convolutions
+  cudnnConvolutionFwdAlgo_t *fwd_algo_;
+  cudnnConvolutionBwdFilterAlgo_t *bwd_filter_algo_;
+  cudnnConvolutionBwdDataAlgo_t *bwd_data_algo_;
+
+  vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
+  cudnnTensorDescriptor_t    bias_desc_;
+  cudnnFilterDescriptor_t      filter_desc_;
+  vector<cudnnConvolutionDescriptor_t> conv_descs_;
+  int bottom_offset_, top_offset_, bias_offset_;
+
+  size_t *workspace_fwd_sizes_;
+  size_t *workspace_bwd_data_sizes_;
+  size_t *workspace_bwd_filter_sizes_;
+  size_t workspaceSizeInBytes;  // size of underlying storage
+  void *workspaceData;  // underlying storage
+  void **workspace;  // aliases into workspaceData
+};
+#endif
+
+/**
+ * @brief A helper for image operations that rearranges image regions into
+ *        column vectors.  Used by ConvolutionLayer to perform convolution
+ *        by matrix multiplication.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
+template <typename Dtype>
+class Im2colLayer : public Layer<Dtype> {
+ public:
+  explicit Im2colLayer(const LayerParameter& param)
+>>>>>>> pod/post-rebase-error-fix
       : Layer<Dtype>(param) {}
 <<<<<<< HEAD
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
@@ -14120,6 +14304,7 @@ class Im2colLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14162,10 +14347,14 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual ~CuDNNLRNLayer();
 
@@ -14200,14 +14389,27 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+
+  virtual inline const char* type() const { return "Im2col"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+<<<<<<< HEAD
+>>>>>>> pod/post-rebase-error-fix
   int M_;
   int K_;
   int N_;
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
 =======
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -14235,7 +14437,10 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 
   bool force_nd_im2col_;
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 };
 
 template <typename Dtype>
@@ -14252,13 +14457,19 @@ template <typename Dtype>
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
 /**
  * @brief Normalize the input in a local region across or within feature maps.
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 template <typename Dtype>
 class CuDNNLRNLayer : public LRNLayer<Dtype> {
  public:
@@ -14268,11 +14479,15 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 =======
   explicit LRNLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual ~CuDNNLRNLayer();
 
@@ -14337,6 +14552,9 @@ class CuDNNLRNLayer : public LRNLayer<Dtype> {
 };
 =======
 
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   virtual inline const char* type() const { return "LRN"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
@@ -14590,7 +14808,10 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
 
 #endif
 
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 /**
  * @brief Pools the input image by taking the max, average, etc. within regions.
  *
@@ -14634,6 +14855,7 @@ class PoolingLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
 =======
@@ -14644,6 +14866,8 @@ class PoolingLayer : public Layer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
@@ -14672,6 +14896,7 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -14778,6 +15003,9 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 =======
       : PoolingLayer<Dtype>(param), handles_setup_(false) {}
 >>>>>>> device-abstraction
+=======
+      : PoolingLayer<Dtype>(param), handles_setup_(false) {}
+>>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -14805,6 +15033,7 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -14959,6 +15188,11 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
   cudnnHandle_t             handle_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 >>>>>>> device-abstraction
+=======
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
+>>>>>>> pod/post-rebase-error-fix
   cudnnPoolingDescriptor_t  pooling_desc_;
   cudnnPoolingMode_t        mode_;
 };
@@ -14976,6 +15210,7 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15042,6 +15277,8 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 /**
  * @brief Does spatial pyramid pooling on the input image
  *        by taking the max, average, etc. within regions
@@ -15114,6 +15351,7 @@ class SPPLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15191,6 +15429,8 @@ class SPPLayer : public Layer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_

@@ -21,6 +21,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -13986,17 +13987,84 @@ class HDF5OutputLayer : public Layer<Dtype> {
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
 };
+=======
+#include "hdf5.h"
+
+#include "caffe/blob.hpp"
+#include "caffe/common.hpp"
+#include "caffe/data_reader.hpp"
+#include "caffe/data_transformer.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/internal_thread.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/util/blocking_queue.hpp"
+#include "caffe/util/db.hpp"
+>>>>>>> pod/post-rebase-error-fix
+
+
+<<<<<<< HEAD
+template <typename Dtype>
+class HDF5OutputLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5OutputLayer(const LayerParameter& param);
+  virtual ~HDF5OutputLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_HDF5_OUTPUT;
+  }
+  // TODO: no limit on the number of blobs
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 0; }
+
+  inline std::string file_name() const { return file_name_; }
+
+ protected:
+  virtual void SaveBlobs();
+
+  std::string file_name_;
+  hid_t file_id_;
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
+};
 
 
 // TODO: DataLayer, ImageDataLayer, and WindowDataLayer all have the
 // same basic structure and a lot of duplicated code.
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+namespace caffe {
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 
+/**
+ * @brief Provides base for data layers that feed blobs to the Net.
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
 template <typename Dtype>
+<<<<<<< HEAD
 >>>>>>> master
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit DataLayer(const LayerParameter& param);
+=======
+class BaseDataLayer : public Layer<Dtype> {
+ public:
+<<<<<<< HEAD
+  explicit DataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+>>>>>>> pod/post-rebase-error-fix
   virtual ~DataLayer();
 <<<<<<< HEAD
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -14015,6 +14083,13 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
     return;
+<<<<<<< HEAD
+=======
+  }
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_DATA;
+>>>>>>> pod/post-rebase-error-fix
   }
 >>>>>>> BVLC/device-abstraction
 
@@ -14044,6 +14119,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
   virtual void load_batch(Batch<Dtype>* batch);
 
@@ -14110,11 +14186,102 @@ class BasePrefetchingDataLayer :
  protected:
 >>>>>>> BVLC/master
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
   virtual unsigned int PrefetchRand();
   // The thread's function
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
+  virtual void InternalThreadEntry();
+  virtual void load_batch(Batch<Dtype>* batch) = 0;
+
+  Batch<Dtype> prefetch_[PREFETCH_COUNT];
+  BlockingQueue<Batch<Dtype>*> prefetch_free_;
+  BlockingQueue<Batch<Dtype>*> prefetch_full_;
+
+  Blob<Dtype> transformed_data_;
+};
+
+template <typename Dtype>
+class DataLayer : public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit DataLayer(const LayerParameter& param);
+  virtual ~DataLayer();
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  // DataLayer uses DataReader instead for sharing for parallelism
+  virtual inline bool ShareInParallel() const { return false; }
+  virtual inline const char* type() const { return "Data"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
+
+ protected:
+  virtual void load_batch(Batch<Dtype>* batch);
+
+  DataReader reader_;
+=======
+=======
+  explicit BaseDataLayer(const LayerParameter& param);
+  // LayerSetUp: implements common data layer setup functionality, and calls
+  // DataLayerSetUp to do special data layer setup for individual layer types.
+  // This method may not be overridden except by the BasePrefetchingDataLayer.
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  // Data layers should be shared by multiple solvers in parallel
+  virtual inline bool ShareInParallel() const { return true; }
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+
+ protected:
+  TransformationParameter transform_param_;
+  shared_ptr<DataTransformer<Dtype> > data_transformer_;
+  bool output_labels_;
+>>>>>>> pod/post-rebase-error-fix
+};
+
+/**
+ * @brief Provides data to the Net generated by a Filler.
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class Batch {
+ public:
+  Blob<Dtype> data_, label_;
+};
+
+template <typename Dtype>
+class BasePrefetchingDataLayer :
+    public BaseDataLayer<Dtype>, public InternalThread {
+ public:
+  explicit BasePrefetchingDataLayer(const LayerParameter& param);
+  // LayerSetUp: implements common data layer setup functionality, and calls
+  // DataLayerSetUp to do special data layer setup for individual layer types.
+  // This method may not be overridden.
+  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  // Prefetches batches (asynchronously if to GPU memory)
+  static const int PREFETCH_COUNT = 3;
+
+ protected:
+>>>>>>> BVLC/master
   virtual void InternalThreadEntry();
   virtual void load_batch(Batch<Dtype>* batch) = 0;
 
@@ -14162,6 +14329,7 @@ class DummyDataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers should be shared by multiple solvers in parallel
@@ -14204,6 +14372,8 @@ class DummyDataLayer : public Layer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
@@ -14221,6 +14391,7 @@ class DummyDataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -14259,10 +14430,13 @@ class DummyDataLayer : public Layer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DUMMY_DATA;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14313,6 +14487,9 @@ class DummyDataLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers should be shared by multiple solvers in parallel
@@ -14337,6 +14514,7 @@ class DummyDataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -14380,10 +14558,14 @@ class DummyDataLayer : public Layer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14453,6 +14635,9 @@ class DummyDataLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -14460,6 +14645,7 @@ class DummyDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14498,6 +14684,9 @@ class DummyDataLayer : public Layer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   vector<shared_ptr<Filler<Dtype> > > fillers_;
   vector<bool> refill_;
 };
@@ -14520,6 +14709,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers should be shared by multiple solvers in parallel
@@ -14562,6 +14752,8 @@ class HDF5DataLayer : public Layer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
@@ -14581,6 +14773,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -14619,10 +14812,13 @@ class HDF5DataLayer : public Layer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HDF5_DATA;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14673,6 +14869,9 @@ class HDF5DataLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers should be shared by multiple solvers in parallel
@@ -14697,6 +14896,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -14740,6 +14940,9 @@ class HDF5DataLayer : public Layer<Dtype> {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
 
@@ -14757,6 +14960,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -14813,6 +15017,9 @@ class HDF5DataLayer : public Layer<Dtype> {
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -14827,6 +15034,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -14898,6 +15106,9 @@ class HDF5DataLayer : public Layer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   virtual void LoadHDF5FileData(const char* filename);
 
   std::vector<std::string> hdf_filenames_;
@@ -14908,6 +15119,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   std::vector<unsigned int> data_permutation_;
   std::vector<unsigned int> file_permutation_;
 =======
@@ -14948,6 +15160,10 @@ class HDF5DataLayer : public Layer<Dtype> {
   std::vector<unsigned int> data_permutation_;
   std::vector<unsigned int> file_permutation_;
 >>>>>>> device-abstraction
+=======
+  std::vector<unsigned int> data_permutation_;
+  std::vector<unsigned int> file_permutation_;
+>>>>>>> pod/post-rebase-error-fix
 };
 
 /**
@@ -14969,6 +15185,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 =======
@@ -14993,12 +15210,17 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 =======
 >>>>>>> device-abstraction
+=======
+class ImageDataLayer : public Layer<Dtype>, public InternalThread {
+=======
+>>>>>>> pod/post-rebase-error-fix
 class HDF5OutputLayer : public Layer<Dtype> {
  public:
   explicit HDF5OutputLayer(const LayerParameter& param)
       : Layer<Dtype>(param), file_opened_(false) {}
   virtual ~HDF5OutputLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15048,6 +15270,11 @@ class HDF5OutputLayer : public Layer<Dtype> {
   // Data layers should be shared by multiple solvers in parallel
   virtual inline bool ShareInParallel() const { return true; }
 >>>>>>> device-abstraction
+=======
+      const vector<Blob<Dtype>*>& top);
+  // Data layers should be shared by multiple solvers in parallel
+  virtual inline bool ShareInParallel() const { return true; }
+>>>>>>> pod/post-rebase-error-fix
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -15094,6 +15321,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -15192,10 +15420,14 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
  public:
   explicit ImageDataLayer(const LayerParameter& param)
       : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~ImageDataLayer();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15269,6 +15501,8 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
@@ -15276,6 +15510,7 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
     return;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15361,11 +15596,14 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
 =======
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15448,11 +15686,15 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 =======
 
 >>>>>>> device-abstraction
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   virtual inline const char* type() const { return "ImageData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -15640,6 +15882,11 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   virtual void ShuffleImages();
   virtual void load_batch(Batch<Dtype>* batch);
 
@@ -15667,6 +15914,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
@@ -15735,6 +15983,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -15758,6 +16008,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -15805,9 +16056,12 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 >>>>>>> caffe
 =======
+>>>>>>> pod/post-rebase-error-fix
+=======
       : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+<<<<<<< HEAD
 >>>>>>> master
 =======
       : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
@@ -15974,6 +16228,9 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 
   virtual inline const char* type() const { return "MemoryData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
@@ -15990,6 +16247,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -16046,6 +16304,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifdef USE_OPENCV
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
       const vector<int>& labels);
@@ -16058,6 +16318,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -16122,6 +16383,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
@@ -16136,6 +16399,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -16221,6 +16485,9 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 =======
   void set_batch_size(int new_size);
 >>>>>>> device-abstraction
+=======
+  void set_batch_size(int new_size);
+>>>>>>> pod/post-rebase-error-fix
 
   int batch_size() { return batch_size_; }
   int channels() { return channels_; }
@@ -16246,6 +16513,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -16355,6 +16623,9 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -16371,6 +16642,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> BVLC/device-abstraction
@@ -16607,6 +16879,13 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int n_;
   size_t pos_;
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+  Dtype* data_;
+  Dtype* labels_;
+  int n_;
+  size_t pos_;
+>>>>>>> pod/post-rebase-error-fix
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
@@ -16637,6 +16916,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -16724,6 +17004,8 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
@@ -16748,6 +17030,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -16971,11 +17254,14 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
 =======
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -17024,6 +17310,9 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 =======
 
 >>>>>>> device-abstraction
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   virtual inline const char* type() const { return "WindowData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
@@ -17047,6 +17336,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -17232,10 +17522,13 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
 =======
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -17321,6 +17614,8 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   virtual unsigned int PrefetchRand();
   virtual void load_batch(Batch<Dtype>* batch);
 

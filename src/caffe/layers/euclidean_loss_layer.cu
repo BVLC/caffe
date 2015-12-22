@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/euclidean_loss_layer.hpp"
 =======
 #include "caffe/loss_layers.hpp"
@@ -17,6 +18,9 @@
 =======
 #include "caffe/loss_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

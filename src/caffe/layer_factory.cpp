@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -76,6 +77,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 // Make sure we include Python.h before any system header
 // to avoid _POSIX_C_SOURCE redefinition
 #ifdef WITH_PYTHON_LAYER
@@ -91,6 +94,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -168,10 +172,13 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <string>
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -191,6 +198,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/proto/caffe.pb.h"
 
 #ifdef USE_CUDNN
@@ -224,6 +233,10 @@
 #include "caffe/python_layer.hpp"
 #endif
 
+#ifdef WITH_PYTHON_LAYER
+#include "caffe/python_layer.hpp"
+#endif
+
 namespace caffe {
 
 // Get convolution layer according to engine.
@@ -237,6 +250,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
@@ -316,6 +330,9 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 =======
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 >>>>>>> device-abstraction
+=======
+shared_ptr<Layer<Dtype> > GetConvolutionLayer(
+>>>>>>> pod/post-rebase-error-fix
     const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
@@ -334,6 +351,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -385,10 +403,13 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -588,12 +609,15 @@ Layer<Dtype>* GetTanHLayer(const LayerParameter& param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -702,6 +726,10 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
 >>>>>>> device-abstraction
+=======
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
+
+>>>>>>> pod/post-rebase-error-fix
 // Get pooling layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
@@ -740,6 +768,7 @@ REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -870,6 +899,8 @@ REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 =======
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 // Get LRN layer according to engine
 template <typename Dtype>
@@ -905,6 +936,7 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
@@ -941,15 +973,22 @@ REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 =======
 
 >>>>>>> pod/caffe-merge
+=======
+
+>>>>>>> pod/post-rebase-error-fix
 REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
 
 // Get relu layer according to engine.
 template <typename Dtype>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/post-rebase-error-fix
 shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   ReLUParameter_Engine engine = param.relu_param().engine();
   if (engine == ReLUParameter_Engine_DEFAULT) {
     engine = ReLUParameter_Engine_CAFFE;
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
@@ -969,16 +1008,22 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifdef USE_CUDNN
     engine = ReLUParameter_Engine_CUDNN;
 #endif
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/post-rebase-error-fix
   if (engine == ReLUParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ReLUParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
+<<<<<<< HEAD
 =======
   if (engine == ConvolutionParameter_Engine_CAFFE) {
 <<<<<<< HEAD
@@ -1127,12 +1172,15 @@ Layer<Dtype>* GetTanHLayer(const LayerParameter& param) {
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/post-rebase-error-fix
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 =======
@@ -2124,6 +2172,10 @@ REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 =======
 
 >>>>>>> device-abstraction
+=======
+REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
+
+>>>>>>> pod/post-rebase-error-fix
 // Get sigmoid layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
@@ -2212,6 +2264,7 @@ REGISTER_LAYER_CREATOR(Python, GetPythonLayer);
 
 // Layers that use their constructor as their default creator should be
 // registered in their corresponding cpp files. Do not register them here.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2314,4 +2367,6 @@ REGISTER_LAYER_CREATOR(TANH, GetTanHLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

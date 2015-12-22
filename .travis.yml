@@ -14,6 +14,7 @@ env:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -80,12 +81,15 @@ env:
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=true PYTHON_VERSION=3
     - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true
     - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -188,6 +192,8 @@ env:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 language: cpp
 
@@ -216,6 +222,7 @@ before_install:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -323,6 +330,9 @@ before_install:
 =======
   - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
 >>>>>>> device-abstraction
+=======
+  - export CONDA_DIR="/home/travis/miniconda$PYTHON_VERSION"
+>>>>>>> pod/post-rebase-error-fix
 
 install:
   - sudo -E $SCRIPTS/travis_install.sh
@@ -340,6 +350,7 @@ before_script:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -455,6 +466,10 @@ before_script:
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
   - export PATH=$CONDA_DIR/bin:$PATH
 >>>>>>> device-abstraction
+=======
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64:$CONDA_DIR/lib
+  - export PATH=$CONDA_DIR/bin:$PATH
+>>>>>>> pod/post-rebase-error-fix
   - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
 script: $SCRIPTS/travis_build_and_test.sh

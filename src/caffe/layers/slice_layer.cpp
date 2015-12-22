@@ -23,6 +23,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -187,9 +188,15 @@
 #include "caffe/vision_layers.hpp"
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
+=======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -348,6 +355,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -378,6 +387,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -444,6 +454,8 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const int num_axes = bottom[0]->num_axes();
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   if (slice_param.has_slice_dim()) {
@@ -472,6 +484,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -608,6 +621,11 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(slice_point_.size(), top.size() - 1);
     CHECK_LE(top.size(), bottom_slice_axis);
 >>>>>>> device-abstraction
+=======
+  if (slice_point_.size() != 0) {
+    CHECK_EQ(slice_point_.size(), top.size() - 1);
+    CHECK_LE(top.size(), bottom_slice_axis);
+>>>>>>> pod/post-rebase-error-fix
     int prev = 0;
     vector<int> slices;
     for (int i = 0; i < slice_point_.size(); ++i) {
@@ -626,6 +644,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -687,11 +706,14 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     slices.push_back(bottom_slice_axis - prev);
     for (int i = 0; i < top.size(); ++i) {
       top_shape[slice_axis_] = slices[i];
       top[i]->Reshape(top_shape);
       count += top[i]->count();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1824,6 +1846,10 @@ template <typename Dtype>
     }
   } else {
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+    }
+  } else {
+>>>>>>> pod/post-rebase-error-fix
     CHECK_EQ(bottom_slice_axis % top.size(), 0)
         << "Number of top blobs (" << top.size() << ") should evenly "
         << "divide input slice axis (" << bottom_slice_axis << ")";
@@ -1832,9 +1858,12 @@ template <typename Dtype>
       top[i]->Reshape(top_shape);
       count += top[i]->count();
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
   }
   CHECK_EQ(count, bottom[0]->count());
@@ -1845,6 +1874,7 @@ template <typename Dtype>
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -1909,6 +1939,8 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 =======
@@ -1945,6 +1977,7 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -2097,6 +2130,8 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> device-abstraction
 =======
+>>>>>>> pod/post-rebase-error-fix
+=======
 void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   if (top.size() == 1) { return; }
@@ -2116,6 +2151,7 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     offset_slice_axis += top_slice_axis;
   }
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -2192,10 +2228,13 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
 void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2301,6 +2340,8 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 =======
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -2325,6 +2366,7 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
 =======
@@ -2456,6 +2498,10 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
 >>>>>>> BVLC/device-abstraction
+=======
+      GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
+          bottom_diff + (*bottom)[0]->offset(offset_num));
+>>>>>>> pod/post-rebase-error-fix
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -2469,6 +2515,7 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2581,11 +2628,14 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         GetDevice<Dtype>(Caffe::CPU)->copy(num_elem, top_diff + blob->offset(n),
             bottom_diff + (*bottom)[0]->offset(n, offset_channel));
       }
       offset_channel += blob->channels();
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
@@ -3375,6 +3425,24 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/master
     }
 >>>>>>> device-abstraction
+=======
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (!propagate_down[0] || top.size() == 1) { return; }
+  int offset_slice_axis = 0;
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  for (int i = 0; i < top.size(); ++i) {
+    const Dtype* top_diff = top[i]->cpu_diff();
+    const int top_slice_axis = top[i]->shape(slice_axis_);
+    for (int n = 0; n < num_slices_; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size_;
+      const int bottom_offset =
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
+      caffe_copy(top_slice_axis * slice_size_,
+          top_diff + top_offset, bottom_diff + bottom_offset);
+>>>>>>> BVLC/master
+    }
+>>>>>>> pod/post-rebase-error-fix
     offset_slice_axis += top_slice_axis;
   }
 }
@@ -3396,6 +3464,7 @@ INSTANTIATE_CLASS(SliceLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3462,6 +3531,8 @@ INSTANTIATE_CLASS(SliceLayer);
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 REGISTER_LAYER_CLASS(Slice);
 
 =======

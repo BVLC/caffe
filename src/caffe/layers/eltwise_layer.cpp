@@ -23,6 +23,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -115,12 +116,15 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -224,6 +228,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -258,6 +264,7 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -384,9 +391,28 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
+=======
+  }
+  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 }
 
 template <typename Dtype>
+void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  for (int i = 1; i < bottom.size(); ++i) {
+    CHECK(bottom[i]->shape() == bottom[0]->shape());
+  }
+  top[0]->ReshapeLike(*bottom[0]);
+  // If max operation, we will initialize the vector index part.
+  if (this->layer_param_.eltwise_param().operation() ==
+      EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
+    max_idx_.Reshape(bottom[0]->shape());
+  }
+>>>>>>> pod/post-rebase-error-fix
+}
+
+template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -422,10 +448,13 @@ template <typename Dtype>
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 Dtype EltwiseLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -530,6 +559,9 @@ template <typename Dtype>
 =======
 =======
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> pod/post-rebase-error-fix
 void EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   int* mask = NULL;
@@ -549,6 +581,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 =======
 >>>>>>> BVLC/master
@@ -582,6 +615,9 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
     this->device_->mul(count, bottom[0]->const_data(),
@@ -602,10 +638,13 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
@@ -636,6 +675,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
       }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/device-abstraction
 =======
@@ -956,6 +996,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
     break;
   default:
@@ -963,12 +1005,16 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 >>>>>>> pod/device/blob.hpp
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1022,6 +1068,8 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 =======
@@ -1033,6 +1081,9 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->const_data();
   const Dtype* top_diff = top[0]->const_diff();
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> pod/post-rebase-error-fix
   for (int i = 0; i < bottom->size(); ++i) {
     if (propagate_down[i]) {
       const Dtype* bottom_data = (*bottom)[i]->const_data();
@@ -1042,6 +1093,7 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         this->device_->div(count, top_data, bottom_data, bottom_diff);
         this->device_->mul(count, bottom_diff, top_diff, bottom_diff);
 =======
+<<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
 =======
@@ -1063,10 +1115,13 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
 void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int* mask = NULL;
   const int count = top[0]->count();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1128,6 +1183,12 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
+=======
+  const Dtype* top_data = top[0]->cpu_data();
+  const Dtype* top_diff = top[0]->cpu_diff();
+  for (int i = 0; i < bottom.size(); ++i) {
+    if (propagate_down[i]) {
+>>>>>>> pod/post-rebase-error-fix
       const Dtype* bottom_data = bottom[i]->cpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
       switch (op_) {
@@ -1149,6 +1210,7 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
         caffe_mul(count, bottom_diff, top_diff, bottom_diff);
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 >>>>>>> device-abstraction
 =======
       switch (op_) {
@@ -1156,6 +1218,8 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         this->device_->div(count, top_data, bottom_data, bottom_diff);
         this->device_->mul(count, bottom_diff, top_diff, bottom_diff);
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         break;
       case EltwiseParameter_EltwiseOp_SUM:
         if (coeffs_[i] == Dtype(1)) {
@@ -1165,12 +1229,25 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
 =======
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+        }
+        break;
+      case EltwiseParameter_EltwiseOp_MAX:
+        mask = max_idx_.cpu_data();
+        for (int index = 0; index < count; ++index) {
+          Dtype gradient = 0;
+          if (mask[index] == i) {
+            gradient += top_diff[index];
+          }
+          bottom_diff[index] = gradient;
+>>>>>>> pod/post-rebase-error-fix
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
@@ -1276,6 +1353,7 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+<<<<<<< HEAD
 template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -5401,6 +5479,9 @@ REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
 =======
 INSTANTIATE_CLASS(EltwiseLayer);
 >>>>>>> device-abstraction
+=======
+INSTANTIATE_CLASS(EltwiseLayer);
+>>>>>>> pod/post-rebase-error-fix
 REGISTER_LAYER_CLASS(Eltwise);
 
 >>>>>>> caffe

@@ -17,6 +17,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -213,6 +214,14 @@
 #include "caffe/loss_layers.hpp"
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+#include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
+=======
+#include "caffe/loss_layers.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -242,6 +251,7 @@ void LossLayer<Dtype>::Reshape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -367,6 +377,10 @@ void LossLayer<Dtype>::Reshape(
   vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
   top[0]->Reshape(loss_shape);
 >>>>>>> device-abstraction
+=======
+  vector<int> loss_shape(0);  // Loss layers output a scalar; 0 axes.
+  top[0]->Reshape(loss_shape);
+>>>>>>> pod/post-rebase-error-fix
 }
 
 INSTANTIATE_CLASS(LossLayer);

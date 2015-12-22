@@ -24,6 +24,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -238,6 +239,13 @@
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 >>>>>>> BVLC/device-abstraction
+=======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+=======
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/vision_layers.hpp"
 =======
 #include "caffe/layers/pooling_layer.hpp"
@@ -595,6 +603,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -891,10 +900,17 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
+=======
+  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+  const int count = (*bottom)[0]->count();
+  GetDevice<Dtype>(Caffe::GPU)->set(count, Dtype(0.), bottom_diff);
+=======
+>>>>>>> pod/post-rebase-error-fix
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   const int count = bottom[0]->count();
   caffe_gpu_set(count, Dtype(0.), bottom_diff);
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -905,6 +921,8 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;

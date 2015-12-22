@@ -23,6 +23,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -154,6 +155,12 @@ layer {
     backend: LMDB
   }
 >>>>>>> device-abstraction
+=======
+    source: "examples/cifar10/cifar10_train_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> pod/post-rebase-error-fix
 }
 layer {
   name: "cifar"
@@ -167,6 +174,7 @@ layer {
     mean_file: "examples/cifar10/mean.binaryproto"
   }
   data_param {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -354,6 +362,12 @@ layer {
     backend: LMDB
   }
 >>>>>>> device-abstraction
+=======
+    source: "examples/cifar10/cifar10_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> pod/post-rebase-error-fix
 }
 layer {
   name: "conv1"

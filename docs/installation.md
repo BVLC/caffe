@@ -17,10 +17,15 @@ The official Makefile and `Makefile.config` build are complemented by an automat
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
 =======
+=======
+
+When updating Caffe, it's best to `make clean` before re-compiling.
+>>>>>>> pod/post-rebase-error-fix
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -67,6 +72,7 @@ Optional dependencies:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 Pycaffe and Matcaffe interfaces have their own natural needs.
@@ -353,6 +359,11 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
 >>>>>>> device-abstraction
+=======
+
+Pycaffe and Matcaffe interfaces have their own natural needs.
+
+>>>>>>> pod/post-rebase-error-fix
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
@@ -370,6 +381,7 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -412,6 +424,8 @@ Pycaffe and Matcaffe interfaces have their own natural needs.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 **CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
@@ -426,6 +440,7 @@ Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library. The choice is yours:
 
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -535,6 +550,8 @@ There are several implementations of this library. The choice is yours:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
     1. Install MKL.
     2. Set `BLAS := mkl` in `Makefile.config`
@@ -562,6 +579,7 @@ You can install the dependencies with
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -706,6 +724,11 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 
 but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
 >>>>>>> device-abstraction
+=======
+    for req in $(cat requirements.txt); do pip install $req; done
+
+but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
+>>>>>>> pod/post-rebase-error-fix
 
 To import the `caffe` Python module after completing the installation, add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like. You should not import the module in the `caffe/python/caffe` directory!
 
@@ -727,6 +750,7 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1174,6 +1198,9 @@ At this point, you should be running the latest Homebrew packages and your Caffe
 =======
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 >>>>>>> device-abstraction
+=======
+*Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
+>>>>>>> pod/post-rebase-error-fix
 
 #### Windows
 
@@ -1193,6 +1220,7 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1305,6 +1333,9 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 =======
 Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 >>>>>>> device-abstraction
+=======
+Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+>>>>>>> pod/post-rebase-error-fix
 
     cp Makefile.config.example Makefile.config
     # Adjust Makefile.config (for example, if using Anaconda Python)
@@ -1324,6 +1355,7 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1458,6 +1490,10 @@ If there is no GPU in your machine, you should switch to CPU-only Caffe by uncom
 - For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 >>>>>>> device-abstraction
+=======
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
+>>>>>>> pod/post-rebase-error-fix
 
 To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
 Be sure to set your MATLAB and Python paths in `Makefile.config` first!
@@ -1473,6 +1509,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1866,6 +1903,9 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 
+=======
+
+>>>>>>> pod/post-rebase-error-fix
 **Speed**: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
@@ -1885,7 +1925,10 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 ## Hardware
 
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 **Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
 **CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.

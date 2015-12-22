@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/flatten_layer.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19,6 +20,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -54,6 +57,7 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -195,6 +199,11 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->shape(0), 2);
   EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
 >>>>>>> device-abstraction
+=======
+  ASSERT_EQ(this->blob_top_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3 * 6 * 5);
+>>>>>>> pod/post-rebase-error-fix
 }
 
 TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
@@ -215,6 +224,7 @@ TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -281,6 +291,8 @@ TYPED_TEST(FlattenLayerTest, TestSetupWithAxis) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   ASSERT_EQ(this->blob_top_->num_axes(), 3);
   EXPECT_EQ(this->blob_top_->shape(0), 2);
   EXPECT_EQ(this->blob_top_->shape(1), 3);
@@ -326,6 +338,7 @@ TYPED_TEST(FlattenLayerTest, TestForward) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -403,6 +416,8 @@ TYPED_TEST(FlattenLayerTest, TestForward) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),

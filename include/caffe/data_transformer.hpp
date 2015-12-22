@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -111,6 +112,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -138,6 +141,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 =======
 <<<<<<< HEAD
@@ -256,6 +260,9 @@ class DataTransformer {
 =======
   explicit DataTransformer(const TransformationParameter& param, Phase phase);
 >>>>>>> device-abstraction
+=======
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+>>>>>>> pod/post-rebase-error-fix
   virtual ~DataTransformer() {}
 
   /**
@@ -301,6 +308,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -367,6 +375,8 @@ class DataTransformer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifdef USE_OPENCV
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -391,6 +401,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -470,6 +481,8 @@ class DataTransformer {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
@@ -492,6 +505,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -628,6 +642,10 @@ class DataTransformer {
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
 #endif  // USE_OPENCV
 >>>>>>> device-abstraction
+=======
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif  // USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix
 
   /**
    * @brief Applies the same transformation defined in the data layer's
@@ -654,6 +672,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -720,6 +739,8 @@ class DataTransformer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -761,6 +782,7 @@ class DataTransformer {
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
    *
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -863,6 +885,8 @@ class DataTransformer {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
    * @param n
    *    The upperbound (exclusive) value of the random number.
    * @return
@@ -888,6 +912,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   Phase phase_;
@@ -1004,6 +1029,9 @@ class DataTransformer {
 =======
   Phase phase_;
 >>>>>>> device-abstraction
+=======
+  Phase phase_;
+>>>>>>> pod/post-rebase-error-fix
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
 };
@@ -1023,6 +1051,7 @@ class DataTransformer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1118,3 +1147,5 @@ class DataTransformer {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix

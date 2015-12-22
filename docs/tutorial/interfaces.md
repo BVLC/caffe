@@ -21,6 +21,7 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -87,6 +88,8 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 **Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:
 
 * All training requires a solver configuration through the `-solver solver.prototxt` argument.
@@ -94,6 +97,7 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 * Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.
 
 For example, you can run:
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -193,6 +197,8 @@ For example, you can run:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
     # train LeNet
     caffe train -solver examples/mnist/lenet_solver.prototxt
@@ -208,6 +214,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 
 **Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -348,6 +355,11 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
     # model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 >>>>>>> device-abstraction
+=======
+    # score the learned LeNet model on the validation set as defined in the
+    # model architeture lenet_train_test.prototxt
+    caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
+>>>>>>> pod/post-rebase-error-fix
 
 **Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.
 
@@ -366,6 +378,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -432,10 +445,13 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     # time LeNet training on GPU for the default 50 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
     # time a model architecture with the given weights on the first GPU for 10 iterations
     caffe time -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 10
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -537,6 +553,8 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 **Diagnostics**: `caffe device_query` reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.
 
@@ -555,6 +573,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -621,6 +640,8 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 **Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.
 
     # train on GPUs 0 & 1 (doubling the batch size)
@@ -638,6 +659,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -717,10 +739,13 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 ## Python
 
 The Python interface -- pycaffe -- is the `caffe` module and its scripts in caffe/python. `import caffe` to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 - `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classifier` and `caffe.Detector` provide convenience interfaces for common tasks.
@@ -730,6 +755,9 @@ The Python interface -- pycaffe -- is the `caffe` module and its scripts in caff
 =======
 - `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classifier` and `caffe.Detector` provide convenience interfaces for common tasks.
 >>>>>>> BVLC/master
+=======
+- `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classsifier` and `caffe.Detector` provide convenience interfaces for common tasks.
+>>>>>>> pod/post-rebase-error-fix
 - `caffe.SGDSolver` exposes the solving interface.
 - `caffe.io` handles input / output with preprocessing and protocol buffers.
 - `caffe.draw` visualizes network architectures.
@@ -749,6 +777,7 @@ Tutorial IPython notebooks are found in caffe/examples: do `ipython notebook caf
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -815,6 +844,8 @@ Tutorial IPython notebooks are found in caffe/examples: do `ipython notebook caf
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 Compile pycaffe by `make pycaffe`.
 Add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like for `import caffe`.
 
@@ -1040,6 +1071,7 @@ Call `caffe.reset_all()` to clear all solvers and stand-alone nets you have crea
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1139,3 +1171,5 @@ Compile matcaffe by `make matcaffe`.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix

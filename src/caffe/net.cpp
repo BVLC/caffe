@@ -30,6 +30,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -274,6 +275,12 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+#include "caffe/util/io.hpp"
+=======
+#include "caffe/util/math_functions.hpp"
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -405,6 +412,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -471,6 +479,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     if (share_from_root) {
       // Set up size of top blobs using root_net_
       const vector<Blob<Dtype>*>& base_top = root_net_->top_vecs_[layer_id];
@@ -494,6 +504,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
@@ -769,6 +780,19 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             << "    with loss weight " << layer->loss(top_id);
       }
 >>>>>>> device-abstraction
+=======
+    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
+        blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
+      }
+      blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
+      LOG_IF(INFO, Caffe::root_solver())
+          << "Top shape: " << top_vecs_[layer_id][top_id]->shape_string();
+      if (layer->loss(top_id)) {
+        LOG_IF(INFO, Caffe::root_solver())
+            << "    with loss weight " << layer->loss(top_id);
+      }
+>>>>>>> pod/post-rebase-error-fix
       memory_used_ += top_vecs_[layer_id][top_id]->count();
     }
     LOG_IF(INFO, Caffe::root_solver())
@@ -776,10 +800,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     const int param_size = layer_param.param_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     CHECK_LE(param_size, num_param_blobs)
         << "Too many params specified for layer " << layer_param.name();
     ParamSpec default_param_spec;
@@ -817,6 +844,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -883,6 +911,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // Also checks if all bottom blobs don't need backward computation (possible
   // because the skip_propagate_down param) and so we can skip bacward
   // computation for the entire layer
@@ -891,6 +921,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
     bool layer_contributes_loss = false;
     bool layer_skip_propagate_down = true;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -992,6 +1023,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
       if (layers_[layer_id]->loss(top_id) ||
@@ -1009,6 +1042,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1072,6 +1106,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       }
       if (blobs_skip_backp.find(blob_name) == blobs_skip_backp.end()) {
         layer_skip_propagate_down = false;
@@ -1121,6 +1157,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1268,6 +1305,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
   }
   // Handle force_backward if needed.
@@ -1392,6 +1431,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
       LOG_IF(INFO, Caffe::root_solver())
@@ -1550,6 +1590,11 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
           << "The NetState did not contain stage '" << rule.stage(i)
           << "' specified by a rule in layer " << layer_name;
 >>>>>>> device-abstraction
+=======
+      LOG_IF(INFO, Caffe::root_solver())
+          << "The NetState did not contain stage '" << rule.stage(i)
+          << "' specified by a rule in layer " << layer_name;
+>>>>>>> pod/post-rebase-error-fix
       return false;
     }
   }
@@ -1573,6 +1618,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1709,6 +1755,11 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
           << "The NetState contained a not_stage '" << rule.not_stage(i)
           << "' specified by a rule in layer " << layer_name;
 >>>>>>> device-abstraction
+=======
+      LOG_IF(INFO, Caffe::root_solver())
+          << "The NetState contained a not_stage '" << rule.not_stage(i)
+          << "' specified by a rule in layer " << layer_name;
+>>>>>>> pod/post-rebase-error-fix
       return false;
     }
   }
@@ -1921,6 +1972,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2016,6 +2068,8 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -2256,6 +2310,7 @@ void Net<Dtype>::Reshape() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -2339,6 +2394,8 @@ void Net<Dtype>::Reshape() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -2459,7 +2516,67 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   for (int i = 0; i < layers_.size(); ++i) {
     LayerParameter* layer_param = param->add_layer();
     layers_[i]->ToProto(layer_param, write_diff);
+<<<<<<< HEAD
+=======
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
+  hid_t file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
+      H5P_DEFAULT);
+  CHECK_GE(file_hid, 0)
+      << "Couldn't open " << filename << " to save weights.";
+  hid_t data_hid = H5Gcreate2(file_hid, "data", H5P_DEFAULT, H5P_DEFAULT,
+      H5P_DEFAULT);
+  CHECK_GE(data_hid, 0) << "Error saving weights to " << filename << ".";
+  hid_t diff_hid = -1;
+  if (write_diff) {
+    diff_hid = H5Gcreate2(file_hid, "diff", H5P_DEFAULT, H5P_DEFAULT,
+        H5P_DEFAULT);
+    CHECK_GE(diff_hid, 0) << "Error saving weights to " << filename << ".";
+  }
+  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+    const LayerParameter& layer_param = layers_[layer_id]->layer_param();
+    string layer_name = layer_param.name();
+    hid_t layer_data_hid = H5Gcreate2(data_hid, layer_name.c_str(),
+        H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    CHECK_GE(layer_data_hid, 0)
+        << "Error saving weights to " << filename << ".";
+    hid_t layer_diff_hid = -1;
+    if (write_diff) {
+      layer_diff_hid = H5Gcreate2(diff_hid, layer_name.c_str(),
+          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      CHECK_GE(layer_diff_hid, 0)
+          << "Error saving weights to " << filename << ".";
+    }
+    int num_params = layers_[layer_id]->blobs().size();
+    for (int param_id = 0; param_id < num_params; ++param_id) {
+      ostringstream dataset_name;
+      dataset_name << param_id;
+      const int net_param_id = param_id_vecs_[layer_id][param_id];
+      if (param_owners_[net_param_id] == -1) {
+        // Only save params that own themselves
+        hdf5_save_nd_dataset<Dtype>(layer_data_hid, dataset_name.str(),
+            *params_[net_param_id]);
+      }
+      if (write_diff) {
+        // Write diffs regardless of weight-sharing
+        hdf5_save_nd_dataset<Dtype>(layer_diff_hid, dataset_name.str(),
+            *params_[net_param_id], true);
+      }
+    }
+    H5Gclose(layer_data_hid);
+    if (write_diff) {
+      H5Gclose(layer_diff_hid);
+    }
+  }
+  H5Gclose(data_hid);
+  if (write_diff) {
+    H5Gclose(diff_hid);
+>>>>>>> pod/post-rebase-error-fix
+  }
+  H5Fclose(file_hid);
 }
 
 template <typename Dtype>
@@ -2479,6 +2596,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
     CHECK_GE(diff_hid, 0) << "Error saving weights to " << filename << ".";
 =======
 void Net<Dtype>::Update() {
+<<<<<<< HEAD
   // First, accumulate the diffs of any shared parameters into their owner's
   // diff. (Assumes that the learning rate, weight decay, etc. have already been
   // accounted for in the current diff.)
@@ -2489,6 +2607,7 @@ void Net<Dtype>::Update() {
     const Dtype* this_diff = params_[i]->const_diff();
     Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
     GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
   }
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
@@ -2680,8 +2799,35 @@ void Net<Dtype>::Update() {
     H5Gclose(layer_data_hid);
     if (write_diff) {
       H5Gclose(layer_diff_hid);
-    }
+=======
+=======
+  for (int i = 0; i < learnable_params_.size(); ++i) {
+    learnable_params_[i]->Update();
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ClearParamDiffs() {
+  for (int i = 0; i < learnable_params_.size(); ++i) {
+    Blob<Dtype>* blob = learnable_params_[i];
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      caffe_set(blob->count(), static_cast<Dtype>(0),
+                blob->mutable_cpu_diff());
+      break;
+    case Caffe::GPU:
+#ifndef CPU_ONLY
+      caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
+                    blob->mutable_gpu_diff());
+#else
+      NO_GPU;
+#endif
+      break;
+>>>>>>> pod/post-rebase-error-fix
+    }
+>>>>>>> BVLC/master
+  }
+<<<<<<< HEAD
   H5Gclose(data_hid);
   if (write_diff) {
     H5Gclose(diff_hid);
@@ -4265,6 +4411,14 @@ void Net<Dtype>::ShareWeights() {
   for (int i = 0; i < params_.size(); ++i) {
     if (param_owners_[i] < 0) { continue; }
 >>>>>>> device-abstraction
+=======
+}
+
+template <typename Dtype>
+void Net<Dtype>::ShareWeights() {
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+>>>>>>> pod/post-rebase-error-fix
     params_[i]->ShareData(*params_[param_owners_[i]]);
     params_[i]->ShareDiff(*params_[param_owners_[i]]);
   }

@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/common_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -122,6 +123,9 @@
 =======
 #include "caffe/common_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/common_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -150,6 +154,7 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
                     bottom[i]->mutable_gpu_diff());
@@ -268,6 +273,9 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
                     bottom[i]->mutable_gpu_diff());
 >>>>>>> device-abstraction
+=======
+                    bottom[i]->mutable_gpu_diff());
+>>>>>>> pod/post-rebase-error-fix
     }
   }
 }

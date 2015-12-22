@@ -26,6 +26,7 @@ solver_mode: GPU
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -134,3 +135,6 @@ type: "AdaGrad"
 =======
 type: "AdaGrad"
 >>>>>>> device-abstraction
+=======
+type: "AdaGrad"
+>>>>>>> pod/post-rebase-error-fix

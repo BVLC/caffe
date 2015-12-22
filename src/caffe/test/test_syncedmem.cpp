@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
@@ -124,6 +125,8 @@
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifndef CPU_ONLY
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -144,6 +147,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 =======
 =======
@@ -252,6 +256,10 @@
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 #include <vector>
 
 #include "gtest/gtest.h"

@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -138,6 +139,11 @@
 #include <opencv2/core/core.hpp>
 #endif  // USE_OPENCV
 >>>>>>> device-abstraction
+=======
+#ifdef USE_OPENCV
+#include <opencv2/core/core.hpp>
+#endif  // USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix
 
 #include <string>
 #include <vector>
@@ -162,6 +168,7 @@ template<typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -302,6 +309,11 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
     : param_(param), phase_(phase) {
 >>>>>>> device-abstraction
+=======
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
+    Phase phase)
+    : param_(param), phase_(phase) {
+>>>>>>> pod/post-rebase-error-fix
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -319,6 +331,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -465,6 +478,11 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       LOG(INFO) << "Loading mean file from: " << mean_file;
     }
 >>>>>>> device-abstraction
+=======
+    if (Caffe::root_solver()) {
+      LOG(INFO) << "Loading mean file from: " << mean_file;
+    }
+>>>>>>> pod/post-rebase-error-fix
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
@@ -537,6 +555,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     if (phase_ == TRAIN) {
@@ -645,6 +664,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 =======
     if (phase_ == TRAIN) {
 >>>>>>> device-abstraction
+=======
+    if (phase_ == TRAIN) {
+>>>>>>> pod/post-rebase-error-fix
       h_off = Rand(datum_height - crop_size + 1);
       w_off = Rand(datum_width - crop_size + 1);
     } else {
@@ -698,6 +720,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -764,6 +787,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
@@ -802,6 +827,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -893,6 +919,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
@@ -909,6 +937,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1017,6 +1046,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 =======
   // Check dimensions.
 >>>>>>> device-abstraction
+=======
+  // Check dimensions.
+>>>>>>> pod/post-rebase-error-fix
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -1027,6 +1059,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   CHECK_LE(width, datum_width);
   CHECK_GE(num, 1);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1135,6 +1168,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
@@ -1158,6 +1193,7 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 
   CHECK_GT(datum_num, 0) << "There is no datum to add";
   CHECK_LE(datum_num, num) <<
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1278,6 +1314,9 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 =======
     "The size of datum_vector must be no greater than transformed_blob->num()";
 >>>>>>> device-abstraction
+=======
+    "The size of datum_vector must be no greater than transformed_blob->num()";
+>>>>>>> pod/post-rebase-error-fix
   Blob<Dtype> uni_blob(1, channels, height, width);
   for (int item_id = 0; item_id < datum_num; ++item_id) {
     int offset = transformed_blob->offset(item_id);
@@ -1298,6 +1337,7 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1364,6 +1404,8 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #ifdef USE_OPENCV
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
@@ -1399,6 +1441,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1482,10 +1525,13 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
   const int img_width = cv_img.cols;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1620,6 +1666,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
   // Check dimensions.
 >>>>>>> device-abstraction
+=======
+  // Check dimensions.
+>>>>>>> pod/post-rebase-error-fix
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -1632,6 +1681,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1739,6 +1789,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
@@ -1774,6 +1826,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
     CHECK_EQ(crop_size, width);
@@ -1912,6 +1965,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
 >>>>>>> device-abstraction
+=======
+    CHECK_EQ(crop_size, width);
+    // We only do random crop when we do training.
+    if (phase_ == TRAIN) {
+>>>>>>> pod/post-rebase-error-fix
       h_off = Rand(img_height - crop_size + 1);
       w_off = Rand(img_width - crop_size + 1);
     } else {
@@ -1944,8 +2002,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         if (has_mean_file) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
           transformed_data[top_index] =
             (pixel - mean[mean_index]) * scale;
@@ -1961,6 +2022,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     }
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2077,6 +2139,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 =======
 #endif  // USE_OPENCV
 >>>>>>> device-abstraction
+=======
+#endif  // USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
@@ -2092,6 +2157,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2194,11 +2260,15 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 =======
   const int crop_size = param_.crop_size();
 >>>>>>> device-abstraction
+=======
+  const int crop_size = param_.crop_size();
+>>>>>>> pod/post-rebase-error-fix
   const int input_num = input_blob->num();
   const int input_channels = input_blob->channels();
   const int input_height = input_blob->height();
   const int input_width = input_blob->width();
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2323,6 +2393,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   if (transformed_blob->count() == 0) {
     // Initialize transformed_blob with the right shape.
     if (crop_size) {
@@ -2344,6 +2416,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2422,6 +2495,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const int num = transformed_blob->num();
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
@@ -2445,6 +2520,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2559,6 +2635,9 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 =======
 
 >>>>>>> device-abstraction
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
@@ -2582,6 +2661,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2696,6 +2776,9 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 =======
     if (phase_ == TRAIN) {
 >>>>>>> device-abstraction
+=======
+    if (phase_ == TRAIN) {
+>>>>>>> pod/post-rebase-error-fix
       h_off = Rand(input_height - crop_size + 1);
       w_off = Rand(input_width - crop_size + 1);
     } else {
@@ -2777,6 +2860,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2843,6 +2927,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
@@ -2928,6 +3014,7 @@ template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size());
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3030,6 +3117,8 @@ void DataTransformer<Dtype>::InitRand() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));

@@ -22,6 +22,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -335,9 +336,15 @@
 #include "caffe/vision_layers.hpp"
 >>>>>>> device-abstraction
 =======
+#include "caffe/device.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
+=======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 #include "caffe/common_layers.hpp"
@@ -373,6 +380,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -392,6 +401,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -525,6 +535,8 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
 Dtype SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
 =======
@@ -558,6 +570,7 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }  // slice_dim_ is guaranteed to be 0 or 1 by SetUp.
 <<<<<<< HEAD
   return Dtype(0.);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2366,6 +2379,8 @@ __global__ void Slice(const int nthreads, const Dtype* in_data,
     }
 >>>>>>> master
 =======
+>>>>>>> pod/post-rebase-error-fix
+=======
 __global__ void Slice(const int nthreads, const Dtype* in_data,
     const bool forward, const int num_slices, const int slice_size,
     const int bottom_slice_axis, const int top_slice_axis,
@@ -2381,9 +2396,12 @@ __global__ void Slice(const int nthreads, const Dtype* in_data,
     } else {
       out_data[bottom_index] = in_data[index];
     }
+<<<<<<< HEAD
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
 }
 
@@ -2417,6 +2435,7 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> BVLC/master
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2469,10 +2488,14 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
 void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2541,6 +2564,8 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
 =======
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -2552,6 +2577,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < top.size(); ++i) {
       Blob<Dtype>* blob = top[i];
       const Dtype* top_diff = blob->gpu_diff();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2584,6 +2610,10 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       GetDevice<Dtype>(Caffe::GPU)->copy(blob->count(), top_diff,
           bottom_diff + (*bottom)[0]->offset(offset_num));
 >>>>>>> BVLC/device-abstraction
+=======
+      GetDevice<Dtype>(Caffe::GPU)->copy(blob->count(), top_diff,
+          bottom_diff + (*bottom)[0]->offset(offset_num));
+>>>>>>> pod/post-rebase-error-fix
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -2593,6 +2623,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const Dtype* top_diff = blob->gpu_diff();
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2625,10 +2656,15 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         GetDevice<Dtype>(Caffe::GPU)->copy(num_elem, top_diff + blob->offset(n),
             bottom_diff +  (*bottom)[0]->offset(n, offset_channel));
 >>>>>>> BVLC/device-abstraction
+=======
+        GetDevice<Dtype>(Caffe::GPU)->copy(num_elem, top_diff + blob->offset(n),
+            bottom_diff +  (*bottom)[0]->offset(n, offset_channel));
+>>>>>>> pod/post-rebase-error-fix
       }
       offset_channel += blob->channels();
     }
   }  // slice_dim_ is guaranteed to be 0 or 1 by SetUp.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -2659,6 +2695,8 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> device-abstraction
 =======
+>>>>>>> pod/post-rebase-error-fix
+=======
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0] || top.size() == 1) { return; }
   int offset_slice_axis = 0;
@@ -2677,6 +2715,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     offset_slice_axis += top_slice_axis;
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2741,6 +2780,9 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(SliceLayer);

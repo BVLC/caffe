@@ -25,6 +25,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -91,10 +92,13 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Datum;
 using caffe::Net;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -207,6 +211,11 @@ using boost::shared_ptr;
 using std::string;
 namespace db = caffe::db;
 >>>>>>> device-abstraction
+=======
+using boost::shared_ptr;
+using std::string;
+namespace db = caffe::db;
+>>>>>>> pod/post-rebase-error-fix
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
@@ -229,6 +238,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type"
     "  [CPU/GPU] [DEVICE_ID=0]\n"
     "Note: you can extract multiple features in one pass by specifying"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -351,6 +361,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
     " multiple feature blob names and dataset names separated by ','."
 >>>>>>> device-abstraction
+=======
+    " multiple feature blob names and dataset names separated by ','."
+>>>>>>> pod/post-rebase-error-fix
     " The names cannot contain white space characters and the number of blobs"
     " and datasets must be equal.";
     return 1;
@@ -407,6 +420,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   boost::shared_ptr<Net<Dtype> > feature_extraction_net(
 =======
   shared_ptr<Net<Dtype> > feature_extraction_net(
@@ -417,6 +431,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
   shared_ptr<Net<Dtype> > feature_extraction_net(
 >>>>>>> device-abstraction
+=======
+  shared_ptr<Net<Dtype> > feature_extraction_net(
+>>>>>>> pod/post-rebase-error-fix
       new Net<Dtype>(feature_extraction_proto, caffe::TEST));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
@@ -457,6 +474,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -607,11 +625,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod/caffe-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
   std::vector<shared_ptr<db::DB> > feature_dbs;
   std::vector<shared_ptr<db::Transaction> > txns;
   const char* db_type = argv[++arg_pos];
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -748,17 +769,23 @@ int feature_extraction_pipeline(int argc, char** argv) {
   const char* db_type = argv[++arg_pos];
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
+=======
+>>>>>>> pod/post-rebase-error-fix
     shared_ptr<db::DB> db(db::GetDB(db_type));
     db->Open(dataset_names.at(i), db::NEW);
     feature_dbs.push_back(db);
     shared_ptr<db::Transaction> txn(db->NewTransaction());
     txns.push_back(txn);
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
 
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -867,6 +894,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   std::vector<Blob<float>*> input_vec;
   std::vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
@@ -900,6 +929,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -966,11 +996,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
         string key_str = caffe::format_int(image_indices[i], 10);
 
         string out;
         CHECK(datum.SerializeToString(&out));
         txns.at(i)->Put(key_str, out);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1163,6 +1196,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+        ++image_indices[i];
+        if (image_indices[i] % 1000 == 0) {
+          txns.at(i)->Commit();
+          txns.at(i).reset(feature_dbs.at(i)->NewTransaction());
+>>>>>>> pod/post-rebase-error-fix
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
         }
@@ -1172,6 +1211,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1208,10 +1248,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
 =======
       txns.at(i)->Commit();
 >>>>>>> device-abstraction
+=======
+      txns.at(i)->Commit();
+>>>>>>> pod/post-rebase-error-fix
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
         " query images for feature blob " << blob_names[i];
     feature_dbs.at(i)->Close();
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1373,6 +1417,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
 
   LOG(ERROR)<< "Successfully extracted the features!";

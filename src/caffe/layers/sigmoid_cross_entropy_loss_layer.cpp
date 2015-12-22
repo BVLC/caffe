@@ -18,6 +18,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -253,9 +254,14 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 =======
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
+=======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 #include "caffe/loss_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -320,6 +326,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -346,6 +354,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::LayerSetUp(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -390,9 +399,12 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
   CHECK_EQ(bottom[0]->count(), bottom[1]->count()) <<
       "SIGMOID_CROSS_ENTROPY_LOSS layer inputs must have the same count.";
   sigmoid_layer_->Reshape(sigmoid_bottom_vec_, sigmoid_top_vec_);
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
@@ -501,6 +513,11 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
+=======
+Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+=======
+>>>>>>> pod/post-rebase-error-fix
 void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
@@ -512,6 +529,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
 template <typename Dtype>
 void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+<<<<<<< HEAD
 >>>>>>> origin/BVLC/parallel
 =======
 >>>>>>> caffe
@@ -519,6 +537,9 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   // The forward pass computes the sigmoid outputs.
   sigmoid_bottom_vec_[0] = bottom[0];
   sigmoid_layer_->Forward(sigmoid_bottom_vec_, sigmoid_top_vec_);
@@ -535,6 +556,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   }
   top[0]->mutable_cpu_data()[0] = loss / num;
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 }
 
@@ -1045,6 +1067,8 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   top[0]->mutable_cpu_data()[0] = loss / num;
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -1071,6 +1095,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -1266,6 +1291,8 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+>>>>>>> pod/post-rebase-error-fix
     const int count = (*bottom)[0]->count();
     const int num = (*bottom)[0]->num();
     const Dtype* sigmoid_output_data = sigmoid_output_->const_data();
@@ -1273,14 +1300,18 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
     Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     this->device_->sub(count, sigmoid_output_data, target, bottom_diff);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     // Scale down gradient
     this->device_->scal(count, Dtype(1) / num, bottom_diff);
   }
 }
 
 =======
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> BVLC/master
@@ -1308,6 +1339,8 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     const int count = bottom[0]->count();
     const int num = bottom[0]->num();
     const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
@@ -1324,6 +1357,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
 STUB_GPU_BACKWARD(SigmoidCrossEntropyLossLayer, Backward);
 #endif
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1555,6 +1589,10 @@ INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
 >>>>>>> BVLC/master
 INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
 >>>>>>> device-abstraction
+=======
+>>>>>>> BVLC/master
+INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
+>>>>>>> pod/post-rebase-error-fix
 REGISTER_LAYER_CLASS(SigmoidCrossEntropyLoss);
 
 >>>>>>> caffe

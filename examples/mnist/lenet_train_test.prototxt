@@ -16,6 +16,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -82,6 +83,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   include {
     phase: TRAIN
   }
@@ -90,6 +93,7 @@ layer {
   }
   data_param {
     source: "examples/mnist/mnist_train_lmdb"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -245,6 +249,11 @@ layer {
     backend: LMDB
   }
 >>>>>>> device-abstraction
+=======
+    batch_size: 64
+    backend: LMDB
+  }
+>>>>>>> pod/post-rebase-error-fix
 }
 layer {
   name: "mnist"
@@ -263,6 +272,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -329,6 +339,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   include {
     phase: TEST
   }
@@ -337,6 +349,7 @@ layer {
   }
   data_param {
     source: "examples/mnist/mnist_test_lmdb"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -524,6 +537,11 @@ layer {
     backend: LMDB
   }
 >>>>>>> device-abstraction
+=======
+    batch_size: 100
+    backend: LMDB
+  }
+>>>>>>> pod/post-rebase-error-fix
 }
 layer {
   name: "conv1"

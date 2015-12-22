@@ -9,6 +9,7 @@
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define CUDNN_VERSION_MIN(major, minor, patch) \
     (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
 
@@ -19,6 +20,8 @@
     (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
 
 >>>>>>> BVLC/master
+=======
+>>>>>>> pod/post-rebase-error-fix
 #define CUDNN_CHECK(condition) \
   do { \
     cudnnStatus_t status = condition; \
@@ -62,6 +65,7 @@ template <typename Dtype> class dataType;
 template<> class dataType<float>  {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_FLOAT;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -196,6 +200,10 @@ template<> class dataType<float>  {
   static float oneval, zeroval;
   static const void *one, *zero;
 >>>>>>> device-abstraction
+=======
+  static float oneval, zeroval;
+  static const void *one, *zero;
+>>>>>>> pod/post-rebase-error-fix
 };
 template<> class dataType<double> {
  public:
@@ -212,6 +220,7 @@ template<> class dataType<double> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -278,6 +287,8 @@ template<> class dataType<double> {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   static double oneval, zeroval;
   static const void *one, *zero;
 };
@@ -297,6 +308,7 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 
 template <typename Dtype>
 inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -412,6 +424,8 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     int n, int c, int h, int w) {
   const int stride_w = 1;
   const int stride_h = w * stride_w;
@@ -430,6 +444,7 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
                          stride_n, stride_c, stride_h, stride_w);
@@ -536,6 +551,9 @@ inline void setTensor4dDesc(cudnnTensor4dDescriptor_t* desc,
 =======
                          stride_n, stride_c, stride_h, stride_w);
 >>>>>>> device-abstraction
+=======
+                         stride_n, stride_c, stride_h, stride_w);
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -554,6 +572,7 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -667,6 +686,9 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
 =======
   CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
 >>>>>>> device-abstraction
+=======
+  CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
+>>>>>>> pod/post-rebase-error-fix
       n, c, h, w));
 }
 
@@ -689,6 +711,7 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -845,6 +868,11 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     int pad_h, int pad_w, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
 >>>>>>> device-abstraction
+=======
+    cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
+    int pad_h, int pad_w, int stride_h, int stride_w) {
+  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
+>>>>>>> pod/post-rebase-error-fix
       pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
 }
 
@@ -861,6 +889,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -993,6 +1022,11 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
     int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
 >>>>>>> device-abstraction
+=======
+inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
+    PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
+    int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
+>>>>>>> pod/post-rebase-error-fix
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;
@@ -1010,6 +1044,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1119,10 +1154,14 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
 =======
     *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
 >>>>>>> device-abstraction
+=======
+    *mode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+>>>>>>> pod/post-rebase-error-fix
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1279,6 +1318,11 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
   CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
         pad_h, pad_w, stride_h, stride_w));
 >>>>>>> device-abstraction
+=======
+  CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
+  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
+        pad_h, pad_w, stride_h, stride_w));
+>>>>>>> pod/post-rebase-error-fix
 }
 
 }  // namespace cudnn

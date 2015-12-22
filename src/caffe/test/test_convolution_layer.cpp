@@ -34,6 +34,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -100,6 +101,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const bool has_depth = (out->num_axes() == 5);
   if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
   // Kernel size, stride, and pad
@@ -144,6 +147,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
   vector<int> out_offset(4 + has_depth);
   Dtype* out_data = out->mutable_cpu_data();
   for (int n = 0; n < out->shape(0); n++) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -274,6 +278,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     for (int g = 0; g < groups; g++) {
       o_head = o_g * g;
       k_head = k_g * g;
@@ -291,6 +297,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -357,6 +364,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
           for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
             for (int y = 0; y < out->shape(2 + has_depth); y++) {
               for (int x = 0; x < out->shape(3 + has_depth); x++) {
@@ -389,6 +398,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
                             * weights[0]->data_at(weight_offset);
                       }
                     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -498,6 +508,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
                   }
                 }
               }
@@ -522,6 +534,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -588,6 +601,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     for (int n = 0; n < out->shape(0); n++) {
       for (int o = 0; o < out->shape(1); o++) {
         for (int z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
@@ -600,6 +615,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
               out_offset[3 + has_depth] = x;
               out_data[out->offset(out_offset)] += bias_data[o];
             }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -703,6 +719,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
           }
         }
       }
@@ -848,6 +866,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -963,6 +982,9 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 =======
 TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 >>>>>>> device-abstraction
+=======
+TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
+>>>>>>> pod/post-rebase-error-fix
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -979,6 +1001,7 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1045,6 +1068,8 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   const int kNumOutput = 3;
   convolution_param->set_num_output(kNumOutput);
   convolution_param->set_axis(3);
@@ -1094,6 +1119,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
     this->blob_bottom_vec_[i]->Reshape(bottom_shape);
     filler.Fill(this->blob_bottom_vec_[i]);
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1440,6 +1466,44 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
 >>>>>>> device-abstraction
+=======
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(4);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  shared_ptr<Layer<Dtype> > layer(
+      new ConvolutionLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_2_));
+  top_data = this->blob_top_2_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+}
+
+TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->add_kernel_size(1);
   convolution_param->add_stride(1);
   convolution_param->set_num_output(4);
@@ -1582,6 +1646,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1733,6 +1798,11 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   weights_2[1] =  0;
   weights_2[2] =  1;
 >>>>>>> device-abstraction
+=======
+  weights_2[0] = -1;
+  weights_2[1] =  0;
+  weights_2[2] =  1;
+>>>>>>> pod/post-rebase-error-fix
   layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
   layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
   // Test equivalence of full and separable filters.
@@ -1872,6 +1942,8 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient) {
   convolution_param->add_stride(2);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
 =======
 =======
   convolution_param->set_num_output(2);
@@ -1888,6 +1960,54 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient3D) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
+  vector<int> bottom_shape(5);
+  bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
+  bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
+  bottom_shape[2] = 5;
+  bottom_shape[3] = this->blob_bottom_vec_[0]->shape(2);
+  bottom_shape[4] = this->blob_bottom_vec_[0]->shape(3);
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  for (int i = 0; i < this->blob_bottom_vec_.size(); ++i) {
+    this->blob_bottom_vec_[i]->Reshape(bottom_shape);
+    filler.Fill(this->blob_bottom_vec_[i]);
+  }
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->add_kernel_size(1);
+  convolution_param->add_stride(1);
+>>>>>>> pod/post-rebase-error-fix
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(ConvolutionLayerTest, TestGradient3D) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+<<<<<<< HEAD
   vector<int> bottom_shape(5);
   bottom_shape[0] = this->blob_bottom_vec_[0]->shape(0);
   bottom_shape[1] = this->blob_bottom_vec_[0]->shape(1);
@@ -1986,12 +2106,19 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Gradient) {
 >>>>>>> caffe
 >>>>>>> pod/device/blob.hpp
   convolution_param->set_num_output(2);
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   ConvolutionLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 }
 
@@ -7178,6 +7305,10 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
 }
 
 >>>>>>> device-abstraction
+=======
+}
+
+>>>>>>> pod/post-rebase-error-fix
 #ifdef USE_CUDNN
 
 template <typename Dtype>
@@ -7262,14 +7393,18 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7287,6 +7422,10 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
 >>>>>>> device-abstraction
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -7318,15 +7457,19 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -7341,6 +7484,8 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
@@ -7369,6 +7514,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
   Caffe::set_mode(Caffe::GPU);
@@ -7379,6 +7525,9 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
 =======
 
 >>>>>>> device-abstraction
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   // Fill bottoms with identical Gaussian noise.
   shared_ptr<GaussianFiller<TypeParam> > filler;
   FillerParameter filler_param;
@@ -7390,6 +7539,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7407,6 +7557,10 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
 >>>>>>> device-abstraction
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
   shared_ptr<Layer<TypeParam> > layer(
@@ -7470,15 +7624,19 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   layer->blobs()[0].reset(new Blob<TypeParam>(1, 1, 1, 3));
   TypeParam* weights_2 = layer->blobs()[0]->mutable_cpu_data();
   weights_2[0] = -1;
   weights_2[1] =  0;
   weights_2[2] =  1;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -7495,6 +7653,8 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   layer->SetUp(sep_blob_bottom_vec, sep_blob_top_vec);
   layer->Forward(sep_blob_bottom_vec, sep_blob_top_vec);
   // Test equivalence of full and separable filters.
@@ -7509,6 +7669,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   Caffe::set_mode(Caffe::GPU);
 >>>>>>> origin/BVLC/parallel
@@ -7516,11 +7677,14 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -7538,6 +7702,10 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientCuDNN) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
 >>>>>>> device-abstraction
+=======
+  convolution_param->add_kernel_size(3);
+  convolution_param->add_stride(2);
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
@@ -7551,15 +7719,19 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -7574,6 +7746,8 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 >>>>>>> caffe
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
@@ -7585,10 +7759,13 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestGradientGroupCuDNN) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #endif
 
 }  // namespace caffe

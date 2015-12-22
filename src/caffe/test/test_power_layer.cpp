@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/power_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -23,6 +24,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -102,6 +106,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
@@ -222,6 +227,9 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 =======
     GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
 >>>>>>> device-abstraction
+=======
+    GradientChecker<Dtype> checker(1e-3, 1e-2, 1701, 0., 0.01);
+>>>>>>> pod/post-rebase-error-fix
     checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);
   }

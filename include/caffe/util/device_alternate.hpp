@@ -19,6 +19,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -127,6 +128,9 @@
 =======
 #define NO_GPU LOG(FATAL) << "Cannot use GPU in CPU-only Caffe: check mode."
 >>>>>>> device-abstraction
+=======
+#define NO_GPU LOG(FATAL) << "Cannot use GPU in CPU-only Caffe: check mode."
+>>>>>>> pod/post-rebase-error-fix
 
 #define STUB_GPU(classname) \
 template <typename Dtype> \
@@ -204,6 +208,7 @@ const char* curandGetErrorString(curandStatus_t error);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 // CUDA: use 512 threads per block
 const int CAFFE_CUDA_NUM_THREADS = 512;
 =======
@@ -213,6 +218,8 @@ const int CAFFE_CUDA_NUM_THREADS = 512;
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 // CUDA: thread number configuration.
 // Use 1024 threads per block, which requires cuda sm_2x or above,
 // or fall back to attempt compatibility (best of luck to you).
@@ -224,6 +231,7 @@ const int CAFFE_CUDA_NUM_THREADS = 512;
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/caffe-merge
@@ -231,6 +239,8 @@ const int CAFFE_CUDA_NUM_THREADS = 512;
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {

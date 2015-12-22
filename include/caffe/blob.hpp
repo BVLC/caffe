@@ -27,6 +27,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
@@ -85,9 +86,12 @@ const int kMaxBlobAxes = 32;
 >>>>>>> BVLC/master
 >>>>>>> pod/caffe-merge
 =======
+>>>>>>> pod/post-rebase-error-fix
+=======
 
 const int kMaxBlobAxes = 32;
 >>>>>>> BVLC/master
+<<<<<<< HEAD
 =======
 
 const int kMaxBlobAxes = 32;
@@ -311,6 +315,8 @@ const int kMaxBlobAxes = 32;
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -337,6 +343,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -663,6 +670,18 @@ class Blob {
   void Reshape(const int num, const int channels, const int height,
       const int width);
 >>>>>>> device-abstraction
+=======
+       : data_(), diff_(), count_(0), capacity_(0) {}
+
+  /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
+  explicit Blob(const int num, const int channels, const int height,
+      const int width);
+  explicit Blob(const vector<int>& shape);
+
+  /// @brief Deprecated; use <code>Reshape(const vector<int>& shape)</code>.
+  void Reshape(const int num, const int channels, const int height,
+      const int width);
+>>>>>>> pod/post-rebase-error-fix
   /**
    * @brief Change the dimensions of the blob, allocating new memory if
    *        necessary.
@@ -794,6 +813,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -860,6 +880,8 @@ class Blob {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     CHECK_LE(n, num());
     CHECK_GE(channels(), 0);
     CHECK_LE(c, channels());
@@ -872,6 +894,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> pod/device/blob.hpp
@@ -937,6 +960,8 @@ class Blob {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
 
   inline int offset(const vector<int>& indices) const {
@@ -951,6 +976,7 @@ class Blob {
       }
     }
     return offset;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   }
@@ -1259,6 +1285,9 @@ class Blob {
 =======
 >>>>>>> pod/device/blob.hpp
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  }
+>>>>>>> pod/post-rebase-error-fix
   /**
    * @brief Copy from a source Blob.
    *
@@ -1434,6 +1463,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 =======
@@ -1542,10 +1572,14 @@ class Blob {
 =======
 
 >>>>>>> device-abstraction
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
   void scale_diff(Dtype scale_factor);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -1970,6 +2004,12 @@ class Blob {
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
    *        data_ of Blob other -- useful in Layer%s which simply perform a copy
 >>>>>>> device-abstraction
+=======
+
+  /**
+   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer%s which simply perform a copy
+>>>>>>> pod/post-rebase-error-fix
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's data_, as
@@ -1990,6 +2030,7 @@ class Blob {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2101,6 +2142,9 @@ class Blob {
 =======
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
 >>>>>>> device-abstraction
+=======
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
+>>>>>>> pod/post-rebase-error-fix
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's diff_, as

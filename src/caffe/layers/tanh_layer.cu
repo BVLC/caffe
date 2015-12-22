@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/tanh_layer.hpp"
 =======
 #include "caffe/neuron_layers.hpp"
@@ -20,6 +21,9 @@
 =======
 #include "caffe/neuron_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/neuron_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 

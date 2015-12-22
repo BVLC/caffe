@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -107,10 +108,13 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <vector>
 
 #include "thrust/device_vector.h"
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -232,6 +236,9 @@
 =======
 #include "caffe/vision_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -255,6 +262,7 @@ void CuDNNSoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   handles_setup_ = true;
@@ -368,6 +376,9 @@ void CuDNNSoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   handles_setup_ = true;
 >>>>>>> device-abstraction
+=======
+  handles_setup_ = true;
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -386,6 +397,7 @@ void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -452,10 +464,13 @@ void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   int N = this->outer_num_;
   int K = bottom[0]->shape(this->softmax_axis_);
   int H = this->inner_num_;
   int W = 1;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -558,6 +573,8 @@ void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
   cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
 }
@@ -576,6 +593,7 @@ CuDNNSoftmaxLayer<Dtype>::~CuDNNSoftmaxLayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -642,11 +660,14 @@ CuDNNSoftmaxLayer<Dtype>::~CuDNNSoftmaxLayer() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -747,6 +768,8 @@ CuDNNSoftmaxLayer<Dtype>::~CuDNNSoftmaxLayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   cudnnDestroy(handle_);
 }
 

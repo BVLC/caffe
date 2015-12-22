@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 #include <vector>
@@ -156,6 +157,11 @@
 
 #include "caffe/vision_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include <vector>
+
+#include "caffe/vision_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -179,6 +185,7 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -281,6 +288,9 @@ void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   handles_setup_ = true;
 >>>>>>> device-abstraction
+=======
+  handles_setup_ = true;
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -309,6 +319,7 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -375,11 +386,14 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
   cudnnDestroyTensorDescriptor(this->bottom_desc_);
   cudnnDestroyTensorDescriptor(this->top_desc_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -480,6 +494,8 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   cudnnDestroy(this->handle_);
 }
 

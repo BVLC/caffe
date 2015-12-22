@@ -20,6 +20,7 @@ $TOOLS/caffe train \
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -128,3 +129,6 @@ $TOOLS/caffe train \
 =======
   --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
 >>>>>>> device-abstraction
+=======
+  --snapshot=examples/cifar10/cifar10_quick_iter_4000.solverstate.h5
+>>>>>>> pod/post-rebase-error-fix

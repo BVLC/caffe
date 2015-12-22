@@ -23,6 +23,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2218,6 +2219,8 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> BVLC/device-abstraction
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -2226,6 +2229,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 #include "caffe/util/math_functions.hpp"
 >>>>>>> BVLC/master
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 #include "caffe/common_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -2269,6 +2273,8 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 
@@ -2277,6 +2283,7 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2285,11 +2292,14 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   softmax_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
   top[0]->ReshapeLike(*bottom[0]);
   vector<int> mult_dims(1, bottom[0]->shape(softmax_axis_));
   sum_multiplier_.Reshape(mult_dims);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
@@ -2318,6 +2328,9 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 =======
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
 >>>>>>> device-abstraction
+=======
+  Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
+>>>>>>> pod/post-rebase-error-fix
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
@@ -2326,11 +2339,14 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   scale_.Reshape(scale_dims);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -2342,6 +2358,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
   caffe_copy(bottom[0]->count(), bottom_data, top_data);
@@ -2361,9 +2378,12 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   int num = bottom[0]->num();
   int channels = bottom[0]->channels();
   int dim = bottom[0]->count() / bottom[0]->num();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2408,10 +2428,16 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // we need to subtract the max to avoid numerical issues, compute the exp,
 =======
 >>>>>>> device-abstraction
+=======
+  GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data, top_data);
+  // we need to subtract the max to avoid numerical issues, compute the exp,
+=======
+>>>>>>> pod/post-rebase-error-fix
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
   caffe_copy(bottom[0]->count(), bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2493,6 +2519,10 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> BVLC/master
   // and then normalize.
+=======
+>>>>>>> BVLC/master
+  // and then normalize.
+>>>>>>> pod/post-rebase-error-fix
   for (int i = 0; i < outer_num_; ++i) {
     // initialize scale_data to the first plane
     caffe_copy(inner_num_, bottom_data + i * dim, scale_data);
@@ -2501,6 +2531,22 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         scale_data[k] = std::max(scale_data[k],
             bottom_data[i * dim + j * inner_num_ + k]);
       }
+<<<<<<< HEAD
+=======
+    }
+    // subtraction
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_,
+        1, -1., sum_multiplier_.cpu_data(), scale_data, 1., top_data);
+    // exponentiation
+    caffe_exp<Dtype>(dim, top_data, top_data);
+    // sum after exp
+    caffe_cpu_gemv<Dtype>(CblasTrans, channels, inner_num_, 1.,
+        top_data, sum_multiplier_.cpu_data(), 0., scale_data);
+    // division
+    for (int j = 0; j < channels; j++) {
+      caffe_div(inner_num_, top_data, scale_data, top_data);
+      top_data += inner_num_;
+>>>>>>> pod/post-rebase-error-fix
     }
     // subtraction
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_,
@@ -2521,6 +2567,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
   // elementwise multiplication
   caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
 >>>>>>> BVLC/master
@@ -2544,6 +2591,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 <<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // subtraction
   GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
                                      -1., scale_data,
@@ -2560,6 +2609,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                        top_data + i * dim);
   }
   return Dtype(0);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
@@ -2620,6 +2670,10 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 =======
 >>>>>>> BVLC/master
 >>>>>>> device-abstraction
+=======
+=======
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -2630,6 +2684,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   Dtype* scale_data = scale_.mutable_cpu_data();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -2688,9 +2743,12 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   int num = top[0]->num();
   int channels = top[0]->channels();
   int dim = top[0]->count() / top[0]->num();
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3269,10 +3327,13 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   GetDevice<Dtype>(Caffe::CPU)->copy(top[0]->count(), top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
 >>>>>>> pod/device/blob.hpp
   for (int i = 0; i < num; ++i) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3322,6 +3383,10 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,
                                       top_data + i * dim, scale_data + i);
 >>>>>>> BVLC/device-abstraction
+=======
+    GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,
+                                      top_data + i * dim, scale_data + i);
+>>>>>>> pod/post-rebase-error-fix
   }
   // elementwise multiplication
   caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
@@ -3338,6 +3403,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                      -1., scale_data,
                                      sum_multiplier_.cpu_data(), 1.,
                                      bottom_diff);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3452,6 +3518,11 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 >>>>>>> caffe
 =======
+  // elementwise multiplication
+  GetDevice<Dtype>(Caffe::CPU)->mul(top[0]->count(), bottom_diff, top_data,
+                                    bottom_diff);
+>>>>>>> pod/post-rebase-error-fix
+=======
   int channels = top[0]->shape(softmax_axis_);
   int dim = top[0]->count() / outer_num_;
   caffe_copy(top[0]->count(), top_diff, bottom_diff);
@@ -3466,6 +3537,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_, 1,
         -1., sum_multiplier_.cpu_data(), scale_data, 1., bottom_diff + i * dim);
   }
+<<<<<<< HEAD
   // elementwise multiplication
   caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
 >>>>>>> master
@@ -3595,6 +3667,11 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   GetDevice<Dtype>(Caffe::CPU)->mul(top[0]->count(), bottom_diff, top_data,
                                     bottom_diff);
 >>>>>>> BVLC/device-abstraction
+=======
+  // elementwise multiplication
+  caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
 }
 
 
@@ -3615,6 +3692,7 @@ INSTANTIATE_CLASS(SoftmaxLayer);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -3692,4 +3770,6 @@ INSTANTIATE_CLASS(SoftmaxLayer);
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe

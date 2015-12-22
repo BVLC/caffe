@@ -13,6 +13,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/data_layers.hpp"
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -134,6 +135,9 @@
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
@@ -165,6 +169,7 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -333,6 +338,9 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 =======
   this->StopInternalThread();
 >>>>>>> device-abstraction
+=======
+  this->StopInternalThread();
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -389,6 +397,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -455,6 +464,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
@@ -470,6 +481,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -637,12 +649,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 =======
   const int batch_size = this->layer_param_.image_data_param().batch_size();
 >>>>>>> device-abstraction
+=======
+  const int batch_size = this->layer_param_.image_data_param().batch_size();
+>>>>>>> pod/post-rebase-error-fix
   CHECK_GT(batch_size, 0) << "Positive batch size required";
   top_shape[0] = batch_size;
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].data_.Reshape(top_shape);
   }
   top[0]->Reshape(top_shape);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 =======
@@ -1199,6 +1215,9 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 >>>>>>> origin/BVLC/parallel
 =======
 
+=======
+
+>>>>>>> pod/post-rebase-error-fix
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
@@ -1208,7 +1227,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].label_.Reshape(label_shape);
   }
+<<<<<<< HEAD
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -1220,6 +1242,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 
 // This function is called on prefetch thread
 <<<<<<< HEAD
+<<<<<<< HEAD
 template <typename Dtype>
 void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
@@ -2591,6 +2614,41 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+template <typename Dtype>
+void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
+  CPUTimer batch_timer;
+  batch_timer.Start();
+  double read_time = 0;
+  double trans_time = 0;
+  CPUTimer timer;
+  CHECK(batch->data_.count());
+  CHECK(this->transformed_data_.count());
+  ImageDataParameter image_data_param = this->layer_param_.image_data_param();
+  const int batch_size = image_data_param.batch_size();
+  const int new_height = image_data_param.new_height();
+  const int new_width = image_data_param.new_width();
+  const bool is_color = image_data_param.is_color();
+  string root_folder = image_data_param.root_folder();
+
+  // Reshape according to the first image of each batch
+  // on single input batches allows for inputs of varying dimension.
+  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+      new_height, new_width, is_color);
+  CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+  // Use data_transformer to infer the expected blob shape from a cv_img.
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
+  this->transformed_data_.Reshape(top_shape);
+  // Reshape batch according to the batch_size.
+  top_shape[0] = batch_size;
+  batch->data_.Reshape(top_shape);
+
+  Dtype* prefetch_data = batch->data_.mutable_cpu_data();
+  Dtype* prefetch_label = batch->label_.mutable_cpu_data();
+
+<<<<<<< HEAD
+template <typename Dtype>
+>>>>>>> pod/post-rebase-error-fix
 Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
@@ -2603,6 +2661,7 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> BVLC/device-abstraction
 }
@@ -2790,6 +2849,45 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+=======
+  // datum scales
+  const int lines_size = lines_.size();
+  for (int item_id = 0; item_id < batch_size; ++item_id) {
+    // get a blob
+    timer.Start();
+    CHECK_GT(lines_size, lines_id_);
+    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+        new_height, new_width, is_color);
+    CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+    read_time += timer.MicroSeconds();
+    timer.Start();
+    // Apply transformations (mirror, crop...) to the image
+    int offset = batch->data_.offset(item_id);
+    this->transformed_data_.set_cpu_data(prefetch_data + offset);
+    this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+    trans_time += timer.MicroSeconds();
+
+    prefetch_label[item_id] = lines_[lines_id_].second;
+    // go to the next iter
+    lines_id_++;
+    if (lines_id_ >= lines_size) {
+      // We have reached the end. Restart from the first.
+      DLOG(INFO) << "Restarting data prefetching from start.";
+      lines_id_ = 0;
+      if (this->layer_param_.image_data_param().shuffle()) {
+        ShuffleImages();
+      }
+    }
+  }
+  batch_timer.Stop();
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+>>>>>>> BVLC/master
+}
+
+>>>>>>> pod/post-rebase-error-fix
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 

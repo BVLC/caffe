@@ -40,6 +40,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -137,6 +138,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 # Editor temporaries
 *.swp
@@ -162,6 +165,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -228,6 +232,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 # QtCreator files
 *.user
 
@@ -244,6 +250,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -321,6 +328,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 # OSX dir files
 .DS_Store
 
@@ -347,6 +356,7 @@ models/*
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -489,6 +499,11 @@ models/*
 *.solverstate
 *.solverstate.h5
 >>>>>>> device-abstraction
+=======
+*.caffemodel.h5
+*.solverstate
+*.solverstate.h5
+>>>>>>> pod/post-rebase-error-fix
 *.binaryproto
 *leveldb
 *lmdb
@@ -513,6 +528,7 @@ python/caffe/proto/
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -625,6 +641,10 @@ cmake_build
 cmake_build
 .cmake_build
 >>>>>>> device-abstraction
+=======
+cmake_build
+.cmake_build
+>>>>>>> pod/post-rebase-error-fix
 
 # Generated documentation
 docs/_site

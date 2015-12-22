@@ -11,6 +11,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/softmax_layer.hpp"
 
 #ifdef USE_CUDNN
@@ -24,6 +25,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -98,16 +101,20 @@ TYPED_TEST(SoftmaxLayerTest, TestGradient) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/caffe-merge
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 #ifdef USE_CUDNN
 template <typename Dtype>
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -370,6 +377,9 @@ class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 =======
 class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 >>>>>>> device-abstraction
+=======
+class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
+>>>>>>> pod/post-rebase-error-fix
  protected:
   CuDNNSoftmaxLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 10, 2, 3)),
@@ -391,6 +401,7 @@ class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNSoftmaxLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -468,6 +479,8 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   LayerParameter layer_param;
   CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -507,6 +520,7 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -558,6 +572,8 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   LayerParameter layer_param;
   CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);

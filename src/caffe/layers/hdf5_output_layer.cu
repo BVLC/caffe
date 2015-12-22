@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/hdf5_output_layer.hpp"
 =======
 #include "caffe/data_layers.hpp"
@@ -20,6 +21,9 @@
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 
 namespace caffe {
 

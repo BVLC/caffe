@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "hdf5.h"
 
 =======
@@ -15,10 +16,13 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -36,6 +40,9 @@
 =======
 #include "caffe/data_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/data_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -115,6 +122,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -408,6 +416,14 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 >>>>>>> device-abstraction
 =======
 >>>>>>> BVLC/device-abstraction
+=======
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+
+  // Test that the layer setup got the correct parameters.
+=======
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+>>>>>>> BVLC/master
+>>>>>>> pod/post-rebase-error-fix
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);
@@ -429,6 +445,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
@@ -584,6 +601,11 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
   EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
 >>>>>>> device-abstraction
+=======
+  EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
+>>>>>>> pod/post-rebase-error-fix
 
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 

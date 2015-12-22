@@ -12,6 +12,7 @@ input: "data"
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -78,6 +79,8 @@ input: "data"
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 input_shape {
   dim: 10000
   dim: 1
@@ -95,6 +98,7 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -205,6 +209,8 @@ layers {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   convolution_param {
     num_output: 20
     kernel_size: 5
@@ -223,6 +229,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -366,6 +373,11 @@ layer {
   name: "pool1"
   type: "Pooling"
 >>>>>>> device-abstraction
+=======
+layer {
+  name: "pool1"
+  type: "Pooling"
+>>>>>>> pod/post-rebase-error-fix
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -386,6 +398,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -452,6 +465,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 layer {
   name: "conv2"
   type: "Convolution"
@@ -463,6 +478,7 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -568,12 +584,15 @@ layers {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   convolution_param {
     num_output: 50
     kernel_size: 5
     stride: 1
   }
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -714,6 +733,11 @@ layer {
   name: "pool2"
   type: "Pooling"
 >>>>>>> device-abstraction
+=======
+layer {
+  name: "pool2"
+  type: "Pooling"
+>>>>>>> pod/post-rebase-error-fix
   bottom: "conv2"
   top: "pool2"
   pooling_param {
@@ -734,6 +758,7 @@ layer {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -800,6 +825,8 @@ layer {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 layer {
   name: "ip1"
   type: "InnerProduct"
@@ -811,6 +838,7 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -916,6 +944,8 @@ layers {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   inner_product_param {
     num_output: 500
   }
@@ -932,6 +962,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -998,6 +1029,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 layer {
   name: "relu1"
   type: "ReLU"
@@ -1015,6 +1048,7 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1126,6 +1160,8 @@ layers {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   inner_product_param {
     num_output: 10
   }
@@ -1142,6 +1178,7 @@ layers {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1208,6 +1245,8 @@ layers {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 layer {
   name: "feat"
   type: "InnerProduct"
@@ -1219,6 +1258,7 @@ layer {
   param {
     lr_mult: 2
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1325,6 +1365,8 @@ layers {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   inner_product_param {
     num_output: 2
   }

@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/data_reader.hpp"
 #include "caffe/layers/base_data_layer.hpp"
 =======
@@ -23,6 +24,10 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/data_reader.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/data_layers.hpp"
+#include "caffe/data_reader.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/parallel.hpp"
 #include "caffe/util/blocking_queue.hpp"
 

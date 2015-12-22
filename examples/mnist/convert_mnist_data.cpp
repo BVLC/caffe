@@ -21,6 +21,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -87,6 +88,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
 #include <leveldb/db.h>
@@ -94,6 +97,7 @@
 #include <lmdb.h>
 #endif
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -195,6 +199,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <stdint.h>
 #include <sys/stat.h>
 
@@ -210,6 +216,7 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -305,6 +312,8 @@ DEFINE_string(backend, "lmdb", "The backend for storing the result");
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -367,6 +376,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -476,6 +486,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   // Open db
   if (db_backend == "leveldb") {  // leveldb
@@ -516,6 +528,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -583,10 +596,13 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   // Storing to db
   char label;
   char* pixels = new char[rows * cols];
   int count = 0;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -695,6 +711,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   string value;
 
   Datum datum;
@@ -720,6 +738,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -786,6 +805,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     string key_str = caffe::format_int(item_id, 8);
     datum.SerializeToString(&value);
 
@@ -797,6 +818,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       mdb_data.mv_data = reinterpret_cast<void*>(&value[0]);
       mdb_key.mv_size = key_str.size();
       mdb_key.mv_data = reinterpret_cast<void*>(&key_str[0]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -907,6 +929,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
     } else {
@@ -956,6 +980,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1058,6 +1083,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 =======
   delete[] pixels;
 >>>>>>> device-abstraction
+=======
+  delete[] pixels;
+>>>>>>> pod/post-rebase-error-fix
 }
 
 int main(int argc, char** argv) {

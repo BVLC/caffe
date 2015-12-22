@@ -71,6 +71,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -137,6 +138,8 @@ class Net {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
    * @brief Zeroes out the diffs of all net parameters.
    *        Should be run before Backward.
    */
@@ -153,6 +156,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -230,6 +234,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
    * The network backward should take no input and output, since it solely
    * computes the gradient w.r.t the parameters, and the data has already been
    * provided during the forward pass.
@@ -268,6 +274,7 @@ class Net {
    * @brief For an already initialized net, implicitly copies (i.e., using no
    *        additional memory) the pre-trained layers from another Net.
    */
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -388,6 +395,9 @@ class Net {
 =======
   void ShareTrainedLayersWith(const Net* other);
 >>>>>>> device-abstraction
+=======
+  void ShareTrainedLayersWith(const Net* other);
+>>>>>>> pod/post-rebase-error-fix
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
   /**
@@ -408,6 +418,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -474,6 +485,8 @@ class Net {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   void CopyTrainedLayersFromBinaryProto(const string trained_filename);
   void CopyTrainedLayersFromHDF5(const string trained_filename);
   /// @brief Writes the net to a proto.
@@ -497,6 +510,7 @@ class Net {
   }
   /// @brief returns the phase: TRAIN or TEST
   inline Phase phase() const { return phase_; }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -608,6 +622,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
@@ -624,6 +640,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
@@ -770,6 +787,11 @@ class Net {
     return bottom_vecs_;
   }
 >>>>>>> device-abstraction
+=======
+  inline const vector<vector<Blob<Dtype>*> >& bottom_vecs() const {
+    return bottom_vecs_;
+  }
+>>>>>>> pod/post-rebase-error-fix
   /**
    * @brief returns the top vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
@@ -786,6 +808,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -852,6 +875,8 @@ class Net {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   inline const vector<vector<Blob<Dtype>*> >& top_vecs() const {
     return top_vecs_;
   }
@@ -866,6 +891,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     return bottom_need_backward_;
   }
 <<<<<<< HEAD
@@ -1306,6 +1332,10 @@ class Net {
     return bottom_need_backward_;
   }
 >>>>>>> device-abstraction
+=======
+    return bottom_need_backward_;
+  }
+>>>>>>> pod/post-rebase-error-fix
   inline const vector<Dtype>& blob_loss_weights() const {
     return blob_loss_weights_;
   }
@@ -1356,6 +1386,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> pod/device/blob.hpp
@@ -1366,6 +1397,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   void set_debug_info(const bool value) { debug_info_ = value; }
 
@@ -1406,6 +1439,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1512,6 +1546,10 @@ class Net {
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
 >>>>>>> device-abstraction
+=======
+  /// @brief Helper for displaying debug info in Forward about input Blobs.
+  void InputDebugInfo(const int layer_id);
+>>>>>>> pod/post-rebase-error-fix
   /// @brief Helper for displaying debug info in Forward.
   void ForwardDebugInfo(const int layer_id);
   /// @brief Helper for displaying debug info in Backward.
@@ -1531,6 +1569,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1597,10 +1636,13 @@ class Net {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   /// @brief The network name
   string name_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1702,6 +1744,8 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
@@ -1736,6 +1780,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1831,6 +1876,9 @@ class Net {
 =======
   vector<vector<int> > param_id_vecs_;
 >>>>>>> device-abstraction
+=======
+  vector<vector<int> > param_id_vecs_;
+>>>>>>> pod/post-rebase-error-fix
   vector<int> param_owners_;
   vector<string> param_display_names_;
   vector<pair<int, int> > param_layer_indices_;
@@ -1852,6 +1900,7 @@ class Net {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -2119,6 +2168,25 @@ class Net {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+  /// The parameters in the network.
+  vector<shared_ptr<Blob<Dtype> > > params_;
+  vector<Blob<Dtype>*> learnable_params_;
+  /**
+   * The mapping from params_ -> learnable_params_: we have
+   * learnable_param_ids_.size() == params_.size(),
+   * and learnable_params_[learnable_param_ids_[i]] == params_[i].get()
+   * if and only if params_[i] is an "owner"; otherwise, params_[i] is a sharer
+   * and learnable_params_[learnable_param_ids_[i]] gives its owner.
+   */
+  vector<int> learnable_param_ids_;
+  /// the learning rate multipliers for learnable_params_
+  vector<float> params_lr_;
+  vector<bool> has_params_lr_;
+  /// the weight decay multipliers for learnable_params_
+  vector<float> params_weight_decay_;
+  vector<bool> has_params_decay_;
+>>>>>>> pod/post-rebase-error-fix
   /// The bytes of memory used by this net
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.

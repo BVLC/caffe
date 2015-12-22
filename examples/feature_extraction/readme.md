@@ -22,6 +22,7 @@ In this tutorial, we will extract features using a pre-trained model with the in
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -130,6 +131,9 @@ Note that we recommend using the Python interface for this task, as for example 
 =======
 Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 >>>>>>> device-abstraction
+=======
+Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
+>>>>>>> pod/post-rebase-error-fix
 
 Follow instructions for [installing Caffe](../../installation.html) and run `scripts/download_model_binary.py models/bvlc_reference_caffenet` from caffe root directory.
 If you need detailed information about the tools below, please consult their source code, in which additional documentation is usually provided.

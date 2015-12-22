@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -106,6 +107,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 #include <stdint.h>
 #include <algorithm>
 #include <string>
@@ -123,6 +126,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -189,6 +193,8 @@
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #include "boost/scoped_ptr.hpp"
 #include "gflags/gflags.h"
@@ -203,6 +209,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -280,6 +287,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -298,6 +307,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -489,6 +499,12 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::max;
 using std::pair;
 >>>>>>> device-abstraction
+=======
+using namespace caffe;  // NOLINT(build/namespaces)
+
+using std::max;
+using std::pair;
+>>>>>>> pod/post-rebase-error-fix
 using boost::scoped_ptr;
 
 DEFINE_string(backend, "lmdb",
@@ -496,6 +512,7 @@ DEFINE_string(backend, "lmdb",
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 #ifdef USE_OPENCV
@@ -546,11 +563,16 @@ int main(int argc, char** argv) {
 
 #ifdef USE_OPENCV
 >>>>>>> device-abstraction
+=======
+
+#ifdef USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
 #endif
 
   gflags::SetUsageMessage("Compute the mean_image of a set of images given by"
+<<<<<<< HEAD
 <<<<<<< HEAD
         " a leveldb/lmdb or a list of images\n"
         "Usage:\n"
@@ -611,6 +633,12 @@ int main(int argc, char** argv) {
         "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
 
 >>>>>>> device-abstraction
+=======
+        " a leveldb/lmdb\n"
+        "Usage:\n"
+        "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
+
+>>>>>>> pod/post-rebase-error-fix
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc < 2 || argc > 3) {
@@ -622,6 +650,7 @@ int main(int argc, char** argv) {
   db->Open(argv[1], db::READ);
   scoped_ptr<db::Cursor> cursor(db->NewCursor());
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   BlobProto sum_blob;
   int count = 0;
@@ -771,6 +800,11 @@ int main(int argc, char** argv) {
   int count = 0;
   // load first datum
 >>>>>>> device-abstraction
+=======
+  BlobProto sum_blob;
+  int count = 0;
+  // load first datum
+>>>>>>> pod/post-rebase-error-fix
   Datum datum;
   datum.ParseFromString(cursor->value());
 
@@ -787,6 +821,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -830,6 +865,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     LOG(INFO) << "Decoding Datum";
   }
 
@@ -856,6 +893,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -922,10 +960,13 @@ int main(int argc, char** argv) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   while (cursor->valid()) {
     Datum datum;
     datum.ParseFromString(cursor->value());
     DecodeDatumNative(&datum);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1028,6 +1069,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),
@@ -1062,6 +1105,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     cursor->Next();
@@ -1166,6 +1210,9 @@ int main(int argc, char** argv) {
 =======
     cursor->Next();
 >>>>>>> device-abstraction
+=======
+    cursor->Next();
+>>>>>>> pod/post-rebase-error-fix
   }
 
   if (count % 10000 != 0) {
@@ -1178,6 +1225,7 @@ int main(int argc, char** argv) {
   if (argc == 3) {
     LOG(INFO) << "Write to " << argv[2];
     WriteProtoToBinaryFile(sum_blob, argv[2]);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1286,6 +1334,8 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   }
   const int channels = sum_blob.channels();
   const int dim = sum_blob.height() * sum_blob.width();
@@ -1314,6 +1364,7 @@ int main(int argc, char** argv) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -1355,5 +1406,7 @@ int main(int argc, char** argv) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   return 0;
 }

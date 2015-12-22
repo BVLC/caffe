@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/concat_layer.hpp"
 =======
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -19,6 +20,8 @@
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -75,6 +78,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
   LayerParameter layer_param;
   layer_param.mutable_concat_param()->set_axis(0);
   ConcatLayer<Dtype> layer(layer_param);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -195,6 +199,9 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 =======
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
 >>>>>>> device-abstraction
+=======
+  layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
+>>>>>>> pod/post-rebase-error-fix
   EXPECT_EQ(this->blob_top_->num(),
       this->blob_bottom_0_->num() + this->blob_bottom_2_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_0_->channels());
@@ -218,6 +225,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -347,6 +355,10 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
 >>>>>>> device-abstraction
+=======
+  layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
+>>>>>>> pod/post-rebase-error-fix
   EXPECT_EQ(this->blob_top_->channels(),
       this->blob_bottom_0_->channels() + this->blob_bottom_1_->channels());
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_0_->height());
@@ -399,6 +411,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -465,6 +478,8 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_1_, this->blob_top_vec_);
   for (int n = 0; n < this->blob_bottom_vec_1_[0]->num(); ++n) {
@@ -495,6 +510,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
   ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -595,6 +611,8 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   for (int n = 0; n < this->blob_top_->num(); ++n) {
     for (int c = 0; c < this->blob_bottom_0_->channels(); ++c) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
@@ -649,6 +667,7 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
   LayerParameter layer_param;
   ConcatLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -789,6 +808,10 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_, 1);
 >>>>>>> device-abstraction
+=======
+  checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
+    this->blob_top_vec_, 1);
+>>>>>>> pod/post-rebase-error-fix
 }
 
 }  // namespace caffe

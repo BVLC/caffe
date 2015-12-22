@@ -22,6 +22,7 @@ namespace caffe {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -88,6 +89,8 @@ namespace caffe {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
   * a client may optionally provide in order to request early termination
@@ -113,6 +116,7 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
  * @brief An interface for classes that perform optimization on Net%s.
  *
  * Requires implementation of ApplyUpdate to compute a parameter update
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -214,6 +218,8 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
  * given the current state of the Net parameters.
  */
 template <typename Dtype>
@@ -242,6 +248,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> caffe
@@ -304,6 +311,8 @@ class Solver {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   explicit Solver(const SolverParameter& param,
       const Solver* root_solver = NULL);
   explicit Solver(const string& param_file, const Solver* root_solver = NULL);
@@ -478,6 +487,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -614,6 +624,9 @@ class Solver {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> pod/common.hpp
+=======
+  int iter() { return iter_; }
+>>>>>>> pod/post-rebase-error-fix
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -621,8 +634,11 @@ class Solver {
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
+=======
+>>>>>>> pod/post-rebase-error-fix
     template <typename T>
     friend class Solver;
   };
@@ -645,6 +661,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -792,6 +809,8 @@ class Solver {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -814,6 +833,7 @@ class Solver {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
   virtual void SnapshotSolverState(const string& model_filename) = 0;
@@ -865,11 +885,17 @@ class Solver {
 >>>>>>> pod/device/blob.hpp
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+  virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
+  virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
+>>>>>>> pod/post-rebase-error-fix
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
   int iter_;
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Points to iter_ by default, but can be overriden, e.g. to a global
   // counter if multiple solvers contribute iterations to the same model.
   int *iter_total_;
@@ -884,14 +910,19 @@ class Solver {
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+>>>>>>> pod/post-rebase-error-fix
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> pod/post-rebase-error-fix
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
@@ -900,6 +931,12 @@ class Solver {
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
   ActionCallback action_request_function_;
+<<<<<<< HEAD
+=======
+
+  // True iff a request to stop early was received.
+  bool requested_early_exit_;
+>>>>>>> pod/post-rebase-error-fix
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;
@@ -920,6 +957,7 @@ class Solver {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 /**
  * @brief Solver that only computes gradients, used as worker
  *        for multi-GPU training.
@@ -937,10 +975,16 @@ class Solver {
  *        for multi-GPU training.
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
+=======
+/**
+ * @brief Solver that only computes gradients, used as worker
+ *        for multi-GPU training.
+>>>>>>> pod/post-rebase-error-fix
  */
 template <typename Dtype>
 class WorkerSolver : public Solver<Dtype> {
  public:
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -1642,6 +1686,13 @@ class WorkerSolver : public Solver<Dtype> {
       : Solver<Dtype>(param, root_solver) {}
 
  protected:
+=======
+  explicit WorkerSolver(const SolverParameter& param,
+      const Solver<Dtype>* root_solver = NULL)
+      : Solver<Dtype>(param, root_solver) {}
+
+ protected:
+>>>>>>> pod/post-rebase-error-fix
   void ApplyUpdate() {}
   void SnapshotSolverState(const string& model_filename) {
     LOG(FATAL) << "Should not be called on worker solver.";
@@ -1652,6 +1703,7 @@ class WorkerSolver : public Solver<Dtype> {
   void RestoreSolverStateFromHDF5(const string& state_file) {
     LOG(FATAL) << "Should not be called on worker solver.";
   }
+<<<<<<< HEAD
 =======
  protected:
 <<<<<<< HEAD
@@ -1899,6 +1951,10 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
 };
 
 >>>>>>> device-abstraction
+=======
+};
+
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe
 
 #endif  // CAFFE_SOLVER_HPP_

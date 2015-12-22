@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/batch_norm_layer.hpp"
 =======
 #include "caffe/common_layers.hpp"
@@ -18,6 +19,9 @@
 =======
 #include "caffe/common_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/common_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

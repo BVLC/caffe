@@ -10,6 +10,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -117,6 +118,9 @@
 =======
 #ifdef USE_OPENCV
 >>>>>>> device-abstraction
+=======
+#ifdef USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -420,6 +424,7 @@ TEST_F(IOTest, TestDecodeDatum) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -542,6 +547,10 @@ TEST_F(IOTest, TestDecodeDatum) {
   EXPECT_TRUE(DecodeDatum(&datum, true));
   EXPECT_FALSE(DecodeDatum(&datum, true));
 >>>>>>> device-abstraction
+=======
+  EXPECT_TRUE(DecodeDatum(&datum, true));
+  EXPECT_FALSE(DecodeDatum(&datum, true));
+>>>>>>> pod/post-rebase-error-fix
   Datum datum_ref;
   ReadImageToDatumReference(filename, 0, 0, 0, true, &datum_ref);
   EXPECT_EQ(datum.channels(), datum_ref.channels());
@@ -572,6 +581,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -638,6 +648,8 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   cv::Mat cv_img = DecodeDatumToCVMat(datum, true);
   EXPECT_EQ(cv_img.channels(), 3);
   EXPECT_EQ(cv_img.rows, 360);
@@ -733,6 +745,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
   Datum datum;
   EXPECT_TRUE(ReadImageToDatum(filename, 0, std::string("jpg"), &datum));
   cv::Mat cv_img = DecodeDatumToCVMatNative(datum);
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -863,6 +876,8 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   cv::Mat cv_img_ref = ReadImageToCVMat(filename);
   EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());
   EXPECT_EQ(cv_img_ref.rows, cv_img.rows);
@@ -891,6 +906,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -993,3 +1009,6 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
 =======
 #endif  // USE_OPENCV
 >>>>>>> device-abstraction
+=======
+#endif  // USE_OPENCV
+>>>>>>> pod/post-rebase-error-fix

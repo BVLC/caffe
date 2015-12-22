@@ -76,6 +76,7 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -184,6 +185,9 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> device-abstraction
+=======
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+>>>>>>> pod/post-rebase-error-fix
   EXPECT_GE(timer.MilliSeconds(), 300 - kMillisecondsThreshold);
   EXPECT_LE(timer.MilliSeconds(), 300 + kMillisecondsThreshold);
   EXPECT_TRUE(timer.initted());
@@ -210,6 +214,7 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -312,6 +317,9 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
 =======
   boost::this_thread::sleep(boost::posix_time::milliseconds(300));
 >>>>>>> device-abstraction
+=======
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+>>>>>>> pod/post-rebase-error-fix
   EXPECT_GE(timer.Seconds(), 0.3 - kMillisecondsThreshold / 1000.);
   EXPECT_LE(timer.Seconds(), 0.3 + kMillisecondsThreshold / 1000.);
   EXPECT_TRUE(timer.initted());

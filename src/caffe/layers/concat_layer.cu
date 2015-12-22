@@ -4,6 +4,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "caffe/layers/concat_layer.hpp"
 =======
 #include "caffe/common_layers.hpp"
@@ -17,6 +18,9 @@
 =======
 #include "caffe/common_layers.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/common_layers.hpp"
+>>>>>>> pod/post-rebase-error-fix
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -34,6 +38,7 @@ template <typename Dtype>
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -100,6 +105,8 @@ template <typename Dtype>
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 __global__ void Concat(const int nthreads, const Dtype* in_data,
     const bool forward, const int num_concats, const int concat_size,
     const int top_concat_axis, const int bottom_concat_axis,
@@ -124,6 +131,7 @@ __global__ void Concat(const int nthreads, const Dtype* in_data,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     }
   }
 <<<<<<< HEAD
@@ -445,6 +453,10 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
   }
 >>>>>>> device-abstraction
+=======
+    }
+  }
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
@@ -476,6 +488,7 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 <<<<<<< HEAD
@@ -519,11 +532,14 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }
 
 template <typename Dtype>
 void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -687,6 +703,10 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (bottom.size() == 1) { return; }
   const Dtype* top_diff = top[0]->gpu_diff();
 >>>>>>> device-abstraction
+=======
+  if (bottom.size() == 1) { return; }
+  const Dtype* top_diff = top[0]->gpu_diff();
+>>>>>>> pod/post-rebase-error-fix
   int offset_concat_axis = 0;
   const int top_concat_axis = top[0]->shape(concat_axis_);
   const bool kForward = false;
@@ -714,6 +734,7 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> caffe
 >>>>>>> pod-caffe-pod.hpp-merge
@@ -755,6 +776,8 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
     offset_concat_axis += bottom_concat_axis;
   }

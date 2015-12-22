@@ -14,6 +14,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -121,6 +122,9 @@
 =======
 #include "caffe/util/math_functions.hpp"
 >>>>>>> device-abstraction
+=======
+#include "caffe/util/math_functions.hpp"
+>>>>>>> pod/post-rebase-error-fix
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -144,6 +148,7 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -210,6 +215,8 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
   thread.StartInternalThread();
   EXPECT_TRUE(thread.is_started());
   thread.StopInternalThread();
@@ -245,6 +252,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
   t3.StopInternalThread();
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -349,5 +357,7 @@ TEST_F(InternalThreadTest, TestRandomSeed) {
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 }  // namespace caffe
 

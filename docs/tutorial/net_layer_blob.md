@@ -23,6 +23,7 @@ We will go over the details of these components in more detail.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -89,6 +90,8 @@ We will go over the details of these components in more detail.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 A Blob is a wrapper over the actual data being processed and passed along by Caffe, and also under the hood provides synchronization capability between the CPU and the GPU. Mathematically, a blob is an N-dimensional array stored in a C-contiguous fashion.
 
 Caffe stores and communicates data using blobs. Blobs provide a unified memory interface holding data; e.g., batches of images, model parameters, and derivatives for optimization.
@@ -103,6 +106,7 @@ The conventional blob dimensions for batches of image data are number N x channe
 Note that although many blobs in Caffe examples are 4D with axes for image applications, it is totally valid to use blobs for non-image applications. For example, if you simply need fully-connected networks like the conventional multi-layer perceptron, use 2D blobs (shape (N, D)) and call the InnerProductLayer (which we will cover soon).
 
 Parameter blob dimensions vary according to the type and configuration of the layer. For a convolution layer with 96 filters of 11 x 11 spatial dimension and 3 inputs the blob is 96 x 3 x 11 x 11. For an inner product / fully-connected layer with 1000 output channels and 1024 input channels the parameter blob is 1000 x 1024.
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -217,6 +221,8 @@ Parameter blob dimensions vary according to the type and configuration of the la
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
 
 For custom data it may be necessary to hack your own input preparation tool or data layer. However once your data is in your job is done. The modularity of layers accomplishes the rest of the work for you.
 
@@ -297,6 +303,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     layer {
       name: "mnist"
       type: "Data"
@@ -458,6 +465,11 @@ is defined by
       name: "mnist"
       type: "Data"
 >>>>>>> device-abstraction
+=======
+    layer {
+      name: "mnist"
+      type: "Data"
+>>>>>>> pod/post-rebase-error-fix
       top: "data"
       top: "label"
       data_param {
@@ -477,6 +489,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -603,6 +616,11 @@ is defined by
       name: "ip"
       type: "InnerProduct"
 >>>>>>> device-abstraction
+=======
+    layer {
+      name: "ip"
+      type: "InnerProduct"
+>>>>>>> pod/post-rebase-error-fix
       bottom: "data"
       top: "ip"
       inner_product_param {
@@ -621,6 +639,7 @@ is defined by
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -766,6 +785,11 @@ is defined by
       name: "loss"
       type: "SoftmaxWithLoss"
 >>>>>>> device-abstraction
+=======
+    layer {
+      name: "loss"
+      type: "SoftmaxWithLoss"
+>>>>>>> pod/post-rebase-error-fix
       bottom: "ip"
       bottom: "label"
       top: "loss"
@@ -796,6 +820,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -910,6 +935,9 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
     I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
 >>>>>>> device-abstraction
+=======
+    I0902 22:52:17.938593 2079114000 net.cpp:103] Top shape: 64 (64)
+>>>>>>> pod/post-rebase-error-fix
     I0902 22:52:17.938611 2079114000 net.cpp:67] Creating Layer ip
     I0902 22:52:17.938617 2079114000 net.cpp:394] ip <- data
     I0902 22:52:17.939177 2079114000 net.cpp:356] ip -> ip
@@ -926,6 +954,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
@@ -1026,6 +1055,9 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
     I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
 >>>>>>> device-abstraction
+=======
+    I0902 22:52:17.940289 2079114000 net.cpp:103] Top shape: 64 2 (128)
+>>>>>>> pod/post-rebase-error-fix
     I0902 22:52:17.941270 2079114000 net.cpp:67] Creating Layer loss
     I0902 22:52:17.941305 2079114000 net.cpp:394] loss <- ip
     I0902 22:52:17.941314 2079114000 net.cpp:394] loss <- label
@@ -1044,6 +1076,7 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -1146,6 +1179,9 @@ Model initialization is handled by `Net::Init()`. The initialization mainly does
 =======
     I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
 >>>>>>> device-abstraction
+=======
+    I0902 22:52:17.941328 2079114000 net.cpp:103] Top shape: (1)
+>>>>>>> pod/post-rebase-error-fix
     I0902 22:52:17.941329 2079114000 net.cpp:109]     with loss weight 1
     I0902 22:52:17.941779 2079114000 net.cpp:170] loss needs backward computation.
     I0902 22:52:17.941787 2079114000 net.cpp:170] ip needs backward computation.

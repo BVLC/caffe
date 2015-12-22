@@ -51,6 +51,7 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -117,6 +118,8 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     layer {
       name: "feat"
       type: "InnerProduct"
@@ -130,6 +133,7 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
         name: "feat_b"
         lr_mult: 2
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -235,6 +239,8 @@ classes with a linear "feature" layer that produces a 2 dimensional vector.
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
       inner_product_param {
         num_output: 2
       }
@@ -265,6 +271,7 @@ or different classes (`sim`).
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -331,6 +338,8 @@ or different classes (`sim`).
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     layer {
       name: "pair_data"
       type: "Data"
@@ -344,6 +353,7 @@ or different classes (`sim`).
         source: "examples/siamese/mnist_siamese_train_leveldb"
         batch_size: 64
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -453,6 +463,8 @@ or different classes (`sim`).
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
 
 In order to pack a pair of images into the same blob in the database we pack one
@@ -473,6 +485,7 @@ and its paired image in `data_p.`
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -539,6 +552,8 @@ and its paired image in `data_p.`
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     layer {
       name: "slice_pair"
       type: "Slice"
@@ -549,6 +564,7 @@ and its paired image in `data_p.`
         slice_dim: 1
         slice_point: 1
       }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -657,6 +673,8 @@ and its paired image in `data_p.`
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     }
 
 ### Building the First Side of the Siamese Net
@@ -681,6 +699,7 @@ the siamese net. In the definition this looks like:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -747,6 +766,8 @@ the siamese net. In the definition this looks like:
 >>>>>>> pod/device/blob.hpp
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     param { name: "conv1_w" ...  }
     param { name: "conv1_b" ...  }
     ...
@@ -758,6 +779,7 @@ the siamese net. In the definition this looks like:
     ...
     param { name: "ip2_w" ...  }
     param { name: "ip2_b" ...  }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -867,6 +889,8 @@ the siamese net. In the definition this looks like:
 >>>>>>> pod-caffe-pod.hpp-merge
 =======
 >>>>>>> device-abstraction
+=======
+>>>>>>> pod/post-rebase-error-fix
     ...
 
 ### Building the Second Side of the Siamese Net
@@ -884,6 +908,7 @@ an Invariant Mapping". This loss function encourages matching pairs to be close
 together in feature space while pushing non-matching pairs apart. This cost
 function is implemented with the `CONTRASTIVE_LOSS` layer:
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1040,6 +1065,11 @@ function is implemented with the `CONTRASTIVE_LOSS` layer:
         name: "loss"
         type: "ContrastiveLoss"
 >>>>>>> device-abstraction
+=======
+    layer {
+        name: "loss"
+        type: "ContrastiveLoss"
+>>>>>>> pod/post-rebase-error-fix
         contrastive_loss_param {
             margin: 1.0
         }

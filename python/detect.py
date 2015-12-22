@@ -58,6 +58,7 @@ def main(argv):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> pod/device/blob.hpp
 =======
@@ -166,6 +167,9 @@ def main(argv):
 =======
                 "../models/bvlc_reference_caffenet/deploy.prototxt"),
 >>>>>>> device-abstraction
+=======
+                "../models/bvlc_reference_caffenet/deploy.prototxt"),
+>>>>>>> pod/post-rebase-error-fix
         help="Model definition file."
     )
     parser.add_argument(
