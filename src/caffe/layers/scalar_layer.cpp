@@ -1,10 +1,47 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/filler.hpp"
 #include "caffe/layers/scalar_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+
+template <typename Dtype>
+void ScalarLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (bottom.size() == 1 && this->blobs_.size() > 0) {
+    LOG(INFO) << "Skipping parameter initialization";
+  } else if (bottom.size() == 1) {
+    // scalar is a learned parameter; initialize it
+    const ScalarParameter& param = this->layer_param_.scalar_param();
+    axis_ = bottom[0]->CanonicalAxisIndex(param.axis());
+    const int num_axes = param.num_axes();
+    CHECK_GE(num_axes, -1) << "num_axes must be non-negative, "
+                           << "or -1 to extend to the end of bottom[0]";
+    if (num_axes >= 0) {
+      CHECK_GE(bottom[0]->num_axes(), axis_ + num_axes)
+          << "scalar blob's shape extends past bottom[0]'s shape when applied "
+          << "starting with bottom[0] axis = " << axis_;
+    }
+    this->blobs_.resize(1);
+    const vector<int>::const_iterator& shape_start =
+        bottom[0]->shape().begin() + axis_;
+    const vector<int>::const_iterator& shape_end =
+        (num_axes == -1) ? bottom[0]->shape().end() : (shape_start + num_axes);
+    vector<int> scalar_shape(shape_start, shape_end);
+    this->blobs_[0].reset(new Blob<Dtype>(scalar_shape));
+    FillerParameter filler_param(param.filler());
+    if (!param.has_filler()) {
+      // Default to unit (1) filler for identity operation.
+      filler_param.set_type("constant");
+      filler_param.set_value(1);
+    }
+    shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
+    filler->Fill(this->blobs_[0].get());
+  }
+  this->param_propagate_down_.resize(this->blobs_.size(), true);
+}
 
 template <typename Dtype>
 void ScalarLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -15,26 +52,27 @@ void ScalarLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // temporary storage of an intermediate result, overwriting top[0]'s diff
   // if using in-place computation.
   CHECK_NE(bottom[0], top[0]) << "ScalarLayer cannot be used in-place";
+  const ScalarParameter& param = this->layer_param_.scalar_param();
+  Blob<Dtype>* scalar = (bottom.size() > 1) ? bottom[1] : this->blobs_[0].get();
   // Always set axis_ == 0 in special case where scalar is an actual scalar
   // (num_axes == 0). Mathematically equivalent for any choice of axis_, so the
   // actual setting can be safely ignored; and computation is most efficient
   // with axis_ == 0 and (therefore) outer_dim_ == 1. (Setting axis_ to
   // bottom[0]->num_axes() - 1, giving inner_dim_ == 1, would be equally
   // performant.)
-  const ScalarParameter& param = this->layer_param_.scalar_param();
-  axis_ = (bottom[1]->num_axes() == 0) ?
+  axis_ = (scalar->num_axes() == 0) ?
       0 : bottom[0]->CanonicalAxisIndex(param.axis());
-  CHECK_GE(bottom[0]->num_axes(), axis_ + bottom[1]->num_axes())
-      << "bottom[1]'s shape extends past bottom[0]'s shape when applied "
+  CHECK_GE(bottom[0]->num_axes(), axis_ + scalar->num_axes())
+      << "scalar blob's shape extends past bottom[0]'s shape when applied "
       << "starting with bottom[0] axis = " << axis_;
-  for (int i = 0; i < bottom[1]->num_axes(); ++i) {
-    CHECK_EQ(bottom[0]->shape(axis_ + i), bottom[1]->shape(i))
+  for (int i = 0; i < scalar->num_axes(); ++i) {
+    CHECK_EQ(bottom[0]->shape(axis_ + i), scalar->shape(i))
         << "dimension mismatch between bottom[0]->shape(" << axis_ + i
-        << ") and bottom[1]->shape(" << i << ")";
+        << ") and scalar->shape(" << i << ")";
   }
   outer_dim_ = bottom[0]->count(0, axis_);
-  scalar_dim_ = bottom[1]->count();
-  inner_dim_ = bottom[0]->count(axis_ + bottom[1]->num_axes());
+  scalar_dim_ = scalar->count();
+  inner_dim_ = bottom[0]->count(axis_ + scalar->num_axes());
   top[0]->ReshapeLike(*bottom[0]);
   sum_result_.Reshape(vector<int>(1, outer_dim_ * scalar_dim_));
   const int sum_mult_size = std::max(outer_dim_, inner_dim_);
@@ -48,7 +86,8 @@ template <typename Dtype>
 void ScalarLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  const Dtype* scalar_data = bottom[1]->cpu_data();
+  const Dtype* scalar_data =
+      ((bottom.size() > 1) ? bottom[1] : this->blobs_[0].get())->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   for (int n = 0; n < outer_dim_; ++n) {
     for (int d = 0; d < scalar_dim_; ++d) {
@@ -63,14 +102,17 @@ void ScalarLayer<Dtype>::Forward_cpu(
 template <typename Dtype>
 void ScalarLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[1]) {
+  const bool scalar_param = (bottom.size() == 1);
+  Blob<Dtype>* scalar = scalar_param ? this->blobs_[0].get() : bottom[1];
+  if ((!scalar_param && propagate_down[1]) ||
+      (scalar_param && this->param_propagate_down_[0])) {
     const Dtype* top_diff = top[0]->cpu_diff();
     const Dtype* bottom_data = bottom[0]->cpu_data();
     // Hack: store big eltwise product in bottom[0] diff, except in the special
     // case where this layer itself does the eltwise product, in which case we
     // can store it directly in the scalar diff, and we're done.
-    const bool is_eltwise = (bottom[0]->count() == bottom[1]->count());
-    Dtype* product = (is_eltwise ? bottom[1] : bottom[0])->mutable_cpu_diff();
+    const bool is_eltwise = (bottom[0]->count() == scalar->count());
+    Dtype* product = (is_eltwise ? scalar : bottom[0])->mutable_cpu_diff();
     caffe_mul(top[0]->count(), top_diff, bottom_data, product);
     if (!is_eltwise) {
       Dtype* sum_result = NULL;
@@ -78,30 +120,41 @@ void ScalarLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         sum_result = product;
       } else if (sum_result_.count() == 1) {
         const Dtype* sum_mult = sum_multiplier_.cpu_data();
-        Dtype* scalar_diff = bottom[1]->mutable_cpu_diff();
-        *scalar_diff = caffe_cpu_dot(inner_dim_, product, sum_mult);
+        Dtype* scalar_diff = scalar->mutable_cpu_diff();
+        if (scalar_param) {
+          Dtype result = caffe_cpu_dot(inner_dim_, product, sum_mult);
+          *scalar_diff += result;
+        } else {
+          *scalar_diff = caffe_cpu_dot(inner_dim_, product, sum_mult);
+        }
       } else {
         const Dtype* sum_mult = sum_multiplier_.cpu_data();
         sum_result = (outer_dim_ == 1) ?
-            bottom[1]->mutable_cpu_diff() : sum_result_.mutable_cpu_data();
+            scalar->mutable_cpu_diff() : sum_result_.mutable_cpu_data();
         caffe_cpu_gemv(CblasNoTrans, sum_result_.count(), inner_dim_,
                        Dtype(1), product, sum_mult, Dtype(0), sum_result);
       }
       if (outer_dim_ != 1) {
         const Dtype* sum_mult = sum_multiplier_.cpu_data();
-        Dtype* scalar_diff = bottom[1]->mutable_cpu_diff();
+        Dtype* scalar_diff = scalar->mutable_cpu_diff();
         if (scalar_dim_ == 1) {
-          *scalar_diff = caffe_cpu_dot(outer_dim_, sum_mult, sum_result);
+          if (scalar_param) {
+            Dtype result = caffe_cpu_dot(outer_dim_, sum_mult, sum_result);
+            *scalar_diff += result;
+          } else {
+            *scalar_diff = caffe_cpu_dot(outer_dim_, sum_mult, sum_result);
+          }
         } else {
           caffe_cpu_gemv(CblasTrans, outer_dim_, scalar_dim_,
-                         Dtype(1), sum_result, sum_mult, Dtype(0), scalar_diff);
+                         Dtype(1), sum_result, sum_mult, Dtype(scalar_param),
+                         scalar_diff);
         }
       }
     }
   }
   if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->cpu_diff();
-    const Dtype* scalar_data = bottom[1]->cpu_data();
+    const Dtype* scalar_data = scalar->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     for (int n = 0; n < outer_dim_; ++n) {
       for (int d = 0; d < scalar_dim_; ++d) {

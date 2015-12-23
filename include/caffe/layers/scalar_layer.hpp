@@ -14,12 +14,17 @@ namespace caffe {
  *        latter Blob "broadcast" to match the shape of the former.
  *        Equivalent to tiling the latter Blob, then computing the elementwise
  *        product.
+ *
+ * The second input may be omitted, in which case it's learned as a parameter
+ * of the layer.
  */
 template <typename Dtype>
 class ScalarLayer: public Layer<Dtype> {
  public:
   explicit ScalarLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 

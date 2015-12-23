@@ -86,6 +86,26 @@ TYPED_TEST(ScalarLayerTest, TestForwardEltwise) {
   }
 }
 
+TYPED_TEST(ScalarLayerTest, TestForwardEltwiseWithParam) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ScalarParameter* scalar_param = layer_param.mutable_scalar_param();
+  scalar_param->set_axis(0);
+  scalar_param->set_num_axes(-1);
+  scalar_param->mutable_filler()->set_type("gaussian");
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype* data = this->blob_top_->cpu_data();
+  const int count = this->blob_top_->count();
+  const Dtype* in_data_a = this->blob_bottom_->cpu_data();
+  const Dtype* in_data_b = layer->blobs()[0]->cpu_data();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i], 1e-5);
+  }
+}
+
 TYPED_TEST(ScalarLayerTest, TestForwardBroadcastBegin) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_0_);
@@ -125,6 +145,30 @@ TYPED_TEST(ScalarLayerTest, TestForwardBroadcastMiddle) {
                       this->blob_bottom_->data_at(n, c, h, w) *
                       this->blob_bottom_broadcast_1_->data_at(c, h, 0, 0),
                       1e-5);
+        }
+      }
+    }
+  }
+}
+
+TYPED_TEST(ScalarLayerTest, TestForwardBroadcastMiddleWithParam) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ScalarParameter* scalar_param = layer_param.mutable_scalar_param();
+  scalar_param->set_axis(1);
+  scalar_param->set_num_axes(2);
+  scalar_param->mutable_filler()->set_type("gaussian");
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
+      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
+        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
+          EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
+                      this->blob_bottom_->data_at(n, c, h, w) *
+                      layer->blobs()[0]->data_at(c, h, 0, 0), 1e-5);
         }
       }
     }
@@ -199,6 +243,19 @@ TYPED_TEST(ScalarLayerTest, TestGradientEltwise) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(ScalarLayerTest, TestGradientEltwiseWithParam) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ScalarParameter* scalar_param = layer_param.mutable_scalar_param();
+  scalar_param->set_axis(0);
+  scalar_param->set_num_axes(-1);
+  scalar_param->mutable_filler()->set_type("gaussian");
+  ScalarLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
 TYPED_TEST(ScalarLayerTest, TestGradientBroadcastBegin) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_0_);
@@ -214,6 +271,20 @@ TYPED_TEST(ScalarLayerTest, TestGradientBroadcastMiddle) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
   LayerParameter layer_param;
   layer_param.mutable_scalar_param()->set_axis(1);
+  ScalarLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(ScalarLayerTest, TestGradientBroadcastMiddleWithParam) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
+  LayerParameter layer_param;
+  ScalarParameter* scalar_param = layer_param.mutable_scalar_param();
+  scalar_param->set_axis(1);
+  scalar_param->set_num_axes(2);
+  scalar_param->mutable_filler()->set_type("gaussian");
   ScalarLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

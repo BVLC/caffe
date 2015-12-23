@@ -967,6 +967,21 @@ message ScalarParameter {
   // Furthermore, bottom[1] may have the empty shape (regardless of the value of
   // "axis") -- a literal scalar.
   optional int32 axis = 1 [default = 0];
+
+  // (num_axes is ignored unless just one bottom is given and the scalar is
+  // a learned parameter of the layer.  Otherwise, num_axes is determined by the
+  // number of axes by the second bottom.)
+  // The number of axes of the input (bottom[0]) covered by the scalar
+  // parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
+  // The default, 0, learns a zero-axis Blob: an actual scalar multiplier.
+  optional int32 num_axes = 2 [default = 0];
+
+  // (filler is ignored unless just one bottom is given and the scalar is
+  // a learned parameter of the layer.)
+  // The initialization for the learned scalar parameter.
+  // Default is the unit (1) initialization, resulting in the ScalarLayer
+  // initially performing the identity operation.
+  optional FillerParameter filler = 3;
 }
 
 message SigmoidParameter {
