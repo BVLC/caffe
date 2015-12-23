@@ -3,12 +3,15 @@
 #include <android/log.h>
 #include <string>
 #include <vector>
+<<<<<<< HEAD
 
 #ifdef USE_EIGEN
 #include <omp.h>
 #else
 #include <cblas.h>
 #endif
+=======
+>>>>>>> 4b51010... Revised jni interfaces
 
 #include "caffe/caffe.hpp"
 #include "caffe_mobile.hpp"
@@ -35,6 +38,7 @@ string jstring2string(JNIEnv *env, jstring jstr) {
 }
 
 JNIEXPORT void JNICALL
+<<<<<<< HEAD
 Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setNumThreads(
     JNIEnv *env, jobject thiz, jint numThreads) {
   int num_threads = numThreads;
@@ -46,6 +50,8 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setNumThreads(
 }
 
 JNIEXPORT void JNICALL
+=======
+>>>>>>> 4b51010... Revised jni interfaces
 Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_enableLog(JNIEnv *env,
                                                          jobject thiz,
                                                          jboolean enabled) {}
