@@ -398,7 +398,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           dloss_neg_.mutable_cpu_data() + batch_offset * batch, &loss_out,
           &classerr_out, &rand_index_out);
 
-    loss += loss_out;
+    loss += 0.5 * loss_out;
     // std::cout << "NEG: " << loss_out << std::endl;
 
     Malis(&affinity_data_pos[batch_offset * batch], conn_num_dims_,
@@ -407,7 +407,7 @@ void MalisLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           dloss_pos_.mutable_cpu_data() + batch_offset * batch, &loss_out,
           &classerr_out, &rand_index_out);
 
-    loss += loss_out;
+    loss += 0.5 * loss_out;
     // std::cout << "POS: " << loss_out << std::endl;
   }
 
@@ -434,7 +434,7 @@ void MalisLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 #pragma omp parallel for
     for (int_tp i = 0; i < bottom[0]->count(); ++i) {
-      bottom_diff[i] = -(dloss_neg_data[i] + dloss_pos_data[i]);
+      bottom_diff[i] = -(dloss_neg_data[i] + dloss_pos_data[i]) / 2.0;
     }
   }
 }
