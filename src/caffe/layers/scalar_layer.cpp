@@ -46,12 +46,6 @@ void ScalarLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ScalarLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // TODO: make ScalarLayer usable in-place.
-  // Currently, in-place computation is broken during Backward with
-  // propagate_down[0] && propagate_down[1], as bottom[0]'s diff is used for
-  // temporary storage of an intermediate result, overwriting top[0]'s diff
-  // if using in-place computation.
-  CHECK_NE(bottom[0], top[0]) << "ScalarLayer cannot be used in-place";
   const ScalarParameter& param = this->layer_param_.scalar_param();
   Blob<Dtype>* scalar = (bottom.size() > 1) ? bottom[1] : this->blobs_[0].get();
   // Always set axis_ == 0 in special case where scalar is an actual scalar
@@ -73,7 +67,11 @@ void ScalarLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   outer_dim_ = bottom[0]->count(0, axis_);
   scalar_dim_ = scalar->count();
   inner_dim_ = bottom[0]->count(axis_ + scalar->num_axes());
-  top[0]->ReshapeLike(*bottom[0]);
+  if (bottom[0] == top[0]) {  // in-place computation
+    temp_.ReshapeLike(*bottom[0]);
+  } else {
+    top[0]->ReshapeLike(*bottom[0]);
+  }
   sum_result_.Reshape(vector<int>(1, outer_dim_ * scalar_dim_));
   const int sum_mult_size = std::max(outer_dim_, inner_dim_);
   sum_multiplier_.Reshape(vector<int>(1, sum_mult_size));
@@ -86,6 +84,14 @@ template <typename Dtype>
 void ScalarLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
+  if (bottom[0] == top[0]) {
+    // In-place computation; need to store bottom data before overwriting it.
+    // Note that this is only necessary for Backward; we could skip this if not
+    // doing Backward, but Caffe currently provides no way of knowing whether
+    // we'll need to do Backward at the time of the Forward call.
+    caffe_copy(bottom[0]->count(), bottom[0]->cpu_data(),
+               temp_.mutable_cpu_data());
+  }
   const Dtype* scalar_data =
       ((bottom.size() > 1) ? bottom[1] : this->blobs_[0].get())->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -107,12 +113,16 @@ void ScalarLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if ((!scalar_param && propagate_down[1]) ||
       (scalar_param && this->param_propagate_down_[0])) {
     const Dtype* top_diff = top[0]->cpu_diff();
-    const Dtype* bottom_data = bottom[0]->cpu_data();
+    const bool in_place = (bottom[0] == top[0]);
+    const Dtype* bottom_data = (in_place ? &temp_ : bottom[0])->cpu_data();
     // Hack: store big eltwise product in bottom[0] diff, except in the special
     // case where this layer itself does the eltwise product, in which case we
     // can store it directly in the scalar diff, and we're done.
+    // If we're computing in-place (and not doing eltwise computation), this
+    // hack doesn't work and we store the product in temp_.
     const bool is_eltwise = (bottom[0]->count() == scalar->count());
-    Dtype* product = (is_eltwise ? scalar : bottom[0])->mutable_cpu_diff();
+    Dtype* product = (is_eltwise ? scalar->mutable_cpu_diff() :
+        (in_place ? temp_.mutable_cpu_data() : bottom[0]->mutable_cpu_diff()));
     caffe_mul(top[0]->count(), top_diff, bottom_data, product);
     if (!is_eltwise) {
       Dtype* sum_result = NULL;

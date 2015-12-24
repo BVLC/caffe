@@ -21,6 +21,14 @@ void ScalarLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int count = top[0]->count();
   const Dtype* bottom_data = bottom[0]->gpu_data();
+  if (bottom[0] == top[0]) {
+    // in-place computation; need to store bottom data before overwriting it.
+    // Note that this is only necessary for Backward; we could skip this if not
+    // doing Backward, but Caffe currently provides no way of knowing whether
+    // we'll need to do Backward at the time of the Forward call.
+    caffe_copy(bottom[0]->count(), bottom[0]->gpu_data(),
+               temp_.mutable_gpu_data());
+  }
   const Dtype* scalar_data =
       ((bottom.size() > 1) ? bottom[1] : this->blobs_[0].get())->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -37,12 +45,16 @@ void ScalarLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if ((!scalar_param && propagate_down[1]) ||
       (scalar_param && this->param_propagate_down_[0])) {
     const Dtype* top_diff = top[0]->gpu_diff();
-    const Dtype* bottom_data = bottom[0]->gpu_data();
+    const bool in_place = (bottom[0] == top[0]);
+    const Dtype* bottom_data = (in_place ? &temp_ : bottom[0])->gpu_data();
     // Hack: store big eltwise product in bottom[0] diff, except in the special
     // case where this layer itself does the eltwise product, in which case we
     // can store it directly in the scalar diff, and we're done.
+    // If we're computing in-place (and not doing eltwise computation), this
+    // hack doesn't work and we store the product in temp_.
     const bool is_eltwise = (bottom[0]->count() == scalar->count());
-    Dtype* product = (is_eltwise ? scalar : bottom[0])->mutable_gpu_diff();
+    Dtype* product = (is_eltwise ? scalar->mutable_gpu_diff() :
+        (in_place ? temp_.mutable_gpu_data() : bottom[0]->mutable_gpu_diff()));
     caffe_gpu_mul(top[0]->count(), top_diff, bottom_data, product);
     if (!is_eltwise) {
       Dtype* sum_result = NULL;

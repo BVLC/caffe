@@ -86,6 +86,70 @@ TYPED_TEST(ScalarLayerTest, TestForwardEltwise) {
   }
 }
 
+TYPED_TEST(ScalarLayerTest, TestForwardEltwiseInPlace) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_top_vec_[0] = this->blob_bottom_;  // in-place computation
+  Blob<Dtype> orig_bottom(this->blob_bottom_->shape());
+  orig_bottom.CopyFrom(*this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_eltwise_);
+  LayerParameter layer_param;
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype* data = this->blob_bottom_->cpu_data();
+  const int count = this->blob_bottom_->count();
+  const Dtype* in_data_a = orig_bottom.cpu_data();
+  const Dtype* in_data_b = this->blob_bottom_eltwise_->cpu_data();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i], 1e-5);
+  }
+}
+
+TYPED_TEST(ScalarLayerTest, TestBackwardEltwiseInPlace) {
+  typedef typename TypeParam::Dtype Dtype;
+  Blob<Dtype> orig_bottom(this->blob_bottom_->shape());
+  orig_bottom.CopyFrom(*this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_eltwise_);
+  LayerParameter layer_param;
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  Blob<Dtype> top_diff(this->blob_bottom_->shape());
+  FillerParameter filler_param;
+  filler_param.set_type("gaussian");
+  filler_param.set_std(1);
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(&top_diff);
+  vector<bool> propagate_down(2, true);
+  // Run forward + backward without in-place computation;
+  // save resulting bottom diffs.
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  caffe_copy(top_diff.count(), top_diff.cpu_data(),
+             this->blob_top_->mutable_cpu_diff());
+  layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const bool kReshape = true;
+  const bool kCopyDiff = true;
+  Blob<Dtype> orig_bottom_diff;
+  orig_bottom_diff.CopyFrom(*this->blob_bottom_, kCopyDiff, kReshape);
+  Blob<Dtype> orig_scalar_diff;
+  orig_scalar_diff.CopyFrom(*this->blob_bottom_eltwise_,
+                            kCopyDiff, kReshape);
+  // Rerun forward + backward with in-place computation;
+  // check that resulting bottom diffs are the same.
+  this->blob_top_vec_[0] = this->blob_bottom_;  // in-place computation
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  caffe_copy(top_diff.count(), top_diff.cpu_data(),
+             this->blob_bottom_->mutable_cpu_diff());
+  layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
+                this->blob_bottom_->cpu_diff()[i], 1e-5);
+  }
+  for (int i = 0; i < this->blob_bottom_eltwise_->count(); ++i) {
+    EXPECT_NEAR(orig_scalar_diff.cpu_diff()[i],
+                this->blob_bottom_eltwise_->cpu_diff()[i], 1e-5);
+  }
+}
+
 TYPED_TEST(ScalarLayerTest, TestForwardEltwiseWithParam) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -148,6 +212,77 @@ TYPED_TEST(ScalarLayerTest, TestForwardBroadcastMiddle) {
         }
       }
     }
+  }
+}
+
+TYPED_TEST(ScalarLayerTest, TestForwardBroadcastMiddleInPlace) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_top_vec_[0] = this->blob_bottom_;  // in-place computation
+  Blob<Dtype> orig_bottom(this->blob_bottom_->shape());
+  orig_bottom.CopyFrom(*this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
+  LayerParameter layer_param;
+  layer_param.mutable_scalar_param()->set_axis(1);
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
+      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
+        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
+          EXPECT_NEAR(this->blob_bottom_->data_at(n, c, h, w),
+                      orig_bottom.data_at(n, c, h, w) *
+                      this->blob_bottom_broadcast_1_->data_at(c, h, 0, 0),
+                      1e-5);
+        }
+      }
+    }
+  }
+}
+
+TYPED_TEST(ScalarLayerTest, TestBackwardBroadcastMiddleInPlace) {
+  typedef typename TypeParam::Dtype Dtype;
+  Blob<Dtype> orig_bottom(this->blob_bottom_->shape());
+  orig_bottom.CopyFrom(*this->blob_bottom_);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
+  LayerParameter layer_param;
+  layer_param.mutable_scalar_param()->set_axis(1);
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  Blob<Dtype> top_diff(this->blob_bottom_->shape());
+  FillerParameter filler_param;
+  filler_param.set_type("gaussian");
+  filler_param.set_std(1);
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(&top_diff);
+  vector<bool> propagate_down(2, true);
+  // Run forward + backward without in-place computation;
+  // save resulting bottom diffs.
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  caffe_copy(top_diff.count(), top_diff.cpu_data(),
+             this->blob_top_->mutable_cpu_diff());
+  layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  const bool kReshape = true;
+  const bool kCopyDiff = true;
+  Blob<Dtype> orig_bottom_diff;
+  orig_bottom_diff.CopyFrom(*this->blob_bottom_, kCopyDiff, kReshape);
+  Blob<Dtype> orig_scalar_diff;
+  orig_scalar_diff.CopyFrom(*this->blob_bottom_broadcast_1_,
+                            kCopyDiff, kReshape);
+  // Rerun forward + backward with in-place computation;
+  // check that resulting bottom diffs are the same.
+  this->blob_top_vec_[0] = this->blob_bottom_;  // in-place computation
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  caffe_copy(top_diff.count(), top_diff.cpu_data(),
+             this->blob_bottom_->mutable_cpu_diff());
+  layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_NEAR(orig_bottom_diff.cpu_diff()[i],
+                this->blob_bottom_->cpu_diff()[i], 1e-5);
+  }
+  for (int i = 0; i < this->blob_bottom_broadcast_1_->count(); ++i) {
+    EXPECT_NEAR(orig_scalar_diff.cpu_diff()[i],
+                this->blob_bottom_broadcast_1_->cpu_diff()[i], 1e-5);
   }
 }
 

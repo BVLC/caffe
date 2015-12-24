@@ -65,6 +65,7 @@ class ScalarLayer: public Layer<Dtype> {
 
   Blob<Dtype> sum_multiplier_;
   Blob<Dtype> sum_result_;
+  Blob<Dtype> temp_;
   int axis_;
   int outer_dim_, scalar_dim_, inner_dim_;
 };
