@@ -249,7 +249,7 @@
     <ClInclude Include="..\include\caffe\blob.hpp" />
     <ClInclude Include="..\include\caffe\caffe.hpp" />
     <ClInclude Include="..\include\caffe\common.hpp" />
-    <ClInclude Include="..\include\caffe\data_layers.hpp" />
+    <ClInclude Include="..\include\caffe\mil_data_layer.hpp" />
     <ClInclude Include="..\include\caffe\data_transformer.hpp" />
     <ClInclude Include="..\include\caffe\filler.hpp" />
     <ClInclude Include="..\include\caffe\internal_thread.hpp" />
@@ -317,7 +317,6 @@
     <ClInclude Include="..\include\caffe\layers\threshold_layer.hpp" />
     <ClInclude Include="..\include\caffe\layers\tile_layer.hpp" />
     <ClInclude Include="..\include\caffe\layers\window_data_layer.hpp" />
-    <ClInclude Include="..\include\caffe\loss_layers.hpp" />
     <ClInclude Include="..\include\caffe\net.hpp" />
     <ClInclude Include="..\include\caffe\solver.hpp" />
     <ClInclude Include="..\include\caffe\syncedmem.hpp" />

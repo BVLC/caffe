@@ -4,13 +4,9 @@
 #include <cstdio>
 #include <ctime>
 
-#ifdef _MSC_VER
-#include <process.h>
-#define getpid _getpid
-#endif
-
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
+#include "caffe/util/MSVC.hpp"
 
 namespace caffe {
 

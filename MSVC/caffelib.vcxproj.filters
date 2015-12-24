@@ -491,12 +491,6 @@
     <ClInclude Include="..\include\caffe\util\upgrade_proto.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\caffe\loss_layers.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\caffe\data_layers.hpp">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\caffe\util\msvc.hpp">
       <Filter>include</Filter>
     </ClInclude>
@@ -712,6 +706,9 @@
     </ClInclude>
     <ClInclude Include="..\include\caffe\util\signal_handler.h">
       <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\caffe\mil_data_layer.hpp">
+      <Filter>include\layers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
