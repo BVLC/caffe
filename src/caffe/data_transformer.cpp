@@ -27,73 +27,99 @@ void DecodeFloats(const string& data, size_t idx, Dtype* pf, size_t len) {
   memcpy(pf, const_cast<char*>(&data[idx]), len * sizeof(Dtype));
 }
 
+string DecodeString(const string& data, size_t idx) {
+  string result = "";
+  int i = 0;
+  while(data[idx+i] != 0){
+    result.push_back(char(data[idx+i]));
+    i++;
+  }
+  return result;
+}
+
 template<typename Dtype>
 void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, size_t offset3, size_t offset1) { //very specific to genLMDB.py
-  meta.isValidation = (data[offset3]==0 ? false : true);
-  meta.numOtherPeople = (int)data[offset3+1];
-  meta.people_index = (int)data[offset3+2];
+  // ------------------- Dataset name ----------------------
+  meta.dataset = DecodeString(data, offset3);
+  // ------------------- Image Dimension -------------------
+  float height, width;
+  DecodeFloats(data, offset3+offset1, &height, 1);
+  DecodeFloats(data, offset3+offset1+4, &width, 1);
+  meta.img_size = Size(width, height);
+  // ----------- Validation, nop, counters -----------------
+  meta.isValidation = (data[offset3+2*offset1]==0 ? false : true);
+  meta.numOtherPeople = (int)data[offset3+2*offset1+1];
+  meta.people_index = (int)data[offset3+2*offset1+2];
   float annolist_index;
-  DecodeFloats(data, offset3+3, &annolist_index, 1);
+  DecodeFloats(data, offset3+2*offset1+3, &annolist_index, 1);
   meta.annolist_index = (int)annolist_index;
   float write_number;
-  DecodeFloats(data, offset3+7, &write_number, 1);
+  DecodeFloats(data, offset3+2*offset1+7, &write_number, 1);
   meta.write_number = (int)write_number;
   float total_write_number;
-  DecodeFloats(data, offset3+11, &total_write_number, 1);
+  DecodeFloats(data, offset3+2*offset1+11, &total_write_number, 1);
   meta.total_write_number = (int)total_write_number;
 
+  // count epochs according to counters
   static int cur_epoch = -1;
   if(meta.write_number == 0){
     cur_epoch++;
   }
   meta.epoch = cur_epoch;
-  //LOG(INFO) << "meta.annolist_index: " << meta.annolist_index << "; meta.write_number: " << meta.write_number
-  //        << "; meta.total_write_number: " << meta.total_write_number << "; meta.epoch: " << meta.epoch;
-  if(!is_table_set){
+  if(meta.write_number % 1000 == 0){
+    LOG(INFO) << "dataset: " << meta.dataset <<"; img_size: " << meta.img_size
+        << "; meta.annolist_index: " << meta.annolist_index << "; meta.write_number: " << meta.write_number
+        << "; meta.total_write_number: " << meta.total_write_number << "; meta.epoch: " << meta.epoch;
+  }
+  if(param_.aug_way() == "table" && !is_table_set){
     SetAugTable(meta.total_write_number);
     is_table_set = true;
   }
 
-  DecodeFloats(data, offset3+offset1, &meta.objpos.x, 1);
-  DecodeFloats(data, offset3+offset1+4, &meta.objpos.y, 1);
+  // ------------------- objpos -----------------------
+  DecodeFloats(data, offset3+3*offset1, &meta.objpos.x, 1);
+  DecodeFloats(data, offset3+3*offset1+4, &meta.objpos.y, 1);
   meta.objpos -= Point2f(1,1);
-  DecodeFloats(data, offset3+2*offset1, &meta.scale_self, 1);
+  // ------------ scale_self, joint_self --------------
+  DecodeFloats(data, offset3+4*offset1, &meta.scale_self, 1);
   meta.joint_self.joints.resize(np_in_lmdb);
   meta.joint_self.isVisible.resize(np_in_lmdb);
   for(int i=0; i<np_in_lmdb; i++){
-    DecodeFloats(data, offset3+3*offset1+4*i, &meta.joint_self.joints[i].x, 1);
-    DecodeFloats(data, offset3+4*offset1+4*i, &meta.joint_self.joints[i].y, 1);
+    DecodeFloats(data, offset3+5*offset1+4*i, &meta.joint_self.joints[i].x, 1);
+    DecodeFloats(data, offset3+6*offset1+4*i, &meta.joint_self.joints[i].y, 1);
     meta.joint_self.joints[i] -= Point2f(1,1); //from matlab 1-index to c++ 0-index
     float isVisible;
-    DecodeFloats(data, offset3+5*offset1+4*i, &isVisible, 1);
+    DecodeFloats(data, offset3+7*offset1+4*i, &isVisible, 1);
     meta.joint_self.isVisible[i] = (isVisible == 0) ? 0 : 1;
-    if(meta.joint_self.joints[i].x <= 0 || meta.joint_self.joints[i].y <= 0){
+    if(meta.joint_self.joints[i].x < 0 || meta.joint_self.joints[i].y < 0 ||
+       meta.joint_self.joints[i].x >= meta.img_size.width || meta.joint_self.joints[i].y >= meta.img_size.height){
       meta.joint_self.isVisible[i] = 2; // 2 means cropped, 0 means occluded by still on image
     }
   }
   
-  //others 
+  //others (7 lines loaded)
   meta.objpos_other.resize(meta.numOtherPeople);
   meta.scale_other.resize(meta.numOtherPeople);
   meta.joint_others.resize(meta.numOtherPeople);
   for(int p=0; p<meta.numOtherPeople; p++){
-    DecodeFloats(data, offset3+(6+p)*offset1, &meta.objpos_other[p].x, 1);
-    DecodeFloats(data, offset3+(6+p)*offset1+4, &meta.objpos_other[p].y, 1);
+    DecodeFloats(data, offset3+(8+p)*offset1, &meta.objpos_other[p].x, 1);
+    DecodeFloats(data, offset3+(8+p)*offset1+4, &meta.objpos_other[p].y, 1);
     meta.objpos_other[p] -= Point2f(1,1);
-    DecodeFloats(data, offset3+(6+meta.numOtherPeople)*offset1+4*p, &meta.scale_other[p], 1);
+    DecodeFloats(data, offset3+(8+meta.numOtherPeople)*offset1+4*p, &meta.scale_other[p], 1);
   }
-  //6+numOtherPeople lines passed
+  //8 + numOtherPeople lines loaded
   for(int p=0; p<meta.numOtherPeople; p++){
     meta.joint_others[p].joints.resize(np_in_lmdb);
     meta.joint_others[p].isVisible.resize(np_in_lmdb);
     for(int i=0; i<np_in_lmdb; i++){
-      DecodeFloats(data, offset3+(7+meta.numOtherPeople+3*p)*offset1+4*i, &meta.joint_others[p].joints[i].x, 1);
-      DecodeFloats(data, offset3+(7+meta.numOtherPeople+3*p+1)*offset1+4*i, &meta.joint_others[p].joints[i].y, 1);
+      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p)*offset1+4*i, &meta.joint_others[p].joints[i].x, 1);
+      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+1)*offset1+4*i, &meta.joint_others[p].joints[i].y, 1);
       meta.joint_others[p].joints[i] -= Point2f(1,1);
       float isVisible;
-      DecodeFloats(data, offset3+(7+meta.numOtherPeople+3*p+2)*offset1+4*i, &isVisible, 1);
+      DecodeFloats(data, offset3+(9+meta.numOtherPeople+3*p+2)*offset1+4*i, &isVisible, 1);
       meta.joint_others[p].isVisible[i] = (isVisible == 0) ? 0 : 1;
-      if(meta.joint_others[p].joints[i].x <= 0 || meta.joint_others[p].joints[i].y <= 0){
+      if(meta.joint_others[p].joints[i].x < 0 || meta.joint_others[p].joints[i].y < 0 ||
+         meta.joint_others[p].joints[i].x >= meta.img_size.width || meta.joint_others[p].joints[i].y >= meta.img_size.height){
         meta.joint_others[p].isVisible[i] = 2; // 2 means cropped, 1 means occluded by still on image
       }
     }
@@ -470,18 +496,9 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
     }
   }
-  transformed_data[0] = meta.write_number;
-  transformed_data[1] = as.degree;
-  transformed_data[2] = as.flip;
-  //LOG(INFO) << "Transformer: " << meta.write_number << " is put.";
-
-
+  
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
   generateLabelMap(transformed_label, img_aug, meta);
-
-  transformed_label[0] = meta.write_number;
-  transformed_label[1] = as.degree;
-  transformed_label[2] = as.flip;
 
   //starts to visualize everything (transformed_data in 4 ch, label) fed into conv1
   //if(param_.visualize()){
@@ -735,7 +752,6 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     }
   }
   
-  static int counter = 3;
   for (int i = 0; i < np; i++){
     Point2f center = meta.joint_self.joints[i];
     if(meta.joint_self.isVisible[i] <= 1){
@@ -791,7 +807,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
       //center = center * (1.0/(float)param_.stride());
       //circle(label_map, center, 3, CV_RGB(255,0,255), -1);
       char imagename [100];
-      sprintf(imagename, "augment_%04d_label_part_%02d.jpg", counter, i);
+      sprintf(imagename, "augment_%04d_label_part_%02d.jpg", meta.write_number, i);
       //LOG(INFO) << "filename is " << imagename;
       imwrite(imagename, label_map);
     }
@@ -817,7 +833,6 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
     // //LOG(INFO) << "filename is " << imagename;
     // imwrite(imagename, label_map);
   }
-  counter += 4;
 }
 
 void setLabel(Mat& im, const std::string label, const Point& org) {
@@ -904,7 +919,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
     std::stringstream ss;
     // ss << "Augmenting with:" << (as.flip ? "flip" : "no flip") << "; Rotate " << as.degree << " deg; scaling: " << as.scale << "; crop: " 
     //    << as.crop.height << "," << as.crop.width;
-    ss << "index:" << meta.annolist_index << "; p:" << meta.people_index 
+    ss << meta.dataset << " " << meta.write_number << " index:" << meta.annolist_index << "; p:" << meta.people_index 
        << "; o_scale: " << meta.scale_self;
     string str_info = ss.str();
     setLabel(img_vis, str_info, Point(0, 20));

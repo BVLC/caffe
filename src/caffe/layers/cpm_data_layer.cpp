@@ -161,9 +161,9 @@ void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         &(this->transformed_label_), cnt);
       ++cnt;
     }
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
-    }
+    // if (this->output_labels_) {
+    //   top_label[item_id] = datum.label();
+    // }
     trans_time += timer.MicroSeconds();
 
     reader_.free().push(const_cast<Datum*>(&datum));

@@ -143,6 +143,8 @@ class DataTransformer {
   };
 
   struct MetaData {
+    string dataset;
+    Size img_size;
     bool isValidation;
     int numOtherPeople;
     int people_index;

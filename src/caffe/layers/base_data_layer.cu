@@ -11,11 +11,11 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
 
-  LOG(INFO) << "forward gpu: write_count is: ";
-  int offset = batch->label_.count()/4;
-    for(int i=0;i<4;i++)
-      LOG(INFO) << batch->label_.cpu_data()[0+offset*i] << "," << batch->label_.cpu_data()[1+offset*i] << ","
-                << batch->label_.cpu_data()[2+offset*i];
+  // LOG(INFO) << "forward gpu: write_count is: ";
+  // int offset = batch->label_.count()/8;
+  //   for(int i=0;i<8;i++)
+  //     LOG(INFO) << batch->label_.cpu_data()[0+offset*i] << "," << batch->label_.cpu_data()[1+offset*i] << ","
+  //               << batch->label_.cpu_data()[2+offset*i];
 
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
@@ -23,11 +23,10 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
       top[0]->mutable_gpu_data());
 
-  offset = batch->data_.count()/4;
-  
-  for(int i=0;i<4;i++)
-    LOG(INFO) << batch->data_.cpu_data()[0+offset*i] << "," << batch->data_.cpu_data()[1+offset*i] << ","
-              << batch->data_.cpu_data()[2+offset*i];
+  // offset = batch->data_.count()/8;
+  // for(int i=0;i<8;i++)
+  //   LOG(INFO) << batch->data_.cpu_data()[0+offset*i] << "," << batch->data_.cpu_data()[1+offset*i] << ","
+  //             << batch->data_.cpu_data()[2+offset*i];
 
   if (this->output_labels_) {
     // Reshape to loaded labels.
