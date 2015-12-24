@@ -88,6 +88,7 @@ void CPMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 // This function is called on prefetch thread
 template<typename Dtype>
 void CPMDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
+
   CPUTimer batch_timer;
   batch_timer.Start();
   double deque_time = 0;

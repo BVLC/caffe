@@ -62,6 +62,9 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 #endif
   DLOG(INFO) << "Initializing prefetch";
   this->data_transformer_->InitRand();
+  // static int iteration_internal = 0;
+  // LOG(INFO) << "-------------------------------------------------" << iteration_internal;
+  // iteration_internal++;
   StartInternalThread();
   DLOG(INFO) << "Prefetch initialized.";
 }

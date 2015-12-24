@@ -147,6 +147,9 @@ class DataTransformer {
     int numOtherPeople;
     int people_index;
     int annolist_index;
+    int write_number;
+    int total_write_number;
+    int epoch;
     Point2f objpos; //objpos_x(float), objpos_y (float)
     float scale_self;
     Joints joint_self; //(3*16)
@@ -166,9 +169,13 @@ class DataTransformer {
   void RotatePoint(Point2f& p, Mat R);
   bool onPlane(Point p, Size img_size);
   void swapLeftRight(Joints& j);
+  void SetAugTable(int numData);
 
   int np_in_lmdb;
   int np;
+  bool is_table_set;
+  vector<vector<float> > aug_degs;
+  vector<vector<int> > aug_flips;
 
  protected:
    /**

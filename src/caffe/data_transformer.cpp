@@ -35,6 +35,24 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
   float annolist_index;
   DecodeFloats(data, offset3+3, &annolist_index, 1);
   meta.annolist_index = (int)annolist_index;
+  float write_number;
+  DecodeFloats(data, offset3+7, &write_number, 1);
+  meta.write_number = (int)write_number;
+  float total_write_number;
+  DecodeFloats(data, offset3+11, &total_write_number, 1);
+  meta.total_write_number = (int)total_write_number;
+
+  static int cur_epoch = -1;
+  if(meta.write_number == 0){
+    cur_epoch++;
+  }
+  meta.epoch = cur_epoch;
+  //LOG(INFO) << "meta.annolist_index: " << meta.annolist_index << "; meta.write_number: " << meta.write_number
+  //        << "; meta.total_write_number: " << meta.total_write_number << "; meta.epoch: " << meta.epoch;
+  if(!is_table_set){
+    SetAugTable(meta.total_write_number);
+    is_table_set = true;
+  }
 
   DecodeFloats(data, offset3+offset1, &meta.objpos.x, 1);
   DecodeFloats(data, offset3+offset1+4, &meta.objpos.y, 1);
@@ -80,6 +98,36 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
       }
     }
   }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::SetAugTable(int numData){
+  aug_degs.resize(numData);     
+  aug_flips.resize(numData);  
+  for(int i = 0; i < numData; i++){
+    aug_degs[i].resize(param_.num_total_augs());
+    aug_flips[i].resize(param_.num_total_augs());
+  }
+  //load table files
+  char filename[100];
+  sprintf(filename, "../../rotate_%d_%d.txt", param_.num_total_augs(), numData);
+  ifstream rot_file(filename);
+  char filename2[100];
+  sprintf(filename2, "../../flip_%d_%d.txt", param_.num_total_augs(), numData);
+  ifstream flip_file(filename2);
+
+  for(int i = 0; i < numData; i++){
+    for(int j = 0; j < param_.num_total_augs(); j++){
+      rot_file >> aug_degs[i][j];
+      flip_file >> aug_flips[i][j];
+    }
+  }
+  // for(int i = 0; i < numData; i++){
+  //   for(int j = 0; j < param_.num_total_augs(); j++){
+  //     printf("%d ", (int)aug_degs[i][j]);
+  //   }
+  //   printf("\n");
+  // }
 }
 
 template<typename Dtype>
@@ -157,6 +205,7 @@ template<typename Dtype> DataTransformer<Dtype>::DataTransformer(const Transform
   LOG(INFO) << "DataTransformer constructor done.";
   np_in_lmdb = 16;
   np = param_.num_parts();
+  is_table_set = false;
 }
 
 template<typename Dtype> void DataTransformer<Dtype>::Transform(const Datum& datum, Dtype* transformed_data) {
@@ -381,7 +430,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   TransformMetaJoints(meta);
 
   //visualize original
-  if(param_.visualize()) 
+  if(0 && param_.visualize()) 
     visualize(img, meta, as);
 
   //Start transforming
@@ -391,10 +440,10 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   if (phase_ == TRAIN) {
     as.scale = augmentation_scale(img, img_temp, meta);
     as.degree = augmentation_rotate(img_temp, img_temp2, meta);
-    if(param_.visualize()) 
+    if(0 && param_.visualize()) 
       visualize(img_temp2, meta, as);
     as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
-    if(param_.visualize()) 
+    if(0 && param_.visualize()) 
       visualize(img_temp3, meta, as);
     as.flip = augmentation_flip(img_temp3, img_aug, meta);
     if(param_.visualize()) 
@@ -421,9 +470,18 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
       transformed_data[3*offset + i*img_aug.cols + j] = 0; //zero 4-th channel
     }
   }
+  transformed_data[0] = meta.write_number;
+  transformed_data[1] = as.degree;
+  transformed_data[2] = as.flip;
+  //LOG(INFO) << "Transformer: " << meta.write_number << " is put.";
+
 
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
   generateLabelMap(transformed_label, img_aug, meta);
+
+  transformed_label[0] = meta.write_number;
+  transformed_label[1] = as.degree;
+  transformed_label[2] = as.flip;
 
   //starts to visualize everything (transformed_data in 4 ch, label) fed into conv1
   //if(param_.visualize()){
@@ -552,8 +610,19 @@ void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
 
 template<typename Dtype>
 bool DataTransformer<Dtype>::augmentation_flip(Mat& img_src, Mat& img_aug, MetaData& meta) {
-  float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-  bool doflip = (dice <= param_.flip_prob());
+  bool doflip;
+  if(param_.aug_way() == "rand"){
+    float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    doflip = (dice <= param_.flip_prob());
+  }
+  else if(param_.aug_way() == "table"){
+    doflip = (aug_flips[meta.write_number][meta.epoch % param_.num_total_augs()] == 1);
+  }
+  else {
+    doflip = 0;
+    LOG(INFO) << "Unhandled exception!!!!!!";
+  }
+
   if(doflip){
     flip(img_src, img_aug, 1);
     int w = img_src.cols;
@@ -592,8 +661,18 @@ void DataTransformer<Dtype>::RotatePoint(Point2f& p, Mat R){
 template<typename Dtype>
 float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, MetaData& meta) {
   
-  float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-  float degree = (dice - 0.5) * 2 * param_.max_rotate_degree();
+  float degree;
+  if(param_.aug_way() == "rand"){
+    float dice = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    degree = (dice - 0.5) * 2 * param_.max_rotate_degree();
+  }
+  else if(param_.aug_way() == "table"){
+    degree = aug_degs[meta.write_number][meta.epoch % param_.num_total_augs()];
+  }
+  else {
+    degree = 0;
+    LOG(INFO) << "Unhandled exception!!!!!!";
+  }
   
   Point2f center(img_src.cols/2.0, img_src.rows/2.0);
   Mat R = getRotationMatrix2D(center, degree, 1.0);
@@ -692,7 +771,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
   }
 
   //visualize
-  if(param_.visualize()){
+  if(0 && param_.visualize()){
     Mat label_map;
     for(int i = 0; i < 2*(np+1); i++){      
       label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
@@ -838,7 +917,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
     rectangle(img_vis, Point(0, 0+img_vis.rows), Point(param_.crop_size_x(), param_.crop_size_y()+img_vis.rows), Scalar(255,255,255), 1);
 
     char imagename [100];
-    sprintf(imagename, "augment_%04d.jpg", counter);
+    sprintf(imagename, "augment_%04d_epoch_%d_writenum_%d.jpg", counter, meta.epoch, meta.write_number);
     //LOG(INFO) << "filename is " << imagename;
     imwrite(imagename, img_vis);
   }

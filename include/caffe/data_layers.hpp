@@ -80,6 +80,8 @@ class BasePrefetchingDataLayer :
   // Prefetches batches (asynchronously if to GPU memory)
   static const int PREFETCH_COUNT = 3;
 
+  void dumpEverything(vector<Blob<Dtype>*> top);
+  
  protected:
   virtual void InternalThreadEntry();
   virtual void load_batch(Batch<Dtype>* batch) = 0;
@@ -202,6 +204,8 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
   virtual void LoadHDF5FileData(const char* filename);
+
+  void dumpEverything(vector<Blob<Dtype>*> top);
 
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;

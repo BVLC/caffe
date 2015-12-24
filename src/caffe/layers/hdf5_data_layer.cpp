@@ -9,6 +9,8 @@ TODO:
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
+#include <iostream>
+using namespace std;
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
@@ -25,7 +27,11 @@ HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
 // Load data and label from HDF5 filename into the class property blobs.
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
-  DLOG(INFO) << "Loading HDF5 file: " << filename;
+  if(this->layer_param_.hdf5_data_param().debug())
+    LOG(INFO) << "Loading HDF5 file: " << filename;
+  else
+    DLOG(INFO) << "Loading HDF5 file: " << filename;
+
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
     LOG(FATAL) << "Failed opening HDF5 file: " << filename;
@@ -154,7 +160,32 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }
   }
+  if(this->layer_param_.hdf5_data_param().debug()){
+    LOG(INFO) << "dump!";
+    dumpEverything(top);
+  }
 }
+
+template <typename Dtype>
+void HDF5DataLayer<Dtype>::dumpEverything(vector<Blob<Dtype>*> top){
+  static int counter = 1;
+  for(int b = 0; b < 3; b++){
+    char filename[100];
+    sprintf(filename, "top%d_%05d", b, counter);
+    ofstream myfile;
+    myfile.open(filename);
+    int data_length = top[b]->count();
+    
+    //LOG(INFO) << "before copy data: " << filename << "  " << data_length;
+    for(int i = 0; i < data_length; i++){
+      myfile << top[b]->cpu_data()[i] << " ";
+    }
+    //LOG(INFO) << "after copy data: " << filename << "  " << data_length;
+    myfile.close();
+  }
+  counter++;
+}
+
 
 #ifdef CPU_ONLY
 STUB_GPU_FORWARD(HDF5DataLayer, Forward);
