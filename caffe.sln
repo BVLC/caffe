@@ -1,13 +1,12 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe.lib", "MSVC\caffelib.vcxproj", "{7F271127-D68A-4B9B-ACCE-1369394ED6E5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe.lib", "windows\caffelib.vcxproj", "{7F271127-D68A-4B9B-ACCE-1369394ED6E5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "MSVC\caffe.vcxproj", "{537EF951-4B02-4103-A310-52A6F7C8D748}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "windows\caffe.vcxproj", "{537EF951-4B02-4103-A310-52A6F7C8D748}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RunTests", "MSVC\runtests.vcxproj", "{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RunTests", "windows\runtests.vcxproj", "{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
