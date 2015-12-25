@@ -86,8 +86,8 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   case Caffe::GPU: {
 #ifndef CPU_ONLY
     // compute square of gradient in update
-    caffe_gpu_powx(net_params[param_id]->count(),
-        net_params[param_id]->gpu_diff(), Dtype(2),
+    caffe_gpu_sqr(net_params[param_id]->count(),
+        net_params[param_id]->gpu_diff(),
         this->update_[param_id]->mutable_gpu_data());
 
     // update history of gradients
@@ -116,8 +116,8 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         this->update_[param_id]->mutable_gpu_data());
 
     // jointly compute the RMS of both for update and gradient history
-    caffe_gpu_powx(net_params[param_id]->count(),
-        this->update_[param_id]->gpu_data(), Dtype(0.5),
+    caffe_gpu_sqrt(net_params[param_id]->count(),
+        this->update_[param_id]->gpu_data(),
         this->update_[param_id]->mutable_gpu_data());
 
     // compute the update and copy to net_diff
@@ -127,8 +127,8 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         net_params[param_id]->mutable_gpu_diff());
 
     // compute square of update
-    caffe_gpu_powx(net_params[param_id]->count(),
-        net_params[param_id]->gpu_diff(), Dtype(2),
+    caffe_gpu_sqr(net_params[param_id]->count(),
+        net_params[param_id]->gpu_diff(),
         this->update_[param_id]->mutable_gpu_data());
 
     // update history of updates
