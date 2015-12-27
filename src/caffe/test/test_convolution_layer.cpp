@@ -837,7 +837,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
-  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
       // Test separable convolution by computing the Sobel operator
       // as a single filter then comparing the result
       // as the convolution of two rectangular filters.

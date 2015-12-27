@@ -107,7 +107,7 @@ class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
 TYPED_TEST_CASE(CuDNNSoftmaxLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
-  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -142,7 +142,7 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 }
 
 TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
-  if (Caffe::GetDefaultDeviceContext()->backend() == BACKEND_CUDA) {
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
     LayerParameter layer_param;
     CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3);

@@ -4,6 +4,9 @@
 
 #include <cudnn.h>
 
+
+#include <vector>
+
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -64,35 +67,98 @@ template<> class dataType<double> {
 };
 
 template <typename Dtype>
-inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc) {
+inline void createTensorNdDesc(cudnnTensorDescriptor_t* desc) {
   CUDNN_CHECK(cudnnCreateTensorDescriptor(desc));
 }
 
 template <typename Dtype>
-inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
-    int_tp n, int_tp c, int_tp h, int_tp w,
-    int_tp stride_n, int_tp stride_c, int_tp stride_h, int_tp stride_w) {
-  CUDNN_CHECK(cudnnSetTensor4dDescriptorEx(*desc, dataType<Dtype>::type,
-        n, c, h, w, stride_n, stride_c, stride_h, stride_w));
+inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
+    const int_tp total_dims,
+    const int_tp* shape, const int_tp* stride) {
+
+  std::vector<int> shape_int(total_dims);
+  std::vector<int> stride_int(total_dims);
+
+  for (int_tp i = 0; i < total_dims; ++i) {
+    shape_int[i] = shape[i];
+    stride_int[i] = stride[i];
+  }
+
+  const int* shape_ptr = &shape_int[0];
+  const int* stride_ptr = &stride_int[0];
+
+  CUDNN_CHECK(
+      cudnnSetTensorNdDescriptor(*desc, dataType<Dtype>::type, total_dims,
+                                 shape_ptr, stride_ptr));
 }
 
 template <typename Dtype>
-inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
-    int_tp n, int_tp c, int_tp h, int_tp w) {
-  const int_tp stride_w = 1;
-  const int_tp stride_h = w * stride_w;
-  const int_tp stride_c = h * stride_h;
-  const int_tp stride_n = c * stride_c;
-  setTensor4dDesc<Dtype>(desc, n, c, h, w,
-                         stride_n, stride_c, stride_h, stride_w);
+inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
+    const int_tp total_dims, const int_tp* shape) {
+
+  std::vector<int_tp> full_shape(total_dims);
+  std::vector<int_tp> full_stride(total_dims);
+
+  for (int_tp i = total_dims - 1; i >= 0; --i) {
+    full_shape[i] = shape[i];
+    if (i == total_dims - 1) {
+      full_stride[i] = 1;
+    } else {
+      full_stride[i] = full_stride[i + 1] * full_shape[i + 1];
+    }
+  }
+
+  setTensorNdDesc<Dtype>(desc, total_dims,
+                         &full_shape[0],
+                         &full_stride[0]);
 }
+
+template <typename Dtype>
+inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
+    const int_tp num_spatial_dims,
+    const int_tp n, const int_tp c, const int_tp* shape) {
+
+  std::vector<int_tp> full_shape(num_spatial_dims + 2);
+  std::vector<int_tp> full_stride(num_spatial_dims + 2);
+
+  full_shape[0] = n;
+  full_shape[1] = c;
+
+  for (int_tp i = num_spatial_dims + 1; i >= 0; --i) {
+    full_shape[i] = i > 1 ? shape[i-2] : full_shape[i];
+    if (i == num_spatial_dims + 1) {
+      full_stride[i] = 1;
+    } else {
+      full_stride[i] = full_stride[i + 1] * full_shape[i + 1];
+    }
+  }
+
+  setTensorNdDesc<Dtype>(desc, num_spatial_dims + 2,
+                         &full_shape[0],
+                         &full_stride[0]);
+}
+
 
 template <typename Dtype>
 inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
-    int_tp n, int_tp c, int_tp h, int_tp w) {
+    const int_tp num_spatial_dims,
+    const int_tp n, const int_tp c, const int_tp* shape) {
+
+  std::vector<int> shape_int(num_spatial_dims + 2);
+
+  shape_int[0] = n;
+  shape_int[1] = c;
+
+  for (int_tp i = 0; i < num_spatial_dims; ++i) {
+    shape_int[2+i] = shape[i];
+  }
+
+  const int* shape_ptr = &shape_int[0];
+
   CUDNN_CHECK(cudnnCreateFilterDescriptor(desc));
-  CUDNN_CHECK(cudnnSetFilter4dDescriptor(*desc, dataType<Dtype>::type,
-      n, c, h, w));
+  CUDNN_CHECK(cudnnSetFilterNdDescriptor(*desc, dataType<Dtype>::type,
+                                         num_spatial_dims + 2,
+                                         shape_ptr));
 }
 
 template <typename Dtype>
@@ -103,16 +169,33 @@ inline void createConvolutionDesc(cudnnConvolutionDescriptor_t* conv) {
 template <typename Dtype>
 inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
-    int_tp pad_h, int_tp pad_w, int_tp stride_h, int_tp stride_w) {
-  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
-      pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
+    const int_tp num_spatial_dims, const int_tp* pad, const int_tp* stride) {
+
+  std::vector<int> pad_int(num_spatial_dims);
+  std::vector<int> stride_int(num_spatial_dims);
+  std::vector<int> upscale_int(num_spatial_dims);
+
+  for (int_tp i = 0; i < num_spatial_dims; ++i) {
+    pad_int[i] = pad[i];
+    stride_int[i] = stride[i];
+    upscale_int[i] = 1;
+  }
+
+  const int* pad_ptr = &pad_int[0];
+  const int* stride_ptr = &stride_int[0];
+  const int* upscale_ptr = &upscale_int[0];
+
+  CUDNN_CHECK(cudnnSetConvolutionNdDescriptor(*conv, num_spatial_dims,
+        pad_ptr, stride_ptr, upscale_ptr, CUDNN_CROSS_CORRELATION,
+        dataType<Dtype>::type));
 }
 
 template <typename Dtype>
 inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
-    int_tp h, int_tp w, int_tp pad_h, int_tp pad_w,
-    int_tp stride_h, int_tp stride_w) {
+    const int_tp num_spatial_dims,
+    const int_tp* shape,
+    const int_tp* pad, const int_tp* stride) {
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;
@@ -124,8 +207,26 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     LOG(FATAL) << "Unknown pooling method.";
   }
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
-  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
-        pad_h, pad_w, stride_h, stride_w));
+
+  std::vector<int> shape_int(num_spatial_dims);
+  std::vector<int> pad_int(num_spatial_dims);
+  std::vector<int> stride_int(num_spatial_dims);
+
+  for (int_tp i = 0; i < num_spatial_dims; ++i) {
+    shape_int[i] = shape[i];
+    pad_int[i] = pad[i];
+    stride_int[i] = stride[i];
+  }
+
+  const int* shape_ptr = &shape_int[0];
+  const int* pad_ptr = &pad_int[0];
+  const int* stride_ptr = &stride_int[0];
+
+  CUDNN_CHECK(cudnnSetPoolingNdDescriptor(*pool_desc, *mode,
+                                          num_spatial_dims,
+                                          shape_ptr,
+                                          pad_ptr,
+                                          stride_ptr));
 }
 
 }  // namespace cudnn

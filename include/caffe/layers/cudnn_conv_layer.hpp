@@ -9,9 +9,14 @@
 
 #include "caffe/layers/conv_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
+
 /*
  * @brief cuDNN implementation of ConvolutionLayer.
  *        Fallback to ConvolutionLayer for CPU mode.
