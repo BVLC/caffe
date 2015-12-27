@@ -10,6 +10,10 @@
 #include "caffe/layers/neuron_layer.hpp"
 #include "caffe/layers/sigmoid_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN

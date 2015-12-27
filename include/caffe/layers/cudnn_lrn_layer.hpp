@@ -9,6 +9,10 @@
 
 #include "caffe/layers/lrn_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
