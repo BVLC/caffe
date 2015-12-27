@@ -17,6 +17,8 @@ namespace caffe {
 template<typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                              const vector<Blob<Dtype>*>& top) {
+  use_colbuffer_ = true;
+
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   force_nd_im2col_ = conv_param.force_nd_im2col();
@@ -269,7 +271,7 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 
   col_buffer_.Reshape(col_buffer_shape_);
-  if (Caffe::mode() == Caffe::Brew::GPU) {
+  if (Caffe::mode() == Caffe::Brew::GPU && use_colbuffer_) {
     // Shared column buffer per device-queue across all layers on that device
     for (int_tp i = 0; i < this->device_->num_queues(); ++i) {
       shared_ptr<Blob<Dtype> > buffer = this->device_
