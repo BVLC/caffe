@@ -67,15 +67,15 @@ bool checkPoolingKstrided(PoolingParameter param) {
 template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
-  if (engine == ConvolutionParameter_Engine_DEFAULT
-      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
-      || checkConvolutionKstrided(param.convolution_param())) {
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = ConvolutionParameter_Engine_CUDNN;
 #endif
   }
-  if (engine == ConvolutionParameter_Engine_CAFFE) {
+  if (engine == ConvolutionParameter_Engine_CAFFE
+      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
+      || checkConvolutionKstrided(param.convolution_param())) {
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
@@ -93,15 +93,15 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
-  if (engine == PoolingParameter_Engine_DEFAULT
-      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
-      || checkPoolingKstrided(param.pooling_param())) {
+  if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = PoolingParameter_Engine_CUDNN;
 #endif
   }
-  if (engine == PoolingParameter_Engine_CAFFE) {
+  if (engine == PoolingParameter_Engine_CAFFE
+      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
+      || checkPoolingKstrided(param.pooling_param())) {
     return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
@@ -125,14 +125,14 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   LRNParameter_Engine engine = param.lrn_param().engine();
 
   if (engine == LRNParameter_Engine_DEFAULT) {
+    engine = LRNParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = LRNParameter_Engine_CUDNN;
-#else
-    engine = LRNParameter_Engine_CAFFE;
 #endif
   }
 
-  if (engine == LRNParameter_Engine_CAFFE) {
+  if (engine == LRNParameter_Engine_CAFFE
+      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
     return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == LRNParameter_Engine_CUDNN) {
