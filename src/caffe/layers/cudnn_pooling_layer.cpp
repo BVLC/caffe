@@ -31,13 +31,13 @@ void CuDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   cudnn::setTensorNdDesc<Dtype>(&bottom_desc_,
                                 bottom[0]->shape().size() - 2,
-                                bottom[0]->num(),
+                                bottom[0]->shape()[0],
                                 this->channels_,
                                 &(bottom[0]->shape()[2]));
   const int_tp* pooled_size_data = this->pooled_size_.cpu_data();
   cudnn::setTensorNdDesc<Dtype>(&top_desc_,
                                 bottom[0]->shape().size() - 2,
-                                bottom[0]->num(),
+                                bottom[0]->shape()[0],
                                 this->channels_,
                                 pooled_size_data);
 }
