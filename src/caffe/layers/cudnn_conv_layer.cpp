@@ -106,7 +106,6 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   uint_tp workspace_limit_bytes = 8*1024*1024;
 
   for (int_tp i = 0; i < bottom.size(); i++) {
-
     {
       int_tp total_dims = bottom[i]->shape().size();
       std::vector<int_tp> full_shape(total_dims);
@@ -235,8 +234,8 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         workspace_bwd_filter_sizes_[i] = 0;
         workspace_bwd_data_sizes_[i] = 0;
         fwd_algo_[i] = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
-        bwd_filter_algo_[i] = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
-        bwd_data_algo_[i] = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
+        bwd_filter_algo_[i] = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
+        bwd_data_algo_[i] = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
       }
 
       // NULL out all workspace pointers
