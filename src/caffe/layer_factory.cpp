@@ -33,18 +33,49 @@
 
 namespace caffe {
 
+bool checkConvolutionKstrided(ConvolutionParameter param) {
+  if ((param.has_kstride_h() && param.kstride_h() > 1)
+      || (param.has_kstride_w() && param.kstride_w() > 1)) {
+    return true;
+  }
+
+  for (int i = 0; i < param.kstride_size(); ++i) {
+    if (param.kstride(i) > 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool checkPoolingKstrided(PoolingParameter param) {
+  if ((param.has_kstride_h() && param.kstride_h() > 1)
+      || (param.has_kstride_w() && param.kstride_w() > 1)) {
+    return true;
+  }
+
+  for (int i = 0; i < param.kstride_size(); ++i) {
+    if (param.kstride(i) > 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // Get convolution layer according to engine.
 template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
-  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+  if (engine == ConvolutionParameter_Engine_DEFAULT
+      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
+      || checkConvolutionKstrided(param.convolution_param())) {
     engine = ConvolutionParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = ConvolutionParameter_Engine_CUDNN;
 #endif
   }
-  if (engine == ConvolutionParameter_Engine_CAFFE
-      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
@@ -57,18 +88,20 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
+
 // Get pooling layer according to engine.
 template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
-  if (engine == PoolingParameter_Engine_DEFAULT) {
+  if (engine == PoolingParameter_Engine_DEFAULT
+      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
+      || checkPoolingKstrided(param.pooling_param())) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = PoolingParameter_Engine_CUDNN;
 #endif
   }
-  if (engine == PoolingParameter_Engine_CAFFE
-      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
+  if (engine == PoolingParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
