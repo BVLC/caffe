@@ -7,21 +7,26 @@
 namespace caffe {
 
 template <typename Dtype>
+__global__ void BiasForward(const int n, const Dtype* in,
+    const Dtype* bias, const int bias_dim, const int inner_dim,
+    Dtype* out) {
+  CUDA_KERNEL_LOOP(index, n) {
+    const int bias_index = (index / inner_dim) % bias_dim;
+    out[index] = in[index] + bias[bias_index];
+  }
+}
+
+template <typename Dtype>
 void BiasLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  const int count = top[0]->count();
+  const Dtype* bottom_data = bottom[0]->gpu_data();
   const Dtype* bias_data =
       ((bottom.size() > 1) ? bottom[1] : this->blobs_[0].get())->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  if (bottom[0] != top[0]) {
-    const Dtype* bottom_data = bottom[0]->gpu_data();
-    caffe_copy(bottom[0]->count(), bottom_data, top_data);
-  }
-  for (int n = 0; n < outer_dim_; ++n) {
-    caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, bias_dim_,
-        inner_dim_, Dtype(1), Dtype(1), bias_data,
-        bias_multiplier_.gpu_data(), Dtype(1), top_data);
-    top_data += dim_;
-  }
+  BiasForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
+      <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, bottom_data, bias_data, bias_dim_, inner_dim_, top_data);
 }
 
 template <typename Dtype>
