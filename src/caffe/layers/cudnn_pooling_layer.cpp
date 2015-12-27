@@ -8,10 +8,10 @@ namespace caffe {
 template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  PoolingLayer<Dtype>::LayerSetUp(bottom, top);
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensorNdDesc<Dtype>(&bottom_desc_);
   cudnn::createTensorNdDesc<Dtype>(&top_desc_);
+  PoolingLayer<Dtype>::LayerSetUp(bottom, top);
 
   const int_tp* kernel_data = this->kernel_shape_.cpu_data();
   const int_tp* pad_data = this->pad_.cpu_data();
@@ -30,11 +30,16 @@ void CuDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   PoolingLayer<Dtype>::Reshape(bottom, top);
 
   cudnn::setTensorNdDesc<Dtype>(&bottom_desc_,
-                                bottom[0]->shape().size(),
-                                &(bottom[0]->shape()[0]));
+                                bottom[0]->shape().size() - 2,
+                                bottom[0]->num(),
+                                this->channels_,
+                                &(bottom[0]->shape()[2]));
+  const int_tp* pooled_size_data = this->pooled_size_.cpu_data();
   cudnn::setTensorNdDesc<Dtype>(&top_desc_,
-                                top[0]->shape().size(),
-                                &(top[0]->shape()[0]));
+                                bottom[0]->shape().size() - 2,
+                                bottom[0]->num(),
+                                this->channels_,
+                                pooled_size_data);
 }
 
 template <typename Dtype>
