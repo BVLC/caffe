@@ -24,6 +24,10 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
     }
   }
+  if (bottom[0] == top[0]) {
+    CHECK_EQ(op_, EltwiseParameter_EltwiseOp_SUM) << type() << "Layer "
+        "in-place computation only supported with SUM operation.";
+  }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 }
 
@@ -44,6 +48,7 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  const bool in_place = (bottom[0] == top[0]);
   int* mask = NULL;
   const Dtype* bottom_data_a = NULL;
   const Dtype* bottom_data_b = NULL;
@@ -57,9 +62,13 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     }
     break;
   case EltwiseParameter_EltwiseOp_SUM:
-    caffe_set(count, Dtype(0), top_data);
+    if (in_place && coeffs_[0] != Dtype(1)) {
+      caffe_scal(count, coeffs_[0], top_data);
+    } else if (!in_place) {
+      caffe_set(count, Dtype(0.), top_data);
+    }
     // TODO(shelhamer) does BLAS optimize to sum for coeff = 1?
-    for (int i = 0; i < bottom.size(); ++i) {
+    for (int i = in_place; i < bottom.size(); ++i) {
       caffe_axpy(count, coeffs_[i], bottom[i]->cpu_data(), top_data);
     }
     break;
@@ -99,11 +108,12 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  const bool in_place = (bottom[0] == top[0]);
   const int* mask = NULL;
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int i = bottom.size() - 1; i >= 0; --i) {
     if (propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->cpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
@@ -127,7 +137,13 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_mul(count, bottom_diff, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_SUM:
-        if (coeffs_[i] == Dtype(1)) {
+        if (i == 0 && in_place) {
+          if (coeffs_[0] == Dtype(1)) {
+            break;
+          } else {
+            caffe_scal(count, coeffs_[0], bottom_diff);
+          }
+        } else if (coeffs_[i] == Dtype(1)) {
           caffe_copy(count, top_diff, bottom_diff);
         } else {
           caffe_cpu_scale(count, coeffs_[i], top_diff, bottom_diff);
