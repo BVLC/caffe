@@ -89,10 +89,7 @@ template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
-  CHECK_EQ(2, this->num_spatial_axes_)
-      << "CuDNNConvolution input must have 2 spatial axes "
-      << "(e.g., height and width). "
-      << "Use 'engine: CAFFE' for general ND convolution.";
+
   bottom_offset_ = this->bottom_dim_ / this->group_;
   top_offset_ = this->top_dim_ / this->group_;
   const int_tp* pad_data = this->pad_.cpu_data();
@@ -103,16 +100,54 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   uint_tp workspace_limit_bytes = 8*1024*1024;
 
   for (int_tp i = 0; i < bottom.size(); i++) {
-    cudnn::setTensorNdDesc<Dtype>(&bottom_descs_[i],
-        bottom[i]->shape().size() - 2,
-        this->num_,
-        this->channels_ / this->group_,
-        &(bottom[i]->shape()[this->channel_axis_ + 1]));
-    cudnn::setTensorNdDesc<Dtype>(&top_descs_[i],
-        top[0]->shape().size() - 2,
-        this->num_,
-        this->num_output_ / this->group_,
-        &(top[0]->shape()[this->channel_axis_ + 1]));
+
+    {
+      int_tp total_dims = bottom[i]->shape().size();
+      std::vector<int_tp> full_shape(total_dims);
+      std::vector<int_tp> full_stride(total_dims);
+
+      for (int_tp j = total_dims - 1; j >= 2; --j) {
+        full_shape[j] = bottom[i]->shape()[j];
+        if (j == total_dims - 1) {
+          full_stride[j] = 1;
+        } else {
+          full_stride[j] = full_stride[j + 1] * full_shape[j + 1];
+        }
+      }
+
+      full_shape[1] = this->channels_ / this->group_;
+      full_stride[1] = full_shape[2] * full_stride[2];
+      full_shape[0] = this->num_;
+      full_stride[0] = this->channels_ * full_stride[1];
+
+      cudnn::setTensorNdDesc<Dtype>(&bottom_descs_[i], total_dims,
+                                    &full_shape[0], &full_stride[0]);
+    }
+
+
+    {
+      int_tp total_dims = top[i]->shape().size();
+      std::vector<int_tp> full_shape(total_dims);
+      std::vector<int_tp> full_stride(total_dims);
+
+      for (int_tp j = total_dims - 1; j >= 2; --j) {
+        full_shape[j] = top[i]->shape()[j];
+        if (j == total_dims - 1) {
+          full_stride[j] = 1;
+        } else {
+          full_stride[j] = full_stride[j + 1] * full_shape[j + 1];
+        }
+      }
+
+      full_shape[1] = this->num_output_ / this->group_;
+      full_stride[1] = full_shape[2] * full_stride[2];
+      full_shape[0] = this->num_;
+      full_stride[0] = this->num_output_ * full_stride[1];
+
+      cudnn::setTensorNdDesc<Dtype>(&top_descs_[i], total_dims, &full_shape[0],
+                                    &full_stride[0]);
+    }
+
     cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
         filter_desc_, this->num_spatial_axes_, pad_data, stride_data);
 
