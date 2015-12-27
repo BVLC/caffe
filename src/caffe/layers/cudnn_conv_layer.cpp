@@ -18,6 +18,9 @@ template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+
+  this->use_colbuffer_ = false;
+
   // Initialize CUDA streams and cuDNN.
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
@@ -88,6 +91,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+
+  this->use_colbuffer_ = false;
+
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
 
   bottom_offset_ = this->bottom_dim_ / this->group_;
