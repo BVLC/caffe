@@ -105,9 +105,6 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num_spatial_axes_; ++i) {
     dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
                        conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
-    if (reverse_dimensions()) {
-      CHECK_EQ(dilation_data[i], 1) << "Deconvolution doesn't support dilation";
-    }
   }
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
