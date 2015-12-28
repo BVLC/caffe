@@ -17,7 +17,7 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   Im2colLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 10, 9)),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 10, 11)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     Caffe::set_random_seed(1701);
@@ -43,12 +43,13 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
       layer_param.mutable_convolution_param();
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
+  convolution_param->add_dilation(3);
   Im2colLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 27);
   EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
 TYPED_TEST(Im2colLayerTest, TestForward) {
@@ -89,6 +90,7 @@ TYPED_TEST(Im2colLayerTest, TestGradientForceND) {
       layer_param.mutable_convolution_param();
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
+  convolution_param->add_dilation(3);
   convolution_param->set_force_nd_im2col(true);
   Im2colLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
@@ -123,6 +125,8 @@ TYPED_TEST(Im2colLayerTest, TestRectGradient) {
   convolution_param->set_kernel_h(5);
   convolution_param->set_kernel_w(3);
   convolution_param->add_stride(2);
+  convolution_param->add_dilation(1);
+  convolution_param->add_dilation(3);
   Im2colLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
