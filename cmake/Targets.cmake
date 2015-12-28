@@ -74,6 +74,10 @@ function(caffe_pickup_caffe_sources root)
   list(REMOVE_ITEM  hdrs ${test_hdrs})
   list(REMOVE_ITEM  srcs ${test_srcs})
 
+  if(NOT USE_GLOG)
+    list(APPEND srcs "${root}/src/ceres/internal/miniglog/glog/logging.cpp")
+  endif()
+
   # adding headers to make the visible in some IDEs (Qt, VS, Xcode)
   list(APPEND srcs ${hdrs} ${PROJECT_BINARY_DIR}/caffe_config.h)
   list(APPEND test_srcs ${test_hdrs})
