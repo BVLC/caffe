@@ -26,7 +26,7 @@ template <typename Dtype, int num_axes>
 __global__ void im2col_nd_gpu_kernel(const int n, const Dtype* data_im,
     const int* im_shape, const int* col_shape,
     const int* kernel_shape, const int* pad, const int* stride,
-    Dtype* data_col);
+    const int* dilation, Dtype* data_col);
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
@@ -35,7 +35,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
  protected:
   Im2colKernelTest()
         // big so launches > 1024 threads
-      : blob_bottom_(new Blob<Dtype>(5, 500, 10, 10)),
+      : blob_bottom_(new Blob<Dtype>(5, 500, 15, 15)),
         blob_kernel_shape_(new Blob<int>()),
         blob_stride_(new Blob<int>()),
         blob_pad_(new Blob<int>()),
@@ -56,7 +56,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
     channels_ = blob_bottom_->channels();
     pad_ = 0;
     stride_ = 2;
-    dilation_ = 1;
+    dilation_ = 3;
     kernel_size_ = 3;
     height_col_ = (height_ + 2 * pad_ -
         (dilation_ * (kernel_size_ - 1) + 1)) / stride_ + 1;
@@ -176,6 +176,7 @@ TYPED_TEST(Im2colKernelTest, TestND) {
         this->blob_top_cpu_->shape().data() + 1,
         this->blob_kernel_shape_->cpu_data(),
         this->blob_pad_->cpu_data(), this->blob_stride_->cpu_data(),
+        this->blob_dilation_->cpu_data(),
         top_data_cpu + this->blob_top_cpu_->offset(n));
   }
 
@@ -194,7 +195,7 @@ TYPED_TEST(Im2colKernelTest, TestND) {
           num_kernels, bottom_data_gpu + this->blob_bottom_->offset(n),
           this->blob_bottom_->gpu_shape() + 1, this->blob_top_->gpu_shape() + 1,
           this->blob_kernel_shape_->gpu_data(), this->blob_pad_->gpu_data(),
-          this->blob_stride_->gpu_data(),
+          this->blob_stride_->gpu_data(), this->blob_dilation_->gpu_data(),
           top_data_gpu + this->blob_top_->offset(n));
       CUDA_POST_KERNEL_CHECK;
     }

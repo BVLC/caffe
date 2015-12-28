@@ -153,7 +153,7 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          top_data + n * top_dim_);
+          dilation_.cpu_data(), top_data + n * top_dim_);
     }
   }
 }
@@ -178,7 +178,7 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           bottom[0]->shape().data() + channel_axis_,
           top[0]->shape().data() + channel_axis_,
           kernel_shape_.cpu_data(), pad_.cpu_data(), stride_.cpu_data(),
-          bottom_diff + n * bottom_dim_);
+          dilation_.cpu_data(), bottom_diff + n * bottom_dim_);
     }
   }
 }
