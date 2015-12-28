@@ -40,7 +40,7 @@ bool checkConvolutionKstrided(ConvolutionParameter param) {
   }
 
   for (int i = 0; i < param.kstride_size(); ++i) {
-    if (param.kstride(i) > 0) {
+    if (param.kstride(i) > 1) {
       return true;
     }
   }
@@ -55,7 +55,7 @@ bool checkPoolingKstrided(PoolingParameter param) {
   }
 
   for (int i = 0; i < param.kstride_size(); ++i) {
-    if (param.kstride(i) > 0) {
+    if (param.kstride(i) > 1) {
       return true;
     }
   }
