@@ -33,33 +33,21 @@
 
 namespace caffe {
 
-bool checkConvolutionKstrided(ConvolutionParameter param) {
-  if ((param.has_kstride_h() && param.kstride_h() > 1)
-      || (param.has_kstride_w() && param.kstride_w() > 1)) {
-    return true;
-  }
-
-  for (int i = 0; i < param.kstride_size(); ++i) {
-    if (param.kstride(i) > 0) {
+bool checkConvolutionDilated(ConvolutionParameter param) {
+  for (int i = 0; i < param.dilation_size(); ++i) {
+    if (param.dilation(i) > 0) {
       return true;
     }
   }
-
   return false;
 }
 
-bool checkPoolingKstrided(PoolingParameter param) {
-  if ((param.has_kstride_h() && param.kstride_h() > 1)
-      || (param.has_kstride_w() && param.kstride_w() > 1)) {
-    return true;
-  }
-
-  for (int i = 0; i < param.kstride_size(); ++i) {
-    if (param.kstride(i) > 0) {
+bool checkPoolingDilated(PoolingParameter param) {
+  for (int i = 0; i < param.dilation_size(); ++i) {
+    if (param.dilation(i) > 0) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -75,10 +63,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
   }
   if (engine == ConvolutionParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
-      || checkConvolutionKstrided(param.convolution_param())) {
+      || checkConvolutionDilated(param.convolution_param())) {
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
+    if (checkConvolutionDilated(param.convolution_param())) {
+      LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
+                 << param.name();
+    }
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
@@ -101,7 +93,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   }
   if (engine == PoolingParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
-      || checkPoolingKstrided(param.pooling_param())) {
+      || checkPoolingDilated(param.pooling_param())) {
     return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
@@ -109,6 +101,10 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
       LOG(INFO) << "cuDNN does not support multiple tops. "
                 << "Using Caffe's own pooling layer.";
       return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+    }
+    if (checkPoolingDilated(param.pooling_param())) {
+      LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
+                 << param.name();
     }
     return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
 #endif

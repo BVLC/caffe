@@ -77,7 +77,7 @@ def get_layer_label(layer, rankdir):
     if layer.type == 'Convolution' or layer.type == 'Deconvolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
-        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
+        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d%sdilation: %d"' %\
                      (layer.name,
                       separator,
                       layer.type,
@@ -88,10 +88,10 @@ def get_layer_label(layer, rankdir):
                       separator,
                       layer.convolution_param.pad[0] if len(layer.convolution_param.pad) > 0 else 0,
                       separator,
-                      layer.convolution_param.kstride[0] if len(layer.convolution_param.kstride) > 0 else 1)
+                      layer.convolution_param.dilation[0] if len(layer.convolution_param.dilation) > 0 else 1)
     elif layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
-        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%skstride: %d"' %\
+        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d%sdilation: %d"' %\
                      (layer.name,
                       separator,
                       pooling_types_dict[layer.pooling_param.pool],
@@ -103,7 +103,7 @@ def get_layer_label(layer, rankdir):
                       separator,
                       layer.pooling_param.pad[0] if len(layer.pooling_param.pad) > 0 else 0,
                       separator,
-                      layer.pooling_param.kstride[0] if len(layer.pooling_param.kstride) > 0 else 1)
+                      layer.pooling_param.dilation[0] if len(layer.pooling_param.dilation) > 0 else 1)
     else:
         node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
     return node_label

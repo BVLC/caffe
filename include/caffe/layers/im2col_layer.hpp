@@ -46,6 +46,8 @@ class Im2colLayer : public Layer<Dtype> {
   Blob<int_tp> stride_;
   /// @brief The spatial dimensions of the padding.
   Blob<int_tp> pad_;
+  /// @brief The spatial dimensions of the dilation.
+  Blob<int_tp> dilation_;
 
   int_tp num_spatial_axes_;
   int_tp bottom_dim_;

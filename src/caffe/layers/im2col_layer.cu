@@ -22,19 +22,20 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_CUDA
     for (int_tp n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-        im2col_gpu<Dtype>(bottom_data + n * bottom_dim_, channels_,
-                   bottom[0]->shape(channel_axis_ + 1),
-                   bottom[0]->shape(channel_axis_ + 2),
-                   kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-                   pad_.cpu_data()[0], pad_.cpu_data()[1],
-                   stride_.cpu_data()[0], stride_.cpu_data()[1],
-                   top_data + n * top_dim_);
+        im2col_gpu(bottom_data + n * bottom_dim_, channels_,
+            bottom[0]->shape(channel_axis_ + 1),
+            bottom[0]->shape(channel_axis_ + 2),
+            kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+            pad_.cpu_data()[0], pad_.cpu_data()[1],
+            stride_.cpu_data()[0], stride_.cpu_data()[1],
+            dilation_.cpu_data()[0], dilation_.cpu_data()[1],
+            top_data + n * top_dim_);
       } else {
-        im2col_nd_gpu<Dtype>(bottom_data + n * bottom_dim_, num_spatial_axes_,
-                      num_kernels, bottom[0]->gpu_shape() + channel_axis_,
-                      top[0]->gpu_shape() + channel_axis_,
-                      kernel_shape_.gpu_data(), pad_.gpu_data(),
-                      stride_.gpu_data(), top_data + n * top_dim_);
+        im2col_nd_gpu(bottom_data + n * bottom_dim_, num_spatial_axes_,
+            num_kernels, bottom[0]->gpu_shape() + channel_axis_,
+            top[0]->gpu_shape() + channel_axis_,
+            kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
+            dilation_.gpu_data(), top_data + n * top_dim_);
       }
     }
 #endif  // USE_CUDA
@@ -54,6 +55,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                    kernel_shape_.cpu_data()[1],
                                    pad_.cpu_data()[0], pad_.cpu_data()[1],
                                    stride_.cpu_data()[0], stride_.cpu_data()[1],
+                                   dilation_.cpu_data()[0], dilation_.cpu_data()[1],
                                    (cl_mem) top_data, n * top_dim_);
       } else {
         greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem) bottom_data,
@@ -64,6 +66,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                       (cl_mem) (kernel_shape_.gpu_data()),
                                       (cl_mem) (pad_.gpu_data()),
                                       (cl_mem) (stride_.gpu_data()),
+                                      (cl_mem) (dilation_.gpu_data()),
                                       (cl_mem) top_data, n * top_dim_);
       }
     }
@@ -80,22 +83,23 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    for (int_tp n = 0; n < num_; ++n) {
+    for (int n = 0; n < num_; ++n) {
       if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-        col2im_gpu<Dtype>(top_diff + n * top_dim_, channels_,
-                          bottom[0]->shape(channel_axis_ + 1),
-                          bottom[0]->shape(channel_axis_ + 2),
-                          kernel_shape_.cpu_data()[0],
-                          kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
-                          pad_.cpu_data()[1], stride_.cpu_data()[0],
-                          stride_.cpu_data()[1], bottom_diff + n * bottom_dim_);
+        col2im_gpu(top_diff + n * top_dim_, channels_,
+                   bottom[0]->shape(channel_axis_ + 1),
+                   bottom[0]->shape(channel_axis_ + 2),
+                   kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+                   pad_.cpu_data()[0], pad_.cpu_data()[1],
+                   stride_.cpu_data()[0], stride_.cpu_data()[1],
+                   dilation_.cpu_data()[0], dilation_.cpu_data()[1],
+                   bottom_diff + n * bottom_dim_);
       } else {
-        col2im_nd_gpu<Dtype>(top_diff + n * top_dim_, num_spatial_axes_,
-                             bottom_dim_,
-                             bottom[0]->gpu_shape() + channel_axis_,
-                             top[0]->gpu_shape() + channel_axis_,
-                             kernel_shape_.gpu_data(), pad_.gpu_data(),
-                             stride_.gpu_data(), bottom_diff + n * bottom_dim_);
+        col2im_nd_gpu(top_diff + n * top_dim_, num_spatial_axes_, bottom_dim_,
+                      bottom[0]->gpu_shape() + channel_axis_,
+                      top[0]->gpu_shape() + channel_axis_,
+                      kernel_shape_.gpu_data(), pad_.gpu_data(),
+                      stride_.gpu_data(), dilation_.gpu_data(),
+                      bottom_diff + n * bottom_dim_);
       }
     }
 #endif  // USE_CUDA
@@ -115,6 +119,8 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                    kernel_shape_.cpu_data()[1],
                                    pad_.cpu_data()[0], pad_.cpu_data()[1],
                                    stride_.cpu_data()[0], stride_.cpu_data()[1],
+                                   dilation_.cpu_data()[0],
+                                   dilation_.cpu_data()[1],
                                    (cl_mem) bottom_diff, n * bottom_dim_);
       } else {
         greentea_col2im_nd_gpu<Dtype>(&program, &ctx, (cl_mem) top_diff,
@@ -125,6 +131,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                       (cl_mem) (kernel_shape_.gpu_data()),
                                       (cl_mem) (pad_.gpu_data()),
                                       (cl_mem) (stride_.gpu_data()),
+                                      (cl_mem) (dilation_.gpu_data()),
                                       (cl_mem) bottom_diff, n * bottom_dim_);
       }
     }
