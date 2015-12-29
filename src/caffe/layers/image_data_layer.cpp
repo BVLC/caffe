@@ -112,15 +112,8 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CHECK(this->transformed_data_.count());
   const ImageDataParameter& param = this->layer_param_.image_data_param();
   const int batch_size = param.batch_size();
-  // Use data_transformer to infer the expected blob shape from cv_img.
-  cv::Mat cv_img = ReadCurrentImageToCVMat();
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  this->transformed_data_.Reshape(top_shape);
-  // Reshape batch according to the batch_size.
-  top_shape[0] = batch_size;
-  batch->data_.Reshape(top_shape);
 
-  Dtype* prefetch_data = batch->data_.mutable_cpu_data();
+  Dtype* prefetch_data = NULL;
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
   // datum scales
@@ -130,6 +123,17 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
     cv::Mat cv_img = ReadCurrentImageToCVMat();
+    if (item_id == 0) {
+      // Reshape according to the first image of each batch.
+      // For batch_size == 1, this allows for inputs of varying dimension.
+      // Use data_transformer to infer the expected blob shape from cv_img.
+      vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
+      this->transformed_data_.Reshape(top_shape);
+      // Reshape batch according to the batch_size.
+      top_shape[0] = batch_size;
+      batch->data_.Reshape(top_shape);
+      prefetch_data = batch->data_.mutable_cpu_data();
+    }
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
