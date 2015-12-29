@@ -335,10 +335,10 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         // the extent beyond the image
         int_tp unclipped_height = y2-y1+1;
         int_tp unclipped_width = x2-x1+1;
-        int_tp pad_x1 = std::max(0L, -x1);
-        int_tp pad_y1 = std::max(0L, -y1);
-        int_tp pad_x2 = std::max(0L, x2 - cv_img.cols + 1);
-        int_tp pad_y2 = std::max(0L, y2 - cv_img.rows + 1);
+        int_tp pad_x1 = std::max((int_tp)0, -x1);
+        int_tp pad_y1 = std::max((int_tp)0, -y1);
+        int_tp pad_x2 = std::max((int_tp)0, x2 - cv_img.cols + 1);
+        int_tp pad_y2 = std::max((int_tp)0, y2 - cv_img.rows + 1);
         // clip bounds
         x1 = x1 + pad_x1;
         x2 = x2 - pad_x2;

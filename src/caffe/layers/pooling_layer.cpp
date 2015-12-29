@@ -33,7 +33,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(num_spatial_axes_, 0);
 
   vector<int_tp> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-  vector<int_tp> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1L));
+  vector<int_tp> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, (int_tp)1));
 
   kernel_shape_.Reshape(spatial_dim_blob_shape);
   int_tp* kernel_shape_data = kernel_shape_.mutable_cpu_data();
@@ -261,7 +261,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       caffe_set(top_count, Dtype(-1), top_mask);
     } else {
       mask = max_idx_.mutable_cpu_data();
-      caffe_set(top_count, -1L, mask);
+      caffe_set(top_count, (int_tp)-1, mask);
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
@@ -273,8 +273,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             int_tp wstart = pw * stride_w_ - pad_w_;
             int_tp hend = min(hstart + kernel_h_, height_);
             int_tp wend = min(wstart + kernel_w_, width_);
-            hstart = max(hstart, 0L);
-            wstart = max(wstart, 0L);
+            hstart = max(hstart, (int_tp)0);
+            wstart = max(wstart, (int_tp)0);
             const int_tp pool_index = ph * pooled_width_ + pw;
             for (int_tp h = hstart; h < hend; ++h) {
               for (int_tp w = wstart; w < wend; ++w) {
@@ -316,8 +316,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             int_tp hend = min(hstart + kernel_h_, height_ + pad_h_);
             int_tp wend = min(wstart + kernel_w_, width_ + pad_w_);
             int_tp pool_size = (hend - hstart) * (wend - wstart);
-            hstart = max(hstart, 0L);
-            wstart = max(wstart, 0L);
+            hstart = max(hstart, (int_tp)0);
+            wstart = max(wstart, (int_tp)0);
             hend = min(hend, height_);
             wend = min(wend, width_);
             for (int_tp h = hstart; h < hend; ++h) {
@@ -408,8 +408,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             int_tp hend = min(hstart + kernel_h_, height_ + pad_h_);
             int_tp wend = min(wstart + kernel_w_, width_ + pad_w_);
             int_tp pool_size = (hend - hstart) * (wend - wstart);
-            hstart = max(hstart, 0L);
-            wstart = max(wstart, 0L);
+            hstart = max(hstart, (int_tp)0);
+            wstart = max(wstart, (int_tp)0);
             hend = min(hend, height_);
             wend = min(wend, width_);
             for (int_tp h = hstart; h < hend; ++h) {

@@ -31,9 +31,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   bwd_data_algo_  = new cudnnConvolutionBwdDataAlgo_t[bottom.size()];
 
   // initialize size arrays
-  workspace_fwd_sizes_ = new uint_tp[bottom.size()];
-  workspace_bwd_filter_sizes_ = new uint_tp[bottom.size()];
-  workspace_bwd_data_sizes_ = new uint_tp[bottom.size()];
+  workspace_fwd_sizes_ = new size_t[bottom.size()];
+  workspace_bwd_filter_sizes_ = new size_t[bottom.size()];
+  workspace_bwd_data_sizes_ = new size_t[bottom.size()];
 
   // workspace data
   workspaceSizeInBytes = 0;
@@ -198,9 +198,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   }
 
   // reduce over all workspace sizes to get a maximum to allocate / reallocate
-  uint_tp total_workspace_fwd = 0;
-  uint_tp total_workspace_bwd_data = 0;
-  uint_tp total_workspace_bwd_filter = 0;
+  size_t total_workspace_fwd = 0;
+  size_t total_workspace_bwd_data = 0;
+  size_t total_workspace_bwd_filter = 0;
 
   for (uint_tp i = 0; i < bottom.size(); i++) {
     total_workspace_fwd        = std::max(total_workspace_fwd,
@@ -211,11 +211,11 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
                                      workspace_bwd_filter_sizes_[i]);
   }
   // get max over all operations
-  uint_tp max_workspace = std::max(total_workspace_fwd,
+  size_t max_workspace = std::max(total_workspace_fwd,
                              total_workspace_bwd_data);
   max_workspace = std::max(max_workspace, total_workspace_bwd_filter);
   // ensure all groups have enough workspace
-  uint_tp total_max_workspace = max_workspace *
+  size_t total_max_workspace = max_workspace *
                                (this->group_ * CUDNN_STREAMS_PER_GROUP);
 
   // this is the total amount of storage needed over all groups + streams
