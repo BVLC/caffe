@@ -34,6 +34,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
+  virtual cv::Mat ReadCurrentImageToCVMat();
   virtual void ShuffleImages();
   virtual void load_batch(Batch<Dtype>* batch);
 
