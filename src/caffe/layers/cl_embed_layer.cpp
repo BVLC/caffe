@@ -1,7 +1,7 @@
 #ifdef USE_OCL
 #include <vector>
 
-#include "caffe/common_layers.hpp"
+#include "caffe/layers/embed_layer.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/util/math_functions.hpp"
 

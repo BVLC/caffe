@@ -3,7 +3,7 @@
 #include <vector>
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/softmax_layer.hpp"
 
 extern "C" const char _cl_softmax_layer_start;
 extern "C" const char _cl_softmax_layer_end;

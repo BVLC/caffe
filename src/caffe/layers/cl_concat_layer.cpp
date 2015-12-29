@@ -3,7 +3,7 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/concat_layer.hpp"
 
 extern "C" const char _cl_concat_layer_start;
 extern "C" const char _cl_concat_layer_end;

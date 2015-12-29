@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/prelu_layer.hpp"
 
 extern "C" const char _cl_prelu_layer_start;
 extern "C" const char _cl_prelu_layer_end;

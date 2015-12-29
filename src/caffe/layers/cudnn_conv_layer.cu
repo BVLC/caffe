@@ -1,7 +1,7 @@
 #ifdef USE_CUDNN
 #include <vector>
 
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/cudnn_conv_layer.hpp"
 
 namespace caffe {
 
@@ -30,11 +30,19 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
       // Bias.
       if (this->bias_term_) {
         const Dtype* bias_data = this->blobs_[1]->gpu_data();
+#if CUDNN_VERSION_MIN(4, 0, 0)
+        CUDNN_CHECK(cudnnAddTensor(handle_[g],
+              cudnn::dataType<Dtype>::one,
+              bias_desc_, bias_data + bias_offset_ * g,
+              cudnn::dataType<Dtype>::one,
+              top_descs_[i], top_data + top_offset_ * g));
+#else
         CUDNN_CHECK(cudnnAddTensor(handle_[g], CUDNN_ADD_SAME_C,
               cudnn::dataType<Dtype>::one,
               bias_desc_, bias_data + bias_offset_ * g,
               cudnn::dataType<Dtype>::one,
               top_descs_[i], top_data + top_offset_ * g));
+#endif
       }
     }
 

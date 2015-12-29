@@ -5,7 +5,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/dropout_layer.hpp"
 
 extern "C" const char _cl_dropout_layer_start;
 extern "C" const char _cl_dropout_layer_end;

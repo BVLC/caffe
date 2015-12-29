@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/relu_layer.hpp"
 
 extern "C" const char _cl_relu_layer_start;
 extern "C" const char _cl_relu_layer_end;

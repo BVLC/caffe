@@ -5,7 +5,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/contrastive_loss_layer.hpp"
 
 extern "C" const char _cl_contrastive_loss_layer_start;
 extern "C" const char _cl_contrastive_loss_layer_end;

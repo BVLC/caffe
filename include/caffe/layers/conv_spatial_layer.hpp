@@ -1,0 +1,206 @@
+#ifndef CAFFE_CONV_SPATIAL_LAYER_HPP_
+#define CAFFE_CONV_SPATIAL_LAYER_HPP_
+
+#include <vector>
+
+#include "caffe/blob.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/proto/caffe.pb.h"
+
+#include "caffe/layers/base_conv_layer.hpp"
+
+namespace caffe {
+
+template <typename Dtype>
+class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
+ public:
+  /**
+   * @param param provides ConvolutionParameter convolution_param,
+   *    with ConvolutionLayer options:
+   *  - num_output. The number of filters.
+   *  - kernel_size / kernel_h / kernel_w. The filter dimensions, given by
+   *  kernel_size for square filters or kernel_h and kernel_w for rectangular
+   *  filters.
+   *  - stride / stride_h / stride_w (\b optional, default 1). The filter
+   *  stride, given by stride_size for equal dimensions or stride_h and stride_w
+   *  for different strides. By default the convolution is dense with stride 1.
+   *  - pad / pad_h / pad_w (\b optional, default 0). The zero-padding for
+   *  convolution, given by pad for equal dimensions or pad_h and pad_w for
+   *  different padding. Input padding is computed implicitly instead of
+   *  actually padding.
+   *  - group (\b optional, default 1). The number of filter groups. Group
+   *  convolution is a method for reducing parameterization by selectively
+   *  connecting input and output channels. The input and output channel dimensions must be divisible
+   *  by the number of groups. For group @f$ \geq 1 @f$, the
+   *  convolutional filters' input and output channels are separated s.t. each
+   *  group takes 1 / group of the input channels and makes 1 / group of the
+   *  output channels. Concretely 4 input channels, 8 output channels, and
+   *  2 groups separate input channels 1-2 and output channels 1-4 into the
+   *  first group and input channels 3-4 and output channels 5-8 into the second
+   *  group.
+   *  - bias_term (\b optional, default true). Whether to have a bias.
+   *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
+   *    kernels + stream parallelism) engines.
+   */
+  explicit ConvolutionLayerSpatial(const LayerParameter& param) :
+      BaseConvolutionLayer<Dtype>(param) {
+  }
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const {
+    return "Convolution";
+  }
+
+  virtual inline int MinBottomBlobs() const {
+    return 1;
+  }
+  virtual inline int MinTopBlobs() const {
+    return 1;
+  }
+  virtual inline bool EqualNumBottomTopBlobs() const {
+    return true;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  virtual inline bool reverse_dimensions() {
+    return false;
+  }
+  virtual void compute_output_shape();
+
+  struct kernelConfig {
+    string kernelName;
+    float executionTime;
+    size_t local_work_size[3];
+    size_t global_work_size[3];
+    int workItem_output[3];
+    bool verified;
+    bool autoTune;
+    bool tested;
+    bool swizzle_weights;
+    bool batched_execute;
+    bool use_null_local;
+    int kernelType;
+
+    kernelConfig() {
+    }
+    kernelConfig(string name, size_t* global_size, size_t* local_size,
+        int* workItem, bool tune, bool swizzle, bool batched, bool null_local, int type = 0) {
+      kernelName = name;
+      for (int x = 0; x < 3; x++) {
+        local_work_size[x] = local_size[x];
+        global_work_size[x] = global_size[x];
+        workItem_output[x] = workItem[x];
+      }
+      autoTune = tune;
+      swizzle_weights = swizzle;
+      batched_execute = batched;
+      use_null_local = null_local;
+      verified = false;
+      tested = false;
+      kernelType = type;
+    }
+  };
+
+#ifndef CPU_ONLY
+#ifdef USE_OCL
+  virtual bool generate_kernel(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int blockWidth, int blockHeight, int blockDepth);
+  virtual bool generate_batched_kernel(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int blockWidth, int blockHeight, int blockDepth);
+  virtual void setup_convolution(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top);
+  virtual void create_convolution_kernel(const vector<Blob<float>*>& bottom,
+        const vector<Blob<float>*>& top,int kernelType, int blockWidth, int blockHeight, int blockDepth);
+  virtual bool setup_IDLF(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int blockWidth, int blockHeight, int blockDepth);
+  virtual bool create_basic_kernel(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int blockWidth, int blockHeight, int blockDepth);
+  virtual bool create_verification_kernel(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top);
+  virtual cl_int convolve(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int index, int numImages,
+      kernelConfig* config);
+  virtual cl_int batched_convolve(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int index, int numImages,
+      kernelConfig* config);
+  virtual float timed_convolve(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int index, int numImages,
+      kernelConfig* config);
+  virtual bool verify_result(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, int index, int numImages,
+      kernelConfig* config);
+  virtual bool tune_local_size(const vector<Blob<float>*>& bottom,
+      const vector<Blob<float>*>& top, kernelConfig*);
+  virtual void swizzleWeights(int swizzle_factor);
+  virtual void pad_image(int image_offset, kernelConfig* config, int imgNum);
+  virtual void generate_key();
+  virtual std::string generate_unique_key();
+  virtual std::string generate_specific_key(int type, int blockWidth, int blockHeight, int blockDepth);
+  virtual void calculate_global_size(int batch, int* workItemOutput,
+      size_t* localSizes, size_t* globalSizes);
+#endif
+#endif
+
+  const float* bottom_data;
+  float* top_data;
+  float* col_data;
+  const float* weight;
+  float* swizzled_weights;
+  int weight_offset;
+  int col_offset;
+  int top_offset;
+  int output_h_, output_w_;
+  int padded_height_, padded_width_;
+  const float* bias_;
+  int bias_offset_;
+  int bottom_index_;
+
+  int kernel_h_;
+  int kernel_w_;
+  int height_;
+  int width_;
+  int pad_h_;
+  int pad_w_;
+  int stride_h_;
+  int stride_w_;
+
+  /// M_ is the channel dimension of the output for a single group, which is the
+  /// leading dimension of the filter matrix.
+  int M_;
+  /// K_ is the dimension of an unrolled input for a single group, which is the
+  /// leading dimension of the data matrix.
+  int K_;
+  /// N_ is the spatial dimension of the output, the H x W, which are the last
+  /// dimensions of the data and filter matrices.
+  int N_;
+
+  bool tuned_;
+
+  std::string key_;
+  std::string kernel_name_;
+  std::string verification_kernel;
+  Blob<Dtype> col_buffer_;
+  Blob<Dtype> swizzled_weights_;
+  Blob<Dtype> bias_multiplier_;
+
+  int kernel_index_;
+  int kernel_uid_;
+
+  vector<kernelConfig*> kernelQueue;
+};
+
+}  // namespace caffe
+
+#endif  // CAFFE_CONV_SPATIAL_LAYER_HPP_

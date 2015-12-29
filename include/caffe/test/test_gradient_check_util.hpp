@@ -172,10 +172,10 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
 #ifdef WIN32
         Dtype scale = std::max<Dtype>(
           std::max<Dtype>(fabs(computed_gradient), fabs(estimated_gradient)),
-              1.);
+              Dtype(1.));
 #else
-        Dtype scale = std::max(
-          std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
+        Dtype scale = std::max<Dtype>(
+          std::max(fabs(computed_gradient), fabs(estimated_gradient)), Dtype(1.));
 #endif
         EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="

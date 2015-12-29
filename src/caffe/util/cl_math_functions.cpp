@@ -528,20 +528,6 @@ void caffe_gpu_sgnbit<double>(const int n, const double* x, double* y) {
   Caffe::cl_state().get_kernel("Tsignbit").enqueue_params(n, n, x, y);
 }
 
-template <>
-uint32_t caffe_gpu_hamming_distance<float>(const int n, const float* x,
-                                  const float* y) {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-
-template <>
-uint32_t caffe_gpu_hamming_distance<double>(const int n, const double* x,
-                                   const double* y) {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-
 void caffe_gpu_rng_uniform(const int n, unsigned int* r) {
   // Generate uniform n random numbers and put them into a device memory r
   ClState& state = Caffe::cl_state();

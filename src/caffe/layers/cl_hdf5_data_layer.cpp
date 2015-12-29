@@ -12,7 +12,7 @@ TODO:
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
-#include "caffe/data_layers.hpp"
+#include "caffe/layers/hdf5_data_layer.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 

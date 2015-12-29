@@ -1,7 +1,7 @@
 #ifdef USE_OCL
 #include <vector>
 
-#include "caffe/data_layers.hpp"
+#include "caffe/layers/data_layer.hpp"
 
 namespace caffe {
 

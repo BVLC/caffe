@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/loss_layers.hpp"
+#include "caffe/layers/contrastive_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -52,10 +52,10 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
         loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
       } else {
 #ifdef _WIN32
-        Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]),
+        Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq_.cpu_data()[i]),
             Dtype(0.0));
 #else
-        Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]), 0.0);
+        Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq_.cpu_data()[i]), Dtype(0.0));
 #endif
         loss += dist*dist;
       }
