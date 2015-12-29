@@ -85,8 +85,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   Blob<int_tp> stride_;
   /// @brief The spatial dimensions of the padding.
   Blob<int_tp> pad_;
-  /// @brief The spatial dimension of the kernel stride.
-  Blob<int_tp> kstride_;
+  /// @brief The spatial dimensions of the dilation.
+  Blob<int_tp> dilation_;
   /// @brief The spatial dimensions of the convolution input.
   Blob<int_tp> conv_input_shape_;
   /// @brief The spatial dimensions of the col_buffer.
@@ -115,28 +115,30 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      im2col_cpu(data, conv_in_channels_, conv_input_shape_.cpu_data()[1],
-                 conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
-                 kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
-                 pad_.cpu_data()[1], stride_.cpu_data()[0],
-                 stride_.cpu_data()[1], col_buff);
+      im2col_cpu(data, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
     } else {
       im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
-                    col_buffer_shape_.data(), kernel_shape_.cpu_data(),
-                    pad_.cpu_data(), stride_.cpu_data(), col_buff);
+          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
+          pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
     }
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      col2im_cpu(col_buff, conv_in_channels_, conv_input_shape_.cpu_data()[1],
-                 conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
-                 kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
-                 pad_.cpu_data()[1], stride_.cpu_data()[0],
-                 stride_.cpu_data()[1], data);
+      col2im_cpu(col_buff, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
     } else {
       col2im_nd_cpu(col_buff, num_spatial_axes_, conv_input_shape_.cpu_data(),
-                    col_buffer_shape_.data(), kernel_shape_.cpu_data(),
-                    pad_.cpu_data(), stride_.cpu_data(), data);
+          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
+          pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), data);
     }
   }
 
@@ -144,64 +146,34 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 #ifdef USE_CUDA
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      if (this->use_skernel_) {
-        im2col_sk_gpu(data, conv_in_channels_, conv_input_shape_.cpu_data()[1],
-                      conv_input_shape_.cpu_data()[2],
-                      kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-                      pad_.cpu_data()[0], pad_.cpu_data()[1],
-                      stride_.cpu_data()[0], stride_.cpu_data()[1],
-                      kstride_.cpu_data()[0], kstride_.cpu_data()[1], col_buff);
-      } else {
-        im2col_gpu(data, conv_in_channels_, conv_input_shape_.cpu_data()[1],
-                   conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
-                   kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
-                   pad_.cpu_data()[1], stride_.cpu_data()[0],
-                   stride_.cpu_data()[1], col_buff);
-      }
+      im2col_gpu(data, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
     } else {
-      if (this->use_skernel_) {
-        im2col_ndsk_gpu(data, num_spatial_axes_, num_kernels_im2col_,
-                        conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-                        kernel_shape_.gpu_data(), pad_.gpu_data(),
-                        stride_.gpu_data(), kstride_.gpu_data(), col_buff);
-      } else {
-        im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
-                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-                      kernel_shape_.gpu_data(), pad_.gpu_data(),
-                      stride_.gpu_data(), col_buff);
-      }
+      im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
+          conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+          kernel_shape_.gpu_data(), pad_.gpu_data(),
+          stride_.gpu_data(), dilation_.gpu_data(), col_buff);
     }
   }
 
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      if (this->use_skernel_) {
-        col2im_sk_gpu(col_buff, conv_in_channels_,
-                      conv_input_shape_.cpu_data()[1],
-                      conv_input_shape_.cpu_data()[2],
-                      kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-                      pad_.cpu_data()[0], pad_.cpu_data()[1],
-                      stride_.cpu_data()[0], stride_.cpu_data()[1],
-                      kstride_.cpu_data()[0], kstride_.cpu_data()[1], data);
-      } else {
-        col2im_gpu(col_buff, conv_in_channels_, conv_input_shape_.cpu_data()[1],
-                   conv_input_shape_.cpu_data()[2], kernel_shape_.cpu_data()[0],
-                   kernel_shape_.cpu_data()[1], pad_.cpu_data()[0],
-                   pad_.cpu_data()[1], stride_.cpu_data()[0],
-                   stride_.cpu_data()[1], data);
-      }
+
+      col2im_gpu(col_buff, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
     } else {
-      if (this->use_skernel_) {
-        col2im_ndsk_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
-                        conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-                        kernel_shape_.gpu_data(), pad_.gpu_data(),
-                        stride_.gpu_data(), kstride_.gpu_data(), data);
-      } else {
-        col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
-                      conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-                      kernel_shape_.gpu_data(), pad_.gpu_data(),
-                      stride_.gpu_data(), data);
-      }
+      col2im_nd_gpu(col_buff, num_spatial_axes_, num_kernels_col2im_,
+          conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+          kernel_shape_.gpu_data(), pad_.gpu_data(), stride_.gpu_data(),
+          dilation_.gpu_data(), data);
     }
   }
 #endif  // USE_CUDA
@@ -214,51 +186,26 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     viennacl::ocl::program &program = this->device_->program();
 
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      if (this->use_skernel_) {
-        greentea_im2col_sk_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                      conv_in_channels_,
-                                      conv_input_shape_.cpu_data()[1],
-                                      conv_input_shape_.cpu_data()[2],
-                                      kernel_shape_.cpu_data()[0],
-                                      kernel_shape_.cpu_data()[1],
-                                      pad_.cpu_data()[0], pad_.cpu_data()[1],
-                                      stride_.cpu_data()[0],
-                                      stride_.cpu_data()[1],
-                                      kstride_.cpu_data()[0],
-                                      kstride_.cpu_data()[1],
-                                      (cl_mem) col_buff);
-      } else {
-        greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                   conv_in_channels_,
-                                   conv_input_shape_.cpu_data()[1],
-                                   conv_input_shape_.cpu_data()[2],
-                                   kernel_shape_.cpu_data()[0],
-                                   kernel_shape_.cpu_data()[1],
-                                   pad_.cpu_data()[0], pad_.cpu_data()[1],
-                                   stride_.cpu_data()[0], stride_.cpu_data()[1],
-                                   (cl_mem) col_buff, col_buff_off);
-      }
+      greentea_im2col_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
+                                 conv_in_channels_,
+                                 conv_input_shape_.cpu_data()[1],
+                                 conv_input_shape_.cpu_data()[2],
+                                 kernel_shape_.cpu_data()[0],
+                                 kernel_shape_.cpu_data()[1],
+                                 pad_.cpu_data()[0], pad_.cpu_data()[1],
+                                 stride_.cpu_data()[0], stride_.cpu_data()[1],
+                                 dilation_.cpu_data()[0],
+                                 dilation_.cpu_data()[1], (cl_mem) col_buff);
     } else {
-      if (this->use_skernel_) {
-        greentea_im2col_ndsk_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                        num_spatial_axes_, num_kernels_im2col_,
-                                        (cl_mem) (conv_input_shape_.gpu_data()),
-                                        (cl_mem) (col_buffer_.gpu_shape()),
-                                        (cl_mem) (kernel_shape_.gpu_data()),
-                                        (cl_mem) (pad_.gpu_data()),
-                                        (cl_mem) (stride_.gpu_data()),
-                                        (cl_mem) (kstride_.gpu_data()),
-                                        (cl_mem) col_buff, col_buff_off);
-      } else {
-        greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
-                                      num_spatial_axes_, 0, num_kernels_im2col_,
-                                      (cl_mem) (conv_input_shape_.gpu_data()),
-                                      (cl_mem) (col_buffer_.gpu_shape()),
-                                      (cl_mem) (kernel_shape_.gpu_data()),
-                                      (cl_mem) (pad_.gpu_data()),
-                                      (cl_mem) (stride_.gpu_data()),
-                                      (cl_mem) col_buff, col_buff_off);
-      }
+      greentea_im2col_nd_gpu<Dtype>(&program, &ctx, (cl_mem) data, data_off,
+                                    num_spatial_axes_, num_kernels_im2col_,
+                                    (cl_mem) (conv_input_shape_.gpu_data()),
+                                    (cl_mem) (col_buffer_.gpu_shape()),
+                                    (cl_mem) (kernel_shape_.gpu_data()),
+                                    (cl_mem) (pad_.gpu_data()),
+                                    (cl_mem) (stride_.gpu_data()),
+                                    (cl_mem) (dilation_.gpu_data()),
+                                    (cl_mem) col_buff, col_buff_off);
     }
   }
 
@@ -269,55 +216,29 @@ class BaseConvolutionLayer : public Layer<Dtype> {
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
 
-
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      if (this->use_skernel_) {
-        greentea_col2im_sk_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
-                                      conv_in_channels_,
-                                      conv_input_shape_.cpu_data()[1],
-                                      conv_input_shape_.cpu_data()[2],
-                                      kernel_shape_.cpu_data()[0],
-                                      kernel_shape_.cpu_data()[1],
-                                      pad_.cpu_data()[0], pad_.cpu_data()[1],
-                                      stride_.cpu_data()[0],
-                                      stride_.cpu_data()[1],
-                                      kstride_.cpu_data()[0],
-                                      kstride_.cpu_data()[1], (cl_mem) data,
-                                      data_off);
-      } else {
-        greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
-                                   col_buff_off, conv_in_channels_,
-                                   conv_input_shape_.cpu_data()[1],
-                                   conv_input_shape_.cpu_data()[2],
-                                   kernel_shape_.cpu_data()[0],
-                                   kernel_shape_.cpu_data()[1],
-                                   pad_.cpu_data()[0], pad_.cpu_data()[1],
-                                   stride_.cpu_data()[0], stride_.cpu_data()[1],
-                                   (cl_mem) data, data_off);
-      }
+      greentea_col2im_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
+                                 conv_in_channels_,
+                                 conv_input_shape_.cpu_data()[1],
+                                 conv_input_shape_.cpu_data()[2],
+                                 kernel_shape_.cpu_data()[0],
+                                 kernel_shape_.cpu_data()[1],
+                                 pad_.cpu_data()[0], pad_.cpu_data()[1],
+                                 stride_.cpu_data()[0], stride_.cpu_data()[1],
+                                 dilation_.cpu_data()[0],
+                                 dilation_.cpu_data()[1], (cl_mem) data,
+                                 data_off);
     } else {
-      if (this->use_skernel_) {
-        greentea_col2im_ndsk_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
-                                        col_buff_off, num_spatial_axes_,
-                                        num_kernels_col2im_,
-                                        (cl_mem) (conv_input_shape_.gpu_data()),
-                                        (cl_mem) (col_buffer_.gpu_shape()),
-                                        (cl_mem) (kernel_shape_.gpu_data()),
-                                        (cl_mem) (pad_.gpu_data()),
-                                        (cl_mem) (stride_.gpu_data()),
-                                        (cl_mem) (kstride_.gpu_data()),
-                                        (cl_mem) data, data_off);
-      } else {
-        greentea_col2im_nd_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
-                                      col_buff_off, num_spatial_axes_, 0,
-                                      num_kernels_col2im_,
-                                      (cl_mem) (conv_input_shape_.gpu_data()),
-                                      (cl_mem) (col_buffer_.gpu_shape()),
-                                      (cl_mem) (kernel_shape_.gpu_data()),
-                                      (cl_mem) (pad_.gpu_data()),
-                                      (cl_mem) (stride_.gpu_data()),
-                                      (cl_mem) data, data_off);
-      }
+      greentea_col2im_nd_gpu<Dtype>(&program, &ctx, (cl_mem) col_buff,
+                                    col_buff_off, num_spatial_axes_,
+                                    num_kernels_col2im_,
+                                    (cl_mem) (conv_input_shape_.gpu_data()),
+                                    (cl_mem) (col_buffer_.gpu_shape()),
+                                    (cl_mem) (kernel_shape_.gpu_data()),
+                                    (cl_mem) (pad_.gpu_data()),
+                                    (cl_mem) (stride_.gpu_data()),
+                                    (cl_mem) (dilation_.gpu_data()),
+                                    (cl_mem) data, data_off);
     }
   }
 #endif  // USE_GREENTEA

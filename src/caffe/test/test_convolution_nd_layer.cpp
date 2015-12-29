@@ -57,9 +57,9 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
     convolution_param->add_kernel_size(3);
     convolution_param->add_kernel_size(3);
 
-    convolution_param->add_kstride(2);
-    convolution_param->add_kstride(2);
-    convolution_param->add_kstride(2);
+    convolution_param->add_dilation(2);
+    convolution_param->add_dilation(2);
+    convolution_param->add_dilation(2);
 
     convolution_param->set_num_output(1);
 
@@ -109,9 +109,9 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
     convolution_param->add_kernel_size(3);
     convolution_param->add_kernel_size(3);
 
-    convolution_param->add_kstride(2);
-    convolution_param->add_kstride(2);
-    convolution_param->add_kstride(2);
+    convolution_param->add_dilation(2);
+    convolution_param->add_dilation(2);
+    convolution_param->add_dilation(2);
 
     convolution_param->set_num_output(1);
 
@@ -169,9 +169,9 @@ TYPED_TEST(ConvolutionNDLayerTest, TestSetup) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_kernel_size(3);
 
-  convolution_param->add_kstride(2);
-  convolution_param->add_kstride(2);
-  convolution_param->add_kstride(2);
+  convolution_param->add_dilation(2);
+  convolution_param->add_dilation(2);
+  convolution_param->add_dilation(2);
 
   convolution_param->set_num_output(4);
 

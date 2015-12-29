@@ -524,6 +524,10 @@ message ConvolutionParameter {
   repeated uint64 pad = 3; // The padding size; defaults to 0
   repeated uint64 kernel_size = 4; // The kernel size
   repeated uint64 stride = 6; // The stride; defaults to 1
+  // Factor used to dilate the kernel, (implicitly) zero-filling the resulting
+  // holes. (Kernel dilation is sometimes referred to by its use in the
+  // algorithme à trous from Holschneider et al. 1987.)
+  repeated uint64 dilation = 18; // The dilation; defaults to 1
 
   // For 2D convolution only, the *_h and *_w versions may also be used to
   // specify both spatial dimensions.
@@ -544,11 +548,6 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
-  
-  // Strided kernel parameters
-  repeated uint64 kstride = 18;
-  optional uint64 kstride_h = 19 [default = 1];
-  optional uint64 kstride_w = 20 [default = 1];
   
   // The axis to interpret as "channels" when performing convolution.
   // Preceding dimensions are treated as independent inputs;
@@ -831,9 +830,7 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
-  repeated uint64 kstride = 13; // The kernel stride, default 1
-  optional uint64 kstride_h = 14;
-  optional uint64 kstride_w = 15;
+  repeated uint64 dilation = 13; // The kernel stride, default 1
   optional int64 axis = 16 [default = 1];
 }
 
