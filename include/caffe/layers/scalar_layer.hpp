@@ -7,6 +7,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "caffe/layers/bias_layer.hpp"
+
 namespace caffe {
 
 /**
@@ -62,6 +64,11 @@ class ScalarLayer: public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  shared_ptr<Layer<Dtype> > bias_layer_;
+  vector<Blob<Dtype>*> bias_bottom_vec_;
+  vector<bool> bias_propagate_down_;
+  int bias_param_id_;
 
   Blob<Dtype> sum_multiplier_;
   Blob<Dtype> sum_result_;

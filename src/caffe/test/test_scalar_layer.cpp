@@ -310,6 +310,33 @@ TYPED_TEST(ScalarLayerTest, TestForwardBroadcastMiddleWithParam) {
   }
 }
 
+TYPED_TEST(ScalarLayerTest, TestForwardBroadcastMiddleWithParamAndBias) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ScalarParameter* scalar_param = layer_param.mutable_scalar_param();
+  scalar_param->set_axis(1);
+  scalar_param->set_num_axes(2);
+  scalar_param->mutable_filler()->set_type("gaussian");
+  scalar_param->set_bias_term(true);
+  scalar_param->mutable_bias_filler()->set_type("gaussian");
+  shared_ptr<ScalarLayer<Dtype> > layer(new ScalarLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
+      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
+        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
+          EXPECT_NEAR(this->blob_top_->data_at(n, c, h, w),
+                      this->blob_bottom_->data_at(n, c, h, w) *
+                      layer->blobs()[0]->data_at(c, h, 0, 0) +
+                      layer->blobs()[1]->data_at(c, h, 0, 0), 1e-5);
+        }
+      }
+    }
+  }
+}
+
 TYPED_TEST(ScalarLayerTest, TestForwardBroadcastEnd) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_2_);
@@ -441,6 +468,19 @@ TYPED_TEST(ScalarLayerTest, TestGradientScalar) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_scalar_);
   LayerParameter layer_param;
+  ScalarLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(ScalarLayerTest, TestGradientScalarAndBias) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_scalar_);
+  LayerParameter layer_param;
+  ScalarParameter* scalar_param = layer_param.mutable_scalar_param();
+  scalar_param->set_bias_term(true);
+  scalar_param->mutable_bias_filler()->set_type("gaussian");
   ScalarLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

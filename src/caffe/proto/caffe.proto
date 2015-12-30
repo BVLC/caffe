@@ -1015,6 +1015,11 @@ message ScalarParameter {
   // Default is the unit (1) initialization, resulting in the ScalarLayer
   // initially performing the identity operation.
   optional FillerParameter filler = 3;
+
+  // Whether to also learn a bias (equivalent to a ScalarLayer+BiasLayer, but
+  // may be more efficient).  Initialized with bias_filler (defaults to 0).
+  optional bool bias_term = 4 [default = false];
+  optional FillerParameter bias_filler = 5;
 }
 
 message SigmoidParameter {

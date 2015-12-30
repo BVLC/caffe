@@ -35,11 +35,18 @@ void ScalarLayer<Dtype>::Forward_gpu(
   ScalarForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
       <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, scalar_data, scalar_dim_, inner_dim_, top_data);
+  if (bias_layer_) {
+    bias_layer_->Forward(bias_bottom_vec_, top);
+  }
 }
 
 template <typename Dtype>
 void ScalarLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (bias_layer_ &&
+      this->param_propagate_down_[this->param_propagate_down_.size() - 1]) {
+    bias_layer_->Backward(top, bias_propagate_down_, bias_bottom_vec_);
+  }
   const bool scalar_param = (bottom.size() == 1);
   Blob<Dtype>* scalar = scalar_param ? this->blobs_[0].get() : bottom[1];
   if ((!scalar_param && propagate_down[1]) ||

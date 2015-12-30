@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "caffe/filler.hpp"
+#include "caffe/layer_factory.hpp"
 #include "caffe/layers/scalar_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -10,11 +11,11 @@ namespace caffe {
 template <typename Dtype>
 void ScalarLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  const ScalarParameter& param = this->layer_param_.scalar_param();
   if (bottom.size() == 1 && this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else if (bottom.size() == 1) {
     // scalar is a learned parameter; initialize it
-    const ScalarParameter& param = this->layer_param_.scalar_param();
     axis_ = bottom[0]->CanonicalAxisIndex(param.axis());
     const int num_axes = param.num_axes();
     CHECK_GE(num_axes, -1) << "num_axes must be non-negative, "
@@ -39,6 +40,26 @@ void ScalarLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
     filler->Fill(this->blobs_[0].get());
+  }
+  if (param.bias_term()) {
+    LayerParameter layer_param(this->layer_param_);
+    layer_param.set_type("Bias");
+    BiasParameter* bias_param = layer_param.mutable_bias_param();
+    bias_param->set_axis(param.axis());
+    if (bottom.size() > 1) {
+      bias_param->set_num_axes(bottom[1]->num_axes());
+    } else {
+      bias_param->set_num_axes(param.num_axes());
+    }
+    bias_param->mutable_filler()->CopyFrom(param.bias_filler());
+    bias_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
+    bias_bottom_vec_.resize(1);
+    bias_bottom_vec_[0] = bottom[0];
+    bias_layer_->SetUp(bias_bottom_vec_, top);
+    bias_param_id_ = this->blobs_.size();
+    this->blobs_.resize(bias_param_id_ + 1);
+    this->blobs_[bias_param_id_] = bias_layer_->blobs()[0];
+    bias_propagate_down_.resize(1, false);
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
@@ -78,6 +99,10 @@ void ScalarLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (sum_multiplier_.cpu_data()[sum_mult_size - 1] != Dtype(1)) {
     caffe_set(sum_mult_size, Dtype(1), sum_multiplier_.mutable_cpu_data());
   }
+  if (bias_layer_) {
+    bias_bottom_vec_[0] = top[0];
+    bias_layer_->Reshape(bias_bottom_vec_, top);
+  }
 }
 
 template <typename Dtype>
@@ -103,11 +128,18 @@ void ScalarLayer<Dtype>::Forward_cpu(
       top_data += inner_dim_;
     }
   }
+  if (bias_layer_) {
+    bias_layer_->Forward(bias_bottom_vec_, top);
+  }
 }
 
 template <typename Dtype>
 void ScalarLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  if (bias_layer_ &&
+      this->param_propagate_down_[this->param_propagate_down_.size() - 1]) {
+    bias_layer_->Backward(top, bias_propagate_down_, bias_bottom_vec_);
+  }
   const bool scalar_param = (bottom.size() == 1);
   Blob<Dtype>* scalar = scalar_param ? this->blobs_[0].get() : bottom[1];
   if ((!scalar_param && propagate_down[1]) ||
