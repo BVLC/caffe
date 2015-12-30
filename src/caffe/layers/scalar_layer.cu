@@ -17,6 +17,16 @@ __global__ void ScalarForward(const int n, const Dtype* in,
 }
 
 template <typename Dtype>
+__global__ void ScalarBiasForward(const int n, const Dtype* in,
+    const Dtype* scalar, const Dtype* bias,
+    const int scalar_dim, const int inner_dim, Dtype* out) {
+  CUDA_KERNEL_LOOP(index, n) {
+    const int scalar_index = (index / inner_dim) % scalar_dim;
+    out[index] = in[index] * scalar[scalar_index] + bias[scalar_index];
+  }
+}
+
+template <typename Dtype>
 void ScalarLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int count = top[0]->count();
@@ -32,11 +42,16 @@ void ScalarLayer<Dtype>::Forward_gpu(
   const Dtype* scalar_data =
       ((bottom.size() > 1) ? bottom[1] : this->blobs_[0].get())->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  ScalarForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-      <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, scalar_data, scalar_dim_, inner_dim_, top_data);
   if (bias_layer_) {
-    bias_layer_->Forward(bias_bottom_vec_, top);
+    const Dtype* bias_data = this->blobs_[bias_param_id_]->gpu_data();
+    ScalarBiasForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, scalar_data, bias_data, scalar_dim_, inner_dim_,
+        top_data);
+  } else {
+    ScalarForward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, scalar_data, scalar_dim_, inner_dim_, top_data);
   }
 }
 
