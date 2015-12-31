@@ -13,6 +13,7 @@
 #define cl_amd_fp64
 #define DOUBLE_SUPPORT_AVAILABLE
 #define CLK_LOCAL_MEM_FENCE
+#define CLK_GLOBAL_MEM_FENCE
 #define Dtype float
 #define barrier(x)
 #define atomic_cmpxchg(x, y, z) x

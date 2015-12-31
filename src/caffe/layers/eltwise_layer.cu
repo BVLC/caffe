@@ -120,7 +120,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         viennacl::ocl::enqueue(
             oclk_max_forward(count,
                 WrapHandle((cl_mem)(bottom[0]->gpu_data()), &ctx),
-                WrapHandle((cl_mem)(bottom[1]->gpu_data()), &ctx), 0L,
+                WrapHandle((cl_mem)(bottom[1]->gpu_data()), &ctx), (int_tp)0,
                 WrapHandle((cl_mem)top_data, &ctx),
                 WrapHandle((cl_mem)mask, &ctx)),
             ctx.get_queue());

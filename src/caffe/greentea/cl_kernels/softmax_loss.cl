@@ -18,9 +18,9 @@ __kernel void TEMPLATE(softmax_loss_forward,Dtype)(
       loss[index] = 0;
       counts[index] = 0;
     } else {
-      loss[index] = -log(
+      loss[index] = -log((Dtype)(
           max((Dtype) (prob_data[n * dim + label_value * spatial_dim + s]),
-              (Dtype) FLT_MIN));
+              (Dtype) FLT_MIN)));
       counts[index] = 1;
     }
   }

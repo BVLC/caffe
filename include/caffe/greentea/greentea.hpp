@@ -39,7 +39,7 @@
 #endif
 
 #ifndef GREENTEA_QUEUE_COUNT
-#define GREENTEA_QUEUE_COUNT 8
+#define GREENTEA_QUEUE_COUNT 1
 #endif
 
 namespace caffe {

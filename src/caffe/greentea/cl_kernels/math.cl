@@ -68,7 +68,7 @@ __kernel void TEMPLATE(log,Dtype)(const int_tp n, __global const Dtype* a,
                                   const int_tp offa, __global Dtype* y,
                                   const int_tp offy) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
-    y[offy + index] = log(a[offa + index]);
+    y[offy + index] = log((Dtype)(a[offa + index]));
   }
 }
 
