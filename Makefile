@@ -165,6 +165,10 @@ NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 # GreenTea backend related include and lib
 ##############################
 
+ifeq ($(USE_INDEX_64),1)
+	COMMON_FLAGS += -DUSE_INDEX_64
+endif
+
 ifeq ($(USE_GREENTEA),1)
 	# Find a valid OpenCL library
 	# TODO: Validate and complete this based on different SDKs
