@@ -35,7 +35,7 @@ namespace caffe {
 
 bool checkConvolutionDilated(ConvolutionParameter param) {
   for (int i = 0; i < param.dilation_size(); ++i) {
-    if (param.dilation(i) > 0) {
+    if (param.dilation(i) > 1) {
       return true;
     }
   }
@@ -44,7 +44,7 @@ bool checkConvolutionDilated(ConvolutionParameter param) {
 
 bool checkPoolingDilated(PoolingParameter param) {
   for (int i = 0; i < param.dilation_size(); ++i) {
-    if (param.dilation(i) > 0) {
+    if (param.dilation(i) > 1) {
       return true;
     }
   }
