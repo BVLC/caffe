@@ -3,7 +3,8 @@
 # load the kernels to ViennaCL/OpenCL contexts.
 # Outputs (overwrites): cl_kernels.hpp and cl_kernels.cpp
 
-CL_HEADERDIR="src/caffe/greentea/cl_headers/*.cl"
+declare -a CL_HEADERS_32=("src/caffe/greentea/cl_headers/header.cl" "src/caffe/greentea/cl_headers/definitions_32.cl")
+declare -a CL_HEADERS_64=("src/caffe/greentea/cl_headers/header.cl" "src/caffe/greentea/cl_headers/definitions_64.cl")
 CL_KERNELDIR="src/caffe/greentea/cl_kernels/*.cl"
 HEADER='include/caffe/greentea/cl_kernels.hpp'
 INCHEADER='caffe/greentea/cl_kernels.hpp'
@@ -34,8 +35,9 @@ echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >>
 echo "}" >> $HEADER
 echo "#endif" >> $HEADER
 
+echo "#ifdef USE_INDEX_64" >> $SOURCE
 shopt -s nullglob
-for CL_KERNEL in $CL_HEADERDIR
+for CL_KERNEL in "${CL_HEADERS_64[@]}"
 do
 	CL_KERNEL_STR=`cat $CL_KERNEL`
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
@@ -45,9 +47,22 @@ do
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
+echo "#else" >> $SOURCE
+shopt -s nullglob
+for CL_KERNEL in "${CL_HEADERS_32[@]}"
+do
+	CL_KERNEL_STR=`cat $CL_KERNEL`
+	CL_KERNEL_NAME=`echo $CL_KERNEL`
+	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
+	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
+	echo -n "std::string $CL_KERNEL_NAME = \"" >> $SOURCE
+	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
+	echo "\";  // NOLINT" >> $SOURCE
+done
+echo "#endif" >> $SOURCE
 
 shopt -s nullglob
-for CL_KERNEL in $CL_HEADERDIR $CL_KERNELDIR
+for CL_KERNEL in $CL_KERNELDIR
 do
 	CL_KERNEL_STR=`cat $CL_KERNEL`
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
@@ -70,19 +85,28 @@ do
 	echo "\";  // NOLINT" >> $SOURCE
 done
 
-
-
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
 
+echo "#ifdef USE_INDEX_64" >> $SOURCE
 shopt -s nullglob
-for CL_KERNEL in $CL_HEADERDIR
+for CL_KERNEL in "${CL_HEADERS_64[@]}"
 do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
 	echo "  ss << $CL_KERNEL_NAME << \"\\n\\n\";  // NOLINT" >> $SOURCE
 done
+echo "#else" >> $SOURCE
+shopt -s nullglob
+for CL_KERNEL in "${CL_HEADERS_32[@]}"
+do
+	CL_KERNEL_NAME=`echo $CL_KERNEL`
+	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
+	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
+	echo "  ss << $CL_KERNEL_NAME << \"\\n\\n\";  // NOLINT" >> $SOURCE
+done
+echo "#endif" >> $SOURCE
 
 shopt -s nullglob
 echo "  ss << \"#define Dtype float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE

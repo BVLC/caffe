@@ -488,8 +488,9 @@ __global__ void MaxPoolBackward(const int_tp nthreads, const Dtype* top_diff,
                                 const int_tp ext_kernel_h,
                                 const int_tp ext_kernel_w,
                                 const int_tp stride_h, const int_tp stride_w,
-                                const int_tp dilation_h, const int_tp dilation_w,
-                                const int_tp pad_h, const int_tp pad_w,
+                                const int_tp dilation_h,
+                                const int_tp dilation_w, const int_tp pad_h,
+                                const int_tp pad_w,
                                 Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index

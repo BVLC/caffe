@@ -14,7 +14,8 @@ __kernel void TEMPLATE(im2col,Dtype)(const int_tp n,
                                         const int_tp dilation_w,
                                         const int_tp height_col,
                                         const int_tp width_col,
-                                        __global Dtype* data_col) {
+                                        __global Dtype* data_col,
+                                        const int_tp data_col_off) {
 
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     int_tp w_out = index % width_col;
@@ -24,7 +25,7 @@ __kernel void TEMPLATE(im2col,Dtype)(const int_tp n,
     int_tp channel_out = channel_in * kernel_h * kernel_w;
     int_tp h_in = h_out * stride_h - pad_h;
     int_tp w_in = w_out * stride_w - pad_w;
-    __global Dtype* data_col_ptr = data_col;
+    __global Dtype* data_col_ptr = data_col + data_col_off;
     data_col_ptr += (channel_out * height_col + h_out) * width_col + w_out;
     __global const Dtype* data_im_ptr = data_im + data_offset;
     data_im_ptr += (channel_in * height + h_in) * width + w_in;
@@ -43,19 +44,22 @@ __kernel void TEMPLATE(im2col,Dtype)(const int_tp n,
 }
 
 __kernel void TEMPLATE(col2im,Dtype)(const int_tp n,
-                                        __global const Dtype* data_col,
-                                        const int_tp height, const int_tp width,
-                                        const int_tp channels, const int_tp patch_h,
-                                        const int_tp patch_w,
-                                        const int_tp ext_patch_h,
-                                        const int_tp ext_patch_w, const int_tp pad_h,
-                                        const int_tp pad_w, const int_tp stride_h,
-                                        const int_tp stride_w, const int_tp dilation_h,
-                                        const int_tp dilation_w,
-                                        const int_tp height_col,
-                                        const int_tp width_col,
-                                        __global Dtype* data_im,
-                                        const int_tp data_offset) {
+                                     __global const Dtype* data_col,
+                                     const int_tp data_col_off,
+                                     const int_tp height, const int_tp width,
+                                     const int_tp channels,
+                                     const int_tp patch_h, const int_tp patch_w,
+                                     const int_tp ext_patch_h,
+                                     const int_tp ext_patch_w,
+                                     const int_tp pad_h, const int_tp pad_w,
+                                     const int_tp stride_h,
+                                     const int_tp stride_w,
+                                     const int_tp dilation_h,
+                                     const int_tp dilation_w,
+                                     const int_tp height_col,
+                                     const int_tp width_col,
+                                     __global Dtype* data_im,
+                                     const int_tp data_offset) {
 
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     Dtype val = 0;
@@ -78,7 +82,7 @@ __kernel void TEMPLATE(col2im,Dtype)(const int_tp n,
 
     int_tp coeff_w_idx = height_col * width_col;
     int_tp coeff_h_idx = patch_w * coeff_w_idx;
-    int_tp offset = c * patch_h * coeff_h_idx;
+    int_tp offset = data_col_off + c * patch_h * coeff_h_idx;
     for (int_tp h_col = h_col_start, h_idx = h_num; h_col <= h_col_end; h_col +=
         dilation_h, --h_idx) {
       for (int_tp w_col = w_col_start, w_idx = w_num; w_col <= w_col_end; w_col +=

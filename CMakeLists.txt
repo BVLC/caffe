@@ -21,7 +21,8 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe without CUDA and OpenCL support" OFF)
+caffe_option(CPU_ONLY "Build Caffe without CUDA and OpenCL support" OFF)
+caffe_option(USE_INDEX_64 "Build Caffe with 64 bit indexing" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" ON)
 caffe_option(USE_GREENTEA "Build Caffe with OpenCL support" ON)
 caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using ViennaClBLAS)" OFF)
