@@ -33,7 +33,8 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(num_spatial_axes_, 0);
 
   vector<int_tp> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-  vector<int_tp> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, (int_tp)1));
+  vector<int_tp> spatial_dim_blob_shape(
+      1, std::max(num_spatial_axes_, (int_tp) 1));
 
   kernel_shape_.Reshape(spatial_dim_blob_shape);
   int_tp* kernel_shape_data = kernel_shape_.mutable_cpu_data();
@@ -188,7 +189,8 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   vector<int_tp> top_shape = bottom[0]->shape();
   for (int_tp i = 0; i < num_spatial_axes_; ++i) {
     size_data[i] = bottom[0]->shape(channel_axis_ + 1 + i);
-    ext_kernel_shape_data[i] = (kernel_shape_data[i] - 1) * dilation_data[i] + 1;
+    ext_kernel_shape_data[i] = (kernel_shape_data[i] - 1) * dilation_data[i]
+        + 1;
     pooled_size_data[i] = static_cast<int_tp>(ceil(
         static_cast<float>(size_data[i] + 2 * pad_data[i]
             - ext_kernel_shape_data[i]) / stride_data[i])) + 1;

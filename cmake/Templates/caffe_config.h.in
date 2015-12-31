@@ -7,6 +7,9 @@
 /* Binaries directory */
 #define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 
+/* 64 bit indexing */
+#cmakedefine USE_INDEX_64
+
 /* NVIDA Cuda */
 #cmakedefine HAVE_CUDA
 #cmakedefine USE_CUDA

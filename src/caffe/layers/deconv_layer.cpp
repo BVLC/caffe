@@ -14,7 +14,8 @@ void DeconvolutionLayer<Dtype>::compute_output_shape() {
   for (int_tp i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
     const int_tp input_dim = this->input_shape(i + 1);
-    const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
+    const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1)
+        + 1;
     const int_tp output_dim = stride_data[i] * (input_dim - 1)
         + kernel_extent - 2 * pad_data[i];
     this->output_shape_.push_back(output_dim);

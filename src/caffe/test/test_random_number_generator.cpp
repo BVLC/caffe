@@ -492,7 +492,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformIntGPU) {
     uniform_data[i] = static_cast<const TypeParam>(uniform_uint_data[i]);
   }
   const TypeParam lower = 0;
-  const TypeParam upper = ULONG_MAX;
+  const TypeParam upper = ((sizeof(int_tp) == 4) ? UINT_MAX:ULONG_MAX);
   this->RngUniformChecks(lower, upper, uniform_data);
 }
 

@@ -71,7 +71,7 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
           for (int_tp w = 0; w < blob_bottom.width(); ++w) {
             int_tp c_start = c - (size - 1) / 2;
             int_tp c_end = min(c_start + size, blob_bottom.channels());
-            c_start = max(c_start, 0L);
+            c_start = max(c_start, (int_tp)0);
             Dtype scale = 1.;
             for (int_tp i = c_start; i < c_end; ++i) {
               Dtype value = blob_bottom.data_at(n, i, h, w);
@@ -90,12 +90,12 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
         for (int_tp h = 0; h < blob_bottom.height(); ++h) {
           int_tp h_start = h - (size - 1) / 2;
           int_tp h_end = min(h_start + size, blob_bottom.height());
-          h_start = max(h_start, 0L);
+          h_start = max(h_start, (int_tp)0);
           for (int_tp w = 0; w < blob_bottom.width(); ++w) {
             Dtype scale = 1.;
             int_tp w_start = w - (size - 1) / 2;
             int_tp w_end = min(w_start + size, blob_bottom.width());
-            w_start = max(w_start, 0L);
+            w_start = max(w_start, (int_tp)0);
             for (int_tp nh = h_start; nh < h_end; ++nh) {
               for (int_tp nw = w_start; nw < w_end; ++nw) {
                 Dtype value = blob_bottom.data_at(n, c, nh, nw);
@@ -299,7 +299,7 @@ void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
           for (int_tp w = 0; w < blob_bottom.width(); ++w) {
             int_tp c_start = c - (size - 1) / 2;
             int_tp c_end = min(c_start + size, blob_bottom.channels());
-            c_start = max(c_start, 0L);
+            c_start = max(c_start, (int_tp)0);
             Dtype scale = 1.;
             for (int_tp i = c_start; i < c_end; ++i) {
               Dtype value = blob_bottom.data_at(n, i, h, w);
@@ -318,12 +318,12 @@ void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
         for (int_tp h = 0; h < blob_bottom.height(); ++h) {
           int_tp h_start = h - (size - 1) / 2;
           int_tp h_end = min(h_start + size, blob_bottom.height());
-          h_start = max(h_start, 0L);
+          h_start = max(h_start, (int_tp)0);
           for (int_tp w = 0; w < blob_bottom.width(); ++w) {
             Dtype scale = 1.;
             int_tp w_start = w - (size - 1) / 2;
             int_tp w_end = min(w_start + size, blob_bottom.width());
-            w_start = max(w_start, 0L);
+            w_start = max(w_start, (int_tp)0);
             for (int_tp nh = h_start; nh < h_end; ++nh) {
               for (int_tp nw = w_start; nw < w_end; ++nw) {
                 Dtype value = blob_bottom.data_at(n, c, nh, nw);
@@ -345,104 +345,116 @@ void CuDNNLRNLayerTest<TypeParam>::ReferenceLRNForward(
 TYPED_TEST_CASE(CuDNNLRNLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
-  // typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  CuDNNLRNLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  Blob<TypeParam> top_reference;
-  this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
-      &top_reference);
-  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
-                this->epsilon_);
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    // typedef typename TypeParam::Dtype Dtype;
+    LayerParameter layer_param;
+    CuDNNLRNLayer<TypeParam> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    Blob<TypeParam> top_reference;
+    this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
+        &top_reference);
+    for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
+      EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
+                  this->epsilon_);
+    }
   }
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsLargeRegionCuDNN) {
-  typedef TypeParam Dtype;
-  LayerParameter layer_param;
-  layer_param.mutable_lrn_param()->set_local_size(15);
-  CuDNNLRNLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  Blob<Dtype> top_reference;
-  this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
-      &top_reference);
-  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
-                this->epsilon_);
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    typedef TypeParam Dtype;
+    LayerParameter layer_param;
+    layer_param.mutable_lrn_param()->set_local_size(15);
+    CuDNNLRNLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    Blob<Dtype> top_reference;
+    this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
+        &top_reference);
+    for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
+      EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
+                  this->epsilon_);
+    }
   }
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
-  typedef TypeParam Dtype;
-  LayerParameter layer_param;
-  CuDNNLRNLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-2);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    typedef TypeParam Dtype;
+    LayerParameter layer_param;
+    CuDNNLRNLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-2);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
+      this->blob_top_->mutable_cpu_diff()[i] = 1.;
+    }
+    vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
+    layer.Backward(this->blob_top_vec_, propagate_down,
+                   this->blob_bottom_vec_);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
   }
-  vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
-  layer.Backward(this->blob_top_vec_, propagate_down,
-                 this->blob_bottom_vec_);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardWithinChannel) {
-  typedef TypeParam Dtype;
-  LayerParameter layer_param;
-  layer_param.mutable_lrn_param()->set_norm_region(
-      LRNParameter_NormRegion_WITHIN_CHANNEL);
-  layer_param.mutable_lrn_param()->set_local_size(3);
-  CuDNNLCNLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  Blob<Dtype> top_reference;
-  this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
-      &top_reference);
-  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
-                this->epsilon_);
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    typedef TypeParam Dtype;
+    LayerParameter layer_param;
+    layer_param.mutable_lrn_param()->set_norm_region(
+        LRNParameter_NormRegion_WITHIN_CHANNEL);
+    layer_param.mutable_lrn_param()->set_local_size(3);
+    CuDNNLCNLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    Blob<Dtype> top_reference;
+    this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
+        &top_reference);
+    for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
+      EXPECT_NEAR(this->blob_top_->cpu_data()[i], top_reference.cpu_data()[i],
+                  this->epsilon_);
+    }
   }
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestGradientWithinChannel) {
-  typedef TypeParam Dtype;
-  LayerParameter layer_param;
-  layer_param.mutable_lrn_param()->set_norm_region(
-      LRNParameter_NormRegion_WITHIN_CHANNEL);
-  layer_param.mutable_lrn_param()->set_local_size(3);
-  CuDNNLCNLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-2);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    typedef TypeParam Dtype;
+    LayerParameter layer_param;
+    layer_param.mutable_lrn_param()->set_norm_region(
+        LRNParameter_NormRegion_WITHIN_CHANNEL);
+    layer_param.mutable_lrn_param()->set_local_size(3);
+    CuDNNLCNLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-2);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
+      this->blob_top_->mutable_cpu_diff()[i] = 1.;
+    }
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
   }
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
 }
 
 TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
-  typedef TypeParam Dtype;
-  LayerParameter layer_param;
-  layer_param.mutable_lrn_param()->set_local_size(15);
-  CuDNNLRNLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-2);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    typedef TypeParam Dtype;
+    LayerParameter layer_param;
+    layer_param.mutable_lrn_param()->set_local_size(15);
+    CuDNNLRNLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-2);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
+      this->blob_top_->mutable_cpu_diff()[i] = 1.;
+    }
+    vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
+    layer.Backward(this->blob_top_vec_, propagate_down,
+                   this->blob_bottom_vec_);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
   }
-  vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
-  layer.Backward(this->blob_top_vec_, propagate_down,
-                 this->blob_bottom_vec_);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
 }
 
 #endif

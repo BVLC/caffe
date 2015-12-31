@@ -58,9 +58,9 @@ class PoolingNDSKLayerTest : public GPUDeviceTest<TypeParam> {
     pooling_param->add_kernel_size(3);
     pooling_param->add_kernel_size(3);
 
-    pooling_param->add_kstride(2);
-    pooling_param->add_kstride(2);
-    pooling_param->add_kstride(2);
+    pooling_param->add_dilation(2);
+    pooling_param->add_dilation(2);
+    pooling_param->add_dilation(2);
 
     pooling_param->set_axis(1);
 
@@ -103,9 +103,9 @@ class PoolingNDSKLayerTest : public GPUDeviceTest<TypeParam> {
     pooling_param->add_kernel_size(3);
     pooling_param->add_kernel_size(3);
 
-    pooling_param->add_kstride(2);
-    pooling_param->add_kstride(2);
-    pooling_param->add_kstride(2);
+    pooling_param->add_dilation(2);
+    pooling_param->add_dilation(2);
+    pooling_param->add_dilation(2);
 
     pooling_param->set_axis(1);
 
@@ -173,9 +173,9 @@ TYPED_TEST(PoolingNDSKLayerTest, TestSetup) {
   pooling_param->add_kernel_size(3);
   pooling_param->add_kernel_size(3);
 
-  pooling_param->add_kstride(2);
-  pooling_param->add_kstride(2);
-  pooling_param->add_kstride(2);
+  pooling_param->add_dilation(2);
+  pooling_param->add_dilation(2);
+  pooling_param->add_dilation(2);
 
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
 

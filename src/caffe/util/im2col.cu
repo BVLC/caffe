@@ -59,33 +59,40 @@ void im2col_gpu(const Dtype* data_im, const int_tp channels,
   int_tp width_col = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1))
       / stride_w + 1;
   int_tp num_kernels = channels * height_col * width_col;
-  // NOLint_tp_NEXT_LINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   im2col_gpu_kernel<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels),
       CAFFE_CUDA_NUM_THREADS)(
       num_kernels, data_im, height, width, kernel_h, kernel_w, pad_h,
       pad_w, stride_h, stride_w, dilation_h, dilation_w, height_col,
       width_col, data_col);
-  CUDA_POST_KERNEL_CHECK
-  ;
+  CUDA_POST_KERNEL_CHECK;
 }
 
 // Explicit instantiation
 template void im2col_gpu<float>(const float* data_im, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h, const int_tp stride_w,
-    const int_tp dilation_h, const int_tp dilation_w, float* data_col);
+                                const int_tp height, const int_tp width,
+                                const int_tp kernel_h, const int_tp kernel_w,
+                                const int_tp pad_h, const int_tp pad_w,
+                                const int_tp stride_h, const int_tp stride_w,
+                                const int_tp dilation_h,
+                                const int_tp dilation_w, float* data_col);
 template void im2col_gpu<double>(const double* data_im, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h, const int_tp stride_w,
-    const int_tp dilation_h, const int_tp dilation_w, double* data_col);
+                                 const int_tp height, const int_tp width,
+                                 const int_tp kernel_h, const int_tp kernel_w,
+                                 const int_tp pad_h, const int_tp pad_w,
+                                 const int_tp stride_h, const int_tp stride_w,
+                                 const int_tp dilation_h,
+                                 const int_tp dilation_w, double* data_col);
 
-template <typename Dtype, int_tp num_axes>
+template<typename Dtype, int_tp num_axes>
 __global__ void im2col_nd_gpu_kernel(const int_tp n, const Dtype* data_im,
-    const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    const int_tp* dilation, Dtype* data_col) {
-  int_tp d_temp[num_axes];  // NOLint_tp(runtime/arrays)
-  int_tp d_iter[num_axes];  // NOLint_tp(runtime/arrays)
+                                     const int_tp* im_shape,
+                                     const int_tp* col_shape,
+                                     const int_tp* kernel_shape,
+                                     const int_tp* pad, const int_tp* stride,
+                                     const int_tp* dilation, Dtype* data_col) {
+  int_tp d_temp[num_axes];  // NOLINT(runtime/arrays)
+  int_tp d_iter[num_axes];  // NOLINT(runtime/arrays)
 
   __shared__ int_tp shared_dilation[num_axes];
   __shared__ int_tp shared_kernel_shape[num_axes];
@@ -174,61 +181,61 @@ void im2col_nd_gpu(const Dtype* data_im, const int_tp num_spatial_axes,
   DCHECK_LT(num_spatial_axes, CAFFE_CUDA_NUM_THREADS);
   switch (num_spatial_axes) {
   case 1:
-    im2col_nd_gpu_kernel<Dtype, 1>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 1>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 2:
-    im2col_nd_gpu_kernel<Dtype, 2>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 2>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 3:
-    im2col_nd_gpu_kernel<Dtype, 3>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 3>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 4:
-    im2col_nd_gpu_kernel<Dtype, 4>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 4>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 5:
-    im2col_nd_gpu_kernel<Dtype, 5>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 5>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 6:
-    im2col_nd_gpu_kernel<Dtype, 6>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 6>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 7:
-    im2col_nd_gpu_kernel<Dtype, 7>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 7>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 8:
-    im2col_nd_gpu_kernel<Dtype, 8>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 8>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 9:
-    im2col_nd_gpu_kernel<Dtype, 9>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 9>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
     break;
   case 10:
-    im2col_nd_gpu_kernel<Dtype, 10>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    im2col_nd_gpu_kernel<Dtype, 10>  // NOLINT_NEXT_LINE(whitespace/operators)
         CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS)(
         num_kernels, data_im, im_shape, col_shape,
         kernel_shape, pad, stride, dilation, data_col);
@@ -242,15 +249,21 @@ void im2col_nd_gpu(const Dtype* data_im, const int_tp num_spatial_axes,
 
 // Explicit instantiation
 template void im2col_nd_gpu<float>(const float* data_im,
-    const int_tp num_spatial_axes, const int_tp col_size,
-    const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    const int_tp* dilation, float* data_col);
+                                   const int_tp num_spatial_axes,
+                                   const int_tp col_size,
+                                   const int_tp* im_shape,
+                                   const int_tp* col_shape,
+                                   const int_tp* kernel_shape,
+                                   const int_tp* pad, const int_tp* stride,
+                                   const int_tp* dilation, float* data_col);
 template void im2col_nd_gpu<double>(const double* data_im,
-    const int_tp num_spatial_axes, const int_tp col_size,
-    const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    const int_tp* dilation, double* data_col);
+                                    const int_tp num_spatial_axes,
+                                    const int_tp col_size,
+                                    const int_tp* im_shape,
+                                    const int_tp* col_shape,
+                                    const int_tp* kernel_shape,
+                                    const int_tp* pad, const int_tp* stride,
+                                    const int_tp* dilation, double* data_col);
 
 template<typename Dtype>
 __global__ void col2im_gpu_kernel(const int_tp n, const Dtype* data_col,
@@ -309,7 +322,7 @@ void col2im_gpu(const Dtype* data_col, const int_tp channels,
   int_tp num_kernels = channels * height * width;
   // To avoid involving atomic operations, we will launch one kernel per
   // bottom dimension, and then in the kernel add up the top dimensions.
-  // NOLint_tp_NEXT_LINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   col2im_gpu_kernel<Dtype>CUDA_KERNEL(CAFFE_GET_BLOCKS(num_kernels),
                              CAFFE_CUDA_NUM_THREADS)(
       num_kernels, data_col, height, width, channels, kernel_h, kernel_w,
@@ -320,32 +333,38 @@ void col2im_gpu(const Dtype* data_col, const int_tp channels,
 
 // Explicit instantiation
 template void col2im_gpu<float>(const float* data_col, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h,
-    const int_tp stride_w, const int_tp dilation_h, const int_tp dilation_w,
-    float* data_im);
+                                const int_tp height, const int_tp width,
+                                const int_tp kernel_h, const int_tp kernel_w,
+                                const int_tp pad_h, const int_tp pad_w,
+                                const int_tp stride_h, const int_tp stride_w,
+                                const int_tp dilation_h,
+                                const int_tp dilation_w, float* data_im);
 template void col2im_gpu<double>(const double* data_col, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w, const int_tp stride_h,
-    const int_tp stride_w, const int_tp dilation_h, const int_tp dilation_w,
-    double* data_im);
+                                 const int_tp height, const int_tp width,
+                                 const int_tp kernel_h, const int_tp kernel_w,
+                                 const int_tp pad_h, const int_tp pad_w,
+                                 const int_tp stride_h, const int_tp stride_w,
+                                 const int_tp dilation_h,
+                                 const int_tp dilation_w, double* data_im);
 
-template <typename Dtype, int_tp num_axes>
+template<typename Dtype, int_tp num_axes>
 __global__ void col2im_nd_gpu_kernel(const int_tp n, const Dtype* data_col,
-    const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    const int_tp* dilation, Dtype* data_im) {
-  int_tp d_im[num_axes];  // NOLint_tp(runtime/arrays)
-  int_tp d_col_iter[num_axes];  // NOLint_tp(runtime/arrays)
-  int_tp d_col_start[num_axes];  // NOLint_tp(runtime/arrays)
-  int_tp d_col_end[num_axes];  // NOLint_tp(runtime/arrays)
+                                     const int_tp* im_shape,
+                                     const int_tp* col_shape,
+                                     const int_tp* kernel_shape,
+                                     const int_tp* pad, const int_tp* stride,
+                                     const int_tp* dilation, Dtype* data_im) {
+  int_tp d_im[num_axes];  // NOLINT(runtime/arrays)
+  int_tp d_col_iter[num_axes];  // NOLINT(runtime/arrays)
+  int_tp d_col_start[num_axes];  // NOLINT(runtime/arrays)
+  int_tp d_col_end[num_axes];  // NOLINT(runtime/arrays)
 
-  __shared__ int_tp shared_dilation[num_axes];
-  __shared__ int_tp shared_kernel_shape[num_axes];
-  __shared__ int_tp shared_pad[num_axes];
-  __shared__ int_tp shared_stride[num_axes];
-  __shared__ int_tp shared_col_shape[num_axes + 1];
-  __shared__ int_tp shared_im_shape[num_axes + 1];
+  __shared__ int_tp shared_dilation[num_axes];   // NOLINT(runtime/arrays)
+  __shared__ int_tp shared_kernel_shape[num_axes];  // NOLINT(runtime/arrays)
+  __shared__ int_tp shared_pad[num_axes];  // NOLINT(runtime/arrays)
+  __shared__ int_tp shared_stride[num_axes];  // NOLINT(runtime/arrays)
+  __shared__ int_tp shared_col_shape[num_axes + 1];  // NOLINT(runtime/arrays)
+  __shared__ int_tp shared_im_shape[num_axes + 1];  // NOLINT(runtime/arrays)
 
   if (threadIdx.x < num_axes) {
     shared_dilation[threadIdx.x] = dilation[threadIdx.x];
@@ -444,61 +463,61 @@ void col2im_nd_gpu(const Dtype* data_col, const int_tp num_spatial_axes,
   DCHECK_LT(num_spatial_axes, CAFFE_CUDA_NUM_THREADS);
   switch (num_spatial_axes) {
   case 1:
-    col2im_nd_gpu_kernel<Dtype, 1>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 1>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 2:
-    col2im_nd_gpu_kernel<Dtype, 2>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 2>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 3:
-    col2im_nd_gpu_kernel<Dtype, 3>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 3>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 4:
-    col2im_nd_gpu_kernel<Dtype, 4>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 4>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 5:
-    col2im_nd_gpu_kernel<Dtype, 5>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 5>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 6:
-    col2im_nd_gpu_kernel<Dtype, 6>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 6>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 7:
-    col2im_nd_gpu_kernel<Dtype, 7>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 7>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 8:
-    col2im_nd_gpu_kernel<Dtype, 8>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 8>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 9:
-    col2im_nd_gpu_kernel<Dtype, 9>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 9>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
     break;
   case 10:
-    col2im_nd_gpu_kernel<Dtype, 10>  // NOLint_tp_NEXT_LINE(whitespace/operators)
+    col2im_nd_gpu_kernel<Dtype, 10>  // NOLINT_NEXT_LINE(whitespace/operators)
           CUDA_KERNEL(CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS)(
           im_size, data_col, im_shape, col_shape,
           kernel_shape, pad, stride, dilation, data_im);
@@ -512,15 +531,20 @@ void col2im_nd_gpu(const Dtype* data_col, const int_tp num_spatial_axes,
 
 // Explicit instantiation
 template void col2im_nd_gpu<float>(const float* data_col,
-    const int_tp num_spatial_axes, const int_tp im_size,
-    const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    const int_tp* dilation, float* data_im);
+                                   const int_tp num_spatial_axes,
+                                   const int_tp im_size, const int_tp* im_shape,
+                                   const int_tp* col_shape,
+                                   const int_tp* kernel_shape,
+                                   const int_tp* pad, const int_tp* stride,
+                                   const int_tp* dilation, float* data_im);
 template void col2im_nd_gpu<double>(const double* data_col,
-    const int_tp num_spatial_axes, const int_tp im_size,
-    const int_tp* im_shape, const int_tp* col_shape,
-    const int_tp* kernel_shape, const int_tp* pad, const int_tp* stride,
-    const int_tp* dilation, double* data_im);
+                                    const int_tp num_spatial_axes,
+                                    const int_tp im_size,
+                                    const int_tp* im_shape,
+                                    const int_tp* col_shape,
+                                    const int_tp* kernel_shape,
+                                    const int_tp* pad, const int_tp* stride,
+                                    const int_tp* dilation, double* data_im);
 
 #endif  // USE_CUDA
 }  // namespace caffe

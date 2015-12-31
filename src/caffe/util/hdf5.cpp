@@ -125,7 +125,7 @@ void hdf5_save_nd_dataset<double>(
 
 string hdf5_load_string(hid_t loc_id, const string& dataset_name) {
   // Get size of dataset
-  uint_tp size;
+  size_t size;
   H5T_class_t class_;
   herr_t status = \
     H5LTget_dataset_info(loc_id, dataset_name.c_str(), NULL, &class_, &size);

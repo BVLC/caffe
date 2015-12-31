@@ -58,7 +58,7 @@ class PoolingLayer : public Layer<Dtype> {
   Blob<int_tp> ext_kernel_shape_;
   Blob<int_tp> stride_;
   Blob<int_tp> pad_;
-  Blob<int_tp> kstride_;
+  Blob<int_tp> dilation_;
   Blob<int_tp> size_;
   Blob<int_tp> pooled_size_;
 

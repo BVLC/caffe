@@ -81,7 +81,7 @@ __kernel void TEMPLATE(lrn_compute_diff,Dtype)(const int_tp nthreads,
     __global const Dtype* bottom_off = bottom_data + offset;
     __global const Dtype* top_off = top_data + offset;
     __global const Dtype* scale_off = scale + offset;
-    __global Dtype* top_diff_off = top_diff + offset;
+    __global const Dtype* top_diff_off = top_diff + offset;
     __global Dtype* bottom_diff_off = bottom_diff + offset;
     int_tp head = 0;
     const int_tp pre_pad = size - (size + 1) / 2;

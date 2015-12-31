@@ -20,8 +20,8 @@ __kernel void TEMPLATE(max_pool_forward,Dtype)(
     int_tp wstart = pw * stride_w - pad_w;
     const int_tp hend = min(hstart + kernel_h, height);
     const int_tp wend = min(wstart + kernel_w, width);
-    hstart = max(hstart, 0L);
-    wstart = max(wstart, 0L);
+    hstart = max(hstart, (int_tp)0);
+    wstart = max(wstart, (int_tp)0);
     Dtype maxval = -FLT_MAX;
     int_tp maxidx = -1;
     __global const Dtype* bottom_slice = bottom_data
@@ -61,8 +61,8 @@ __kernel void TEMPLATE(ave_pool_forward,Dtype)(
       int_tp hend = min(hstart + kernel_h, height + pad_h);
       int_tp wend = min(wstart + kernel_w, width + pad_w);
       const int_tp pool_size = (hend - hstart) * (wend - wstart);
-      hstart = max(hstart, 0L);
-      wstart = max(wstart, 0L);
+      hstart = max(hstart, (int_tp)0);
+      wstart = max(wstart, (int_tp)0);
       hend = min(hend, height);
       wend = min(wend, width);
       Dtype aveval = 0;

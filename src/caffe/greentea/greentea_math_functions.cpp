@@ -220,7 +220,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     size_type B_size1 = static_cast<size_type>((TransB == CblasTrans) ? N : K);
     size_type B_size2 = static_cast<size_type>((TransB == CblasTrans) ? K : N);
 
-    viennacl::matrix_base<Dtype, uint_tp, int_tp> matA(A, ctx, A_size1,
+    viennacl::matrix_base<Dtype, size_t, ptrdiff_t> matA(A, ctx, A_size1,
                                                        size_type(0),
                                                        difference_type(1),
                                                        size_type(M), A_size2,
@@ -229,7 +229,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
                                                        size_type(lda)
                                                        VCL_ROW_MAJOR);
 
-    viennacl::matrix_base<Dtype, uint_tp, int_tp> matB(B, ctx, B_size1,
+    viennacl::matrix_base<Dtype, size_t, ptrdiff_t> matB(B, ctx, B_size1,
                                                        size_type(0),
                                                        difference_type(1),
                                                        size_type(K), B_size2,
@@ -238,7 +238,7 @@ void greentea_gpu_gemm(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
                                                        size_type(ldb)
                                                        VCL_ROW_MAJOR);
 
-    viennacl::matrix_base<Dtype, uint_tp, int_tp> matC(C, ctx, size_type(M),
+    viennacl::matrix_base<Dtype, size_t, ptrdiff_t> matC(C, ctx, size_type(M),
                                                        size_type(0),
                                                        difference_type(1),
                                                        size_type(M),
@@ -342,13 +342,13 @@ void greentea_gpu_gemv(const int_tp ctx_id, const CBLAS_TRANSPOSE TransA,
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type difference_type;
 
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(
         x, size_type((TransA == CblasTrans) ? M : N), size_type(offx),
         difference_type(1), ctx);
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v2(
         y, size_type((TransA == CblasTrans) ? N : M), size_type(offy),
         difference_type(1), ctx);
-    viennacl::matrix_base<Dtype, uint_tp, int_tp> mat(A, ctx, size_type(M),
+    viennacl::matrix_base<Dtype, size_t, ptrdiff_t> mat(A, ctx, size_type(M),
                                                       size_type(0),
                                                       difference_type(1),
                                                       size_type(M),
@@ -427,10 +427,10 @@ void greentea_gpu_axpy(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type difference_type;
 
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(N),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(X, size_type(N),
                                                      size_type(offX),
                                                      difference_type(1), ctx);
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(Y, size_type(N),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v2(Y, size_type(N),
                                                      size_type(offY),
                                                      difference_type(1), ctx);
 
@@ -531,7 +531,7 @@ void greentea_gpu_scal(const int_tp ctx_id, const int_tp N, const Dtype alpha,
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type difference_type;
 
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(x, size_type(N),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(x, size_type(N),
                                                      size_type(offx),
                                                      difference_type(1), ctx);
 
@@ -604,10 +604,10 @@ void greentea_gpu_dot(const int_tp ctx_id, const int_tp n, const cl_mem X,
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type difference_type;
 
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(X, size_type(n),
                                                      size_type(offX),
                                                      difference_type(1), ctx);
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(Y, size_type(n),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v2(Y, size_type(n),
                                                      size_type(offY),
                                                      difference_type(1), ctx);
 
@@ -672,7 +672,7 @@ void greentea_gpu_asum(const int_tp ctx_id, const int_tp n, const cl_mem X,
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type difference_type;
 
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(X, size_type(n),
                                                      size_type(offX),
                                                      difference_type(1), ctx);
 
@@ -740,10 +740,10 @@ void greentea_gpu_scale(const int_tp ctx_id, const int_tp n, const Dtype alpha,
     typedef typename viennacl::vector_base<Dtype,
         uint_tp, int_tp>::size_type difference_type;
 
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v1(X, size_type(n),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v1(X, size_type(n),
                                                      size_type(offX),
                                                      difference_type(1), ctx);
-    viennacl::vector_base<Dtype, uint_tp, int_tp> v2(Y, size_type(n),
+    viennacl::vector_base<Dtype, size_t, ptrdiff_t> v2(Y, size_type(n),
                                                      size_type(offY),
                                                      difference_type(1), ctx);
 
