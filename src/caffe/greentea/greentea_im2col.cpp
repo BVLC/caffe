@@ -20,19 +20,19 @@ void greentea_im2col_gpu(viennacl::ocl::program *prog,
                          const int_tp stride_h, const int_tp stride_w,
                          const int_tp dilation_h, const int_tp dilation_w,
                          cl_mem data_col, const int_tp data_col_off) {
-  int_tp ext_kernel_h = (kernel_h - 1) * dilation_h + 1;
-  int_tp ext_kernel_w = (kernel_w - 1) * dilation_w + 1;
-  int_tp height_col = (height + 2 * pad_h - ext_kernel_h) / stride_h + 1;
-  int_tp width_col = (width + 2 * pad_w - ext_kernel_w) / stride_w + 1;
+  int_tp height_col = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1))
+      / stride_h + 1;
+  int_tp width_col = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1))
+      / stride_w + 1;
   int_tp num_kernels = channels * height_col * width_col;
 
   viennacl::ocl::kernel &kernel = prog->get_kernel(CL_KERNEL_SELECT("im2col"));
 
   viennacl::ocl::enqueue(
       kernel(num_kernels, WrapHandle(data_im, ctx), data_offset, height, width,
-             kernel_h, kernel_w, ext_kernel_h, ext_kernel_w, pad_h, pad_w,
-             stride_h, stride_w, dilation_h, dilation_w, height_col, width_col,
-             WrapHandle(data_col, ctx), data_col_off),
+             kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
+             dilation_w, height_col, width_col, WrapHandle(data_col, ctx),
+             data_col_off),
       ctx->get_queue());
 }
 
@@ -77,26 +77,23 @@ void greentea_col2im_gpu(viennacl::ocl::program *prog,
                          viennacl::ocl::context *ctx, const cl_mem data_col,
                          const int_tp data_col_off, const int_tp channels,
                          const int_tp height, const int_tp width,
-                         const int_tp patch_h, const int_tp patch_w,
+                         const int_tp kernel_h, const int_tp kernel_w,
                          const int_tp pad_h, const int_tp pad_w,
                          const int_tp stride_h, const int_tp stride_w,
                          const int_tp dilation_h, const int_tp dilation_w,
                          cl_mem data_im, const int_tp data_offset) {
-  int_tp ext_patch_h = (patch_h - 1) * dilation_h + 1;
-  int_tp ext_patch_w = (patch_w - 1) * dilation_w + 1;
-  int_tp height_col = (height + 2 * pad_h - ext_patch_h) / stride_h + 1;
-  int_tp width_col = (width + 2 * pad_w - ext_patch_w) / stride_w + 1;
+  int_tp height_col = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1))
+      / stride_h + 1;
+  int_tp width_col = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1))
+      / stride_w + 1;
   int_tp num_kernels = channels * height * width;
-
-  viennacl::ocl::kernel &kernel = prog->get_kernel(
-      CL_KERNEL_SELECT("col2im"));
+  viennacl::ocl::kernel &kernel = prog->get_kernel(CL_KERNEL_SELECT("col2im"));
 
   viennacl::ocl::enqueue(
-      kernel(num_kernels, WrapHandle(data_col, ctx), data_col_off,
-          height, width, channels,
-          patch_h, patch_w, ext_patch_h, ext_patch_w,
-          pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
-          height_col, width_col, WrapHandle(data_im, ctx), data_offset),
+      kernel(num_kernels, WrapHandle(data_col, ctx), data_col_off, height,
+             width, channels, kernel_h, kernel_w, pad_h, pad_w, stride_h,
+             stride_w, dilation_h, dilation_w, height_col, width_col,
+             WrapHandle(data_im, ctx), data_offset),
       ctx->get_queue());
 }
 
@@ -202,6 +199,7 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
       kernel(im_size, num_spatial_axes, channel_axis,
              WrapHandle(data_col, ctx), data_col_off,
              WrapHandle(im_shape, ctx),
+             WrapHandle(col_shape, ctx),
              WrapHandle(kernel_shape, ctx), WrapHandle(pad, ctx),
              WrapHandle(stride, ctx), WrapHandle(dilation, ctx),
              WrapHandle(data_im, ctx), data_off),

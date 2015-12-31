@@ -2,7 +2,7 @@
 # Contributions simplifying and improving our build system are welcome!
 
 # 32 bit / 64 bit indexing
-# USE_INDEX_64
+# USE_INDEX_64 := 1
 
 # GreenTea (ViennaCL/OpenCL) backend switch
 

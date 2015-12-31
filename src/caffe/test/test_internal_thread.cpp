@@ -22,13 +22,21 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
 
 class TestThreadA : public InternalThread {
   void InternalThreadEntry() {
-    EXPECT_EQ(10282592414170385089UL, caffe_rng_rand());
+    if (sizeof(uint_tp) == 4) {
+      EXPECT_EQ(2682223724U, caffe_rng_rand());
+    } else {
+      EXPECT_EQ(10282592414170385089UL, caffe_rng_rand());
+    }
   }
 };
 
 class TestThreadB : public InternalThread {
   void InternalThreadEntry() {
-    EXPECT_EQ(10310463406559028313UL, caffe_rng_rand());
+    if (sizeof(uint_tp) == 4) {
+      EXPECT_EQ(887095485U, caffe_rng_rand());
+    } else {
+      EXPECT_EQ(10310463406559028313UL, caffe_rng_rand());
+    }
   }
 };
 

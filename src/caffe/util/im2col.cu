@@ -115,7 +115,7 @@ __global__ void im2col_nd_gpu_kernel(const int_tp n, const Dtype* data_im,
 
   int_tp i;
   CUDA_KERNEL_LOOP(index, n) {
-    // Initialize channel_in, computed in the loop below, with int_tpermediate
+    // Initialize channel_in, computed in the loop below, with intermediate
     // computations used to compute the spatial indices.
     int_tp channel_in = index;
     int_tp channel_out = 1;
@@ -359,12 +359,12 @@ __global__ void col2im_nd_gpu_kernel(const int_tp n, const Dtype* data_col,
   int_tp d_col_start[num_axes];  // NOLINT(runtime/arrays)
   int_tp d_col_end[num_axes];  // NOLINT(runtime/arrays)
 
-  __shared__ int_tp shared_dilation[num_axes];   // NOLINT(runtime/arrays)
-  __shared__ int_tp shared_kernel_shape[num_axes];  // NOLINT(runtime/arrays)
-  __shared__ int_tp shared_pad[num_axes];  // NOLINT(runtime/arrays)
-  __shared__ int_tp shared_stride[num_axes];  // NOLINT(runtime/arrays)
-  __shared__ int_tp shared_col_shape[num_axes + 1];  // NOLINT(runtime/arrays)
-  __shared__ int_tp shared_im_shape[num_axes + 1];  // NOLINT(runtime/arrays)
+  __shared__ int_tp shared_dilation[num_axes];
+  __shared__ int_tp shared_kernel_shape[num_axes];
+  __shared__ int_tp shared_pad[num_axes];
+  __shared__ int_tp shared_stride[num_axes];
+  __shared__ int_tp shared_col_shape[num_axes + 1];
+  __shared__ int_tp shared_im_shape[num_axes + 1];
 
   if (threadIdx.x < num_axes) {
     shared_dilation[threadIdx.x] = dilation[threadIdx.x];
