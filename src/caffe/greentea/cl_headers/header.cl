@@ -17,6 +17,7 @@
 #define Dtype float
 #define barrier(x)
 #define atomic_cmpxchg(x, y, z) x
+#define signbit(x) x
 #define int_tp long
 #define uint_tp unsigned long
 #define int_tpc long

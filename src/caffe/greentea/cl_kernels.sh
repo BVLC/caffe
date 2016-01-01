@@ -43,7 +43,7 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo -n "std::string $CL_KERNEL_NAME = \"" >> $SOURCE
+	echo -n "static std::string $CL_KERNEL_NAME = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
@@ -55,7 +55,7 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo -n "std::string $CL_KERNEL_NAME = \"" >> $SOURCE
+	echo -n "static std::string $CL_KERNEL_NAME = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
@@ -68,7 +68,7 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo -n "std::string ${CL_KERNEL_NAME}_float = \"" >> $SOURCE
+	echo -n "static std::string ${CL_KERNEL_NAME}_float = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done
@@ -80,7 +80,7 @@ do
 	CL_KERNEL_NAME=`echo $CL_KERNEL`
 	CL_KERNEL_NAME="${CL_KERNEL_NAME##*/}"
 	CL_KERNEL_NAME="${CL_KERNEL_NAME%.cl}"
-	echo -n "std::string ${CL_KERNEL_NAME}_double = \"" >> $SOURCE
+	echo -n "static std::string ${CL_KERNEL_NAME}_double = \"" >> $SOURCE
 	echo -n "$CL_KERNEL_STR" | sed -e ':a;N;$!ba;s/\n/\\n/g' | sed -e 's/\"/\\"/g' >> $SOURCE
 	echo "\";  // NOLINT" >> $SOURCE
 done

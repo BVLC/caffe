@@ -41,7 +41,7 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  vector<int> bottom_shape;
+  vector<int_tp> bottom_shape;
   bottom_shape.push_back(2);
   bottom_shape.push_back(3);
   bottom_shape.push_back(10);
@@ -93,7 +93,7 @@ TYPED_TEST(Im2colLayerTest, TestDilatedGradient) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  vector<int> bottom_shape;
+  vector<int_tp> bottom_shape;
   bottom_shape.push_back(2);
   bottom_shape.push_back(3);
   bottom_shape.push_back(10);
@@ -127,7 +127,7 @@ TYPED_TEST(Im2colLayerTest, TestDilatedGradientForceND) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  vector<int> bottom_shape;
+  vector<int_tp> bottom_shape;
   bottom_shape.push_back(2);
   bottom_shape.push_back(3);
   bottom_shape.push_back(10);
