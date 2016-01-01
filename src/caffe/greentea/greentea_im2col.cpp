@@ -191,7 +191,7 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
                             cl_mem im_shape, cl_mem col_shape,
                             cl_mem kernel_shape, cl_mem pad, cl_mem stride,
                             cl_mem dilation, cl_mem data_im,
-                            const int_tp data_off) {
+                            const int_tp data_im_off) {
   viennacl::ocl::kernel &kernel = prog->get_kernel(
       CL_KERNEL_SELECT("col2im_nd"));
 
@@ -202,7 +202,7 @@ void greentea_col2im_nd_gpu(viennacl::ocl::program *prog,
              WrapHandle(col_shape, ctx),
              WrapHandle(kernel_shape, ctx), WrapHandle(pad, ctx),
              WrapHandle(stride, ctx), WrapHandle(dilation, ctx),
-             WrapHandle(data_im, ctx), data_off),
+             WrapHandle(data_im, ctx), data_im_off),
       ctx->get_queue());
 }
 
