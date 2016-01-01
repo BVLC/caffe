@@ -13,6 +13,12 @@
 =======
 >>>>>>> 4b51010... Revised jni interfaces
 
+#ifdef USE_EIGEN
+#include <omp.h>
+#else
+#include <cblas.h>
+#endif
+
 #include "caffe/caffe.hpp"
 #include "caffe_mobile.hpp"
 
@@ -39,6 +45,9 @@ string jstring2string(JNIEnv *env, jstring jstr) {
 
 JNIEXPORT void JNICALL
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7803d98... Add setNumThreads for Eigen/OpenBLAS
 Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setNumThreads(
     JNIEnv *env, jobject thiz, jint numThreads) {
   int num_threads = numThreads;
@@ -50,8 +59,11 @@ Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_setNumThreads(
 }
 
 JNIEXPORT void JNICALL
+<<<<<<< HEAD
 =======
 >>>>>>> 4b51010... Revised jni interfaces
+=======
+>>>>>>> 7803d98... Add setNumThreads for Eigen/OpenBLAS
 Java_com_sh1r0_caffe_1android_1lib_CaffeMobile_enableLog(JNIEnv *env,
                                                          jobject thiz,
                                                          jboolean enabled) {}
