@@ -7,9 +7,9 @@ __kernel void TEMPLATE(bnll_forward,Dtype)(const int_tp n,
                                            __global Dtype* out) {
   for (int_tp index = get_global_id(0); index < n; index += get_global_size(0)) {
     if (in[index] > 0.0f) {
-      out[index] = in[index] + log((Dtype) (1.0f + exp(-in[index])));
+      out[index] = in[index] + log((Dtype) (1.0 + exp(-in[index])));
     } else {
-      out[index] = log((Dtype) (1.0f + exp(in[index])));
+      out[index] = log((Dtype) (1.0 + exp(in[index])));
     }
   }
 }

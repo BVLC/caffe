@@ -137,8 +137,8 @@ __kernel void TEMPLATE(max_pool_backward_nd, Dtype)(const int_tp n,
         d_start[i] =
             (d_idx[i] + pad[i] < kernel_size[i]) ?
                 0 : (d_idx[i] + pad[i] - kernel_size[i]) / stride[i] + 1;
-        d_end[i] = min((int_tpc) ((d_idx[i] + pad[i]) / stride[i] + 1),
-                       (int_tpc) (pooled_size[i]));
+        d_end[i] = min((int_tp) ((d_idx[i] + pad[i]) / stride[i] + 1),
+                       (int_tp) (pooled_size[i]));
       }
       num /= size[i];
       offset *= pooled_size[i];

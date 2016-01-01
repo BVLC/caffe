@@ -650,7 +650,7 @@ TYPED_TEST(ConvolutionLayerTest, TestNDAgainst2D) {
     // Copy pre-generated top diff into actual top diff;
     // do Backward and save result in backward_result_2d.
     ASSERT_EQ(this->blob_top_->shape(), top_diff.shape());
-    caffe_copy(top_diff.count(), top_diff.cpu_data(),
+    caffe_cpu_copy(top_diff.count(), top_diff.cpu_data(),
                this->blob_top_->mutable_cpu_diff());
     layer_2d.Backward(this->blob_top_vec_, propagate_down,
                       this->blob_bottom_vec_);
@@ -681,7 +681,7 @@ TYPED_TEST(ConvolutionLayerTest, TestNDAgainst2D) {
     // Copy pre-generated top diff into actual top diff;
     // do Backward and save result in backward_result_nd.
     ASSERT_EQ(this->blob_top_->shape(), top_diff.shape());
-    caffe_copy(top_diff.count(), top_diff.cpu_data(),
+    caffe_cpu_copy(top_diff.count(), top_diff.cpu_data(),
                this->blob_top_->mutable_cpu_diff());
     layer_nd.Backward(this->blob_top_vec_, propagate_down,
                       this->blob_bottom_vec_);

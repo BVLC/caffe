@@ -29,7 +29,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(num_spatial_axes_, 0);
   vector<int_tp> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
   vector<int_tp> spatial_dim_blob_shape(
-      1, std::max(num_spatial_axes_, (int_tpc) 1));
+      1, std::max(num_spatial_axes_, (int_tp) 1));
   // Setup filter kernel dimensions (kernel_shape_).
   kernel_shape_.Reshape(spatial_dim_blob_shape);
   int_tp* kernel_shape_data = kernel_shape_.mutable_cpu_data();
