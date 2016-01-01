@@ -238,7 +238,7 @@ __kernel void TEMPLATE(ave_pool_backward,Dtype)(const int_tp nthreads,
     const int_tp phend = min(h / stride_h + 1, pooled_height);
     const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;
     const int_tp pwend = min(w / stride_w + 1, pooled_width);
-    Dtype gradient = 0;
+    Dtype gradient = 0.0;
     __global const Dtype* const top_diff_slice = top_diff
         + (n * channels + c) * pooled_height * pooled_width;
     for (int_tp ph = phstart; ph < phend; ++ph) {
@@ -274,7 +274,7 @@ __kernel void TEMPLATE(sto_pool_backward,Dtype)(
     const int_tp phend = min(h / stride_h + 1, pooled_height);
     const int_tp pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;
     const int_tp pwend = min(w / stride_w + 1, pooled_width);
-    Dtype gradient = 0;
+    Dtype gradient = 0.0;
     __global const Dtype* rand_idx_slice = rand_idx
         + (n * channels + c) * pooled_height * pooled_width;
     __global const Dtype* top_diff_slice = top_diff
@@ -282,7 +282,7 @@ __kernel void TEMPLATE(sto_pool_backward,Dtype)(
     for (int_tp ph = phstart; ph < phend; ++ph) {
       for (int_tp pw = pwstart; pw < pwend; ++pw) {
         gradient += top_diff_slice[ph * pooled_width + pw]
-            * (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw]));
+            * (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?0.0:1.0);
       }
     }
     bottom_diff[index] = gradient;
