@@ -49,7 +49,7 @@ endif()
 
 if(USE_ISAAC)
   set(USE_CLBLAS ON)
-endif
+endif()
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
