@@ -77,7 +77,7 @@ if (USE_GREENTEA)
 endif()
 
 # ---[ clBLAS
-if (USE_CLBLAS)
+if (USE_CLBLAS AND NOT USE_ISAAC)
   find_package(clBLAS)
   if (NOT CLBLAS_FOUND)
     message(FATAL_ERROR "clBLAS required but not found.")
@@ -85,6 +85,17 @@ if (USE_CLBLAS)
   include_directories(SYSTEM ${CLBLAS_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${CLBLAS_LIBRARY})
   set(HAVE_CLBLAS TRUE)
+endif()
+
+# ---[ ISAAC
+if (USE_ISAAC)
+  find_package(ISAAC)
+  if (NOT ISAAC_FOUND)
+    message(FATAL_ERROR "ISAAC required but not found.")
+  endif()
+  # include_directories(SYSTEM ${CLBLAS_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${ISAAC_LIBRARY})
+  set(HAVE_ISAAC TRUE)
 endif()
 
 # ---[ OpenCV

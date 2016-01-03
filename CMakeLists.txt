@@ -26,6 +26,7 @@ caffe_option(USE_INDEX_64 "Build Caffe with 64 bit indexing" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" ON)
 caffe_option(USE_GREENTEA "Build Caffe with OpenCL support" ON)
 caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using ViennaClBLAS)" OFF)
+caffe_option(USE_ISAAC "Build Caffe with ISAAC support (instead of using ViennaClBLAS)" OFF)
 caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" OFF)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
@@ -45,6 +46,10 @@ if(CPU_ONLY)
   set(USE_CUDNN OFF)
   set(USE_CLBLAS OFF)
 endif()
+
+if(USE_ISAAC)
+  set(USE_CLBLAS ON)
+endif
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
