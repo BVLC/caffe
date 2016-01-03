@@ -441,6 +441,7 @@ message TransformationParameter {
   optional uint32 num_parts = 31 [default = 14];
   optional uint32 num_total_augs = 32 [default = 82];
   optional string aug_way = 33 [default = "rand"];
+  optional uint32 gray = 34 [default = 0];
 }
 
 

@@ -449,6 +449,10 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   //color, contract
   if(param_.do_clahe())
     clahe(img, clahe_tileSize, clahe_clipLimit);
+  if(param_.gray() == 1){
+    cv::cvtColor(img, img, CV_BGR2GRAY);
+    cv::cvtColor(img, img, CV_GRAY2BGR);
+  }
 
   int offset3 = 3 * offset;
   int offset1 = datum_width;
