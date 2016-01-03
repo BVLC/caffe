@@ -203,6 +203,12 @@ ifeq ($(USE_GREENTEA),1)
 		COMMON_FLAGS += -DUSE_CLBLAS
 	endif
 	
+	# Use ISAAC clBLAS replacement
+	ifeq ($(USE_ISAAC), 1)
+		LIBRARIES += isaac
+		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+	
 	# Requires valid OpenCL library
 	LIBRARY_DIRS += $(CLLIBS)
 	# Requires valid OpenCL headers and valid ViennaCL
