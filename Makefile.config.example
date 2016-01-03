@@ -15,9 +15,11 @@ USE_GREENTEA := 0
 # Folder of the ViennaCL header-only library
 VIENNACL_DIR = ../ViennaCL
 
-# Either set clBLAS to 1 or it will use ViennaclBLAS.
-# CLBLAS should be faster, especially on AMD cards.
-USE_CLBLAS := 0
+# Override BLAS, use clBLAS insead of ViennaclBLAS.
+# USE_CLBLAS := 1
+
+# Override BLAS, use ISAAC instead of ViennaclBLAS.
+# USE_ISAAC := 1
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 # USE_CUDNN := 1
