@@ -49,6 +49,9 @@ protected:
 
     return orig_id;
   }
+  
+  // get a new version of parameters from PS
+  void SyncWithPS();
 
 protected:
   static int64_t conv_id_;
@@ -57,7 +60,7 @@ protected:
   /// id of parameter servers
   vector<int> ps_ids_;
 
-  // mapping the PS ids for quick references
+  // mapping PS ids for quick references
   map<int, int> ps_id_map_;
 
   // clock at each parameter server

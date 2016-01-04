@@ -59,20 +59,14 @@ void PSThread<Dtype>::SendUpdates()
   } else {
     int clock_bound = MinClock() + staleness_;
     
-    int net_updates = 0;
     // update parameters from clients
     for (int i = 0; i < client_msgs_.size(); i++) {
       if (client_msgs_[i] != NULL && client_clocks_[i] <= clock_bound) {
-        ParamHelper<Dtype>::AddDiffFromMsg(ps_solver_->net(), client_msgs_[i]);
+        ParamHelper<Dtype>::CopyParamDiffFromMsg(ps_solver_->net(), client_msgs_[i]);
+        ps_solver_->CommitGradient();
         client_msgs_[i].reset();
-        net_updates++;
+        iter_++;
       }
-    }
-
-    if (net_updates > 0) {
-      ps_solver_->net()->Update();
-      ps_solver_->net()->ClearParamDiffs();
-      iter_++;
     }
 
     // send the parameters to clients

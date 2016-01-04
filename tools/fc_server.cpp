@@ -7,7 +7,6 @@
 using namespace caffe;
 
 DEFINE_int32(fc_threads, 2, "number of threads in fc server");
-DEFINE_string(function, "fc_gateway", "function list: fc_server, fc_gateway, fc_client");
 
 DEFINE_string(ip, "127.0.0.1", "the ip of the id and model server");
 DEFINE_int32(id_port, 1955, "the tcp port of ID server");
@@ -18,19 +17,17 @@ DEFINE_string(request_file, "examples/cifar10/fc.prototxt", "the location of the
 void fc_server_thread()
 {
   LOG(INFO) << "fc node id: " << NodeEnv::Instance()->ID();
-
-  if (FLAGS_function == "fc_gateway") {
+  
+  if (NodeEnv::Instance()->is_fc_gateway()) {
     shared_ptr<FcGateway<float> > fgate(new FcGateway<float>(FLAGS_fc_threads));
 
     fgate->Init();
     fgate->Poll();
-  } else if (FLAGS_function == "fc_client") {
+  } else {
     shared_ptr<FcClient<float> > fclient(new FcClient<float>(FLAGS_fc_threads));
 
     fclient->Init();
     fclient->Poll();
-  } else {
-    LOG(ERROR) << "Unknown function: " << FLAGS_function;
   }
 
   return;

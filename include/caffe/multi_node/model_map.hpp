@@ -34,15 +34,29 @@ public:
     solver_param_.clear_test_iter();
     solver_param_.clear_test_interval();
     
-    Caffe::set_root_solver(true);
-    psolver_ = SolverRegistry<Dtype>::CreateSolver(solver_param_);
-    
     // currently we only deal with the net parameter is specified by a txt path
     CHECK(solver_param_.has_net());
-
     // init the net parameter
     NetParameter net_param;
     ReadNetParamsFromTextFileOrDie(solver_param_.net(), &net_param);
+
+    // TRICK: overlapping communication and computation
+    for (int i = 0; i < net_param.layer_size(); i++) {
+      LayerParameter *player = net_param.mutable_layer(i);
+      const string& layer_type = player->type();
+
+      if (layer_type == "Data" || layer_type == "AsyncData") {
+        int batch_size = player->data_param().batch_size();
+
+        player->mutable_data_param()->set_batch_size(batch_size / NUM_SUB_SOLVERS);
+      }
+    }
+    
+    solver_param_.clear_net();
+    solver_param_.mutable_net_param()->CopyFrom(net_param);
+    
+    Caffe::set_root_solver(true);
+    psolver_ = SolverRegistry<Dtype>::CreateSolver(solver_param_);
 
     //init net parameter
     net_ = psolver_->net();

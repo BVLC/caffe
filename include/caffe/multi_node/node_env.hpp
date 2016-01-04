@@ -86,7 +86,18 @@ public:
     
     return addr;
   }
+  
+  bool is_fc_gateway() {
+    if (!rt_info_.has_gateway_node()) {
+      return false;
+    }
 
+    if (rt_info_.gateway_node().node_id() == node_id_) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   string router_addr() {
     string addr = "tcp://*:";

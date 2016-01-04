@@ -74,6 +74,7 @@ public:
   FcParamThread() {
     train_iter_ = 0;
     test_node_id_ = -1;
+    sub_updates_ = 0;
   }
 
   virtual void Run();
@@ -92,6 +93,9 @@ protected:
 protected:
   int train_iter_;
   int test_node_id_;
+
+  // number of updates from sub solvers
+  int sub_updates_;
 
 DISABLE_COPY_AND_ASSIGN(FcParamThread);
 };

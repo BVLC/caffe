@@ -36,6 +36,7 @@ public:
 
     for (int i = 0; i < nthreads; i++) {
       sockp_arr_.push_back(shared_ptr<SkSock>(new SkSock(ZMQ_PAIR)));
+      prior_socks_.push_back(shared_ptr<SkSock>(new SkSock(ZMQ_PAIR)));
     }
 
     //no poll items in the begining
@@ -72,7 +73,12 @@ protected:
 
   // enqueue a message to a worker thread
   void Enqueue(int thrd_id, shared_ptr<Msg> m) {
-    sockp_arr_[thrd_id]->SendMsg(m);
+    // prioritize processing of backward messages
+    if (m->type() == BACKWARD) {
+      prior_socks_[thrd_id]->SendMsg(m);
+    } else {
+      sockp_arr_[thrd_id]->SendMsg(m);
+    }
     threads_[thrd_id]->Enqueue();
   }
 
@@ -85,6 +91,9 @@ protected:
 
   // pair sockets to communicate with the work threads
   vector<shared_ptr<SkSock> > sockp_arr_;
+  
+  // send packets to worker with priority
+  vector<shared_ptr<SkSock> > prior_socks_;
 
   // for message polling
   zmq_pollitem_t *poll_items_;

@@ -21,6 +21,10 @@ const int REQ_SERVER_ID = 2;
 const int ROOT_THREAD_ID = 1;
 const int INVALID_ID = -1;
 
+/// overlapping computation and communication 
+/// by splitting the solver into sub-solvers
+const int NUM_SUB_SOLVERS = 1;
+
 using boost::shared_ptr;
 
 namespace caffe {

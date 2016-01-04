@@ -81,7 +81,7 @@ void FcThread<Dtype>::FcBackward(shared_ptr<Msg> m, vector<shared_ptr<Msg> >& re
     ParamHelper<Dtype>::CopyInputDiffToMsg(fc_net, r);
   }
   
-  pfc->UpdateDiff();
+  // pfc->UpdateDiff();
   
   //notify the param thread
   shared_ptr<Msg> notify(new Msg(m));
@@ -183,9 +183,19 @@ void FcParamThread<Dtype>::UpdateParam(shared_ptr<Msg> m)
   }
   #endif
   
-  proot->net()->ClearParamDiffs();
-  ParamHelper<Dtype>::AddDiffFromNet(proot->net(), psolver->net());
-  proot->net()->Update();
+  if (sub_updates_ == 0) {
+    ParamHelper<Dtype>::CopyDiffFromNet(proot->net(), psolver->net());
+  } else {
+    ParamHelper<Dtype>::AddDiffFromNet(proot->net(), psolver->net());
+  }
+  
+  sub_updates_++;
+  
+  if (sub_updates_ >= NUM_SUB_SOLVERS) {
+    proot->CommitGradient();
+    sub_updates_ = 0;
+  }
+  
   NodeEnv::Instance()->DeleteSolver(m->msg_id());
   NodeEnv::Instance()->PushFreeSolver(psolver);
   train_iter_++;

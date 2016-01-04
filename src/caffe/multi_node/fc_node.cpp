@@ -263,8 +263,6 @@ int FcClient<Dtype>::RouteMsg()
   for (int i = 0; i < vec_sub_sock_.size(); i++, poll_index++) {
     if (this->poll_items_[poll_index].revents & ZMQ_POLLIN) {
       shared_ptr<Msg> m = vec_sub_sock_[i]->RecvMsg(true);
-      
-      LOG(INFO) << "sub received msg id: " << m->msg_id();
 
       this->PrepareInputData(m);
     }

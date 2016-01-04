@@ -48,6 +48,18 @@ public:
       caffe_axpy<Dtype>(src_params[i]->count(), 1.0, src_params[i]->cpu_diff(), dst_params[i]->mutable_cpu_diff());
     }
   }
+  
+  static void CopyDiffFromNet(const shared_ptr<Net<Dtype> > dst_net, const shared_ptr<Net<Dtype> > src_net) {
+    const vector<Blob<Dtype>*>& src_params = src_net->learnable_params();
+    const vector<Blob<Dtype>*>& dst_params = dst_net->learnable_params();
+
+    CHECK_EQ(src_params.size(), dst_params.size());
+
+    for (int i = 0; i < src_params.size(); i++) {
+      CHECK_EQ(src_params[i]->count(), dst_params[i]->count());
+      memcpy(dst_params[i]->mutable_cpu_diff(), src_params[i]->cpu_diff(), dst_params[i]->count() * sizeof(Dtype));
+    }
+  }
 
   static void AddDiffFromMsg(const shared_ptr<Net<Dtype> > dst_net, shared_ptr<Msg> m) {
     for (int i = 0; i < m->num_blobs(); i++) {

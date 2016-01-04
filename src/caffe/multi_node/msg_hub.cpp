@@ -12,10 +12,15 @@ int MsgHub<Dtype>::StartThreads()
     sk_addr += "_";
     sk_addr += boost::lexical_cast<string>(i);
     
+    string prior_addr = sk_addr + "_prior";
+
     sockp_arr_[i]->Bind(sk_addr);
+    prior_socks_[i]->Bind(prior_addr);
     
     threads_[i]->SetWorkerId(i);
-    threads_[i]->SetAddr(sk_addr);
+    threads_[i]->SetClientAddr(sk_addr);
+    threads_[i]->SetPriorAddr(prior_addr);
+
     threads_[i]->StartInternalThread();
   }
 
