@@ -8,7 +8,6 @@
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/layers/neuron_layer.hpp"
-#include "caffe/layers/relu_layer_impl.hpp"
 
 namespace caffe {
 
@@ -18,10 +17,6 @@ namespace caffe {
  */
 template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
-  // Private code generators.
-  ReLUCodeGeneratorForward<Dtype> Forward_code_generator;
-  ReLUCodeGeneratorBackward<Dtype> Backward_code_generator;
-
  public:
   /**
    * @param param provides ReLUParameter relu_param,

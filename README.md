@@ -22,22 +22,23 @@ Framework development discussions and thorough bug reports are collected on [Iss
 
 Happy brewing!
 
-# Intel Caffe (OpenMP branch)
+# Intel Caffe
+This fork is dedicated to improving Caffe performance when running on CPU (in particular Xeon servers)
 
 ## Performance Results :
-Time measures are: average Forward-Backward as stated by *caffe time*. *speedup* is (master branch measure / openmp-conv-relu branch measure)
+Time measures are: average Forward-Backward as stated by *caffe time*. *speedup* is (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
 
 #### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (MKL 11.3, GCC 4.8.3):
-Branch | googlenet(speedup: 5.5) | caffenet (speedup: 5.9) | alexnet(speedup: 5.5) | ciphar10-sigmoid-bn(speedup: 7.5) 
+Branch | googlenet(speedup: 6.5) | caffenet (speedup: 6.4) | alexnet(speedup: 6.2) | cifar10-sigmoid-bn(speedup: 9.5) 
 ----------|-----------------------|-------------------------------|-----------------------------|---------------------
-openmp (using OMP_NUM_THREADS=36)| 813ms|1369ms|1547ms|43ms
-master |4438ms                    |8164ms|8644ms |323ms
+intelcaffe-master |682ms|1276ms|1387ms|34ms
+bvlc-caffe-master |4438ms|8164ms|8644ms |323ms
 
 #### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (OpenBLAS 0.2.14, GCC 4.8.3):
-Branch | googlenet(speedup: 2.4) | caffenet (speedup: 3.7) | alexnet(speedup: 1.1)| ciphar10-sigmoid-bn(speedup: 6.6) 
+Branch | googlenet(speedup: 17.0) | caffenet (speedup: 8.7) | alexnet(speedup: 15.4)| ciphar10-sigmoid-bn(speedup: 8.4) 
 ----------|-----------------------|-------------------------------|----------|-------------------
-openmp (using OMP_NUM_THREADS=36)| 7033ms|7076ms |57980ms|81ms  
-master |16848ms 	|26130ms 	|62091ms|538ms
+intelcaffe-openmp |1169ms|3088ms|4628ms|63ms  
+bvlc-caffe-master |19767|26993ms|71152ms|529ms
 
 So there is significant speedup, that depends on how many CPU cores the platform does have. Tests were made using MKL(it is available free of charge now) and OpenBLAS.
 
@@ -48,14 +49,13 @@ OS kernel for running two OpenMP threads on the same phyisical core (eg. using H
 ### Building:
 Build as usual, either from makefile or cmake. Both build systems will detect if openmp is available for compiler of your choice and use it
 
-
 ### Running:
 It is best NOT to use Hyperthreading . So either disable it in BIOS or limit OpenMP threads number by using OMP_NUM_THREADS env variable. If not sure how to set OMP_NUM_THREADS  and you cannot disable HT in BIOS, then do not do it, you should still observe performance gain , but not that
 significant as when not relying on HT.
 
 ##### Example of running:
 ###### Intel(R) Xeon(R) E5-2699 v3 @ 2.30GHz, two sockets, 18 cpu cores in each socket
-*OMP_NUM_THREADS=36 ./build/tools/caffe time -iterations 20  --model=models/bvlc_googlenet/train_val.prototxt*  
+* GOMP_CPU_AFFINITY="0-35" OMP_PROC_BIND=false OMP_NUM_THREADS=36 ./build/tools/caffe time -iterations 50  --model=models/bvlc_googlenet/train_val.prototxt*  
 
 ##### Notes:
 To check if you have HT enabled:

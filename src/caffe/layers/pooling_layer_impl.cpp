@@ -2,35 +2,29 @@
 
 #include "caffe/layers/pooling_layer.hpp"
 
-namespace caffe
-{
+namespace caffe {
 using std::min;
 using std::max;
 
 template <typename Dtype>
-PoolingCodeGeneratorForward<Dtype>::PoolingCodeGeneratorForward() 
+PoolingCodeGeneratorForward<Dtype>::PoolingCodeGeneratorForward()
 {
-  Callback = NULL; 
+  Callback = NULL;
 }
 
 template <typename Dtype>
-PoolingCodeGeneratorForward<Dtype>::~PoolingCodeGeneratorForward() 
-{
-}
+PoolingCodeGeneratorForward<Dtype>::~PoolingCodeGeneratorForward() {}
 
 template <typename Dtype>
 typename PoolingCodeGeneratorForward<Dtype>::Callback_t* PoolingCodeGeneratorForward<Dtype>::Get_callback(
   PoolingLayer<Dtype>* layer, 
   Blob<Dtype>* top, 
-  bool use_top_mask) 
-{
+  bool use_top_mask) {
   // Wrapper for lazy initialization.
   // Also check if top shape din't change.
   // TODO: do we need to check all blobs' shapes?
   // In future we may add cache for all already found options. 
   // Currently there is only one code for last used shape.
-  #pragma omp critical 
-  {
   if(Callback == NULL || 
      top->shape() != Layer_output_shape_signature || 
      Use_top_mask != use_top_mask ||
@@ -41,11 +35,10 @@ typename PoolingCodeGeneratorForward<Dtype>::Callback_t* PoolingCodeGeneratorFor
     Layer_output_shape_signature = top->shape();
     Create_callback(layer);
   }
-  }
   return Callback;
 }
 
-// Implementation of CodeGenerator classes for ReLU.
+// Implementation of CodeGenerator classes for Pooling.
 template <typename Dtype>
 void PoolingCodeGeneratorForward<Dtype>::Naive(
   const Dtype* bottom_data, 
@@ -53,11 +46,12 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
   int top_count,
   int batch_start,
   int batch_end,
-  Dtype* top_mask,
+  void* mask_ptr,
   PoolingLayer<Dtype>* layer,
   bool use_top_mask)
 {
   int* mask = NULL;  // suppress warnings about uninitalized variables
+  Dtype* top_mask = static_cast<Dtype*>(mask_ptr);
 
   int pooled_fm_size = layer->pooled_height_ * layer->pooled_width_;
   int fm_size = layer->height_ * layer->width_;
@@ -67,8 +61,9 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
   switch (layer->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // Initialize
-    if (!use_top_mask) 
-      mask = layer->max_idx_.mutable_cpu_data();
+    if (!use_top_mask) {
+      mask = static_cast<int*>(mask_ptr);
+    }
 
     bottom_data += fm_size*layer->channels_*batch_start;
     top_data += pooled_fm_size*layer->channels_*batch_start;
@@ -167,8 +162,7 @@ void PoolingCodeGeneratorForward<Dtype>::Create_callback(PoolingLayer<Dtype>* la
   Callback = Naive;
 }
 
-//#if defined __x86_64__ || defined _M_X64
-#if 0
+#if defined __x86_64__ || defined _M_X64
 // Here we have specialized versions for supported formats in x64 architectures.
 template <>
 void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* layer)
@@ -200,7 +194,6 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
         : reinterpret_cast<int64_t>(layer->max_idx_.cpu_data());
 
     bool optimal_version = false;
-    bool more_optimal_version = false;
 
     if(layer->pad_h_ == 0 &&
        layer->pad_w_ == 0 &&
@@ -668,13 +661,10 @@ typename PoolingCodeGeneratorBackward<Dtype>::Callback_t* PoolingCodeGeneratorBa
   // TODO: do we need to check all blobs' shapes?
   // In future we may add cache for all already found options. 
   // Currently there is only one code for last used shape.
-  #pragma omp critical //TODO: uncomment me
-  {
   if(Callback == NULL || top->shape() != layer_output_shape_signature)
   {
     layer_output_shape_signature = top->shape();
     Create_callback(layer);
-  }
   }
 
   return Callback;
@@ -687,10 +677,11 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
   int batch_start,
   int batch_end,
   bool use_top_mask,
-  const Dtype* top_mask,
+  const void* mask_ptr,
   PoolingLayer<Dtype>* layer)
 {
   const int* mask = NULL;  // suppress warnings about uninitialized variables
+  const Dtype* top_mask = static_cast<const Dtype*>(mask_ptr);
 
   int pooled_fm_size = layer->pooled_height_ * layer->pooled_width_;
   int fm_size = layer->height_ * layer->width_;
@@ -699,7 +690,7 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
     if (!use_top_mask) {
-      mask = layer->max_idx_.cpu_data();
+      mask = static_cast<const int*>(mask_ptr);
     }
     bottom_diff += fm_size*layer->channels_*batch_start;
     top_diff += pooled_fm_size*layer->channels_*batch_start;

@@ -1,8 +1,8 @@
 #ifndef CAFFE_CODE_GENERATORS_POOLING_H_
 #define CAFFE_CODE_GENERATORS_POOLING_H_
 
-#include "caffe/proto/caffe.pb.h"
 #include <vector>
+#include "caffe/proto/caffe.pb.h"
 
 #if defined __x86_64__ || defined _M_X64
 # define XBYAK_NO_OP_NAMES
@@ -10,8 +10,7 @@
 # include "../xbyak/xbyak_util.h"
 #endif
 
-namespace caffe
-{
+namespace caffe {
 // Declarations of CodeGenerator classes.
 
 template <typename Dtype>
@@ -21,31 +20,31 @@ template <typename Dtype>
 class Blob;
 
 template <typename Dtype>
-class PoolingCodeGeneratorForward 
+class PoolingCodeGeneratorForward
 #if defined __x86_64__ || defined _M_X64
   : public ::Xbyak::CodeGenerator
 #endif
 {
-public:
+ public:
   PoolingCodeGeneratorForward();
   ~PoolingCodeGeneratorForward();
 
   typedef void (Callback_t)(
-    const Dtype* bottom_data, 
-    Dtype* top_data, 
+    const Dtype* bottom_data,
+    Dtype* top_data,
     int top_count,
     int batch_start,
     int batch_end,
-    Dtype* top_mask,
+    void* mask,
     PoolingLayer<Dtype>* layer,
     bool use_top_mask);
 
   Callback_t* Get_callback(
-    PoolingLayer<Dtype>* layer, 
-    Blob<Dtype>* top, 
+    PoolingLayer<Dtype>* layer,
+    Blob<Dtype>* top,
     bool use_top_mask);
 
-private:
+ private:
   void Create_callback(PoolingLayer<Dtype>* layer);
 
   static Callback_t Naive;
@@ -61,28 +60,28 @@ class PoolingCodeGeneratorBackward
   : public ::Xbyak::CodeGenerator
 #endif
 {
-public:
+ public:
   PoolingCodeGeneratorBackward();
   ~PoolingCodeGeneratorBackward();
 
   typedef void (Callback_t)(
-    const Dtype* top_diff, 
-    Dtype* bottom_diff, 
+    const Dtype* top_diff,
+    Dtype* bottom_diff,
     int batch_start,
     int batch_end,
     bool use_top_mask,
-    const Dtype* top_mask,
+    const void* mask,
     PoolingLayer<Dtype>* layer);
 
   Callback_t* Get_callback(PoolingLayer<Dtype>* layer, Blob<Dtype>* top);
 
-private:
+ private:
   void Create_callback(PoolingLayer<Dtype>* layer);
 
   static Callback_t Naive;
   Callback_t* Callback;
   std::vector<int> layer_output_shape_signature;
 };
-}
+}  // namespace caffe
 
-#endif // CAFFE_CODE_GENERATORS_POOLING_H_
+#endif  // CAFFE_CODE_GENERATORS_POOLING_H_
