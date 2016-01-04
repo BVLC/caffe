@@ -4,7 +4,7 @@
 
 #include <cudnn.h>
 
-
+#include <algorithm>
 #include <vector>
 
 #include "caffe/common.hpp"
@@ -76,19 +76,28 @@ inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
     const int_tp total_dims,
     const int_tp* shape, const int_tp* stride) {
 
-  std::vector<int> shape_int(total_dims);
-  std::vector<int> stride_int(total_dims);
+  // Pad to at least 4 dimensions
+  int_tp cudnn_dims = std::max(total_dims, (int_tp)4);
+  int_tp padding = std::max((int_tp)0, cudnn_dims - total_dims);
 
-  for (int_tp i = 0; i < total_dims; ++i) {
-    shape_int[i] = shape[i];
-    stride_int[i] = stride[i];
+  std::vector<int> shape_int(cudnn_dims);
+  std::vector<int> stride_int(cudnn_dims);
+
+  for (int_tp i = cudnn_dims - 1; i >= 0; --i) {
+    if (i < padding) {
+      shape_int[i] = 1;
+      stride_int[i] = shape_int[i + 1] * stride_int[i + 1];
+    } else {
+      shape_int[i] = shape[i - padding];
+      stride_int[i] = stride[i - padding];
+    }
   }
 
   const int* shape_ptr = &shape_int[0];
   const int* stride_ptr = &stride_int[0];
 
   CUDNN_CHECK(
-      cudnnSetTensorNdDescriptor(*desc, dataType<Dtype>::type, total_dims,
+      cudnnSetTensorNdDescriptor(*desc, dataType<Dtype>::type, cudnn_dims,
                                  shape_ptr, stride_ptr));
 }
 
