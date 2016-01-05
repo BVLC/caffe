@@ -14,6 +14,8 @@
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "dnn.hpp"
+
 namespace caffe {
 
 /**
@@ -174,6 +176,58 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual inline bool reverse_dimensions() { return false; }
   virtual void compute_output_shape();
+};
+
+template <typename Dtype>
+class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
+ public:
+  explicit DnnConvolutionLayer(const LayerParameter& param);
+
+  virtual inline const char* type() const { return "DnnConvolution"; }
+  virtual ~DnnConvolutionLayer();
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  // Customized methods
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void compute_output_shape();
+
+ private:
+/* Fwd step */
+     dnnPrimitive_t convolutionFwd;
+     dnnLayout_t l_fwd_top_data_int, l_fwd_bottom_data_int, l_fwd_filter_data_int, l_fwd_bias_data_int;
+     dnnLayout_t l_fwd_top_data_usr, l_fwd_bottom_data_usr, l_fwd_filter_data_usr, l_fwd_bias_data_usr;
+     Dtype  *fwd_top_data_int, *fwd_bottom_data_int, *fwd_filter_data_int, *fwd_bias_data_int;
+     dnnPrimitive_t  convertFwd_top, convertFwd_bottom, convertFwd_filter, convertFwd_bias;
+
+/* Bwd data step */
+     dnnPrimitive_t convolutionBwdData;
+     dnnLayout_t l_bwdd_top_diff_int, l_bwdd_bottom_diff_int, l_bwdd_filter_data_int;
+     dnnLayout_t l_bwdd_top_diff_usr, l_bwdd_bottom_diff_usr, l_bwdd_filter_data_usr;
+     Dtype *bwdd_top_diff_int, *bwdd_bottom_diff_int, *bwdd_filter_data_int;
+     dnnPrimitive_t  convertBwdData_top, convertBwdData_bottom, convertBwdData_filter;
+
+/* Bwd filter step */
+     dnnPrimitive_t convolutionBwdFilter;
+     dnnLayout_t l_bwdf_top_diff_int, l_bwdf_bottom_data_int, l_bwdf_filter_diff_int;
+     dnnLayout_t l_bwdf_top_diff_usr, l_bwdf_bottom_data_usr, l_bwdf_filter_diff_usr;
+     Dtype *bwdf_top_diff_int, *bwdf_bottom_data_int, *bwdf_filter_diff_int;
+     dnnPrimitive_t  convertBwdFilter_top, convertBwdFilter_bottom, convertBwdFilter_filter;
+
+/* Bwd bias step */
+     dnnPrimitive_t convolutionBwdBias;
+     dnnLayout_t l_bwdb_top_diff_int, l_bwdb_bias_diff_int;
+     dnnLayout_t l_bwdb_top_diff_usr, l_bwdb_bias_diff_usr;
+     Dtype *bwdb_top_diff_int, *bwdb_bias_diff_int;
+     dnnPrimitive_t  convertBwdBias_top, convertBwdBias_bias;
 };
 
 /**
@@ -373,6 +427,62 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
+/**
+ * @brief Normalize the input in a local region across feature maps.
+ */
+
+template <typename Dtype>
+class DnnLRNLayer : public Layer<Dtype> {
+ public:
+  explicit DnnLRNLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~DnnLRNLayer();
+
+  virtual inline const char* type() const { return "DnnLRN"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  virtual void CrossChannelForward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void CrossChannelBackward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  virtual void CrossChannelForward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+      
+  int size_;
+  int pre_pad_;
+  Dtype alpha_;
+  Dtype beta_;
+  Dtype k_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
+
+  // Fields used for normalization ACROSS_CHANNELS
+  // scale_ stores the intermediate summing results
+private:
+  dnnPrimitive_t lrnFwd, lrnBwd;
+  Dtype *lrn_buffer_;
+};
 
 /**
  * @brief Pools the input image by taking the max, average, etc. within regions.
@@ -418,6 +528,58 @@ class PoolingLayer : public Layer<Dtype> {
   bool global_pooling_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
+};
+
+template <typename Dtype>
+class DnnPoolingLayer : public Layer<Dtype> {
+ public:
+  explicit DnnPoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  ~DnnPoolingLayer();
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "DnnPooling"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  // MAX POOL layers can output an extra top blob for the mask;
+  // others can only output the pooled inputs.
+  virtual inline int MaxTopBlobs() const {
+    return (this->layer_param_.pooling_param().pool() ==
+            PoolingParameter_PoolMethod_MAX) ? 2 : 1;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
+  int pad_h_, pad_w_;
+  int channels_;
+  int height_, width_;
+  int pooled_height_, pooled_width_;
+  bool global_pooling_;
+  Blob<Dtype> rand_idx_;
+  Blob<size_t> max_idx_;
+ private:
+  dnnPrimitive_t poolingFwd, poolingBwd;
+  dnnPrimitive_t convertFwd_top, convertBwd_top;
+  dnnLayout_t l_fwd_top_data_int;
+  dnnLayout_t l_fwd_top_data_usr;
+  dnnLayout_t l_bwd_top_diff_int;
+  dnnLayout_t l_bwd_top_diff_usr;
+  Dtype*fwd_top_data_int;
+  Dtype*bwd_top_diff_int;
+  Dtype *pool_buffer_;
 };
 
 #ifdef USE_CUDNN

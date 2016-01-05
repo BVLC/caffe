@@ -10,6 +10,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "dnn.hpp"
+
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
 
@@ -473,6 +475,39 @@ class ReLULayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
+template <typename Dtype>
+class DnnReLULayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides ReLUParameter relu_param,
+   *     with ReLULayer options:
+   *   - negative_slope (\b optional, default 0).
+   *     the value @f$ \nu @f$ by which negative values are multiplied.
+   */
+  explicit DnnReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  ~DnnReLULayer();
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "DnnReLU"; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+ private:
+    dnnPrimitive_t reluFwd, reluBwd;
 };
 
 #ifdef USE_CUDNN

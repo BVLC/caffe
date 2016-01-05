@@ -21,10 +21,15 @@ SyncedMemory::~SyncedMemory() {
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
-    CaffeMallocHost(&cpu_ptr_, size_);
-    caffe_memset(size_, 0, cpu_ptr_);
-    head_ = HEAD_AT_CPU;
-    own_cpu_data_ = true;
+#pragma omp critical
+    {
+      if (head_ == UNINITIALIZED) {
+        CaffeMallocHost(&cpu_ptr_, size_);
+        caffe_memset(size_, 0, cpu_ptr_);
+        head_ = HEAD_AT_CPU;
+        own_cpu_data_ = true;
+      }
+    }
     break;
   case HEAD_AT_GPU:
 #ifndef CPU_ONLY
@@ -75,12 +80,15 @@ const void* SyncedMemory::cpu_data() {
 
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
+#pragma omp critical
+  {
   if (own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_);
   }
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
+  }
 }
 
 const void* SyncedMemory::gpu_data() {

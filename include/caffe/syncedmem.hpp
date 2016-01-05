@@ -23,12 +23,20 @@ namespace caffe {
 // does not seem to create a memory bottleneck here.
 
 inline void CaffeMallocHost(void** ptr, size_t size) {
-  *ptr = malloc(size);
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+  *ptr = _mm_malloc(size, 2*1024*1024); 
+#else
+  *ptr = aligned_alloc(2*1024*1024, size);
+#endif
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
 inline void CaffeFreeHost(void* ptr) {
+#if defined(__ICC) || defined(__INTEL_COMPILER)
+  _mm_free(ptr);
+#else
   free(ptr);
+#endif
 }
 
 

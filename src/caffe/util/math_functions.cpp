@@ -55,18 +55,27 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
-  if (alpha == 0) {
-    memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+  if (0 && alpha == 0) {
+    int block = 256*1024/sizeof(Dtype), remainder = N%block;
+#pragma omp parallel for
+    for (int i = 0; i <= N-block; i += block)
+        memset(Y+i, 0, sizeof(Dtype) * block);  // NOLINT(caffe/alt_fn)
+    if (remainder != 0)
+        memset(Y+N-remainder, 0, sizeof(Dtype) * remainder);
     return;
   }
+#pragma omp parallel for
+#pragma simd
   for (int i = 0; i < N; ++i) {
     Y[i] = alpha;
   }
 }
 
+template void caffe_set<char>(const int N, const char alpha, char* Y);
 template void caffe_set<int>(const int N, const int alpha, int* Y);
 template void caffe_set<float>(const int N, const float alpha, float* Y);
 template void caffe_set<double>(const int N, const double alpha, double* Y);
+template void caffe_set<size_t>(const int N, const size_t alpha, size_t* Y);
 
 template <>
 void caffe_add_scalar(const int N, const float alpha, float* Y) {
@@ -103,6 +112,7 @@ template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
 template void caffe_copy<float>(const int N, const float* X, float* Y);
 template void caffe_copy<double>(const int N, const double* X, double* Y);
+template void caffe_copy<size_t>(const int N, const size_t* X, size_t* Y);
 
 template <>
 void caffe_scal<float>(const int N, const float alpha, float *X) {
@@ -112,6 +122,10 @@ void caffe_scal<float>(const int N, const float alpha, float *X) {
 template <>
 void caffe_scal<double>(const int N, const double alpha, double *X) {
   cblas_dscal(N, alpha, X, 1);
+}
+
+template <>
+void caffe_scal<size_t>(const int N, const size_t alpha, size_t *X) {  
 }
 
 template <>
@@ -125,6 +139,10 @@ void caffe_cpu_axpby<double>(const int N, const double alpha, const double* X,
                              const double beta, double* Y) {
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
+
+template <>
+void caffe_axpy<size_t>(const int N, const size_t alpha, const size_t* X,
+    size_t* Y) { }
 
 template <>
 void caffe_add<float>(const int n, const float* a, const float* b,
@@ -337,6 +355,12 @@ double caffe_cpu_strided_dot<double>(const int n, const double* x,
   return cblas_ddot(n, x, incx, y, incy);
 }
 
+template <>
+size_t caffe_cpu_strided_dot<size_t>(const int n, const size_t* x, const int incx,
+    const size_t* y, const int incy) {
+  return 0;
+}
+
 template <typename Dtype>
 Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y) {
   return caffe_cpu_strided_dot(n, x, 1, y, 1);
@@ -347,6 +371,9 @@ float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
 
 template
 double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
+
+template
+size_t caffe_cpu_dot<size_t>(const int n, const size_t* x, const size_t* y);
 
 template <>
 int caffe_cpu_hamming_distance<float>(const int n, const float* x,
@@ -378,6 +405,11 @@ float caffe_cpu_asum<float>(const int n, const float* x) {
 template <>
 double caffe_cpu_asum<double>(const int n, const double* x) {
   return cblas_dasum(n, x, 1);
+}
+
+template <>
+size_t caffe_cpu_asum<size_t>(const int n, const size_t* x) {
+  return 0;
 }
 
 template <>

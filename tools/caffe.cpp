@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include <algorithm>
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
 
@@ -242,10 +242,10 @@ int time() {
   Timer forward_timer;
   Timer backward_timer;
   Timer timer;
-  std::vector<double> forward_time_per_layer(layers.size(), 0.0);
-  std::vector<double> backward_time_per_layer(layers.size(), 0.0);
-  double forward_time = 0.0;
-  double backward_time = 0.0;
+  std::vector<float> forward_time_per_layer(layers.size(), 1e37);
+  std::vector<float> backward_time_per_layer(layers.size(), 1e37);
+  float forward_time = 0;
+  float backward_time = 0;
   for (int j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
     iter_timer.Start();
@@ -253,7 +253,7 @@ int time() {
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-      forward_time_per_layer[i] += timer.MicroSeconds();
+      forward_time_per_layer[i] = std::min(forward_time_per_layer[i],timer.MicroSeconds());
     }
     forward_time += forward_timer.MicroSeconds();
     backward_timer.Start();
@@ -261,21 +261,21 @@ int time() {
       timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
-      backward_time_per_layer[i] += timer.MicroSeconds();
+      backward_time_per_layer[i] = std::min(backward_time_per_layer[i], timer.MicroSeconds());
     }
     backward_time += backward_timer.MicroSeconds();
     LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
       << iter_timer.MilliSeconds() << " ms.";
   }
-  LOG(INFO) << "Average time per layer: ";
+  LOG(INFO) << "Min time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
-      "\tforward: " << forward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
+      "\tforward:  " << forward_time_per_layer[i] / 1000 /
+      (1 + 0*FLAGS_iterations) << " ms.";
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
+      (1+0*FLAGS_iterations) << " ms.";
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /

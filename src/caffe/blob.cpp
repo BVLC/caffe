@@ -489,6 +489,7 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
 
 INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
+template class Blob<size_t>;
 template class Blob<unsigned int>;
 
 }  // namespace caffe
