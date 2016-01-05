@@ -7,7 +7,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/loss_layers.hpp"
+#include "caffe/layers/contrastive_loss_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -77,7 +77,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
     if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
       loss += dist_sq;
     } else {
-      Dtype dist = std::max(margin - sqrt(dist_sq), 0.0);
+      Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq), 0.0);
       loss += dist*dist;
     }
   }

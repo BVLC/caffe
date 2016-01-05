@@ -7,6 +7,9 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#define CUDNN_VERSION_MIN(major, minor, patch) \
+    (CUDNN_VERSION >= (major * 1000 + minor * 100 + patch))
+
 #define CUDNN_CHECK(condition) \
   do { \
     cudnnStatus_t status = condition; \
