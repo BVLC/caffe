@@ -29,7 +29,7 @@ int ConvClient<Dtype>::Init()
   vector<int> ps_clocks;
   ps_clocks.resize(ps_num_);
   
-  // init parameters from parameter server
+  // register node to parameter server
   for (int i = 0; i < ps_num_; i++) {
     shared_ptr<Msg> ps_msg(new Msg());
     ps_msg->set_type(REGISTER_NODE);
@@ -40,10 +40,11 @@ int ConvClient<Dtype>::Init()
     ps_msg->AppendData(&i, sizeof(i));
 
     ps_clients_[i]->SendMsg(ps_msg);
-    
+  }
+
+  for (int i = 0; i < ps_num_; i++) {
     LOG(INFO) << "waiting for parameter server : " << ps_addrs_[i];
     shared_ptr<Msg> m = ps_clients_[i]->RecvMsg(true);
-    LOG(INFO) << "got response.";
     
     // copy initial clock and parameter
     ps_clocks[i] = m->clock();
