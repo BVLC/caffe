@@ -484,7 +484,8 @@ cdef class ApolloNet:
                         else:
                             print 'WARNING: %s was ignored due to shape mismatch' % name
                     else:
-                        print 'WARNING: %s could not be loaded' % name
+                        pass
+                        # print 'WARNING: %s could not be loaded' % name
         elif extension == '.caffemodel':
             self.thisptr.CopyTrainedLayersFrom(filename)
         else:
