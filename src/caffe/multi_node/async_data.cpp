@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
+#include "caffe/data_transformer.hpp"
+#include "caffe/layers/data_layer.hpp"
 #include "caffe/common.hpp"
-#include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/proto/caffe.pb.h"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"

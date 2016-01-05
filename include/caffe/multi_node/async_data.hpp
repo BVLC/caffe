@@ -11,7 +11,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/data_layers.hpp"
+#include "caffe/layers/data_layer.hpp"
 
 #include "caffe/multi_node/async_reader.hpp"
 
