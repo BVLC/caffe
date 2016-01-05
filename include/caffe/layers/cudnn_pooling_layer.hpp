@@ -36,6 +36,54 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+
+
+  bool handles_setup_;
+  cudnnHandle_t             handle_;
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
+  cudnnPoolingDescriptor_t  pooling_desc_;
+  cudnnPoolingMode_t        mode_;
+};
+
+template <typename Dtype>
+class CudnnNdPoolingLayer : public Layer<Dtype> {
+ public:
+  explicit CudnnNdPoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CudnnNdPoolingLayer();
+
+  virtual inline const char* type() const { return "NdPooling"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void compute_output_shape();
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  vector<int> kernel_shape_;
+  vector<int> stride_shape_;
+  vector<int> pad_shape_;
+  int channels_;
+  vector<int> input_shape_;
+  vector<int> pooled_shape_;
+  bool global_pooling_;
+  Blob<Dtype> rand_idx_;
+  Blob<int> max_idx_;
+
+
+
   bool handles_setup_;
   cudnnHandle_t             handle_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
