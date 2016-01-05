@@ -43,9 +43,9 @@ void LstmUnitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "lstm_unit_param.has_output_gate_weight_filler()";
 
   channels_ = lstm_unit_param.num_cells();
+  CHECK_EQ(channels_, bottom[1]->shape(1)) <<
+    "Number of input memory channels must match the number of lstm mem_cells";
   input_data_size_ = bottom[0]->shape(1);
-  num_ = bottom[0]->shape(0);
-  M_ = num_;
   N_ = channels_;
   K_ = input_data_size_;
 
@@ -81,6 +81,7 @@ void LstmUnitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->buffers_.push_back(input_values_data_buffer_);
   gates_diff_buffer_.reset(new Blob<Dtype>());
   next_state_tot_diff_buffer_.reset(new Blob<Dtype>());
+  tanh_mem_buffer_.reset(new Blob<Dtype>());
   dldg_buffer_.reset(new Blob<Dtype>());
 
   // Propagate gradients to the parameters (as directed by backward pass).
@@ -96,12 +97,15 @@ void LstmUnitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK((this->layer_param_.top_size() == 2
       || this->layer_param_.top_size() == 0))
       << "LstmUnit must have a data and cell top";
+  num_ = bottom[0]->shape(0);
+  M_ = num_;
   input_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
   forget_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
   output_gates_data_buffer_->Reshape(num_, channels_, 1, 1);
   input_values_data_buffer_->Reshape(num_, channels_, 1, 1);
   gates_diff_buffer_->Reshape(num_, 4 * channels_, 1, 1);
   next_state_tot_diff_buffer_->Reshape(num_, channels_, 1, 1);
+  tanh_mem_buffer_->Reshape(num_, channels_, 1, 1);
   dldg_buffer_->Reshape(num_, channels_, 1, 1);
   vector<int> shape;
   shape.push_back(num_);
@@ -128,6 +132,7 @@ void LstmUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* forget_gates = forget_gates_data_buffer_->mutable_cpu_data();
   Dtype* output_gates = output_gates_data_buffer_->mutable_cpu_data();
   Dtype* input_values = input_values_data_buffer_->mutable_cpu_data();
+  Dtype* tanh_next_memory_state = tanh_mem_buffer_->mutable_cpu_data();
 
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, N_, K_,
     (Dtype)1., input_data, input_weight,
@@ -142,6 +147,11 @@ void LstmUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     (Dtype)1., input_data, output_gate_weight,
     (Dtype)0., output_gates);
 
+  if (this->layer_param_.lstm_unit_param().tie_output_forget()) {
+    caffe_set(channels_ * num_, Dtype(0), forget_gates);
+    caffe_sub(channels_ * num_, forget_gates, output_gates, forget_gates);
+  }
+
   for (int n = 0; n < num_; ++n) {
     for (int i = 0; i < channels_; ++i) {
       const int idx = i + n * channels_;
@@ -152,7 +162,12 @@ void LstmUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
       next_memory_state[idx] = prev_state_data[idx] * forget_gates[idx] +
           input_gates[idx] * input_values[idx];
-      next_hidden_state[idx] = next_memory_state[idx] * output_gates[idx];
+      if (this->layer_param_.lstm_unit_param().tanh_hidden()) {
+        tanh_next_memory_state[idx] = tanh(next_memory_state[idx]);
+      } else {
+        tanh_next_memory_state[idx] = next_memory_state[idx];
+      }
+      next_hidden_state[idx] = tanh_next_memory_state[idx] * output_gates[idx];
     }
   }
 }
@@ -160,15 +175,6 @@ void LstmUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  for (int i = 0; i < 2; ++i) {
-    caffe_set(bottom[i]->count(), Dtype(0),
-      bottom[i]->mutable_cpu_diff());
-  }
-  for (int i = 0; i < 4; ++i) {
-    caffe_set(this->blobs_[i]->count(), Dtype(0),
-      this->blobs_[i]->mutable_cpu_diff());
-  }
-
   const Dtype* input_data = bottom[0]->cpu_data();
   const Dtype* prev_state_data = bottom[1]->cpu_data();
 
@@ -181,6 +187,7 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* forget_gates = forget_gates_data_buffer_->cpu_data();
   const Dtype* output_gates = output_gates_data_buffer_->cpu_data();
   const Dtype* input_values = input_values_data_buffer_->cpu_data();
+  const Dtype* tanh_next_memory_state = tanh_mem_buffer_->cpu_data();
 
   Dtype* gates_diff = gates_diff_buffer_->mutable_cpu_data();
 
@@ -188,6 +195,7 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* forget_gates_diff = gates_diff + channels_ * num_ * 1;
   Dtype* output_gates_diff = gates_diff + channels_ * num_ * 2;
   Dtype* input_values_diff = gates_diff + channels_ * num_ * 3;
+  Dtype* tanh_next_memory_diff = tanh_mem_buffer_->mutable_cpu_diff();
 
   for (int n = 0; n < num_; ++n) {
     for (int i = 0; i < channels_; ++i) {
@@ -196,6 +204,11 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       forget_gates_diff[idx] = sigmoid_diff(forget_gates[idx]);
       output_gates_diff[idx] = sigmoid_diff(output_gates[idx]);
       input_values_diff[idx] = tanh_diff(input_values[idx]);
+      if (this->layer_param_.lstm_unit_param().tanh_hidden()) {
+        tanh_next_memory_diff[idx] = tanh_diff(tanh_next_memory_state[idx]);
+      } else {
+        tanh_next_memory_diff[idx] = Dtype(1.);
+      }
     }
   }
 
@@ -208,12 +221,13 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* prev_state_diff = bottom[1]->mutable_cpu_diff();
 
   const Dtype* next_hidden_state_diff = top[0]->cpu_diff();
-  const Dtype* next_memory_state = top[1]->cpu_data();
   const Dtype* next_memory_state_diff = top[1]->cpu_diff();
 
   Dtype* next_state_tot_diff = next_state_tot_diff_buffer_->mutable_cpu_data();
   caffe_mul(num_ * channels_, output_gates,
     next_hidden_state_diff, next_state_tot_diff);
+  caffe_mul(num_ * channels_, tanh_next_memory_diff,
+    next_state_tot_diff, next_state_tot_diff);
   caffe_add(num_ * channels_, next_memory_state_diff,
     next_state_tot_diff, next_state_tot_diff);
 
@@ -227,7 +241,7 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
     channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
-    (Dtype)0., input_weight_diff);
+    (Dtype)1., input_weight_diff);
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
     num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, input_weight,
@@ -238,29 +252,43 @@ void LstmUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
     channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
-    (Dtype)0., input_gate_weight_diff);
+    (Dtype)1., input_gate_weight_diff);
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
     num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, input_gate_weight,
     (Dtype)1., input_diff);
 
-  caffe_mul(num_ * channels_, forget_gates_diff, prev_state_data, dldg_data);
-  caffe_mul(num_ * channels_, next_state_tot_diff, dldg_data, dldg_data);
-  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
-    channels_, input_data_size_, num_,
-    (Dtype)1., dldg_data, input_data,
-    (Dtype)0., forget_gate_weight_diff);
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
-    num_, input_data_size_, channels_,
-    (Dtype)1., dldg_data, forget_gate_weight,
-    (Dtype)1., input_diff);
+  if (this->layer_param_.lstm_unit_param().tie_output_forget()) {
+    caffe_mul(num_ * channels_, forget_gates_diff, prev_state_data, dldg_data);
+    caffe_mul(num_ * channels_, next_state_tot_diff, dldg_data, dldg_data);
+    caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
+      channels_, input_data_size_, num_,
+      (Dtype)-1., dldg_data, input_data,
+      (Dtype)1., output_gate_weight_diff);
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+      num_, input_data_size_, channels_,
+      (Dtype)-1., dldg_data, output_gate_weight,
+      (Dtype)1., input_diff);
+  } else {
+    caffe_mul(num_ * channels_, forget_gates_diff, prev_state_data, dldg_data);
+    caffe_mul(num_ * channels_, next_state_tot_diff, dldg_data, dldg_data);
+    caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
+      channels_, input_data_size_, num_,
+      (Dtype)1., dldg_data, input_data,
+      (Dtype)1., forget_gate_weight_diff);
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+      num_, input_data_size_, channels_,
+      (Dtype)1., dldg_data, forget_gate_weight,
+      (Dtype)1., input_diff);
+  }
 
-  caffe_mul(num_ * channels_, output_gates_diff, next_memory_state, dldg_data);
+  caffe_mul(num_ * channels_, output_gates_diff, tanh_next_memory_state,
+      dldg_data);
   caffe_mul(num_ * channels_, next_hidden_state_diff, dldg_data, dldg_data);
   caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
     channels_, input_data_size_, num_,
     (Dtype)1., dldg_data, input_data,
-    (Dtype)0., output_gate_weight_diff);
+    (Dtype)1., output_gate_weight_diff);
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
     num_, input_data_size_, channels_,
     (Dtype)1., dldg_data, output_gate_weight,

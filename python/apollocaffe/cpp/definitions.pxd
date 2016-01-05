@@ -60,8 +60,8 @@ cdef extern from "caffe/blob.hpp" namespace "caffe":
         void Reshape(vector[int]& shape) except +
         float* mutable_cpu_data() except +
         float* mutable_cpu_diff() except +
-        void ShareData(Blob& other)
-        void ShareDiff(Blob& other)
+        void ShareData(Blob& other) except +
+        void ShareDiff(Blob& other) except +
         shared_ptr[Tensor] data()
         shared_ptr[Tensor] diff()
 
@@ -92,6 +92,7 @@ cdef extern from "caffe/apollonet.hpp" namespace "caffe":
         void SaveTrainedLayersTo(string trained_filename) except + 
         vector[string]& active_layer_names()
         set[string]& active_param_names()
+        void set_active_param_names(vector[string]&)
 
 cdef extern from "caffe/layer_factory.hpp" namespace "caffe::LayerRegistry<float>":
     cdef shared_ptr[Layer] CreateLayer(LayerParameter& param)

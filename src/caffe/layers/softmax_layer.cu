@@ -11,6 +11,56 @@
 namespace caffe {
 
 template <typename Dtype>
+__global__ void kernel_fast_max(const int num, const int channels,
+    const int p, const Dtype* data, Dtype* buf, Dtype* out) {
+  CUDA_KERNEL_LOOP(index, num * p) {
+    int n = index / p;
+    int s = index % p;
+    Dtype maxval = -FLT_MAX;
+    int stride = 1 + (channels / p);
+    for (int c = s * stride; c < (s + 1) * stride; ++c) {
+      if (c < channels) {
+        maxval = max(data[(n * channels + c)], maxval);
+      }
+    }
+    buf[index] = maxval;
+    __syncthreads();
+    if (s == 0) {
+      Dtype total_maxval = -FLT_MAX;
+      for (int i = 0; i < p; ++i) {
+        total_maxval = max(buf[index + i], total_maxval);
+      }
+      out[n] = total_maxval;
+    }
+  }
+}
+
+template <typename Dtype>
+__global__ void kernel_fast_sum(const int num, const int channels,
+    const int p, const Dtype* data, Dtype* buf, Dtype* out) {
+  CUDA_KERNEL_LOOP(index, num * p) {
+    int n = index / p;
+    int s = index % p;
+    Dtype sumval = Dtype(0.);
+    int stride = 1 + (channels / p);
+    for (int c = s * stride; c < (s + 1) * stride; ++c) {
+      if (c < channels) {
+        sumval = data[(n * channels + c)] + sumval;
+      }
+    }
+    buf[index] = sumval;
+    __syncthreads();
+    if (s == 0) {
+      Dtype total_sumval = Dtype(0.);
+      for (int i = 0; i < p; ++i) {
+        total_sumval = buf[index + i] + total_sumval;
+      }
+      out[n] = total_sumval;
+    }
+  }
+}
+
+template <typename Dtype>
 __global__ void kernel_channel_max(const int num, const int channels,
     const int spatial_dim, const Dtype* data, Dtype* out) {
   CUDA_KERNEL_LOOP(index, num * spatial_dim) {
@@ -89,16 +139,23 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
+  Dtype* scale_buf_data = scale_buf_.mutable_gpu_data();
   int count = bottom[0]->count();
   int channels = top[0]->shape(softmax_axis_);
   caffe_copy(count, bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   // compute max
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
-      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
-      scale_data);
+  if (inner_num_ > 1) {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+        scale_data);
+  } else {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_fast_max<Dtype><<<bottom[0]->shape(0), speedup_>>>(
+        outer_num_, channels, speedup_, top_data, scale_buf_data, scale_data);
+  }
   // subtract
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
@@ -108,11 +165,17 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, top_data, top_data);
-  // sum after exp
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
-      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
-      scale_data);
+  if (inner_num_ > 1) {
+    // sum after exp
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+        CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
+        scale_data);
+  } else {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    kernel_fast_sum<Dtype><<<bottom[0]->shape(0), speedup_>>>(
+        outer_num_, channels, speedup_, top_data, scale_buf_data, scale_data);
+  }
   // divide
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),

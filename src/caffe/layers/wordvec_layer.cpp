@@ -15,6 +15,7 @@ void WordvecLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "wordvec_param.has_vocab_size()";
 
   num_ = bottom[0]->shape(0);
+  CHECK(num_ == bottom[0]->count());
   dimension_ = wordvec_param.dimension();
   vocab_size_ = wordvec_param.vocab_size();
   sentence_length_ = 1;
@@ -40,6 +41,8 @@ void WordvecLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK((this->layer_param_.top_size() == 1
       || this->layer_param_.top_size() == 0))
       << "Wordvec must have no more than one top";
+  num_ = bottom[0]->shape(0);
+  CHECK(num_ == bottom[0]->count());
   ASSERT(sentence_length_ == 1, "sentence length is no longer supported");
   vector<int> shape;
   shape.push_back(num_);
