@@ -5,8 +5,8 @@
 
 #include <vector>
 
-#include "caffe/data_layers.hpp"
-#include "caffe/proto/caffe.pb.h"
+#include "caffe/data_transformer.hpp"
+#include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
 
 namespace caffe {

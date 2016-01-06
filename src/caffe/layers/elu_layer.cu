@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/neuron_layers.hpp"
+#include "caffe/layers/elu_layer.hpp"
 
 namespace caffe {
 
@@ -25,11 +25,6 @@ void ELULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   ELUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, top_data, alpha);
   CUDA_POST_KERNEL_CHECK;
-  // << " count: " << count << " bottom_data: "
-  //     << (unsigned long)bottom_data
-  //     << " top_data: " << (unsigned long)top_data
-  //     << " blocks: " << CAFFE_GET_BLOCKS(count)
-  //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
 }
 
 template <typename Dtype>

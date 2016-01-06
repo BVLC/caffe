@@ -521,6 +521,10 @@ message ConvolutionParameter {
   repeated uint32 pad = 3; // The padding size; defaults to 0
   repeated uint32 kernel_size = 4; // The kernel size
   repeated uint32 stride = 6; // The stride; defaults to 1
+  // Factor used to dilate the kernel, (implicitly) zero-filling the resulting
+  // holes. (Kernel dilation is sometimes referred to by its use in the
+  // algorithme à trous from Holschneider et al. 1987.)
+  repeated uint32 dilation = 18; // The dilation; defaults to 1
 
   // For 2D convolution only, the *_h and *_w versions may also be used to
   // specify both spatial dimensions.
