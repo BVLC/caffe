@@ -16,6 +16,7 @@ class Cursor {
   virtual ~Cursor() { }
   virtual void SeekToFirst() = 0;
   virtual void Next() = 0;
+  virtual void Get(const string& key) = 0;
   virtual string key() = 0;
   virtual string value() = 0;
   virtual bool valid() = 0;

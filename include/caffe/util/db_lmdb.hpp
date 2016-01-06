@@ -26,6 +26,11 @@ class LMDBCursor : public Cursor {
   }
   virtual void SeekToFirst() { Seek(MDB_FIRST); }
   virtual void Next() { Seek(MDB_NEXT); }
+  virtual void Get(const string& key) {
+    mdb_key_.mv_data = const_cast<char*>(key.data());
+    mdb_key_.mv_size = key.size();
+    Seek(MDB_SET_KEY);
+  }
   virtual string key() {
     return string(static_cast<const char*>(mdb_key_.mv_data), mdb_key_.mv_size);
   }
