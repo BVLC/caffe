@@ -556,6 +556,8 @@ BOOST_PYTHON_MODULE(_caffe) {
                                &SolverParameter::set_stepsize)
     .add_property("snapshot",  &SolverParameter::snapshot,
                                &SolverParameter::set_snapshot)
+    .add_property("snapshot_format", &SolverParameter::snapshot_format,
+                                     &SolverParameter::set_snapshot_format)
     .add_property("snapshot_prefix",
                        bp::make_function(&SolverParameter::snapshot_prefix,
                        bp::return_value_policy<bp::copy_const_reference>()),
@@ -576,6 +578,10 @@ BOOST_PYTHON_MODULE(_caffe) {
                        bp::return_value_policy<bp::copy_const_reference>()),
                        static_cast<void (SolverParameter::*)(const string&)>(
                                &SolverParameter::set_train_net));
+
+  bp::enum_< ::caffe::SolverParameter_SnapshotFormat>("snapshot_format")
+      .value("HDF5", SolverParameter_SnapshotFormat_HDF5)
+      .value("BINARYPROTO", SolverParameter_SnapshotFormat_BINARYPROTO);
 
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
