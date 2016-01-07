@@ -8,7 +8,8 @@
 #include "dnn.h"
 
 namespace caffe {
-static const int print_conversion= 0;
+static const int print_conversion = 0;
+
 template <typename Dtype>
 DnnConvolutionLayer<Dtype>::DnnConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param)
@@ -103,7 +104,7 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   size_t ow, oh, oc;
   size_t kw, kh; /* filter */
   size_t dimension = 4;
-  
+
   g  = this->group_;
   n  = this->num_;
   iw = this->width_;
@@ -122,7 +123,7 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   size_t fdata_sizes[4] = {kw, kh, ic/g, oc};
   size_t fdata_strides[4]  = {1, kw, kw*kh, kw*kh*ic/g};
- 
+
   size_t bias_sizes[1] = {oc};
   size_t bias_strides[1] = {1};
 
@@ -155,7 +156,7 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   l_fwd_bottom_data_usr = l_fwd_top_data_usr = l_fwd_filter_data_usr = l_fwd_bias_data_usr = NULL;
 
   if (g > 1)
-  {  
+  {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
       dnnAlgorithmConvolutionDirect,
@@ -225,19 +226,6 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK(status == 0) << "Failed creation convertFwd_filter with status " << status << "\n";
     status = dnnAllocateBuffer<Dtype>((void **)&fwd_filter_data_int, l_fwd_filter_data_int);
     CHECK(status == 0) << "Failed fwd_filter_data_int memory allocation with status " << status << "\n";
-    if (is_Alexnet_pcl)
-    {
-      // convert data filter to PCL forward weights format
-      void *convert_resources[dnnResourceNumber];
-      convert_resources[dnnResourceFrom] = (void *)this->blobs_[0]->mutable_cpu_data();
-      convert_resources[dnnResourceTo]   = (void *)fwd_filter_data_int;
-      status = dnnExecute<Dtype>(convertFwd_filter, convert_resources);
-      caffe_copy(this->blobs_[0]->count(), fwd_filter_data_int, this->blobs_[0]->mutable_cpu_data());
-      dnnReleaseBuffer<Dtype>(fwd_filter_data_int);
-      fwd_filter_data_int = NULL;
-      dnnDelete<Dtype>(convertFwd_filter);
-      convertFwd_filter = NULL;
-    }
   }
 
   if (!is_Alexnet_pcl && !dnnLayoutCompare<Dtype>(l_fwd_bias_data_usr , l_fwd_bias_data_int))
@@ -489,8 +477,8 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   size_t n, g;
   size_t iw, ih, ic;
   size_t ow, oh, oc;
-  size_t kw, kh; /* filter */
-  
+  //size_t kw, kh; /* filter */
+
   g  = this->group_;
   n  = this->num_;
   iw = this->width_;
@@ -498,7 +486,7 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   ic = this->channels_/g;
 
   CHECK(bottom[0]->width()    == iw &&
-        bottom[0]->height()   == ih && 
+        bottom[0]->height()   == ih &&
         bottom[0]->channels() == ic*g &&
         bottom[0]->num()      == n) << "Inclompatible shape of bottom with layer";
 
@@ -506,21 +494,20 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   oh = this->height_out_;
   oc = this->num_output_/g;
   CHECK(top[0]->width()    == ow &&
-        top[0]->height()   == oh && 
+        top[0]->height()   == oh &&
         top[0]->channels() == oc*g &&
         top[0]->num()      == n) << "Inclompatible shape of bottom with layer";
 
   void *convert_resources[dnnResourceNumber];
   void *res_convolutionFwd[dnnResourceNumber];
 
-  Dtype *fwd_bottom_data_usr = bottom[0]->mutable_cpu_data();
+  const Dtype *fwd_bottom_data_usr = bottom[0]->cpu_data();
   Dtype *fwd_top_data_usr    = top[0]->mutable_cpu_data();
-  Dtype *fwd_filter_data_usr = this->blobs_[0]->mutable_cpu_data();
-  Dtype *fwd_bias_data_usr   = this->blobs_[1]->mutable_cpu_data();
+  const Dtype *fwd_filter_data_usr = this->blobs_[0]->cpu_data();
+  const Dtype *fwd_bias_data_usr   = this->blobs_[1]->cpu_data();
 
   if (convertFwd_bottom)
   {
-
     if(print_conversion) LOG(INFO) << "convertFwd_bottom for " << this->layer_param_.name();
     convert_resources[dnnResourceFrom] = (void *)fwd_bottom_data_usr;
     convert_resources[dnnResourceTo]   = (void *)fwd_bottom_data_int;
@@ -532,12 +519,25 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   if (convertFwd_filter)
   {
-if(print_conversion)    LOG(INFO) << "converFwd_filter";
-    convert_resources[dnnResourceFrom] = (void *)fwd_filter_data_usr;
-    convert_resources[dnnResourceTo]   = (void *)fwd_filter_data_int;
-    status = dnnExecute<Dtype>(convertFwd_filter, convert_resources);
-    CHECK(status == 0) << "[5] | Forward conv failed with status " << status;
-    res_convolutionFwd[dnnResourceFilter] = (void *)fwd_filter_data_int;
+    const Dtype* prv_filter = this->blobs_[0]->prv_data();
+
+    if (prv_filter == NULL)
+    {
+     // if (print_conversion)
+      LOG(INFO) << "converFwd_filter for " << this->layer_param_.name();
+
+      this->blobs_[0]->set_prv_data(fwd_filter_data_int, true);
+      convert_resources[dnnResourceFrom] = (void *)fwd_filter_data_usr;
+      convert_resources[dnnResourceTo]   = (void *)fwd_filter_data_int;
+      status = dnnExecute<Dtype>(convertFwd_filter, convert_resources);
+      CHECK(status == 0) << "[5] | Forward conv failed with status " << status;
+      res_convolutionFwd[dnnResourceFilter] = (void *)fwd_filter_data_int;
+    }
+    else // TBD: check layout?
+    {
+      LOG(INFO) << "converFwd_filter skipped for " << this->layer_param_.name();
+      res_convolutionFwd[dnnResourceFilter] = (void *)prv_filter;
+    }
   } else
     res_convolutionFwd[dnnResourceFilter] = (void *)fwd_filter_data_usr;
 
@@ -575,8 +575,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   size_t n, g;
   size_t iw, ih, ic;
   size_t ow, oh, oc;
-  size_t kw, kh; /* filter */
-  
+
   g  = this->group_;
   n  = this->num_;
   iw = this->width_;
@@ -584,28 +583,25 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   ic = this->channels_/g;
 
   CHECK(bottom[0]->width()    == iw &&
-        bottom[0]->height()   == ih && 
+        bottom[0]->height()   == ih &&
         bottom[0]->channels() == ic*g &&
-        bottom[0]->num()      == n) << "Inclompatible shape of bottom with layer";
+        bottom[0]->num()      == n) << "Incompatible shape of bottom with layer";
 
   ow = this->width_out_;
   oh = this->height_out_;
   oc = this->num_output_/g;
   CHECK(top[0]->width()    == ow &&
-        top[0]->height()   == oh && 
+        top[0]->height()   == oh &&
         top[0]->channels() == oc*g &&
-        top[0]->num()      == n) << "Inclompatible shape of bottom with layer";
-
-  kw = this->kernel_w_;
-  kh = this->kernel_h_;
+        top[0]->num()      == n) << "Incompatible shape of bottom with layer";
 
   if (propagate_down[0])
   {
     void *convert_resources[dnnResourceNumber];
     void *res_convolutionBwdData[dnnResourceNumber];
     Dtype *bwdd_bottom_diff_usr = bottom[0]->mutable_cpu_diff();
-    Dtype *bwdd_top_diff_usr    = top[0]->mutable_cpu_diff();
-    Dtype *bwdd_filter_data_usr = this->blobs_[0]->mutable_cpu_data();
+    const Dtype *bwdd_top_diff_usr    = top[0]->cpu_diff();
+    const Dtype *bwdd_filter_data_usr = this->blobs_[0]->cpu_data();
 
     if (convertBwdData_top)
     {
@@ -650,8 +646,8 @@ if(print_conversion)      LOG(INFO) << "convertBwdData_bottom for " << this->lay
   {
     void *convert_resources[dnnResourceNumber];
     void *res_convolutionBwdFilter[dnnResourceNumber];
-    Dtype *bwdf_bottom_data_usr = bottom[0]->mutable_cpu_data();
-    Dtype *bwdf_top_diff_usr    = top[0]->mutable_cpu_diff();
+    const Dtype *bwdf_bottom_data_usr = bottom[0]->cpu_data();
+    const Dtype *bwdf_top_diff_usr    = top[0]->cpu_diff();
     Dtype *bwdf_filter_diff_usr = this->blobs_[0]->mutable_cpu_diff();
 
     if (convertBwdFilter_top)
@@ -684,7 +680,7 @@ if(print_conversion)      LOG(INFO) << "convertBwdFilter_bottom for " << this->l
     res_convolutionBwdFilter[dnnResourceDiffFilter] = convertBwdFilter_filter ? (void *)bwdf_filter_diff_int : (void *)bwdf_filter_diff_usr;
     status = dnnExecute<Dtype>( convolutionBwdFilter, res_convolutionBwdFilter);
     CHECK(status == 0) << "[6] | Backward Filter conv failed with status " << status;
-   
+
     if (convertBwdFilter_filter)
     {
 if(print_conversion)      LOG(INFO) << "convertBwdFilter_filter for " << this->layer_param_.name();
@@ -698,7 +694,7 @@ if(print_conversion)      LOG(INFO) << "convertBwdFilter_filter for " << this->l
   {
     void *convert_resources[dnnResourceNumber];
     void *res_convolutionBwdBias[dnnResourceNumber];
-    Dtype *bwdb_top_diff_usr = top[0]->mutable_cpu_diff();
+    const Dtype *bwdb_top_diff_usr = top[0]->cpu_diff();
     Dtype *bwdb_bias_diff_usr= this->blobs_[1]->mutable_cpu_diff();
 
     if (convertBwdBias_top)
@@ -734,5 +730,5 @@ STUB_GPU(DnnConvolutionLayer);
 #endif
 
 INSTANTIATE_CLASS(DnnConvolutionLayer);
-REGISTER_LAYER_CLASS(DnnConvolution); 
+REGISTER_LAYER_CLASS(DnnConvolution);
 }  // namespace caffe

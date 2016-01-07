@@ -11,6 +11,10 @@ SyncedMemory::~SyncedMemory() {
     CaffeFreeHost(cpu_ptr_);
   }
 
+  if (prv_ptr_  && own_prv_data_) {
+    CaffeFreeHost(prv_ptr_);
+  }
+
 #ifndef CPU_ONLY
   if (gpu_ptr_) {
     CUDA_CHECK(cudaFree(gpu_ptr_));
@@ -43,6 +47,13 @@ inline void SyncedMemory::to_cpu() {
     NO_GPU;
 #endif
     break;
+  case HEAD_AT_PRV:
+    if(NULL == sync_prv_to_cpu_)
+      LOG(FATAL) << " Can't sync prv data to cpu";
+    sync_prv_to_cpu_(prv_ptr_, cpu_ptr_, prv_descriptor_);
+    head_ = SYNCED_PRV;
+    break;
+  case SYNCED_PRV:
   case HEAD_AT_CPU:
   case SYNCED:
     break;
@@ -57,6 +68,8 @@ inline void SyncedMemory::to_gpu() {
     caffe_gpu_memset(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
     break;
+  case HEAD_AT_PRV:
+    to_cpu();
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
       CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
@@ -116,6 +129,66 @@ void* SyncedMemory::mutable_gpu_data() {
 #endif
 }
 
+/*
+  Use this when prv_ptr_ will be written as the
+  same data as in cpu_ptr_ but with different layout.
+*/
+void* SyncedMemory::init_prv_data() {
+
+  if(NULL == prv_ptr_) {
+    CaffeMallocHost(&prv_ptr_, size_);
+    caffe_memset(size_, 0, prv_ptr_);
+  }
+
+  // Data is the same as in cpu_ptr_, possibly different layout
+  head_ = SYNCED_PRV;
+
+  return prv_ptr_;
+}
+
+/*
+  Memory allocated by the user.
+  same_data - shall be true if dat is the same in cpu_ptr_ but with different layout.
+  TODO: memory freeing
+*/
+void SyncedMemory::set_prv_data(void* data, bool same_data) {
+  CHECK(data);
+#pragma omp critical
+  {
+    if (prv_ptr_ && own_prv_data_) {
+      CaffeFreeHost(prv_ptr_);
+    }
+    prv_ptr_ = data;
+
+    if(same_data)
+      head_ = SYNCED_PRV;
+    else
+      head_ = HEAD_AT_PRV;
+
+    own_prv_data_ = false;
+  }
+}
+
+const void* SyncedMemory::prv_data() {
+
+  if((head_ != HEAD_AT_PRV) &&
+     (head_ != SYNCED_PRV)) {
+    // Call set_prv_data() or init_prv_data() first
+    return NULL;
+  }
+
+  return (const void* )prv_ptr_;
+}
+
+void* SyncedMemory::mutable_prv_data() {
+  head_ = HEAD_AT_PRV;
+
+  if(NULL == prv_ptr_) {
+    CaffeMallocHost(&prv_ptr_, size_);
+    caffe_memset(size_, 0, prv_ptr_);
+  }
+  return prv_ptr_;
+}
 
 }  // namespace caffe
 

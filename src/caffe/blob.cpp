@@ -122,6 +122,62 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
+const Dtype* Blob<Dtype>::prv_data() const {
+  CHECK(data_);
+  return (const Dtype*)data_->prv_data();
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_data(Dtype* data, bool same_data) {
+  CHECK(data);
+  data_->set_prv_data(data, same_data);
+}
+
+template <typename Dtype>
+const Dtype* Blob<Dtype>::prv_diff() const {
+  CHECK(diff_);
+  return (const Dtype*)diff_->prv_data();
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_prv_diff() {
+  CHECK(diff_);
+  return static_cast<Dtype*>(diff_->mutable_prv_data());
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_diff(Dtype* data, bool same_data) {
+  CHECK(data);
+  diff_->set_prv_data(data, same_data);
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::init_prv_data() {
+  return static_cast<Dtype*>(data_->init_prv_data());
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::init_prv_diff() {
+  return static_cast<Dtype*>(diff_->init_prv_data());
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_converter_data(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
+    CHECK(prv_descriptor);
+    CHECK(sync_prv_to_cpu);
+    data_->prv_descriptor_ = prv_descriptor;
+    data_->sync_prv_to_cpu_ = sync_prv_to_cpu;
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_prv_converter_diff(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
+  CHECK(prv_descriptor);
+  CHECK(sync_prv_to_cpu);
+  diff_->prv_descriptor_ = prv_descriptor;
+  diff_->sync_prv_to_cpu_ = sync_prv_to_cpu;
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
