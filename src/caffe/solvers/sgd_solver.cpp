@@ -122,7 +122,7 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 }
 
 template<typename Dtype>
-void SGDSolver<Dtype>::Normalize(uint_tp param_id) {
+void SGDSolver<Dtype>::Normalize(int param_id) {
   if (this->param_.iter_size() == 1) {
     return;
   }
@@ -161,7 +161,7 @@ void SGDSolver<Dtype>::Normalize(uint_tp param_id) {
   }
 
 template<typename Dtype>
-void SGDSolver<Dtype>::Regularize(uint_tp param_id) {
+void SGDSolver<Dtype>::Regularize(int param_id) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_weight_decay =
       this->net_->params_weight_decay();
@@ -252,8 +252,14 @@ void SGDSolver<Dtype>::Regularize(uint_tp param_id) {
   }
 }
 
+#ifndef CPU_ONLY
 template<typename Dtype>
-void SGDSolver<Dtype>::ComputeUpdateValue(uint_tp param_id, Dtype rate) {
+void sgd_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype momentum,
+                    Dtype local_rate);
+#endif
+
+template <typename Dtype>
+void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
@@ -271,30 +277,10 @@ void SGDSolver<Dtype>::ComputeUpdateValue(uint_tp param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-                        net_params[param_id]->gpu_diff(), momentum,
-                        history_[param_id]->mutable_gpu_data());
-        caffe_copy(net_params[param_id]->count(),
-                   history_[param_id]->gpu_data(),
-                   net_params[param_id]->mutable_gpu_diff());
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_GREENTEA
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_->id());
-
-        greentea_gpu_axpby<Dtype>(
-            this->device_->id(), net_params[param_id]->count(),
-            local_rate, (cl_mem) (net_params[param_id]->gpu_diff()), 0,
-            momentum, (cl_mem) (history_[param_id]->mutable_gpu_data()), 0);
-        greentea_copy<Dtype>(
-            net_params[param_id]->count(),
-            (cl_mem) (history_[param_id]->gpu_data()), 0,
-            (cl_mem) (net_params[param_id]->mutable_gpu_diff()), 0, &ctx);
-#endif  // USE_GREENTEA
-      }
+    sgd_update_gpu(this->device_, net_params[param_id]->count(),
+        net_params[param_id]->mutable_gpu_diff(),
+        history_[param_id]->mutable_gpu_data(),
+        momentum, local_rate);
 #else
       NO_GPU;
 #endif

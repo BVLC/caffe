@@ -7,6 +7,10 @@
 
 #ifndef GREENTEA_MATH_FUNCTIONS_HPP_
 #define GREENTEA_MATH_FUNCTIONS_HPP_
+
+#include "caffe/common.hpp"
+#include "caffe/definitions.hpp"
+
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/math_functions.hpp"
