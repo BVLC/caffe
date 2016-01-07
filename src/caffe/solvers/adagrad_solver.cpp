@@ -4,8 +4,14 @@
 
 namespace caffe {
 
+#ifndef CPU_ONLY
 template<typename Dtype>
-void AdaGradSolver<Dtype>::ComputeUpdateValue(uint_tp param_id, Dtype rate) {
+void adagrad_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype delta,
+                        Dtype local_rate);
+#endif
+
+template <typename Dtype>
+void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   CHECK(Caffe::root_solver());
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
@@ -44,75 +50,9 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(uint_tp param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        // compute square of gradient in update
-        caffe_gpu_powx(net_params[param_id]->count(),
-                       net_params[param_id]->gpu_diff(), Dtype(2),
-                       this->update_[param_id]->mutable_gpu_data());
-
-        // update history
-        caffe_gpu_add(net_params[param_id]->count(),
-                      this->update_[param_id]->gpu_data(),
-                      this->history_[param_id]->gpu_data(),
-                      this->history_[param_id]->mutable_gpu_data());
-
-        // prepare update
-        caffe_gpu_powx(net_params[param_id]->count(),
-                       this->history_[param_id]->gpu_data(), Dtype(0.5),
-                       this->update_[param_id]->mutable_gpu_data());
-
-        caffe_gpu_add_scalar(net_params[param_id]->count(), delta,
-                             this->update_[param_id]->mutable_gpu_data());
-
-        caffe_gpu_div(net_params[param_id]->count(),
-                      net_params[param_id]->gpu_diff(),
-                      this->update_[param_id]->gpu_data(),
-                      this->update_[param_id]->mutable_gpu_data());
-
-        // scale and copy
-        caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-                        this->update_[param_id]->gpu_data(), Dtype(0),
-                        net_params[param_id]->mutable_gpu_diff());
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_GREENTEA
-        // compute square of gradient in update
-        greentea_gpu_powx<Dtype>(
-            this->device_->id(), net_params[param_id]->count(),
-            (cl_mem) (net_params[param_id]->gpu_diff()), 0, Dtype(2),
-            (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
-
-        // update history
-        greentea_gpu_add<Dtype>(
-            this->device_->id(), net_params[param_id]->count(),
-            (cl_mem) (this->update_[param_id]->gpu_data()), 0,
-            (cl_mem) (this->history_[param_id]->gpu_data()), 0,
-            (cl_mem) (this->history_[param_id]->mutable_gpu_data()), 0);
-
-        // prepare update
-        greentea_gpu_powx<Dtype>(
-            this->device_->id(), net_params[param_id]->count(),
-            (cl_mem) (this->history_[param_id]->gpu_data()), 0, Dtype(0.5),
-            (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
-
-        greentea_gpu_add_scalar<Dtype>(
-            this->device_->id(), net_params[param_id]->count(), delta,
-            (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
-
-        greentea_gpu_div<Dtype>(
-            this->device_->id(), net_params[param_id]->count(),
-            (cl_mem) (net_params[param_id]->gpu_diff()), 0,
-            (cl_mem) (this->update_[param_id]->gpu_data()), 0,
-            (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
-
-        // scale and copy
-        greentea_gpu_axpby<Dtype>(
-            this->device_->id(), net_params[param_id]->count(),
-            local_rate, (cl_mem) (this->update_[param_id]->gpu_data()), 0,
-            Dtype(0), (cl_mem) (net_params[param_id]->mutable_gpu_diff()), 0);
-#endif  // USE_GREENTEA
-      }
+    adagrad_update_gpu(this->device_, net_params[param_id]->count(),
+        net_params[param_id]->mutable_gpu_diff(),
+        this->history_[param_id]->mutable_gpu_data(), delta, local_rate);
 #else
       NO_GPU;
 #endif
