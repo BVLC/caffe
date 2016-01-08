@@ -25,6 +25,11 @@ class AccuracyLayer : public Layer<Dtype> {
    *     Sets the maximum rank @f$ k @f$ at which a prediction is considered
    *     correct.  For example, if @f$ k = 5 @f$, a prediction is counted
    *     correct if the correct label is among the top 5 predicted labels.
+   *   - type (\b optional, default REC).
+   *     Compute with different types of relevance, such as recall (REC),
+   *     precision (PRE) or jaccard index (JAC). The jaccard index corresponds
+   *     to the intersection over union. The layer name is only symbolic and not
+   *     to be confused with the "rand accuracy" or "rand index".
    */
   explicit AccuracyLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
