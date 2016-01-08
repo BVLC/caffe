@@ -7,6 +7,7 @@
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/solver_trace.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 namespace caffe {
@@ -58,6 +59,10 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   if (Caffe::root_solver()) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
+  }
+  // Add solver trace to root solver
+  if (Caffe::root_solver()) {
+    solver_trace_.reset(new SolverTrace<Dtype>(param, this));
   }
   iter_ = 0;
   current_step_ = 0;
@@ -258,6 +263,11 @@ void Solver<Dtype>::Step(int iters) {
 
     SolverAction::Enum request = GetRequestedAction();
 
+    // Add new information to weight trace
+    if (Caffe::root_solver()) {
+      solver_trace_->update_trace_train(request);
+    }
+
     // Save a snapshot if needed.
     if ((param_.snapshot()
          && iter_ % param_.snapshot() == 0
@@ -297,6 +307,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       && (!param_.snapshot() || iter_ % param_.snapshot() != 0)) {
     Snapshot();
   }
+  // Force a solver trace update
+  solver_trace_->update_trace_train(SolverAction::SNAPSHOT);
+
   if (requested_early_exit_) {
     LOG(INFO) << "Optimization stopped early.";
     return;
@@ -389,6 +402,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
+    solver_trace_->update_trace_test_loss(test_net_id, loss);
   }
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
@@ -403,7 +417,10 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
+    solver_trace_->update_trace_test_score(test_net_id, output_name,
+                                           loss_weight, mean_score);
   }
+  solver_trace_->Save();
 }
 
 template <typename Dtype>

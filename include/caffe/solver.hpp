@@ -9,6 +9,8 @@
 
 namespace caffe {
 
+template <typename Dtype> class SolverTrace;
+
 /**
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
@@ -72,7 +74,7 @@ class Solver {
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+  int iter() const { return iter_; }
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -128,6 +130,9 @@ class Solver {
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;
+
+  // Maintains a history of the solver for analysis afterwards
+  shared_ptr<SolverTrace<Dtype> > solver_trace_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

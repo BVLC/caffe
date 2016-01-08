@@ -98,7 +98,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 41 (last added: type)
+// SolverParameter next available ID: 42 (last added: solver_trace_param)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -239,6 +239,23 @@ message SolverParameter {
   }
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
+  
+  optional SolverTraceParameter solver_trace_param = 41;
+}
+
+message TraceDigest {
+  optional int32 dummy = 1;
+}
+
+message SolverTraceParameter {
+  // filename where the trace will be saved
+  optional string trace_filename = 1;
+  // save the trace in a human readable format too
+  optional bool human_readable_trace = 2;
+  // How often solver trace should be saved to disk
+  // determines the IO to disk load that the solver traces will create
+  // If not set, it is the same as SolverParameter.snapshot
+  optional int32 save_interval = 3;
 }
 
 // A message that stores the solver snapshots
