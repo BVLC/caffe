@@ -227,8 +227,6 @@ class Blob {
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
 
-  Dtype* init_prv_data();
-  Dtype* init_prv_diff();
   void set_prv_data(Dtype* data, bool same_data);
   void set_prv_diff(Dtype* data, bool same_data);
   const Dtype* prv_data() const;
@@ -238,6 +236,8 @@ class Blob {
 
   void set_prv_converter_data(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu);
   void set_prv_converter_diff(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu);
+  void* get_prv_descriptor_data();
+  void* get_prv_descriptor_diff();
 
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);

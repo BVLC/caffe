@@ -105,8 +105,20 @@ void DnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  void* bottom_data = (void*)bottom[0]->cpu_data();
-  void* top_data = (void*)top[0]->mutable_cpu_data();
+  void* bottom_data = (void*)bottom[0]->prv_data();
+  void* top_data = NULL;
+
+  if(NULL == bottom_data)
+  {
+    LOG(INFO) << "Using cpu_data in DnnLRNLayer.";
+    bottom_data = (void*)bottom[0]->cpu_data();
+    top_data = top[0]->mutable_cpu_data();
+  }
+  else
+  {
+    //TODO: Add top converter
+    top_data = top[0]->mutable_prv_data();
+  }
 
   dnnError_t e;
   void* lrn_res[dnnResourceNumber];

@@ -128,8 +128,14 @@ const Dtype* Blob<Dtype>::prv_data() const {
 }
 
 template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_prv_data() {
+  CHECK(data_);
+  return static_cast<Dtype*>(data_->mutable_prv_data());
+}
+
+template <typename Dtype>
 void Blob<Dtype>::set_prv_data(Dtype* data, bool same_data) {
-  CHECK(data);
+  CHECK(data_);
   data_->set_prv_data(data, same_data);
 }
 
@@ -147,34 +153,34 @@ Dtype* Blob<Dtype>::mutable_prv_diff() {
 
 template <typename Dtype>
 void Blob<Dtype>::set_prv_diff(Dtype* data, bool same_data) {
-  CHECK(data);
+  CHECK(diff_);
   diff_->set_prv_data(data, same_data);
 }
 
 template <typename Dtype>
-Dtype* Blob<Dtype>::init_prv_data() {
-  return static_cast<Dtype*>(data_->init_prv_data());
-}
-
-template <typename Dtype>
-Dtype* Blob<Dtype>::init_prv_diff() {
-  return static_cast<Dtype*>(diff_->init_prv_data());
-}
-
-template <typename Dtype>
 void Blob<Dtype>::set_prv_converter_data(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
-    CHECK(prv_descriptor);
-    CHECK(sync_prv_to_cpu);
+    CHECK(data_);
     data_->prv_descriptor_ = prv_descriptor;
     data_->sync_prv_to_cpu_ = sync_prv_to_cpu;
 }
 
 template <typename Dtype>
 void Blob<Dtype>::set_prv_converter_diff(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
-  CHECK(prv_descriptor);
-  CHECK(sync_prv_to_cpu);
+  CHECK(data_);
   diff_->prv_descriptor_ = prv_descriptor;
   diff_->sync_prv_to_cpu_ = sync_prv_to_cpu;
+}
+
+template <typename Dtype>
+void* Blob<Dtype>::get_prv_descriptor_data() {
+  CHECK(data_);
+  return data_->prv_descriptor_;
+}
+
+template <typename Dtype>
+void* Blob<Dtype>::get_prv_descriptor_diff() {
+  CHECK(diff_);
+  return diff_->prv_descriptor_;
 }
 
 template <typename Dtype>

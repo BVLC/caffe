@@ -11,7 +11,7 @@
 #include "dnn.h"
 
 namespace caffe {
-static const int print_conversion= 0;
+static const int print_conversion= 1;
 using std::min;
 using std::max;
 
@@ -22,13 +22,9 @@ DnnPoolingLayer<Dtype>::~DnnPoolingLayer()
   dnnDelete<Dtype>(poolingBwd);
   if (pool_buffer_ != NULL)free(pool_buffer_);
 
-  dnnLayoutDelete<Dtype>(l_fwd_top_data_int);
-  dnnLayoutDelete<Dtype>(l_fwd_top_data_usr);
   dnnLayoutDelete<Dtype>(l_bwd_top_diff_int);
   dnnLayoutDelete<Dtype>(l_bwd_top_diff_usr);
-  dnnDelete<Dtype>(convertFwd_top);
   dnnDelete<Dtype>(convertBwd_top);
-  dnnReleaseBuffer<Dtype>(fwd_top_data_int);
   dnnReleaseBuffer<Dtype>(bwd_top_diff_int);
 }
 
@@ -36,7 +32,7 @@ template <typename Dtype>
 void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
-  
+
   if (pool_param.global_pooling()) {
     CHECK(!(pool_param.has_kernel_size() ||
       pool_param.has_kernel_h() || pool_param.has_kernel_w()))
@@ -119,12 +115,12 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   size_t kernel_size[2],
          kernel_stride[4];
   int src_offset[2];
-  
+
   src_sizes[0] = bottom[0]->width();
   src_sizes[1] = bottom[0]->height();
   src_sizes[2] = bottom[0]->channels();
   src_sizes[3] = bottom[0]->num();
-  
+
   src_strides[0] = 1;
   src_strides[1] = src_sizes[0];
   src_strides[2] = src_sizes[0]*src_sizes[1];
@@ -134,18 +130,18 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   dst_sizes[1] = pooled_height_;
   dst_sizes[2] = src_sizes[2];
   dst_sizes[3] = src_sizes[3];
-  
+
   dst_strides[0] = 1;
   dst_strides[1] = dst_sizes[0];
   dst_strides[2] = dst_sizes[0]*dst_sizes[1];
   dst_strides[3] = dst_sizes[0]*dst_sizes[1]*dst_sizes[2];
-  
+
   src_offset[0] = -pad_w_;
   src_offset[1] = -pad_h_;
-  
+
   kernel_stride[0] = stride_w_;
   kernel_stride[1] = stride_h_;
-  
+
   kernel_size[0] = kernel_w_;
   kernel_size[1] = kernel_h_;
 
@@ -153,9 +149,9 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   dnnLayout_t lt_pool_input = NULL;
   dnnLayout_t pool_buffer_l = NULL;
   pool_buffer_ = NULL;
-  l_fwd_top_data_int = l_fwd_top_data_usr = l_bwd_top_diff_int = l_bwd_top_diff_usr = NULL;
-  convertFwd_top = convertBwd_top = NULL;
-  fwd_top_data_int = bwd_top_diff_int = NULL;
+  l_bwd_top_diff_int = l_bwd_top_diff_usr = NULL;
+  convertBwd_top = NULL;
+  bwd_top_diff_int = NULL;
 
 
   if (kernel_size[0] == 3 && kernel_size[1] == 3 && kernel_stride[0] == 2 &&  kernel_stride[1] == 2
@@ -167,27 +163,25 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   {
     e = dnnLayoutPCLCreate<Dtype>(&lt_pool_input, dim, src_sizes);
     CHECK_EQ(e, E_SUCCESS);
-    if (src_sizes[0] == 13  && src_sizes[1] == 13 && src_sizes[2] == 256) /* The last one based on PCL layout in Alexnet topology */
-    {
-      e = dnnLayoutPCLCreate<Dtype>(&l_fwd_top_data_int, dim, dst_sizes);
+//    if (src_sizes[0] == 13  && src_sizes[1] == 13 && src_sizes[2] == 256) /* The last one based on PCL layout in Alexnet topology */
+  //  {
+      e = dnnLayoutPCLCreate<Dtype>(&fwd_top_data.layout_int, dim, dst_sizes);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreate<Dtype>(&l_fwd_top_data_usr, dim, dst_sizes, dst_strides);
+      e = dnnLayoutCreate<Dtype>(&fwd_top_data.layout_usr, dim, dst_sizes, dst_strides);
       CHECK_EQ(e, E_SUCCESS);
       e = dnnLayoutPCLCreate<Dtype>(&l_bwd_top_diff_int, dim, dst_sizes);
       CHECK_EQ(e, E_SUCCESS);
       e = dnnLayoutCreate<Dtype>(&l_bwd_top_diff_usr, dim, dst_sizes, dst_strides);
       CHECK_EQ(e, E_SUCCESS);
 
-      e = dnnConversionCreate<Dtype>(&convertFwd_top, l_fwd_top_data_int, l_fwd_top_data_usr);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnAllocateBuffer<Dtype>((void **)&fwd_top_data_int, l_fwd_top_data_int);
-      CHECK_EQ(e, E_SUCCESS);
+      fwd_top_data.create_conversions();
+
       e = dnnConversionCreate<Dtype>(&convertBwd_top, l_bwd_top_diff_usr, l_bwd_top_diff_int);
       CHECK_EQ(e, E_SUCCESS);
       e = dnnAllocateBuffer<Dtype>((void **)&bwd_top_diff_int, l_bwd_top_diff_int);
       CHECK_EQ(e, E_SUCCESS);
 
-    }
+    //}
 
   } else
   {
@@ -252,13 +246,22 @@ void DnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?
 template <typename Dtype>
 void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  void* bottom_data = (void*)bottom[0]->cpu_data();
-  Dtype* top_data = top[0]->mutable_cpu_data();
+  void* bottom_data = (void*)bottom[0]->prv_data();
+  void* top_data = NULL;
+
+  // TODO: validate bottom layout for both cases: cpu_data and prv_data?
+  if(NULL == bottom_data)
+  {
+    LOG(INFO) << "Using cpu_data for bottom in POOLing.";
+    bottom_data = (void*)bottom[0]->cpu_data();
+  }
+
   //printf(" len(top_data) = %i\n", sizeof(top_data)/sizeof(Dtype));
   const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
@@ -272,24 +275,23 @@ void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // Initialize
     dnnError_t e;
     void* pooling_res[dnnResourceNumber];
-    pooling_res[dnnResourceDst] = convertFwd_top ? (void*)fwd_top_data_int : (void*)top_data;
     pooling_res[dnnResourceSrc] = (void *)bottom_data;
     mask = max_idx_.mutable_cpu_data();
     caffe_set(top_count, -1, (int*)mask);
     pooling_res[dnnResourceWorkspace] = (void*)mask;
 
+    if (fwd_top_data.convert_from_int)
+    {
+      top[0]->set_prv_data(fwd_top_data.internal_ptr, false);
+      top[0]->set_prv_converter_data(&fwd_top_data, &MklDnnMemoryDescriptor<Dtype>::convert_from_prv);
+      pooling_res[dnnResourceDst] = (void *)fwd_top_data.internal_ptr;
+    }
+    else {
+      pooling_res[dnnResourceDst] = (void*)top[0]->mutable_cpu_data();;
+      LOG(INFO) << "Using cpu_data for top in DnnPooling.";
+    }
     e = dnnExecute<Dtype>(poolingFwd, pooling_res);
     CHECK_EQ(e, E_SUCCESS);
-
-    if (convertFwd_top)
-    {
-if(print_conversion)      LOG(INFO) << " convertFwd_top for " << this->layer_param_.name();
-      void *convert_resources[dnnResourceNumber];
-      convert_resources[dnnResourceFrom] = (void *)fwd_top_data_int;
-      convert_resources[dnnResourceTo]   = (void *)top_data;
-      e = dnnExecute<Dtype>(convertFwd_top, convert_resources);
-      CHECK_EQ(e, E_SUCCESS);
-    }
 
     break;
   case PoolingParameter_PoolMethod_AVE:
@@ -322,7 +324,7 @@ void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
     mask = max_idx_.cpu_data();
-    
+
     dnnError_t e;
     void* pooling_res[dnnResourceNumber];
     pooling_res[dnnResourceDiffSrc] = (void*)bottom_diff;
@@ -330,7 +332,7 @@ void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     if (convertBwd_top)
     {
-if(print_conversion)      LOG(INFO) << "convertBwd_top for " << this->layer_param_.name();
+      if(print_conversion)      LOG(INFO) << "convertBwd_top for " << this->layer_param_.name();
       void *convert_resources[dnnResourceNumber];
       convert_resources[dnnResourceFrom] = (void *)top_diff;
       convert_resources[dnnResourceTo]   = (void *)bwd_top_diff_int;

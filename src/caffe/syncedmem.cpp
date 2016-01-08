@@ -48,9 +48,17 @@ inline void SyncedMemory::to_cpu() {
 #endif
     break;
   case HEAD_AT_PRV:
+    if (cpu_ptr_ == NULL) {
+      CaffeMallocHost(&cpu_ptr_, size_);
+      own_cpu_data_ = true;
+    }
     if(NULL == sync_prv_to_cpu_)
+    {
       LOG(FATAL) << " Can't sync prv data to cpu";
-    sync_prv_to_cpu_(prv_ptr_, cpu_ptr_, prv_descriptor_);
+      //memcpy(cpu_ptr_, prv_ptr_, size_);
+    }
+    else
+      sync_prv_to_cpu_(prv_ptr_, cpu_ptr_, prv_descriptor_);
     head_ = SYNCED_PRV;
     break;
   case SYNCED_PRV:
@@ -130,35 +138,23 @@ void* SyncedMemory::mutable_gpu_data() {
 }
 
 /*
-  Use this when prv_ptr_ will be written as the
-  same data as in cpu_ptr_ but with different layout.
-*/
-void* SyncedMemory::init_prv_data() {
-
-  if(NULL == prv_ptr_) {
-    CaffeMallocHost(&prv_ptr_, size_);
-    caffe_memset(size_, 0, prv_ptr_);
-  }
-
-  // Data is the same as in cpu_ptr_, possibly different layout
-  head_ = SYNCED_PRV;
-
-  return prv_ptr_;
-}
-
-/*
-  Memory allocated by the user.
-  same_data - shall be true if dat is the same in cpu_ptr_ but with different layout.
-  TODO: memory freeing
+  If data is NULL, then allocate the memory here.
+  same_data - shall be true if data will be the same as in cpu_ptr_
+    but (potentially) with different layout.
 */
 void SyncedMemory::set_prv_data(void* data, bool same_data) {
-  CHECK(data);
 #pragma omp critical
   {
-    if (prv_ptr_ && own_prv_data_) {
-      CaffeFreeHost(prv_ptr_);
+    if(data != NULL) {
+      if (prv_ptr_ && own_prv_data_) {
+        CaffeFreeHost(prv_ptr_);
+      }
+      prv_ptr_ = data;
     }
-    prv_ptr_ = data;
+    else if(NULL == prv_ptr_) {
+      CaffeMallocHost(&prv_ptr_, size_);
+      caffe_memset(size_, 0, prv_ptr_);
+    }
 
     if(same_data)
       head_ = SYNCED_PRV;

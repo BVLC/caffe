@@ -179,6 +179,39 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
 };
 
 template <typename Dtype>
+struct MklDnnMemoryDescriptor{
+  MklDnnMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
+    internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL) {};
+  ~MklDnnMemoryDescriptor()
+  {
+    dnnLayoutDelete<Dtype>(layout_usr);
+    dnnLayoutDelete<Dtype>(layout_int);
+    dnnReleaseBuffer<Dtype>(internal_ptr);
+    dnnDelete<Dtype>(convert_to_int);
+    dnnDelete<Dtype>(convert_from_int);
+  }
+  dnnLayout_t layout_usr;
+  dnnLayout_t layout_int;
+  Dtype* internal_ptr;
+  dnnPrimitive_t convert_to_int;
+  dnnPrimitive_t convert_from_int;
+  void create_conversions()
+  {
+    if (!dnnLayoutCompare<Dtype>(layout_usr, layout_int))
+    {
+      int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr , layout_int);
+      CHECK(status == 0) << "Failed creation convert_to_int with status " << status << "\n";
+      status = dnnConversionCreate<Dtype>(&convert_from_int, layout_int , layout_usr);
+      CHECK(status == 0) << "Failed creation convert_to_int with status " << status << "\n";
+      status = dnnAllocateBuffer<Dtype>((void **)&internal_ptr, layout_int);
+      CHECK(status == 0) << "Failed fwd_bottom_data_int memory allocation with status " << status << "\n";
+    }
+  }
+
+  static void convert_from_prv(void* prv_ptr, void* cpu_ptr, void* prv_descriptor);
+};
+
+template <typename Dtype>
 class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit DnnConvolutionLayer(const LayerParameter& param);
@@ -202,11 +235,8 @@ class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
 
  private:
 /* Fwd step */
+     MklDnnMemoryDescriptor<Dtype> fwd_bottom_data, fwd_top_data, fwd_filter_data, fwd_bias_data;
      dnnPrimitive_t convolutionFwd;
-     dnnLayout_t l_fwd_top_data_int, l_fwd_bottom_data_int, l_fwd_filter_data_int, l_fwd_bias_data_int;
-     dnnLayout_t l_fwd_top_data_usr, l_fwd_bottom_data_usr, l_fwd_filter_data_usr, l_fwd_bias_data_usr;
-     Dtype  *fwd_top_data_int, *fwd_bottom_data_int, *fwd_filter_data_int, *fwd_bias_data_int;
-     dnnPrimitive_t  convertFwd_top, convertFwd_bottom, convertFwd_filter, convertFwd_bias;
 
 /* Bwd data step */
      dnnPrimitive_t convolutionBwdData;
@@ -466,7 +496,7 @@ class DnnLRNLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-      
+
   int size_;
   int pre_pad_;
   Dtype alpha_;
@@ -571,14 +601,13 @@ class DnnPoolingLayer : public Layer<Dtype> {
   Blob<Dtype> rand_idx_;
   Blob<size_t> max_idx_;
  private:
+  MklDnnMemoryDescriptor<Dtype> fwd_top_data;
+
   dnnPrimitive_t poolingFwd, poolingBwd;
-  dnnPrimitive_t convertFwd_top, convertBwd_top;
-  dnnLayout_t l_fwd_top_data_int;
-  dnnLayout_t l_fwd_top_data_usr;
+  dnnPrimitive_t convertBwd_top;
   dnnLayout_t l_bwd_top_diff_int;
   dnnLayout_t l_bwd_top_diff_usr;
-  Dtype*fwd_top_data_int;
-  Dtype*bwd_top_diff_int;
+  Dtype *bwd_top_diff_int;
   Dtype *pool_buffer_;
 };
 
