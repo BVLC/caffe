@@ -17,10 +17,10 @@
 #include "caffe/proto/caffe.pb.h"
 
 #ifdef USE_CUDNN
-#include "caffe/layers/cudnn_ndconv_layer.hpp"
 #include "caffe/layers/cudnn_conv_layer.hpp"
 #include "caffe/layers/cudnn_lcn_layer.hpp"
 #include "caffe/layers/cudnn_lrn_layer.hpp"
+#include "caffe/layers/cudnn_ndconv_layer.hpp"
 #include "caffe/layers/cudnn_pooling_layer.hpp"
 #include "caffe/layers/cudnn_relu_layer.hpp"
 #include "caffe/layers/cudnn_sigmoid_layer.hpp"
@@ -37,7 +37,7 @@ namespace caffe {
 // Get convolution layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionLayer(
-    const LayerParameter& param) {
+  const LayerParameter& param) {
   ConvolutionParameter conv_param = param.convolution_param();
   ConvolutionParameter_Engine engine = conv_param.engine();
 #ifdef USE_CUDNN
@@ -75,7 +75,7 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetNdConvolutionLayer(
-    const LayerParameter& param) {
+  const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
@@ -84,7 +84,7 @@ shared_ptr<Layer<Dtype> > GetNdConvolutionLayer(
 #endif
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-	  NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED;
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CudnnNdConvolutionLayer<Dtype>(param));
@@ -173,7 +173,7 @@ shared_ptr<Layer<Dtype> > GetNdPoolingLayer(const LayerParameter& param) {
 #endif
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
-	  NOT_IMPLEMENTED;
+    NOT_IMPLEMENTED;
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CudnnNdPoolingLayer<Dtype>(param));
