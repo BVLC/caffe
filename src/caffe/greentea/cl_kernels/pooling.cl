@@ -258,12 +258,13 @@ __kernel void TEMPLATE(ave_pool_backward,Dtype)(const int_tp nthreads,
 
 __kernel void TEMPLATE(sto_pool_backward,Dtype)(
     const int_tp nthreads, __global const Dtype* rand_idx,
-    __global const Dtype* const top_diff, const int_tp num, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp pooled_height,
-    const int_tp pooled_width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp stride_h, const int_tp stride_w, __global Dtype* bottom_diff) {
-  for (int_tp index = get_global_id(0); index < nthreads;
-      index += get_global_size(0)) {
+    __global const Dtype* const top_diff, const int_tp num,
+    const int_tp channels, const int_tp height, const int_tp width,
+    const int_tp pooled_height, const int_tp pooled_width,
+    const int_tp kernel_h, const int_tp kernel_w, const int_tp stride_h,
+    const int_tp stride_w, __global Dtype* bottom_diff) {
+  for (int_tp index = get_global_id(0); index < nthreads; index +=
+      get_global_size(0)) {
     // find out the local index
     // find out the local offset
     const int_tp w = index % width;
@@ -282,7 +283,7 @@ __kernel void TEMPLATE(sto_pool_backward,Dtype)(
     for (int_tp ph = phstart; ph < phend; ++ph) {
       for (int_tp pw = pwstart; pw < pwend; ++pw) {
         gradient += top_diff_slice[ph * pooled_width + pw]
-            * (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?0.0:1.0);
+            * (index == (int_tp) (rand_idx_slice[ph * pooled_width + pw])?1.0:0.0);
       }
     }
     bottom_diff[index] = gradient;
