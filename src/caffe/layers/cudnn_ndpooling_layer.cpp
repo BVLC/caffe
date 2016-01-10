@@ -10,7 +10,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void CudnnNdPoolingLayer<Dtype>::LayerSetUp(const
+void CudnnNdPoolingLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
