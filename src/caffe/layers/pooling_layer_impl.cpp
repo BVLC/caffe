@@ -190,8 +190,7 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
 
     int64_t internal_mask_ptr = 
       (Use_top_mask || param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE) 
-        ? reinterpret_cast<int64_t>(NULL)
-        : reinterpret_cast<int64_t>(layer->max_idx_.cpu_data());
+        ? 0 : reinterpret_cast<int64_t>(layer->max_idx_.cpu_data());
 
     bool optimal_version = false;
 
