@@ -10,6 +10,16 @@ list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
+# ---[ OpenMP
+if(USE_OPENMP)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  else()
+    set(USE_OPENMP "OFF")   # compiler is not supporting OpenMP then do not use it
+  endif()
+endif()
+
 # ---[ Google-glog
 include("cmake/External/glog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
@@ -97,6 +107,10 @@ if(NOT APPLE)
     include_directories(SYSTEM ${MKL_INCLUDE_DIR})
     list(APPEND Caffe_LINKER_LIBS ${MKL_LIBRARIES})
     add_definitions(-DUSE_MKL)
+    # If MKL and OpenMP is to be used then use Intel OpenMP
+    if(OPENMP_FOUND)    
+      list(APPEND Caffe_LINKER_LIBS iomp5)
+    endif()
   endif()
 elseif(APPLE)
   find_package(vecLib REQUIRED)

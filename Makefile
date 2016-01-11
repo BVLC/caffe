@@ -424,6 +424,33 @@ endif
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
+# Following section detects if compiler supports OpenMP and updated compilation/linking flags accordingly
+# if no openmp is supported in compiler then openmp compiler flags are not to be updated 
+USE_OPENMP ?= 1
+ifeq ($(USE_OPENMP), 1)
+  DUMMY_OPENMP_BINARY := $(shell mktemp)
+  DUMMY_OPENMP_FILE := $(shell mktemp).cpp
+  define OPENMP_VERIFYING_CODE =
+    "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
+  endef
+  ifeq ($(BLAS), mkl)
+    OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)/compiler/lib/intel64
+  endif
+  OPENMP_VERIFYING_COMPILE_COMMAND = $(CXX) -fopenmp $(DUMMY_OPENMP_FILE) $(OPENMP_VERIFYING_COMPILE_FLAGS) -o $(DUMMY_OPENMP_BINARY) 2>/dev/null
+  OPENMP_VERIFYING_COMMAND = echo -e $(OPENMP_VERIFYING_CODE) > $(DUMMY_OPENMP_FILE) && $(OPENMP_VERIFYING_COMPILE_COMMAND) && echo 1 || echo 0
+  IS_OPENMP_PRESENT = $(shell $(OPENMP_VERIFYING_COMMAND))
+
+  ifeq ($(IS_OPENMP_PRESENT), 1)
+    CXXFLAGS += -fopenmp
+    LINKFLAGS += -fopenmp
+    ifeq ($(BLAS), mkl)
+      LIBRARIES += iomp5
+      LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
+    endif
+  endif
+endif
+
+
 all: lib tools examples
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
