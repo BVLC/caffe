@@ -26,22 +26,23 @@ void RReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
-  Dtype negative_slope_lower = this->layer_param_.rrelu_param().negative_slope_lower();
-  Dtype negative_slope_upper = this->layer_param_.rrelu_param().negative_slope_upper();
+  Dtype negative_slope_lower = this->
+    layer_param_.rrelu_param().negative_slope_lower();
+  Dtype negative_slope_upper = this->
+    layer_param_.rrelu_param().negative_slope_upper();
   if (this->phase_ == TRAIN) {
     // Create random numbers
     Dtype *mask = rand_vec_.mutable_cpu_data();
-    caffe_rng_uniform(count,negative_slope_lower,negative_slope_upper,mask);
+    caffe_rng_uniform(count, negative_slope_lower, negative_slope_upper, mask);
     for (int i = 0; i < count; ++i) {
       top_data[i] = std::max(bottom_data[i], Dtype(0))
         + Dtype(1) / mask[i] * std::min(bottom_data[i], Dtype(0));
   }
-  }
-  else
-  {
+  } else {
     for (int i = 0; i < count; ++i) {
       top_data[i] = std::max(bottom_data[i], Dtype(0))
-        + Dtype(2) / (negative_slope_lower+negative_slope_upper) * std::min(bottom_data[i], Dtype(0));
+        + Dtype(2) / (negative_slope_lower+negative_slope_upper)
+        * std::min(bottom_data[i], Dtype(0));
     }
   }
 }
@@ -55,21 +56,23 @@ void RReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int count = bottom[0]->count();
-    Dtype negative_slope_lower = this->layer_param_.rrelu_param().negative_slope_lower();
-    Dtype negative_slope_upper = this->layer_param_.rrelu_param().negative_slope_upper();
+    Dtype negative_slope_lower = this->
+      layer_param_.rrelu_param().negative_slope_lower();
+    Dtype negative_slope_upper = this->
+      layer_param_.rrelu_param().negative_slope_upper();
     if (this->phase_ == TRAIN) {
       Dtype *mask = rand_vec_.mutable_cpu_data();
       for (int i = 0; i < count; ++i) {
         bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-                                        + Dtype(1) / mask[i] * (bottom_data[i] <= 0));
-
+                                        + Dtype(1) / mask[i]
+                                        * (bottom_data[i] <= 0));
       }
-    }
-    else
-    {
+    } else {
       for (int i = 0; i < count; ++i) {
         bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-                                        + Dtype(2) / (negative_slope_lower+negative_slope_upper) * (bottom_data[i] <= 0));
+                                        + Dtype(2) / (negative_slope_lower
+                                           +negative_slope_upper)
+                                        * (bottom_data[i] <= 0));
       }
     }
   }
