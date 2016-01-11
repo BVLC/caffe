@@ -101,3 +101,4 @@ Debug/
 3rdparty/
 *.*sdf
 *.deps
+ipch/

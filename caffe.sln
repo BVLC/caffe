@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -7,6 +8,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "windows\caffe.vcxproj", "{537EF951-4B02-4103-A310-52A6F7C8D748}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RunTests", "windows\runtests.vcxproj", "{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe.managed", "windows\caffe.managed\caffe.managed.vcxproj", "{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +29,10 @@ Global
 		{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}.Debug|x64.Build.0 = Debug|x64
 		{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}.Release|x64.ActiveCfg = Release|x64
 		{ECBC0E29-895C-4ADB-AFF1-CB787E172B0F}.Release|x64.Build.0 = Release|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Debug|x64.ActiveCfg = Debug|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Debug|x64.Build.0 = Debug|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Release|x64.ActiveCfg = Release|x64
+		{350020CA-75B9-425E-85CA-DD8CF8CFBA9B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
