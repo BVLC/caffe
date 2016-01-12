@@ -6,44 +6,92 @@
 namespace caffe {
 
 template <typename Dtype>
-void im2col_cpu(const Dtype* data_im, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    const int dilation_h, const int dilation_w,
-    Dtype* data_col) {
-  const int height_col = (height + 2 * pad_h -
-      (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-  const int width_col = (width + 2 * pad_w -
-      (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-  const int channels_col = channels * kernel_h * kernel_w;
-  for (int c_col = 0; c_col < channels_col; ++c_col) {
-    int w_offset = c_col % kernel_w;
-    int h_offset = (c_col / kernel_w) % kernel_h;
-    int c_im = c_col / kernel_h / kernel_w;
-    for (int h_col = 0; h_col < height_col; ++h_col) {
-      for (int w_col = 0; w_col < width_col; ++w_col) {
-        int h_im = h_col * stride_h - pad_h + h_offset * dilation_h;
-        int w_im = w_col * stride_w - pad_w + w_offset * dilation_w;
-        data_col[(c_col * height_col + h_col) * width_col + w_col] =
-            (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?
-            data_im[(c_im * height + h_im) * width + w_im] : 0;
+void im2col_cpu(const Dtype *data_im, int channels, int input_h, int input_w,
+    int kernel_h, int kernel_w, int pad_h, int pad_w,
+    int stride_h, int stride_w, int dilation_h, int dilation_w,
+    Dtype *data_col) {
+  const int output_h = (input_h + 2 * pad_h -
+    (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+  const int output_w = (input_w + 2 * pad_w -
+    (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  const int channel_size = input_h * input_w;
+  for (; channels--; data_im += channel_size) {
+    for (int kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
+      for (int kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
+        int input_row = -pad_h + kernel_row * dilation_h;
+        for (int output_rows = output_h; output_rows; output_rows--) {
+          if (((unsigned) input_row) >= ((unsigned) input_h)) {
+            for (int output_cols = output_w; output_cols; output_cols--)
+              *(data_col++) = 0;
+          } else {
+            int input_col = -pad_w + kernel_col * dilation_w;
+            for (int output_col = output_w; output_col; output_col--) {
+              if (((unsigned) input_col) < ((unsigned) input_w))
+                *(data_col++) = data_im[input_row * input_w + input_col];
+              else
+                *(data_col++) = 0;
+              input_col += stride_w;
+            }
+          }
+          input_row += stride_h;
+        }
+      }
+    }
+  }
+}
+
+template <typename Dtype>
+void col2im_cpu(
+    const Dtype *data_col, int channels, int input_h, int input_w,
+    int kernel_h, int kernel_w, int pad_h, int pad_w,
+    int stride_h, int stride_w, int dilation_h, int dilation_w,
+    Dtype *data_im) {
+  const int output_h = (input_h + 2 * pad_h -
+    (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+  const int output_w = (input_w + 2 * pad_w -
+    (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  const int channel_size = input_h * input_w;
+  caffe_set(channels * input_h * input_w, Dtype(0), data_im);
+  for (; channels--; data_im += channel_size) {
+    for (int kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
+      for (int kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
+        int input_row = -pad_h + kernel_row * dilation_h;
+        for (int output_rows = output_h; output_rows; output_rows--) {
+          if (((unsigned) input_row) >= ((unsigned) input_h)) {
+            data_col += output_w;
+          } else {
+            int input_col = -pad_w + kernel_col * dilation_w;
+            for (int output_col = output_w; output_col; output_col--) {
+              if (((unsigned) input_col) < ((unsigned) input_w))
+                data_im[input_row * input_w + input_col] += *data_col;
+              data_col++;
+              input_col += stride_w;
+            }
+          }
+          input_row += stride_h;
+        }
       }
     }
   }
 }
 
 // Explicit instantiation
-template void im2col_cpu<float>(const float* data_im, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w, const int stride_h,
-    const int stride_w, const int dilation_h, const int dilation_w,
-    float* data_col);
-template void im2col_cpu<double>(const double* data_im, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w, const int stride_h,
-    const int stride_w, const int dilation_h, const int dilation_w,
-    double* data_col);
+template void im2col_cpu<float>(const float* data_im, int channels,
+    int input_h, int input_w, int kernel_h, int kernel_w,
+    int pad_h, int pad_w, int stride_h, int stride_w,
+    int dilation_h, int dilation_w, float* data_col);
+template void im2col_cpu<double>(const double* data_im, int channels,
+    int input_h, int input_w, int kernel_h, int kernel_w,
+    int pad_h, int pad_w, int stride_h, int stride_w,
+    int dilation_h, int dilation_w, double* data_col);
+template void col2im_cpu<float>(const float* data_col, int channels,
+    int input_h, int input_w, int kernel_h, int kernel_w,
+    int pad_h, int pad_w, int stride_h, int stride_w,
+    int dilation_h, int dilation_w, float* data_im);
+template void col2im_cpu<double>(const double* data_col, int channels,
+    int input_h, int input_w, int kernel_h, int kernel_w,
+    int pad_h, int pad_w, int stride_h, int stride_w,
+    int dilation_h, int dilation_w, double* data_im);
 
 template <typename Dtype>
 inline void im2col_nd_core_cpu(const Dtype* data_input, const bool im2col,
@@ -126,59 +174,6 @@ void im2col_nd_cpu(const Dtype* data_im, const int num_spatial_axes,
                   kernel_shape, pad, stride, dilation, data_col);
 }
 
-// Explicit instantiation
-template void im2col_nd_cpu<float>(const float* data_im,
-    const int num_spatial_axes,
-    const int* im_shape, const int* col_shape,
-    const int* kernel_shape, const int* pad, const int* stride,
-    const int* dilation, float* data_col);
-template void im2col_nd_cpu<double>(const double* data_im,
-    const int num_spatial_axes,
-    const int* im_shape, const int* col_shape,
-    const int* kernel_shape, const int* pad, const int* stride,
-    const int* dilation, double* data_col);
-
-template <typename Dtype>
-void col2im_cpu(const Dtype* data_col, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    const int dilation_h, const int dilation_w,
-    Dtype* data_im) {
-  caffe_set(height * width * channels, Dtype(0), data_im);
-  const int height_col = (height + 2 * pad_h -
-      (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-  const int width_col = (width + 2 * pad_w -
-      (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-  const int channels_col = channels * kernel_h * kernel_w;
-  for (int c_col = 0; c_col < channels_col; ++c_col) {
-    int w_offset = c_col % kernel_w;
-    int h_offset = (c_col / kernel_w) % kernel_h;
-    int c_im = c_col / kernel_h / kernel_w;
-    for (int h_col = 0; h_col < height_col; ++h_col) {
-      for (int w_col = 0; w_col < width_col; ++w_col) {
-        int h_im = h_col * stride_h - pad_h + h_offset * dilation_h;
-        int w_im = w_col * stride_w - pad_w + w_offset * dilation_w;
-        if (h_im >= 0 && h_im < height && w_im >= 0 && w_im < width)
-          data_im[(c_im * height + h_im) * width + w_im] +=
-              data_col[(c_col * height_col + h_col) * width_col + w_col];
-      }
-    }
-  }
-}
-
-// Explicit instantiation
-template void col2im_cpu<float>(const float* data_col, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w, const int stride_h,
-    const int stride_w, const int dilation_h, const int dilation_w,
-    float* data_im);
-template void col2im_cpu<double>(const double* data_col, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w, const int stride_h,
-    const int stride_w, const int dilation_h, const int dilation_w,
-    double* data_im);
-
 template <typename Dtype>
 void col2im_nd_cpu(const Dtype* data_col, const int num_spatial_axes,
     const int* im_shape, const int* col_shape,
@@ -190,6 +185,16 @@ void col2im_nd_cpu(const Dtype* data_col, const int num_spatial_axes,
 }
 
 // Explicit instantiation
+template void im2col_nd_cpu<float>(const float* data_im,
+    const int num_spatial_axes,
+    const int* im_shape, const int* col_shape,
+    const int* kernel_shape, const int* pad, const int* stride,
+    const int* dilation, float* data_col);
+template void im2col_nd_cpu<double>(const double* data_im,
+    const int num_spatial_axes,
+    const int* im_shape, const int* col_shape,
+    const int* kernel_shape, const int* pad, const int* stride,
+    const int* dilation, double* data_col);
 template void col2im_nd_cpu<float>(const float* data_col,
     const int num_spatial_axes,
     const int* im_shape, const int* col_shape,
@@ -200,6 +205,5 @@ template void col2im_nd_cpu<double>(const double* data_col,
     const int* im_shape, const int* col_shape,
     const int* kernel_shape, const int* pad, const int* stride,
     const int* dilation, double* data_im);
-
 
 }  // namespace caffe
