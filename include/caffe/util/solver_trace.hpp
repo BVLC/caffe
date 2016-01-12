@@ -43,8 +43,11 @@ class SolverTrace {
  protected:
   void update_weight_trace();                  /// Add weight history to digest
   void update_activation_trace();
+  void update_diff_trace();
+  void blob_trace(int trace_interval, int num_traces, bool use_data);
   void init_weight_trace();
   void init_activation_trace();
+  void init_diff_trace();
   SolverParameter param_;
   SolverTraceParameter trace_param_;
   shared_ptr<TraceDigest> trace_digest_;       /// History of the solver
@@ -57,6 +60,8 @@ class SolverTrace {
   int activation_trace_interval_;
   int num_weight_traces_;
   int weight_trace_interval_;
+  int num_diff_traces_;
+  int diff_trace_interval_;
   std::map<string, int> activation_name_to_index_;
   DISABLE_COPY_AND_ASSIGN(SolverTrace);
 };

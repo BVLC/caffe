@@ -47,6 +47,7 @@ SolverTrace<Dtype>::SolverTrace(const SolverParameter& param,
 
     init_weight_trace();
     init_activation_trace();
+    init_diff_trace();
   }
 }
 
@@ -140,11 +141,51 @@ void SolverTrace<Dtype>::init_weight_trace() {
 }
 
 template <typename Dtype>
+void SolverTrace<Dtype>::init_diff_trace() {
+  // set diff_trace_interval_ to zero as our default value
+  diff_trace_interval_ = 0;
+  // If weight trace interval is defined, use that
+  if (trace_param_.has_weight_trace_interval()) {
+    CHECK_GE(trace_param_.diff_trace_interval(), 0)
+        << "diff_trace_interval must be greater than or equal to zero";
+    diff_trace_interval_ = trace_param_.diff_trace_interval();
+  } else {
+    if (trace_param_.has_trace_interval()) {
+      diff_trace_interval_ = trace_param_.trace_interval();
+    }
+  }
+
+  // set num_diff_traces_ to zero as our default value
+  num_diff_traces_ = 0;
+  // If num_diff_traces is defined, use that
+  if (trace_param_.num_diff_traces()) {
+    CHECK_GE(trace_param_.num_diff_traces(), 0)
+        << "num_diff_traces must be greater than or equal to zero";
+    num_diff_traces_ = trace_param_.num_diff_traces();
+  } else {
+    if (trace_param_.has_num_traces()) {
+      num_diff_traces_ = trace_param_.num_traces();
+    }
+  }
+}
+
+template <typename Dtype>
 void SolverTrace<Dtype>::update_weight_trace() {
+  blob_trace(weight_trace_interval_, num_weight_traces_, true);
+}
+
+template <typename Dtype>
+void SolverTrace<Dtype>::update_diff_trace() {
+  blob_trace(weight_trace_interval_, num_weight_traces_, false);
+}
+
+template <typename Dtype>
+void SolverTrace<Dtype>::blob_trace(int trace_interval,
+                                    int num_traces, bool use_data) {
   int iter = solver_->iter();
   // If we are at the very start or at a point where we want to create trace
-  if ((weight_trace_interval_ > 0)
-      && ((iter + start_iter_) % weight_trace_interval_ == 0)
+  if ((trace_interval > 0)
+      && ((iter + start_iter_) % trace_interval == 0)
       && (start_iter_ == 0 || iter > start_iter_)) {
     const vector<shared_ptr<Layer<Dtype> > >& layers= solver_->net()->layers();
     const vector<string>& layer_names = solver_->net()->layer_names();
@@ -155,17 +196,27 @@ void SolverTrace<Dtype>::update_weight_trace() {
           layers[layer_id]->blobs();
       // for each blob in the layer weight traces are created
       for (int param_id = 0; param_id  < blobs.size(); ++param_id) {
-        WeightTracePoint* new_point = trace_digest_->add_weight_trace_point();
+        WeightTracePoint* new_point = NULL;
+        if (use_data) {
+          new_point = trace_digest_->add_weight_trace_point();
+        } else {
+          new_point = trace_digest_->add_diff_trace_point();
+        }
         new_point->set_iter(iter);
         new_point->set_layer_name(layer_names[layer_id]);
         new_point->set_param_id(param_id);
         int count = blobs[param_id]->count();
-        const Dtype* data = blobs[param_id]->cpu_data();
+        const Dtype* data = NULL;
+        if (use_data) {
+          data = blobs[param_id]->cpu_data();
+        } else {
+          data = blobs[param_id]->cpu_diff();
+        }
         // If the blob has a lot of values, add them to trace at even intervals
-        if (count > num_weight_traces_) {
-          int start = count / (num_weight_traces_ * 2 + 2);
-          int step  = count / (num_weight_traces_ + 1);
-          for (int i = 0; i < num_weight_traces_; ++i) {
+        if (count > num_traces) {
+          int start = count / (num_traces * 2 + 2);
+          int step  = count / (num_traces + 1);
+          for (int i = 0; i < num_traces; ++i) {
             new_point->add_value(data[start + i * step]);
           }
         } else {

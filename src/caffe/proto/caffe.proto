@@ -246,6 +246,7 @@ message SolverParameter {
 message TraceDigest {
   repeated WeightTracePoint weight_trace_point = 1;
   repeated ActivationTrace  activation_trace = 2;
+  repeated WeightTracePoint diff_trace_point = 3;
 }
 
 message SolverTraceParameter {
@@ -290,6 +291,17 @@ message SolverTraceParameter {
   // number of parameters to track from every layer
   // If this is not set, num_traces is used as a default
   optional int32 num_activation_traces = 9;
+  
+  // tells us how often we should take weight trace values.
+  // If this is not set, trace_interval is used as a default
+  // tells us how often we should take diff trace values.
+  // If this value is zero, no diff trace will be made
+  // determines how detailed the diff trace will be
+  optional int32 diff_trace_interval = 10;
+
+  // number of parameters to track from every layer
+  // If this is not set, num_traces is used as a default
+  optional int32 num_diff_traces = 11;
   
 }
 
