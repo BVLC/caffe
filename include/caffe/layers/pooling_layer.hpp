@@ -19,8 +19,8 @@ namespace caffe {
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
   // Private code generators.
-  friend PoolingCodeGeneratorForward<Dtype>;
-  friend PoolingCodeGeneratorBackward<Dtype>;
+  friend class PoolingCodeGeneratorForward<Dtype>;
+  friend class PoolingCodeGeneratorBackward<Dtype>;
   PoolingCodeGeneratorForward<Dtype> Forward_code_generator;
   PoolingCodeGeneratorBackward<Dtype> Backward_code_generator;
 
