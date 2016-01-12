@@ -1,5 +1,6 @@
 #ifndef CAFFE_SOLVER_TRACE_HPP_
 #define CAFFE_SOLVER_TRACE_HPP_
+#include <map>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,9 @@ class SolverTrace {
 
  protected:
   void update_weight_trace();                  /// Add weight history to digest
+  void update_activation_trace();
+  void init_weight_trace();
+  void init_activation_trace();
   SolverParameter param_;
   SolverTraceParameter trace_param_;
   shared_ptr<TraceDigest> trace_digest_;       /// History of the solver
@@ -49,6 +53,11 @@ class SolverTrace {
   int start_iter_;                             /// Iter where the solver starts
   int last_iter_;                              /// The last iter we updated
   string filename_;                            /// File for the solver trace
+  int num_activation_traces_;
+  int activation_trace_interval_;
+  int num_weight_traces_;
+  int weight_trace_interval_;
+  std::map<string, int> activation_name_to_index_;
   DISABLE_COPY_AND_ASSIGN(SolverTrace);
 };
 

@@ -1,3 +1,4 @@
+#include <map>
 #include <string>
 #include <vector>
 #include "caffe/util/io.hpp"
@@ -33,6 +34,19 @@ SolverTrace<Dtype>::SolverTrace(const SolverParameter& param,
           "either snapshot_prefix or trace_filename must be set";
       filename_ = param_.snapshot_prefix() + ".caffetrace";
     }
+
+    if (trace_param_.has_trace_interval()) {
+      CHECK_GT(trace_param_.trace_interval(), 0)
+          << "trace_interval must be non negative";
+    }
+
+    if (trace_param_.has_num_traces()) {
+      CHECK_GT(trace_param_.num_traces(), 0)
+          << "num_traces must be non negative";
+    }
+
+    init_weight_trace();
+    init_activation_trace();
   }
 }
 
@@ -53,6 +67,7 @@ void SolverTrace<Dtype>::update_trace_train(SolverAction::Enum request) {
   if (iter != last_iter_) {
     last_iter_ = iter;
     update_weight_trace();
+    update_activation_trace();
   }
   // this prevents saving the same iteration twice even if we are requested to
   if (iter % save_trace_ == 0 ||
@@ -96,11 +111,40 @@ void SolverTrace<Dtype>::Save() const {
 }
 
 template <typename Dtype>
+void SolverTrace<Dtype>::init_weight_trace() {
+  // set weight_trace_interval_ to zero as our default value
+  weight_trace_interval_ = 0;
+  // If weight trace interval is defined, use that
+  if (trace_param_.has_weight_trace_interval()) {
+    CHECK_GE(trace_param_.weight_trace_interval(), 0)
+        << "weight_trace_interval must be greater than or equal to zero";
+    weight_trace_interval_ = trace_param_.weight_trace_interval();
+  } else {
+    if (trace_param_.has_trace_interval()) {
+      weight_trace_interval_ = trace_param_.trace_interval();
+    }
+  }
+
+  // set num_weight_traces_ to zero as our default value
+  num_weight_traces_ = 0;
+  // If num_weight_traces is defined, use that
+  if (trace_param_.has_num_weight_traces()) {
+    CHECK_GE(trace_param_.num_weight_traces(), 0)
+        << "num_weight_traces must be greater than or equal to zero";
+    num_weight_traces_ = trace_param_.num_weight_traces();
+  } else {
+    if (trace_param_.has_num_traces()) {
+      num_weight_traces_ = trace_param_.num_traces();
+    }
+  }
+}
+
+template <typename Dtype>
 void SolverTrace<Dtype>::update_weight_trace() {
   int iter = solver_->iter();
   // If we are at the very start or at a point where we want to create trace
-  if ((trace_param_.weight_trace_interval() > 0)
-      && ((iter + start_iter_) % trace_param_.weight_trace_interval() == 0)
+  if ((weight_trace_interval_ > 0)
+      && ((iter + start_iter_) % weight_trace_interval_ == 0)
       && (start_iter_ == 0 || iter > start_iter_)) {
     const vector<shared_ptr<Layer<Dtype> > >& layers= solver_->net()->layers();
     const vector<string>& layer_names = solver_->net()->layer_names();
@@ -118,10 +162,10 @@ void SolverTrace<Dtype>::update_weight_trace() {
         int count = blobs[param_id]->count();
         const Dtype* data = blobs[param_id]->cpu_data();
         // If the blob has a lot of values, add them to trace at even intervals
-        if (count > trace_param_.num_weight_traces()) {
-          int start = count / (trace_param_.num_weight_traces() * 2 + 2);
-          int step  = count / (trace_param_.num_weight_traces() + 1);
-          for (int i = 0; i < trace_param_.num_weight_traces(); ++i) {
+        if (count > num_weight_traces_) {
+          int start = count / (num_weight_traces_ * 2 + 2);
+          int step  = count / (num_weight_traces_ + 1);
+          for (int i = 0; i < num_weight_traces_; ++i) {
             new_point->add_value(data[start + i * step]);
           }
         } else {
@@ -129,6 +173,84 @@ void SolverTrace<Dtype>::update_weight_trace() {
           for (int i = 0; i < count; ++i) {
             new_point->add_value(data[i]);
           }
+        }
+      }
+    }
+  }
+}
+
+template <typename Dtype>
+void SolverTrace<Dtype>::init_activation_trace() {
+  // set activation_trace_interval_ to zero as our default value
+  activation_trace_interval_ = 0;
+  // If activation trace interval is defined, use that
+  if (trace_param_.has_activation_trace_interval()) {
+    CHECK_GE(trace_param_.activation_trace_interval(), 0)
+        << "weight_trace_interval must be greater than or equal to zero";
+    activation_trace_interval_ = trace_param_.activation_trace_interval();
+  } else {
+    if (trace_param_.has_trace_interval()) {
+      activation_trace_interval_ = trace_param_.trace_interval();
+    }
+  }
+
+  // set num_activation_traces_ to zero as our default value
+  num_activation_traces_ = 0;
+  // If num_weight_traces is defined, use that
+  if (trace_param_.has_num_activation_traces()) {
+    CHECK_GE(trace_param_.num_activation_traces(), 0)
+        << "num_weight_traces must be greater than or equal to zero";
+    num_activation_traces_ = trace_param_.num_activation_traces();
+  } else {
+    if (trace_param_.has_num_traces()) {
+      num_activation_traces_ = trace_param_.num_traces();
+    }
+  }
+}
+
+template <typename Dtype>
+void SolverTrace<Dtype>::update_activation_trace() {
+  int iter = solver_->iter();
+  // If we are at the very start or at a point where we want to create trace
+  if ((activation_trace_interval_ > 0)
+      && ((iter + start_iter_) % activation_trace_interval_ == 0)
+      && (start_iter_ == 0 || iter > start_iter_)) {
+    const vector<shared_ptr<Blob<Dtype> > >& blobs = solver_->net()->blobs();
+    const vector<string>& blob_names = solver_->net()->blob_names();
+    int blob_idx;
+
+    // for each blob in the net activation traces are created
+    for (int blob_id = 0; blob_id < blobs.size(); ++blob_id) {
+      const shared_ptr<Blob<Dtype> > blob = blobs[blob_id];
+      string name = blob_names[blob_id];
+
+      // check to see if a trace for this blob has already been started
+      std::map<string, int>::iterator it =activation_name_to_index_.find(name);
+      if (it == activation_name_to_index_.end()) {
+        ActivationTrace* new_trace = trace_digest_->add_activation_trace();
+        new_trace->set_blob_name(name);
+        blob_idx = trace_digest_->activation_trace_size()-1;
+        activation_name_to_index_[name] = blob_idx;
+      } else {
+        blob_idx = it->second;
+      }
+      ActivationTrace* mat = trace_digest_->mutable_activation_trace(blob_idx);
+      ActivationTracePoint* new_point = mat->add_activation_trace_point();
+
+      new_point->set_iter(iter);
+      int count = blob->count();
+      const Dtype* data = blob->cpu_data();
+      // If the blob has a lot of values, add them to trace at even intervals
+      if (count > num_activation_traces_) {
+        int start = count / (num_activation_traces_ * 2 + 2);
+        int step  = count / (num_activation_traces_ + 1);
+        for (int i = 0; i < num_activation_traces_; ++i) {
+          new_point->add_value(data[start + i * step]);
+        }
+      } else {
+        // If there are not very many values, add them all to trace
+        for (int i = 0; i < count; ++i) {
+          new_point->add_value(data[i]);
         }
       }
     }
