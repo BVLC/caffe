@@ -1,50 +1,60 @@
 name: "mnist_siamese_train_test"
-layers {
+layer {
   name: "pair_data"
-  type: DATA
+  type: "Data"
   top: "pair_data"
   top: "sim"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00390625
+  }
   data_param {
     source: "examples/siamese/mnist_siamese_train_leveldb"
-    scale: 0.00390625
     batch_size: 64
   }
-  include: { phase: TRAIN }
 }
-layers {
+layer {
   name: "pair_data"
-  type: DATA
+  type: "Data"
   top: "pair_data"
   top: "sim"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    scale: 0.00390625
+  }
   data_param {
     source: "examples/siamese/mnist_siamese_test_leveldb"
-    scale: 0.00390625
     batch_size: 100
   }
-  include: { phase: TEST }
 }
-layers {
-    name: "slice_pair"
-    type: SLICE
-    bottom: "pair_data"
-    top: "data"
-    top: "data_p"
-    slice_param {
-        slice_dim: 1
-        slice_point: 1
-    }
+layer {
+  name: "slice_pair"
+  type: "Slice"
+  bottom: "pair_data"
+  top: "data"
+  top: "data_p"
+  slice_param {
+    slice_dim: 1
+    slice_point: 1
+  }
 }
-
-
-
-
-layers {
+layer {
   name: "conv1"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    name: "conv1_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv1_b"
+    lr_mult: 2
+  }
   convolution_param {
     num_output: 20
     kernel_size: 5
@@ -56,12 +66,10 @@ layers {
       type: "constant"
     }
   }
-  param: "conv1_w"
-  param: "conv1_b"
 }
-layers {
+layer {
   name: "pool1"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -70,15 +78,11 @@ layers {
     stride: 2
   }
 }
-
-
-layers {
+layer {
   name: "local1"
-  type: LOCAL
+  type: "Local"
   bottom: "pool1"
   top: "local1"
-  blobs_lr: 1
-  blobs_lr: 2
   local_param {
     num_output: 5
     kernel_size: 5
@@ -92,22 +96,26 @@ layers {
       value: 0.1
     }
   }
-  param: "local1_w"
-  param: "local1_b"
+  param {
+    name: "local1_w"
+    lr_mult: 1
+  }
+  param {
+    name: "local1_b"
+    lr_mult: 2
+  }
 }
-layers {
+layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "local1"
   top: "local1"
 }
-layers {
+layer {
   name: "local2"
-  type: LOCAL
+  type: "Local"
   bottom: "local1"
   top: "local2"
-  blobs_lr: 1
-  blobs_lr: 2
   local_param {
     num_output: 10
     kernel_size: 5
@@ -121,29 +129,45 @@ layers {
       value: 0.1
     }
   }
-  param: "local2_w"
-  param: "local2_b"
+  param {
+    name: "local2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "local2_b"
+    lr_mult: 2
+  }
 }
-layers {
+layer {
   name: "relu2"
-  type: RELU
+  type: "ReLU"
   bottom: "local2"
   top: "local2"
 }
-
-
-
-
-
-
-
-layers {
-  name: "ip1"
-  type: INNER_PRODUCT
+layer {
+  name: "pool2"
+  type: "Pooling"
   bottom: "local2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "pool2"
   top: "ip1"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    name: "ip1_w"
+    lr_mult: 1
+  }
+  param {
+    name: "ip1_b"
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 500
     weight_filler {
@@ -153,22 +177,26 @@ layers {
       type: "constant"
     }
   }
-  param: "ip1_w"
-  param: "ip1_b"
 }
-layers {
+layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "ip1"
   top: "ip1"
 }
-layers {
+layer {
   name: "ip2"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "ip1"
   top: "ip2"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    name: "ip2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "ip2_b"
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 10
     weight_filler {
@@ -178,17 +206,20 @@ layers {
       type: "constant"
     }
   }
-  param: "ip2_w"
-  param: "ip2_b"
 }
-
-layers {
-  name: "feat2"
-  type: INNER_PRODUCT
+layer {
+  name: "feat"
+  type: "InnerProduct"
   bottom: "ip2"
-  top: "feat2"
-  blobs_lr: 1
-  blobs_lr: 2
+  top: "feat"
+  param {
+    name: "feat_w"
+    lr_mult: 1
+  }
+  param {
+    name: "feat_b"
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 2
     weight_filler {
@@ -198,39 +229,20 @@ layers {
       type: "constant"
     }
   }
-  param: "feat2_w"
-  param: "feat2_b"
 }
-
-layers {
-  name: "feat1"
-  type: INNER_PRODUCT
-  bottom: "local1"
-  top: "feat1"
-  blobs_lr: 1
-  blobs_lr: 2
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-  param: "feat1_w"
-  param: "feat1_b"
-}
-
-
-
-layers {
+layer {
   name: "conv1_p"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "data_p"
   top: "conv1_p"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    name: "conv1_w"
+    lr_mult: 1
+  }
+  param {
+    name: "conv1_b"
+    lr_mult: 2
+  }
   convolution_param {
     num_output: 20
     kernel_size: 5
@@ -242,12 +254,10 @@ layers {
       type: "constant"
     }
   }
-  param: "conv1_w"
-  param: "conv1_b"
 }
-layers {
+layer {
   name: "pool1_p"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv1_p"
   top: "pool1_p"
   pooling_param {
@@ -256,15 +266,11 @@ layers {
     stride: 2
   }
 }
-
-
-layers {
+layer {
   name: "local1_p"
-  type: LOCAL
+  type: "Local"
   bottom: "pool1_p"
   top: "local1_p"
-  blobs_lr: 1
-  blobs_lr: 2
   local_param {
     num_output: 5
     kernel_size: 5
@@ -278,22 +284,26 @@ layers {
       value: 0.1
     }
   }
-  param: "local1_w"
-  param: "local1_b"
+  param {
+    name: "local1_w"
+    lr_mult: 1
+  }
+  param {
+    name: "local1_b"
+    lr_mult: 2
+  }
 }
-layers {
+layer {
   name: "relu1_p"
-  type: RELU
+  type: "ReLU"
   bottom: "local1_p"
   top: "local1_p"
 }
-layers {
+layer {
   name: "local2_p"
-  type: LOCAL
+  type: "Local"
   bottom: "local1_p"
   top: "local2_p"
-  blobs_lr: 1
-  blobs_lr: 2
   local_param {
     num_output: 10
     kernel_size: 5
@@ -307,27 +317,45 @@ layers {
       value: 0.1
     }
   }
-  param: "local2_w"
-  param: "local2_b"
+  param {
+    name: "local2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "local2_b"
+    lr_mult: 2
+  }
 }
-layers {
+layer {
   name: "relu2_p"
-  type: RELU
+  type: "ReLU"
   bottom: "local2_p"
   top: "local2_p"
 }
-
-
-
-
-
-layers {
-  name: "ip1_p"
-  type: INNER_PRODUCT
+layer {
+  name: "pool2_p"
+  type: "Pooling"
   bottom: "local2_p"
+  top: "pool2_p"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "ip1_p"
+  type: "InnerProduct"
+  bottom: "pool2_p"
   top: "ip1_p"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    name: "ip1_w"
+    lr_mult: 1
+  }
+  param {
+    name: "ip1_b"
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 500
     weight_filler {
@@ -337,22 +365,26 @@ layers {
       type: "constant"
     }
   }
-  param: "ip1_w"
-  param: "ip1_b"
 }
-layers {
+layer {
   name: "relu1_p"
-  type: RELU
+  type: "ReLU"
   bottom: "ip1_p"
   top: "ip1_p"
 }
-layers {
+layer {
   name: "ip2_p"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "ip1_p"
   top: "ip2_p"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    name: "ip2_w"
+    lr_mult: 1
+  }
+  param {
+    name: "ip2_b"
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 10
     weight_filler {
@@ -362,17 +394,20 @@ layers {
       type: "constant"
     }
   }
-  param: "ip2_w"
-  param: "ip2_b"
 }
-
-layers {
-  name: "feat2_p"
-  type: INNER_PRODUCT
+layer {
+  name: "feat_p"
+  type: "InnerProduct"
   bottom: "ip2_p"
-  top: "feat2_p"
-  blobs_lr: 1
-  blobs_lr: 2
+  top: "feat_p"
+  param {
+    name: "feat_w"
+    lr_mult: 1
+  }
+  param {
+    name: "feat_b"
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 2
     weight_filler {
@@ -382,54 +417,15 @@ layers {
       type: "constant"
     }
   }
-  param: "feat2_w"
-  param: "feat2_b"
 }
-
-
-layers {
-  name: "feat1_p"
-  type: INNER_PRODUCT
-  bottom: "local1_p"
-  top: "feat1_p"
-  blobs_lr: 1
-  blobs_lr: 2
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
+layer {
+  name: "loss"
+  type: "ContrastiveLoss"
+  bottom: "feat"
+  bottom: "feat_p"
+  bottom: "sim"
+  top: "loss"
+  contrastive_loss_param {
+    margin: 1
   }
-  param: "feat1_w"
-  param: "feat1_b"
 }
-
-
-layers {
-    name: "loss2"
-    type: CONTRASTIVE_LOSS
-    contrastive_loss_param {
-        margin: 1.0
-    }
-    bottom: "feat2"
-    bottom: "feat2_p"
-    bottom: "sim"
-    top: "loss2"
-}
-
-
-layers {
-    name: "loss1"
-    type: CONTRASTIVE_LOSS
-    contrastive_loss_param {
-        margin: 1.0
-    }
-    bottom: "feat1"
-    bottom: "feat1_p"
-    bottom: "sim"
-    top: "loss1"
-}
-
