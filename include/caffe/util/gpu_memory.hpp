@@ -77,6 +77,8 @@ class gpu_memory {
     cudaStream_t  stream_;
     size_t        size_;
   };
+  static void update_dev_info(int device);
+
 # endif
 
  private:
@@ -89,8 +91,12 @@ class gpu_memory {
 
 #ifndef CPU_ONLY
   struct MemInfo {
-      size_t free;
-      size_t total;
+    MemInfo()  {
+      free = total = flush_count = 0;
+    }
+    size_t   free;
+    size_t   total;
+    unsigned flush_count;
   };
 
   static vector<MemInfo>  dev_info_;
@@ -102,7 +108,6 @@ class gpu_memory {
                        cudaStream_t stream = cudaStreamDefault);
   static void deallocate(pointer ptr, cudaStream_t = cudaStreamDefault);
 
-  static void registerStream(cudaStream_t stream);
   static void getInfo(size_t *free_mem, size_t *used_mem);
 
  private:

@@ -454,16 +454,6 @@ struct CachingDeviceAllocator
 	    if (error != cudaSuccess) {
 	      if (debug) CubLog("\tdevice %d failed to allocate %lld bytes for stream %lld",
 				device, (long long) search_key.bytes, (long long) search_key.associated_stream);
-
-	      // if (search_key.bytes < cached_bytes[device]) {
-	      // free all cached memory (for all devices), synchrionize and retry once
-	      cudaDeviceSynchronize();
-	      cudaThreadSynchronize();
-	      FreeAllCached();
-	      cudaDeviceSynchronize();
-	      cudaThreadSynchronize();
-	      error = cudaMalloc(&search_key.d_ptr, search_key.bytes);
-	      //	      }
 	    }
 	    if (CubDebug(error))
 	      return error;
