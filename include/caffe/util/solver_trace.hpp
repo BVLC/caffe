@@ -32,6 +32,8 @@ class SolverTrace {
   virtual const TraceDigest& get_digest() const;
   /** @brief Add trace of state the solver is in during training to digest */
   virtual void update_trace_train(SolverAction::Enum request);
+  virtual void update_trace_train_loss(Dtype loss,
+                                       Dtype smoothed_loss);
   virtual void update_trace_test_loss(int test_net_id, Dtype loss);
   virtual void update_trace_test_score(int test_net_id,
                                        const string& output_name,

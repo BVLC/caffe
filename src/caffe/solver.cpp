@@ -234,6 +234,9 @@ void Solver<Dtype>::Step(int iters) {
     loss /= param_.iter_size();
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
+    if (Caffe::root_solver()) {
+      solver_trace_->update_trace_train_loss(loss, smoothed_loss_);
+    }
     if (display) {
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss_;
@@ -407,10 +410,13 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO)     << "Test interrupted.";
     return;
   }
+  if (param_.test_iter(test_net_id) > 0) {
+    Dtype l = loss / param_.test_iter(test_net_id);
+    solver_trace_->update_trace_test_loss(test_net_id, l);
+  }
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
-    solver_trace_->update_trace_test_loss(test_net_id, loss);
   }
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
@@ -428,7 +434,10 @@ void Solver<Dtype>::Test(const int test_net_id) {
     solver_trace_->update_trace_test_score(test_net_id, output_name,
                                            loss_weight, mean_score);
   }
-  solver_trace_->Save();
+  if (param_.has_solver_trace_param() &&
+      param_.solver_trace_param().save_after_test()) {
+    solver_trace_->Save();
+  }
 }
 
 template <typename Dtype>

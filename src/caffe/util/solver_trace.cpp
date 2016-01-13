@@ -36,12 +36,12 @@ SolverTrace<Dtype>::SolverTrace(const SolverParameter& param,
     }
 
     if (trace_param_.has_trace_interval()) {
-      CHECK_GT(trace_param_.trace_interval(), 0)
+      CHECK_GE(trace_param_.trace_interval(), 0)
           << "trace_interval must be non negative";
     }
 
     if (trace_param_.has_num_traces()) {
-      CHECK_GT(trace_param_.num_traces(), 0)
+      CHECK_GE(trace_param_.num_traces(), 0)
           << "num_traces must be non negative";
     }
 
@@ -68,7 +68,10 @@ void SolverTrace<Dtype>::update_trace_train(SolverAction::Enum request) {
   if (iter != last_iter_) {
     last_iter_ = iter;
     update_weight_trace();
-    update_activation_trace();
+    if (iter > 0) {
+      update_diff_trace();
+      update_activation_trace();
+    }
   }
   // this prevents saving the same iteration twice even if we are requested to
   if (iter % save_trace_ == 0 ||
@@ -78,12 +81,27 @@ void SolverTrace<Dtype>::update_trace_train(SolverAction::Enum request) {
 }
 
 template <typename Dtype>
-void SolverTrace<Dtype>::update_trace_test_loss(int test_net_id, Dtype loss) {
-  // Continue only if the trace params have been set
-  if (!param_.has_solver_trace_param()) {
-    return;
-  }
+void SolverTrace<Dtype>::update_trace_train_loss(Dtype loss,
+                                                 Dtype smoothed_loss) {
   CHECK(Caffe::root_solver());
+  // Continue only if the trace params have been set
+  if (param_.has_solver_trace_param() && trace_param_.create_train_trace()) {
+    TrainTracePoint* new_point = trace_digest_->add_train_trace_point();
+    new_point->set_iter(solver_->iter());
+    new_point->set_train_loss(loss);
+    new_point->set_train_smoothed_loss(smoothed_loss);
+  }
+}
+
+template <typename Dtype>
+void SolverTrace<Dtype>::update_trace_test_loss(int test_net_id, Dtype loss) {
+  CHECK(Caffe::root_solver());
+  if (param_.has_solver_trace_param() && trace_param_.create_test_trace()) {
+    TestLossTracePoint* new_point = trace_digest_->add_test_loss_trace_point();
+    new_point->set_test_net_id(test_net_id);
+    new_point->set_iter(solver_->iter());
+    new_point->set_test_loss(loss);
+  }
 }
 
 template <typename Dtype>
@@ -91,11 +109,16 @@ void SolverTrace<Dtype>::update_trace_test_score(int test_net_id,
                                                  const string& output_name,
                                                  Dtype loss_weight,
                                                  Dtype mean_score) {
-  // Continue only if the trace params have been set
-  if (!param_.has_solver_trace_param()) {
-    return;
-  }
   CHECK(Caffe::root_solver());
+  if (param_.has_solver_trace_param() && trace_param_.create_test_trace()) {
+    TestScoreTracePoint* new_point =
+        trace_digest_->add_test_score_trace_point();
+    new_point->set_test_net_id(test_net_id);
+    new_point->set_iter(solver_->iter());
+    new_point->set_score_name(output_name);
+    new_point->set_mean_score(mean_score);
+    new_point->set_loss_weight(loss_weight);
+  }
 }
 
 template <typename Dtype>
@@ -176,7 +199,7 @@ void SolverTrace<Dtype>::update_weight_trace() {
 
 template <typename Dtype>
 void SolverTrace<Dtype>::update_diff_trace() {
-  blob_trace(weight_trace_interval_, num_weight_traces_, false);
+  blob_trace(diff_trace_interval_, num_diff_traces_, false);
 }
 
 template <typename Dtype>

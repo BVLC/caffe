@@ -247,6 +247,9 @@ message TraceDigest {
   repeated WeightTracePoint weight_trace_point = 1;
   repeated ActivationTrace  activation_trace = 2;
   repeated WeightTracePoint diff_trace_point = 3;
+  repeated TrainTracePoint  train_trace_point = 4;
+  repeated TestLossTracePoint   test_loss_trace_point = 5;
+  repeated TestScoreTracePoint   test_score_trace_point = 6;
 }
 
 message SolverTraceParameter {
@@ -302,6 +305,15 @@ message SolverTraceParameter {
   // number of parameters to track from every layer
   // If this is not set, num_traces is used as a default
   optional int32 num_diff_traces = 11;
+  
+  // during training phase, record training loss in the solver trace
+  optional bool create_train_trace = 12 [default = true];
+  
+  // during test phase, record the loss / accuracy in the solver trace
+  optional bool create_test_trace = 13 [default = true];
+  
+  // save the trace every time we train
+  optional bool save_after_test = 14 [default = true];
   
 }
 
@@ -1189,6 +1201,42 @@ message TileParameter {
 // Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
+}
+
+message TestLossTracePoint {
+  //the id of the test net we test the loss of
+  optional int32 test_net_id = 1;
+
+  //number of training iterations up until this point
+  optional int32 iter = 2;
+
+  //the loss of this net at this point
+  optional float test_loss = 3;
+}
+
+//the test output of one forward pass of one net
+message TestScoreTracePoint {
+
+  //the id of the test net we test the loss of
+  optional int32 test_net_id = 1;
+  
+  //number of training iterations up until this point
+  optional int32 iter = 2;
+
+  //the index of the data blob we send through the net to test it
+  optional string score_name = 3;
+
+  //the mean score of the net on this test blob
+  optional float mean_score = 4;
+
+  //the weight given to this blob of test data
+  optional float loss_weight = 5;
+}
+
+message TrainTracePoint {
+  optional int32 iter = 1;
+  optional float train_loss = 2;
+  optional float train_smoothed_loss = 3;
 }
 
 // Stores a few weights from a blob of a layer. Used for solver trace.
