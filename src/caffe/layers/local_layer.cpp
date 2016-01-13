@@ -1,10 +1,7 @@
 #include <vector>
 
 #include "caffe/filler.hpp"
-#include "caffe/layer.hpp"
-#include "caffe/util/im2col.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/local_layer.hpp"
 
 namespace caffe {
 

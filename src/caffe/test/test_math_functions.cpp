@@ -1,8 +1,6 @@
 #include <stdint.h>  // for uint32_t & uint64_t
 #include <time.h>
-#include <climits>
 #include <cmath>  // for std::fabs
-#include <cstdlib>  // for rand_r
 
 #include "gtest/gtest.h"
 
@@ -41,27 +39,6 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_;
   }
 
-  // http://en.wikipedia.org/wiki/Hamming_distance
-  int ReferenceHammingDistance(const int n, const Dtype* x, const Dtype* y) {
-    int dist = 0;
-    uint64_t val;
-    for (int i = 0; i < n; ++i) {
-      if (sizeof(Dtype) == 8) {
-        val = static_cast<uint64_t>(x[i]) ^ static_cast<uint64_t>(y[i]);
-      } else if (sizeof(Dtype) == 4) {
-        val = static_cast<uint32_t>(x[i]) ^ static_cast<uint32_t>(y[i]);
-      } else {
-        LOG(FATAL) << "Unrecognized Dtype size: " << sizeof(Dtype);
-      }
-      // Count the number of set bits
-      while (val) {
-        ++dist;
-        val &= val - 1;
-      }
-    }
-    return dist;
-  }
-
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
 };
@@ -76,14 +53,6 @@ TYPED_TEST_CASE(CPUMathFunctionsTest, TestDtypes);
 TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
   // The first test case of a test suite takes the longest time
   //   due to the set up overhead.
-}
-
-TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
-  int n = this->blob_bottom_->count();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
-  const TypeParam* y = this->blob_top_->cpu_data();
-  EXPECT_EQ(this->ReferenceHammingDistance(n, x, y),
-            caffe_cpu_hamming_distance<TypeParam>(n, x, y));
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
@@ -157,18 +126,6 @@ class GPUMathFunctionsTest : public MathFunctionsTest<GPUDevice<Dtype> > {
 };
 
 TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
-
-// TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
-TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
-  int n = this->blob_bottom_->count();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
-  const TypeParam* y = this->blob_top_->cpu_data();
-  int reference_distance = this->ReferenceHammingDistance(n, x, y);
-  x = this->blob_bottom_->gpu_data();
-  y = this->blob_top_->gpu_data();
-  int computed_distance = caffe_gpu_hamming_distance<TypeParam>(n, x, y);
-  EXPECT_EQ(reference_distance, computed_distance);
-}
 
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   int n = this->blob_bottom_->count();

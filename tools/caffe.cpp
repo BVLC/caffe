@@ -157,14 +157,14 @@ int train() {
       "but not both.";
 
   caffe::SolverParameter solver_param;
-  caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
+  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
   if (FLAGS_gpu.size() == 0
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
       if (solver_param.has_device_id()) {
-          FLAGS_gpu = ""  +
+          FLAGS_gpu = "" +
               boost::lexical_cast<string>(solver_param.device_id());
       } else {  // Set default GPU if unspecified
           FLAGS_gpu = "" + boost::lexical_cast<string>(0);
@@ -174,6 +174,7 @@ int train() {
   vector<int> gpus;
   get_gpus(&gpus);
   if (gpus.size() == 0) {
+    LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   } else {
     ostringstream s;
@@ -193,7 +194,7 @@ int train() {
         GetRequestedAction(FLAGS_sighup_effect));
 
   shared_ptr<caffe::Solver<float> >
-    solver(caffe::GetSolver<float>(solver_param));
+      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
