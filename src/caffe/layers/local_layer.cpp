@@ -2,6 +2,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/local_layer.hpp"
+#include "caffe/util/im2col.hpp"
 
 namespace caffe {
 
@@ -111,7 +112,8 @@ void LocalLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int n = 0; n < num_; n++) {
     im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
         width_, kernel_size_, kernel_size_,
-        pad_, pad_, stride_, stride_, x_data);
+        pad_, pad_, stride_, stride_,
+        dilation_, dilation_, x_data);
 
     for (int m = 0; m < num_output_; m++) {
       caffe_mul(K_*N_, x_data, weight+this->blobs_[0]->offset(m),
@@ -165,7 +167,8 @@ void LocalLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int n = 0; n < num_; n++) {
     im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
         width_, kernel_size_, kernel_size_,
-        pad_, pad_, stride_, stride_, x_data);
+        pad_, pad_, stride_, stride_,
+        dilation_, dilation_, x_data);
 
     // gradient wrt weight
     for (int m = 0; m < num_output_; m++) {
@@ -196,7 +199,8 @@ void LocalLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       // col2im back to the data
       col2im_cpu(x_diff, channels_, height_,
           width_, kernel_size_, kernel_size_,
-          pad_, pad_, stride_, stride_, bottom_diff + bottom[0]->offset(n));
+          pad_, pad_, stride_, stride_,
+          dilation_, dilation_, bottom_diff + bottom[0]->offset(n));
     }
   }
 }

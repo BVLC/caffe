@@ -13,7 +13,7 @@ template <typename Dtype>
 class LocalLayer : public Layer<Dtype> {
  public:
   explicit LocalLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param), dilation_(1) {}
 
   virtual inline const char* type() const { return "Local"; }
 
@@ -50,6 +50,8 @@ class LocalLayer : public Layer<Dtype> {
   int M_;
   int K_;
   int N_;
+
+  const int dilation_;
 
   Blob<Dtype> col_buffer_;
 };
