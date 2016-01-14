@@ -63,7 +63,7 @@ New input types are supported by developing a new data layer – the rest of the
 
 <p>This data layer definition</p>
 
-<pre><code>layer {
+<div class="highlighter-rouge"><pre class="highlight"><code>layer {
   name: "mnist"
   # Data layer loads leveldb or lmdb storage DBs for high-throughput.
   type: "Data"
@@ -87,6 +87,7 @@ New input types are supported by developing a new data layer – the rest of the
   }
 }
 </code></pre>
+</div>
 
 <p>loads the MNIST digits.</p>
 
@@ -100,7 +101,7 @@ The (data, label) pairing is a convenience for classification models.</p>
 
 <p><strong>Transformations</strong>: data preprocessing is parametrized by transformation messages within the data layer definition.</p>
 
-<pre><code>layer {
+<div class="highlighter-rouge"><pre class="highlight"><code>layer {
   name: "data"
   type: "Data"
   [...]
@@ -117,6 +118,7 @@ The (data, label) pairing is a convenience for classification models.</p>
   }
 }
 </code></pre>
+</div>
 
 <p><strong>Prefetching</strong>: for throughput data layers fetch the next batch of data and prepare it in the background while the Net computes the current batch.</p>
 
@@ -130,7 +132,7 @@ The (data, label) pairing is a convenience for classification models.</p>
 
 <h2 id="deployment-input">Deployment Input</h2>
 
-<p>For on-the-fly computation deployment Nets define their inputs by <code>input</code> fields: these Nets then accept direct assignment of data for online or interactive computation.</p>
+<p>For on-the-fly computation deployment Nets define their inputs by <code class="highlighter-rouge">input</code> fields: these Nets then accept direct assignment of data for online or interactive computation.</p>
 
 
       </section>

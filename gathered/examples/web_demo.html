@@ -59,22 +59,23 @@
 <h2 id="requirements">Requirements</h2>
 
 <p>The demo server requires Python with some dependencies.
-To make sure you have the dependencies, please run <code>pip install -r examples/web_demo/requirements.txt</code>, and also make sure that you’ve compiled the Python Caffe interface and that it is on your <code>PYTHONPATH</code> (see <a href="/installation.html">installation instructions</a>).</p>
+To make sure you have the dependencies, please run <code class="highlighter-rouge">pip install -r examples/web_demo/requirements.txt</code>, and also make sure that you’ve compiled the Python Caffe interface and that it is on your <code class="highlighter-rouge">PYTHONPATH</code> (see <a href="/installation.html">installation instructions</a>).</p>
 
 <p>Make sure that you have obtained the Reference CaffeNet Model and the ImageNet Auxiliary Data:</p>
 
-<pre><code>./scripts/download_model_binary.py models/bvlc_reference_caffenet
+<div class="highlighter-rouge"><pre class="highlight"><code>./scripts/download_model_binary.py models/bvlc_reference_caffenet
 ./data/ilsvrc12/get_ilsvrc_aux.sh
 </code></pre>
+</div>
 
 <p>NOTE: if you run into trouble, try re-downloading the auxiliary files.</p>
 
 <h2 id="run">Run</h2>
 
-<p>Running <code>python examples/web_demo/app.py</code> will bring up the demo server, accessible at <code>http://0.0.0.0:5000</code>.
+<p>Running <code class="highlighter-rouge">python examples/web_demo/app.py</code> will bring up the demo server, accessible at <code class="highlighter-rouge">http://0.0.0.0:5000</code>.
 You can enable debug mode of the web server, or switch to a different port:</p>
 
-<pre><code>% python examples/web_demo/app.py -h
+<div class="highlighter-rouge"><pre class="highlight"><code>% python examples/web_demo/app.py -h
 Usage: app.py [options]
 
 Options:
@@ -82,12 +83,13 @@ Options:
   -d, --debug           enable debug mode
   -p PORT, --port=PORT  which port to serve content on
 </code></pre>
+</div>
 
 <h2 id="how-are-the-maximally-accurate-results-generated">How are the “maximally accurate” results generated?</h2>
 
 <p>In a nutshell: ImageNet predictions are made at the leaf nodes, but the organization of the project allows leaf nodes to be united via more general parent nodes, with ‘entity’ at the very top.
 To give “maximally accurate” results, we “back off” from maximally specific predictions to maintain a high accuracy.
-The <code>bet_file</code> that is loaded in the demo provides the graph structure and names of all relevant ImageNet nodes as well as measures of information gain between them.
+The <code class="highlighter-rouge">bet_file</code> that is loaded in the demo provides the graph structure and names of all relevant ImageNet nodes as well as measures of information gain between them.
 Please see the “Hedging your bets” paper from <a href="http://www.image-net.org/projects/hedging/">CVPR 2012</a> for further information.</p>
 
 

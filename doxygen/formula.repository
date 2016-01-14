@@ -138,3 +138,6 @@
 \form#137:$ y = x_1[x_2] $
 \form#138:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d + \left(1-y\right) \max \left(margin-d, 0\right)^2 $
 \form#139:$ d = \left| \left| a_n - b_n \right| \right|_2 $
+\form#140:$ (N \times 1 \times K) $
+\form#141:$ (N \times 2 \times K) $
+\form#142:$ E = \frac{1}{2N} \sum\limits_{n=1}^N \left(y\right) d^2 + \left(1-y\right) \max \left(margin-d, 0\right)^2 $

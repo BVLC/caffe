@@ -4,6 +4,7 @@ var searchData=
   ['basedatalayer',['BaseDataLayer',['../classcaffe_1_1BaseDataLayer.html',1,'caffe']]],
   ['baseprefetchingdatalayer',['BasePrefetchingDataLayer',['../classcaffe_1_1BasePrefetchingDataLayer.html',1,'caffe']]],
   ['batch',['Batch',['../classcaffe_1_1Batch.html',1,'caffe']]],
+  ['batchnormlayer',['BatchNormLayer',['../classcaffe_1_1BatchNormLayer.html',1,'caffe']]],
   ['batchreindexlayer',['BatchReindexLayer',['../classcaffe_1_1BatchReindexLayer.html',1,'caffe']]],
   ['bilinearfiller',['BilinearFiller',['../classcaffe_1_1BilinearFiller.html',1,'caffe']]],
   ['blob',['Blob',['../classcaffe_1_1Blob.html',1,'caffe']]],

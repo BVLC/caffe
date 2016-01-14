@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['scale_5f',['scale_',['../classcaffe_1_1SoftmaxLayer.html#a22a5348d7a31c512ac9d5dcfc066d4b1',1,'caffe::SoftmaxLayer::scale_()'],['../classcaffe_1_1DropoutLayer.html#ac8702c053de0fea389f5a0ded8cdc544',1,'caffe::DropoutLayer::scale_()'],['../classcaffe_1_1PowerLayer.html#a6684b2c6c2b2047d58c9d2809b86c39c',1,'caffe::PowerLayer::scale_()']]],
+  ['scale_5f',['scale_',['../classcaffe_1_1DropoutLayer.html#ac8702c053de0fea389f5a0ded8cdc544',1,'caffe::DropoutLayer::scale_()'],['../classcaffe_1_1PowerLayer.html#a6684b2c6c2b2047d58c9d2809b86c39c',1,'caffe::PowerLayer::scale_()'],['../classcaffe_1_1SoftmaxLayer.html#a22a5348d7a31c512ac9d5dcfc066d4b1',1,'caffe::SoftmaxLayer::scale_()']]],
   ['shift_5f',['shift_',['../classcaffe_1_1PowerLayer.html#a3a3143c4d6735d12cb5a41b1cb623bc9',1,'caffe::PowerLayer']]],
   ['sigmoid_5fbottom_5fvec_5f',['sigmoid_bottom_vec_',['../classcaffe_1_1SigmoidCrossEntropyLossLayer.html#a52c3183799d44aa9e581992aee502409',1,'caffe::SigmoidCrossEntropyLossLayer']]],
   ['sigmoid_5flayer_5f',['sigmoid_layer_',['../classcaffe_1_1SigmoidCrossEntropyLossLayer.html#a69e0c8d2106b4b06c7c896e3069f531c',1,'caffe::SigmoidCrossEntropyLossLayer']]],

@@ -65,7 +65,7 @@
 <h1 id="hardware-configuration-assumptions">Hardware Configuration Assumptions</h1>
 
 <p>The current implementation uses a tree reduction strategy.  e.g. if there are 4 GPUs in the system, 0:1, 2:3 will exchange gradients, then 0:2 (top of the tree) will exchange gradients, 0 will calculate
-updated model, 0-&gt;2, and then 0-&gt;1, 2-&gt;3. </p>
+updated model, 0-&gt;2, and then 0-&gt;1, 2-&gt;3.</p>
 
 <p>For best performance, P2P DMA access between devices is needed. Without P2P access, for example crossing PCIe root complex, data is copied through host and effective exchange bandwidth is greatly reduced.</p>
 
