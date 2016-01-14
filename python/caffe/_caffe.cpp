@@ -232,6 +232,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("share_with", &Net<Dtype>::ShareTrainedLayersWith)
     .add_property("_blob_loss_weights", bp::make_function(
         &Net<Dtype>::blob_loss_weights, bp::return_internal_reference<>()))
+    .def("_bottom_ids", bp::make_function(&Net<Dtype>::bottom_ids,
+        bp::return_value_policy<bp::copy_const_reference>()))
+    .def("_top_ids", bp::make_function(&Net<Dtype>::top_ids,
+        bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_blobs", bp::make_function(&Net<Dtype>::blobs,
         bp::return_internal_reference<>()))
     .add_property("layers", bp::make_function(&Net<Dtype>::layers,
