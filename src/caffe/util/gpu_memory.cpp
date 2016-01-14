@@ -29,8 +29,7 @@ namespace caffe {
 
   void gpu_memory::init(const std::vector<int>& gpus,
                         PoolMode m, bool debug) {
-
-    bool debug_env = (getenv("DEBUG_GPU_MEM")!=0);
+    bool debug_env = (getenv("DEBUG_GPU_MEM") != 0);
     debug_ = debug || debug_env;
 
     if (gpus.size() <= 0) {
@@ -67,8 +66,7 @@ namespace caffe {
     CHECK((ptr) != NULL);
     switch (mode_) {
     case CubPool:
-      if (cubAlloc->DeviceAllocate(ptr, size, stream) != cudaSuccess)
-        {
+      if (cubAlloc->DeviceAllocate(ptr, size, stream) != cudaSuccess) {
           int cur_device;
           CUDA_CHECK(cudaGetDevice(&cur_device));
           // free all cached memory (for all devices), synchrionize
@@ -148,8 +146,6 @@ namespace caffe {
 
   void gpu_memory::initMEM(const std::vector<int>& gpus, PoolMode m) {
     mode_ = m;
-    int initial_device;
-
     switch ( mode_ ) {
       case CubPool:
         try {
@@ -165,11 +161,9 @@ namespace caffe {
         }
         catch (...) {}
         CHECK(cubAlloc);
-
         for (int i = 0; i < gpus.size(); i++) {
           update_dev_info(gpus[i]);
         }
-
         break;
       default:
         break;
