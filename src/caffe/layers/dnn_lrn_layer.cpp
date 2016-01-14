@@ -43,35 +43,14 @@ void DnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   strides[2] = sizes[0]*sizes[1];
   strides[3] = sizes[0]*sizes[1]*sizes[2];
 
-  dnnError_t e;
-  dnnLayout_t lrn_layout   = NULL;
-  dnnLayout_t lrn_buffer_l = NULL;
   lrn_buffer_ = NULL;
+  fwd_top_data = NULL;
+  bwd_bottom_diff = NULL;
 
-  if ( size_ == 5 && /*alpha_ == 0.0001 && beta_ == 0.75 &&*/
-      ( (channels_ == 96  &&  height_ == 55 && width_ == 55) ||
-        (channels_ == 256 &&  height_ == 27 && width_ == 27)
-       )
-      )
-  {
-     e = dnnLayoutPCLCreate<Dtype>(&lrn_layout, dim, sizes);
-  } else {
-     e = dnnLayoutCreate<Dtype>(&lrn_layout, dim, sizes, strides);
-  }
-  CHECK_EQ(e, E_SUCCESS);
-
-  e = dnnLRNCreateForward<Dtype>(&lrnFwd, lrn_layout, size_, alpha_, beta_, k_);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLayoutCreateFromPrimitive<Dtype>(&lrn_buffer_l, lrnFwd, dnnResourceWorkspace);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnAllocateBuffer<Dtype>((void **)&lrn_buffer_, lrn_buffer_l);
-  CHECK_EQ(e, E_SUCCESS);
-  e = dnnLRNCreateBackward<Dtype>(&lrnBwd, lrn_layout, lrn_layout, size_, alpha_, beta_, k_);
-  CHECK_EQ(e, E_SUCCESS);
-
-  dnnLayoutDelete<Dtype>(lrn_layout);
-  dnnLayoutDelete<Dtype>(lrn_buffer_l);
-
+  // "Lazy" allocation because here we don't know
+  // what layout is used by neighbours.
+  lrnFwd = NULL; // Will be allocated in a "lazy" way in first forward pass
+  lrnBwd = NULL; // Will be allocated in a "lazy" way in first backward pass
 }
 
 template <typename Dtype>
@@ -110,14 +89,34 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
 
   if(NULL == bottom_data)
   {
+    LOG(FATAL) << "No implemented for default caffe data layout";
     LOG(INFO) << "Using cpu_data in DnnLRNLayer.";
     bottom_data = (void*)bottom[0]->cpu_data();
     top_data = top[0]->mutable_cpu_data();
+
   }
   else
   {
-    //TODO: Add top converter
+    // Is it first pass? Create the primitive.
+    if (lrnFwd == NULL) {
+      MklDnnMemoryDescriptor<Dtype, false>* mem_descr = (MklDnnMemoryDescriptor<Dtype, false>*) bottom[0]->get_prv_descriptor_data();
+      CHECK(mem_descr != NULL);
+
+      dnnError_t e;
+      dnnLayout_t lrn_buffer_l = NULL;
+
+      e = dnnLRNCreateForward<Dtype>(&lrnFwd, mem_descr->layout_int, size_, alpha_, beta_, k_);
+      CHECK_EQ(e, E_SUCCESS);
+      e = dnnLayoutCreateFromPrimitive<Dtype>(&lrn_buffer_l, lrnFwd, dnnResourceWorkspace);
+      CHECK_EQ(e, E_SUCCESS);
+      e = dnnAllocateBuffer<Dtype>((void **)&lrn_buffer_, lrn_buffer_l);
+      CHECK_EQ(e, E_SUCCESS);
+      dnnLayoutDelete<Dtype>(lrn_buffer_l);
+
+      fwd_top_data = mem_descr;
+    }
     top_data = top[0]->mutable_prv_data();
+    top[0]->set_prv_converter_data(fwd_top_data, &MklDnnMemoryDescriptor<Dtype, false>::convert_from_prv);
   }
 
   dnnError_t e;
@@ -156,7 +155,22 @@ void DnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
 
     if (NULL == bottom_data)
       LOG(FATAL) << "bottom_data is NULL";
-  }else {
+
+    // Is it first pass? Create the primitive.
+    if (lrnBwd == NULL) {
+      MklDnnMemoryDescriptor<Dtype, true>* mem_descr = (MklDnnMemoryDescriptor<Dtype, true>*) top[0]->get_prv_descriptor_diff();
+      CHECK(mem_descr != NULL);
+
+      dnnError_t e;
+      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, mem_descr->layout_int, mem_descr->layout_int, size_, alpha_, beta_, k_);
+      CHECK_EQ(e, E_SUCCESS);
+
+      bwd_bottom_diff = mem_descr;
+    }
+    bottom[0]->set_prv_converter_diff(bwd_bottom_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+
+  } else {
+    LOG(FATAL) << "No implemented for default caffe data layout";
     top_diff = (void*)top[0]->cpu_diff();
     bottom_data = (void*)bottom[0]->cpu_data();
     bottom_diff = (void*)bottom[0]->mutable_cpu_diff();

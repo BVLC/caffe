@@ -316,6 +316,10 @@ void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     // TBD: Is this OK ?
     pooling_res[dnnResourceDiffSrc] = (void*) bottom[0]->mutable_prv_diff();
+    // TODO: bwd_bottom_diff !!!!!!!!!!!!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    bottom[0]->set_prv_converter_diff(&bwd_top_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+
     caffe_set(bottom[0]->count(), Dtype(0), (Dtype*)pooling_res[dnnResourceDiffSrc]);
 
     e = dnnExecute<Dtype>(poolingBwd, pooling_res);

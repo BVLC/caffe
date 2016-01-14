@@ -506,6 +506,8 @@ class DnnLRNLayer : public Layer<Dtype> {
   // scale_ stores the intermediate summing results
 private:
   dnnPrimitive_t lrnFwd, lrnBwd;
+  MklDnnMemoryDescriptor<Dtype, false>* fwd_top_data;
+  MklDnnMemoryDescriptor<Dtype, true> * bwd_bottom_diff;
   Dtype *lrn_buffer_;
 };
 

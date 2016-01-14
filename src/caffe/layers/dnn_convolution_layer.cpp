@@ -451,7 +451,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   {
     void *res_convolutionBwdData[dnnResourceNumber];
 
-    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff.get_converted_prv(top[0], false);
+    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff.get_converted_prv(top[0], true);
     res_convolutionBwdData[dnnResourceFilter]  = bwdd_filter_data.get_converted_prv(this->blobs_[0].get(), true);
 
     if (bwdd_bottom_diff.convert_from_int)
@@ -472,7 +472,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   {
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
-    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff.get_converted_prv(top[0], false);
+    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff.get_converted_prv(top[0], true);
     res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data.get_converted_prv(bottom[0], true);
 
     if (bwdf_filter_diff.convert_from_int)
@@ -495,7 +495,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   {
     void *res_convolutionBwdBias[dnnResourceNumber];
 
-    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff.get_converted_prv(top[0], false);
+    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff.get_converted_prv(top[0], true);
 
     if (bwdb_bias_diff.convert_from_int)
     {
