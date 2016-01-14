@@ -76,9 +76,21 @@ void DnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
-    void* bottom_data = (void*)bottom[0]->cpu_data();
-    void* top_diff = (void*)top[0]->cpu_diff();
-    void* bottom_diff = bottom[0]->mutable_cpu_diff();
+    void* top_diff = (void*)top[0]->prv_diff();
+    void* bottom_data = NULL;
+    void* bottom_diff = NULL;
+
+    if (NULL != top_diff) {
+      bottom_data = (void*)bottom[0]->prv_data();
+      bottom_diff = (void*)bottom[0]->mutable_prv_diff();
+
+      if (NULL == bottom_data)
+        LOG(FATAL) << "bottom_data is NULL";
+    }else {
+      top_diff = (void*)top[0]->cpu_diff();
+      bottom_data = (void*)bottom[0]->cpu_data();
+      bottom_diff = (void*)bottom[0]->mutable_cpu_diff();
+    }
 
     dnnError_t e;
     void* relu_res[dnnResourceNumber];
