@@ -5,6 +5,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/data_reader.hpp"
+#include "caffe/layers/annotated_data_layer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -19,6 +20,10 @@ template <>
 map<const string, weak_ptr<DataReader<Datum>::Body> >
   DataReader<Datum>::bodies_
   = map<const string, weak_ptr<DataReader<Datum>::Body> >();
+template <>
+map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> >
+  DataReader<AnnotatedDatum>::bodies_
+  = map<const string, weak_ptr<DataReader<AnnotatedDatum>::Body> >();
 static boost::mutex bodies_mutex_;
 
 template <typename T>
@@ -128,5 +133,6 @@ void DataReader<T>::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 
 // Instance class
 template class DataReader<Datum>;
+template class DataReader<AnnotatedDatum>;
 
 }  // namespace caffe

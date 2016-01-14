@@ -68,6 +68,38 @@ inline void RemoveCaffeTempDir() {
 
 #endif
 
+inline void GetTempDirname(string* temp_dirname) {
+  temp_dirname->clear();
+  const path& model =
+    boost::filesystem::temp_directory_path()/"caffe_test.%%%%-%%%%";
+  for ( int i = 0; i < CAFFE_TMP_DIR_RETRIES; i++ ) {
+    const path& dir = boost::filesystem::unique_path(model).string();
+    bool done = boost::filesystem::create_directory(dir);
+    if ( done ) {
+      bool remove_done = boost::filesystem::remove(dir);
+      if (remove_done) {
+        *temp_dirname = dir.string();
+        return;
+      }
+      LOG(FATAL) << "Failed to remove a temporary directory.";
+    }
+  }
+  LOG(FATAL) << "Failed to create a temporary directory.";
+}
+
+inline void GetTempFilename(string* temp_filename) {
+  static path temp_files_subpath;
+  static uint64_t next_temp_file = 0;
+  temp_filename->clear();
+  if ( temp_files_subpath.empty() ) {
+    string path_string="";
+    GetTempDirname(&path_string);
+    temp_files_subpath = path_string;
+  }
+  *temp_filename =
+    (temp_files_subpath/caffe::format_int(next_temp_file++, 9)).string();
+}
+
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
 
 inline bool ReadProtoFromTextFile(const string& filename, Message* proto) {

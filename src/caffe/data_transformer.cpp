@@ -42,7 +42,9 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                       Dtype* transformed_data) {
+                                       Dtype* transformed_data,
+                                       int* h_off, int* w_off,
+                                       bool* do_mirror) {
   const string& data = datum.data();
   const int_tp datum_channels = datum.channels();
   const int_tp datum_height = datum.height();
@@ -50,7 +52,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   const int_tp crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
+  *do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
@@ -81,28 +83,28 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   int_tp height = datum_height;
   int_tp width = datum_width;
 
-  int_tp h_off = 0;
-  int_tp w_off = 0;
+  *h_off = 0;
+  *w_off = 0;
   if (crop_size) {
     height = crop_size;
     width = crop_size;
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
-      h_off = Rand(datum_height - crop_size + 1);
-      w_off = Rand(datum_width - crop_size + 1);
+      *h_off = Rand(datum_height - crop_size + 1);
+      *w_off = Rand(datum_width - crop_size + 1);
     } else {
-      h_off = (datum_height - crop_size) / 2;
-      w_off = (datum_width - crop_size) / 2;
+      *h_off = (datum_height - crop_size) / 2;
+      *w_off = (datum_width - crop_size) / 2;
     }
   }
 
   Dtype datum_element;
-  int_tp top_index, data_index;
-  for (int_tp c = 0; c < datum_channels; ++c) {
-    for (int_tp h = 0; h < height; ++h) {
-      for (int_tp w = 0; w < width; ++w) {
-        data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
-        if (do_mirror) {
+  int top_index, data_index;
+  for (int c = 0; c < datum_channels; ++c) {
+    for (int h = 0; h < height; ++h) {
+      for (int w = 0; w < width; ++w) {
+        data_index = (c * datum_height + *h_off + h) * datum_width + *w_off + w;
+        if (*do_mirror) {
           top_index = (c * height + h) * width + (width - 1 - w);
         } else {
           top_index = (c * height + h) * width + w;
@@ -129,6 +131,121 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 }
 
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(const Datum& datum,
+                                       Dtype* transformed_data) {
+  int h_off, w_off;
+  bool do_mirror;
+  Transform(datum, transformed_data, &h_off, &w_off, &do_mirror);
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(
+    const AnnotatedDatum& anno_datum, Blob<Dtype>* transformed_blob,
+    vector<AnnotationGroup>* transformed_anno_vec, bool* do_mirror) {
+  const Datum& datum = anno_datum.datum();
+
+  const int datum_channels = datum.channels();
+  const int datum_height = datum.height();
+  const int datum_width = datum.width();
+
+  const int crop_size = param_.crop_size();
+
+  // Check dimensions.
+  const int channels = transformed_blob->channels();
+  const int num = transformed_blob->num();
+  int height = transformed_blob->height();
+  int width = transformed_blob->width();
+
+  CHECK_EQ(channels, datum_channels);
+  CHECK_LE(height, datum_height);
+  CHECK_LE(width, datum_width);
+  CHECK_GE(num, 1);
+
+  if (crop_size) {
+    CHECK_EQ(crop_size, height);
+    CHECK_EQ(crop_size, width);
+  } else {
+    CHECK_EQ(datum_height, height);
+    CHECK_EQ(datum_width, width);
+  }
+
+  // Transform datum.
+  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
+  int h_off, w_off;
+  Transform(datum, transformed_data, &h_off, &w_off, do_mirror);
+  // Represent the new crop as NormalizedBBox in original image.
+  NormalizedBBox crop;
+  crop.set_xmin(Dtype(w_off) / datum_width);
+  crop.set_ymin(Dtype(h_off) / datum_height);
+  crop.set_xmax(Dtype(w_off + width) / datum_width);
+  crop.set_ymax(Dtype(h_off + height) / datum_height);
+
+  // Transform annotations.
+  AnnotationGroup transformed_anno_group;
+  // Go through each AnnotationGroup.
+  for (int g = 0; g < anno_datum.annotation_group_size(); ++g) {
+    const AnnotationGroup& anno_group = anno_datum.annotation_group(g);
+    transformed_anno_group.Clear();
+    // Go through each Annotation.
+    bool has_valid_annotation = false;
+    for (int a = 0; a < anno_group.annotation_size(); ++a) {
+      const Annotation& anno = anno_group.annotation(a);
+      if (anno_datum.type() == AnnotatedDatum_AnnotationType_BBOX) {
+        const NormalizedBBox& bbox = anno.bbox();
+        NormalizedBBox* transformed_bbox = NULL;
+        if (w_off != 0 || h_off != 0) {
+          if (bbox.xmin() >= crop.xmax() || bbox.xmax() <= crop.xmin() ||
+              bbox.ymin() >= crop.ymax() || bbox.ymax() <= crop.ymin()) {
+            // Skip if there is no overlap between the crop and the bbox.
+            continue;
+          }
+          // Adjust bounding box annotation.
+          has_valid_annotation = true;
+          Annotation* transformed_anno =
+              transformed_anno_group.add_annotation();
+          transformed_anno->set_instance_id(anno.instance_id());
+          transformed_bbox = transformed_anno->mutable_bbox();
+          transformed_bbox->set_xmin(std::max<Dtype>(
+                  (bbox.xmin()*datum_width - w_off)/width, Dtype(0.0)));
+          transformed_bbox->set_ymin(std::max<Dtype>(
+                  (bbox.ymin()*datum_height - h_off)/height, Dtype(0.0)));
+          transformed_bbox->set_xmax(std::min<Dtype>(
+                  (bbox.xmax()*datum_width - w_off)/width, Dtype(1.0)));
+          transformed_bbox->set_ymax(std::min<Dtype>(
+                  (bbox.ymax()*datum_height - h_off)/height, Dtype(1.0)));
+        } else {
+          has_valid_annotation = true;
+          Annotation* transformed_anno =
+              transformed_anno_group.add_annotation();
+          transformed_anno->set_instance_id(anno.instance_id());
+          transformed_bbox = transformed_anno->mutable_bbox();
+          transformed_bbox->CopyFrom(bbox);
+        }
+        if (transformed_bbox != NULL && *do_mirror) {
+          Dtype temp = transformed_bbox->xmin();
+          transformed_bbox->set_xmin(1 - transformed_bbox->xmax());
+          transformed_bbox->set_xmax(1 - temp);
+        }
+      } else {
+        LOG(FATAL) << "Unknown annotation type.";
+      }
+    }
+    // Save for output.
+    if (has_valid_annotation) {
+      transformed_anno_group.set_group_label(anno_group.group_label());
+      transformed_anno_vec->push_back(transformed_anno_group);
+    }
+  }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(
+    const AnnotatedDatum& anno_datum, Blob<Dtype>* transformed_blob,
+    vector<AnnotationGroup>* transformed_anno_vec) {
+  bool do_mirror;
+  Transform(anno_datum, transformed_blob, transformed_anno_vec, &do_mirror);
+}
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,

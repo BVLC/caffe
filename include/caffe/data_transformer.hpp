@@ -41,6 +41,26 @@ class DataTransformer {
 
   /**
    * @brief Applies the transformation defined in the data layer's
+   * transform_param block to the annotated data.
+   *
+   * @param anno_datum
+   *    AnnotatedDatum containing the data and annotation to be transformed.
+   * @param transformed_blob
+   *    This is destination blob. It can be part of top blob's data if
+   *    set_cpu_data() is used. See annotated_data_layer.cpp for an example.
+   * @param transformed_anno_vec
+   *    This is destination annotation.
+   */
+  void Transform(const AnnotatedDatum& anno_datum,
+                 Blob<Dtype>* transformed_blob,
+                 vector<AnnotationGroup>* transformed_anno_vec);
+  void Transform(const AnnotatedDatum& anno_datum,
+                 Blob<Dtype>* transformed_blob,
+                 vector<AnnotationGroup>* transformed_anno_vec,
+                 bool* do_mirror);
+
+  /**
+   * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Datum.
    *
    * @param datum_vector
@@ -141,6 +161,9 @@ class DataTransformer {
   virtual int_tp Rand(int_tp n);
 
   void Transform(const Datum& datum, Dtype* transformed_data);
+  void Transform(const Datum& datum, Dtype* transformed_data,
+                 int* h_off, int* w_off, bool* do_mirror);
+
   // Tranformation parameters
   TransformationParameter param_;
 
