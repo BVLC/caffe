@@ -67,7 +67,7 @@ class SyncedMemory {
   void* init_prv_data(); // we use modified layout, data same as in cpu_ptr_
   const void* prv_data();
   void* mutable_prv_data();
-  void* prv_descriptor_;  // TODO: cleanup? TODO: Consider non-void type
+  void* prv_descriptor_;
   sync_prv_to_cpu_func sync_prv_to_cpu_;
 
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED, HEAD_AT_PRV, SYNCED_PRV};

@@ -178,10 +178,10 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   virtual void compute_output_shape();
 };
 
-template <typename Dtype>
+template <typename Dtype, bool is_diff>
 struct MklDnnMemoryDescriptor{
   MklDnnMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
-    internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL) {};
+    internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL), name("UKNOWN") {};
   ~MklDnnMemoryDescriptor()
   {
     dnnLayoutDelete<Dtype>(layout_usr);
@@ -195,6 +195,7 @@ struct MklDnnMemoryDescriptor{
   Dtype* internal_ptr;
   dnnPrimitive_t convert_to_int;
   dnnPrimitive_t convert_from_int;
+  std::string name;  // for debugging purposes
   void create_conversions()
   {
     if (!dnnLayoutCompare<Dtype>(layout_usr, layout_int))
@@ -202,13 +203,14 @@ struct MklDnnMemoryDescriptor{
       int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr , layout_int);
       CHECK(status == 0) << "Failed creation convert_to_int with status " << status << "\n";
       status = dnnConversionCreate<Dtype>(&convert_from_int, layout_int , layout_usr);
-      CHECK(status == 0) << "Failed creation convert_to_int with status " << status << "\n";
+      CHECK(status == 0) << "Failed creation convert_from_int with status " << status << "\n";
       status = dnnAllocateBuffer<Dtype>((void **)&internal_ptr, layout_int);
-      CHECK(status == 0) << "Failed fwd_bottom_data_int memory allocation with status " << status << "\n";
+      CHECK(status == 0) << "Failed internal_ptr memory allocation with status " << status << "\n";
     }
   }
 
   static void convert_from_prv(void* prv_ptr, void* cpu_ptr, void* prv_descriptor);
+  Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout);
 };
 
 template <typename Dtype>
@@ -235,29 +237,22 @@ class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
 
  private:
 /* Fwd step */
-     MklDnnMemoryDescriptor<Dtype> fwd_bottom_data, fwd_top_data, fwd_filter_data, fwd_bias_data;
+     MklDnnMemoryDescriptor<Dtype, false> fwd_bottom_data, fwd_top_data, fwd_filter_data, fwd_bias_data;
      dnnPrimitive_t convolutionFwd;
 
 /* Bwd data step */
+     MklDnnMemoryDescriptor<Dtype, true> bwdd_top_diff, bwdd_bottom_diff;
+     MklDnnMemoryDescriptor<Dtype, false> bwdd_filter_data;
      dnnPrimitive_t convolutionBwdData;
-     dnnLayout_t l_bwdd_top_diff_int, l_bwdd_bottom_diff_int, l_bwdd_filter_data_int;
-     dnnLayout_t l_bwdd_top_diff_usr, l_bwdd_bottom_diff_usr, l_bwdd_filter_data_usr;
-     Dtype *bwdd_top_diff_int, *bwdd_bottom_diff_int, *bwdd_filter_data_int;
-     dnnPrimitive_t  convertBwdData_top, convertBwdData_bottom, convertBwdData_filter;
 
 /* Bwd filter step */
+     MklDnnMemoryDescriptor<Dtype, true> bwdf_top_diff, bwdf_filter_diff;
+     MklDnnMemoryDescriptor<Dtype, false> bwdf_bottom_data;
      dnnPrimitive_t convolutionBwdFilter;
-     dnnLayout_t l_bwdf_top_diff_int, l_bwdf_bottom_data_int, l_bwdf_filter_diff_int;
-     dnnLayout_t l_bwdf_top_diff_usr, l_bwdf_bottom_data_usr, l_bwdf_filter_diff_usr;
-     Dtype *bwdf_top_diff_int, *bwdf_bottom_data_int, *bwdf_filter_diff_int;
-     dnnPrimitive_t  convertBwdFilter_top, convertBwdFilter_bottom, convertBwdFilter_filter;
 
 /* Bwd bias step */
+     MklDnnMemoryDescriptor<Dtype, true> bwdb_top_diff, bwdb_bias_diff;
      dnnPrimitive_t convolutionBwdBias;
-     dnnLayout_t l_bwdb_top_diff_int, l_bwdb_bias_diff_int;
-     dnnLayout_t l_bwdb_top_diff_usr, l_bwdb_bias_diff_usr;
-     Dtype *bwdb_top_diff_int, *bwdb_bias_diff_int;
-     dnnPrimitive_t  convertBwdBias_top, convertBwdBias_bias;
 };
 
 /**
@@ -601,13 +596,10 @@ class DnnPoolingLayer : public Layer<Dtype> {
   Blob<Dtype> rand_idx_;
   Blob<size_t> max_idx_;
  private:
-  MklDnnMemoryDescriptor<Dtype> fwd_top_data;
+  MklDnnMemoryDescriptor<Dtype, false> fwd_top_data;
+  MklDnnMemoryDescriptor<Dtype, true> bwd_top_diff;
 
   dnnPrimitive_t poolingFwd, poolingBwd;
-  dnnPrimitive_t convertBwd_top;
-  dnnLayout_t l_bwd_top_diff_int;
-  dnnLayout_t l_bwd_top_diff_usr;
-  Dtype *bwd_top_diff_int;
   Dtype *pool_buffer_;
 };
 
