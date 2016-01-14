@@ -37,6 +37,9 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (this->phase_ == TRAIN) {
     // Create random numbers
     caffe_rng_bernoulli(count, 1. - threshold_, mask);
+#ifdef _OPENMP
+    #pragma omp parallel for
+#endif
     for (int i = 0; i < count; ++i) {
       top_data[i] = bottom_data[i] * mask[i] * scale_;
     }
@@ -55,6 +58,9 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->phase_ == TRAIN) {
       const unsigned int* mask = rand_vec_.cpu_data();
       const int count = bottom[0]->count();
+#ifdef _OPENMP
+      #pragma omp parallel for
+#endif
       for (int i = 0; i < count; ++i) {
         bottom_diff[i] = top_diff[i] * mask[i] * scale_;
       }
