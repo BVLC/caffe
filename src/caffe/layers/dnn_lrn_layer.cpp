@@ -26,23 +26,6 @@ void DnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   beta_ = this->layer_param_.lrn_param().beta();
   k_ = this->layer_param_.lrn_param().k();
 
-  size_t dim = 4, sizes[4], strides[4];
-
-  channels_ = bottom[0]->channels();
-  height_   = bottom[0]->height();
-  width_    = bottom[0]->width();
-  num_      = bottom[0]->num();
-
-  sizes[0] = width_;
-  sizes[1] = height_;
-  sizes[2] = channels_;
-  sizes[3] = num_;
-
-  strides[0] = 1;
-  strides[1] = sizes[0];
-  strides[2] = sizes[0]*sizes[1];
-  strides[3] = sizes[0]*sizes[1]*sizes[2];
-
   lrn_buffer_ = NULL;
   fwd_top_data = NULL;
   bwd_bottom_diff = NULL;
@@ -87,15 +70,7 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
   void* bottom_data = (void*)bottom[0]->prv_data();
   void* top_data = NULL;
 
-  if(NULL == bottom_data)
-  {
-    LOG(FATAL) << "No implemented for default caffe data layout";
-    LOG(INFO) << "Using cpu_data in DnnLRNLayer.";
-    bottom_data = (void*)bottom[0]->cpu_data();
-    top_data = top[0]->mutable_cpu_data();
-
-  }
-  else
+  if(NULL != bottom_data)
   {
     // Is it first pass? Create the primitive.
     if (lrnFwd == NULL) {
@@ -117,7 +92,15 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
     }
     top_data = top[0]->mutable_prv_data();
     top[0]->set_prv_converter_data(fwd_top_data, &MklDnnMemoryDescriptor<Dtype, false>::convert_from_prv);
+
+  } else {
+    LOG(FATAL) << "No implemented for default caffe data layout";
+    LOG(INFO) << "Using cpu_data in DnnLRNLayer.";
+    bottom_data = (void*)bottom[0]->cpu_data();
+    top_data = top[0]->mutable_cpu_data();
+
   }
+
 
   dnnError_t e;
   void* lrn_res[dnnResourceNumber];
