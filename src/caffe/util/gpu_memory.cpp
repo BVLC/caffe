@@ -26,9 +26,12 @@ namespace caffe {
     return "No GPU: CPU Only Memory";
   }
 #else
+
   void gpu_memory::init(const std::vector<int>& gpus,
                         PoolMode m, bool debug) {
-    debug_ = debug;
+    bool debug_env = (getenv("DEBUG_GPU_MEM") != 0);
+    debug_ = debug || debug_env;
+
     if (gpus.size() <= 0) {
       // should we report an error here ?
       m = gpu_memory::NoPool;
@@ -63,7 +66,29 @@ namespace caffe {
     CHECK((ptr) != NULL);
     switch (mode_) {
     case CubPool:
-      CUDA_CHECK(cubAlloc->DeviceAllocate(ptr, size, stream));
+      if (cubAlloc->DeviceAllocate(ptr, size, stream) != cudaSuccess) {
+          int cur_device;
+          CUDA_CHECK(cudaGetDevice(&cur_device));
+          // free all cached memory (for all devices), synchrionize
+          cudaDeviceSynchronize();
+          cudaThreadSynchronize();
+          cubAlloc->FreeAllCached();
+          cudaDeviceSynchronize();
+          cudaThreadSynchronize();
+
+          // Refresh per-device saved values.
+          for (int i = 0; i < dev_info_.size(); i++) {
+            // only query devices that were initialized
+            if (dev_info_[i].total) {
+              update_dev_info(i);
+              // record which device caused cache flush
+              if (i == cur_device)
+                dev_info_[i].flush_count++;
+            }
+          }
+          // retry once
+          CUDA_CHECK(cubAlloc->DeviceAllocate(ptr, size, stream));
+        }
       break;
     default:
       CUDA_CHECK(cudaMalloc(ptr, size));
@@ -85,47 +110,42 @@ namespace caffe {
     }
   }
 
-  void gpu_memory::registerStream(cudaStream_t stream) {
-    switch (mode_) {
-    case CubPool:
-    default:
-      break;
+
+  void gpu_memory::update_dev_info(int device) {
+    int initial_device;
+    CUDA_CHECK(cudaGetDevice(&initial_device));
+
+    if (device+1 > dev_info_.size())
+      dev_info_.resize(device+1);
+
+    CUDA_CHECK(cudaSetDevice(device));
+    cudaDeviceProp props;
+    CUDA_CHECK(cudaGetDeviceProperties(&props, device));
+    CUDA_CHECK(cudaMemGetInfo(&dev_info_[device].free,
+                              &dev_info_[device].total));
+
+    if (debug_) {
+      std::cout << "cudaGetDeviceProperties: Mem = "
+                << props.totalGlobalMem <<std::endl;
+      std::cout << "cudaMemGetInfo_[" << device
+                <<": Free= " << dev_info_[device].free
+                << " Total= " << dev_info_[device].total << std::endl;
     }
+
+    // make sure we don't have more that total device memory
+    dev_info_[device].total = std::min(props.totalGlobalMem,
+                                           dev_info_[device].total);
+
+    // here we are adding existing 'busy' allocations to CUDA free memory
+    dev_info_[device].free =
+      std::min(dev_info_[device].total,
+               dev_info_[device].free
+               + cubAlloc->cached_bytes[device].busy);
+    CUDA_CHECK(cudaSetDevice(initial_device));
   }
 
   void gpu_memory::initMEM(const std::vector<int>& gpus, PoolMode m) {
     mode_ = m;
-    int initial_device;
-
-    CUDA_CHECK(cudaGetDevice(&initial_device));
-
-    for (int i = 0; i < gpus.size(); i++) {
-        int cur_device = gpus[i];
-        if (cur_device+1 > dev_info_.size())
-            dev_info_.resize(cur_device+1);
-
-      CUDA_CHECK(cudaSetDevice(gpus[i]));
-      cudaDeviceProp props;
-      CUDA_CHECK(cudaGetDeviceProperties(&props, cur_device));
-      CUDA_CHECK(cudaMemGetInfo(&dev_info_[cur_device].free,
-                                &dev_info_[cur_device].total));
-
-      if (debug_) {
-        std::cout << "cudaGetDeviceProperties: Mem = "
-                  << props.totalGlobalMem <<std::endl;
-        std::cout << "cudaMemGetInfo_[" << cur_device
-                  <<": Free= " << dev_info_[cur_device].free
-                  << " Total= " << dev_info_[cur_device].total << std::endl;
-      }
-
-      // make sure we don't ask for more that total device memory
-      dev_info_[i].free = std::min(dev_info_[cur_device].total,
-                                   dev_info_[cur_device].free);
-      dev_info_[i].free = std::min(props.totalGlobalMem,
-                                   dev_info_[cur_device].free);
-    }
-
-
     switch ( mode_ ) {
       case CubPool:
         try {
@@ -141,12 +161,13 @@ namespace caffe {
         }
         catch (...) {}
         CHECK(cubAlloc);
+        for (int i = 0; i < gpus.size(); i++) {
+          update_dev_info(gpus[i]);
+        }
         break;
       default:
         break;
       }
-
-    CUDA_CHECK(cudaSetDevice(initial_device));
   }
 
   const char* gpu_memory::getPoolName()  {
@@ -167,7 +188,7 @@ namespace caffe {
       // Free memory is initial free memory minus outstanding allocations.
       // Assuming we only allocate via gpu_memory since its constructon.
       *free_mem = dev_info_[cur_device].free -
-          cubAlloc->cached_bytes[cur_device].busy;
+        cubAlloc->cached_bytes[cur_device].busy;
       break;
     default:
       CUDA_CHECK(cudaMemGetInfo(free_mem, total_mem));

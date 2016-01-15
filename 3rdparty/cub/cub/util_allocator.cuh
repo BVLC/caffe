@@ -408,10 +408,10 @@ struct CachingDeviceAllocator
                 && (block_itr->device == device)
                 && (block_itr->bin == search_key.bin)) {
 
-                // use special rule for the last ("exact size") bin: set max memory overuse to 1/8th
+          // use special rule for the last ("exact size") bin: set max memory overuse to 1/8th
           if (search_key.bin == (unsigned int) -1 && (block_itr->bytes - search_key.bytes)*8UL > search_key.bytes)
             break;
-            
+
           cudaStream_t prev_stream = block_itr->associated_stream;
 	  if ((active_stream == prev_stream)
 	      || (cudaEventQuery(block_itr->ready_event) != cudaErrorNotReady)) {
@@ -454,22 +454,12 @@ struct CachingDeviceAllocator
 	    if (error != cudaSuccess) {
 	      if (debug) CubLog("\tdevice %d failed to allocate %lld bytes for stream %lld",
 				device, (long long) search_key.bytes, (long long) search_key.associated_stream);
-
-	      // if (search_key.bytes < cached_bytes[device]) {
-	      // free all cached memory (for all devices), synchrionize and retry once
-	      cudaDeviceSynchronize();
-	      cudaThreadSynchronize();
-	      FreeAllCached();
-	      cudaDeviceSynchronize();
-	      cudaThreadSynchronize();
-	      error = cudaMalloc(&search_key.d_ptr, search_key.bytes);
-	      //	      }
 	    }
-	    if (CubDebug(error)) 
+	    if (CubDebug(error))
 	      return error;
-	    if (CubDebug(error = cudaEventCreateWithFlags(&search_key.ready_event, cudaEventDisableTiming))) 
+	    if (CubDebug(error = cudaEventCreateWithFlags(&search_key.ready_event, cudaEventDisableTiming)))
 	      return error;
-	    
+
 	    // Insert into live blocks
 	    Lock(&spin_lock);
 	    live_blocks.insert(search_key);
@@ -548,30 +538,30 @@ struct CachingDeviceAllocator
 
 	// Lock
 	Lock(&spin_lock);
-	
+
 	// Find corresponding block descriptor
 	BusyBlocks::iterator block_itr = live_blocks.find(search_key);
 	if (block_itr != live_blocks.end()) {
 	  // Remove from live blocks
 	  search_key = *block_itr;
-	  live_blocks.erase(block_itr);	    
+	  live_blocks.erase(block_itr);
 	  cached_bytes[device].busy -= search_key.bytes;
-	  
+
 	  // Check if we should keep the returned allocation
 	  if (cached_bytes[device].free + search_key.bytes <= max_cached_bytes)
-	    {	      
+	    {
 	      // Insert returned allocation into free blocks
 	      cached_blocks.insert(search_key);
 	      cached_bytes[device].free += search_key.bytes;
 	      recached = true;
-	      if (debug) { 
+	      if (debug) {
 		CubLog("\tdevice %d returned %lld bytes from associated stream %lld.\n\t\t %lld available blocks cached (%lld bytes), %lld live blocks outstanding. (%lld bytes)\n",
-		       device, (long long) search_key.bytes, (long long) search_key.associated_stream, (long long) cached_blocks.size(), 
+		       device, (long long) search_key.bytes, (long long) search_key.associated_stream, (long long) cached_blocks.size(),
 		       (long long) cached_bytes[device].free, (long long) live_blocks.size(), (long long) cached_bytes[device].busy);
 	      }
 	    }
 	}
-	
+
         Unlock(&spin_lock);
 
         if (recached) {
@@ -585,7 +575,7 @@ struct CachingDeviceAllocator
 	      return error;
 	    if (CubDebug(error = cudaSetDevice(device))) return error;
 	  }
-	  
+
           // Actually free device memory
           if (CubDebug(error = cudaFree(d_ptr))) return error;
           if (CubDebug(error = cudaEventDestroy(search_key.ready_event))) return error;
