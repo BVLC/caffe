@@ -36,7 +36,17 @@ public:
   _CaffeModel(const std::string &netFile, const std::string &modelFile);
 	~_CaffeModel();
 
+    int GetInputImageWidth();
+    int GetInputImageHeight();
+    int GetInputImageChannels();
+
   //REVIEW ktran: these APIs only make sense for images
 	FloatArray ExtractOutputs(const std::string &imageFile, int interpolation, const std::string &layerName);
   std::vector<FloatArray> ExtractOutputs(const std::string &imageFile, int interpolation, const std::vector<std::string> &layerNames);
+
+  // imageData needs to be of size channel*height*width as required by the "data" blob. 
+  // The C++/CLI caller can use GetInputImageWidth()/Height/Channels to get the desired dimension.
+  FloatArray ExtractBitmapOutputs(const std::string &imageData, int interpolation, const std::string &layerName);
+  std::vector<FloatArray> ExtractBitmapOutputs(const std::string &imageData, int interpolation, const std::vector<std::string> &layerNames);
+
 };
