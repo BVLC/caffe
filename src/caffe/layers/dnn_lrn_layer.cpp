@@ -27,8 +27,6 @@ void DnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   k_ = this->layer_param_.lrn_param().k();
 
   lrn_buffer_ = NULL;
-  fwd_top_data = NULL;
-  bwd_bottom_diff = NULL;
 
   // "Lazy" allocation because here we don't know
   // what layout is used by neighbours.
@@ -74,7 +72,8 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
   {
     // Is it first pass? Create the primitive.
     if (lrnFwd == NULL) {
-      MklDnnMemoryDescriptor<Dtype, false>* mem_descr = (MklDnnMemoryDescriptor<Dtype, false>*) bottom[0]->get_prv_descriptor_data();
+      shared_ptr<MklDnnMemoryDescriptor<Dtype, false> > mem_descr
+        =  boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, false> >( bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
       dnnError_t e;
@@ -141,7 +140,8 @@ void DnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
 
     // Is it first pass? Create the primitive.
     if (lrnBwd == NULL) {
-      MklDnnMemoryDescriptor<Dtype, true>* mem_descr = (MklDnnMemoryDescriptor<Dtype, true>*) top[0]->get_prv_descriptor_diff();
+      shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > mem_descr
+        =  boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, true> > (top[0]->get_prv_descriptor_diff());
       CHECK(mem_descr != NULL);
 
       dnnError_t e;

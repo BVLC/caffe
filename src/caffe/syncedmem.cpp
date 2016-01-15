@@ -58,7 +58,7 @@ inline void SyncedMemory::to_cpu() {
       //memcpy(cpu_ptr_, prv_ptr_, size_);
     }
     else
-      sync_prv_to_cpu_(prv_ptr_, cpu_ptr_, prv_descriptor_);
+      sync_prv_to_cpu_(prv_ptr_, cpu_ptr_, prv_descriptor_.get());
     head_ = SYNCED_PRV;
     break;
   case SYNCED_PRV:

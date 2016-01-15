@@ -158,27 +158,27 @@ void Blob<Dtype>::set_prv_diff(Dtype* data, bool same_data) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_converter_data(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
+void Blob<Dtype>::set_prv_converter_data(shared_ptr<PrvMemDescr> prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
     CHECK(data_);
     data_->prv_descriptor_ = prv_descriptor;
     data_->sync_prv_to_cpu_ = sync_prv_to_cpu;
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_converter_diff(void* prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
+void Blob<Dtype>::set_prv_converter_diff(shared_ptr<PrvMemDescr> prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu) {
   CHECK(data_);
   diff_->prv_descriptor_ = prv_descriptor;
   diff_->sync_prv_to_cpu_ = sync_prv_to_cpu;
 }
 
 template <typename Dtype>
-void* Blob<Dtype>::get_prv_descriptor_data() {
+shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_descriptor_data() {
   CHECK(data_);
   return data_->prv_descriptor_;
 }
 
 template <typename Dtype>
-void* Blob<Dtype>::get_prv_descriptor_diff() {
+shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_descriptor_diff() {
   CHECK(diff_);
   return diff_->prv_descriptor_;
 }
@@ -205,6 +205,8 @@ template <typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
   switch (data_->head()) {
+  case SyncedMemory::SYNCED_PRV:
+  case SyncedMemory::HEAD_AT_PRV:
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
     caffe_axpy<Dtype>(count_, Dtype(-1),
