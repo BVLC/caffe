@@ -1,3 +1,8 @@
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 #include <fcntl.h>
 
 #if defined(_MSC_VER)
@@ -17,6 +22,7 @@
 
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
+#include <map>
 #include <string>
 #include <vector>
 
@@ -28,6 +34,7 @@ const int_tp kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
 
 namespace caffe {
 
+using namespace boost::property_tree;  // NOLINT(build/namespaces)
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
@@ -149,6 +156,7 @@ bool ReadImageToDatum(const string& filename, const int_tp label,
     return false;
   }
 }
+
 #endif  // USE_OPENCV
 
 bool ReadFileToDatum(const string& filename, const int_tp label,
@@ -169,6 +177,201 @@ bool ReadFileToDatum(const string& filename, const int_tp label,
   } else {
     return false;
   }
+}
+
+bool ReadRichImageToAnnotatedDatum(const string& filename,
+    const string& labelname, const int height, const int width,
+    const bool is_color, const string& encoding,
+    const AnnotatedDatum_AnnotationType type,
+    const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum) {
+  // Read image to datum.
+  bool status = ReadImageToDatum(filename, -1, height, width, is_color,
+                                 encoding, anno_datum->mutable_datum());
+  if (status == false) {
+    return status;
+  }
+  switch (type) {
+    case AnnotatedDatum_AnnotationType_BBOX:
+      return ReadXMLToAnnotatedDatum(labelname, name_to_label, anno_datum);
+      break;
+    default:
+      LOG(FATAL) << "Unknown annotation type.";
+      return false;
+  }
+}
+
+// Parse PASCAL VOC detection annotation.
+bool ReadXMLToAnnotatedDatum(const string& labelname,
+    const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum) {
+  ptree pt;
+  read_xml(labelname, pt);
+
+  // Parse annotation.
+  int width = 0, height = 0;
+  int instance_id = 0;
+  BOOST_FOREACH(ptree::value_type &v1, pt.get_child("annotation")) {
+    ptree pt1 = v1.second;
+    if (v1.first == "size") {
+      width = pt1.get<int>("width");
+      height = pt1.get<int>("height");
+    } else if (v1.first == "object") {
+      Annotation* anno = NULL;
+      ptree object = v1.second;
+      BOOST_FOREACH(ptree::value_type &v2, object.get_child("")) {
+        ptree pt2 = v2.second;
+        if (v2.first == "name") {
+          string name = pt2.data();
+          if (name_to_label.find(name) == name_to_label.end()) {
+            LOG(FATAL) << "Unknown name: " << name;
+          }
+          int label = name_to_label.find(name)->second;
+          bool found_group = false;
+          for (int g = 0; g < anno_datum->annotation_group_size(); ++g) {
+            AnnotationGroup* anno_group =
+                anno_datum->mutable_annotation_group(g);
+            if (label == anno_group->group_label()) {
+              if (anno_group->annotation_size() == 0) {
+                instance_id = 0;
+              } else {
+                instance_id = anno_group->annotation(
+                    anno_group->annotation_size() - 1).instance_id() + 1;
+              }
+              anno = anno_group->add_annotation();
+              found_group = true;
+            }
+          }
+          if (!found_group) {
+            // If there is no such annotation_group, create a new one.
+            AnnotationGroup* anno_group = anno_datum->add_annotation_group();
+            anno_group->set_group_label(label);
+            anno = anno_group->add_annotation();
+            instance_id = 0;
+          }
+          anno->set_instance_id(instance_id++);
+        } else if (v2.first == "bndbox") {
+          int xmin = pt2.get("xmin", 0);
+          int ymin = pt2.get("ymin", 0);
+          int xmax = pt2.get("xmax", 0);
+          int ymax = pt2.get("ymax", 0);
+          CHECK_NOTNULL(anno);
+          CHECK(width != 0 && height != 0) << "No valid image width/height.";
+          CHECK_LE(xmin, width) << "Bounding box exceeds image boundary.";
+          CHECK_LE(ymin, height) << "Bounding box exceeds image boundary.";
+          CHECK_LE(xmax, width) << "Bounding box exceeds image boundary.";
+          CHECK_LE(ymax, height) << "Bounding box exceeds image boundary.";
+          CHECK_GE(xmin, 0) << "Bounding box exceeds image boundary.";
+          CHECK_GE(ymin, 0) << "Bounding box exceeds image boundary.";
+          CHECK_GE(xmax, 0) << "Bounding box exceeds image boundary.";
+          CHECK_GE(ymax, 0) << "Bounding box exceeds image boundary.";
+          // Store the normalized bounding box.
+          NormalizedBBox* bbox = anno->mutable_bbox();
+          bbox->set_xmin(static_cast<float>(xmin) / width);
+          bbox->set_ymin(static_cast<float>(ymin) / height);
+          bbox->set_xmax(static_cast<float>(xmax) / width);
+          bbox->set_ymax(static_cast<float>(ymax) / height);
+        }
+      }
+    }
+  }
+  return true;
+}
+
+bool ReadLabelFileToLabelMap(const string& filename, bool include_background,
+    const string& delimiter, LabelMap* map) {
+  // cleanup
+  map->Clear();
+
+  std::ifstream file(filename.c_str());
+  string line;
+  // Every line can have [1, 3] number of fields.
+  // The delimiter between fields can be one of " :;".
+  // The order of the fields are:
+  //  name [label] [display_name]
+  //  ...
+  int field_size = -1;
+  int label = 0;
+  LabelMapItem* map_item;
+  // Add background (none_of_the_above) class.
+  if (include_background) {
+    map_item = map->add_item();
+    map_item->set_name("none_of_the_above");
+    map_item->set_label(label++);
+    map_item->set_display_name("background");
+  }
+  while (std::getline(file, line)) {
+    vector<string> fields;
+    fields.clear();
+    boost::split(fields, line, boost::is_any_of(delimiter));
+    if (field_size == -1) {
+      field_size = fields.size();
+    } else {
+      CHECK_EQ(field_size, fields.size())
+          << "Inconsistent number of fields per line.";
+    }
+    map_item = map->add_item();
+    map_item->set_name(fields[0]);
+    switch (field_size) {
+      case 1:
+        map_item->set_label(label++);
+        map_item->set_display_name(fields[0]);
+        break;
+      case 2:
+        label = std::atoi(fields[1].c_str());
+        map_item->set_label(label);
+        map_item->set_display_name(fields[0]);
+        break;
+      case 3:
+        label = std::atoi(fields[1].c_str());
+        map_item->set_label(label);
+        map_item->set_display_name(fields[2]);
+        break;
+      default:
+        LOG(FATAL) << "The number of fields should be [1, 3].";
+        break;
+    }
+  }
+  return true;
+}
+
+bool MapNameToLabel(const LabelMap& map, const bool strict_check,
+    std::map<string, int>* name_to_label) {
+  // cleanup
+  name_to_label->clear();
+
+  for (int i = 0; i < map.item_size(); ++i) {
+    const string& name = map.item(i).name();
+    const int label = map.item(i).label();
+    if (strict_check) {
+      if (!name_to_label->insert(std::make_pair(name, label)).second) {
+        LOG(FATAL) << "There are many duplicates of name: " << name;
+        return false;
+      }
+    } else {
+      (*name_to_label)[name] = label;
+    }
+  }
+  return true;
+}
+
+bool MapLabelToName(const LabelMap& map, const bool strict_check,
+    std::map<int, string>* label_to_name) {
+  // cleanup
+  label_to_name->clear();
+
+  for (int i = 0; i < map.item_size(); ++i) {
+    const string& name = map.item(i).name();
+    const int label = map.item(i).label();
+    if (strict_check) {
+      if (!label_to_name->insert(std::make_pair(label, name)).second) {
+        LOG(FATAL) << "There are many duplicates of label: " << label;
+        return false;
+      }
+    } else {
+      (*label_to_name)[label] = name;
+    }
+  }
+  return true;
 }
 
 #ifdef USE_OPENCV
