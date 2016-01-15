@@ -21,6 +21,16 @@
 
 namespace caffe {
 
+#if defined(_MSC_VER)
+    // Reference all layers and solvers to make sure they get linked into
+    // the executable.
+    void HookRegisteredClasses()
+    {
+        FOR_ALL_LAYERS(USE_HOOK);
+        FOR_ALL_SOLVERS(USE_HOOK);
+    }
+#endif
+
 template <typename Dtype>
 Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
     : root_net_(root_net) {
