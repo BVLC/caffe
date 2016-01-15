@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/linker_hooks.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -119,9 +120,11 @@ class SolverRegisterer {
 };
 
 
+// If the following macro produces compiler error, add hook to solver in linker_hooks.hpp
 #define REGISTER_SOLVER_CREATOR(type, creator)                                 \
   static SolverRegisterer<float> g_creator_f_##type(#type, creator<float>);    \
-  static SolverRegisterer<double> g_creator_d_##type(#type, creator<double>)   \
+  static SolverRegisterer<double> g_creator_d_##type(#type, creator<double>);  \
+  ENSURE_HOOKED(type)
 
 #define REGISTER_SOLVER_CLASS(type)                                            \
   template <typename Dtype>                                                    \

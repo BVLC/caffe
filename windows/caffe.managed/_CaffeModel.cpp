@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "caffe/caffe.hpp"
 #include "caffe/blob.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #pragma warning(push, 0) 
@@ -42,6 +43,24 @@ void _CaffeModel::SetDevice(int deviceId)
   }
   else
     Caffe::set_mode(Caffe::CPU);
+}
+
+int _CaffeModel::GetInputImageWidth()
+{
+    MemoryDataLayer<float> * layer = (MemoryDataLayer<float>*)_net->layer_by_name("data").get();
+    return layer->width();
+}
+
+int _CaffeModel::GetInputImageHeight()
+{
+    MemoryDataLayer<float> * layer = (MemoryDataLayer<float>*)_net->layer_by_name("data").get();
+    return layer->height();
+}
+
+int _CaffeModel::GetInputImageChannels()
+{
+    MemoryDataLayer<float> * layer = (MemoryDataLayer<float>*)_net->layer_by_name("data").get();
+    return layer->channels();
 }
 
 cv::Mat CVReadImage(const string &imageFile, int height, int width, int interpolation)
@@ -120,4 +139,48 @@ vector<FloatArray> _CaffeModel::ExtractOutputs(const string &imageFile, int inte
     results.push_back(FloatArray(blob->cpu_data(), blob->count()));
   }
   return results;
+}
+
+void EvaluateBitmap(caffe::Net<float>* net, const string &imageData, int interpolation)
+{
+    // Net initialization
+    float loss = 0.0;
+    shared_ptr<MemoryDataLayer<float> > memory_data_layer;
+    memory_data_layer = static_pointer_cast<MemoryDataLayer<float>>(net->layer_by_name("data"));
+
+    Datum datum;
+    datum.set_channels(3);
+    datum.set_height(memory_data_layer->height());
+    datum.set_width(memory_data_layer->width());
+    datum.set_label(0);
+    datum.clear_data();
+    datum.clear_float_data();
+    datum.set_data(imageData);
+
+    std::vector<Datum> datums;
+    for (int i = 0; i < 1; i++)
+        datums.push_back(datum);
+
+    memory_data_layer->AddDatumVector(datums);
+    const std::vector<Blob<float>*>& results = net->ForwardPrefilled(&loss);
+
+}
+
+FloatArray _CaffeModel::ExtractBitmapOutputs(const std::string &imageData, int interpolation, const string &blobName)
+{
+    EvaluateBitmap(_net, imageData, interpolation);
+    auto blob = _net->blob_by_name(blobName);
+    return FloatArray(blob->cpu_data(), blob->count());
+}
+
+vector<FloatArray> _CaffeModel::ExtractBitmapOutputs(const std::string &imageData, int interpolation, const vector<string> &layerNames)
+{
+    EvaluateBitmap(_net, imageData, interpolation);
+    vector<FloatArray> results;
+    for (auto& name : layerNames)
+    {
+        auto blob = _net->blob_by_name(name);
+        results.push_back(FloatArray(blob->cpu_data(), blob->count()));
+    }
+    return results;
 }
