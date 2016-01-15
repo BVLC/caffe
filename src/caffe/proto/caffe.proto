@@ -40,6 +40,19 @@ message Datum {
   optional bool encoded = 7 [default = false];
 }
 
+// The label (display) name and label id.
+message LabelMapItem {
+  // Both name and label are required.
+  optional string name = 1;
+  optional int32 label = 2;
+  // display_name is optional.
+  optional string display_name = 3;
+}
+
+message LabelMap {
+  repeated LabelMapItem item = 1;
+}
+
 // The normalized bounding box [0, 1] w.r.t. the input image size.
 message NormalizedBBox {
   optional float xmin = 1;
@@ -72,6 +85,8 @@ message AnnotatedDatum {
   optional AnnotationType type = 2;
   // Each group contains annotation for a particular class.
   repeated AnnotationGroup annotation_group = 3;
+  // Store label name and label id in LabelMap format.
+  optional string label_map_file = 4;
 }
 
 message FillerParameter {
