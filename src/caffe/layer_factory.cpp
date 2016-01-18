@@ -78,7 +78,14 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     PoolingParameter p_param = param.pooling_param();
+
+// FIXME We assume that precision issue will be fixed in cuDNN v5.0
+#if CUDNN_VERSION >= 5000
     return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
+#else
+    return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+#endif
+
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
