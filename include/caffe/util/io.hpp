@@ -206,8 +206,9 @@ inline bool ReadRichImageToAnnotatedDatum(const string& filename,
                       0, is_color, encoding, type, name_to_label, anno_datum);
 }
 
-bool ReadXMLToAnnotatedDatum(const string& labelname,
-    const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum);
+bool ReadXMLToAnnotatedDatum(const string& labelname, const int img_height,
+    const int img_width, const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum);
 
 bool ReadLabelFileToLabelMap(const string& filename, bool include_background,
     const string& delimiter, LabelMap* map);
@@ -256,6 +257,8 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum);
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color);
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
+
+void GetImageSize(const string& filename, int* height, int* width);
 #endif  // USE_OPENCV
 
 }  // namespace caffe

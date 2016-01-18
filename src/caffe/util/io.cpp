@@ -176,6 +176,16 @@ bool ReadImageToDatum(const string& filename, const int label,
   }
 }
 
+void GetImageSize(const string& filename, int* height, int* width) {
+  cv::Mat cv_img = cv::imread(filename);
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return;
+  }
+  *height = cv_img.rows;
+  *width = cv_img.cols;
+}
+
 #endif  // USE_OPENCV
 
 bool ReadFileToDatum(const string& filename, const int_tp label,
@@ -199,7 +209,7 @@ bool ReadFileToDatum(const string& filename, const int_tp label,
 }
 
 bool ReadRichImageToAnnotatedDatum(const string& filename,
-    const string& labelname, const int height, const int width,
+    const string& labelfile, const int height, const int width,
     const int min_dim, const bool is_color, const string& encoding,
     const AnnotatedDatum_AnnotationType type,
     const std::map<string, int>& name_to_label,
@@ -212,7 +222,10 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
   }
   switch (type) {
     case AnnotatedDatum_AnnotationType_BBOX:
-      return ReadXMLToAnnotatedDatum(labelname, name_to_label, anno_datum);
+      int ori_height, ori_width;
+      GetImageSize(filename, &ori_height, &ori_width);
+      return ReadXMLToAnnotatedDatum(labelfile, ori_height, ori_width,
+                                     name_to_label, anno_datum);
       break;
     default:
       LOG(FATAL) << "Unknown annotation type.";
@@ -221,20 +234,28 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
 }
 
 // Parse PASCAL VOC detection annotation.
-bool ReadXMLToAnnotatedDatum(const string& labelname,
-    const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum) {
+bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
+    const int img_width, const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum) {
   ptree pt;
-  read_xml(labelname, pt);
+  read_xml(labelfile, pt);
 
   // Parse annotation.
   int width = 0, height = 0;
+  try {
+    height = pt.get<int>("annotation.size.height");
+    width = pt.get<int>("annotation.size.width");
+  } catch (const ptree_error &e) {
+    LOG(WARNING) << "When parsing " << labelfile << ": " << e.what();
+    height = img_height;
+    width = img_width;
+  }
+  CHECK_EQ(height, img_height) << "Inconsistent image width.";
+  CHECK_EQ(width, img_width) << "Inconsistent image width.";
   int instance_id = 0;
   BOOST_FOREACH(ptree::value_type &v1, pt.get_child("annotation")) {
     ptree pt1 = v1.second;
-    if (v1.first == "size") {
-      width = pt1.get<int>("width");
-      height = pt1.get<int>("height");
-    } else if (v1.first == "object") {
+    if (v1.first == "object") {
       Annotation* anno = NULL;
       ptree object = v1.second;
       BOOST_FOREACH(ptree::value_type &v2, object.get_child("")) {
@@ -274,6 +295,9 @@ bool ReadXMLToAnnotatedDatum(const string& labelname,
           int xmax = pt2.get("xmax", 0);
           int ymax = pt2.get("ymax", 0);
           CHECK_NOTNULL(anno);
+          if (!(width != 0 && height != 0)) {
+            LOG(INFO) << labelfile;
+          }
           CHECK(width != 0 && height != 0) << "No valid image width/height.";
           CHECK_LE(xmin, width) << "Bounding box exceeds image boundary.";
           CHECK_LE(ymin, height) << "Bounding box exceeds image boundary.";
