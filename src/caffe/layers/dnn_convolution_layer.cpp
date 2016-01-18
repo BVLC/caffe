@@ -300,7 +300,7 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
 }
 
 template <typename Dtype, bool is_diff>
-Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* blob, bool test_prv_layout, shared_ptr<PrvMemDescr> mem_descr)
+Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* blob, bool test_prv_layout)
 {
   if (this->convert_to_int)
   {
@@ -320,12 +320,12 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
       if(is_diff)
       {
         blob->set_prv_diff(this->internal_ptr, true);
-        blob->set_prv_descriptor_diff(mem_descr);
+        blob->set_prv_descriptor_diff(get_shared());
       }
       else
       {
         blob->set_prv_data(this->internal_ptr, true);
-        blob->set_prv_descriptor_data(mem_descr);
+        blob->set_prv_descriptor_data(get_shared());
       }
 
       return this->internal_ptr;
@@ -366,12 +366,12 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
         if(is_diff)
         {
           blob->set_prv_diff(this->internal_ptr, true);
-          blob->set_prv_descriptor_diff(mem_descr);
+          blob->set_prv_descriptor_diff(get_shared());
         }
         else
         {
           blob->set_prv_data(this->internal_ptr, true);
-          blob->set_prv_descriptor_data(mem_descr);
+          blob->set_prv_descriptor_data(get_shared());
         }
 
         return this->internal_ptr;
@@ -418,9 +418,9 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 
   void *res_convolutionFwd[dnnResourceNumber];
-  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], true, fwd_bottom_data);
-  res_convolutionFwd[dnnResourceFilter] = fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true, fwd_filter_data);
-  res_convolutionFwd[dnnResourceBias]   = fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), false, fwd_bias_data);
+  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], true);
+  res_convolutionFwd[dnnResourceFilter] = fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
+  res_convolutionFwd[dnnResourceBias]   = fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), false);
 
   if (fwd_top_data->convert_from_int)
   {
@@ -468,8 +468,8 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   {
     void *res_convolutionBwdData[dnnResourceNumber];
 
-    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true, bwdd_top_diff);
-    res_convolutionBwdData[dnnResourceFilter]  = bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), true, bwdd_filter_data);
+    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdData[dnnResourceFilter]  = bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
 
     if (bwdd_bottom_diff->convert_from_int)
     {
@@ -489,8 +489,8 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   {
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
-    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true, bwdf_top_diff);
-    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], true, bwdf_bottom_data);
+    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], true);
 
     if (bwdf_filter_diff->convert_from_int)
     {
@@ -512,7 +512,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   {
     void *res_convolutionBwdBias[dnnResourceNumber];
 
-    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true, bwdb_top_diff);
+    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true);
 
     if (bwdb_bias_diff->convert_from_int)
     {

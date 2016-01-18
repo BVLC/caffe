@@ -166,7 +166,7 @@ const void* SyncedMemory::prv_data() {
   if((head_ != HEAD_AT_PRV) &&
      (head_ != SYNCED_PRV)) {
 
-    DLOG(INFO) << "prv_ptr_ is not up-to-date, first call set_prv_data()";
+    DLOG(INFO) << "prv_ptr_ is not up-to-date, call set_prv_data() first.";
     return NULL;
   }
 

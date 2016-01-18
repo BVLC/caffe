@@ -312,7 +312,7 @@ void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     void* pooling_res[dnnResourceNumber];
 
     pooling_res[dnnResourceWorkspace] = (void*)mask;
-    pooling_res[dnnResourceDiffDst] = bwd_top_diff->get_converted_prv(top[0], false, bwd_top_diff);
+    pooling_res[dnnResourceDiffDst] = bwd_top_diff->get_converted_prv(top[0], false);
 
     // TBD: Is this OK ?
     pooling_res[dnnResourceDiffSrc] = (void*) bottom[0]->mutable_prv_diff();

@@ -13,6 +13,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "boost/enable_shared_from_this.hpp"
 
 #include "dnn.hpp"
 
@@ -179,7 +180,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
 };
 
 template <typename Dtype, bool is_diff>
-struct MklDnnMemoryDescriptor : PrvMemDescr {
+struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklDnnMemoryDescriptor<Dtype, is_diff> > {
   MklDnnMemoryDescriptor() : layout_usr(NULL), layout_int(NULL),
     internal_ptr(NULL), convert_to_int(NULL), convert_from_int(NULL), name("UKNOWN") {};
   ~MklDnnMemoryDescriptor()
@@ -190,6 +191,12 @@ struct MklDnnMemoryDescriptor : PrvMemDescr {
     dnnDelete<Dtype>(convert_to_int);
     dnnDelete<Dtype>(convert_from_int);
   }
+
+  shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > get_shared()
+  {
+    return this->shared_from_this();
+  }
+
   dnnLayout_t layout_usr;
   dnnLayout_t layout_int;
   Dtype* internal_ptr;
@@ -210,7 +217,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr {
   }
 
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
-  Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout, shared_ptr<PrvMemDescr> mem_descr);
+  Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout);
 };
 
 template <typename Dtype>
