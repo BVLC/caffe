@@ -52,13 +52,8 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_);
       own_cpu_data_ = true;
     }
-    if(NULL == sync_prv_to_cpu_)
-    {
-      LOG(FATAL) << " Can't sync prv data to cpu";
-      //memcpy(cpu_ptr_, prv_ptr_, size_);
-    }
-    else
-      sync_prv_to_cpu_(prv_ptr_, cpu_ptr_, prv_descriptor_.get());
+    CHECK(prv_descriptor_);
+    prv_descriptor_->convert_from_prv(prv_ptr_, cpu_ptr_);
     head_ = SYNCED_PRV;
     break;
   case SYNCED_PRV:
@@ -150,10 +145,12 @@ void SyncedMemory::set_prv_data(void* data, bool same_data) {
         CaffeFreeHost(prv_ptr_);
       }
       prv_ptr_ = data;
+      own_prv_data_ = false;
     }
     else if(NULL == prv_ptr_) {
       CaffeMallocHost(&prv_ptr_, size_);
       caffe_memset(size_, 0, prv_ptr_);
+      own_prv_data_ = true;
     }
 
     if(same_data)
@@ -161,7 +158,6 @@ void SyncedMemory::set_prv_data(void* data, bool same_data) {
     else
       head_ = HEAD_AT_PRV;
 
-    own_prv_data_ = false;
   }
 }
 
@@ -169,7 +165,8 @@ const void* SyncedMemory::prv_data() {
 
   if((head_ != HEAD_AT_PRV) &&
      (head_ != SYNCED_PRV)) {
-    // Call set_prv_data() or init_prv_data() first
+
+    DLOG(INFO) << "prv_ptr_ is not up-to-date, first call set_prv_data()";
     return NULL;
   }
 

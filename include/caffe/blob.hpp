@@ -234,8 +234,8 @@ class Blob {
   Dtype* mutable_prv_data();
   Dtype* mutable_prv_diff();
 
-  void set_prv_converter_data(shared_ptr<PrvMemDescr> prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu);
-  void set_prv_converter_diff(shared_ptr<PrvMemDescr> prv_descriptor, sync_prv_to_cpu_func sync_prv_to_cpu);
+  void set_prv_descriptor_data(shared_ptr<PrvMemDescr> prv_descriptor);
+  void set_prv_descriptor_diff(shared_ptr<PrvMemDescr> prv_descriptor);
 
   shared_ptr<PrvMemDescr> get_prv_descriptor_data();
   shared_ptr<PrvMemDescr> get_prv_descriptor_diff();

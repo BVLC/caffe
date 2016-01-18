@@ -209,7 +209,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr {
     }
   }
 
-  static void convert_from_prv(void* prv_ptr, void* cpu_ptr, void* prv_descriptor);
+  virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout, shared_ptr<PrvMemDescr> mem_descr);
 };
 

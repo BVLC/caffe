@@ -39,10 +39,9 @@ inline void CaffeFreeHost(void* ptr) {
 #endif
 }
 
-typedef void (*sync_prv_to_cpu_func)(void* prv_ptr, void* cpu_ptr, void* prv_descriptor);
-
-// base class
+// Base class
 struct PrvMemDescr {
+  virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr) = 0;
 };
 
 /**
@@ -54,10 +53,10 @@ struct PrvMemDescr {
 class SyncedMemory {
  public:
   SyncedMemory()
-      : prv_descriptor_(), sync_prv_to_cpu_(NULL), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+      : prv_descriptor_(), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL), size_(0), head_(UNINITIALIZED),
         own_cpu_data_(false), own_prv_data_(false) {}
   explicit SyncedMemory(size_t size)
-      : prv_descriptor_(), sync_prv_to_cpu_(NULL), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL), size_(size), head_(UNINITIALIZED),
+      : prv_descriptor_(), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false), own_prv_data_(false) {}
   ~SyncedMemory();
   const void* cpu_data();
@@ -67,11 +66,9 @@ class SyncedMemory {
   void* mutable_gpu_data();
 
   void set_prv_data(void* data, bool same_data);
-  void* init_prv_data(); // we use modified layout, data same as in cpu_ptr_
   const void* prv_data();
   void* mutable_prv_data();
   shared_ptr<PrvMemDescr> prv_descriptor_;
-  sync_prv_to_cpu_func sync_prv_to_cpu_;
 
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED, HEAD_AT_PRV, SYNCED_PRV};
   SyncedHead head() { return head_; }

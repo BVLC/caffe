@@ -283,21 +283,19 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype, bool is_diff>
-void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, void* cpu_ptr, void* prv_descriptor)
+void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, void* cpu_ptr)
 {
   CHECK(prv_ptr);
   CHECK(cpu_ptr);
-  CHECK(prv_descriptor);
 
   int status;
   void *convert_resources[dnnResourceNumber];
-  MklDnnMemoryDescriptor<Dtype, is_diff>* mkldnn_descriptor = (MklDnnMemoryDescriptor<Dtype, is_diff>*) prv_descriptor;
 
-  DLOG(INFO) << "convert priv =>      from "  << mkldnn_descriptor->name;
+  DLOG(INFO) << "convert priv =>      from "  << this->name;
 
   convert_resources[dnnResourceFrom] = (void *)prv_ptr;
   convert_resources[dnnResourceTo]   = (void *)cpu_ptr;
-  status = dnnExecute<Dtype>(mkldnn_descriptor->convert_from_int, convert_resources);
+  status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
   CHECK(status == 0) << "[8] | Conversion from prv failed with status " << status;
 }
 
@@ -322,12 +320,12 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
       if(is_diff)
       {
         blob->set_prv_diff(this->internal_ptr, true);
-        blob->set_prv_converter_diff(mem_descr, &convert_from_prv);
+        blob->set_prv_descriptor_diff(mem_descr);
       }
       else
       {
         blob->set_prv_data(this->internal_ptr, true);
-        blob->set_prv_converter_data(mem_descr, &convert_from_prv);
+        blob->set_prv_descriptor_data(mem_descr);
       }
 
       return this->internal_ptr;
@@ -368,12 +366,12 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
         if(is_diff)
         {
           blob->set_prv_diff(this->internal_ptr, true);
-          blob->set_prv_converter_diff(mem_descr, &convert_from_prv);
+          blob->set_prv_descriptor_diff(mem_descr);
         }
         else
         {
           blob->set_prv_data(this->internal_ptr, true);
-          blob->set_prv_converter_data(mem_descr, &convert_from_prv);
+          blob->set_prv_descriptor_data(mem_descr);
         }
 
         return this->internal_ptr;
@@ -427,7 +425,7 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (fwd_top_data->convert_from_int)
   {
     top[0]->set_prv_data(fwd_top_data->internal_ptr, false);
-    top[0]->set_prv_converter_data(fwd_top_data, &MklDnnMemoryDescriptor<Dtype, false>::convert_from_prv);
+    top[0]->set_prv_descriptor_data(fwd_top_data);
     res_convolutionFwd[dnnResourceDst] = (void *)fwd_top_data->internal_ptr;
   }
   else
@@ -476,7 +474,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (bwdd_bottom_diff->convert_from_int)
     {
       bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, false);
-      bottom[0]->set_prv_converter_diff(bwdd_bottom_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+      bottom[0]->set_prv_descriptor_diff(bwdd_bottom_diff);
       res_convolutionBwdData[dnnResourceDiffSrc] = (void *)bwdd_bottom_diff->internal_ptr;
     }
     else
@@ -497,7 +495,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (bwdf_filter_diff->convert_from_int)
     {
       this->blobs_[0]->set_prv_diff(bwdf_filter_diff->internal_ptr, false);
-      this->blobs_[0]->set_prv_converter_diff(bwdf_filter_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+      this->blobs_[0]->set_prv_descriptor_diff(bwdf_filter_diff);
 
       res_convolutionBwdFilter[dnnResourceDiffFilter] = (void*) bwdf_filter_diff->internal_ptr;
 
@@ -519,7 +517,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (bwdb_bias_diff->convert_from_int)
     {
       this->blobs_[1]->set_prv_diff(bwdb_bias_diff->internal_ptr, false);
-      this->blobs_[1]->set_prv_converter_diff(bwdb_bias_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+      this->blobs_[1]->set_prv_descriptor_diff(bwdb_bias_diff);
       res_convolutionBwdBias[dnnResourceDiffBias] = bwdb_bias_diff->internal_ptr;
     }
     else

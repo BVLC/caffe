@@ -90,7 +90,7 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
       fwd_top_data = mem_descr;
     }
     top_data = top[0]->mutable_prv_data();
-    top[0]->set_prv_converter_data(fwd_top_data, &MklDnnMemoryDescriptor<Dtype, false>::convert_from_prv);
+    top[0]->set_prv_descriptor_data(fwd_top_data);
 
   } else {
     LOG(FATAL) << "No implemented for default caffe data layout";
@@ -150,7 +150,7 @@ void DnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
 
       bwd_bottom_diff = mem_descr;
     }
-    bottom[0]->set_prv_converter_diff(bwd_bottom_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+    bottom[0]->set_prv_descriptor_diff(bwd_bottom_diff);
 
   } else {
     LOG(FATAL) << "No implemented for default caffe data layout";

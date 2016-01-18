@@ -270,7 +270,7 @@ void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (fwd_top_data->convert_from_int)
     {
       top[0]->set_prv_data(fwd_top_data->internal_ptr, false);
-      top[0]->set_prv_converter_data(fwd_top_data, &MklDnnMemoryDescriptor<Dtype, false>::convert_from_prv);
+      top[0]->set_prv_descriptor_data(fwd_top_data);
       pooling_res[dnnResourceDst] = (void *)fwd_top_data->internal_ptr;
     }
     else {
@@ -318,7 +318,7 @@ void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     pooling_res[dnnResourceDiffSrc] = (void*) bottom[0]->mutable_prv_diff();
     // TODO: bwd_bottom_diff !!!!!!!!!!!!!
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    bottom[0]->set_prv_converter_diff(bwd_top_diff, &MklDnnMemoryDescriptor<Dtype, true>::convert_from_prv);
+    bottom[0]->set_prv_descriptor_diff(bwd_top_diff);
 
     caffe_set(bottom[0]->count(), Dtype(0), (Dtype*)pooling_res[dnnResourceDiffSrc]);
 
