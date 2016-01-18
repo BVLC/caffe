@@ -109,16 +109,15 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     // go to the next item.
     cursor_->Next();
     if (!cursor_->valid()) {
-       // temp disable
-      //DLOG(INFO) << "Restarting data prefetching from start.";
+      DLOG(INFO) << "Restarting data prefetching from start.";
       cursor_->SeekToFirst();
     }
   }
   timer.Stop();
   batch_timer.Stop();
-//  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-//  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-//  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
