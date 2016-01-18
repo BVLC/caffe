@@ -39,6 +39,9 @@ DEFINE_string(snapshot, "",
 DEFINE_string(weights, "",
     "Optional; the pretrained weights to initialize finetuning, "
     "separated by ','. Cannot be set simultaneously with snapshot.");
+DEFINE_string(trace, "",
+    "Optional; the trace file to resume training, "
+    "can only be defined if snapshot is defined.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
 DEFINE_string(sigint_effect, "stop",
@@ -156,7 +159,10 @@ int train() {
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
       << "Give a snapshot to resume training or weights to finetune "
       "but not both.";
-
+  if (FLAGS_trace.size()) {
+    CHECK(FLAGS_snapshot.size()) << "Can not restore a trace without also "
+    "defining a snapshot from which to restore";
+  }
   caffe::SolverParameter solver_param;
   caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
@@ -207,7 +213,12 @@ int train() {
 
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
-    solver->Restore(FLAGS_snapshot.c_str());
+    if (FLAGS_trace.size()) {
+      LOG(INFO) << "Resuming trace from " << FLAGS_trace;
+      solver->Restore(FLAGS_snapshot.c_str(), FLAGS_trace.c_str());
+    } else {
+      solver->Restore(FLAGS_snapshot.c_str());
+    }
   } else if (FLAGS_weights.size()) {
     CopyLayers(solver.get(), FLAGS_weights);
   }
