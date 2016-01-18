@@ -44,9 +44,11 @@ DEFINE_string(backend, "lmdb",
 DEFINE_string(anno_type, "classification",
     "The type of annotation {classification, detection}.");
 DEFINE_string(label_map_file, "",
-    "If anno_type is detection, provide a label map file.");
-DEFINE_bool(strict_check, false,
+    "A file with LabelMap protobuf message.");
+DEFINE_bool(check_label, false,
     "When this option is on, check that there is no duplicated name/label.");
+DEFINE_int32(min_dim, 0,
+    "Minimum dimension images are resized to (keep same aspect ratio)");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 DEFINE_bool(check_size, false,
@@ -84,7 +86,7 @@ int main(int argc, char** argv) {
   const string anno_type = FLAGS_anno_type;
   AnnotatedDatum_AnnotationType type;
   const string label_map_file = FLAGS_label_map_file;
-  const bool strict_check = FLAGS_strict_check;
+  const bool check_label = FLAGS_check_label;
   std::map<std::string, int> name_to_label;
 
   std::ifstream infile(argv[2]);
@@ -101,7 +103,7 @@ int main(int argc, char** argv) {
     LabelMap label_map;
     CHECK(ReadProtoFromTextFile(label_map_file, &label_map))
         << "Failed to read label map file.";
-    CHECK(MapNameToLabel(label_map, strict_check, &name_to_label))
+    CHECK(MapNameToLabel(label_map, check_label, &name_to_label))
         << "Failed to convert name to label.";
     while (infile >> filename >> labelname) {
       lines.push_back(std::make_pair(filename, labelname));
@@ -117,6 +119,7 @@ int main(int argc, char** argv) {
   if (encode_type.size() && !encoded)
     LOG(INFO) << "encode_type specified, assuming encoded=true.";
 
+  int min_dim = std::max<int>(0, FLAGS_min_dim);
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
@@ -149,11 +152,12 @@ int main(int argc, char** argv) {
     if (anno_type == "classification") {
       label = boost::get<int>(lines[line_id].second);
       status = ReadImageToDatum(filename, label, resize_height, resize_width,
-          is_color, enc, datum);
+          min_dim, is_color, enc, datum);
     } else if (anno_type == "detection") {
       labelname = root_folder + boost::get<std::string>(lines[line_id].second);
       status = ReadRichImageToAnnotatedDatum(filename, labelname, resize_height,
-          resize_width, is_color, enc, type, name_to_label, &anno_datum);
+          resize_width, min_dim, is_color, enc, type, name_to_label,
+          &anno_datum);
     }
     if (status == false) {
       LOG(WARNING) << "Failed to read " << lines[line_id].first;

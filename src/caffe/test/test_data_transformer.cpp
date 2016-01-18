@@ -144,7 +144,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
                                               this->height_, this->width_);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -166,7 +166,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
                                               this->height_, this->width_);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   EXPECT_EQ(blob->num(), 1);
@@ -188,7 +188,7 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   Blob<TypeParam>* blob =
       new Blob<TypeParam>(1, this->channels_, crop_size, crop_size);
@@ -309,7 +309,7 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
                                               this->height_, this->width_);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {
@@ -330,7 +330,7 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
                                               this->height_, this->width_);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int c = 0; c < this->channels_; ++c) {
@@ -368,7 +368,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
                                               this->height_, this->width_);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(datum, blob);
   for (int j = 0; j < blob->count(); ++j) {
@@ -392,7 +392,7 @@ TYPED_TEST(DataTransformTest, TestRichLabel) {
   vector<AnnotationGroup> transformed_anno_vec;
 
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(anno_datum, blob, &transformed_anno_vec);
 
@@ -428,7 +428,7 @@ TYPED_TEST(DataTransformTest, TestRichLabelCrop) {
 
   transform_param.set_crop_size(crop_size);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   transformer->Transform(anno_datum, blob, &transformed_anno_vec);
 
@@ -463,7 +463,7 @@ TYPED_TEST(DataTransformTest, TestRichLabelCropMirror) {
   transform_param.set_crop_size(crop_size);
   transform_param.set_mirror(true);
   DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
+      new DataTransformer<TypeParam>(transform_param, TEST, Caffe::Get().GetDefaultDevice());
   transformer->InitRand();
   bool do_mirror;
   for (int iter = 0; iter < 10; ++iter) {

@@ -148,9 +148,16 @@ inline bool ReadFileToDatum(const string& filename, Datum* datum) {
   return ReadFileToDatum(filename, -1, datum);
 }
 
-bool ReadImageToDatum(const string& filename, const int_tp label,
-    const int_tp height, const int_tp width, const bool is_color,
-    const std::string & encoding, Datum* datum);
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const int min_dim,
+    const bool is_color, const std::string & encoding, Datum* datum);
+
+inline bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color,
+    const std::string & encoding, Datum* datum) {
+  return ReadImageToDatum(filename, label, height, width, 0, is_color,
+                          encoding, datum);
+}
 
 inline bool ReadImageToDatum(const string& filename, const int_tp label,
                              const int_tp height, const int_tp width,
@@ -184,10 +191,20 @@ bool DecodeDatum(Datum* datum, bool is_color);
 
 bool ReadRichImageToAnnotatedDatum(const string& filename,
     const string& labelname, const int height, const int width,
-    const bool is_color, const std::string & encoding,
+    const int min_dim, const bool is_color, const std::string & encoding,
     const AnnotatedDatum_AnnotationType type,
     const std::map<string, int>& name_to_label,
     AnnotatedDatum* anno_datum);
+
+inline bool ReadRichImageToAnnotatedDatum(const string& filename,
+    const string& labelname, const int height, const int width,
+    const bool is_color, const std::string & encoding,
+    const AnnotatedDatum_AnnotationType type,
+    const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum) {
+  return ReadRichImageToAnnotatedDatum(filename, labelname, height, width,
+                      0, is_color, encoding, type, name_to_label, anno_datum);
+}
 
 bool ReadXMLToAnnotatedDatum(const string& labelname,
     const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum);
@@ -221,6 +238,9 @@ inline bool MapLabelToName(const LabelMap& map,
 }
 
 #ifdef USE_OPENCV
+cv::Mat ReadImageToCVMat(const string& filename, const int height,
+    const int width, const int min_dim, const bool is_color);
+
 cv::Mat ReadImageToCVMat(const string& filename,
     const int_tp height, const int_tp width, const bool is_color);
 
