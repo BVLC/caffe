@@ -10,6 +10,7 @@
 
 #include "caffe/layers/absval_layer.hpp"
 #include "caffe/layers/bnll_layer.hpp"
+#include "caffe/layers/clip_layer.hpp"
 #include "caffe/layers/dropout_layer.hpp"
 #include "caffe/layers/elu_layer.hpp"
 #include "caffe/layers/exp_layer.hpp"
@@ -202,6 +203,38 @@ TYPED_TEST(NeuronLayerTest, TestAbsGradient) {
   LayerParameter layer_param;
   AbsValLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestClip) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "clip_param { min: -1, max: 2 }", &layer_param));
+  ClipLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], -1);
+    EXPECT_LE(top_data[i], 2);
+    EXPECT_TRUE(bottom_data[i] > -1 || top_data[i] == -1);
+    EXPECT_TRUE(bottom_data[i] < 2 || top_data[i] == 2);
+    EXPECT_TRUE(!(bottom_data[i] >= -1 && bottom_data[i] <= 2)
+            || top_data[i] == bottom_data[i]);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestClipGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "clip_param { min: -1, max: 2 }", &layer_param));
+  ClipLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
