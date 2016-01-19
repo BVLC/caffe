@@ -11,19 +11,18 @@ namespace caffe {
 template <typename Dtype>
 DnnConvolutionLayer<Dtype>::DnnConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param),
-        fwd_bottom_data   (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        fwd_top_data      (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        fwd_filter_data   (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        fwd_bias_data     (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        bwdd_top_diff     (new MklDnnMemoryDescriptor<Dtype, true> ()),
-        bwdd_bottom_diff  (new MklDnnMemoryDescriptor<Dtype, true> ()),
-        bwdd_filter_data  (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        bwdf_top_diff     (new MklDnnMemoryDescriptor<Dtype, true> ()),
-        bwdf_filter_diff  (new MklDnnMemoryDescriptor<Dtype, true> ()),
-        bwdf_bottom_data  (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        bwdb_top_diff     (new MklDnnMemoryDescriptor<Dtype, true> ()),
-        bwdb_bias_diff    (new MklDnnMemoryDescriptor<Dtype, true> ()),
-        convolutionBwdBias(new MklDnnMemoryDescriptor<Dtype, false> ()) {}
+        fwd_bottom_data   (new MklDnnData<Dtype>()),
+        fwd_top_data      (new MklDnnData<Dtype>()),
+        fwd_filter_data   (new MklDnnData<Dtype>()),
+        fwd_bias_data     (new MklDnnData<Dtype>()),
+        bwdd_top_diff     (new MklDnnDiff<Dtype>()),
+        bwdd_bottom_diff  (new MklDnnDiff<Dtype>()),
+        bwdd_filter_data  (new MklDnnData<Dtype>()),
+        bwdf_top_diff     (new MklDnnDiff<Dtype>()),
+        bwdf_filter_diff  (new MklDnnDiff<Dtype>()),
+        bwdf_bottom_data  (new MklDnnData<Dtype>()),
+        bwdb_top_diff     (new MklDnnDiff<Dtype>()),
+        bwdb_bias_diff    (new MklDnnDiff<Dtype>()) {}
 
 template <typename Dtype>
 void DnnConvolutionLayer<Dtype>::compute_output_shape() {

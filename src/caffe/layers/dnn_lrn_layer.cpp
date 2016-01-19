@@ -70,10 +70,10 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
 
   if(NULL != bottom_data)
   {
-    // Is it first pass? Create the primitive.
+    // Is it the first pass? Create a primitive.
     if (lrnFwd == NULL) {
-      shared_ptr<MklDnnMemoryDescriptor<Dtype, false> > mem_descr
-        =  boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, false> >( bottom[0]->get_prv_descriptor_data());
+      shared_ptr<MklDnnData<Dtype> > mem_descr
+        =  boost::static_pointer_cast<MklDnnData<Dtype> > (bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
       dnnError_t e;
@@ -93,7 +93,7 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
     top[0]->set_prv_descriptor_data(fwd_top_data);
 
   } else {
-    LOG(FATAL) << "No implemented for default caffe data layout";
+    LOG(FATAL) << "Not yet implemented for default caffe data layout";
     LOG(INFO) << "Using cpu_data in DnnLRNLayer.";
     bottom_data = (void*)bottom[0]->cpu_data();
     top_data = top[0]->mutable_cpu_data();
@@ -138,10 +138,10 @@ void DnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     if (NULL == bottom_data)
       LOG(FATAL) << "bottom_data is NULL";
 
-    // Is it first pass? Create the primitive.
+    // Is it the first pass? Create a primitive.
     if (lrnBwd == NULL) {
-      shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > mem_descr
-        =  boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, true> > (top[0]->get_prv_descriptor_diff());
+      shared_ptr<MklDnnDiff<Dtype> > mem_descr
+        =  boost::static_pointer_cast<MklDnnDiff<Dtype> > (top[0]->get_prv_descriptor_diff());
       CHECK(mem_descr != NULL);
 
       dnnError_t e;

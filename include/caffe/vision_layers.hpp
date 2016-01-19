@@ -221,6 +221,14 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
 };
 
 template <typename Dtype>
+struct MklDnnData : MklDnnMemoryDescriptor<Dtype, false>
+{};
+
+template <typename Dtype>
+struct MklDnnDiff : MklDnnMemoryDescriptor<Dtype, true>
+{};
+
+template <typename Dtype>
 class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit DnnConvolutionLayer(const LayerParameter& param);
@@ -244,21 +252,21 @@ class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
 
  private:
 /* Fwd step */
-     shared_ptr<MklDnnMemoryDescriptor<Dtype, false> >fwd_bottom_data, fwd_top_data, fwd_filter_data, fwd_bias_data;
+     shared_ptr<MklDnnData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data, fwd_bias_data;
      dnnPrimitive_t convolutionFwd;
 
 /* Bwd data step */
-     shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > bwdd_top_diff, bwdd_bottom_diff;
-     shared_ptr<MklDnnMemoryDescriptor<Dtype, false> > bwdd_filter_data;
+     shared_ptr<MklDnnDiff<Dtype> > bwdd_top_diff, bwdd_bottom_diff;
+     shared_ptr<MklDnnData<Dtype> > bwdd_filter_data;
      dnnPrimitive_t convolutionBwdData;
 
 /* Bwd filter step */
-     shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > bwdf_top_diff, bwdf_filter_diff;
-     shared_ptr<MklDnnMemoryDescriptor<Dtype, false> > bwdf_bottom_data;
+     shared_ptr<MklDnnDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
+     shared_ptr<MklDnnData<Dtype> > bwdf_bottom_data;
      dnnPrimitive_t convolutionBwdFilter;
 
 /* Bwd bias step */
-     shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > bwdb_top_diff, bwdb_bias_diff;
+     shared_ptr<MklDnnDiff<Dtype> > bwdb_top_diff, bwdb_bias_diff;
      dnnPrimitive_t convolutionBwdBias;
 };
 
@@ -513,8 +521,8 @@ class DnnLRNLayer : public Layer<Dtype> {
   // scale_ stores the intermediate summing results
 private:
   dnnPrimitive_t lrnFwd, lrnBwd;
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, false> > fwd_top_data;
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > bwd_bottom_diff;
+  shared_ptr<MklDnnData<Dtype> > fwd_top_data;
+  shared_ptr<MklDnnDiff<Dtype> > bwd_bottom_diff;
   Dtype *lrn_buffer_;
 };
 
@@ -569,8 +577,8 @@ class DnnPoolingLayer : public Layer<Dtype> {
  public:
   explicit DnnPoolingLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
-        fwd_top_data (new MklDnnMemoryDescriptor<Dtype, false> ()),
-        bwd_top_diff (new MklDnnMemoryDescriptor<Dtype, true> ())
+        fwd_top_data    (new MklDnnData<Dtype>()),
+        bwd_top_diff    (new MklDnnDiff<Dtype>())
     {}
   ~DnnPoolingLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -608,11 +616,10 @@ class DnnPoolingLayer : public Layer<Dtype> {
   Blob<Dtype> rand_idx_;
   Blob<size_t> max_idx_;
  private:
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, false> > fwd_top_data;
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, true> > bwd_top_diff;
+  shared_ptr<MklDnnData<Dtype> > fwd_top_data;
+  shared_ptr<MklDnnDiff<Dtype> > bwd_top_diff;
 
   dnnPrimitive_t poolingFwd, poolingBwd;
-  Dtype *pool_buffer_;
 };
 
 #ifdef USE_CUDNN
