@@ -320,6 +320,56 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
       }
     }
   }
+
+  void TestSolverActivationTrace(const Dtype learning_rate = 1.0,
+      const Dtype weight_decay = 0.0, const Dtype momentum = 0.0,
+      const int num_iters = 1) {
+    // Run the solver for num_iters * 2 iterations.
+    const int total_num_iters = num_iters * 2;
+    bool snapshot = false;
+    const char* from_snapshot = NULL;
+    const char* trace_snapshot = NULL;
+    int trace_interval = 1;
+    int num_traces = 5;
+    const int kIterSize = 1;
+    const int kDevices = 1;
+
+    MakeTempDir(&snapshot_prefix_);
+    ostringstream extra_proto;
+    extra_proto <<
+      "solver_trace_param { "
+      "  save_interval: 1 "
+      "  trace_filename: '" << snapshot_prefix_ << "/trace' "
+      "  activation_trace_interval: " << trace_interval << " "
+      "  num_activation_traces: " << num_traces << " "
+      "} ";
+
+    RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
+        total_num_iters, kIterSize, kDevices, snapshot, from_snapshot,
+        trace_snapshot, extra_proto.str());
+
+    string string_snapshot, string_no_snapshot;
+    const TraceDigest& digest = solver_->get_digest();
+    TextFormat::PrintToString(digest, &string_no_snapshot);
+
+    int num_blobs = solver_->net()->blobs().size();
+    ASSERT_EQ(digest.activation_trace_size(), num_blobs);
+
+    for (int i = 0; i < digest.activation_trace_size(); ++i) {
+      int trace_size = digest.activation_trace(i).activation_trace_point_size();
+      EXPECT_TRUE(digest.activation_trace(i).has_blob_name());
+      ASSERT_EQ(trace_size, total_num_iters);
+      vector<int> iter_counts(total_num_iters + 1, 0);
+      for (int j = 0; j < trace_size; ++j) {
+        int iter = digest.activation_trace(i).activation_trace_point(j).iter();
+        ASSERT_LE(iter, total_num_iters);
+        iter_counts[iter]++;
+      }
+      for (int j = 1; j < trace_size; ++j) {
+        EXPECT_EQ(iter_counts[j], 1);
+      }
+    }
+  }
 };
 
 template <typename TypeParam>
@@ -354,6 +404,29 @@ TYPED_TEST(SGDSolverTraceTest, TestSolverWeightTraceShare) {
   this->share_ = true;
   for (int i = 1; i <= kNumIters; ++i) {
     this->TestSolverWeightTrace(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+TYPED_TEST(SGDSolverTraceTest, TestSolverActivationTrace) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.01;
+  const Dtype kWeightDecay = 0.5;
+  const Dtype kMomentum = 0.9;
+  const int kNumIters = 4;
+  for (int i = 1; i <= kNumIters; ++i) {
+    this->TestSolverActivationTrace(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+TYPED_TEST(SGDSolverTraceTest, TestSolverActivationTraceShare) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.01;
+  const Dtype kWeightDecay = 0.5;
+  const Dtype kMomentum = 0.9;
+  const int kNumIters = 4;
+  this->share_ = true;
+  for (int i = 1; i <= kNumIters; ++i) {
+    this->TestSolverActivationTrace(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
 
