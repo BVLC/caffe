@@ -52,7 +52,7 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_);
       own_cpu_data_ = true;
     }
-    CHECK(prv_descriptor_);
+    CHECK(prv_descriptor_.get());
     prv_descriptor_->convert_from_prv(prv_ptr_, cpu_ptr_);
     head_ = SYNCED_PRV;
     break;

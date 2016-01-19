@@ -269,8 +269,7 @@ void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     if (fwd_top_data->convert_from_int)
     {
-      top[0]->set_prv_data(fwd_top_data->internal_ptr, false);
-      top[0]->set_prv_descriptor_data(fwd_top_data);
+      top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
       pooling_res[dnnResourceDst] = (void *)fwd_top_data->internal_ptr;
     }
     else {

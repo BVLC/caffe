@@ -318,15 +318,9 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
       CHECK(status == 0) << "Conversion failed with status " << status;
 
       if(is_diff)
-      {
-        blob->set_prv_diff(this->internal_ptr, true);
-        blob->set_prv_descriptor_diff(get_shared());
-      }
+        blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
       else
-      {
-        blob->set_prv_data(this->internal_ptr, true);
-        blob->set_prv_descriptor_data(get_shared());
-      }
+        blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
 
       return this->internal_ptr;
     }
@@ -364,15 +358,9 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
         }
 
         if(is_diff)
-        {
-          blob->set_prv_diff(this->internal_ptr, true);
-          blob->set_prv_descriptor_diff(get_shared());
-        }
+          blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
         else
-        {
-          blob->set_prv_data(this->internal_ptr, true);
-          blob->set_prv_descriptor_data(get_shared());
-        }
+          blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
 
         return this->internal_ptr;
       }
@@ -424,8 +412,7 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   if (fwd_top_data->convert_from_int)
   {
-    top[0]->set_prv_data(fwd_top_data->internal_ptr, false);
-    top[0]->set_prv_descriptor_data(fwd_top_data);
+    top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
     res_convolutionFwd[dnnResourceDst] = (void *)fwd_top_data->internal_ptr;
   }
   else
@@ -473,8 +460,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     if (bwdd_bottom_diff->convert_from_int)
     {
-      bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, false);
-      bottom[0]->set_prv_descriptor_diff(bwdd_bottom_diff);
+      bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, bwdd_bottom_diff, false);
       res_convolutionBwdData[dnnResourceDiffSrc] = (void *)bwdd_bottom_diff->internal_ptr;
     }
     else
@@ -494,11 +480,8 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     if (bwdf_filter_diff->convert_from_int)
     {
-      this->blobs_[0]->set_prv_diff(bwdf_filter_diff->internal_ptr, false);
-      this->blobs_[0]->set_prv_descriptor_diff(bwdf_filter_diff);
-
+      this->blobs_[0]->set_prv_diff(bwdf_filter_diff->internal_ptr, bwdf_filter_diff, false);
       res_convolutionBwdFilter[dnnResourceDiffFilter] = (void*) bwdf_filter_diff->internal_ptr;
-
     }
     else
       res_convolutionBwdFilter[dnnResourceDiffFilter] = this->blobs_[0]->mutable_cpu_diff();
@@ -516,8 +499,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     if (bwdb_bias_diff->convert_from_int)
     {
-      this->blobs_[1]->set_prv_diff(bwdb_bias_diff->internal_ptr, false);
-      this->blobs_[1]->set_prv_descriptor_diff(bwdb_bias_diff);
+      this->blobs_[1]->set_prv_diff(bwdb_bias_diff->internal_ptr, bwdb_bias_diff, false);
       res_convolutionBwdBias[dnnResourceDiffBias] = bwdb_bias_diff->internal_ptr;
     }
     else

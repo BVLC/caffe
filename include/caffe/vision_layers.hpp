@@ -192,7 +192,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
     dnnDelete<Dtype>(convert_from_int);
   }
 
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > get_shared()
+  shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > get_shared_ptr()
   {
     return this->shared_from_this();
   }
