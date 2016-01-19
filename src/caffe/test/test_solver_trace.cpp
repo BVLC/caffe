@@ -245,6 +245,8 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
       "  trace_filename: '" << snapshot_prefix_ << "/trace' "
       "  weight_trace_interval: " << weight_trace_interval << " "
       "  num_weight_traces: " << num_traces << " "
+      "  create_train_trace: true "
+      "  create_test_trace: false "
       "} ";
 
     RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
@@ -342,6 +344,8 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
       "  trace_filename: '" << snapshot_prefix_ << "/trace' "
       "  activation_trace_interval: " << trace_interval << " "
       "  num_activation_traces: " << num_traces << " "
+      "  create_train_trace: true "
+      "  create_test_trace: false "
       "} ";
 
     RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
@@ -368,6 +372,62 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
       for (int j = 1; j < trace_size; ++j) {
         EXPECT_EQ(iter_counts[j], 1);
       }
+    }
+  }
+
+  void TestSolverTrainTrace(const Dtype learning_rate = 1.0,
+      const Dtype weight_decay = 0.0, const Dtype momentum = 0.0,
+      const int num_iters = 1) {
+    // Run the solver for num_iters * 2 iterations.
+    const int total_num_iters = num_iters * 2;
+    bool snapshot = false;
+    const char* from_snapshot = NULL;
+    const char* trace_snapshot = NULL;
+    const int kIterSize = 1;
+    const int kDevices = 1;
+
+    MakeTempDir(&snapshot_prefix_);
+    ostringstream extra_proto;
+    extra_proto <<
+      "solver_trace_param { "
+      "  save_interval: 1 "
+      "  trace_filename: '" << snapshot_prefix_ << "/trace' "
+      "  trace_interval: 0 "
+      "  num_traces: 0 "
+      "  create_train_trace: true "
+      "  create_test_trace: false "
+      "} ";
+
+    RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
+        total_num_iters, kIterSize, kDevices, snapshot, from_snapshot,
+        trace_snapshot, extra_proto.str());
+
+    const TraceDigest digest(solver_->get_digest());
+    EXPECT_EQ(digest.train_trace_point_size(), total_num_iters);
+
+    // Run the solver for num_iters iterations and snapshot.
+    snapshot = true;
+    pair<string, string> snapshot_name = RunLeastSquaresSolver(learning_rate,
+        weight_decay, momentum, num_iters, kIterSize, kDevices,
+        snapshot, from_snapshot, trace_snapshot, extra_proto.str());
+
+    // Reinitialize the solver and run for num_iters more iterations.
+    snapshot = false;
+    RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
+        total_num_iters, kIterSize, kDevices, snapshot,
+        snapshot_name.first.c_str(), snapshot_name.second.c_str(),
+        extra_proto.str());
+
+    const TraceDigest& digest_snapshot = solver_->get_digest();
+    // Here we can't do the string compare trick, b/c its impossible to get the
+    // smoothed loss right
+    ASSERT_EQ(digest.train_trace_point_size(),
+              digest_snapshot.train_trace_point_size());
+    for (int i = 0; i < digest.train_trace_point_size(); ++i) {
+      EXPECT_EQ(digest.train_trace_point(i).iter(),
+                digest_snapshot.train_trace_point(i).iter());
+      EXPECT_EQ(digest.train_trace_point(i).train_loss(),
+                digest_snapshot.train_trace_point(i).train_loss());
     }
   }
 };
@@ -427,6 +487,29 @@ TYPED_TEST(SGDSolverTraceTest, TestSolverActivationTraceShare) {
   this->share_ = true;
   for (int i = 1; i <= kNumIters; ++i) {
     this->TestSolverActivationTrace(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+TYPED_TEST(SGDSolverTraceTest, TestSolverTrainTrace) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.01;
+  const Dtype kWeightDecay = 0.5;
+  const Dtype kMomentum = 0.9;
+  const int kNumIters = 4;
+  for (int i = 1; i <= kNumIters; ++i) {
+    this->TestSolverTrainTrace(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+TYPED_TEST(SGDSolverTraceTest, TestSolverTrainTraceShare) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.01;
+  const Dtype kWeightDecay = 0.5;
+  const Dtype kMomentum = 0.9;
+  const int kNumIters = 4;
+  this->share_ = true;
+  for (int i = 1; i <= kNumIters; ++i) {
+    this->TestSolverTrainTrace(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
 
