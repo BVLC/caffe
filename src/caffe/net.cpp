@@ -47,8 +47,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
   LOG_IF(INFO, Caffe::root_solver())
-      << "Initializing net from parameters: " << std::endl
-      << filtered_param.DebugString();
+    << "Initializing net from parameters: " << std::endl;
+#ifdef DEBUG
+  LOG_IF(INFO, Caffe::root_solver()) << filtered_param.DebugString();
+#endif
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
   InsertSplits(filtered_param, &param);
