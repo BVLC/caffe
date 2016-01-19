@@ -29,18 +29,20 @@ class SolverTrace {
                        const Solver<Dtype>* solver);
   virtual ~SolverTrace() {}
   /** @brief Get a const reference to the history */
-  virtual const TraceDigest& get_digest() const;
+  const TraceDigest& get_digest() const;
   /** @brief Add trace of state the solver is in during training to digest */
-  virtual void update_trace_train(SolverAction::Enum request);
-  virtual void update_trace_train_loss(Dtype loss,
+  void update_trace_train(SolverAction::Enum request);
+  void update_trace_train_loss(Dtype loss,
                                        Dtype smoothed_loss);
-  virtual void update_trace_test_loss(int test_net_id, Dtype loss);
-  virtual void update_trace_test_score(int test_net_id,
+  void update_trace_test_loss(int test_net_id, Dtype loss);
+  void update_trace_test_score(int test_net_id,
                                        const string& output_name,
                                        Dtype loss_weight,
                                        Dtype mean_score);
   /** @brief Save the history of the solver to a proto file */
-  virtual void Save() const;
+  void Save() const;
+  /** @brief Restore the history of the solver from a proto file */
+  void Restore(const string& trace_filename);
 
  protected:
   void update_weight_trace();                  /// Add weight history to digest

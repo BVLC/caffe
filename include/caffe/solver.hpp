@@ -62,7 +62,7 @@ class Solver {
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
   // methods to restore the state from the appropriate snapshot type.
-  void Restore(const char* resume_file);
+  void Restore(const char* resume_file, const char* trace_file = NULL);
   // The Solver::Snapshot function implements the basic snapshotting utility
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be

@@ -135,6 +135,70 @@ void SolverTrace<Dtype>::Save() const {
 }
 
 template <typename Dtype>
+void SolverTrace<Dtype>::Restore(const string& trace_filename) {
+  // Read the trace digest in from file
+  TraceDigest local_digest;
+  ReadProtoFromBinaryFileOrDie(trace_filename, &local_digest);
+  const int iter = solver_->iter();
+  last_iter_ = iter;
+
+  trace_digest_->clear_weight_trace_point();
+  for (int i = 0; i < local_digest.weight_trace_point_size(); ++i) {
+    if (local_digest.weight_trace_point(i).iter() <= iter) {
+      WeightTracePoint* point = trace_digest_->add_weight_trace_point();
+      *point = local_digest.weight_trace_point(i);
+    }
+  }
+
+  trace_digest_->clear_diff_trace_point();
+  for (int i = 0; i < local_digest.diff_trace_point_size(); ++i) {
+    if (local_digest.diff_trace_point(i).iter() <= iter) {
+      WeightTracePoint* point = trace_digest_->add_diff_trace_point();
+      *point = local_digest.diff_trace_point(i);
+    }
+  }
+
+  trace_digest_->clear_activation_trace();
+  activation_name_to_index_.clear();
+  for (int i = 0; i < local_digest.activation_trace_size(); ++i) {
+    ActivationTrace* new_trace = trace_digest_->add_activation_trace();
+    const ActivationTrace& old_trace = local_digest.activation_trace(i);
+    new_trace->set_blob_name(old_trace.blob_name());
+    activation_name_to_index_[old_trace.blob_name()] = i;
+    for (int j = 0; j < old_trace.activation_trace_point_size(); ++j) {
+      if (old_trace.activation_trace_point(j).iter() <= iter) {
+        ActivationTracePoint* atp = new_trace->add_activation_trace_point();
+        *atp = old_trace.activation_trace_point(j);
+      }
+    }
+  }
+
+  trace_digest_->clear_train_trace_point();
+  for (int i = 0; i < local_digest.train_trace_point_size(); ++i) {
+    if (local_digest.train_trace_point(i).iter() <= iter) {
+      TrainTracePoint* point = trace_digest_->add_train_trace_point();
+      *point = local_digest.train_trace_point(i);
+    }
+  }
+
+  trace_digest_->clear_test_loss_trace_point();
+  for (int i = 0; i < local_digest.test_loss_trace_point_size(); ++i) {
+    if (local_digest.test_loss_trace_point(i).iter() <= iter) {
+      TestLossTracePoint* point = trace_digest_->add_test_loss_trace_point();
+      *point = local_digest.test_loss_trace_point(i);
+    }
+  }
+
+  trace_digest_->clear_test_score_trace_point();
+  for (int i = 0; i < local_digest.test_score_trace_point_size(); ++i) {
+    if (local_digest.test_score_trace_point(i).iter() <= iter) {
+      TestScoreTracePoint* point = trace_digest_->add_test_score_trace_point();
+      *point = local_digest.test_score_trace_point(i);
+    }
+  }
+}
+
+template <typename Dtype>
 void SolverTrace<Dtype>::init_weight_trace() {
   // set weight_trace_interval_ to zero as our default value
   weight_trace_interval_ = 0;

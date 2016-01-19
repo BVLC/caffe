@@ -501,7 +501,7 @@ string Solver<Dtype>::SnapshotToHDF5() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Restore(const char* state_file) {
+void Solver<Dtype>::Restore(const char* state_file, const char* trace_file) {
   CHECK(Caffe::root_solver());
   string state_filename(state_file);
   if (state_filename.size() >= 3 &&
@@ -509,6 +509,10 @@ void Solver<Dtype>::Restore(const char* state_file) {
     RestoreSolverStateFromHDF5(state_filename);
   } else {
     RestoreSolverStateFromBinaryProto(state_filename);
+  }
+  if (trace_file) {
+    string trace_filename(trace_file);
+    solver_trace_->Restore(trace_file);
   }
 }
 
