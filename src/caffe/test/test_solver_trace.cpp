@@ -188,7 +188,7 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
     Caffe::set_random_seed(this->seed_);
     this->InitSolverFromProtoString(proto.str());
     if (from_snapshot != NULL) {
-      this->solver_->Restore(from_snapshot);
+      this->solver_->Restore(from_snapshot, from_trace);
       vector<Blob<Dtype>*> empty_bottom_vec;
       for (int i = 0; i < this->solver_->iter(); ++i) {
         this->solver_->net()->Forward(empty_bottom_vec);
@@ -245,7 +245,7 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
       "  trace_filename: '" << snapshot_prefix_ << "/trace' "
       "  weight_trace_interval: " << weight_trace_interval << " "
       "  num_weight_traces: " << num_traces << " "
-      "  create_train_trace: true "
+      "  create_train_trace: false "
       "  create_test_trace: false "
       "} ";
 
@@ -321,6 +321,25 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
         }
       }
     }
+
+    // Run the solver for num_iters iterations and snapshot.
+    snapshot = true;
+    pair<string, string> snapshot_name = RunLeastSquaresSolver(learning_rate,
+        weight_decay, momentum, num_iters, kIterSize, kDevices,
+        snapshot, from_snapshot, trace_snapshot, extra_proto.str());
+
+    // Reinitialize the solver and run for num_iters more iterations.
+    snapshot = false;
+    RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
+        total_num_iters, kIterSize, kDevices, snapshot,
+        snapshot_name.first.c_str(), snapshot_name.second.c_str(),
+        extra_proto.str());
+
+    const TraceDigest& digest_snapshot = solver_->get_digest();
+    TextFormat::PrintToString(digest_snapshot, &string_snapshot);
+
+    // Make sure we get the exact same trace for both cases
+    EXPECT_EQ(string_snapshot, string_no_snapshot);
   }
 
   void TestSolverActivationTrace(const Dtype learning_rate = 1.0,
@@ -344,7 +363,7 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
       "  trace_filename: '" << snapshot_prefix_ << "/trace' "
       "  activation_trace_interval: " << trace_interval << " "
       "  num_activation_traces: " << num_traces << " "
-      "  create_train_trace: true "
+      "  create_train_trace: false "
       "  create_test_trace: false "
       "} ";
 
@@ -373,6 +392,25 @@ class SolverTraceTest : public MultiDeviceTest<TypeParam> {
         EXPECT_EQ(iter_counts[j], 1);
       }
     }
+
+    // Run the solver for num_iters iterations and snapshot.
+    snapshot = true;
+    pair<string, string> snapshot_name = RunLeastSquaresSolver(learning_rate,
+        weight_decay, momentum, num_iters, kIterSize, kDevices,
+        snapshot, from_snapshot, trace_snapshot, extra_proto.str());
+
+    // Reinitialize the solver and run for num_iters more iterations.
+    snapshot = false;
+    RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
+        total_num_iters, kIterSize, kDevices, snapshot,
+        snapshot_name.first.c_str(), snapshot_name.second.c_str(),
+        extra_proto.str());
+
+    const TraceDigest& digest_snapshot = solver_->get_digest();
+    TextFormat::PrintToString(digest_snapshot, &string_snapshot);
+
+    // Make sure we get the exact same trace for both cases
+    EXPECT_EQ(string_snapshot, string_no_snapshot);
   }
 
   void TestSolverTrainTrace(const Dtype learning_rate = 1.0,
