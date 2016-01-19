@@ -41,9 +41,27 @@ class CropLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int crop_h_, crop_w_;
-};
+  vector<int> offsets;
 
+ private:
+  void crop_copy(const vector<Blob<Dtype>*>& bottom,
+               const vector<Blob<Dtype>*>& top,
+               const vector<int>& offsets,
+               vector<int> indices,
+               int cur_dim,
+               const Dtype* src_data,
+               Dtype* dest_data,
+               bool is_forward);
+
+  void crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
+                const vector<Blob<Dtype>*>& top,
+                const vector<int>& offsets,
+                vector<int> indices,
+                int cur_dim,
+                const Dtype* src_data,
+                Dtype* dest_data,
+                bool is_forward);
+};
 }  // namespace caffe
 
 #endif  // CAFFE_CROP_LAYER_HPP_
