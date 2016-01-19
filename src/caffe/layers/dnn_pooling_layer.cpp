@@ -20,7 +20,7 @@ DnnPoolingLayer<Dtype>::~DnnPoolingLayer()
 {
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
-  if (pool_buffer_ != NULL)free(pool_buffer_);
+
 }
 
 template <typename Dtype>
@@ -104,12 +104,14 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT((pooled_height_ - 1) * stride_h_, bottom[0]->height() + pad_h_);
     CHECK_LT((pooled_width_ - 1) * stride_w_, bottom[0]->height() + pad_w_);
   }
-  size_t dim = 4;
-  size_t src_sizes[4], src_strides[4];
-  size_t dst_sizes[4], dst_strides[4];
-  size_t kernel_size[2],
-         kernel_stride[4];
-  int src_offset[2];
+
+  dim = 4;
+  //size_t dim = 4;
+  //size_t src_sizes[4], src_strides[4];
+  //size_t dst_sizes[4], dst_strides[4];
+  //size_t kernel_size[2],
+  //       kernel_stride[4];
+  //int src_offset[2];
 
   src_sizes[0] = bottom[0]->width();
   src_sizes[1] = bottom[0]->height();
@@ -141,44 +143,21 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   kernel_size[1] = kernel_h_;
 
   dnnError_t e;
+
+  poolingFwd=NULL;
+  e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, dst_sizes, dst_strides);
+  CHECK_EQ(e, E_SUCCESS);
+
   dnnLayout_t lt_pool_input = NULL;
 
-  pool_buffer_ = NULL;
-
-  if (kernel_size[0] == 3 && kernel_size[1] == 3 && kernel_stride[0] == 2 &&  kernel_stride[1] == 2
-      && (   src_sizes[0] == 55  && src_sizes[1] == 55 && src_sizes[2] == 96
-          || src_sizes[0] == 27  && src_sizes[1] == 27 && src_sizes[2] == 256
-          || src_sizes[0] == 13  && src_sizes[1] == 13 && src_sizes[2] == 256
-         )
-     )
-  {
-    e = dnnLayoutPCLCreate<Dtype>(&lt_pool_input, dim, src_sizes);
-    CHECK_EQ(e, E_SUCCESS);
-//    if (src_sizes[0] == 13  && src_sizes[1] == 13 && src_sizes[2] == 256) /* The last one based on PCL layout in Alexnet topology */
-  //  {
-      e = dnnLayoutPCLCreate<Dtype>(&fwd_top_data->layout_int, dim, dst_sizes);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, dst_sizes, dst_strides);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutPCLCreate<Dtype>(&bwd_top_diff->layout_int, dim, dst_sizes);
-      CHECK_EQ(e, E_SUCCESS);
-      e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, dst_sizes, dst_strides);
-      CHECK_EQ(e, E_SUCCESS);
-
-      fwd_top_data->create_conversions();
-      bwd_top_diff->create_conversions();
-
-    //}
-
-  } else
-  {
-    e = dnnLayoutCreate<Dtype>(&lt_pool_input, dim, src_sizes, src_strides);
-    CHECK_EQ(e, E_SUCCESS);
-  }
-
-  e = dnnPoolingCreateForward<Dtype>(&poolingFwd, dnnAlgorithmPoolingMax,
-        lt_pool_input, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
+  e = dnnLayoutPCLCreate<Dtype>(&lt_pool_input, dim, src_sizes);
   CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutPCLCreate<Dtype>(&bwd_top_diff->layout_int, dim, dst_sizes);
+  CHECK_EQ(e, E_SUCCESS);
+  e = dnnLayoutCreate<Dtype>(&bwd_top_diff->layout_usr, dim, dst_sizes, dst_strides);
+  CHECK_EQ(e, E_SUCCESS);
+  bwd_top_diff->create_conversions();
+
   e = dnnPoolingCreateBackward<Dtype>(&poolingBwd, dnnAlgorithmPoolingMax,
         lt_pool_input, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
   CHECK_EQ(e, E_SUCCESS);
@@ -242,15 +221,6 @@ void DnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  void* bottom_data = (void*)bottom[0]->prv_data();
-
-  // TODO: validate bottom layout for both cases: cpu_data and prv_data?
-  if(NULL == bottom_data)
-  {
-    LOG(INFO) << "Using cpu_data for bottom in POOLing.";
-    bottom_data = (void*)bottom[0]->cpu_data();
-  }
-
   //printf(" len(top_data) = %i\n", sizeof(top_data)/sizeof(Dtype));
   const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
@@ -259,14 +229,41 @@ void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // loop to save time, although this results in more code.
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-    // Initialize
-    dnnError_t e;
+    {
+    void* bottom_data = (void*)bottom[0]->prv_data();
+    dnnError_t status;
     void* pooling_res[dnnResourceNumber];
     pooling_res[dnnResourceSrc] = (void *)bottom_data;
     mask = max_idx_.mutable_cpu_data();
     caffe_set(top_count, -1, (int*)mask);
     pooling_res[dnnResourceWorkspace] = (void*)mask;
 
+    if(NULL == bottom_data)
+    {
+      LOG(FATAL) << "TODO: Not yet implemented for default caffe data layout";
+    }
+    else
+    {
+      if(NULL == poolingFwd) {
+        // Is it the first pass? Create a primitive.
+        shared_ptr<MklDnnData<Dtype> > mem_descr
+          =  boost::static_pointer_cast<MklDnnData<Dtype> > (bottom[0]->get_prv_descriptor_data());
+        CHECK(mem_descr != NULL);
+
+        DLOG(INFO) << "Using layout for " << mem_descr->name << " as input layout for " << this->layer_param_.name();
+        // copy shared_ptr
+        fwd_bottom_data = mem_descr;
+
+        status = dnnPoolingCreateForward<Dtype>(&poolingFwd, dnnAlgorithmPoolingMax,
+          fwd_bottom_data->layout_int, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
+        CHECK_EQ(status, E_SUCCESS);
+
+        status = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int, poolingFwd, dnnResourceDst);
+        CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int, ...) with status " << status << "\n";
+
+        fwd_top_data->create_conversions();
+      }
+    }
     if (fwd_top_data->convert_from_int)
     {
       top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
@@ -276,9 +273,9 @@ void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       pooling_res[dnnResourceDst] = (void*)top[0]->mutable_cpu_data();;
       LOG(INFO) << "Using cpu_data for top in DnnPooling.";
     }
-    e = dnnExecute<Dtype>(poolingFwd, pooling_res);
-    CHECK_EQ(e, E_SUCCESS);
-
+    status = dnnExecute<Dtype>(poolingFwd, pooling_res);
+    CHECK_EQ(status, E_SUCCESS);
+    }
     break;
   case PoolingParameter_PoolMethod_AVE:
     NOT_IMPLEMENTED;
