@@ -244,18 +244,28 @@ message SolverParameter {
 }
 
 message TraceDigest {
-  optional int32 dummy = 1;
+  repeated WeightTracePoint weight_trace_point = 1;
 }
 
 message SolverTraceParameter {
   // filename where the trace will be saved
   optional string trace_filename = 1;
+  
   // save the trace in a human readable format too
   optional bool human_readable_trace = 2;
+  
   // How often solver trace should be saved to disk
   // determines the IO to disk load that the solver traces will create
   // If not set, it is the same as SolverParameter.snapshot
   optional int32 save_interval = 3;
+  
+  // tells us how often we should take weight trace values.
+  // If this value is zero or not set, no weight trace will be made
+  // determines how detailed the weight trace will be
+  optional int32 weight_trace_interval = 4 [default = 0];
+
+  // number of parameters to track from every layer 
+  optional int32 num_weight_traces = 5 [default = 10];
 }
 
 // A message that stores the solver snapshots
@@ -1142,6 +1152,14 @@ message TileParameter {
 // Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
+}
+
+// Stores a few weights from a blob of a layer. Used from solver trace.
+message WeightTracePoint {
+  optional int32  iter = 1;
+  optional int32  param_id = 2;
+  optional string layer_name = 3;
+  repeated float  value = 4;
 }
 
 message WindowDataParameter {

@@ -29,6 +29,7 @@ class SolverTrace {
   virtual ~SolverTrace() {}
   /** @brief Get a const reference to the history */
   virtual const TraceDigest& get_digest() const;
+  /** @brief Add trace of state the solver is in during training to digest */
   virtual void update_trace_train(SolverAction::Enum request);
   virtual void update_trace_test_loss(int test_net_id, Dtype loss);
   virtual void update_trace_test_score(int test_net_id,
@@ -37,12 +38,17 @@ class SolverTrace {
                                        Dtype mean_score);
   /** @brief Save the history of the solver to a proto file */
   virtual void Save() const;
+
  protected:
+  void update_weight_trace();                  /// Add weight history to digest
   SolverParameter param_;
   SolverTraceParameter trace_param_;
   shared_ptr<TraceDigest> trace_digest_;       /// History of the solver
   const Solver<Dtype>* solver_;                /// Solver to get history for
   int save_trace_;                             /// Interval when to save trace
+  int start_iter_;                             /// Iter where the solver starts
+  int last_iter_;                              /// The last iter we updated
+  string filename_;                            /// File for the solver trace
   DISABLE_COPY_AND_ASSIGN(SolverTrace);
 };
 

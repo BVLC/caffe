@@ -71,10 +71,12 @@ class Solver {
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
+  inline const shared_ptr<Net<Dtype> >& net() const { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
   int iter() const { return iter_; }
+  const TraceDigest& get_digest() const;
 
   // Invoked at specific points during an iteration
   class Callback {

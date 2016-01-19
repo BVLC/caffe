@@ -25,6 +25,10 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
   }
   return SolverAction::NONE;
 }
+template<typename Dtype>
+const TraceDigest& Solver<Dtype>::get_digest() const {
+  return solver_trace_->get_digest();
+}
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
@@ -60,12 +64,13 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     InitTestNets();
     LOG(INFO) << "Solver scaffolding done.";
   }
+  iter_ = 0;
+  current_step_ = 0;
+
   // Add solver trace to root solver
   if (Caffe::root_solver()) {
     solver_trace_.reset(new SolverTrace<Dtype>(param, this));
   }
-  iter_ = 0;
-  current_step_ = 0;
 }
 
 template <typename Dtype>
@@ -296,7 +301,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
   }
-
+  // record the trace at iteration == 0
+  if (iter_ == 0) {
+    solver_trace_->update_trace_train(SolverAction::NONE);
+  }
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   int start_iter = iter_;
