@@ -79,9 +79,11 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     PoolingParameter p_param = param.pooling_param();
 
-// CuDNN handles tie breaks differently than Caffe for MaxPooling.
-// Until there is a workaround in Caffe (index management) or cuDNN,
-// use Caffe layer to max pooling
+// CuDNN assumes layers are not being modified in place, thus breaking
+// our index tracking for updates in some cases in Caffe.  Until there
+// is a workaround in Caffe (index management) or cuDNN, use Caffe
+// layer to max pooling, or don't use in place layers after max
+// pooling layers
     if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
         return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     } else {
