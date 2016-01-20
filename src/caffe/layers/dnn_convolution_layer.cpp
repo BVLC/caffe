@@ -308,7 +308,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
     if(prv_ptr == NULL)
     {
-      DLOG(INFO) << "convert      => priv for  " << this->name;
+      DLOG(INFO) << "convert      => priv                                to " << this->name;
 
       convert_resources[dnnResourceFrom] = is_diff ? (void *) blob->cpu_diff() : (void *) blob->cpu_data();
       convert_resources[dnnResourceTo]   = (void *)this->internal_ptr;

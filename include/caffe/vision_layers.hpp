@@ -578,7 +578,8 @@ class DnnPoolingLayer : public Layer<Dtype> {
   explicit DnnPoolingLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
         fwd_top_data    (new MklDnnData<Dtype>()),
-        bwd_top_diff    (new MklDnnDiff<Dtype>())
+        bwd_top_diff    (new MklDnnDiff<Dtype>()),
+        bwd_bottom_diff (new MklDnnDiff<Dtype>())
     {}
   ~DnnPoolingLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -616,18 +617,13 @@ class DnnPoolingLayer : public Layer<Dtype> {
   Blob<Dtype> rand_idx_;
   Blob<size_t> max_idx_;
  private:
-  shared_ptr<MklDnnData<Dtype> > fwd_top_data, fwd_bottom_data;
-  shared_ptr<MklDnnDiff<Dtype> > bwd_top_diff;
-
-  dnnPrimitive_t poolingFwd, poolingBwd;
-
-  size_t dim;
-  size_t src_sizes[4], src_strides[4];
-  size_t dst_sizes[4], dst_strides[4];
   size_t kernel_size[2],
          kernel_stride[4];
   int src_offset[2];
+  shared_ptr<MklDnnData<Dtype> > fwd_top_data, fwd_bottom_data;
+  shared_ptr<MklDnnDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
 
+  dnnPrimitive_t poolingFwd, poolingBwd;
 };
 
 #ifdef USE_CUDNN
