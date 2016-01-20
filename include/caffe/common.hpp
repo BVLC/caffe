@@ -172,7 +172,7 @@ class Caffe {
  protected:
 #ifndef CPU_ONLY
 #ifdef USE_OCL
-  ClState cl_state_;
+  static ClState cl_state_;
 #ifdef USE_FFT
   ClFFTState cl_fft_state_;
 #endif
