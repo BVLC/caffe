@@ -87,7 +87,7 @@ void CuDNNBatchNormLayer<Dtype>::Backward_gpu(
       cudnn::dataType<Dtype>::zero,
 #if CUDNN_VERSION >= 4005
       cudnn::dataType<Dtype>::one,
-      cudnn::dataType<Dtype>::zero,
+      cudnn::dataType<Dtype>::one,
 #endif
       bottom_desc_,
       bottom_data,
