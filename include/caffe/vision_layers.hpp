@@ -260,6 +260,12 @@ class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
      shared_ptr<MklDnnData<Dtype> > bwdd_filter_data;
      dnnPrimitive_t convolutionBwdData;
 
+#ifndef BWDD_DISABLE_PAD_REMOVING
+     /* Temporary workaround for removing padding from bwdd_bottom_diff */
+     shared_ptr<MklDnnDiff<Dtype> > bwdd_bottom_diff_no_padding;
+     dnnPrimitive_t convert_to_bottom_diff_no_padding;
+#endif
+
 /* Bwd filter step */
      shared_ptr<MklDnnDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
      shared_ptr<MklDnnData<Dtype> > bwdf_bottom_data;

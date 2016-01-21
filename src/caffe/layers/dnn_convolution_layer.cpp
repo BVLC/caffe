@@ -18,6 +18,9 @@ DnnConvolutionLayer<Dtype>::DnnConvolutionLayer(const LayerParameter& param)
         bwdd_top_diff     (new MklDnnDiff<Dtype>()),
         bwdd_bottom_diff  (new MklDnnDiff<Dtype>()),
         bwdd_filter_data  (new MklDnnData<Dtype>()),
+#ifndef BWDD_DISABLE_PAD_REMOVING
+        bwdd_bottom_diff_no_padding (new MklDnnDiff<Dtype>()),
+#endif
         bwdf_top_diff     (new MklDnnDiff<Dtype>()),
         bwdf_filter_diff  (new MklDnnDiff<Dtype>()),
         bwdf_bottom_data  (new MklDnnData<Dtype>()),
@@ -39,6 +42,9 @@ DnnConvolutionLayer<Dtype>::~DnnConvolutionLayer()
     dnnDelete<Dtype>(convolutionBwdData);
     dnnDelete<Dtype>(convolutionBwdFilter);
     dnnDelete<Dtype>(convolutionBwdBias);
+#ifndef BWDD_DISABLE_PAD_REMOVING
+    dnnDelete<Dtype>(convert_to_bottom_diff_no_padding);
+#endif
 }
 
 template <typename Dtype>
@@ -279,6 +285,28 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bwdf_filter_diff   ->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
   bwdb_top_diff      ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
   bwdb_bias_diff     ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
+
+#ifndef BWDD_DISABLE_PAD_REMOVING
+  /* Temporary workaround for removing padding from bwdd_bottom_diff */
+  status = dnnLayoutPCLCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_int, dimension, bdata_sizes);
+  CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
+
+  status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_usr, dimension, bdata_sizes, bdata_strides);
+  CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
+
+  bwdd_bottom_diff_no_padding->create_conversions();
+
+  bwdd_bottom_diff_no_padding->name = "bwdd_bot_diff_NP  @ " + this->layer_param_.name();
+
+  convert_to_bottom_diff_no_padding = NULL;
+  if (!dnnLayoutCompare<Dtype>(bwdd_bottom_diff->layout_int, bwdd_bottom_diff_no_padding->layout_int))
+  {
+    int status = dnnConversionCreate<Dtype>(&convert_to_bottom_diff_no_padding,
+                                            bwdd_bottom_diff->layout_int ,
+                                            bwdd_bottom_diff_no_padding->layout_int);
+    CHECK(status == 0) << "Failed creation convert_to_bottom_diff_no_padding with status " << status << "\n";
+  }
+#endif
 }
 
 template <typename Dtype, bool is_diff>
@@ -290,12 +318,12 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
   int status;
   void *convert_resources[dnnResourceNumber];
 
-  DLOG(INFO) << "convert priv =>      from "  << this->name;
+  DLOG(INFO) << "convert priv =>           "  << this->name;
 
   convert_resources[dnnResourceFrom] = (void *)prv_ptr;
   convert_resources[dnnResourceTo]   = (void *)cpu_ptr;
   status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
-  CHECK(status == 0) << "[8] | Conversion from prv failed with status " << status;
+  CHECK(status == 0) << "Conversion from prv failed with status " << status;
 }
 
 template <typename Dtype, bool is_diff>
@@ -308,7 +336,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
     if(prv_ptr == NULL)
     {
-      DLOG(INFO) << "convert      => priv                                to " << this->name;
+      DLOG(INFO) << "convert      => priv                                => " << this->name;
 
       convert_resources[dnnResourceFrom] = is_diff ? (void *) blob->cpu_diff() : (void *) blob->cpu_data();
       convert_resources[dnnResourceTo]   = (void *)this->internal_ptr;
@@ -334,7 +362,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
 
       if(!dnnLayoutCompare<Dtype>(current_descr->layout_int , this->layout_int))
       {
-        DLOG(INFO) << "convert priv => priv from " << current_descr->name << " to " << this->name;
+        DLOG(INFO) << "convert priv => priv      " << current_descr->name << " => " << this->name;
 
         dnnPrimitive_t convert_padding;
         status = dnnConversionCreate<Dtype>(&convert_padding, current_descr->layout_int , this->layout_int);
@@ -418,8 +446,7 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     res_convolutionFwd[dnnResourceDst] = top[0]->mutable_cpu_data();
 
   status = dnnExecute<Dtype>( convolutionFwd, res_convolutionFwd);
-  CHECK(status == 0) << "[7] | Forward conv failed with status " << status;
-
+  CHECK(status == 0) << "Forward convolution failed with status " << status;
 }
 
 template <typename Dtype>
@@ -466,8 +493,29 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       res_convolutionBwdData[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
 
     status = dnnExecute<Dtype>( convolutionBwdData, res_convolutionBwdData);
-    CHECK(status == 0) << "[6] | Backward Data conv failed with status " << status;
+    CHECK(status == 0) << "Backward Data conv failed with status " << status;
 
+#ifndef BWDD_DISABLE_PAD_REMOVING
+    // *** Temporary Workaround ***
+    // We need to remove padding from bwdd_bottom_diff
+    if(convert_to_bottom_diff_no_padding)
+    {
+      int status;
+      void *convert_resources[dnnResourceNumber];
+
+      DLOG(INFO) << "convert priv => priv      "  << bwdd_bottom_diff->name << " => "
+                 << bwdd_bottom_diff_no_padding->name;
+
+      convert_resources[dnnResourceFrom] = (void *)bwdd_bottom_diff->internal_ptr;
+      convert_resources[dnnResourceTo]   = (void *)bwdd_bottom_diff_no_padding->internal_ptr;
+      status = dnnExecute<Dtype>(convert_to_bottom_diff_no_padding, convert_resources);
+      CHECK(status == 0) << "Conversion      prv failed with status " << status;
+
+      bottom[0]->set_prv_diff(bwdd_bottom_diff_no_padding->internal_ptr,
+                              bwdd_bottom_diff_no_padding, false);
+    }
+    // *** end of the workaround ***
+#endif
   }
 
   if (this->param_propagate_down(0))
@@ -486,7 +534,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       res_convolutionBwdFilter[dnnResourceDiffFilter] = this->blobs_[0]->mutable_cpu_diff();
 
     status = dnnExecute<Dtype>( convolutionBwdFilter, res_convolutionBwdFilter);
-    CHECK(status == 0) << "[6] | Backward Filter conv failed with status " << status;
+    CHECK(status == 0) << "Backward Filter conv failed with status " << status;
 
   }
 
@@ -505,7 +553,7 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       res_convolutionBwdBias[dnnResourceDiffBias] = (void *)this->blobs_[1]->mutable_cpu_diff();;
 
     status = dnnExecute<Dtype>( convolutionBwdBias, res_convolutionBwdBias);
-    CHECK(status == 0) << "[4] | Backward Bias conv failed with status " << status;
+    CHECK(status == 0) << "Backward Bias failed with status " << status;
 
   }
 }
