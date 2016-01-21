@@ -165,6 +165,29 @@ class XavierFiller : public Filler<Dtype> {
   }
 };
 
+template <typename Dtype>
+class TestLocalFiller : public Filler<Dtype> {
+ public:
+  explicit TestLocalFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    LOG(INFO) << "Doing mutable cpu";
+    LOG(INFO) << "blobs" << blob;
+    Dtype* data = blob->mutable_cpu_data();
+    LOG(INFO) << "Done Doing mutable cpu";
+    CHECK_EQ(blob->channels(), 1);
+
+    for (int n = 0; n < blob->num(); n++) {
+      for (int j = 0; j < blob->height(); j++) {
+        for (int i = 0; i < blob->width(); i++) {
+          *(data+blob->offset(n, 0, j, i)) = i;
+        }
+      }
+    }
+  }
+};
+
+
 /**
  * @brief Fills a Blob with values @f$ x \sim N(0, \sigma^2) @f$ where
  *        @f$ \sigma^2 @f$ is set inversely proportional to number of incoming
@@ -280,6 +303,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "xavier") {
     return new XavierFiller<Dtype>(param);
+  } else if (type == "test_local") {
+    return new TestLocalFiller<Dtype>(param);
   } else if (type == "msra") {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
