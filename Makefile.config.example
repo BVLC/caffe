@@ -70,6 +70,11 @@ PYTHON_INCLUDE := /usr/include/python2.7 \
 		# $(ANACONDA_HOME)/include/python2.7 \
 		# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include \
 
+# Uncomment to use Python 3 (default is Python 2)
+# PYTHON_LIBRARIES := boost_python3 python3.5m
+# PYTHON_INCLUDE := /usr/include/python3.5m \
+#                 /usr/lib/python3.5/dist-packages/numpy/core/include
+
 # We need to be able to find libpythonX.X.so or .dylib.
 PYTHON_LIB := /usr/lib
 # PYTHON_LIB := $(ANACONDA_HOME)/lib
