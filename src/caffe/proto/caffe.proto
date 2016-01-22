@@ -59,6 +59,7 @@ message NormalizedBBox {
   optional float ymin = 2;
   optional float xmax = 3;
   optional float ymax = 4;
+  optional int32 label = 5;
 }
 
 // Annotation for each object instance.
@@ -355,7 +356,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 141 (last added: prior_box_param)
+// LayerParameter next available layer-specific ID: 142 (last added: multibox_loss_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -424,6 +425,7 @@ message LayerParameter {
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
+  optional MultiBoxLossParameter multibox_loss_param = 141;
   optional MVNParameter mvn_param = 120;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
@@ -829,6 +831,37 @@ message MemoryDataParameter {
   optional uint32 channels = 2;
   optional uint32 height = 3;
   optional uint32 width = 4;
+}
+
+// Message that store parameters used by MultiBoxLossLayer
+message MultiBoxLossParameter {
+  // Localization loss type.
+  enum LocLossType {
+    L2 = 0;
+  }
+  optional LocLossType loc_loss_type = 1 [default = L2];
+  // Confidence loss type.
+  enum ConfLossType {
+    SOFTMAX = 0;
+  }
+  optional ConfLossType conf_loss_type = 2 [default = SOFTMAX];
+  // Weight for localization loss.
+  optional float loc_weight = 3 [default = 0.06];
+  // Number of classes to be predicted. Required!
+  optional uint32 num_classes = 4;
+  // If true, bounding box are shared among different classes.
+  optional bool share_location = 5 [default = true];
+  // Matching method during training.
+  enum MatchType {
+    BIPARTITE = 0;
+    PER_PREDICTION = 1;
+  }
+  optional MatchType match_type = 6 [default = PER_PREDICTION];
+  // If match_type is PER_PREDICTION, use overlap_threshold to
+  // determine the extra matching bboxes.
+  optional float overlap_threshold = 7 [default = 0.5];
+  // Use prior for matching.
+  optional bool use_prior_for_matching = 8 [default = true];
 }
 
 message MVNParameter {
