@@ -59,6 +59,10 @@ message NormalizedBBox {
   optional float ymin = 2;
   optional float xmax = 3;
   optional float ymax = 4;
+  optional int32 label = 5;
+  optional bool difficult = 6;
+  optional float score = 7;
+  optional float size = 8;
 }
 
 // Annotation for each object instance.
@@ -355,7 +359,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 141 (last added: prior_box_param)
+// LayerParameter next available layer-specific ID: 142 (last added: multibox_loss_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -441,6 +445,7 @@ message LayerParameter {
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
+  optional MultiBoxLossParameter multibox_loss_param = 150;
   optional MVNParameter mvn_param = 120;
   optional ParameterParameter parameter_param = 145;
   optional PoolingParameter pooling_param = 121;
@@ -632,17 +637,6 @@ message YoloDetectionOutputParameter {
   optional float nms_threshold = 6 [default = 0.45];
   repeated float biases = 7;
   optional string label_map_file = 8;
-}
-// The normalized bounding box [0, 1] w.r.t. the input image size.
-message NormalizedBBox {
-  optional float xmin = 1;
-  optional float ymin = 2;
-  optional float xmax = 3;
-  optional float ymax = 4;
-  optional int32 label = 5;
-  optional bool difficult = 6;
-  optional float score = 7;
-  optional float size = 8;
 }
 message ConvolutionParameter {
   optional uint64 num_output = 1; // The number of outputs for the layer
@@ -979,6 +973,37 @@ message MemoryDataParameter {
   // batch_size, channels, height, width
   // batch_size, channels, Z, Y, X
   repeated uint64 dim = 5;
+}
+
+// Message that store parameters used by MultiBoxLossLayer
+message MultiBoxLossParameter {
+  // Localization loss type.
+  enum LocLossType {
+    L2 = 0;
+  }
+  optional LocLossType loc_loss_type = 1 [default = L2];
+  // Confidence loss type.
+  enum ConfLossType {
+    SOFTMAX = 0;
+  }
+  optional ConfLossType conf_loss_type = 2 [default = SOFTMAX];
+  // Weight for localization loss.
+  optional float loc_weight = 3 [default = 0.06];
+  // Number of classes to be predicted. Required!
+  optional uint32 num_classes = 4;
+  // If true, bounding box are shared among different classes.
+  optional bool share_location = 5 [default = true];
+  // Matching method during training.
+  enum MatchType {
+    BIPARTITE = 0;
+    PER_PREDICTION = 1;
+  }
+  optional MatchType match_type = 6 [default = PER_PREDICTION];
+  // If match_type is PER_PREDICTION, use overlap_threshold to
+  // determine the extra matching bboxes.
+  optional float overlap_threshold = 7 [default = 0.5];
+  // Use prior for matching.
+  optional bool use_prior_for_matching = 8 [default = true];
 }
 
 message MVNParameter {
