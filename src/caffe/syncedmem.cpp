@@ -123,6 +123,7 @@ inline void SyncedMemory::to_gpu_with_zero_copy(const size_t size,
             size_, cpu_ptr_);
         head_ = SYNCED;
         zero_copy_mem_ = true;
+        own_gpu_data_ = true;
       }
       break;
     case SYNCED:
