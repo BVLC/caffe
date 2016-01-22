@@ -3,6 +3,7 @@
 namespace bp = boost::python;
 #endif
 
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include <cstring>
@@ -378,6 +379,8 @@ RegisterBrewFunction(time);
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
+  // Set version
+  gflags::SetVersionString(AS_STRING(CAFFE_VERSION));
   // Usage message.
   gflags::SetUsageMessage("command line brew\n"
       "usage: caffe <command> <args>\n\n"
