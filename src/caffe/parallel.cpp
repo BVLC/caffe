@@ -169,9 +169,8 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
   DLOG(INFO) << "GPUs paired by P2P access, remaining: " << s.str();
 
   // Group remaining
-  remaining_depth = ceil(log2(remaining.size()));
-  for (int d = 0; d < remaining_depth; ++d) {
-    for (int i = 0; i < remaining.size(); ++i) {
+  while (remaining.size() > 1) {
+    for (int i = 0; i+1 < remaining.size(); ++i) {
       pairs->push_back(DevicePair(remaining[i], remaining[i + 1]));
       DLOG(INFO) << "Remaining pair: " << remaining[i] << ":"
                  << remaining[i + 1];
