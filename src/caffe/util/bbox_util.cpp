@@ -126,7 +126,8 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
   for (int i = 0; i < num_pred; ++i) {
     overlaps[i] = new int[num_gt];
     for (int j = 0; j < num_gt; ++j) {
-      overlaps[i][j] = JaccardOverlap(pred_bboxes[i], gt_bboxes[gt_indices[j]]) * scale;
+      overlaps[i][j] =
+          JaccardOverlap(pred_bboxes[i], gt_bboxes[gt_indices[j]]) * scale;
     }
   }
 
