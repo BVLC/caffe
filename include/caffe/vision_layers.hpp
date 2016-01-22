@@ -217,7 +217,8 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
   }
 
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
-  Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout);
+  virtual PrvDescrType get_descr_type();
+  Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout, bool set_prv_ptr=true);
 };
 
 template <typename Dtype>

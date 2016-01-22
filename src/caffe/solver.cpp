@@ -173,8 +173,12 @@ void Solver<Dtype>::Step(int iters) {
       shared_ptr<Blob<Dtype> > blob = net_->params()[i];
       switch (Caffe::mode()) {
       case Caffe::CPU:
-        caffe_set(blob->count(), static_cast<Dtype>(0),
-            blob->mutable_cpu_diff());
+        if(blob->prv_diff())
+          caffe_set(blob->count(), static_cast<Dtype>(0),
+              blob->mutable_prv_diff());
+        else
+          caffe_set(blob->count(), static_cast<Dtype>(0),
+                    blob->mutable_cpu_diff());
         break;
       case Caffe::GPU:
 #ifndef CPU_ONLY
@@ -533,18 +537,35 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
-        caffe_axpy(net_params[param_id]->count(),
-            local_decay,
-            net_params[param_id]->cpu_data(),
-            net_params[param_id]->mutable_cpu_diff());
+        if(net_params[param_id]->prv_data())
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->prv_data(),
+              net_params[param_id]->mutable_prv_diff());
+        else
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
       } else if (regularization_type == "L1") {
-        caffe_cpu_sign(net_params[param_id]->count(),
-            net_params[param_id]->cpu_data(),
-            temp_[param_id]->mutable_cpu_data());
-        caffe_axpy(net_params[param_id]->count(),
-            local_decay,
-            temp_[param_id]->cpu_data(),
-            net_params[param_id]->mutable_cpu_diff());
+        if(net_params[param_id]->prv_data()) {
+          caffe_cpu_sign(net_params[param_id]->count(),
+              net_params[param_id]->prv_data(),
+              temp_[param_id]->mutable_prv_data());
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              temp_[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
+        } else
+        {
+          caffe_cpu_sign(net_params[param_id]->count(),
+               net_params[param_id]->cpu_data(),
+               temp_[param_id]->mutable_cpu_data());
+          caffe_axpy(net_params[param_id]->count(),
+               local_decay,
+               temp_[param_id]->cpu_data(),
+               net_params[param_id]->mutable_cpu_diff());
+        }
       } else {
         LOG(FATAL) << "Unknown regularization type: " << regularization_type;
       }
@@ -591,12 +612,22 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-              net_params[param_id]->cpu_diff(), momentum,
-              history_[param_id]->mutable_cpu_data());
-    caffe_copy(net_params[param_id]->count(),
-        history_[param_id]->cpu_data(),
-        net_params[param_id]->mutable_cpu_diff());
+    if(net_params[param_id]->prv_diff()) {
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->prv_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
+      caffe_copy(net_params[param_id]->count(),
+                 history_[param_id]->cpu_data(),
+                 net_params[param_id]->mutable_prv_diff());
+    }
+    else {
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                net_params[param_id]->cpu_diff(), momentum,
+                history_[param_id]->mutable_cpu_data());
+      caffe_copy(net_params[param_id]->count(),
+          history_[param_id]->cpu_data(),
+          net_params[param_id]->mutable_cpu_diff());
+    }
     break;
   }
   case Caffe::GPU: {

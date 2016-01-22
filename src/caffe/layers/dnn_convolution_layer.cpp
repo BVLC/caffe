@@ -310,6 +310,11 @@ void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype, bool is_diff>
+PrvMemDescr::PrvDescrType MklDnnMemoryDescriptor<Dtype, is_diff>::get_descr_type() {
+    return PRV_DESCR_MKLDNN;
+}
+
+template <typename Dtype, bool is_diff>
 void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, void* cpu_ptr)
 {
   CHECK(prv_ptr);
@@ -327,7 +332,8 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
 }
 
 template <typename Dtype, bool is_diff>
-Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* blob, bool test_prv_layout)
+Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
+  Blob<Dtype>* blob, bool test_prv_layout, bool set_prv_ptr)
 {
   if (this->convert_to_int)
   {
@@ -344,11 +350,12 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
       status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
       CHECK(status == 0) << "Conversion failed with status " << status;
 
-      if(is_diff)
-        blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
-      else
-        blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
-
+      if (set_prv_ptr) {
+        if(is_diff)
+          blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
+        else
+          blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
+      }
       return this->internal_ptr;
     }
     else if (test_prv_layout)
@@ -384,11 +391,12 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(Blob<Dtype>* bl
           dnnDelete<Dtype>(convert_padding);
         }
 
-        if(is_diff)
-          blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
-        else
-          blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
-
+        if (set_prv_ptr) {
+          if(is_diff)
+            blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
+          else
+            blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
+        }
         return this->internal_ptr;
       }
       else if(current_descr.get() != this) {
@@ -482,7 +490,9 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     void *res_convolutionBwdData[dnnResourceNumber];
 
     res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true);
-    res_convolutionBwdData[dnnResourceFilter]  = bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
+    // Currently this conversion adds padding to weights. We don't want that to be stored in the weights prv_ptr_
+    res_convolutionBwdData[dnnResourceFilter]  =
+      bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), true, false);
 
     if (bwdd_bottom_diff->convert_from_int)
     {

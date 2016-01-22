@@ -42,6 +42,12 @@ inline void CaffeFreeHost(void* ptr) {
 // Base class
 struct PrvMemDescr {
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr) = 0;
+
+  // This might help using prv_ptr_ by different accelerators/engines
+  enum PrvDescrType {
+    PRV_DESCR_MKLDNN
+  };
+  virtual PrvDescrType get_descr_type() = 0;
 };
 
 /**

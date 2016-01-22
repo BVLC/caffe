@@ -207,6 +207,10 @@ void Blob<Dtype>::Update() {
   switch (data_->head()) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
+    caffe_axpy<Dtype>(count_, Dtype(-1),
+                      static_cast<const Dtype*>(diff_->prv_data()),
+                      static_cast<Dtype*>(data_->mutable_prv_data()));
+    break;
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
     caffe_axpy<Dtype>(count_, Dtype(-1),
