@@ -7,6 +7,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace caffe {
 
 template<>
@@ -55,17 +59,14 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
-  if (0 && alpha == 0) {
-    int block = 256*1024/sizeof(Dtype), remainder = N%block;
-#pragma omp parallel for
-    for (int i = 0; i <= N-block; i += block)
-        memset(Y+i, 0, sizeof(Dtype) * block);  // NOLINT(caffe/alt_fn)
-    if (remainder != 0)
-        memset(Y+N-remainder, 0, sizeof(Dtype) * remainder);
+  if (alpha == 0) {
+    memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     return;
   }
-#pragma omp parallel for
-#pragma simd
+#ifdef _OPENMP
+  #pragma omp parallel if (omp_in_parallel() == 0)
+  #pragma omp for
+#endif
   for (int i = 0; i < N; ++i) {
     Y[i] = alpha;
   }
@@ -374,28 +375,6 @@ double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
 template
 size_t caffe_cpu_dot<size_t>(const int n, const size_t* x, const size_t* y);
-
-template <>
-int caffe_cpu_hamming_distance<float>(const int n, const float* x,
-                                  const float* y) {
-  int dist = 0;
-  for (int i = 0; i < n; ++i) {
-    dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
-                               static_cast<uint32_t>(y[i]));
-  }
-  return dist;
-}
-
-template <>
-int caffe_cpu_hamming_distance<double>(const int n, const double* x,
-                                   const double* y) {
-  int dist = 0;
-  for (int i = 0; i < n; ++i) {
-    dist += __builtin_popcountl(static_cast<uint64_t>(x[i]) ^
-                                static_cast<uint64_t>(y[i]));
-  }
-  return dist;
-}
 
 template <>
 float caffe_cpu_asum<float>(const int n, const float* x) {

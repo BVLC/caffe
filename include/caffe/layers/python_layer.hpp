@@ -18,22 +18,23 @@ class PythonLayer : public Layer<Dtype> {
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-    try {
-      self_.attr("setup")(bottom, top);
-    } catch (bp::error_already_set) {
-      PyErr_Print();
-      throw;
+    // Disallow PythonLayer in MultiGPU training stage, due to GIL issues
+    // Details: https://github.com/BVLC/caffe/issues/2936
+    if (this->phase_ == TRAIN && Caffe::solver_count() > 1
+        && !ShareInParallel()) {
+      LOG(FATAL) << "PythonLayer is not implemented in Multi-GPU training";
     }
+    self_.attr("param_str") = bp::str(
+        this->layer_param_.python_param().param_str());
+    self_.attr("setup")(bottom, top);
   }
-
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-    try {
-      self_.attr("reshape")(bottom, top);
-    } catch (bp::error_already_set) {
-      PyErr_Print();
-      throw;
-    }
+    self_.attr("reshape")(bottom, top);
+  }
+
+  virtual inline bool ShareInParallel() const {
+    return this->layer_param_.python_param().share_in_parallel();
   }
 
   virtual inline const char* type() const { return "Python"; }
@@ -41,21 +42,11 @@ class PythonLayer : public Layer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-    try {
-      self_.attr("forward")(bottom, top);
-    } catch (bp::error_already_set) {
-      PyErr_Print();
-      throw;
-    }
+    self_.attr("forward")(bottom, top);
   }
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-    try {
-      self_.attr("backward")(top, propagate_down, bottom);
-    } catch (bp::error_already_set) {
-      PyErr_Print();
-      throw;
-    }
+    self_.attr("backward")(top, propagate_down, bottom);
   }
 
  private:

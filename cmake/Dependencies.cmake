@@ -2,13 +2,23 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
+find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 
 # ---[ Threads
 find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
+
+# ---[ OpenMP
+if(USE_OPENMP)
+  find_package(OpenMP)
+  if(OPENMP_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  else()
+    set(USE_OPENMP "OFF")   # compiler is not supporting OpenMP then do not use it
+  endif()
+endif()
 
 # ---[ Google-glog
 include("cmake/External/glog.cmake")
@@ -29,27 +39,38 @@ include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
 
 # ---[ LMDB
-find_package(LMDB REQUIRED)
-include_directories(SYSTEM ${LMDB_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
+if(USE_LMDB)
+  find_package(LMDB REQUIRED)
+  include_directories(SYSTEM ${LMDB_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
+  add_definitions(-DUSE_LMDB)
+  if(ALLOW_LMDB_NOLOCK)
+    add_definitions(-DALLOW_LMDB_NOLOCK)
+  endif()
+endif()
 
 # ---[ LevelDB
-find_package(LevelDB REQUIRED)
-include_directories(SYSTEM ${LevelDB_INCLUDE})
-list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
+if(USE_LEVELDB)
+  find_package(LevelDB REQUIRED)
+  include_directories(SYSTEM ${LevelDB_INCLUDE})
+  list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
+  add_definitions(-DUSE_LEVELDB)
+endif()
 
 # ---[ Snappy
-find_package(Snappy REQUIRED)
-include_directories(SYSTEM ${Snappy_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
+if(USE_LEVELDB)
+  find_package(Snappy REQUIRED)
+  include_directories(SYSTEM ${Snappy_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
+endif()
 
 # ---[ CUDA
 include(cmake/Cuda.cmake)
 if(NOT HAVE_CUDA)
   if(CPU_ONLY)
-    message("-- CUDA is disabled. Building without it...")
+    message(STATUS "-- CUDA is disabled. Building without it...")
   else()
-    message("-- CUDA is not detected by cmake. Building without it...")
+    message(WARNING "-- CUDA is not detected by cmake. Building without it...")
   endif()
 
   # TODO: remove this not cross platform define in future. Use caffe_config.h instead.
@@ -57,13 +78,16 @@ if(NOT HAVE_CUDA)
 endif()
 
 # ---[ OpenCV
-find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
-if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found
-  find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
+if(USE_OPENCV)
+  find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
+  if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found
+    find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
+  endif()
+  include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})
+  message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
+  add_definitions(-DUSE_OPENCV)
 endif()
-include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})
-message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
 
 # ---[ BLAS
 if(NOT APPLE)
@@ -83,6 +107,10 @@ if(NOT APPLE)
     include_directories(SYSTEM ${MKL_INCLUDE_DIR})
     list(APPEND Caffe_LINKER_LIBS ${MKL_LIBRARIES})
     add_definitions(-DUSE_MKL)
+    # If MKL and OpenMP is to be used then use Intel OpenMP
+    if(OPENMP_FOUND)    
+      list(APPEND Caffe_LINKER_LIBS iomp5)
+    endif()
   endif()
 elseif(APPLE)
   find_package(vecLib REQUIRED)
@@ -100,14 +128,14 @@ if(BUILD_python)
     # Find the matching boost python implementation
     set(version ${PYTHONLIBS_VERSION_STRING})
     
-    STRING( REPLACE "." "" boost_py_version ${version} )
+    STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
     find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
     set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
     
     while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
       STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
       
-      STRING( REPLACE "." "" boost_py_version ${version} )
+      STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
       find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
       set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
       

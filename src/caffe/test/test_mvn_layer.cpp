@@ -1,11 +1,10 @@
-#include <cmath>
-#include <cstring>
 #include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layers/mvn_layer.hpp"
+#include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -73,7 +72,8 @@ TYPED_TEST(MVNLayerTest, TestForward) {
 TYPED_TEST(MVNLayerTest, TestForwardMeanOnly) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.ParseFromString("mvn_param{normalize_variance: false}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "mvn_param{normalize_variance: false}", &layer_param));
   MVNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -105,7 +105,8 @@ TYPED_TEST(MVNLayerTest, TestForwardMeanOnly) {
 TYPED_TEST(MVNLayerTest, TestForwardAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.ParseFromString("mvn_param{across_channels: true}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "mvn_param{across_channels: true}", &layer_param));
   MVNLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -149,7 +150,8 @@ TYPED_TEST(MVNLayerTest, TestGradient) {
 TYPED_TEST(MVNLayerTest, TestGradientMeanOnly) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.ParseFromString("mvn_param{normalize_variance: false}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "mvn_param{normalize_variance: false}", &layer_param));
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
@@ -159,7 +161,8 @@ TYPED_TEST(MVNLayerTest, TestGradientMeanOnly) {
 TYPED_TEST(MVNLayerTest, TestGradientAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.ParseFromString("mvn_param{across_channels: true}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "mvn_param{across_channels: true}", &layer_param));
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

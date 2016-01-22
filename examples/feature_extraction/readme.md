@@ -64,7 +64,7 @@ If you meet with the error "Check failed: status.ok() Failed to open leveldb exa
 
     rm -rf examples/_temp/features/
 
-If you'd like to use the Python wrapper for extracting features, check out the [layer visualization notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb).
+If you'd like to use the Python wrapper for extracting features, check out the [filter visualization notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 
 Clean Up
 --------

@@ -1,13 +1,17 @@
 #include <caffe/caffe.hpp>
+#ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#endif  // USE_OPENCV
+#include <algorithm>
 #include <iosfwd>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 
@@ -101,6 +105,7 @@ static std::vector<int> Argmax(const std::vector<float>& v, int N) {
 std::vector<Prediction> Classifier::Classify(const cv::Mat& img, int N) {
   std::vector<float> output = Predict(img);
 
+  N = std::min<int>(labels_.size(), N);
   std::vector<int> maxN = Argmax(output, N);
   std::vector<Prediction> predictions;
   for (int i = 0; i < N; ++i) {
@@ -186,13 +191,13 @@ void Classifier::Preprocess(const cv::Mat& img,
   /* Convert the input image to the input image format of the network. */
   cv::Mat sample;
   if (img.channels() == 3 && num_channels_ == 1)
-    cv::cvtColor(img, sample, CV_BGR2GRAY);
+    cv::cvtColor(img, sample, cv::COLOR_BGR2GRAY);
   else if (img.channels() == 4 && num_channels_ == 1)
-    cv::cvtColor(img, sample, CV_BGRA2GRAY);
+    cv::cvtColor(img, sample, cv::COLOR_BGRA2GRAY);
   else if (img.channels() == 4 && num_channels_ == 3)
-    cv::cvtColor(img, sample, CV_BGRA2BGR);
+    cv::cvtColor(img, sample, cv::COLOR_BGRA2BGR);
   else if (img.channels() == 1 && num_channels_ == 3)
-    cv::cvtColor(img, sample, CV_GRAY2BGR);
+    cv::cvtColor(img, sample, cv::COLOR_GRAY2BGR);
   else
     sample = img;
 
@@ -253,3 +258,8 @@ int main(int argc, char** argv) {
               << p.first << "\"" << std::endl;
   }
 }
+#else
+int main(int argc, char** argv) {
+  LOG(FATAL) << "This example requires OpenCV; compile with USE_OPENCV.";
+}
+#endif  // USE_OPENCV

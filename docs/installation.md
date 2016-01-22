@@ -17,23 +17,28 @@ When updating Caffe, it's best to `make clean` before re-compiling.
 
 ## Prerequisites
 
-Caffe has several dependencies.
+Caffe has several dependencies:
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) is required for GPU mode.
     * library version 7.0 and the latest driver version are recommended, but 6.* is fine too
     * 5.5, and 5.0 are compatible but considered legacy
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
 * [Boost](http://www.boost.org/) >= 1.55
+* `protobuf`, `glog`, `gflags`, `hdf5`
+
+Optional dependencies:
+
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
-* `protobuf`, `glog`, `gflags`
-* IO libraries `hdf5`, `leveldb`, `snappy`, `lmdb`
+* [OpenMP](http://openmp.org/wp/)
+* IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
+* cuDNN for GPU acceleration (v3)
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
-**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. For now cuDNN v1 is integrated but see [PR #1731](https://github.com/BVLC/caffe/pull/1731) for v2.
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
 
 **CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
@@ -54,6 +59,10 @@ There are several implementations of this library. The choice is yours:
 * [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
+
+### OpenMP (optional)
+
+Caffe can use OpenMP for parallel execution of CPU layers. OpenMP is supported (and delivered) by most of [compilers](http://openmp.org/wp/openmp-compilers/). To have Caffe use OpenMP uncomment USE_OPENMP := 1 Makefile.config (when using cmake, add -DUSE_OPENMP=ON to your commandline invoking cmake)
 
 ### Python and/or MATLAB Caffe (optional)
 

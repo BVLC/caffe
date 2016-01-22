@@ -1,3 +1,4 @@
+#ifdef USE_LEVELDB
 #ifndef CAFFE_UTIL_DB_LEVELDB_HPP
 #define CAFFE_UTIL_DB_LEVELDB_HPP
 
@@ -71,3 +72,4 @@ class LevelDB : public DB {
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_DB_LEVELDB_HPP
+#endif  // USE_LEVELDB

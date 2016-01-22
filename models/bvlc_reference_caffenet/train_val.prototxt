@@ -45,7 +45,7 @@ layer {
 #    mean_value: 104
 #    mean_value: 117
 #    mean_value: 123
-#    mirror: true
+#    mirror: false
 #  }
   data_param {
     source: "examples/imagenet/ilsvrc12_val_lmdb"
