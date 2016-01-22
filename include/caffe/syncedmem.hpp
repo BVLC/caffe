@@ -20,6 +20,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
     return;
   }
 #endif
+
 #if defined(__ICC) || defined(__INTEL_COMPILER)
   *ptr = _mm_malloc(size, 2*1024*1024);
 #else
@@ -39,9 +40,6 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #if defined(__ICC) || defined(__INTEL_COMPILER)
   _mm_free(ptr);
 #else
-    return;
-  }
-#endif
   free(ptr);
 #endif
 }
@@ -71,7 +69,7 @@ class SyncedMemory {
         gpu_device_(-1) {}
   explicit SyncedMemory(size_t size)
       : prv_descriptor_(), cpu_ptr_(NULL), gpu_ptr_(NULL), prv_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false)
+        own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
         gpu_device_(-1) {}
   ~SyncedMemory();
   const void* cpu_data();
@@ -103,9 +101,9 @@ class SyncedMemory {
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
-  bool own_prv_data_;
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
+  bool own_prv_data_;
   int gpu_device_;
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

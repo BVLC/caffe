@@ -10,7 +10,7 @@ SyncedMemory::~SyncedMemory() {
   }
 
   if (prv_ptr_  && own_prv_data_) {
-    CaffeFreeHost(prv_ptr_);
+    CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
   }
 
 #ifndef CPU_ONLY
@@ -48,7 +48,7 @@ inline void SyncedMemory::to_cpu() {
     break;
   case HEAD_AT_PRV:
     if (cpu_ptr_ == NULL) {
-      CaffeMallocHost(&cpu_ptr_, size_);
+      CaffeMallocHost(&cpu_ptr_, size_, &cpu_malloc_use_cuda_);
       own_cpu_data_ = true;
     }
     CHECK(prv_descriptor_.get());
@@ -182,13 +182,13 @@ void SyncedMemory::set_prv_data(void* data, bool same_data) {
   {
     if(data != NULL) {
       if (prv_ptr_ && own_prv_data_) {
-        CaffeFreeHost(prv_ptr_);
+        CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
       }
       prv_ptr_ = data;
       own_prv_data_ = false;
     }
     else if(NULL == prv_ptr_) {
-      CaffeMallocHost(&prv_ptr_, size_);
+      CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
       caffe_memset(size_, 0, prv_ptr_);
       own_prv_data_ = true;
     }
@@ -217,7 +217,7 @@ void* SyncedMemory::mutable_prv_data() {
   head_ = HEAD_AT_PRV;
 
   if(NULL == prv_ptr_) {
-    CaffeMallocHost(&prv_ptr_, size_);
+    CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, prv_ptr_);
   }
   return prv_ptr_;

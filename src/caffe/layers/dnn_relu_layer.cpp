@@ -1,9 +1,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-
+#include "caffe/layers/mkldnn_layers.hpp"
 #include "dnn.h"
 
 namespace caffe {

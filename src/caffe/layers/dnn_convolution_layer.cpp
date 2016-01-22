@@ -2,9 +2,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/im2col.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/mkldnn_layers.hpp"
 #include "dnn.h"
 
 namespace caffe {
@@ -29,6 +27,7 @@ DnnConvolutionLayer<Dtype>::DnnConvolutionLayer(const LayerParameter& param)
 
 template <typename Dtype>
 void DnnConvolutionLayer<Dtype>::compute_output_shape() {
+  ConvolutionLayer<Dtype>::compute_output_shape();
   this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
       / this->stride_h_ + 1;
   this->width_out_ = (this->width_ + 2 * this->pad_w_ - this->kernel_w_)
@@ -51,7 +50,20 @@ template <typename Dtype>
 void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
-  this->width_ = bottom[0]->width(); this->height_ = bottom[0]->height(); this->num_ = bottom[0]->num();
+
+  this->width_ = bottom[0]->width();
+  this->height_ = bottom[0]->height();
+  this->num_ = bottom[0]->num();
+
+  // TODO: clean up this
+  kernel_w_ = this->kernel_shape_.cpu_data()[0];
+  kernel_h_ = this->kernel_shape_.cpu_data()[1];
+  stride_w_ = this->stride_.cpu_data()[0];
+  stride_h_ = this->stride_.cpu_data()[1];
+  pad_w_ = this->pad_.cpu_data()[0];
+  pad_h_ = this->pad_.cpu_data()[1];
+
+  this->bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();
   int status;
   size_t n, g;
