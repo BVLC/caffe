@@ -63,6 +63,20 @@ class BatchNormLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  void replicate(Dtype* buffer_to_write,
+                         int num_batches,
+                         unsigned int batch_offset_incr,
+                         unsigned int channel_offset_incr,
+                         const Dtype* data_to_be_replicated);
+
+  template <typename FuncTy>
+  void replicate_to_op(Dtype* buffer_to_write,
+                       int num_batches,
+                       unsigned int batch_offset_incr,
+                       unsigned int channel_offset_incr,
+                       const Dtype* data_to_be_replicated,
+                       FuncTy op_func);
+
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;
   Dtype moving_average_fraction_;

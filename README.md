@@ -29,25 +29,25 @@ Time measures are: average Forward-Backward as stated by *caffe time*.*speedup* 
 (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] |
-|------------------:|---------------:|--------------:|-------------:|
-| intelcaffe-master |            682 |          1250 |         1380 |
-| bvlc-caffe-master |           3872 |          6899 |         7343 |
-|    speedup factor |           x5.7 |          x5.5 |         x5.3 |
+|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
+|------------------:|---------------:|--------------:|-------------:|----------------:|
+| intelcaffe-master |            682 |          1250 |         1380 |               24|
+| bvlc-caffe-master |           3872 |          6899 |         7343 |              323|
+|    speedup factor |           x5.7 |          x5.5 |         x5.3 |            x13.4|
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (72 threads, MKL 11.3, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] |
-|------------------:|---------------:|--------------:|-------------:|
-| intelcaffe-master |            989 |          1558 |         1725 |
-| bvlc-caffe-master |           3846 |          6810 |         7358 |
-|    speedup factor |           x3.9 |          x4.4 |         x4.3 |
+|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
+|------------------:|---------------:|--------------:|-------------:|----------------:|
+| intelcaffe-master |            989 |          1558 |         1725 |               35|
+| bvlc-caffe-master |           3846 |          6810 |         7358 |              323|
+|    speedup factor |           x3.9 |          x4.4 |         x4.3 |             x9.2|
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] |
-|------------------:|---------------:|--------------:|-------------:|
-| intelcaffe-master |           1412 |          3329 |         3977 |
-| bvlc-caffe-master |          14892 |         25920 |        67542 |
-|    speedup factor |          x10.5 |          x7.8 |        x17.0 |
+|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
+|------------------:|---------------:|--------------:|-------------:|----------------:|
+| intelcaffe-master |           1412 |          3329 |         3977 |               56|
+| bvlc-caffe-master |          14892 |         25920 |        67542 |              530|
+|    speedup factor |          x10.5 |          x7.8 |        x17.0 |             x9.4|
 
 Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
 The speedup factor highly depends on the amount of running threads and system load.
