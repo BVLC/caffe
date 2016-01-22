@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 143 (last added: scale_param)
+// LayerParameter next available layer-specific ID: 144 (last added: source_class)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -346,6 +346,9 @@ message LayerParameter {
 
   // Parameters shared by loss layers.
   optional LossParameter loss_param = 101;
+
+  // Specify name of source class
+  optional string source_class = 143;
 
   // Layer type-specific parameters.
   //
@@ -822,6 +825,9 @@ message MemoryDataParameter {
   optional uint32 channels = 2;
   optional uint32 height = 3;
   optional uint32 width = 4;
+  optional bool share_in_parallel = 5 [default = true];
+  // Specify location of source
+  optional string source = 6;
 }
 
 message MVNParameter {
