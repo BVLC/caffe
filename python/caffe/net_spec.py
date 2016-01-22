@@ -209,6 +209,9 @@ class NetSpec(object):
     def __setattr__(self, name, value):
         self.tops[name] = value
 
+    def __setitem__(self, name, value):
+        self.tops[name] = value
+
     def __getattr__(self, name):
         return self.tops[name]
 
