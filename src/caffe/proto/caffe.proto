@@ -89,8 +89,6 @@ message AnnotatedDatum {
   optional AnnotationType type = 2;
   // Each group contains annotation for a particular class.
   repeated AnnotationGroup annotation_group = 3;
-  // Store label name and label id in LabelMap format.
-  optional string label_map_file = 4;
 }
 
 message FillerParameter {
@@ -359,7 +357,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 142 (last added: multibox_loss_param)
+// LayerParameter next available layer-specific ID: 143 (last added: annotated_data_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -420,6 +418,7 @@ message LayerParameter {
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
+  optional AnnotatedDataParameter annotated_data_param = 142;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
@@ -540,6 +539,11 @@ message AccuracyParameter {
   
   // If specified, ignore instances with the given label.
   optional int64 ignore_label = 3;
+}
+
+message AnnotatedDataParameter {
+  // Store label name and label id in LabelMap format.
+  optional string label_map_file = 1;
 }
 
 message ArgMaxParameter {
