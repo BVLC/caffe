@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "gtest/gtest.h"
 
 #include "caffe/common.hpp"

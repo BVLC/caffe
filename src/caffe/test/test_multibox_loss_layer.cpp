@@ -1,4 +1,5 @@
 #include <cmath>
+#include <string>
 #include <vector>
 
 #include "boost/scoped_ptr.hpp"
@@ -28,9 +29,9 @@ using boost::scoped_ptr;
 namespace caffe {
 
 static bool kBoolChoices[] = {false, true};
-static MultiBoxLossParameter_MatchType kMatchTypes[] =
-  {MultiBoxLossParameter_MatchType_BIPARTITE,
-   MultiBoxLossParameter_MatchType_PER_PREDICTION};
+static MultiBoxLossParameter_MatchType kMatchTypes[] = {
+  MultiBoxLossParameter_MatchType_BIPARTITE,
+  MultiBoxLossParameter_MatchType_PER_PREDICTION};
 
 template <typename TypeParam>
 class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
