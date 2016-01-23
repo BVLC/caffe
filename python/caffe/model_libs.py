@@ -1,0 +1,176 @@
+import caffe
+from caffe import layers as L
+from caffe import params as P
+from caffe.proto import caffe_pb2
+
+def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
+        output_label=True, train=True, mean_value=[104, 117, 123], mirror=True,
+        label_map_file=''):
+    if train:
+        include = dict(phase=caffe_pb2.Phase.Value('TRAIN'))
+    else:
+        include = dict(phase=caffe_pb2.Phase.Value('TEST'))
+    if output_label:
+        data, label = L.AnnotatedData(name="data", label_map_file=label_map_file,
+                data_param=dict(batch_size=batch_size, backend=backend, source=source),
+                ntop=2, include=include, transform_param=dict(mean_value=mean_value, mirror=mirror))
+        return [data, label]
+    else:
+        data = L.AnnotatedData(name="data", label_map_file=label_map_file,
+                data_param=dict(batch_size=batch_size, backend=backend, source=source),
+                ntop=1, include=include, transform_param=dict(mean_value=mean_value))
+        return data
+
+def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
+    kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)]}
+
+    net.conv1_1 = L.Convolution(net.data, num_output=64, pad=1, kernel_size=3, **kwargs)
+    net.relu1_1 = L.ReLU(net.conv1_1, in_place=True)
+    net.conv1_2 = L.Convolution(net.relu1_1, num_output=64, pad=1, kernel_size=3, **kwargs)
+    net.relu1_2 = L.ReLU(net.conv1_2, in_place=True)
+
+    net.pool1 = L.Pooling(net.relu1_2, pool=P.Pooling.MAX, kernel_size=2, stride=2)
+
+    net.conv2_1 = L.Convolution(net.pool1, num_output=128, pad=1, kernel_size=3, **kwargs)
+    net.relu2_1 = L.ReLU(net.conv2_1, in_place=True)
+    net.conv2_2 = L.Convolution(net.relu2_1, num_output=128, pad=1, kernel_size=3, **kwargs)
+    net.relu2_2 = L.ReLU(net.conv2_2, in_place=True)
+
+    net.pool2 = L.Pooling(net.relu2_2, pool=P.Pooling.MAX, kernel_size=2, stride=2)
+
+    net.conv3_1 = L.Convolution(net.pool2, num_output=256, pad=1, kernel_size=3, **kwargs)
+    net.relu3_1 = L.ReLU(net.conv3_1, in_place=True)
+    net.conv3_2 = L.Convolution(net.relu3_1, num_output=256, pad=1, kernel_size=3, **kwargs)
+    net.relu3_2 = L.ReLU(net.conv3_2, in_place=True)
+    net.conv3_3 = L.Convolution(net.relu3_2, num_output=256, pad=1, kernel_size=3, **kwargs)
+    net.relu3_3 = L.ReLU(net.conv3_3, in_place=True)
+
+    net.pool3 = L.Pooling(net.relu3_3, pool=P.Pooling.MAX, kernel_size=2, stride=2)
+
+    net.conv4_1 = L.Convolution(net.pool3, num_output=512, pad=1, kernel_size=3, **kwargs)
+    net.relu4_1 = L.ReLU(net.conv4_1, in_place=True)
+    net.conv4_2 = L.Convolution(net.relu4_1, num_output=512, pad=1, kernel_size=3, **kwargs)
+    net.relu4_2 = L.ReLU(net.conv4_2, in_place=True)
+    net.conv4_3 = L.Convolution(net.relu4_2, num_output=512, pad=1, kernel_size=3, **kwargs)
+    net.relu4_3 = L.ReLU(net.conv4_3, in_place=True)
+
+    net.pool4 = L.Pooling(net.relu4_3, pool=P.Pooling.MAX, kernel_size=2, stride=2, **kwargs)
+
+    net.conv5_1 = L.Convolution(net.pool4, num_output=512, pad=1, kernel_size=3, **kwargs)
+    net.relu5_1 = L.ReLU(net.conv5_1, in_place=True)
+    net.conv5_2 = L.Convolution(net.relu5_1, num_output=512, pad=1, kernel_size=3, **kwargs)
+    net.relu5_2 = L.ReLU(net.conv5_2, in_place=True)
+    net.conv5_3 = L.Convolution(net.relu5_2, num_output=512, pad=1, kernel_size=3, **kwargs)
+    net.relu5_3 = L.ReLU(net.conv5_3, in_place=True)
+
+    net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=2, stride=2)
+
+    if fully_conv:
+        if reduced:
+            net.fc6 = L.Convolution(net.pool5, num_output=1024, pad=1, kernel_size=3, **kwargs)
+        else:
+            net.fc6 = L.Convolution(net.pool5, num_output=4096, pad=3, kernel_size=7, **kwargs)
+        net.relu6 = L.ReLU(net.fc6, in_place=True)
+        net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+        if reduced:
+            net.fc7 = L.Convolution(net.relu6, num_output=1024, kernel_size=1, **kwargs)
+        else:
+            net.fc7 = L.Convolution(net.relu6, num_output=4096, kernel_size=1, **kwargs)
+        net.relu7 = L.ReLU(net.fc7, in_place=True)
+        net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+    else:
+        net.fc6 = L.InnerProduct(net.pool5, num_output=4096)
+        net.relu6 = L.ReLU(net.fc6, in_place=True)
+        net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+        net.fc7 = L.InnerProduct(net.relu6, num_output=4096)
+        net.relu7 = L.ReLU(net.fc7, in_place=True)
+        net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+
+    # Update freeze layers.
+    kwargs = {
+            'param': [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)]}
+    layers = net.keys()
+    for freeze_layer in freeze_layers:
+        if freeze_layer in layers:
+            net.update(freeze_layer, kwargs)
+
+    return net
+
+def CreateMultiBoxHead(net, label_layer="label", from_layers=[], min_sizes=[],
+        max_sizes=[], num_classes=[], share_location=True, aspect_ratios=[],
+        flip=True, clip=True, multibox_loss_param=dict()):
+    assert num_classes, "must provide num_classes"
+    assert num_classes > 0, "num_classes must be positive number"
+    assert len(from_layers) == len(min_sizes), "from_layers and min_sizes should have same length"
+    assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
+
+    kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+            'weight_filler': dict(type='xavier'),
+            'bias_filler': dict(type='constant', value=0)}
+
+    num = len(from_layers)
+    priorbox_layers = []
+    loc_layers = []
+    conf_layers = []
+    for i in range(0, num):
+        from_layer = from_layers[i]
+
+        # Create prior generation layer.
+        aspect_ratio = [2, 3]
+        if len(aspect_ratios) > i:
+            aspect_ratio = aspect_ratios[i]
+            if type(aspect_ratio) is not list:
+                aspect_ratio = [aspect_ratio]
+        print aspect_ratio
+        name = "{}_mbox_priorbox".format(from_layer)
+        net[name] = L.PriorBox(net[from_layer], min_size=min_sizes[i], max_size=max_sizes[i],
+                aspect_ratio=aspect_ratio, flip=flip, clip=clip)
+        flatten_name = "{}_flat".format(name)
+        net[flatten_name] = L.Flatten(net[name], axis=1)
+        priorbox_layers.append(net[flatten_name])
+
+        # Estimate number of priors per location given provided parameters.
+        num_priors_per_location = 2 + len(aspect_ratio)
+        if flip:
+            num_priors_per_location += len(aspect_ratio)
+
+        # Create location prediction layer.
+        name = "{}_mbox_loc".format(from_layer)
+        num_loc_output = num_priors_per_location * 4;
+        if not share_location:
+            num_loc_output *= num_classes
+        net[name] = L.Convolution(net[from_layer], num_output=num_loc_output, kernel_size=1, **kwargs)
+        flatten_name = "{}_flat".format(name)
+        net[flatten_name] = L.Flatten(net[name], axis=1)
+        loc_layers.append(net[flatten_name])
+
+        # Create location prediction layer.
+        name = "{}_mbox_conf".format(from_layer)
+        num_conf_output = num_priors_per_location * num_classes;
+        net[name] = L.Convolution(net[from_layer], num_output=num_conf_output, kernel_size=1, **kwargs)
+        flatten_name = "{}_flat".format(name)
+        net[flatten_name] = L.Flatten(net[name], axis=1)
+        conf_layers.append(net[flatten_name])
+
+    # Concatenate priorbox, loc, and conf layers.
+    mbox_layers = []
+    name = "mbox_priorbox"
+    net[name] = L.Concat(*priorbox_layers, axis=1)
+    mbox_layers.append(net[name])
+    name = "mbox_loc"
+    net[name] = L.Concat(*loc_layers, axis=1)
+    mbox_layers.append(net[name])
+    name = "mbox_conf"
+    net[name] = L.Concat(*conf_layers, axis=1)
+    mbox_layers.append(net[name])
+    mbox_layers.append(net[label_layer])
+
+    # Create the MultiBoxLossLayer.
+    name = "mbox_loss"
+    kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)]}
+    net[name] = L.MultiBoxLossLayer(*mbox_layers, multibox_loss_param=multibox_loss_param,
+            include=dict(phase=caffe_pb2.Phase.Value('TRAIN')), **kwargs)
+    return net
