@@ -5,6 +5,16 @@
 
 namespace caffe {
 
+// Function uses casting from int to unsigned to compare if value of
+// parameter a is greater or equal to zero and lower than value of
+// parameter b. The b parameter is of type signed and is always positive,
+// therefore its value is always lower than 0x800... where casting
+// negative value of a parameter converts it to value higher than 0x800...
+// The casting allows to use one condition instead of two.
+inline bool is_a_ge_zero_and_a_lt_b(int_tp a, int_tp b) {
+  return static_cast<unsigned>(a) < static_cast<unsigned>(b);
+}
+
 template<typename Dtype>
 void im2col_cpu(const Dtype* data_im, const int_tp channels,
                 const int_tp height, const int_tp width, const int_tp kernel_h,
@@ -12,22 +22,33 @@ void im2col_cpu(const Dtype* data_im, const int_tp channels,
                 const int_tp stride_h, const int_tp stride_w,
                 const int_tp dilation_h, const int_tp dilation_w,
                 Dtype* data_col) {
-  const int_tp height_col = (height + 2 * pad_h
+  const int_tp output_h = (height + 2 * pad_h
       - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-  const int_tp width_col = (width + 2 * pad_w
-      - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-  const int_tp channels_col = channels * kernel_h * kernel_w;
-  for (int_tp c_col = 0; c_col < channels_col; ++c_col) {
-    int_tp w_offset = c_col % kernel_w;
-    int_tp h_offset = (c_col / kernel_w) % kernel_h;
-    int_tp c_im = c_col / kernel_h / kernel_w;
-    for (int_tp h_col = 0; h_col < height_col; ++h_col) {
-      for (int_tp w_col = 0; w_col < width_col; ++w_col) {
-        int_tp h_im = h_col * stride_h - pad_h + h_offset * dilation_h;
-        int_tp w_im = w_col * stride_w - pad_w + w_offset * dilation_w;
-        data_col[(c_col * height_col + h_col) * width_col + w_col] =
-            (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?
-                data_im[(c_im * height + h_im) * width + w_im] : 0;
+  const int_tp output_w =
+      (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  const int_tp channel_size = height * width;
+  for (int_tp channel = channels; channel--; data_im += channel_size) {
+    for (int_tp kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
+      for (int_tp kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
+        int_tp input_row = -pad_h + kernel_row * dilation_h;
+        for (int_tp output_rows = output_h; output_rows; output_rows--) {
+          if (!is_a_ge_zero_and_a_lt_b(input_row, height)) {
+            for (int_tp output_cols = output_w; output_cols; output_cols--) {
+              *(data_col++) = 0;
+            }
+          } else {
+            int_tp input_col = -pad_w + kernel_col * dilation_w;
+            for (int_tp output_col = output_w; output_col; output_col--) {
+              if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
+                *(data_col++) = data_im[input_row * width + input_col];
+              } else {
+                *(data_col++) = 0;
+              }
+              input_col += stride_w;
+            }
+          }
+          input_row += stride_h;
+        }
       }
     }
   }
@@ -157,22 +178,30 @@ void col2im_cpu(const Dtype* data_col, const int_tp channels,
                 const int_tp dilation_h, const int_tp dilation_w,
                 Dtype* data_im) {
   caffe_set(height * width * channels, Dtype(0), data_im);
-  const int_tp height_col = (height + 2 * pad_h
+  const int_tp output_h = (height + 2 * pad_h
       - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-  const int_tp width_col = (width + 2 * pad_w
-      - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-  const int_tp channels_col = channels * kernel_h * kernel_w;
-  for (int_tp c_col = 0; c_col < channels_col; ++c_col) {
-    int_tp w_offset = c_col % kernel_w;
-    int_tp h_offset = (c_col / kernel_w) % kernel_h;
-    int_tp c_im = c_col / kernel_h / kernel_w;
-    for (int_tp h_col = 0; h_col < height_col; ++h_col) {
-      for (int_tp w_col = 0; w_col < width_col; ++w_col) {
-        int_tp h_im = h_col * stride_h - pad_h + h_offset * dilation_h;
-        int_tp w_im = w_col * stride_w - pad_w + w_offset * dilation_w;
-        if (h_im >= 0 && h_im < height && w_im >= 0 && w_im < width)
-          data_im[(c_im * height + h_im) * width + w_im] += data_col[(c_col
-              * height_col + h_col) * width_col + w_col];
+  const int_tp output_w =
+      (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  const int_tp channel_size = height * width;
+  for (int_tp channel = channels; channel--; data_im += channel_size) {
+    for (int_tp kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
+      for (int_tp kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
+        int_tp input_row = -pad_h + kernel_row * dilation_h;
+        for (int_tp output_rows = output_h; output_rows; output_rows--) {
+          if (!is_a_ge_zero_and_a_lt_b(input_row, height)) {
+            data_col += output_w;
+          } else {
+            int_tp input_col = -pad_w + kernel_col * dilation_w;
+            for (int_tp output_col = output_w; output_col; output_col--) {
+              if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
+                data_im[input_row * width + input_col] += *data_col;
+              }
+              data_col++;
+              input_col += stride_w;
+            }
+          }
+          input_row += stride_h;
+        }
       }
     }
   }
