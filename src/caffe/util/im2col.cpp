@@ -15,17 +15,17 @@ inline bool is_a_ge_zero_and_a_lt_b(int_tp a, int_tp b) {
   return static_cast<unsigned>(a) < static_cast<unsigned>(b);
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void im2col_cpu(const Dtype* data_im, const int_tp channels,
-    const int_tp height, const int_tp width, const int_tp kernel_h, const int_tp kernel_w,
-    const int_tp pad_h, const int_tp pad_w,
-    const int_tp stride_h, const int_tp stride_w,
-    const int_tp dilation_h, const int_tp dilation_w,
-    Dtype* data_col) {
-  const int_tp output_h = (height + 2 * pad_h -
-    (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-  const int_tp output_w = (width + 2 * pad_w -
-    (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+                const int_tp height, const int_tp width, const int_tp kernel_h,
+                const int_tp kernel_w, const int_tp pad_h, const int_tp pad_w,
+                const int_tp stride_h, const int_tp stride_w,
+                const int_tp dilation_h, const int_tp dilation_w,
+                Dtype* data_col) {
+  const int_tp output_h = (height + 2 * pad_h
+      - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+  const int_tp output_w =
+      (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   const int_tp channel_size = height * width;
   for (int_tp channel = channels; channel--; data_im += channel_size) {
     for (int_tp kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
