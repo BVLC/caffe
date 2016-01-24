@@ -41,17 +41,19 @@ Currently, we will read the MNIST data from the lmdb we created earlier in the d
     layer {
       name: "mnist"
       type: "Data"
-      data_param {
-        source: "mnist_train_lmdb"
-        backend: LMDB
-        batch_size: 64
-        scale: 0.00390625
-      }
       top: "data"
       top: "label"
+      data_param {
+        source: "examples/mnist/mnist_train_lmdb"
+        batch_size: 64
+        backend: LMDB
+      }
+      transform_param {
+        scale : scale: 0.00390625
+      }
     }
 
-Specifically, this layer has name `mnist`, type `data`, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range \[0,1\). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the `data` blob, and one is the `label` blob.
+Specifically, this layer has name `mnist`, type `Data`, and it reads the data from the given lmdb source whose path is specified in the `data_param`'s `source`. We will use a batch size of 64, and scale the incoming pixels so that they are in the range \[0,1\). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the `data` blob, and one is the `label` blob.
 
 ### Writing the Convolution Layer
 
@@ -60,8 +62,14 @@ Let's define the first convolution layer:
     layer {
       name: "conv1"
       type: "Convolution"
-      param { lr_mult: 1 }
-      param { lr_mult: 2 }
+      bottom: "data"
+      top: "conv1"
+      param { 
+        lr_mult: 1 
+      }
+      param { 
+        lr_mult: 2 
+      }
       convolution_param {
         num_output: 20
         kernel_size: 5
@@ -73,11 +81,9 @@ Let's define the first convolution layer:
           type: "constant"
         }
       }
-      bottom: "data"
-      top: "conv1"
     }
 
-This layer takes the `data` blob (it is provided by the data layer), and produces the `conv1` layer. It produces outputs of 20 channels, with the convolutional kernel size 5 and carried out with stride 1.
+The layer is named `conv1` and its type is `Convolution`. This layer takes the `data` blob (it is provided by the data layer), and produces the `conv1` layer. It produces outputs of 20 channels, with the convolutional kernel size 5 and carried out with stride 1.
 
 The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the `xavier` algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.
 
@@ -90,13 +96,13 @@ Phew. Pooling layers are actually much easier to define:
     layer {
       name: "pool1"
       type: "Pooling"
-      pooling_param {
-        kernel_size: 2
-        stride: 2
-        pool: MAX
-      }
       bottom: "conv1"
       top: "pool1"
+      pooling_param {
+        pool: MAX
+        kernel_size: 2
+        stride: 2
+      }
     }
 
 This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).
@@ -110,8 +116,14 @@ Writing a fully connected layer is also simple:
     layer {
       name: "ip1"
       type: "InnerProduct"
-      param { lr_mult: 1 }
-      param { lr_mult: 2 }
+      bottom: "pool2"
+      top: "ip1"
+      param { 
+        lr_mult: 1 
+      }
+      param { 
+        lr_mult: 2 
+      }
       inner_product_param {
         num_output: 500
         weight_filler {
@@ -121,8 +133,6 @@ Writing a fully connected layer is also simple:
           type: "constant"
         }
       }
-      bottom: "pool2"
-      top: "ip1"
     }
 
 This defines a fully connected layer (known in Caffe as an `InnerProduct` layer) with 500 outputs. All other lines look familiar, right?
@@ -145,8 +155,14 @@ After the ReLU layer, we will write another innerproduct layer:
     layer {
       name: "ip2"
       type: "InnerProduct"
-      param { lr_mult: 1 }
-      param { lr_mult: 2 }
+      bottom: "ip1"
+      top: "ip2"
+      param { 
+        lr_mult: 1 
+      }
+      param { 
+        lr_mult: 2
+      }
       inner_product_param {
         num_output: 10
         weight_filler {
@@ -156,8 +172,6 @@ After the ReLU layer, we will write another innerproduct layer:
           type: "constant"
         }
       }
-      bottom: "ip1"
-      top: "ip2"
     }
 
 ### Writing the Loss Layer
@@ -169,6 +183,7 @@ Finally, we will write the loss!
       type: "SoftmaxWithLoss"
       bottom: "ip2"
       bottom: "label"
+      top: "loss"
     }
 
 The `softmax_loss` layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the `label` provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to `ip2`. This is where all magic starts.
