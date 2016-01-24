@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <map>
 #include <vector>
 
 #include "caffe/3rdparty/hungarian.h"
@@ -118,33 +119,54 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
     return;
   }
 
-  // Construct the overlap matrix.
-  // Since libhungarian only accept integer cost matrix, we scale overlap.
-  float scale = 1e5;
-  int** overlaps;
-  overlaps = new int*[num_pred];
+  // Store the positive overlap between predictions and ground truth.
+  map<int, map<int, float> > overlaps;
   for (int i = 0; i < num_pred; ++i) {
-    overlaps[i] = new int[num_gt];
     for (int j = 0; j < num_gt; ++j) {
-      overlaps[i][j] =
-          JaccardOverlap(pred_bboxes[i], gt_bboxes[gt_indices[j]]) * scale;
+      float overlap = JaccardOverlap(pred_bboxes[i], gt_bboxes[gt_indices[j]]);
+      if (overlap > 1e-6) {
+        overlaps[i][j] = overlap;
+      }
+    }
+  }
+  int num_pos = overlaps.size();
+
+  // Create costs matrix to be used by libhungarian. Since libhungarian only
+  // accept integer cost matrix, we scale overlap appropriately.
+  float scale = 1e5;
+  int** costs = new int*[num_gt];
+  for (int i = 0; i < num_gt; ++i) {
+    costs[i] = new int[num_pos];
+    int j = 0;
+    for (map<int, map<int, float> >::iterator it = overlaps.begin();
+         it != overlaps.end(); ++it, ++j) {
+      if (it->second.find(i) == it->second.end()) {
+        costs[i][j] = 0;
+      } else {
+        costs[i][j] = static_cast<int>(it->second[i] * scale);
+      }
     }
   }
 
   // Use hungarian algorithm to solve bipartite matching.
   hungarian_problem_t p;
-  hungarian_init(&p, overlaps, num_pred, num_gt, HUNGARIAN_MODE_MAXIMIZE_UTIL);
+  hungarian_init(&p, costs, num_gt, num_pos, HUNGARIAN_MODE_MAXIMIZE_UTIL);
   hungarian_solve(&p);
 
   // Output match results. Since currently both BIPARTITE and PER_PREDICTION
   // matching method need to perform BIPARTITE matching, we put it outside.
-  for (int i = 0; i < num_pred; ++i) {
-    for (int j = 0; j < num_gt; ++j) {
+  for (int i = 0; i < num_gt; ++i) {
+    int j = 0;
+    for (map<int, map<int, float> >::iterator it = overlaps.begin();
+         it != overlaps.end(); ++it, ++j) {
+      int pred_idx = it->first;
       if (p.assignment[i][j] == HUNGARIAN_ASSIGNED) {
-        CHECK_EQ((*match_indices)[i], -1);
-        (*match_indices)[i] = gt_indices[j];
-        (*match_overlaps)[i] = overlaps[i][j];
-        break;
+        CHECK_EQ((*match_indices)[pred_idx], -1) << "Found multiple matches";
+        if (it->second.find(i) == it->second.end()) {
+          continue;
+        }
+        (*match_indices)[pred_idx] = gt_indices[i];
+        (*match_overlaps)[pred_idx] = it->second[i];
       }
     }
   }
@@ -154,16 +176,25 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
       break;
     case MultiBoxLossParameter_MatchType_PER_PREDICTION:
       // Get most overlaped for the rest prediction bboxes.
-      for (int i = 0; i < num_pred; ++i) {
-        if ((*match_indices)[i] > -1) {
-          // Already found a match during Bipartite matching step.
-          continue;
-        }
-        for (int j = 0; j < num_gt; ++j) {
-          if (overlaps[i][j] >= overlap_threshold * scale &&
-              overlaps[i][j] >= (*match_overlaps)[i]) {
-            (*match_indices)[i] = gt_indices[j];
-            (*match_overlaps)[i] = overlaps[i][j];
+      for (int i = 0; i < num_gt; ++i) {
+        for (map<int, map<int, float> >::iterator it = overlaps.begin();
+             it != overlaps.end(); ++it) {
+          int pred_idx = it->first;
+          if ((*match_indices)[pred_idx] > -1) {
+            // Already found a match during Bipartite matching step.
+            continue;
+          }
+          if (it->second.find(i) == it->second.end()) {
+            if (overlap_threshold == 0) {
+              (*match_indices)[pred_idx] = gt_indices[i];
+              (*match_overlaps)[pred_idx] = 0;
+            }
+          } else {
+            if (it->second[i] >= overlap_threshold &&
+                it->second[i] >= (*match_overlaps)[pred_idx]) {
+              (*match_indices)[pred_idx] = gt_indices[i];
+              (*match_overlaps)[pred_idx] = it->second[i];
+            }
           }
         }
       }
@@ -173,17 +204,12 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
       break;
   }
 
-  // Scale back the overlap.
-  for (int i = 0; i < num_pred; ++i) {
-    (*match_overlaps)[i] /= scale;
-  }
-
   // free space
   hungarian_free(&p);
-  for (int i = 0; i < num_pred; ++i) {
-    free(overlaps[i]);
+  for (int i = 0; i < num_gt; ++i) {
+    free(costs[i]);
   }
-  free(overlaps);
+  free(costs);
 
   return;
 }
