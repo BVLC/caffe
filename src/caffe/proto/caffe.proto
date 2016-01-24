@@ -357,7 +357,11 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
+<<<<<<< 98f57962c7ca9232434686b5ef2e87ff342618a5
 // LayerParameter next available layer-specific ID: 143 (last added: annotated_data_param)
+=======
+// LayerParameter next available layer-specific ID: 145 (last added: permute_param)
+>>>>>>> add PermuteLayer
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -447,6 +451,7 @@ message LayerParameter {
   optional MultiBoxLossParameter multibox_loss_param = 150;
   optional MVNParameter mvn_param = 120;
   optional ParameterParameter parameter_param = 145;
+  optional PermuteParameter permute_param = 202;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
@@ -1023,6 +1028,12 @@ message MVNParameter {
 
 message ParameterParameter {
   optional BlobShape shape = 1;
+}
+message PermuteParameter {
+  // The new orders of the axes of data. Notice it should be with
+  // in the same range as the input data, and it starts from 0.
+  // Do not provide repeated order.
+  repeated uint32 order = 1;
 }
 
 message PoolingParameter {
