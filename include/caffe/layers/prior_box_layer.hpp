@@ -68,11 +68,6 @@ class PriorBoxLayer : public Layer<Dtype> {
   bool flip_;
   int num_priors_;
   bool clip_;
-
-  // store the priors and the size of feature map from previous batch.
-  Blob<Dtype> prior_data_;
-  int prev_width_;
-  int prev_height_;
 };
 
 }  // namespace caffe
