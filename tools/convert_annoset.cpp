@@ -158,6 +158,7 @@ int main(int argc, char** argv) {
       status = ReadRichImageToAnnotatedDatum(filename, labelname, resize_height,
           resize_width, min_dim, is_color, enc, type, name_to_label,
           &anno_datum);
+      anno_datum.set_type(AnnotatedDatum_AnnotationType_BBOX);
     }
     if (status == false) {
       LOG(WARNING) << "Failed to read " << lines[line_id].first;
