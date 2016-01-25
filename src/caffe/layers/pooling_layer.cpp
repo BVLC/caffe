@@ -130,8 +130,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
 
-  typename PoolingCodeGeneratorForward<Dtype>::Callback_t* generator_func =
-           Forward_code_generator.Get_callback(this, top[0], use_top_mask);
+//  typename PoolingCodeGeneratorForward<Dtype>::Callback_t* generator_func =
+//           Forward_code_generator.Get_callback(this, top[0], use_top_mask);
   // We are getting top_mask here as mutable_cpu_data is not thread safe
   // and doing it inside parallel region creates of risk of race condition
   void* mask = NULL;
@@ -140,7 +140,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     mask = (use_top_mask) ? static_cast<void*>(top[1]->mutable_cpu_data()) :
                             static_cast<void*>(max_idx_.mutable_cpu_data());
   }
-
+/*
 #ifdef _OPENMP
   #pragma omp parallel for
 #endif
@@ -152,7 +152,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                    image+1,
                    mask,
                    this,
-                   use_top_mask);
+                   use_top_mask); */
 }
 
 template <typename Dtype>
@@ -167,6 +167,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
 
+  /*
   typename PoolingCodeGeneratorBackward<Dtype>::Callback_t* generator_func =
                           Backward_code_generator.Get_callback(this, top[0]);
 
@@ -190,6 +191,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                    use_top_mask,
                    mask,
                    this);
+                   */
 }
 
 
