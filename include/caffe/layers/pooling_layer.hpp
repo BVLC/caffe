@@ -7,7 +7,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/pooling_layer_impl.hpp"
+//#include "caffe/layers/pooling_layer_impl.hpp"
 
 namespace caffe {
 
@@ -19,10 +19,10 @@ namespace caffe {
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
   // Private code generators.
-  friend class PoolingCodeGeneratorForward<Dtype>;
-  friend class PoolingCodeGeneratorBackward<Dtype>;
-  PoolingCodeGeneratorForward<Dtype> Forward_code_generator;
-  PoolingCodeGeneratorBackward<Dtype> Backward_code_generator;
+//  friend class PoolingCodeGeneratorForward<Dtype>;
+//  friend class PoolingCodeGeneratorBackward<Dtype>;
+//  PoolingCodeGeneratorForward<Dtype> Forward_code_generator;
+//  PoolingCodeGeneratorBackward<Dtype> Backward_code_generator;
 
 
  public:

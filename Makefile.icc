@@ -105,6 +105,7 @@ CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 OBJ_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)
 LAYER_BUILD_DIR := $(OBJ_BUILD_DIR)/layers
+
 UTIL_BUILD_DIR := $(OBJ_BUILD_DIR)/util
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
@@ -169,11 +170,29 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-LIBRARIES += gflags protobuf leveldb snappy \
-	lmdb \
-	boost_system \
-	hdf5_hl hdf5 \
-	opencv_core opencv_highgui opencv_imgproc pthread 
+
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
+
+# handle IO dependencies
+USE_LEVELDB ?= 1
+USE_LMDB ?= 1
+USE_OPENCV ?= 1
+
+ifeq ($(USE_LEVELDB), 1)
+	LIBRARIES += leveldb snappy
+endif
+ifeq ($(USE_LMDB), 1)
+	LIBRARIES += lmdb
+endif
+ifeq ($(USE_OPENCV), 1)
+	LIBRARIES += opencv_core opencv_highgui opencv_imgproc 
+
+	ifeq ($(OPENCV_VERSION), 3)
+		LIBRARIES += opencv_imgcodecs
+	endif
+		
+endif	
+	
 PYTHON_LIBRARIES := boost_python python2.7 
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -276,6 +295,20 @@ CXXFLAGS += -march=core-avx2
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
 	COMMON_FLAGS += -DUSE_CUDNN
+endif
+
+# configure IO libraries
+ifeq ($(USE_OPENCV), 1)
+	COMMON_FLAGS += -DUSE_OPENCV
+endif
+ifeq ($(USE_LEVELDB), 1)
+	COMMON_FLAGS += -DUSE_LEVELDB
+endif
+ifeq ($(USE_LMDB), 1)
+	COMMON_FLAGS += -DUSE_LMDB
+ifeq ($(ALLOW_LMDB_NOLOCK), 1)
+	COMMON_FLAGS += -DALLOW_LMDB_NOLOCK
+endif
 endif
 
 # CPU-only configuration
