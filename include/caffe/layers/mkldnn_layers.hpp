@@ -274,5 +274,5 @@ private:
   dnnPrimitive_t reluFwd, reluBwd;
 };
 
-} //namespace caffe {
+} // namespace caffe
 #endif // #ifndef CAFFE_MKLDNN_LAYERS_HPP_
