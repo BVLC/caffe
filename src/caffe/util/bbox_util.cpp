@@ -129,73 +129,86 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
       }
     }
   }
-  int num_pos = overlaps.size();
 
-  // Create costs matrix to be used by libhungarian. Since libhungarian only
-  // accept integer cost matrix, we scale overlap appropriately.
-  float scale = 1e5;
-  int** costs = new int*[num_gt];
+  // Bipartite matching.
+  vector<int> gt_pool;
   for (int i = 0; i < num_gt; ++i) {
-    costs[i] = new int[num_pos];
-    int j = 0;
-    for (map<int, map<int, float> >::iterator it = overlaps.begin();
-         it != overlaps.end(); ++it, ++j) {
-      if (it->second.find(i) == it->second.end()) {
-        costs[i][j] = 0;
-      } else {
-        costs[i][j] = static_cast<int>(it->second[i] * scale);
-      }
-    }
+    gt_pool.push_back(i);
   }
-
-  // Use hungarian algorithm to solve bipartite matching.
-  hungarian_problem_t p;
-  hungarian_init(&p, costs, num_gt, num_pos, HUNGARIAN_MODE_MAXIMIZE_UTIL);
-  hungarian_solve(&p);
-
-  // Output match results. Since currently both BIPARTITE and PER_PREDICTION
-  // matching method need to perform BIPARTITE matching, we put it outside.
-  for (int i = 0; i < num_gt; ++i) {
-    int j = 0;
+  while (gt_pool.size() > 0) {
+    // Find the most overlapped gt and cooresponding predictions.
+    int max_idx = -1;
+    int max_gt_idx = -1;
+    float max_overlap = -1;
     for (map<int, map<int, float> >::iterator it = overlaps.begin();
-         it != overlaps.end(); ++it, ++j) {
-      int pred_idx = it->first;
-      if (p.assignment[i][j] == HUNGARIAN_ASSIGNED) {
-        CHECK_EQ((*match_indices)[pred_idx], -1) << "Found multiple matches";
-        if (it->second.find(i) == it->second.end()) {
+         it != overlaps.end(); ++it) {
+      int i = it->first;
+      if ((*match_indices)[i] != -1) {
+        // The prediction already have matched ground truth.
+        continue;
+      }
+      for (int p = 0; p < gt_pool.size(); ++p) {
+        int j = gt_pool[p];
+        if (it->second.find(j) == it->second.end()) {
+          // No overlap between the i-th prediction and j-th ground truth.
           continue;
         }
-        (*match_indices)[pred_idx] = gt_indices[i];
-        (*match_overlaps)[pred_idx] = it->second[i];
+        // Find the maximum overlapped pair.
+        if (it->second[j] > max_overlap) {
+          // If the prediction has not been matched to any ground truth,
+          // and the overlap is larger than maximum overlap, update.
+          max_idx = i;
+          max_gt_idx = j;
+          max_overlap = it->second[j];
+        }
       }
     }
+    if (max_idx == -1) {
+      // Cannot find good match.
+      break;
+    } else {
+      CHECK_EQ((*match_indices)[max_idx], -1);
+      (*match_indices)[max_idx] = gt_indices[max_gt_idx];
+      (*match_overlaps)[max_idx] = max_overlap;
+      // Erase the ground truth.
+      gt_pool.erase(std::find(gt_pool.begin(), gt_pool.end(), max_gt_idx));
+    }
   }
+
   switch (match_type) {
     case MultiBoxLossParameter_MatchType_BIPARTITE:
       // Already done.
       break;
     case MultiBoxLossParameter_MatchType_PER_PREDICTION:
       // Get most overlaped for the rest prediction bboxes.
-      for (int i = 0; i < num_gt; ++i) {
-        for (map<int, map<int, float> >::iterator it = overlaps.begin();
-             it != overlaps.end(); ++it) {
-          int pred_idx = it->first;
-          if ((*match_indices)[pred_idx] > -1) {
-            // Already found a match during Bipartite matching step.
+      for (map<int, map<int, float> >::iterator it = overlaps.begin();
+           it != overlaps.end(); ++it) {
+        int i = it->first;
+        if ((*match_indices)[i] != -1) {
+          // The prediction already have matched ground truth.
+          continue;
+        }
+        int max_gt_idx = -1;
+        float max_overlap = -1;
+        for (int j = 0; j < num_gt; ++j) {
+          if (it->second.find(j) == it->second.end()) {
+            // No overlap between the i-th prediction and j-th ground truth.
             continue;
           }
-          if (it->second.find(i) == it->second.end()) {
-            if (overlap_threshold == 0) {
-              (*match_indices)[pred_idx] = gt_indices[i];
-              (*match_overlaps)[pred_idx] = 0;
-            }
-          } else {
-            if (it->second[i] >= overlap_threshold &&
-                it->second[i] >= (*match_overlaps)[pred_idx]) {
-              (*match_indices)[pred_idx] = gt_indices[i];
-              (*match_overlaps)[pred_idx] = it->second[i];
-            }
+          // Find the maximum overlapped pair.
+          float overlap = it->second[j];
+          if (overlap >= overlap_threshold && overlap > max_overlap) {
+            // If the prediction has not been matched to any ground truth,
+            // and the overlap is larger than maximum overlap, update.
+            max_gt_idx = j;
+            max_overlap = overlap;
           }
+        }
+        if (max_gt_idx != -1) {
+          // Found a matched ground truth.
+          CHECK_EQ((*match_indices)[i], -1);
+          (*match_indices)[i] = gt_indices[max_gt_idx];
+          (*match_overlaps)[i] = max_overlap;
         }
       }
       break;
@@ -203,13 +216,6 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
       LOG(FATAL) << "Unknown matching type.";
       break;
   }
-
-  // free space
-  hungarian_free(&p);
-  for (int i = 0; i < num_gt; ++i) {
-    free(costs[i]);
-  }
-  free(costs);
 
   return;
 }
