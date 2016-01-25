@@ -10,9 +10,11 @@
 #include "caffe/filler.hpp"
 #include "caffe/layers/annotated_data_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/flatten_layer.hpp"
 #include "caffe/layers/multibox_loss_layer.hpp"
+#include "caffe/layers/permute_layer.hpp"
+#include "caffe/layers/pooling_layer.hpp"
 #include "caffe/layers/prior_box_layer.hpp"
-#include "caffe/layers/reshape_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
@@ -28,7 +30,7 @@ using boost::scoped_ptr;
 
 namespace caffe {
 
-static bool kBoolChoices[] = {false, true};
+static bool kBoolChoices[] = {true, false};
 static MultiBoxLossParameter_MatchType kMatchTypes[] = {
   MultiBoxLossParameter_MatchType_BIPARTITE,
   MultiBoxLossParameter_MatchType_PER_PREDICTION};
@@ -39,16 +41,16 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   MultiBoxLossLayerTest()
-      : num_(10),
+      : num_(3),
         num_classes_(3),
         width_(2),
         height_(2),
-        num_priors_per_location_(6),
+        num_priors_per_location_(4),
         num_priors_(width_ * height_ * num_priors_per_location_),
         blob_bottom_prior_(new Blob<Dtype>(num_, 2, num_priors_ * 4, 1)),
-        blob_bottom_loc_(new Blob<Dtype>(num_, 1, num_priors_ * 4, 1)),
+        blob_bottom_loc_(new Blob<Dtype>(num_, num_priors_ * 4, 1, 1)),
         blob_bottom_conf_(new Blob<Dtype>(
-                num_, 1, num_priors_ * num_classes_, 1)),
+                num_, num_priors_ * num_classes_, 1, 1)),
         blob_bottom_gt_(new Blob<Dtype>(1, 1, 4, 7)),
         blob_top_loss_(new Blob<Dtype>()) {
     blob_bottom_vec_.push_back(blob_bottom_prior_);
@@ -90,11 +92,11 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
       datum->set_height(20);
       datum->set_width(20);
       std::string* data = datum->mutable_data();
-      for (int j = 0; j < 20*20; ++j) {
-        data->push_back(static_cast<uint8_t>(j));
+      for (int j = 0; j < 3*20*20; ++j) {
+        data->push_back(static_cast<uint8_t>(j/100.));
       }
       anno_datum.set_type(AnnotatedDatum_AnnotationType_BBOX);
-      if (i == 0 || i == 4) {
+      if (i == 0 || i == 2) {
         AnnotationGroup* anno_group = anno_datum.add_annotation_group();
         anno_group->set_group_label(1);
         Annotation* anno = anno_group->add_annotation();
@@ -105,7 +107,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         bbox->set_xmax(0.3);
         bbox->set_ymax(0.3);
       }
-      if (i == 4) {
+      if (i == 2) {
         AnnotationGroup* anno_group = anno_datum.add_annotation_group();
         anno_group->set_group_label(2);
         Annotation* anno = anno_group->add_annotation();
@@ -123,11 +125,10 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         bbox->set_xmax(0.8);
         bbox->set_ymax(0.9);
       }
-      stringstream ss;
-      ss << i;
+      string key_str = caffe::format_int(i, 3);
       string out;
       CHECK(anno_datum.SerializeToString(&out));
-      txn->Put(ss.str(), out);
+      txn->Put(key_str, out);
     }
     txn->Commit();
     db->Close();
@@ -144,23 +145,30 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
 
     // 2) Fill prior bboxes.
     // Fake layer
-    Blob<Dtype>* fake_blob = new Blob<Dtype>(num_, 10, height_, width_);
-    FillerParameter filler_param;
-    GaussianFiller<Dtype> filler(filler_param);
-    filler.Fill(fake_blob);
-    filler.Fill(fake_input);
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+    pooling_param->set_kernel_size(10);
+    pooling_param->set_stride(10);
+
+    PoolingLayer<Dtype> pooling_layer(layer_param);
+    Blob<Dtype>* fake_blob = new Blob<Dtype>(num_, 5, height_, width_);
     fake_bottom_vec.clear();
-    fake_bottom_vec.push_back(fake_blob);
     fake_bottom_vec.push_back(fake_input);
+    fake_top_vec.clear();
+    fake_top_vec.push_back(fake_blob);
+    pooling_layer.SetUp(fake_bottom_vec, fake_top_vec);
+    pooling_layer.Forward(fake_bottom_vec, fake_top_vec);
 
     PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
     prior_box_param->set_min_size(5);
     prior_box_param->set_max_size(10);
-    prior_box_param->add_aspect_ratio(2.);
     prior_box_param->add_aspect_ratio(3.);
     prior_box_param->set_flip(true);
 
     PriorBoxLayer<Dtype> prior_layer(layer_param);
+    fake_bottom_vec.clear();
+    fake_bottom_vec.push_back(fake_blob);
+    fake_bottom_vec.push_back(fake_input);
     fake_top_vec.clear();
     fake_top_vec.push_back(blob_bottom_prior_);
     prior_layer.SetUp(fake_bottom_vec, fake_top_vec);
@@ -169,63 +177,82 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     // 3) Fill bbox location predictions.
     ConvolutionParameter* convolution_param =
         layer_param.mutable_convolution_param();
+    convolution_param->add_pad(0);
     convolution_param->add_kernel_size(1);
     convolution_param->add_stride(1);
-    convolution_param->set_num_output(
-        num_priors_per_location_ * loc_classes * 4);
-    convolution_param->mutable_weight_filler()->set_type("gaussian");
+    int num_output = num_priors_per_location_ * loc_classes * 4;
+    convolution_param->set_num_output(num_output);
+    convolution_param->mutable_weight_filler()->set_type("xavier");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
     ConvolutionLayer<Dtype> conv_layer_loc(layer_param);
     fake_bottom_vec.clear();
     fake_bottom_vec.push_back(fake_blob);
-    fake_input->Reshape(num_, height_, width_,
-                        num_priors_per_location_ * loc_classes * 4);
+    Blob<Dtype> fake_output_loc;
     fake_top_vec.clear();
-    fake_top_vec.push_back(fake_input);
+    fake_top_vec.push_back(&fake_output_loc);
     conv_layer_loc.SetUp(fake_bottom_vec, fake_top_vec);
     conv_layer_loc.Forward(fake_bottom_vec, fake_top_vec);
 
-    BlobShape* blob_shape_loc =
-        layer_param.mutable_reshape_param()->mutable_shape();
-    blob_shape_loc->add_dim(num_);
-    blob_shape_loc->add_dim(1);
-    blob_shape_loc->add_dim(num_priors_ * loc_classes * 4);
-    blob_shape_loc->add_dim(1);
-    ReshapeLayer<Dtype> reshape_layer_loc(layer_param);
+    // Use Permute and Flatten layer to prepare for MultiBoxLoss layer.
+    PermuteParameter* permute_param = layer_param.mutable_permute_param();
+    permute_param->add_order(0);
+    permute_param->add_order(2);
+    permute_param->add_order(3);
+    permute_param->add_order(1);
+    PermuteLayer<Dtype> permute_layer(layer_param);
     fake_bottom_vec.clear();
-    fake_bottom_vec.push_back(fake_input);
+    fake_bottom_vec.push_back(&fake_output_loc);
+    fake_top_vec.clear();
+    Blob<Dtype> fake_permute_loc;
+    fake_top_vec.push_back(&fake_permute_loc);
+    permute_layer.SetUp(fake_bottom_vec, fake_top_vec);
+    permute_layer.Forward(fake_bottom_vec, fake_top_vec);
+
+    FlattenParameter* flatten_param = layer_param.mutable_flatten_param();
+    flatten_param->set_axis(1);
+    FlattenLayer<Dtype> flatten_layer(layer_param);
+    vector<int> loc_shape(4, 1);
+    loc_shape[0] = num_;
+    loc_shape[1] = num_output * height_ * width_;
+    blob_bottom_loc_->Reshape(loc_shape);
+    fake_bottom_vec.clear();
+    fake_bottom_vec.push_back(&fake_permute_loc);
     fake_top_vec.clear();
     fake_top_vec.push_back(blob_bottom_loc_);
-    reshape_layer_loc.SetUp(fake_bottom_vec, fake_top_vec);
-    reshape_layer_loc.Forward(fake_bottom_vec, fake_top_vec);
+    flatten_layer.SetUp(fake_bottom_vec, fake_top_vec);
+    flatten_layer.Forward(fake_bottom_vec, fake_top_vec);
 
     // 4) Fill bbox confidence predictions.
     convolution_param->set_num_output(num_priors_per_location_ * num_classes_);
     ConvolutionLayer<Dtype> conv_layer_conf(layer_param);
     fake_bottom_vec.clear();
     fake_bottom_vec.push_back(fake_blob);
-    fake_input->Reshape(num_, height_, width_,
-                        num_priors_per_location_ * num_classes_);
+    num_output = num_priors_per_location_ * num_classes_;
+    Blob<Dtype> fake_output_conf;
     fake_top_vec.clear();
-    fake_top_vec.push_back(fake_input);
+    fake_top_vec.push_back(&fake_output_conf);
     conv_layer_conf.SetUp(fake_bottom_vec, fake_top_vec);
     conv_layer_conf.Forward(fake_bottom_vec, fake_top_vec);
 
-    layer_param.mutable_reshape_param()->clear_shape();
-    BlobShape* blob_shape_conf =
-        layer_param.mutable_reshape_param()->mutable_shape();
-    blob_shape_conf->add_dim(num_);
-    blob_shape_conf->add_dim(1);
-    blob_shape_conf->add_dim(num_priors_ * num_classes_);
-    blob_shape_conf->add_dim(1);
-    ReshapeLayer<Dtype> reshape_layer_conf(layer_param);
     fake_bottom_vec.clear();
-    fake_bottom_vec.push_back(fake_input);
+    fake_bottom_vec.push_back(&fake_output_conf);
+    fake_top_vec.clear();
+    Blob<Dtype> fake_permute_conf;
+    fake_top_vec.push_back(&fake_permute_conf);
+    permute_layer.SetUp(fake_bottom_vec, fake_top_vec);
+    permute_layer.Forward(fake_bottom_vec, fake_top_vec);
+
+    vector<int> conf_shape(4, 1);
+    conf_shape[0] = num_;
+    conf_shape[1] = num_output * height_ * width_;
+    blob_bottom_conf_->Reshape(conf_shape);
+    fake_bottom_vec.clear();
+    fake_bottom_vec.push_back(&fake_permute_conf);
     fake_top_vec.clear();
     fake_top_vec.push_back(blob_bottom_conf_);
-    reshape_layer_conf.SetUp(fake_bottom_vec, fake_top_vec);
-    reshape_layer_conf.Forward(fake_bottom_vec, fake_top_vec);
+    flatten_layer.SetUp(fake_bottom_vec, fake_top_vec);
+    flatten_layer.Forward(fake_bottom_vec, fake_top_vec);
 
     delete fake_blob;
     delete fake_input;
@@ -277,7 +304,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
   layer_param.add_propagate_down(true);
   MultiBoxLossParameter* multibox_loss_param =
       layer_param.mutable_multibox_loss_param();
-  multibox_loss_param->set_num_classes(3);
+  multibox_loss_param->set_num_classes(this->num_classes_);
   for (int i = 0; i < 2; ++i) {
     bool share_location = kBoolChoices[i];
     this->Fill(share_location);
@@ -305,7 +332,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
   layer_param.add_propagate_down(true);
   MultiBoxLossParameter* multibox_loss_param =
       layer_param.mutable_multibox_loss_param();
-  multibox_loss_param->set_num_classes(3);
+  multibox_loss_param->set_num_classes(this->num_classes_);
   for (int i = 0; i < 2; ++i) {
     bool share_location = kBoolChoices[i];
     this->Fill(share_location);
@@ -313,13 +340,17 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
       MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
       for (int k = 0; k < 2; ++k) {
         bool use_prior = kBoolChoices[k];
-        multibox_loss_param->set_share_location(share_location);
-        multibox_loss_param->set_match_type(match_type);
-        multibox_loss_param->set_use_prior_for_matching(use_prior);
-        MultiBoxLossLayer<Dtype> layer(layer_param);
-        GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-        checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                        this->blob_top_vec_, 2);
+        for (int l = 0; l < 1; ++l) {
+          // TODO(weiliu89): Fix the bug when background_label_id is -1.
+          multibox_loss_param->set_share_location(share_location);
+          multibox_loss_param->set_match_type(match_type);
+          multibox_loss_param->set_use_prior_for_matching(use_prior);
+          multibox_loss_param->set_background_label_id(l);
+          MultiBoxLossLayer<Dtype> layer(layer_param);
+          GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+          checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                          this->blob_top_vec_, 2);
+        }
       }
     }
   }

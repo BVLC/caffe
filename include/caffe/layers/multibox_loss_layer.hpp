@@ -92,12 +92,12 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   MatchType match_type_;
   float overlap_threshold_;
   bool use_prior_for_matching_;
+  int background_label_id_;
 
   int loc_classes_;
   int num_gt_;
   int num_;
   int num_priors_;
-  int num_matches_;
 
   vector<map<int, vector<int> > > all_match_indices_;
   vector<map<int, vector<float> > > all_match_overlaps_;

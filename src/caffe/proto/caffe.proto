@@ -1013,6 +1013,9 @@ message MultiBoxLossParameter {
   optional float overlap_threshold = 7 [default = 0.5];
   // Use prior for matching.
   optional bool use_prior_for_matching = 8 [default = true];
+  // Background label id. To ignore background class for confidence loss,
+  // set it as -1.
+  optional int32 background_label_id = 9 [default = 0];
 }
 
 message MVNParameter {

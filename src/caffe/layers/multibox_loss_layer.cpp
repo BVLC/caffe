@@ -19,6 +19,8 @@ void MultiBoxLossLayer<Dtype>::GetGroundTruth(const Dtype* gt_data,
     }
     NormalizedBBox bbox;
     bbox.set_label(gt_data[start_idx + 1]);
+    CHECK_NE(background_label_id_, bbox.label())
+        << "Found background label in the dataset.";
     bbox.set_xmin(gt_data[start_idx + 3]);
     bbox.set_ymin(gt_data[start_idx + 4]);
     bbox.set_xmax(gt_data[start_idx + 5]);
@@ -97,6 +99,7 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   match_type_ = multibox_loss_param.match_type();
   overlap_threshold_ = multibox_loss_param.overlap_threshold();
   use_prior_for_matching_ = multibox_loss_param.use_prior_for_matching();
+  background_label_id_ = multibox_loss_param.background_label_id();
 
   vector<int> loss_shape(1, 1);
   // Set up localization loss layer.
@@ -122,8 +125,6 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Set up confidence loss layer.
   conf_loss_type_ = multibox_loss_param.conf_loss_type();
-  vector<int> conf_shape(2);
-  conf_shape[0] = num_;
   conf_bottom_vec_.push_back(&conf_pred_);
   conf_bottom_vec_.push_back(&conf_gt_);
   conf_loss_.Reshape(loss_shape);
@@ -132,15 +133,19 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LayerParameter layer_param;
     layer_param.set_name(this->layer_param_.name() + "_softmax_conf");
     layer_param.set_type("SoftmaxWithLoss");
-    layer_param.add_loss_weight(Dtype(1));
+    layer_param.add_loss_weight(Dtype(1.));
     SoftmaxParameter* softmax_param = layer_param.mutable_softmax_param();
-    softmax_param->set_axis(2);
-    conf_loss_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
-    conf_shape[1] = num_priors_;
+    softmax_param->set_axis(1);
+    vector<int> conf_shape(1);
+    // If we do not need to consider background, assume there is one match to
+    // setup SoftmaxWithLossLayer correctly.
+    conf_shape[0] = background_label_id_ > -1 ? num_ * num_priors_ : 1;
     conf_gt_.Reshape(conf_shape);
     conf_shape.push_back(num_classes_);
     conf_pred_.Reshape(conf_shape);
-    conf_loss_layer_->LayerSetUp(conf_bottom_vec_, conf_top_vec_);
+    conf_loss_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
+    // Use SetUp() instead of LayerSetUp().
+    conf_loss_layer_->SetUp(conf_bottom_vec_, conf_top_vec_);
   } else {
     LOG(FATAL) << "Unknown confidence loss type.";
   }
@@ -153,9 +158,9 @@ void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   num_priors_ = bottom[0]->height() / 4;
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   CHECK_EQ(bottom[0]->num(), bottom[2]->num());
-  CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[1]->height())
+  CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[1]->channels())
       << "Number of priors must match number of location predictions.";
-  CHECK_EQ(num_priors_ * num_classes_, bottom[2]->height())
+  CHECK_EQ(num_priors_ * num_classes_, bottom[2]->channels())
       << "Number of priors must match number of confidence predictions.";
   num_gt_ = bottom[3]->height();
   vector<int> loss_shape(0);
@@ -183,6 +188,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   vector<LabelBBox> all_loc_preds;
   GetLocPredictions(loc_data, &all_loc_preds);
 
+  int num_matches = 0;
   for (int i = 0; i < num_; ++i) {
     map<int, vector<int> > match_indices;
     map<int, vector<float> > match_overlaps;
@@ -211,8 +217,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                   &match_overlaps[label]);
       }
       for (int m = 0; m < match_indices[label].size(); ++m) {
-        if (match_indices[label][m] > -1) {
-          num_matches_++;
+        if (match_indices[label][m] != -1) {
+          num_matches++;
         }
       }
     }
@@ -220,11 +226,11 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     all_match_overlaps_.push_back(match_overlaps);
   }
 
-  if (num_matches_ >= 1) {
+  if (num_matches >= 1) {
     // Form data to pass on to loc_loss_layer_.
     vector<int> loc_shape(2);
-    loc_shape[0] = 1;
-    loc_shape[1] = num_matches_ * 4;
+    loc_shape[0] = num_matches;
+    loc_shape[1] = 4;
     loc_pred_.Reshape(loc_shape);
     loc_gt_.Reshape(loc_shape);
     Dtype* loc_pred_data = loc_pred_.mutable_cpu_data();
@@ -253,6 +259,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           loc_pred_data[count * 4 + 3] = loc_pred[j].ymax();
           // Store encoded ground truth.
           const int gt_idx = match_index[j];
+          CHECK_GT(all_gt_bboxes[i].size(), gt_idx);
           const NormalizedBBox& gt_bbox = all_gt_bboxes[i][gt_idx];
           NormalizedBBox gt_encode;
           EncodeBBox(prior_bboxes[j], prior_variances[j], gt_bbox, &gt_encode);
@@ -269,52 +276,66 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Form data to pass on to conf_loss_layer_.
-  vector<int> conf_shape(2);
-  conf_shape[0] = num_;
-  conf_shape[1] = num_priors_;
+  vector<int> conf_shape(1);
+  conf_shape[0] = background_label_id_ > -1 ? num_ * num_priors_ : num_matches;
   conf_gt_.Reshape(conf_shape);
   conf_shape.push_back(num_classes_);
   conf_pred_.Reshape(conf_shape);
-  CHECK_EQ(conf_pred_.count(), bottom[2]->count());
-  // Directory copy the confidence prediction (but with different shape).
-  caffe_copy(bottom[2]->count(), bottom[2]->cpu_data(),
-             conf_pred_.mutable_cpu_data());
+  Dtype* conf_pred_data = conf_pred_.mutable_cpu_data();
   Dtype* conf_gt_data = conf_gt_.mutable_cpu_data();
+  const Dtype* conf_data = bottom[2]->cpu_data();
   if (conf_loss_type_ == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
-    caffe_set(conf_gt_.count(), Dtype(0), conf_gt_data);
+    if (background_label_id_ > -1) {
+      // Need to consider background.
+      // Directory copy the confidence prediction (but with different shape).
+      CHECK_EQ(conf_pred_.count(), bottom[2]->count());
+      caffe_copy(bottom[2]->count(), conf_data, conf_pred_.mutable_cpu_data());
+      caffe_set(conf_gt_.count(), Dtype(background_label_id_), conf_gt_data);
+    }
   } else {
     LOG(FATAL) << "Unknown confidence loss type.";
   }
+  int count = 0;
   for (int i = 0; i < num_; ++i) {
-    if (all_gt_bboxes.find(i) == all_gt_bboxes.end()) {
-      conf_gt_data += conf_gt_.offset(1);
-      continue;
-    }
-    const map<int, vector<int> >& match_indices = all_match_indices_[i];
-    for (map<int, vector<int> >::const_iterator it = match_indices.begin();
-         it != match_indices.end(); ++it) {
-      const vector<int>& match_index = it->second;
-      CHECK_EQ(match_index.size(), prior_bboxes.size());
-      for (int j = 0; j < match_index.size(); ++j) {
-        if (match_index[j] == -1) {
-          continue;
+    if (all_gt_bboxes.find(i) != all_gt_bboxes.end()) {
+      const map<int, vector<int> >& match_indices = all_match_indices_[i];
+      for (int j = 0; j < num_priors_; ++j) {
+        for (map<int, vector<int> >::const_iterator it = match_indices.begin();
+             it != match_indices.end(); ++it) {
+          const vector<int>& match_index = it->second;
+          CHECK_EQ(match_index.size(), num_priors_);
+          if (match_index[j] == -1) {
+            continue;
+          }
+          const int gt_idx = match_index[j];
+          int idx = background_label_id_ > -1 ? j : count;
+          if (background_label_id_ == -1) {
+            // Only copy scores for matched bboxes.
+            for (int c = 0; c < num_classes_; ++c) {
+              conf_pred_data[idx*num_classes_ + c] = conf_data[j*num_classes_ + c];
+            }
+          }
+          conf_gt_data[idx] = all_gt_bboxes[i][gt_idx].label();
+          ++count;
         }
-        const int gt_idx = match_index[j];
-        conf_gt_data[j] = all_gt_bboxes[i][gt_idx].label();
       }
     }
-    conf_gt_data += conf_gt_.offset(1);
+    if (background_label_id_ > -1) {
+      conf_gt_data += num_priors_;
+      conf_data += bottom[2]->offset(1);
+    }
   }
   conf_loss_layer_->Reshape(conf_bottom_vec_, conf_top_vec_);
   conf_loss_layer_->Forward(conf_bottom_vec_, conf_top_vec_);
 
   top[0]->mutable_cpu_data()[0] = 0;
   if (this->layer_param_.propagate_down(1)) {
-    // TODO (weiliu89): Understand why it needs to divide 2.
+    // TODO(weiliu89): Understand why it needs to divide 2.
     top[0]->mutable_cpu_data()[0] += loc_weight_ * loc_loss_.cpu_data()[0] / 2;
   }
   if (this->layer_param_.propagate_down(2)) {
-    top[0]->mutable_cpu_data()[0] += conf_loss_.cpu_data()[0];
+    // TODO(weiliu89): Understand why it needs to divide 2.
+    top[0]->mutable_cpu_data()[0] += conf_loss_.cpu_data()[0] / 2;
   }
 }
 
@@ -322,6 +343,7 @@ template <typename Dtype>
 void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+
   if (propagate_down[0]) {
     LOG(FATAL) << this->type()
         << " Layer cannot backpropagate to prior inputs.";
@@ -373,8 +395,35 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     conf_propagate_down.push_back(false);
     conf_loss_layer_->Backward(conf_top_vec_, conf_propagate_down,
                                conf_bottom_vec_);
-    caffe_copy(conf_pred_.count(), conf_pred_.cpu_diff(),
-               bottom[2]->mutable_cpu_diff());
+    Dtype* conf_bottom_diff = bottom[2]->mutable_cpu_diff();
+    caffe_set(bottom[2]->count(), Dtype(0), conf_bottom_diff);
+    const Dtype* conf_pred_diff = conf_pred_.cpu_diff();
+    if (background_label_id_ == -1) {
+      int count = 0;
+      for (int i = 0; i < num_; ++i) {
+        const map<int, vector<int> >& match_indices = all_match_indices_[i];
+        for (int j = 0; j < num_priors_; ++j) {
+          for (map<int, vector<int> >::const_iterator it = match_indices.begin();
+               it != match_indices.end(); ++it) {
+            const vector<int>& match_index = it->second;
+            CHECK_EQ(match_index.size(), num_priors_);
+            if (match_index[j] == -1) {
+              continue;
+            }
+            // Copy the diff to the right place.
+            for (int c = 0; c < num_classes_; ++c) {
+              conf_bottom_diff[j*num_classes_ + c] =
+                  conf_pred_diff[count*num_classes_ + c];
+            }
+            ++count;
+          }
+        }
+        conf_bottom_diff += bottom[2]->offset(1);
+      }
+    } else {
+      // Copy the whole diff back.
+      caffe_copy(conf_pred_.count(), conf_pred_diff, conf_bottom_diff);
+    }
   }
 }
 
@@ -384,5 +433,6 @@ STUB_GPU(MultiBoxLossLayer);
 #endif
 
 INSTANTIATE_CLASS(MultiBoxLossLayer);
+REGISTER_LAYER_CLASS(MultiBoxLoss);
 
 }  // namespace caffe
