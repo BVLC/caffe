@@ -220,6 +220,7 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
   if (status == false) {
     return status;
   }
+  anno_datum->clear_annotation_group();
   switch (type) {
     case AnnotatedDatum_AnnotationType_BBOX:
       int ori_height, ori_width;
