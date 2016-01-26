@@ -1,38 +1,42 @@
-#ifndef CAFFE_POOLING_LAYER_HPP_
-#define CAFFE_POOLING_LAYER_HPP_
+#ifndef CAFFE_UNPOOLING_LAYER_HPP_
+#define CAFFE_UNPOOLING_LAYER_HPP_
 
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/blob.hpp"
+#include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+
+#include "caffe/layers/pooling_layer.hpp"
 
 namespace caffe {
 
 /**
- * @brief Pools the input image by taking the max, average, etc. within regions.
+ * @brief Unpools the input image by undoing the max, average, etc. within regions.
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
 template <typename Dtype>
-class PoolingLayer : public Layer<Dtype> {
+class UnpoolingLayer : public Layer<Dtype> {
  public:
-  explicit PoolingLayer(const LayerParameter& param)
+  explicit UnpoolingLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "Pooling"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  // MAX PoolingLayers can output extra top blob for the mask and argmax count;
-  // others can only output the pooled inputs.
-  virtual inline int MaxTopBlobs() const {
+  virtual inline const char* type() const { return "Unpooling"; }
+  virtual inline int MinBottomBlobs() const {
     return (this->layer_param_.pooling_param().pool() ==
-            PoolingParameter_PoolMethod_MAX) ? 3 : 1;
+            PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
+  virtual inline int MaxBottomBlobs() const {
+    return (this->layer_param_.pooling_param().pool() ==
+            PoolingParameter_PoolMethod_MAX) ? 3 : 2;
+  }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -44,17 +48,17 @@ class PoolingLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int kernel_h_, kernel_w_;
-  int stride_h_, stride_w_;
-  int pad_h_, pad_w_;
+  int kernel_size_;
+  int stride_;
+  int pad_;
   int channels_;
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
-  Blob<Dtype> rand_idx_;
+  Blob<Dtype> pool_count_;
   Blob<int> max_idx_;
 };
 
 }  // namespace caffe
 
-#endif  // CAFFE_POOLING_LAYER_HPP_
+#endif  // CAFFE_UNPOOLING_LAYER_HPP_

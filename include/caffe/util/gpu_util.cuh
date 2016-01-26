@@ -1,7 +1,18 @@
 #ifndef CAFFE_UTIL_GPU_UTIL_H_
 #define CAFFE_UTIL_GPU_UTIL_H_
 
+#include "math_constants.h"  // for CUDART_INF*
+
 namespace caffe {
+
+template <typename Dtype>
+inline __device__ Dtype caffe_gpu_infty();
+
+template <>
+inline __device__ float caffe_gpu_infty() { return CUDART_INF_F; }
+
+template <>
+inline __device__ double caffe_gpu_infty() { return CUDART_INF; }
 
 template <typename Dtype>
 inline __device__ Dtype caffe_gpu_atomic_add(const Dtype val, Dtype* address);

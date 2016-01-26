@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cfloat>
+#include <limits>
 #include <vector>
 
 #include "caffe/layers/pooling_layer.hpp"
@@ -108,6 +109,9 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (top.size() > 1) {
     top[1]->ReshapeLike(*top[0]);
   }
+  if (top.size() > 2) {
+    top[2]->ReshapeLike(*bottom[0]);
+  }
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX && top.size() == 1) {
@@ -134,6 +138,10 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const bool use_top_mask = top.size() > 1;
   int* mask = NULL;  // suppress warnings about uninitalized variables
   Dtype* top_mask = NULL;
+  // We'll count the number of times each bottom index is an argmax in top[2],
+  // if available.
+  const bool do_argmax_count = top.size() > 2;
+  Dtype* argmax_count = NULL;
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more code.
   switch (this->layer_param_.pooling_param().pool()) {
@@ -146,7 +154,17 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       mask = max_idx_.mutable_cpu_data();
       caffe_set(top_count, -1, mask);
     }
-    caffe_set(top_count, Dtype(-FLT_MAX), top_data);
+    if (do_argmax_count) {
+      CHECK_EQ(kernel_h_, kernel_w_)
+          << "argmax_count doesn't support non-square kernels.";
+      CHECK_EQ(stride_h_, stride_w_)
+          << "argmax_count doesn't support non-square stride.";
+      CHECK_EQ(pad_h_, pad_w_)
+          << "argmax_count doesn't support non-square padding.";
+      argmax_count = top[2]->mutable_cpu_data();
+      caffe_set(top[2]->count(), Dtype(0), argmax_count);
+    }
+    caffe_set(top_count, -std::numeric_limits<Dtype>::infinity(), top_data);
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
@@ -172,6 +190,13 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                 }
               }
             }
+            if (do_argmax_count) {
+              if (use_top_mask) {
+                ++argmax_count[static_cast<int>(top_mask[pool_index])];
+              } else {
+                ++argmax_count[mask[pool_index]];
+              }
+            }
           }
         }
         // compute offset
@@ -181,6 +206,9 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           top_mask += top[0]->offset(0, 1);
         } else {
           mask += top[0]->offset(0, 1);
+        }
+        if (do_argmax_count) {
+          argmax_count += top[2]->offset(0, 1);
         }
       }
     }

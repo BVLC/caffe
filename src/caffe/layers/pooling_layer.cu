@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "caffe/layers/pooling_layer.hpp"
+#include "caffe/util/gpu_util.cuh"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -13,7 +14,7 @@ __global__ void MaxPoolForward(const int nthreads,
     const int height, const int width, const int pooled_height,
     const int pooled_width, const int kernel_h, const int kernel_w,
     const int stride_h, const int stride_w, const int pad_h, const int pad_w,
-    Dtype* const top_data, int* mask, Dtype* top_mask) {
+    Dtype* const top_data, int* mask, Dtype* top_mask, Dtype* argmax_count) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
@@ -25,10 +26,10 @@ __global__ void MaxPoolForward(const int nthreads,
     const int wend = min(wstart + kernel_w, width);
     hstart = max(hstart, 0);
     wstart = max(wstart, 0);
-    Dtype maxval = -FLT_MAX;
+    Dtype maxval = -caffe_gpu_infty<Dtype>();
     int maxidx = -1;
-    const Dtype* const bottom_slice =
-        bottom_data + (n * channels + c) * height * width;
+    const int offset = (n * channels + c) * height * width;
+    const Dtype* const bottom_slice = bottom_data + offset;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
         if (bottom_slice[h * width + w] > maxval) {
@@ -42,6 +43,10 @@ __global__ void MaxPoolForward(const int nthreads,
       mask[index] = maxidx;
     } else {
       top_mask[index] = maxidx;
+    }
+    if (argmax_count) {
+      caffe_gpu_atomic_add(static_cast<Dtype>(1),
+                           argmax_count + offset + maxidx);
     }
   }
 }
@@ -164,6 +169,8 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const bool use_top_mask = top.size() > 1;
   int* mask = NULL;
   Dtype* top_mask = NULL;
+  const bool do_argmax_count = top.size() > 2;
+  Dtype* argmax_count = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     if (use_top_mask) {
@@ -171,12 +178,16 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     } else {
       mask = max_idx_.mutable_gpu_data();
     }
+    if (do_argmax_count) {
+      argmax_count = top[2]->mutable_gpu_data();
+      caffe_gpu_set(top[2]->count(), Dtype(0), argmax_count);
+    }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_, kernel_h_,
         kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
-        mask, top_mask);
+        mask, top_mask, argmax_count);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
@@ -228,10 +239,10 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* const top_diff,
     const int c = (index / width / height) % channels;
     const int n = index / width / height / channels;
     const int phstart =
-         (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;
+        (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;
     const int phend = min((h + pad_h) / stride_h + 1, pooled_height);
     const int pwstart =
-         (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;
+        (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;
     const int pwend = min((w + pad_w) / stride_w + 1, pooled_width);
     Dtype gradient = 0;
     const int offset = (n * channels + c) * pooled_height * pooled_width;
