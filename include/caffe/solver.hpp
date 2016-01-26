@@ -130,7 +130,9 @@ class Solver {
   void Test(const int_tp test_net_id = 0);
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
+
   void DisplayOutputBlobs(const int_tp net_id);
+  void UpdateSmoothedLoss(Dtype loss, int_tp start_iter, int_tp average_loss);
 
   SolverParameter param_;
   int_tp iter_;
@@ -139,6 +141,8 @@ class Solver {
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   device* device_;
   vector<Callback*> callbacks_;
+  vector<Dtype> losses_;
+  Dtype smoothed_loss_;
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
