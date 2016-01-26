@@ -34,9 +34,7 @@ __global__ void im2col_nd_gpu_kernel(const int_tp n, const Dtype* data_im,
                                      const int_tp* pad, const int_tp* stride,
                                      const int_tp* dilation, Dtype* data_col);
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
-template<typename Dtype>
+template <typename Dtype>
 class Im2colKernelTest : public GPUDeviceTest<Dtype> {
  protected:
   Im2colKernelTest()
