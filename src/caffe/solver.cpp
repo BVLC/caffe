@@ -219,8 +219,8 @@ Dtype Solver<Dtype>::Step(int_tp iters) {
   const int_tp start_iter = iter_;
   const int_tp stop_iter = iter_ + iters;
   int_tp average_loss = this->param_.average_loss();
-  vector<Dtype> losses;
-  Dtype smoothed_loss = 0;
+  losses_.clear();
+  smoothed_loss_ = 0;
 
   while (iter_ < stop_iter) {
     // zero-init the params
@@ -247,18 +247,10 @@ Dtype Solver<Dtype>::Step(int_tp iters) {
     }
     loss /= param_.iter_size();
     // average the loss across iterations for smoothed reporting
-    if (losses.size() < average_loss) {
-      losses.push_back(loss);
-      int_tp size = losses.size();
-      smoothed_loss = (smoothed_loss * (size - 1) + loss) / size;
-    } else {
-      int_tp idx = (iter_ - start_iter) % average_loss;
-      smoothed_loss += (loss - losses[idx]) / average_loss;
-      losses[idx] = loss;
-    }
+    UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
-          << ", loss = " << smoothed_loss;
+          << ", loss = " << smoothed_loss_;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int_tp score_index = 0;
       for (int_tp j = 0; j < result.size(); ++j) {
@@ -303,7 +295,7 @@ Dtype Solver<Dtype>::Step(int_tp iters) {
       break;
     }
   }
-  return smoothed_loss;
+  return smoothed_loss_;
 }
 
 template<typename Dtype>
@@ -322,6 +314,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
+  int start_iter = iter_;
   Step(param_.max_iter() - iter_);
   // If we haven't already, save a snapshot after optimization, unless
   // overridden by setting snapshot_after_train := false
@@ -340,9 +333,13 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // updated the parameters "max_iter" times -- this final pass is only done to
   // display the loss, which is computed in the forward pass.
   if (param_.display() && iter_ % param_.display() == 0) {
+    int average_loss = this->param_.average_loss();
     Dtype loss;
     net_->ForwardPrefilled(&loss);
-    LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
+
+    UpdateSmoothedLoss(loss, start_iter, average_loss);
+
+    LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
   }
   if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
     TestAll();
@@ -505,6 +502,20 @@ void Solver<Dtype>::Restore(const char* state_file) {
     RestoreSolverStateFromHDF5(state_filename);
   } else {
     RestoreSolverStateFromBinaryProto(state_filename);
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int_tp start_iter,
+    int_tp average_loss) {
+  if (losses_.size() < average_loss) {
+    losses_.push_back(loss);
+    int_tp size = losses_.size();
+    smoothed_loss_ = (smoothed_loss_ * (size - 1) + loss) / size;
+  } else {
+    int_tp idx = (iter_ - start_iter) % average_loss;
+    smoothed_loss_ += (loss - losses_[idx]) / average_loss;
+    losses_[idx] = loss;
   }
 }
 
