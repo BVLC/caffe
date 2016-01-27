@@ -206,6 +206,9 @@ class Net {
   inline const vector<int_tp>& param_owners() const {
     return param_owners_;
   }
+  inline const vector<string>& param_display_names() const {
+    return param_display_names_;
+  }
   /// @brief Input and output blob numbers
   inline int_tp num_inputs() const {
     return net_input_blobs_.size();
