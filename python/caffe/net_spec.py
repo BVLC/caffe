@@ -230,6 +230,9 @@ class NetSpec(object):
     def __getitem__(self, name):
         return self.tops[name]
 
+    def __delitem__(self, name):
+        del self.tops[name]
+
     def keys(self):
         keys = [k for k, v in six.iteritems(self.tops)]
         return keys
