@@ -87,15 +87,20 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 
 ## Compilation
 
-Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community.
+
+### Compilation with Make
+
+Configure the build by copying and modifying the example `Makefile.config` for your setup. The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 
     cp Makefile.config.example Makefile.config
-    # Adjust Makefile.config (for example, if using Anaconda Python)
+    # Adjust Makefile.config (for example, if using Anaconda Python, or if cuDNN is desired)
     make all
     make test
     make runtest
 
-- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+- For CPU & GPU accelerated Caffe, no changes are needed.
+- For cuDNN acceleration using NVIDIA's proprietary cuDNN software, uncomment the `USE_CUDNN := 1` switch in `Makefile.config`. cuDNN is sometimes but not always faster than Caffe's GPU acceleration.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 
 To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
@@ -107,7 +112,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### CMake Compilation
+### Compilation with CMake
 
 In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
 The basic steps are as follows:
@@ -116,6 +121,7 @@ The basic steps are as follows:
     cd build
     cmake ..
     make all
+    make install
     make runtest
 
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
