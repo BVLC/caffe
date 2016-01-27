@@ -49,6 +49,8 @@ DEFINE_bool(check_label, false,
     "When this option is on, check that there is no duplicated name/label.");
 DEFINE_int32(min_dim, 0,
     "Minimum dimension images are resized to (keep same aspect ratio)");
+DEFINE_int32(max_dim, 0,
+    "Maximum dimension images are resized to (keep same aspect ratio)");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 DEFINE_bool(check_size, false,
@@ -120,6 +122,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "encode_type specified, assuming encoded=true.";
 
   int min_dim = std::max<int>(0, FLAGS_min_dim);
+  int max_dim = std::max<int>(0, FLAGS_max_dim);
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
@@ -152,11 +155,11 @@ int main(int argc, char** argv) {
     if (anno_type == "classification") {
       label = boost::get<int>(lines[line_id].second);
       status = ReadImageToDatum(filename, label, resize_height, resize_width,
-          min_dim, is_color, enc, datum);
+          min_dim, max_dim, is_color, enc, datum);
     } else if (anno_type == "detection") {
       labelname = root_folder + boost::get<std::string>(lines[line_id].second);
       status = ReadRichImageToAnnotatedDatum(filename, labelname, resize_height,
-          resize_width, min_dim, is_color, enc, type, name_to_label,
+          resize_width, min_dim, max_dim, is_color, enc, type, name_to_label,
           &anno_datum);
       anno_datum.set_type(AnnotatedDatum_AnnotationType_BBOX);
     }
