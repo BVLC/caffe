@@ -165,7 +165,8 @@ static bool matchExt(const std::string & fn,
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
     const bool is_color, const std::string & encoding, Datum* datum) {
-  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, min_dim, max_dim);
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, min_dim, max_dim,
+                                    is_color);
   if (cv_img.data) {
     if (encoding.size()) {
       if ( (cv_img.channels() == 3) == is_color && !height && !width &&
@@ -225,8 +226,9 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
     const string& encoding, const AnnotatedDatum_AnnotationType type,
     const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum) {
   // Read image to datum.
-  bool status = ReadImageToDatum(filename, -1, height, width, min_dim, max_dim,
-                              is_color, encoding, anno_datum->mutable_datum());
+  bool status = ReadImageToDatum(filename, -1, height, width,
+                                 min_dim, max_dim, is_color, encoding,
+                                 anno_datum->mutable_datum());
   if (status == false) {
     return status;
   }
