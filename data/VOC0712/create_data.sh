@@ -10,6 +10,7 @@ mapfile="$root_dir/data/$dataset_name/labelmap_voc.prototxt"
 anno_type="detection"
 db="lmdb"
 min_dim=600
+max_dim=1000
 width=0
 height=0
 
@@ -25,5 +26,5 @@ do
   then
     extra_cmd="$extra_cmd --shuffle"
   fi
-  python $root_dir/scripts/create_annoset.py --anno-type=$anno_type --label-map-file=$mapfile --min-dim=$min_dim --resize-width=$width --resize-height=$height --check-label $extra_cmd $data_root_dir $root_dir/data/$dataset_name/$subset.txt $data_root_dir/$dataset_name/$db/$dataset_name"_"$subset"_"$db examples/$dataset_name
+  python $root_dir/scripts/create_annoset.py --anno-type=$anno_type --label-map-file=$mapfile --min-dim=$min_dim --max-dim=$max_dim --resize-width=$width --resize-height=$height --check-label $extra_cmd $data_root_dir $root_dir/data/$dataset_name/$subset.txt $data_root_dir/$dataset_name/$db/$dataset_name"_"$subset"_"$db examples/$dataset_name
 done

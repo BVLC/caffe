@@ -35,6 +35,8 @@ if __name__ == "__main__":
       help="A file with LabelMap protobuf message.")
   parser.add_argument("--min-dim", default = 0, type = int,
       help="Minimum dimension images are resized to.")
+  parser.add_argument("--max-dim", default = 0, type = int,
+      help="Maximum dimension images are resized to.")
   parser.add_argument("--resize-height", default = 0, type = int,
       help="Height images are resized to.")
   parser.add_argument("--resize-width", default = 0, type = int,
@@ -59,6 +61,7 @@ if __name__ == "__main__":
   gray = args.gray
   label_map_file = args.label_map_file
   min_dim = args.min_dim
+  max_dim = args.max_dim
   resize_height = args.resize_height
   resize_width = args.resize_width
   shuffle = args.shuffle
@@ -118,6 +121,7 @@ if __name__ == "__main__":
         " --label_map_file={}" \
         " --check_label={}" \
         " --min_dim={}" \
+        " --max_dim={}" \
         " --resize_height={}" \
         " --resize_width={}" \
         " --backend={}" \
@@ -128,7 +132,7 @@ if __name__ == "__main__":
         " --gray={}" \
         " {} {} {}" \
         .format(caffe_root, anno_type, label_map_file, check_label, min_dim,
-            resize_height, resize_width, backend, shuffle, check_size,
+            max_dim, resize_height, resize_width, backend, shuffle, check_size,
             encode_type, encoded, gray, root_dir, list_file, out_dir)
   print cmd
   process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
