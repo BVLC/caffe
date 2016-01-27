@@ -398,8 +398,8 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
-  optional MergeCropParameter mergecrop_param = 141;
-  optional AffinityParameter affinity_param = 142;
+  optional MergeCropParameter mergecrop_param = 143;
+  optional AffinityParameter affinity_param = 144;
 }
 
 // Message that stores parameters used to apply transformation
@@ -428,7 +428,7 @@ message TransformationParameter {
 // Message that stores parameters shared by loss layers
 message LossParameter {
   // If specified, ignore instances with the given label.
-  optional int32 ignore_label = 1;
+  optional int64 ignore_label = 1;
   // How to normalize the loss for loss layers that aggregate across batches,
   // spatial dimensions, or other dimensions.  Currently only implemented in
   // SoftmaxWithLoss layer.
@@ -520,7 +520,7 @@ message BiasParameter {
   //    (axis == 3 == -1)                                60
   // Furthermore, bottom[1] may have the empty shape (regardless of the value of
   // "axis") -- a scalar bias.
-  optional int32 axis = 1 [default = 1];
+  optional int64 axis = 1 [default = 1];
 
   // (num_axes is ignored unless just one bottom is given and the bias is
   // a learned parameter of the layer.  Otherwise, num_axes is determined by the
@@ -528,7 +528,7 @@ message BiasParameter {
   // The number of axes of the input (bottom[0]) covered by the bias
   // parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
   // Set num_axes := 0, to add a zero-axis Blob: a scalar.
-  optional int32 num_axes = 2 [default = 1];
+  optional int64 num_axes = 2 [default = 1];
 
   // (filler is ignored unless just one bottom is given and the bias is
   // a learned parameter of the layer.)
@@ -1021,7 +1021,7 @@ message ScaleParameter {
   //    (axis == 3 == -1)                                60
   // Furthermore, bottom[1] may have the empty shape (regardless of the value of
   // "axis") -- a scalar multiplier.
-  optional int32 axis = 1 [default = 1];
+  optional int64 axis = 1 [default = 1];
 
   // (num_axes is ignored unless just one bottom is given and the scale is
   // a learned parameter of the layer.  Otherwise, num_axes is determined by the
@@ -1029,7 +1029,7 @@ message ScaleParameter {
   // The number of axes of the input (bottom[0]) covered by the scale
   // parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
   // Set num_axes := 0, to multiply with a zero-axis Blob: a scalar.
-  optional int32 num_axes = 2 [default = 1];
+  optional int64 num_axes = 2 [default = 1];
 
   // (filler is ignored unless just one bottom is given and the scale is
   // a learned parameter of the layer.)
