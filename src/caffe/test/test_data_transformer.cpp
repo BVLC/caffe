@@ -79,23 +79,21 @@ class DataTransformTest : public ::testing::Test {
   int NumSequenceMatches(const TransformationParameter transform_param,
       const Datum& datum, Phase phase) {
     // Get crop sequence with Caffe seed 1701.
-    DataTransformer<Dtype>* transformer =
-        new DataTransformer<Dtype>(transform_param, phase);
+    DataTransformer<Dtype> transformer(transform_param, phase);
     const int crop_size = transform_param.crop_size();
     Caffe::set_random_seed(seed_);
-    transformer->InitRand();
-    Blob<Dtype>* blob =
-        new Blob<Dtype>(1, datum.channels(), datum.height(), datum.width());
+    transformer.InitRand();
+    Blob<Dtype> blob(1, datum.channels(), datum.height(), datum.width());
     if (transform_param.crop_size() > 0) {
-      blob->Reshape(1, datum.channels(), crop_size, crop_size);
+      blob.Reshape(1, datum.channels(), crop_size, crop_size);
     }
 
     vector<vector<Dtype> > crop_sequence;
     for (int iter = 0; iter < this->num_iter_; ++iter) {
       vector<Dtype> iter_crop_sequence;
-      transformer->Transform(datum, blob);
-      for (int j = 0; j < blob->count(); ++j) {
-        iter_crop_sequence.push_back(blob->cpu_data()[j]);
+      transformer.Transform(datum, &blob);
+      for (int j = 0; j < blob.count(); ++j) {
+        iter_crop_sequence.push_back(blob.cpu_data()[j]);
       }
       crop_sequence.push_back(iter_crop_sequence);
     }
@@ -103,16 +101,13 @@ class DataTransformTest : public ::testing::Test {
     int num_sequence_matches = 0;
     for (int iter = 0; iter < this->num_iter_; ++iter) {
       vector<Dtype> iter_crop_sequence = crop_sequence[iter];
-      transformer->Transform(datum, blob);
-      for (int j = 0; j < blob->count(); ++j) {
-        num_sequence_matches +=
-            (crop_sequence[iter][j] == blob->cpu_data()[j]);
+      transformer.Transform(datum, &blob);
+      for (int j = 0; j < blob.count(); ++j) {
+        num_sequence_matches += (crop_sequence[iter][j] == blob.cpu_data()[j]);
       }
     }
     return num_sequence_matches;
   }
-
-  virtual ~DataTransformTest() { }
 
   int seed_;
   int num_iter_;
@@ -130,18 +125,16 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
 
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              this->height_, this->width_);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(datum, blob);
-  EXPECT_EQ(blob->num(), 1);
-  EXPECT_EQ(blob->channels(), datum.channels());
-  EXPECT_EQ(blob->height(), datum.height());
-  EXPECT_EQ(blob->width(), datum.width());
-  for (int j = 0; j < blob->count(); ++j) {
-    EXPECT_EQ(blob->cpu_data()[j], label);
+  Blob<TypeParam> blob(1, this->channels_, this->height_, this->width_);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
+  EXPECT_EQ(blob.num(), 1);
+  EXPECT_EQ(blob.channels(), datum.channels());
+  EXPECT_EQ(blob.height(), datum.height());
+  EXPECT_EQ(blob.width(), datum.width());
+  for (int j = 0; j < blob.count(); ++j) {
+    EXPECT_EQ(blob.cpu_data()[j], label);
   }
 }
 
@@ -152,18 +145,16 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
 
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              this->height_, this->width_);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(datum, blob);
-  EXPECT_EQ(blob->num(), 1);
-  EXPECT_EQ(blob->channels(), datum.channels());
-  EXPECT_EQ(blob->height(), datum.height());
-  EXPECT_EQ(blob->width(), datum.width());
-  for (int j = 0; j < blob->count(); ++j) {
-    EXPECT_EQ(blob->cpu_data()[j], j);
+  Blob<TypeParam> blob(1, this->channels_, this->height_, this->width_);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
+  EXPECT_EQ(blob.num(), 1);
+  EXPECT_EQ(blob.channels(), datum.channels());
+  EXPECT_EQ(blob.height(), datum.height());
+  EXPECT_EQ(blob.width(), datum.width());
+  for (int j = 0; j < blob.count(); ++j) {
+    EXPECT_EQ(blob.cpu_data()[j], j);
   }
 }
 
@@ -176,19 +167,17 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
   transform_param.set_crop_size(crop_size);
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  Blob<TypeParam>* blob =
-      new Blob<TypeParam>(1, this->channels_, crop_size, crop_size);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  Blob<TypeParam> blob(1, this->channels_, crop_size, crop_size);
   for (int iter = 0; iter < this->num_iter_; ++iter) {
-    transformer->Transform(datum, blob);
-    EXPECT_EQ(blob->num(), 1);
-    EXPECT_EQ(blob->channels(), datum.channels());
-    EXPECT_EQ(blob->height(), crop_size);
-    EXPECT_EQ(blob->width(), crop_size);
-    for (int j = 0; j < blob->count(); ++j) {
-      EXPECT_EQ(blob->cpu_data()[j], label);
+    transformer.Transform(datum, &blob);
+    EXPECT_EQ(blob.num(), 1);
+    EXPECT_EQ(blob.channels(), datum.channels());
+    EXPECT_EQ(blob.height(), crop_size);
+    EXPECT_EQ(blob.width(), crop_size);
+    for (int j = 0; j < blob.count(); ++j) {
+      EXPECT_EQ(blob.cpu_data()[j], label);
     }
   }
 }
@@ -294,14 +283,12 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
   transform_param.add_mean_value(mean_value);
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              this->height_, this->width_);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(datum, blob);
-  for (int j = 0; j < blob->count(); ++j) {
-    EXPECT_EQ(blob->cpu_data()[j], label - mean_value);
+  Blob<TypeParam> blob(1, this->channels_, this->height_, this->width_);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
+  for (int j = 0; j < blob.count(); ++j) {
+    EXPECT_EQ(blob.cpu_data()[j], label - mean_value);
   }
 }
 
@@ -315,15 +302,13 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
   }
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              this->height_, this->width_);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(datum, blob);
+  Blob<TypeParam> blob(1, this->channels_, this->height_, this->width_);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
   for (int c = 0; c < this->channels_; ++c) {
     for (int j = 0; j < this->height_ * this->width_; ++j) {
-      EXPECT_EQ(blob->cpu_data()[blob->offset(0, c) + j], label - c);
+      EXPECT_EQ(blob.cpu_data()[blob.offset(0, c) + j], label - c);
     }
   }
 }
@@ -335,8 +320,8 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   const int size = this->channels_ * this->height_ * this->width_;
 
   // Create a mean file
-  string* mean_file = new string();
-  MakeTempFilename(mean_file);
+  string mean_file;
+  MakeTempFilename(&mean_file);
   BlobProto blob_mean;
   blob_mean.set_num(1);
   blob_mean.set_channels(this->channels_);
@@ -347,20 +332,18 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
       blob_mean.add_data(j);
   }
 
-  LOG(INFO) << "Using temporary mean_file " << *mean_file;
-  WriteProtoToBinaryFile(blob_mean, *mean_file);
+  LOG(INFO) << "Using temporary mean_file " << mean_file;
+  WriteProtoToBinaryFile(blob_mean, mean_file);
 
-  transform_param.set_mean_file(*mean_file);
+  transform_param.set_mean_file(mean_file);
   Datum datum;
   this->FillDatum(label, unique_pixels, &datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              this->height_, this->width_);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(datum, blob);
-  for (int j = 0; j < blob->count(); ++j) {
-      EXPECT_EQ(blob->cpu_data()[j], 0);
+  Blob<TypeParam> blob(1, this->channels_, this->height_, this->width_);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
+  for (int j = 0; j < blob.count(); ++j) {
+      EXPECT_EQ(blob.cpu_data()[j], 0);
   }
 }
 
@@ -375,14 +358,12 @@ TYPED_TEST(DataTransformTest, TestRichLabel) {
   AnnotatedDatum anno_datum;
   this->FillAnnotatedDatum(label, unique_pixels, use_rich_annotation, type,
                            &anno_datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              this->height_, this->width_);
+  Blob<TypeParam> blob(1, this->channels_, this->height_, this->width_);
   vector<AnnotationGroup> transformed_anno_vec;
 
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(anno_datum, blob, &transformed_anno_vec);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(anno_datum, &blob, &transformed_anno_vec);
 
   EXPECT_EQ(transformed_anno_vec.size(), 1);
   AnnotationGroup& anno_group = transformed_anno_vec[0];
@@ -410,15 +391,13 @@ TYPED_TEST(DataTransformTest, TestRichLabelCrop) {
   AnnotatedDatum anno_datum;
   this->FillAnnotatedDatum(label, unique_pixels, use_rich_annotation, type,
                            &anno_datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              crop_size, crop_size);
+  Blob<TypeParam> blob(1, this->channels_, crop_size, crop_size);
   vector<AnnotationGroup> transformed_anno_vec;
 
   transform_param.set_crop_size(crop_size);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
-  transformer->Transform(anno_datum, blob, &transformed_anno_vec);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(anno_datum, &blob, &transformed_anno_vec);
 
   EXPECT_EQ(transformed_anno_vec.size(), 1);
   AnnotationGroup& anno_group = transformed_anno_vec[0];
@@ -445,18 +424,16 @@ TYPED_TEST(DataTransformTest, TestRichLabelCropMirror) {
   AnnotatedDatum anno_datum;
   this->FillAnnotatedDatum(label, unique_pixels, use_rich_annotation, type,
                            &anno_datum);
-  Blob<TypeParam>* blob = new Blob<TypeParam>(1, this->channels_,
-                                              crop_size, crop_size);
+  Blob<TypeParam> blob(1, this->channels_, crop_size, crop_size);
 
   transform_param.set_crop_size(crop_size);
   transform_param.set_mirror(true);
-  DataTransformer<TypeParam>* transformer =
-      new DataTransformer<TypeParam>(transform_param, TEST);
-  transformer->InitRand();
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
   bool do_mirror;
   for (int iter = 0; iter < 10; ++iter) {
     vector<AnnotationGroup> transformed_anno_vec;
-    transformer->Transform(anno_datum, blob, &transformed_anno_vec, &do_mirror);
+    transformer.Transform(anno_datum, &blob, &transformed_anno_vec, &do_mirror);
 
     EXPECT_EQ(transformed_anno_vec.size(), 1);
     AnnotationGroup& anno_group = transformed_anno_vec[0];
