@@ -117,3 +117,8 @@ MANIFEST-*
 *.opensdf
 *.pdb
 *.props
+
+# temporary directories
+jobs
+temp
+examples/*/*lmdb
