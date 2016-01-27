@@ -235,6 +235,9 @@ inline bool MapLabelToName(const LabelMap& map,
 cv::Mat ReadImageToCVMat(const string& filename, const int height,
     const int width, const int min_dim, const int max_dim, const bool is_color);
 
+cv::Mat ReadImageToCVMat(const string& filename, const int height,
+    const int width, const int min_dim, const int max_dim);
+
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color);
 
