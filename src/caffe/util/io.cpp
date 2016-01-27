@@ -113,7 +113,8 @@ cv::Mat ReadImageToCVMat(const string& filename, const int height,
     if (scale_factor == 1) {
       cv_img = cv_img_origin;
     } else {
-      cv::resize(cv_img_origin, cv_img, cv::Size(0, 0), scale_factor, scale_factor);
+      cv::resize(cv_img_origin, cv_img, cv::Size(0, 0),
+                 scale_factor, scale_factor);
     }
   } else if (height > 0 && width > 0) {
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
@@ -121,6 +122,11 @@ cv::Mat ReadImageToCVMat(const string& filename, const int height,
     cv_img = cv_img_origin;
   }
   return cv_img;
+}
+
+cv::Mat ReadImageToCVMat(const string& filename, const int height,
+    const int width, const int min_dim, const int max_dim) {
+  return ReadImageToCVMat(filename, height, width, min_dim, max_dim, true);
 }
 
 cv::Mat ReadImageToCVMat(const string& filename,
@@ -159,7 +165,7 @@ static bool matchExt(const std::string & fn,
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
     const bool is_color, const std::string & encoding, Datum* datum) {
-  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, min_dim, max_dim, is_color);
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, min_dim, max_dim);
   if (cv_img.data) {
     if (encoding.size()) {
       if ( (cv_img.channels() == 3) == is_color && !height && !width &&
