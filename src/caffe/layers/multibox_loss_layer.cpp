@@ -174,6 +174,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* loc_data = bottom[1]->cpu_data();
   const Dtype* gt_data = bottom[3]->cpu_data();
 
+
   // Retrieve all ground truth.
   map<int, vector<NormalizedBBox> > all_gt_bboxes;
   GetGroundTruth(gt_data, &all_gt_bboxes);
@@ -312,7 +313,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           if (background_label_id_ == -1) {
             // Only copy scores for matched bboxes.
             for (int c = 0; c < num_classes_; ++c) {
-              conf_pred_data[idx*num_classes_ + c] = conf_data[j*num_classes_ + c];
+              conf_pred_data[idx*num_classes_ + c] =
+                  conf_data[j*num_classes_ + c];
             }
           }
           conf_gt_data[idx] = all_gt_bboxes[i][gt_idx].label();
@@ -401,9 +403,9 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (background_label_id_ == -1) {
       int count = 0;
       for (int i = 0; i < num_; ++i) {
-        const map<int, vector<int> >& match_indices = all_match_indices_[i];
+        map<int, vector<int> >& match_indices = all_match_indices_[i];
         for (int j = 0; j < num_priors_; ++j) {
-          for (map<int, vector<int> >::const_iterator it = match_indices.begin();
+          for (map<int, vector<int> >::iterator it = match_indices.begin();
                it != match_indices.end(); ++it) {
             const vector<int>& match_index = it->second;
             CHECK_EQ(match_index.size(), num_priors_);
@@ -425,6 +427,10 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_copy(conf_pred_.count(), conf_pred_diff, conf_bottom_diff);
     }
   }
+
+  // After backward, remove match statistics.
+  all_match_indices_.clear();
+  all_match_overlaps_.clear();
 }
 
 
