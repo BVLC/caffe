@@ -594,22 +594,6 @@ layer {
   }
 }
 layer {
-  name: "conv4_3_mbox_priorbox"
-  type: "PriorBox"
-  bottom: "conv4_3"
-  bottom: "data"
-  top: "conv4_3_mbox_priorbox"
-  prior_box_param {
-    min_size: 40
-    max_size: 92
-    aspect_ratio: 2
-    aspect_ratio: 3
-    aspect_ratio: 4
-    flip: true
-    clip: true
-  }
-}
-layer {
   name: "conv4_3_mbox_loc"
   type: "Convolution"
   bottom: "conv4_3"
@@ -714,16 +698,17 @@ layer {
   }
 }
 layer {
-  name: "conv5_3_mbox_priorbox"
+  name: "conv4_3_mbox_priorbox"
   type: "PriorBox"
-  bottom: "conv5_3"
+  bottom: "conv4_3"
   bottom: "data"
-  top: "conv5_3_mbox_priorbox"
+  top: "conv4_3_mbox_priorbox"
   prior_box_param {
-    min_size: 92
-    max_size: 196
+    min_size: 40
+    max_size: 92
     aspect_ratio: 2
     aspect_ratio: 3
+    aspect_ratio: 4
     flip: true
     clip: true
   }
@@ -833,15 +818,16 @@ layer {
   }
 }
 layer {
-  name: "fc7_mbox_priorbox"
+  name: "conv5_3_mbox_priorbox"
   type: "PriorBox"
-  bottom: "fc7"
+  bottom: "conv5_3"
   bottom: "data"
-  top: "fc7_mbox_priorbox"
+  top: "conv5_3_mbox_priorbox"
   prior_box_param {
-    min_size: 196
-    max_size: 404
+    min_size: 92
+    max_size: 196
     aspect_ratio: 2
+    aspect_ratio: 3
     flip: true
     clip: true
   }
@@ -951,16 +937,15 @@ layer {
   }
 }
 layer {
-  name: "conv6_3_mbox_priorbox"
+  name: "fc7_mbox_priorbox"
   type: "PriorBox"
-  bottom: "conv6_3"
+  bottom: "fc7"
   bottom: "data"
-  top: "conv6_3_mbox_priorbox"
+  top: "fc7_mbox_priorbox"
   prior_box_param {
-    min_size: 404
-    max_size: 596
+    min_size: 196
+    max_size: 404
     aspect_ratio: 2
-    aspect_ratio: 3
     flip: true
     clip: true
   }
@@ -1070,14 +1055,14 @@ layer {
   }
 }
 layer {
-  name: "pool6_mbox_priorbox"
+  name: "conv6_3_mbox_priorbox"
   type: "PriorBox"
-  bottom: "pool6"
+  bottom: "conv6_3"
   bottom: "data"
-  top: "pool6_mbox_priorbox"
+  top: "conv6_3_mbox_priorbox"
   prior_box_param {
-    min_size: 600
-    max_size: 1000
+    min_size: 404
+    max_size: 596
     aspect_ratio: 2
     aspect_ratio: 3
     flip: true
@@ -1189,16 +1174,18 @@ layer {
   }
 }
 layer {
-  name: "mbox_priorbox"
-  type: "Concat"
-  bottom: "conv4_3_mbox_priorbox"
-  bottom: "conv5_3_mbox_priorbox"
-  bottom: "fc7_mbox_priorbox"
-  bottom: "conv6_3_mbox_priorbox"
-  bottom: "pool6_mbox_priorbox"
-  top: "mbox_priorbox"
-  concat_param {
-    axis: 2
+  name: "pool6_mbox_priorbox"
+  type: "PriorBox"
+  bottom: "pool6"
+  bottom: "data"
+  top: "pool6_mbox_priorbox"
+  prior_box_param {
+    min_size: 600
+    max_size: 1000
+    aspect_ratio: 2
+    aspect_ratio: 3
+    flip: true
+    clip: true
   }
 }
 layer {
@@ -1228,19 +1215,32 @@ layer {
   }
 }
 layer {
+  name: "mbox_priorbox"
+  type: "Concat"
+  bottom: "conv4_3_mbox_priorbox"
+  bottom: "conv5_3_mbox_priorbox"
+  bottom: "fc7_mbox_priorbox"
+  bottom: "conv6_3_mbox_priorbox"
+  bottom: "pool6_mbox_priorbox"
+  top: "mbox_priorbox"
+  concat_param {
+    axis: 2
+  }
+}
+layer {
   name: "mbox_loss"
   type: "MultiBoxLoss"
-  bottom: "mbox_priorbox"
   bottom: "mbox_loc"
   bottom: "mbox_conf"
+  bottom: "mbox_priorbox"
   bottom: "label"
   top: "mbox_loss"
   include {
     phase: TRAIN
   }
+  propagate_down: true
+  propagate_down: true
   propagate_down: false
-  propagate_down: true
-  propagate_down: true
   propagate_down: false
   multibox_loss_param {
     loc_loss_type: L2

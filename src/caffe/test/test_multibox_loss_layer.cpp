@@ -47,15 +47,15 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         height_(2),
         num_priors_per_location_(4),
         num_priors_(width_ * height_ * num_priors_per_location_),
-        blob_bottom_prior_(new Blob<Dtype>(num_, 2, num_priors_ * 4, 1)),
         blob_bottom_loc_(new Blob<Dtype>(num_, num_priors_ * 4, 1, 1)),
         blob_bottom_conf_(new Blob<Dtype>(
                 num_, num_priors_ * num_classes_, 1, 1)),
+        blob_bottom_prior_(new Blob<Dtype>(num_, 2, num_priors_ * 4, 1)),
         blob_bottom_gt_(new Blob<Dtype>(1, 1, 4, 7)),
         blob_top_loss_(new Blob<Dtype>()) {
-    blob_bottom_vec_.push_back(blob_bottom_prior_);
     blob_bottom_vec_.push_back(blob_bottom_loc_);
     blob_bottom_vec_.push_back(blob_bottom_conf_);
+    blob_bottom_vec_.push_back(blob_bottom_prior_);
     blob_bottom_vec_.push_back(blob_bottom_gt_);
     blob_top_vec_.push_back(blob_top_loss_);
   }
@@ -143,7 +143,6 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     anno_data_layer.SetUp(fake_bottom_vec, fake_top_vec);
     anno_data_layer.Forward(fake_bottom_vec, fake_top_vec);
 
-    // 2) Fill prior bboxes.
     // Fake layer
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
     pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
@@ -159,22 +158,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     pooling_layer.SetUp(fake_bottom_vec, fake_top_vec);
     pooling_layer.Forward(fake_bottom_vec, fake_top_vec);
 
-    PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
-    prior_box_param->set_min_size(5);
-    prior_box_param->set_max_size(10);
-    prior_box_param->add_aspect_ratio(3.);
-    prior_box_param->set_flip(true);
-
-    PriorBoxLayer<Dtype> prior_layer(layer_param);
-    fake_bottom_vec.clear();
-    fake_bottom_vec.push_back(fake_blob);
-    fake_bottom_vec.push_back(fake_input);
-    fake_top_vec.clear();
-    fake_top_vec.push_back(blob_bottom_prior_);
-    prior_layer.SetUp(fake_bottom_vec, fake_top_vec);
-    prior_layer.Forward(fake_bottom_vec, fake_top_vec);
-
-    // 3) Fill bbox location predictions.
+    // 2) Fill bbox location predictions.
     ConvolutionParameter* convolution_param =
         layer_param.mutable_convolution_param();
     convolution_param->add_pad(0);
@@ -223,7 +207,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     flatten_layer.SetUp(fake_bottom_vec, fake_top_vec);
     flatten_layer.Forward(fake_bottom_vec, fake_top_vec);
 
-    // 4) Fill bbox confidence predictions.
+    // 3) Fill bbox confidence predictions.
     convolution_param->set_num_output(num_priors_per_location_ * num_classes_);
     ConvolutionLayer<Dtype> conv_layer_conf(layer_param);
     fake_bottom_vec.clear();
@@ -254,6 +238,22 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     flatten_layer.SetUp(fake_bottom_vec, fake_top_vec);
     flatten_layer.Forward(fake_bottom_vec, fake_top_vec);
 
+    // 4) Fill prior bboxes.
+    PriorBoxParameter* prior_box_param = layer_param.mutable_prior_box_param();
+    prior_box_param->set_min_size(5);
+    prior_box_param->set_max_size(10);
+    prior_box_param->add_aspect_ratio(3.);
+    prior_box_param->set_flip(true);
+
+    PriorBoxLayer<Dtype> prior_layer(layer_param);
+    fake_bottom_vec.clear();
+    fake_bottom_vec.push_back(fake_blob);
+    fake_bottom_vec.push_back(fake_input);
+    fake_top_vec.clear();
+    fake_top_vec.push_back(blob_bottom_prior_);
+    prior_layer.SetUp(fake_bottom_vec, fake_top_vec);
+    prior_layer.Forward(fake_bottom_vec, fake_top_vec);
+
     delete fake_blob;
     delete fake_input;
   }
@@ -263,9 +263,9 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
   int height_;
   int num_priors_per_location_;
   int num_priors_;
-  Blob<Dtype>* const blob_bottom_prior_;
   Blob<Dtype>* const blob_bottom_loc_;
   Blob<Dtype>* const blob_bottom_conf_;
+  Blob<Dtype>* const blob_bottom_prior_;
   Blob<Dtype>* const blob_bottom_gt_;
   Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -300,7 +300,6 @@ TYPED_TEST(MultiBoxLossLayerTest, TestSetUp) {
 TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.add_propagate_down(false);
   layer_param.add_propagate_down(true);
   MultiBoxLossParameter* multibox_loss_param =
       layer_param.mutable_multibox_loss_param();
@@ -318,7 +317,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
         MultiBoxLossLayer<Dtype> layer(layer_param);
         GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
         checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                        this->blob_top_vec_, 1);
+                                        this->blob_top_vec_, 0);
       }
     }
   }
@@ -327,7 +326,6 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
 TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.add_propagate_down(false);
   layer_param.add_propagate_down(false);
   layer_param.add_propagate_down(true);
   MultiBoxLossParameter* multibox_loss_param =
@@ -349,7 +347,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
           MultiBoxLossLayer<Dtype> layer(layer_param);
           GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
           checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                          this->blob_top_vec_, 2);
+                                          this->blob_top_vec_, 1);
         }
       }
     }
