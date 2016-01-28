@@ -17,7 +17,6 @@ namespace caffe {
 typedef MultiBoxLossParameter_MatchType MatchType;
 typedef MultiBoxLossParameter_LocLossType LocLossType;
 typedef MultiBoxLossParameter_ConfLossType ConfLossType;
-typedef map<int, vector<NormalizedBBox> > LabelBBox;
 
 /**
  * @brief Perform MultiBox operations. Including the following:
@@ -38,6 +37,10 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MultiBoxLoss"; }
+  // bottom[0] stores the location predictions.
+  // bottom[0] stores the confidence predictions.
+  // bottom[2] stores the prior bounding boxes.
+  // bottom[3] stores the ground truth bounding boxes.
   virtual inline int ExactNumBottomBlobs() const { return 4; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
@@ -46,17 +49,6 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
-  // bottom[0] stores the location predictions.
-  void GetLocPredictions(const Dtype* loc_data, vector<LabelBBox>* loc_preds);
-  // bottom[2] stores the prior bboxes.
-  void GetPriorBBoxes(const Dtype* prior_data,
-      vector<NormalizedBBox>* prior_boxes,
-      vector<vector<float> >* prior_variances);
-  // Get all the inputs from bottom layers.
-  // bottom[3] stores the ground truth bounding box labels.
-  void GetGroundTruth(const Dtype* gt_data,
-      map<int, vector<NormalizedBBox> >* all_gt_bboxes);
 
   // The internal localization loss layer.
   shared_ptr<Layer<Dtype> > loc_loss_layer_;

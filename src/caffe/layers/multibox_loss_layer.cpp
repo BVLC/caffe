@@ -9,73 +9,6 @@
 namespace caffe {
 
 template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::GetGroundTruth(const Dtype* gt_data,
-      map<int, vector<NormalizedBBox> >* all_gt_bboxes) {
-  for (int i = 0; i < num_gt_; ++i) {
-    int start_idx = i * 7;
-    int item_id = gt_data[start_idx];
-    if (item_id == -1) {
-      break;
-    }
-    NormalizedBBox bbox;
-    bbox.set_label(gt_data[start_idx + 1]);
-    CHECK_NE(background_label_id_, bbox.label())
-        << "Found background label in the dataset.";
-    bbox.set_xmin(gt_data[start_idx + 3]);
-    bbox.set_ymin(gt_data[start_idx + 4]);
-    bbox.set_xmax(gt_data[start_idx + 5]);
-    bbox.set_ymax(gt_data[start_idx + 6]);
-    (*all_gt_bboxes)[item_id].push_back(bbox);
-  }
-}
-
-template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::GetLocPredictions(const Dtype* loc_data,
-      vector<LabelBBox>* loc_preds) {
-  for (int i = 0; i < num_; ++i) {
-    LabelBBox label_bbox;
-    for (int p = 0; p < num_priors_; ++p) {
-      int start_idx = p * loc_classes_ * 4;
-      for (int c = 0; c < loc_classes_; ++c) {
-        int label = share_location_ ? -1 : c;
-        NormalizedBBox bbox;
-        bbox.set_xmin(loc_data[start_idx + c * 4]);
-        bbox.set_ymin(loc_data[start_idx + c * 4 + 1]);
-        bbox.set_xmax(loc_data[start_idx + c * 4 + 2]);
-        bbox.set_ymax(loc_data[start_idx + c * 4 + 3]);
-        label_bbox[label].push_back(bbox);
-      }
-    }
-    loc_data += num_priors_ * loc_classes_ * 4;
-    loc_preds->push_back(label_bbox);
-  }
-}
-
-template <typename Dtype>
-void MultiBoxLossLayer<Dtype>::GetPriorBBoxes(const Dtype* prior_data,
-      vector<NormalizedBBox>* prior_bboxes,
-      vector<vector<float> >* prior_variances) {
-  for (int i = 0; i < num_priors_; ++i) {
-    int start_idx = i * 4;
-    NormalizedBBox bbox;
-    bbox.set_xmin(prior_data[start_idx]);
-    bbox.set_ymin(prior_data[start_idx + 1]);
-    bbox.set_xmax(prior_data[start_idx + 2]);
-    bbox.set_ymax(prior_data[start_idx + 3]);
-    prior_bboxes->push_back(bbox);
-  }
-
-  for (int i = 0; i < num_priors_; ++i) {
-    int start_idx = (num_priors_ + i) * 4;
-    vector<float> var;
-    for (int j = 0; j < 4; ++j) {
-      var.push_back(prior_data[start_idx + j]);
-    }
-    prior_variances->push_back(var);
-  }
-}
-
-template <typename Dtype>
 void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
@@ -177,17 +110,18 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // Retrieve all ground truth.
   map<int, vector<NormalizedBBox> > all_gt_bboxes;
-  GetGroundTruth(gt_data, &all_gt_bboxes);
+  GetGroundTruth(gt_data, num_gt_, background_label_id_, &all_gt_bboxes);
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
   // images in a batch are of same dimension.
   vector<NormalizedBBox> prior_bboxes;
   vector<vector<float> > prior_variances;
-  GetPriorBBoxes(prior_data, &prior_bboxes, &prior_variances);
+  GetPriorBBoxes(prior_data, num_priors_, &prior_bboxes, &prior_variances);
 
   // Retrieve all predictions.
   vector<LabelBBox> all_loc_preds;
-  GetLocPredictions(loc_data, &all_loc_preds);
+  GetLocPredictions(loc_data, num_, num_priors_, loc_classes_, share_location_,
+                    &all_loc_preds);
 
   int num_matches = 0;
   for (int i = 0; i < num_; ++i) {

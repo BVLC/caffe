@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
+#include <map>
 #include <vector>
 
 #include "glog/logging.h"
@@ -12,6 +13,7 @@
 namespace caffe {
 
 typedef MultiBoxLossParameter_MatchType MatchType;
+typedef map<int, vector<NormalizedBBox> > LabelBBox;
 
 // Compute the intersection between two bboxes.
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
@@ -45,6 +47,41 @@ void MatchBBox(const vector<NormalizedBBox>& gt,
     const MatchType match_type, const float overlap_threshold,
     vector<int>* match_indices, vector<float>* match_overlaps);
 
+// Retrieve bounding box ground truth from gt_data.
+//    gt_data: 1 x 1 x num_gt x 7 blob.
+//    num_gt: the number of ground truth.
+//    background_label_id: the label for background class which is used to do
+//      santity check so that no ground truth contains it.
+//    all_gt_bboxes: stores ground truth for each image. Label of each bbox is
+//      stored in NormalizedBBox.
+template <typename Dtype>
+void GetGroundTruth(const Dtype* gt_data, const int num_gt,
+      const int background_label_id,
+      map<int, vector<NormalizedBBox> >* all_gt_bboxes);
+
+// Get location predictions from loc_data.
+//    loc_data: num x num_preds_per_location * num_loc_classes * 4 blob.
+//    num: the number of images.
+//    num_preds_per_location: number of predictions per location.
+//    num_loc_classes: number of location classes. It is 1 if share_location is
+//      true; and is equal to number of classes needed to predict otherwise.
+//    share_location: if true, all classes share the same location prediction.
+//    loc_preds: stores the location prediction, where each item contains
+//      location prediction for an image.
+template <typename Dtype>
+void GetLocPredictions(const Dtype* loc_data, const int num,
+      const int num_preds_per_class, const int num_loc_classes,
+      const bool share_location, vector<LabelBBox>* loc_preds);
+
+// Get prior bounding boxes from prior_data.
+//    prior_data: 1 x 2 x num_priors * 4 x 1 blob.
+//    num_priors: number of priors.
+//    prior_bboxes: stores all the prior bboxes in the format of NormalizedBBox.
+//    prior_variances: stores all the variances needed by prior bboxes.
+template <typename Dtype>
+void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes,
+      vector<vector<float> >* prior_variances);
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_BBOX_UTIL_H_

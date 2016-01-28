@@ -220,4 +220,101 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
   return;
 }
 
+template <typename Dtype>
+void GetGroundTruth(const Dtype* gt_data, const int num_gt,
+      const int background_label_id,
+      map<int, vector<NormalizedBBox> >* all_gt_bboxes) {
+  all_gt_bboxes->clear();
+  for (int i = 0; i < num_gt; ++i) {
+    int start_idx = i * 7;
+    int item_id = gt_data[start_idx];
+    if (item_id == -1) {
+      break;
+    }
+    NormalizedBBox bbox;
+    bbox.set_label(gt_data[start_idx + 1]);
+    CHECK_NE(background_label_id, bbox.label())
+        << "Found background label in the dataset.";
+    bbox.set_xmin(gt_data[start_idx + 3]);
+    bbox.set_ymin(gt_data[start_idx + 4]);
+    bbox.set_xmax(gt_data[start_idx + 5]);
+    bbox.set_ymax(gt_data[start_idx + 6]);
+    (*all_gt_bboxes)[item_id].push_back(bbox);
+  }
+}
+
+// Explicit initialization.
+template void GetGroundTruth(const float* gt_data, const int num_gt,
+      const int background_label_id,
+      map<int, vector<NormalizedBBox> >* all_gt_bboxes);
+template void GetGroundTruth(const double* gt_data, const int num_gt,
+      const int background_label_id,
+      map<int, vector<NormalizedBBox> >* all_gt_bboxes);
+
+template <typename Dtype>
+void GetLocPredictions(const Dtype* loc_data, const int num,
+      const int num_preds_per_class, const int num_loc_classes,
+      const bool share_location, vector<LabelBBox>* loc_preds) {
+  loc_preds->clear();
+  for (int i = 0; i < num; ++i) {
+    LabelBBox label_bbox;
+    for (int p = 0; p < num_preds_per_class; ++p) {
+      int start_idx = p * num_loc_classes * 4;
+      for (int c = 0; c < num_loc_classes; ++c) {
+        int label = share_location ? -1 : c;
+        NormalizedBBox bbox;
+        bbox.set_xmin(loc_data[start_idx + c * 4]);
+        bbox.set_ymin(loc_data[start_idx + c * 4 + 1]);
+        bbox.set_xmax(loc_data[start_idx + c * 4 + 2]);
+        bbox.set_ymax(loc_data[start_idx + c * 4 + 3]);
+        label_bbox[label].push_back(bbox);
+      }
+    }
+    loc_data += num_preds_per_class * num_loc_classes * 4;
+    loc_preds->push_back(label_bbox);
+  }
+}
+
+// Explicit initialization.
+template void GetLocPredictions(const float* loc_data, const int num,
+      const int num_preds_per_class, const int num_loc_classes,
+      const bool share_location, vector<LabelBBox>* loc_preds);
+template void GetLocPredictions(const double* loc_data, const int num,
+      const int num_preds_per_class, const int num_loc_classes,
+      const bool share_location, vector<LabelBBox>* loc_preds);
+
+template <typename Dtype>
+void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes,
+      vector<vector<float> >* prior_variances) {
+  prior_bboxes->clear();
+  prior_variances->clear();
+  for (int i = 0; i < num_priors; ++i) {
+    int start_idx = i * 4;
+    NormalizedBBox bbox;
+    bbox.set_xmin(prior_data[start_idx]);
+    bbox.set_ymin(prior_data[start_idx + 1]);
+    bbox.set_xmax(prior_data[start_idx + 2]);
+    bbox.set_ymax(prior_data[start_idx + 3]);
+    prior_bboxes->push_back(bbox);
+  }
+
+  for (int i = 0; i < num_priors; ++i) {
+    int start_idx = (num_priors + i) * 4;
+    vector<float> var;
+    for (int j = 0; j < 4; ++j) {
+      var.push_back(prior_data[start_idx + j]);
+    }
+    prior_variances->push_back(var);
+  }
+}
+
+// Explicit initialization.
+template void GetPriorBBoxes(const float* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes,
+      vector<vector<float> >* prior_variances);
+template void GetPriorBBoxes(const double* prior_data, const int num_priors,
+      vector<NormalizedBBox>* prior_bboxes,
+      vector<vector<float> >* prior_variances);
+
 }  // namespace caffe
