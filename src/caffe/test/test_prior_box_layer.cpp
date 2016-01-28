@@ -50,7 +50,7 @@ TYPED_TEST(PriorBoxLayerTest, TestSetup) {
   prior_box_param->set_max_size(this->max_size_);
   PriorBoxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 2);
   EXPECT_EQ(this->blob_top_->height(), 100 * 2 * 4);
   EXPECT_EQ(this->blob_top_->width(), 1);
@@ -66,7 +66,7 @@ TYPED_TEST(PriorBoxLayerTest, TestSetupAspectRatio1) {
   prior_box_param->set_flip(false);
   PriorBoxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 2);
   EXPECT_EQ(this->blob_top_->height(), 100 * 3 * 4);
   EXPECT_EQ(this->blob_top_->width(), 1);
@@ -82,7 +82,7 @@ TYPED_TEST(PriorBoxLayerTest, TestSetupAspectRatioNoFlip) {
   prior_box_param->set_flip(false);
   PriorBoxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 2);
   EXPECT_EQ(this->blob_top_->height(), 100 * 4 * 4);
   EXPECT_EQ(this->blob_top_->width(), 1);
@@ -97,7 +97,7 @@ TYPED_TEST(PriorBoxLayerTest, TestSetupAspectRatio) {
   prior_box_param->add_aspect_ratio(3.);
   PriorBoxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 2);
   EXPECT_EQ(this->blob_top_->height(), 100 * 6 * 4);
   EXPECT_EQ(this->blob_top_->width(), 1);
@@ -114,34 +114,28 @@ TYPED_TEST(PriorBoxLayerTest, TestCPU) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  int num = this->blob_bottom_->num();
   int dim = this->blob_top_->height();
-  for (int i = 0; i < num; ++i) {
-    // pick a few generated priors and compare against the expected number.
-    // first prior
-    EXPECT_NEAR(top_data[0], 0.03, eps);
-    EXPECT_NEAR(top_data[1], 0.03, eps);
-    EXPECT_NEAR(top_data[2], 0.07, eps);
-    EXPECT_NEAR(top_data[3], 0.07, eps);
-    // second prior
-    EXPECT_NEAR(top_data[4], 0.02, eps);
-    EXPECT_NEAR(top_data[5], 0.02, eps);
-    EXPECT_NEAR(top_data[6], 0.08, eps);
-    EXPECT_NEAR(top_data[7], 0.08, eps);
-    // prior in the 5-th row and 5-th col
-    EXPECT_NEAR(top_data[4*10*2*4+4*2*4], 0.43, eps);
-    EXPECT_NEAR(top_data[4*10*2*4+4*2*4+1], 0.43, eps);
-    EXPECT_NEAR(top_data[4*10*2*4+4*2*4+2], 0.47, eps);
-    EXPECT_NEAR(top_data[4*10*2*4+4*2*4+3], 0.47, eps);
+  // pick a few generated priors and compare against the expected number.
+  // first prior
+  EXPECT_NEAR(top_data[0], 0.03, eps);
+  EXPECT_NEAR(top_data[1], 0.03, eps);
+  EXPECT_NEAR(top_data[2], 0.07, eps);
+  EXPECT_NEAR(top_data[3], 0.07, eps);
+  // second prior
+  EXPECT_NEAR(top_data[4], 0.02, eps);
+  EXPECT_NEAR(top_data[5], 0.02, eps);
+  EXPECT_NEAR(top_data[6], 0.08, eps);
+  EXPECT_NEAR(top_data[7], 0.08, eps);
+  // prior in the 5-th row and 5-th col
+  EXPECT_NEAR(top_data[4*10*2*4+4*2*4], 0.43, eps);
+  EXPECT_NEAR(top_data[4*10*2*4+4*2*4+1], 0.43, eps);
+  EXPECT_NEAR(top_data[4*10*2*4+4*2*4+2], 0.47, eps);
+  EXPECT_NEAR(top_data[4*10*2*4+4*2*4+3], 0.47, eps);
 
-    // check variance
-    top_data += dim;
-    for (int d = 0; d < dim; ++d) {
-      EXPECT_NEAR(top_data[d], 0.1, eps);
-    }
-
-    // go to next image
-    top_data += dim;
+  // check variance
+  top_data += dim;
+  for (int d = 0; d < dim; ++d) {
+    EXPECT_NEAR(top_data[d], 0.1, eps);
   }
 }
 
@@ -158,44 +152,38 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatioNoFlip) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  int num = this->blob_bottom_->num();
   int dim = this->blob_top_->height();
-  for (int i = 0; i < num; ++i) {
-    // pick a few generated priors and compare against the expected number.
-    // first prior
-    EXPECT_NEAR(top_data[0], 0.03, eps);
-    EXPECT_NEAR(top_data[1], 0.03, eps);
-    EXPECT_NEAR(top_data[2], 0.07, eps);
-    EXPECT_NEAR(top_data[3], 0.07, eps);
-    // second prior
-    EXPECT_NEAR(top_data[4], 0.02, eps);
-    EXPECT_NEAR(top_data[5], 0.02, eps);
-    EXPECT_NEAR(top_data[6], 0.08, eps);
-    EXPECT_NEAR(top_data[7], 0.08, eps);
-    // third prior
-    EXPECT_NEAR(top_data[8], 0.05 - 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[9], 0.05 - 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[10], 0.05 + 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[11], 0.05 + 0.01*sqrt(2.), eps);
-    // prior in the 5-th row and 5-th col
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4], 0.43, eps);
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+1], 0.43, eps);
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+2], 0.47, eps);
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+3], 0.47, eps);
-    // prior with ratio 1:2 in the 5-th row and 5-th col
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+8], 0.45 - 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+9], 0.45 - 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+10], 0.45 + 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*3*4+4*3*4+11], 0.45 + 0.01*sqrt(2.), eps);
+  // pick a few generated priors and compare against the expected number.
+  // first prior
+  EXPECT_NEAR(top_data[0], 0.03, eps);
+  EXPECT_NEAR(top_data[1], 0.03, eps);
+  EXPECT_NEAR(top_data[2], 0.07, eps);
+  EXPECT_NEAR(top_data[3], 0.07, eps);
+  // second prior
+  EXPECT_NEAR(top_data[4], 0.02, eps);
+  EXPECT_NEAR(top_data[5], 0.02, eps);
+  EXPECT_NEAR(top_data[6], 0.08, eps);
+  EXPECT_NEAR(top_data[7], 0.08, eps);
+  // third prior
+  EXPECT_NEAR(top_data[8], 0.05 - 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[9], 0.05 - 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[10], 0.05 + 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[11], 0.05 + 0.01*sqrt(2.), eps);
+  // prior in the 5-th row and 5-th col
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4], 0.43, eps);
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+1], 0.43, eps);
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+2], 0.47, eps);
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+3], 0.47, eps);
+  // prior with ratio 1:2 in the 5-th row and 5-th col
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+8], 0.45 - 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+9], 0.45 - 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+10], 0.45 + 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*3*4+4*3*4+11], 0.45 + 0.01*sqrt(2.), eps);
 
-    // check variance
-    top_data += dim;
-    for (int d = 0; d < dim; ++d) {
-      EXPECT_NEAR(top_data[d], 0.1, eps);
-    }
-
-    // go to next image
-    top_data += dim;
+  // check variance
+  top_data += dim;
+  for (int d = 0; d < dim; ++d) {
+    EXPECT_NEAR(top_data[d], 0.1, eps);
   }
 }
 
@@ -211,54 +199,48 @@ TYPED_TEST(PriorBoxLayerTest, TestCPUAspectRatio) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  int num = this->blob_bottom_->num();
   int dim = this->blob_top_->height();
-  for (int i = 0; i < num; ++i) {
-    // pick a few generated priors and compare against the expected number.
-    // first prior
-    EXPECT_NEAR(top_data[0], 0.03, eps);
-    EXPECT_NEAR(top_data[1], 0.03, eps);
-    EXPECT_NEAR(top_data[2], 0.07, eps);
-    EXPECT_NEAR(top_data[3], 0.07, eps);
-    // second prior
-    EXPECT_NEAR(top_data[4], 0.02, eps);
-    EXPECT_NEAR(top_data[5], 0.02, eps);
-    EXPECT_NEAR(top_data[6], 0.08, eps);
-    EXPECT_NEAR(top_data[7], 0.08, eps);
-    // third prior
-    EXPECT_NEAR(top_data[8], 0.05 - 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[9], 0.05 - 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[10], 0.05 + 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[11], 0.05 + 0.01*sqrt(2.), eps);
-    // forth prior
-    EXPECT_NEAR(top_data[12], 0.05 - 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[13], 0.05 - 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[14], 0.05 + 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[15], 0.05 + 0.02*sqrt(2.), eps);
-    // prior in the 5-th row and 5-th col
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4], 0.43, eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+1], 0.43, eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+2], 0.47, eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+3], 0.47, eps);
-    // prior with ratio 1:2 in the 5-th row and 5-th col
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+8], 0.45 - 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+9], 0.45 - 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+10], 0.45 + 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+11], 0.45 + 0.01*sqrt(2.), eps);
-    // prior with ratio 2:1 in the 5-th row and 5-th col
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+12], 0.45 - 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+13], 0.45 - 0.02*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+14], 0.45 + 0.01*sqrt(2.), eps);
-    EXPECT_NEAR(top_data[4*10*4*4+4*4*4+15], 0.45 + 0.02*sqrt(2.), eps);
+  // pick a few generated priors and compare against the expected number.
+  // first prior
+  EXPECT_NEAR(top_data[0], 0.03, eps);
+  EXPECT_NEAR(top_data[1], 0.03, eps);
+  EXPECT_NEAR(top_data[2], 0.07, eps);
+  EXPECT_NEAR(top_data[3], 0.07, eps);
+  // second prior
+  EXPECT_NEAR(top_data[4], 0.02, eps);
+  EXPECT_NEAR(top_data[5], 0.02, eps);
+  EXPECT_NEAR(top_data[6], 0.08, eps);
+  EXPECT_NEAR(top_data[7], 0.08, eps);
+  // third prior
+  EXPECT_NEAR(top_data[8], 0.05 - 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[9], 0.05 - 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[10], 0.05 + 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[11], 0.05 + 0.01*sqrt(2.), eps);
+  // forth prior
+  EXPECT_NEAR(top_data[12], 0.05 - 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[13], 0.05 - 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[14], 0.05 + 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[15], 0.05 + 0.02*sqrt(2.), eps);
+  // prior in the 5-th row and 5-th col
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4], 0.43, eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+1], 0.43, eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+2], 0.47, eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+3], 0.47, eps);
+  // prior with ratio 1:2 in the 5-th row and 5-th col
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+8], 0.45 - 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+9], 0.45 - 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+10], 0.45 + 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+11], 0.45 + 0.01*sqrt(2.), eps);
+  // prior with ratio 2:1 in the 5-th row and 5-th col
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+12], 0.45 - 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+13], 0.45 - 0.02*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+14], 0.45 + 0.01*sqrt(2.), eps);
+  EXPECT_NEAR(top_data[4*10*4*4+4*4*4+15], 0.45 + 0.02*sqrt(2.), eps);
 
-    // check variance
-    top_data += dim;
-    for (int d = 0; d < dim; ++d) {
-      EXPECT_NEAR(top_data[d], 0.1, eps);
-    }
-
-    // go to next image
-    top_data += dim;
+  // check variance
+  top_data += dim;
+  for (int d = 0; d < dim; ++d) {
+    EXPECT_NEAR(top_data[d], 0.1, eps);
   }
 }
 
