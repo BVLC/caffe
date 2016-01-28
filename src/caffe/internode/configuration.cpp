@@ -1,19 +1,20 @@
-
-#include "caffe/internode/communication.hpp"
-#include "caffe/internode/configuration.hpp"
-#include <boost/make_shared.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/unordered_map.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/unordered_map.hpp>
+#include <string>
+#include <utility>
+#include <vector>
+#include "caffe/internode/communication.hpp"
+#include "caffe/internode/configuration.hpp"
 
 namespace caffe {
 namespace internode {
 
-class Daemon
-{
-public:
+class Daemon {
+ public:
     boost::asio::io_service io_service;
 };
 
@@ -35,11 +36,10 @@ void poll(shared_ptr<Daemon> daemon) {
 
 namespace {
 
-string get_address(boost::asio::ip::tcp::socket& socket) {
-  try
-  {
-    std::string ip = socket.remote_endpoint().address().to_string();
-    unsigned short port = socket.remote_endpoint().port();
+string get_address(boost::asio::ip::tcp::socket* socket) {
+  try {
+    std::string ip = socket->remote_endpoint().address().to_string();
+    unsigned short port = socket->remote_endpoint().port();
 
     return "tcp://" + ip + ":" + boost::lexical_cast<string>(port);
   } catch (...) {
@@ -49,7 +49,6 @@ string get_address(boost::asio::ip::tcp::socket& socket) {
 
 void null_disconnect_handler(string addr) {
   throw std::runtime_error("[" + addr + "] client disconnected");
-  //LOG(INFO) << "[" << addr << "] client disconnected (ignored)";
 }
 
 class SingleClient : public Waypoint {
@@ -64,11 +63,9 @@ class SingleClient : public Waypoint {
   boost::recursive_mutex send_mtx;
 
   void handle_size(const boost::system::error_code& ec, size_t size) {
+    // size_buffer = ntohl(size_buffer);
 
-    //size_buffer = ntohl(size_buffer);
-    
-    if (ec)
-    {
+    if (ec) {
       LOG(ERROR) << "[" << address << "] "
                  << "received error on receiving size: " << ec.message()
                  << " " << size << ", client is closed";
@@ -80,22 +77,23 @@ class SingleClient : public Waypoint {
                  << "received error on receiving size: " << size;
       return;
     }
-    CHECK(size_buffer < 500 * 1024 * 1024) 
+    CHECK(size_buffer < 500 * 1024 * 1024)
       << "[" << address << "] size buffer is too big: " << size_buffer;
     if (buffer.size() < size_buffer) {
       buffer.resize(size_buffer);
     }
-    using namespace boost;
-    asio::async_read(
+    using boost::asio::async_read;
+    using boost::asio::transfer_exactly;
+    using boost::bind;
+    async_read(
       *socket,
-      asio::buffer(&buffer.front(), size_buffer),
-      asio::transfer_exactly(size_buffer),
+      boost::asio::buffer(&buffer.front(), size_buffer),
+      transfer_exactly(size_buffer),
       bind(&SingleClient::handle_msg, this, _1, _2));
   }
 
   void handle_msg(const boost::system::error_code& ec, size_t size) {
-    if (ec)
-    {
+    if (ec) {
       LOG(ERROR) << "[" << address << "] "
                  << "received error on receiving size: " << ec.message()
                  << " " << size << ", client is closed";
@@ -114,21 +112,19 @@ class SingleClient : public Waypoint {
   }
 
   void async_receive() {
-    using namespace boost;
-    asio::async_read(
+    boost::asio::async_read(
       *socket,
-      asio::buffer(&size_buffer, sizeof(size_buffer)),
-      asio::transfer_exactly(sizeof(size_buffer)),
-      bind(&SingleClient::handle_size, this, _1, _2));
+      boost::asio::buffer(&size_buffer, sizeof(size_buffer)),
+      boost::asio::transfer_exactly(sizeof(size_buffer)),
+      boost::bind(&SingleClient::handle_size, this, _1, _2));
   }
 
-public:
+ public:
   SingleClient(boost::shared_ptr<boost::asio::ip::tcp::socket> socket,
                DisconnectHandler disconnect_handler)
       : socket(socket)
       , disconnect_handler(disconnect_handler)
-      , address(get_address(*socket))
-  {
+      , address(get_address(socket.get())) {
     async_receive();
   }
 
@@ -138,12 +134,12 @@ public:
 
   virtual void send(const char* buffer, size_t size) {
     boost::recursive_mutex::scoped_lock lock(send_mtx);
-    using namespace boost;
-    size_t sent_size = size;//htonl(size);
-    system::error_code ec1, ec2;
+    using boost::asio::write;
+    size_t sent_size = size;
+    boost::system::error_code ec1, ec2;
     DLOG(INFO) << "sending to: " << address << " buffer of size: " << size;
-    asio::write(*socket, asio::buffer(&sent_size, sizeof(sent_size)), ec1);
-    asio::write(*socket, asio::buffer(buffer, size), ec2);
+    write(*socket, boost::asio::buffer(&sent_size, sizeof(sent_size)), ec1);
+    write(*socket, boost::asio::buffer(buffer, size), ec2);
     if (ec1 || ec2) {
       LOG(ERROR) << "sending failed with error: " << ec1.message() << " "
         << ec2.message() << " " << socket->is_open();
@@ -155,7 +151,7 @@ public:
   virtual void register_receive_handler(Handler* handler) {
     handlers.push_back(handler);
   }
-  
+
   virtual void shutdown() {
     boost::system::error_code ec;
     socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
@@ -177,7 +173,6 @@ public:
 };
 
 class ServerCommunicatorImpl : public MultiWaypoint {
-
   typedef boost::shared_ptr<boost::asio::ip::tcp::socket> SharedTcpSocket;
   typedef boost::shared_ptr<SingleClient> Client;
   typedef boost::unordered_map<string, Client> Clients;
@@ -200,11 +195,9 @@ class ServerCommunicatorImpl : public MultiWaypoint {
       boost::bind(&ServerCommunicatorImpl::handle_accept, this, _1));
   }
 
-  void handle_accept(const boost::system::error_code& error)
-  {
+  void handle_accept(const boost::system::error_code& error) {
     boost::recursive_mutex::scoped_lock lock(mtx);
-    using namespace boost;
-    string address = get_address(*new_client_socket);
+    string address = get_address(new_client_socket.get());
     LOG(INFO) << "accepted client from address: " << address;
     clients[address].reset(new SingleClient(
       new_client_socket,
@@ -213,12 +206,13 @@ class ServerCommunicatorImpl : public MultiWaypoint {
       clients[address]->register_receive_handler(receive_handlers[i]);
     }
     new_client_socket =
-      make_shared<boost::asio::ip::tcp::socket>(ref(daemon->io_service));
+      boost::make_shared<boost::asio::ip::tcp::socket>(
+        boost::ref(daemon->io_service));
 
     for (int i = 0; i < accept_handlers.size(); ++i) {
       accept_handlers[i]->accepted(clients[address]->get_id());
     }
-    
+
     start_accept();
   }
 
@@ -232,18 +226,18 @@ class ServerCommunicatorImpl : public MultiWaypoint {
 
     clients.erase(addr);
   }
-public:
+
+ public:
   ServerCommunicatorImpl(
           boost::shared_ptr<Daemon> daemon,
           std::string port)
       : daemon(daemon)
       , endpoint(boost::asio::ip::tcp::v4(),
-                 boost::lexical_cast<unsigned short>(port))
+                 boost::lexical_cast<uint16_t>(port))
       , acceptor(daemon->io_service, endpoint)
       , new_client_socket(
           boost::make_shared<boost::asio::ip::tcp::socket>(
-            boost::ref(daemon->io_service)))
-  {
+            boost::ref(daemon->io_service))) {
     start_accept();
   }
 
@@ -293,12 +287,12 @@ std::pair<string, string> extract(string address) {
   size_t protocol_pos = address.find_first_of(tcp_protcol);
   size_t port_pos = address.find_first_of(":");
   port_pos = address.find_first_of(":", port_pos + 1);
-  if ((protocol_pos != 0) or (port_pos == std::string::npos)) {
+  if ((protocol_pos != 0) || (port_pos == std::string::npos)) {
     LOG(ERROR) << "unrecognized address: " << address
       << ", expected format is: `tcp://*:80`";
     throw std::runtime_error("unsupported protocol");
   }
-  
+
   string ip = address.substr(tcp_protcol.size(), port_pos - tcp_protcol.size());
   string port = address.substr(port_pos + 1);
   return std::make_pair(ip, port);
@@ -306,15 +300,13 @@ std::pair<string, string> extract(string address) {
 
 }  // namespace
 
-boost::shared_ptr<Daemon> create_communication_daemon()
-{
+boost::shared_ptr<Daemon> create_communication_daemon() {
   return boost::make_shared<Daemon>();
 }
 
 boost::shared_ptr<Waypoint> configure_client(
     boost::shared_ptr<Daemon> daemon,
-    std::string address)
-{
+    std::string address) {
   string ip = extract(address).first;
   string port = extract(address).second;
 
@@ -323,8 +315,7 @@ boost::shared_ptr<Waypoint> configure_client(
   boost::asio::ip::tcp::resolver::iterator endpoint_it(resolver.resolve(query));
   boost::shared_ptr<boost::asio::ip::tcp::socket> socket
     (new boost::asio::ip::tcp::socket(daemon->io_service));
-  try
-  {
+  try {
     boost::asio::connect(*socket, endpoint_it);
   } catch (std::runtime_error& error) {
     LOG(INFO) << "connect failed: " << error.what();
@@ -337,8 +328,7 @@ boost::shared_ptr<Waypoint> configure_client(
 
 boost::shared_ptr<MultiWaypoint> configure_server(
     boost::shared_ptr<Daemon> communication_daemon,
-    string address)
-{
+    string address) {
   string port = extract(address).second;
   return boost::make_shared<ServerCommunicatorImpl>(
       communication_daemon, port);
@@ -350,6 +340,6 @@ bool is_remote_address(std::string str) {
       && (str.substr(0, tcp_prefix.size()) == tcp_prefix));
 }
 
-}  // namespace caffe
 }  // namespace internode
+}  // namespace caffe
 

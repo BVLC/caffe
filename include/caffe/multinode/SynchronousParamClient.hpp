@@ -3,17 +3,18 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/internal_thread.hpp"
+#include "caffe/internode/communication.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/MultiSolver.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
-#include "caffe/MultiSolver.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/internode/communication.hpp"
 
 namespace caffe {
 
@@ -31,11 +32,11 @@ class SynchronousParamClient : public MultiSolver<Dtype>::Callback {
 
  protected:
   void on_start();
-  void on_start(int);
-  void on_forward_finished(int);
+  void on_start(int layer_id);
+  void on_forward_finished(int layer_id);
   void on_gradients_ready();
-  void on_backward_start(int);
-  void on_gradients_ready(int);
+  void on_backward_start(int layer_id);
+  void on_gradients_ready(int layer_id);
 
   shared_ptr<MultiSolver<Dtype> >  solver_;
   shared_ptr<SynchronousParamSyncingImpl<Dtype> > sync;
@@ -44,4 +45,5 @@ class SynchronousParamClient : public MultiSolver<Dtype>::Callback {
 
 }  // namespace caffe
 
-#endif //CAFFE_SYNCHRONOUSPARAMCLIENT_HPP_
+#endif  // CAFFE_SYNCHRONOUSPARAMCLIENT_HPP_
+

@@ -158,7 +158,7 @@ class WorkerSolver : public Solver<Dtype> {
 
  protected:
   void ApplyUpdate() { }
-  void ApplyUpdate(int) { }
+  void ApplyUpdate(int param_id) { }
   void SnapshotSolverState(const string& model_filename) {
     LOG(FATAL) << "Should not be called on worker solver.";
   }

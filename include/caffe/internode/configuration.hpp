@@ -1,9 +1,9 @@
 #ifndef CAFFE_INTERNODE_CONFIGURATION_H_
 #define CAFFE_INTERNODE_CONFIGURATION_H_
 
-#include "communication.hpp"
-#include <string>
 #include <boost/shared_ptr.hpp>
+#include <string>
+#include "communication.hpp"
 
 namespace caffe {
 namespace internode {
@@ -28,4 +28,4 @@ bool is_remote_address(std::string str);
 }  // namespace internode
 }  // namespace caffe
 
-#endif // CAFFE_INTERNODE_CONFIGURATION_H_
+#endif  // CAFFE_INTERNODE_CONFIGURATION_H_

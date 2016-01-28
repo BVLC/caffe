@@ -1,8 +1,9 @@
-#include "caffe/serialization/BlobCodec.hpp"
-#include "caffe/serialization/bitfield.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "boost/make_shared.hpp"
+#include <algorithm>
 #include <numeric>
+#include "boost/make_shared.hpp"
+#include "caffe/serialization/bitfield.hpp"
+#include "caffe/serialization/BlobCodec.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -10,9 +11,8 @@ namespace {
 
 
 template <typename Dtype>
-void encode_simple(Dtype* data, BlobUpdate& msg, uint32_t size) {
-
-  msg.set_data(data, size * sizeof(Dtype));
+void encode_simple(Dtype* data, BlobUpdate* msg, uint32_t size) {
+  msg->set_data(data, size * sizeof(Dtype));
 }
 
 template <typename Dtype>
@@ -22,7 +22,6 @@ bool decode_simple(Dtype* dest,
                    const BlobUpdate& update,
                    Dtype alpha,
                    Dtype beta) {
-
   uint32_t encoded_elements = update.data().size() / sizeof(Dtype);
   if (max_size < update.part() * part_size + encoded_elements) {
     LOG(ERROR) << "ignoring received data for layer: " << update.layer_id()
@@ -36,9 +35,9 @@ bool decode_simple(Dtype* dest,
   Dtype* src =
     reinterpret_cast<Dtype*>(const_cast<char*>(update.data().c_str()));
 
-  //to ensure, that this doesn't interrupt actual calculation
-  //it is done in a naive way, without using threaded implementations
-  //naiveness here improves overall performance
+  // to ensure, that this doesn't interrupt actual calculation
+  // it is done in a naive way, without using threaded implementations
+  // naiveness here improves overall performance
   for (int i = 0; i < encoded_elements; ++i) {
     dest[i] = src[i] * alpha + dest[i] * beta;
   }
@@ -46,10 +45,9 @@ bool decode_simple(Dtype* dest,
 }
 
 template <typename Dtype>
-void encode_averaging(Dtype* data, BlobUpdate& msg, uint32_t size) {
-
+void encode_averaging(Dtype* data, BlobUpdate* msg, uint32_t size) {
   ThresholdCompressionConfig& config =
-    *msg.mutable_compression_param()->mutable_threshold_param();
+    *msg->mutable_compression_param()->mutable_threshold_param();
 
   float sum = 0.0;
   for (int i = 0; i < size; ++i) {
@@ -69,13 +67,13 @@ void encode_averaging(Dtype* data, BlobUpdate& msg, uint32_t size) {
       std::min(uint32_t(round(fabs(data[i]) / threshold)), max_val);
     if (data[i] < 0) val = -val;
     buffer.set_bits(val, config.size() - 1, bit);
-    
+
     CHECK_EQ(val, buffer.get_bits(config.size() - 1, bit))
       << " actual:" << data[i] << " " << (fabs(data[i]) / threshold);
 
     bit += config.size();
   }
-  msg.set_data(buffer.raw(), buffer.bytes());
+  msg->set_data(buffer.raw(), buffer.bytes());
 }
 
 template <typename Dtype>
@@ -85,7 +83,6 @@ bool decode_averaging(Dtype* dest,
                       const BlobUpdate& msg,
                       Dtype alpha,
                       Dtype beta) {
-
   ThresholdCompressionConfig config =
     msg.compression_param().threshold_param();
 
@@ -120,28 +117,27 @@ template <typename Dtype>
 struct BlobCodecImpl : BlobCodec<Dtype> {
   MultinodeParameter param;
 
-  BlobCodecImpl(MultinodeParameter param) : param(param) {
+  explicit BlobCodecImpl(MultinodeParameter param) : param(param) {
   }
 
-  virtual uint32_t encode(BlobUpdate& msg,
+  virtual uint32_t encode(BlobUpdate* msg,
                           const Blob<Dtype>* src,
                           typename BlobCodec<Dtype>::What what,
                           uint32_t start_element) const {
-    
     uint32_t part_size = param.max_packet_size() / sizeof(Dtype);
     uint32_t size =
       std::min(start_element + part_size, uint32_t(src->count()))
         - start_element;
-    msg.set_part(start_element / part_size);
-    *msg.mutable_compression_param() = param.outgoing_compression();
+    msg->set_part(start_element / part_size);
+    *msg->mutable_compression_param() = param.outgoing_compression();
 
     const Dtype* data =
       ((what == BlobCodec<Dtype>::GRADS) ?
         src->cpu_diff() : src->cpu_data()) + start_element;
-    VLOG(5) << "encoding " << 
+    VLOG(5) << "encoding " <<
       ((what == BlobCodec<Dtype>::GRADS) ? "grads" : "params")
       << ", number of elements: " << size
-      << ", part: " << msg.part()
+      << ", part: " << msg->part()
       << ", starting from: " << start_element;
 
     if (param.outgoing_compression().algo() == AVERAGING) {
@@ -158,7 +154,6 @@ struct BlobCodecImpl : BlobCodec<Dtype> {
                       typename BlobCodec<Dtype>::What what,
                       Dtype alpha,
                       Dtype beta) const {
-
     if (update.data().size() % sizeof(Dtype) != 0) {
       LOG(ERROR) << "ignoring received data for layer: " << update.layer_id()
                  << " because data is corrupted, data size is not divisable"
@@ -174,7 +169,7 @@ struct BlobCodecImpl : BlobCodec<Dtype> {
     int32_t max_size = dest->count() - update.part() * part_size;
 
 
-    VLOG(5) << "decoding " << 
+    VLOG(5) << "decoding " <<
       ((what == BlobCodec<Dtype>::GRADS) ? "grads" : "params")
       << ", number of elements: " << (update.data().size() / sizeof(Dtype))
       << ", part: " << update.part()
@@ -186,15 +181,14 @@ struct BlobCodecImpl : BlobCodec<Dtype> {
   }
 };
 
-} //namespace
+}  // namespace
 
 template <typename Dtype>
 shared_ptr<BlobCodec<Dtype> > BlobCodec<Dtype>::create_codec(
   const MultinodeParameter& param) {
-
   return boost::make_shared<BlobCodecImpl<Dtype> >(param);
 }
 
 INSTANTIATE_CLASS(BlobCodec);
-} //namespace caffe
+}  // namespace caffe
 

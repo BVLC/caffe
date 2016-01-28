@@ -1,12 +1,16 @@
-#include "caffe/multinode/DataServer.hpp"
+#include <boost/lexical_cast.hpp>
 #include <glog/logging.h>
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
+#include <string>
+#include <vector>
+#include "caffe/multinode/DataServer.hpp"
 
 namespace caffe {
 
 using ::google::protobuf::Message;
-using namespace internode;
+using internode::RemoteId;
+using internode::create_communication_daemon;
+using internode::configure_server;
 
 template <typename Dtype>
 DataServer<Dtype>::DataServer(shared_ptr<Solver<Dtype> > solver,
@@ -14,7 +18,6 @@ DataServer<Dtype>::DataServer(shared_ptr<Solver<Dtype> > solver,
   : daemon(create_communication_daemon())
   , solver(solver)
   , waypoint(configure_server(daemon, bind_address)) {
-
   waypoint->register_receive_handler(this);
   LOG(INFO) << solver->param().DebugString();
 }
@@ -79,5 +82,5 @@ void DataServer<Dtype>::run() {
 }
 
 INSTANTIATE_CLASS(DataServer);
-} //namespace caffe
+}  // namespace caffe
 

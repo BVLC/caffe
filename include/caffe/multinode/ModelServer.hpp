@@ -1,9 +1,10 @@
 #ifndef CAFFE_MULTINODE_MODEL_SERVER_HPP_
 #define CAFFE_MULTINODE_MODEL_SERVER_HPP_
 
-#include "caffe/solver.hpp"
-#include "caffe/internode/configuration.hpp"
+#include <string>
 #include <vector>
+#include "caffe/internode/configuration.hpp"
+#include "caffe/solver.hpp"
 
 namespace caffe {
 
@@ -16,14 +17,14 @@ class ModelServer : public internode::Waypoint::Handler {
 
   SolverParameter prepare_model();
   BlobShape blob_shape_by_name(string name);
-public:
+ public:
   ModelServer(shared_ptr<Solver<Dtype> >, string bind_address);
   void run();
 
   virtual void received(char* data, size_t size, internode::RemoteId);
 };
 
-} //namespace caffe
+}  // namespace caffe
 
-#endif //CAFFE_MULTINODE_MODEL_SERVER_HPP_
+#endif  // CAFFE_MULTINODE_MODEL_SERVER_HPP_
 

@@ -2,18 +2,19 @@
 #define CAFFE_SERIALIZATION_BITFIELD_HPP_
 
 #include <vector>
+#include "caffe/util/math_functions.hpp"
 
 struct bitfield {
   std::vector<unsigned char> buffer;
 
-  bitfield(size_t bits)
+  explicit bitfield(size_t bits)
     : buffer((bits + __CHAR_BIT__ - 1) / __CHAR_BIT__) {
   }
 
   bitfield(const char* data, size_t bytes)
     : buffer(bytes) {
-    
-    memcpy(&buffer.front(), data, bytes);
+    caffe::caffe_copy<char>(
+      bytes, data, reinterpret_cast<char*>(&buffer.front()));
   }
 
   char* raw() {
@@ -24,12 +25,12 @@ struct bitfield {
     return buffer.size();
   }
 
-  void shift(uint32_t& bit, uint32_t& byte) {
-    if (bit == __CHAR_BIT__ - 1) {
-      ++byte;
+  void shift(uint32_t* bit, uint32_t* byte) {
+    if (*bit == __CHAR_BIT__ - 1) {
+      ++(*byte);
       bit = 0;
     } else {
-      ++bit;
+      ++(*bit);
     }
   }
 
@@ -38,13 +39,13 @@ struct bitfield {
     uint32_t bit = at_bit % __CHAR_BIT__;
 
     buffer[byte] = buffer[byte] | (((val < 0) ? 1u : 0u) << bit);
-    shift(bit, byte);
+    shift(&bit, &byte);
 
     uint32_t aux = abs(val);
     for (int i = 0; i < mask_size; ++i) {
       buffer[byte] = buffer[byte] | (unsigned char)((aux & 1) << bit);
       aux >>= 1;
-      shift(bit, byte);
+      shift(&bit, &byte);
     }
   }
 
@@ -53,16 +54,16 @@ struct bitfield {
     uint32_t bit = at_bit % __CHAR_BIT__;
 
     bool negative = ((buffer[byte] >> bit) & 1) > 0;
-    shift(bit, byte);
+    shift(&bit, &byte);
 
     uint32_t ret = (mask_size == 0) ? 1u : 0u;
     for (int i = 0; i < mask_size; ++i) {
       ret = ret | ((uint32_t(buffer[byte] >> bit) & 1u) << i);
-      shift(bit, byte);
+      shift(&bit, &byte);
     }
     return (negative) ? -int32_t(ret) : int32_t(ret);
   }
 };
 
-#endif //CAFFE_SERIALIZATION_BITFIELD_HPP_
+#endif  // CAFFE_SERIALIZATION_BITFIELD_HPP_
 

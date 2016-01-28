@@ -1,13 +1,13 @@
-#include "caffe/MultiSolver.hpp"
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
+#include <vector>
+#include "caffe/MultiSolver.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
 MultiSolver<Dtype>::MultiSolver(shared_ptr<Solver<Dtype> > root_solver)
   : root_solver_(root_solver) {
-
   root_solver->set_forward_backward(
     boost::bind(&MultiSolver<Dtype>::ForwardBackward, this));
 
@@ -38,7 +38,7 @@ void MultiSolver<Dtype>::add_another() {
 
   Caffe::set_solver_count(Caffe::solver_count() + 1);
   Caffe::set_root_solver(false);
-  CHECK(worker_solvers.size() > 0);
+  CHECK_GT(worker_solvers.size(), 0);
 
   const vector<shared_ptr<Layer<Dtype> > >& this_layers =
     root_solver_->net()->layers();
@@ -72,7 +72,7 @@ Dtype MultiSolver<Dtype>::ForwardBackward() {
   Dtype loss = 0;
   Net<Dtype>& net = *root_solver_->net();
 
-  //workers share all params
+  // workers share all params
 
   for (int i = 0; i < net.layers().size(); ++i) {
     for (int j = 0; j < callbacks_.size(); ++j) {
@@ -109,5 +109,5 @@ void MultiSolver<Dtype>::Solve() {
 
 INSTANTIATE_CLASS(MultiSolver);
 
-} //namespace caffe
+}  // namespace caffe
 

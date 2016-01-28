@@ -179,7 +179,7 @@ class Net {
     return learnable_params_;
   }
 
-  vector<int> get_layer_learnable_param_ids(int layer_id);
+  vector<int> get_layer_learnable_param_ids(int layer_id) const;
 
   /// @brief returns the learnable parameter learning rate multipliers
   inline const vector<float>& params_lr() const { return params_lr_; }

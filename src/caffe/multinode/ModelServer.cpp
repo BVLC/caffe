@@ -1,12 +1,16 @@
-#include "caffe/multinode/ModelServer.hpp"
+#include <boost/lexical_cast.hpp>
 #include <glog/logging.h>
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
+#include <string>
+#include <vector>
+#include "caffe/multinode/ModelServer.hpp"
 
 namespace caffe {
 
 using ::google::protobuf::Message;
-using namespace internode;
+using internode::create_communication_daemon;
+using internode::RemoteId;
+using internode::configure_server;
 
 template <typename Dtype>
 ModelServer<Dtype>::ModelServer(shared_ptr<Solver<Dtype> > solver,
@@ -15,7 +19,6 @@ ModelServer<Dtype>::ModelServer(shared_ptr<Solver<Dtype> > solver,
   , solver(solver)
   , param_(prepare_model())
   , waypoint(configure_server(daemon, bind_address)) {
-
   waypoint->register_receive_handler(this);
   LOG(INFO) << param_.DebugString();
 }
@@ -33,14 +36,14 @@ BlobShape ModelServer<DType>::blob_shape_by_name(string name) {
 
 template <typename Dtype>
 SolverParameter ModelServer<Dtype>::prepare_model() {
-
   NetParameter net;
   solver->net()->ToProto(&net);
 
   for (int i = 0; i < net.layer_size(); ++i) {
     LayerParameter& layer = *net.mutable_layer(i);
     layer.clear_blobs();
-    if ((layer.type().find("Data") != std::string::npos) && (layer.has_remote_data_param())) {
+    if ((layer.type().find("Data") != std::string::npos)
+        && (layer.has_remote_data_param())) {
       layer.set_type("RemoteData");
 
       for (int j = 0; j < layer.top_size(); ++j) {
@@ -98,5 +101,5 @@ void ModelServer<Dtype>::run() {
 }
 
 INSTANTIATE_CLASS(ModelServer);
-} //namespace caffe
+}  // namespace caffe
 

@@ -16,9 +16,9 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/internode/configuration.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
-#include "caffe/internode/configuration.hpp"
 
 const int kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
 
@@ -66,10 +66,13 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 }
 
 bool ReceiveProtoFromRemote(const string& address, Message* proto) {
-  using namespace internode;
   try {
-    shared_ptr<Daemon> comm = create_communication_daemon();
-    shared_ptr<Waypoint> remote_client = configure_client(comm, address);
+    using internode::Daemon;
+    using internode::Waypoint;
+    using internode::RemoteId;
+    shared_ptr<Daemon> comm = internode::create_communication_daemon();
+    shared_ptr<Waypoint> remote_client =
+      internode::configure_client(comm, address);
     string msg_name = proto->GetTypeName();
     ModelReq request;
     request.set_name(msg_name);
@@ -80,12 +83,12 @@ bool ReceiveProtoFromRemote(const string& address, Message* proto) {
 
     struct Handler : Waypoint::Handler {
       Message* proto;
-      bool& handled;
-      Handler(Message* dest, bool& handled)
+      bool* handled;
+      Handler(Message* dest, bool* handled)
         : proto(dest), handled(handled) {}
 
       void received(char* data, size_t size, RemoteId) {
-        handled = true;
+        *handled = true;
         if (!proto->ParseFromArray(data, size)) {
           throw std::runtime_error("parse failed");
         }
@@ -93,7 +96,7 @@ bool ReceiveProtoFromRemote(const string& address, Message* proto) {
     };
 
     bool received = false;
-    Handler handler(proto, received);
+    Handler handler(proto, &received);
     remote_client->register_receive_handler(&handler);
 
     while (!received) {

@@ -1,11 +1,13 @@
 #ifndef CAFFE_SYNCHRONOUSPARAMSERVER_HPP_
 #define CAFFE_SYNCHRONOUSPARAMSERVER_HPP_
 
-#include "caffe/solver.hpp"
+#include <string>
+#include <vector>
+#include "boost/thread/mutex.hpp"
+#include "boost/unordered_map.hpp"
+#include "boost/unordered_set.hpp"
 #include "caffe/internode/configuration.hpp"
-#include <boost/thread/mutex.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
+#include "caffe/solver.hpp"
 
 namespace caffe {
 
@@ -31,7 +33,7 @@ class SynchronousParamServer : public internode::MultiWaypoint::Handler,
   shared_ptr<BlobCodec<Dtype> > codec;
 
   void init_client(internode::RemoteId);
-public:
+ public:
   SynchronousParamServer(shared_ptr<Solver<Dtype> >,
                          string bind_address);
   void run();
@@ -45,7 +47,8 @@ public:
   bool all_layers_synced() const;
   int current_iter() const;
 };
-} //namespace caffe
+}  // namespace caffe
 
-#endif //CAFFE_SYNCHRONOUSPARAMSERVER_HPP_
+
+#endif  // CAFFE_SYNCHRONOUSPARAMSERVER_HPP_
 

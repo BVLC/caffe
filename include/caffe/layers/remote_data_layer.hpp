@@ -29,12 +29,15 @@ namespace caffe {
  */
 template <typename Dtype>
 class RemoteDataLayer : public BaseDataLayer<Dtype> {
+  void prepare(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
  public:
   explicit RemoteDataLayer(const LayerParameter& param);
 
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
+      const vector<Blob<Dtype>*>& top) {
+    prepare(bottom, top);
+  }
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,

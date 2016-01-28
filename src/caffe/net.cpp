@@ -1022,11 +1022,10 @@ void Net<Dtype>::ShareWeights() {
 }
 
 template <typename Dtype>
-vector<int> Net<Dtype>::get_layer_learnable_param_ids(int layer_id) {
-
-  CHECK(layer_id >= 0);
+vector<int> Net<Dtype>::get_layer_learnable_param_ids(int layer_id) const {
+  CHECK_GE(layer_id, 0);
   CHECK(layer_id < param_id_vecs_.size());
-  vector<int>& layer_param_ids = param_id_vecs_[layer_id];
+  const vector<int>& layer_param_ids = param_id_vecs_[layer_id];
   vector<int> ret;
   for (int i = 0; i < layer_param_ids.size(); ++i) {
     ret.push_back(learnable_param_ids_[layer_param_ids[i]]);

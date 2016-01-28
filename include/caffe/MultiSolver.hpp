@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "caffe/net.hpp"
-#include "caffe/solver_factory.hpp"
 #include "caffe/solver.hpp"
+#include "caffe/solver_factory.hpp"
 
 namespace caffe {
 

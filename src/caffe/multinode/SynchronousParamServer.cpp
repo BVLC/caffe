@@ -1,16 +1,21 @@
-#include "caffe/multinode/SynchronousParamServer.hpp"
-#include "caffe/serialization/ProtoSerialize.hpp"
-#include "caffe/serialization/BlobCodec.hpp"
-#include <boost/tuple/tuple_comparison.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+#include <algorithm>
+#include <string>
+#include <vector>
+#include "caffe/multinode/SynchronousParamServer.hpp"
+#include "caffe/serialization/BlobCodec.hpp"
+#include "caffe/serialization/ProtoSerialize.hpp"
 
 namespace caffe {
 
-using namespace internode;
+using internode::configure_server;
+using internode::create_communication_daemon;
+using internode::RemoteId;
 
 template <typename Dtype>
-SynchronousParamServer<Dtype>::SynchronousParamServer(shared_ptr<Solver<Dtype> > solver,
-                                string bind_address)
+SynchronousParamServer<Dtype>::SynchronousParamServer(
+        shared_ptr<Solver<Dtype> > solver, string bind_address)
     : daemon(create_communication_daemon())
     , waypoint(configure_server(daemon, bind_address))
     , solver(solver)
@@ -18,7 +23,6 @@ SynchronousParamServer<Dtype>::SynchronousParamServer(shared_ptr<Solver<Dtype> >
     , blob_iters(solver->net()->layers().size())
     , pending_clients(solver->net()->layers().size())
     , codec(BlobCodec<Dtype>::create_codec(solver->param().multinode_param())) {
-
   for (int i = 0; i < blob_version.size(); ++i) {
     blob_version[i].resize(solver->net()->layers()[i]->blobs().size());
     blob_iters[i].resize(blob_version[i].size());
@@ -47,7 +51,6 @@ void SynchronousParamServer<Dtype>::run() {
 
 template <typename Dtype>
 int SynchronousParamServer<Dtype>::current_iter() const {
-
   int ret = 0;
   for (int i = 0; i < blob_version.size(); ++i) {
     for (int j = 0; j < blob_version[i].size(); ++j) {
@@ -70,13 +73,13 @@ void SynchronousParamServer<Dtype>::init_client(internode::RemoteId id) {
 
       Layer<Dtype>& layer = *solver->net()->layers()[i];
       Blob<Dtype>* blob = layer.blobs()[j].get();
-      
+
       BlobUpdate update;
       update.set_layer_id(i);
       update.set_blob_id(j);
       update.set_version(blob_version[i][j]);
       CHECK(codec->encode(
-        update, blob, BlobCodec<Dtype>::PARAMS, 0) == blob->count());
+        &update, blob, BlobCodec<Dtype>::PARAMS, 0) == blob->count());
       string str = serialize(update);
       VLOG(4)
         << "sending blob " << j << " of layer " << i;
@@ -98,7 +101,6 @@ void SynchronousParamServer<Dtype>::accepted(internode::RemoteId id) {
 
   if (all_clients.size()
       >= solver->param().multinode_param().wait_for_clients()) {
-    
     typedef ClientSet::iterator It;
     for (It it = all_clients.begin(); it != all_clients.end(); ++it) {
       init_client(*it);
@@ -135,7 +137,6 @@ void SynchronousParamServer<Dtype>::disconnected(internode::RemoteId id) {
 
 template <typename Dtype>
 bool SynchronousParamServer<Dtype>::all_layers_synced() const {
-
   int curr_iter = current_iter();
   for (int i = 0; i < solver->net()->layers().size(); ++i) {
     for (int j = 0; j < blob_version[i].size(); ++j) {
@@ -187,7 +188,6 @@ void SynchronousParamServer<Dtype>::upgrade_layer(int layer_id) {
       && all_layers_synced()
       && (((blob_version[layer_id][0] - 1) > 0)
           || (solver->param().test_initialization()))) {
-
     solver->TestAll();
   }
 }
@@ -195,9 +195,8 @@ void SynchronousParamServer<Dtype>::upgrade_layer(int layer_id) {
 template <typename Dtype>
 void SynchronousParamServer<Dtype>::received(
       char* data, size_t size, RemoteId remote_id) {
-
   BlobUpdate msg;
-  if (!deserialize(data, size, msg))  return;
+  if (!deserialize(data, size, &msg))  return;
 
   Blob<Dtype>* blob =
     solver->net()->layers()[msg.layer_id()]->blobs()[msg.blob_id()].get();
@@ -216,10 +215,8 @@ void SynchronousParamServer<Dtype>::received(
 
 template <typename Dtype>
 void SynchronousParamServer<Dtype>::update_clients() {
-
   for (int i = 0; i < blob_version.size(); ++i) {
     for (int j = 0; j < blob_version[i].size(); ++j) {
-
       typedef ClientSet::iterator It;
       std::vector<RemoteId> clients_to_update;
       ClientSet& clients = pending_clients[i][j];
@@ -244,7 +241,7 @@ void SynchronousParamServer<Dtype>::update_clients() {
       update.set_blob_id(j);
       update.set_version(blob_version[i][j]);
       CHECK(codec->encode(
-        update, blob, BlobCodec<Dtype>::PARAMS, 0) == blob->count());
+        &update, blob, BlobCodec<Dtype>::PARAMS, 0) == blob->count());
       Dtype sum = 0.0;
       for (int k = 0; k < blob->count(); ++k) {
         sum += blob->cpu_data()[k];
@@ -265,5 +262,5 @@ void SynchronousParamServer<Dtype>::update_clients() {
 
 INSTANTIATE_CLASS(SynchronousParamServer);
 
-} //namespace caffe
+}  // namespace caffe
 

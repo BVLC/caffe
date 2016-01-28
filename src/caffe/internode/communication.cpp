@@ -4,6 +4,6 @@
 namespace caffe {
 namespace internode {
 
-}  // namespace caffe
 }  // namespace internode
+}  // namespace caffe
 

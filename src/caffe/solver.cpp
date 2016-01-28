@@ -1,9 +1,8 @@
 #include <cstdio>
-
 #include <string>
 #include <vector>
-#include <boost/bind.hpp>
 
+#include "boost/bind.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"

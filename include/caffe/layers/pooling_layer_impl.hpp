@@ -2,13 +2,14 @@
 #define CAFFE_CODE_GENERATORS_POOLING_H_
 
 #include <vector>
-#include "caffe/proto/caffe.pb.h"
 
 #if defined __x86_64__ || defined _M_X64
 # define XBYAK_NO_OP_NAMES
 # define XBYAK_USE_MMAP_ALLOCATOR
 # include "../xbyak/xbyak_util.h"
 #endif
+
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 // Declarations of CodeGenerator classes.

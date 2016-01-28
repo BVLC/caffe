@@ -12,13 +12,13 @@
 #include <string>
 #include <vector>
 
-#include "boost/thread.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/thread.hpp"
 #include "caffe/caffe.hpp"
-#include "caffe/multinode/SynchronousParamClient.hpp"
 #include "caffe/internode/configuration.hpp"
-#include "caffe/serialization/ProtoSerialize.hpp"
+#include "caffe/multinode/SynchronousParamClient.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
+#include "caffe/serialization/ProtoSerialize.hpp"
 
 namespace caffe {
 
@@ -44,7 +44,7 @@ class LayerState {
   boost::mutex gradient_mtx;
   boost::mutex param_mtx;
 
-public:
+ public:
   LayerState() : state(waiting_for_update), iter(0), iter_size(0) {
   }
 
@@ -83,31 +83,31 @@ public:
     return iter;
   }
 
-  void wait_till_sending(TerminatedHandler& handler) {
+  void wait_till_sending(TerminatedHandler* handler) {
     boost::mutex::scoped_lock lock(mtx);
     while (state != sending_gradients) {
       boost::system_time timeout
         = boost::get_system_time() + boost::posix_time::milliseconds(100);
       cond.timed_wait(lock, timeout);
-      if (handler.terminated()) {
+      if (handler->terminated()) {
         std::terminate();
       }
     }
   }
 
-  void wait_till_updating(TerminatedHandler& handler) {
+  void wait_till_updating(TerminatedHandler* handler) {
     boost::mutex::scoped_lock lock(mtx);
     while (state != waiting_for_update) {
       boost::system_time timeout
         = boost::get_system_time() + boost::posix_time::milliseconds(100);
       cond.timed_wait(lock, timeout);
-      if (handler.terminated()) {
+      if (handler->terminated()) {
         std::terminate();
       }
     }
   }
 
-  int wait_till_calculating(TerminatedHandler& handler) {
+  int wait_till_calculating(TerminatedHandler* handler) {
     boost::mutex::scoped_lock lock(mtx);
     int ret = 0;
     while (state != calculating) {
@@ -115,7 +115,7 @@ public:
         = boost::get_system_time() + boost::posix_time::milliseconds(100);
       cond.timed_wait(lock, timeout);
       ++ret;
-      if (handler.terminated()) {
+      if (handler->terminated()) {
         std::terminate();
       }
     }
@@ -128,10 +128,9 @@ struct CalculationState {
   std::vector<bool> needs_syncing;
 
   template <typename Net>
-  CalculationState(Net& net)
+  explicit CalculationState(const Net& net)
     : layers(net.layers().size())
     , needs_syncing(net.layers().size(), false) {
-
     for (int i = 0; i < net.layers().size(); ++i) {
       needs_syncing[i] = !net.get_layer_learnable_param_ids(i).empty();
     }
@@ -141,7 +140,6 @@ struct CalculationState {
 template <typename Dtype>
 class ReceiveThread : public InternalThread,
                       public internode::Waypoint::Handler {
-
   shared_ptr<Solver<Dtype> > solver;
   shared_ptr<Net<Dtype> > net;
   boost::shared_ptr<internode::Daemon> comm;
@@ -149,14 +147,14 @@ class ReceiveThread : public InternalThread,
   shared_ptr<CalculationState> state;
   shared_ptr<BlobCodec<Dtype> > codec;
   std::vector<std::vector<bool> > received_blobs;
-  TerminatedHandler& terminate_handler;
-public:
+  TerminatedHandler* terminate_handler;
+ public:
   ReceiveThread(shared_ptr<Solver<Dtype> > solver,
                 boost::shared_ptr<internode::Daemon> comm,
                 boost::shared_ptr<internode::Waypoint> param_waypoint,
                 shared_ptr<CalculationState> state,
                 shared_ptr<BlobCodec<Dtype> > codec,
-                TerminatedHandler& terminate_handler)
+                TerminatedHandler* terminate_handler)
     : solver(solver)
     , net(solver->net())
     , comm(comm)
@@ -165,7 +163,6 @@ public:
     , codec(codec)
     , received_blobs(net->layers().size())
     , terminate_handler(terminate_handler) {
-
     waypoint->register_receive_handler(this);
     for (int i = 0; i < net->layers().size(); ++i) {
       received_blobs[i].resize(net->layers()[i]->blobs().size(), false);
@@ -187,7 +184,7 @@ public:
 
   virtual void received(char* data, size_t size, internode::RemoteId) {
     BlobUpdate msg;
-    if (!deserialize(data, size, msg)) return;
+    if (!deserialize(data, size, &msg)) return;
 
     Blob<Dtype>* blob =
       net->layers().at(msg.layer_id())->blobs().at(msg.blob_id()).get();
@@ -211,7 +208,7 @@ public:
   }
 
   virtual void InternalThreadEntry() {
-    while (!terminate_handler.terminated()) {
+    while (!terminate_handler->terminated()) {
       internode::poll_one(comm);
     }
   }
@@ -219,21 +216,21 @@ public:
 
 template <typename Dtype>
 class SendThread : public InternalThread {
-
   const int layer_id;
   shared_ptr<Solver<Dtype> > solver;
   shared_ptr<internode::Waypoint> waypoint;
   shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<CalculationState> state;
   vector<int> param_ids;
-  TerminatedHandler& terminate_handler;
-public:
+  TerminatedHandler* terminate_handler;
+
+ public:
   SendThread(int layer_id,
              shared_ptr<Solver<Dtype> > solver,
              shared_ptr<internode::Waypoint> waypoint,
              shared_ptr<BlobCodec<Dtype> > codec,
              shared_ptr<CalculationState> state,
-             TerminatedHandler& terminate_handler)
+             TerminatedHandler* terminate_handler)
     : layer_id(layer_id)
     , solver(solver)
     , waypoint(waypoint)
@@ -248,8 +245,7 @@ public:
       return;
     }
 
-    while (!terminate_handler.terminated()) {
-
+    while (!terminate_handler->terminated()) {
       state->layers.at(layer_id).wait_till_sending(terminate_handler);
 
       Layer<Dtype>& layer = *solver->net()->layers()[layer_id];
@@ -261,9 +257,9 @@ public:
         msg.set_blob_id(j);
 
         Blob<Dtype>* blob = layer.blobs()[j].get();
-        codec->encode(msg, blob, BlobCodec<Dtype>::GRADS, 0);
+        codec->encode(&msg, blob, BlobCodec<Dtype>::GRADS, 0);
         string str = serialize(msg);
-  
+
         VLOG(3) << "[sending thread] sending blob "
                 << j << " of layer " << layer_id;
         waypoint->send(str.c_str(), str.size());
@@ -284,11 +280,10 @@ public:
   }
 };
 
-} //namespace
+}  // namespace
 
 template<typename Dtype>
 struct SynchronousParamSyncingImpl : TerminatedHandler {
-
   shared_ptr<Solver<Dtype> > solver;
   shared_ptr<Net<Dtype> > net;
   shared_ptr<internode::Daemon> comm;
@@ -310,13 +305,12 @@ struct SynchronousParamSyncingImpl : TerminatedHandler {
     , state(new CalculationState(*net))
     , codec(BlobCodec<Dtype>::create_codec(solver->param().multinode_param()))
     , receiving(
-        new ReceiveThread<Dtype>(solver, comm, waypoint, state, codec, *this))
+        new ReceiveThread<Dtype>(solver, comm, waypoint, state, codec, this))
     , sending(state->layers.size())
     , terminated_(false) {
-
     for (int i = 0; i < sending.size(); ++i) {
       sending[i].reset(
-        new SendThread<Dtype>(i, solver, waypoint, codec, state, *this));
+        new SendThread<Dtype>(i, solver, waypoint, codec, state, this));
     }
   }
 
@@ -359,8 +353,8 @@ void SynchronousParamClient<Dtype>::on_start(int layer_id) {
 
   VLOG(4)  << "[solver thread] waiting for layer " << layer_id;
   int waited = sync->state->layers.at(layer_id)
-    .wait_till_calculating(*sync);
-  
+    .wait_till_calculating(sync.get());
+
   int layer_iter = sync->state->layers.at(layer_id).get_iter();
 
   if (waited > 1) {
