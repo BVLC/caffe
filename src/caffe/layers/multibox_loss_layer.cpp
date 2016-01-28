@@ -80,16 +80,16 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   if (this->layer_param_.propagate_down_size() == 0) {
+    this->layer_param_.add_propagate_down(true);
+    this->layer_param_.add_propagate_down(true);
     this->layer_param_.add_propagate_down(false);
-    this->layer_param_.add_propagate_down(true);
-    this->layer_param_.add_propagate_down(true);
     this->layer_param_.add_propagate_down(false);
   }
   const MultiBoxLossParameter& multibox_loss_param =
       this->layer_param_.multibox_loss_param();
 
   num_ = bottom[0]->num();
-  num_priors_ = bottom[0]->height() / 4;
+  num_priors_ = bottom[2]->height() / 4;
   // Get other parameters.
   CHECK(multibox_loss_param.has_num_classes()) << "Must provide num_classes.";
   num_classes_ = multibox_loss_param.num_classes();
@@ -155,14 +155,14 @@ template <typename Dtype>
 void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   num_ = bottom[0]->num();
-  num_priors_ = bottom[0]->height() / 4;
+  num_priors_ = bottom[2]->height() / 4;
+  num_gt_ = bottom[3]->height();
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   CHECK_EQ(bottom[0]->num(), bottom[2]->num());
-  CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[1]->channels())
+  CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[0]->channels())
       << "Number of priors must match number of location predictions.";
-  CHECK_EQ(num_priors_ * num_classes_, bottom[2]->channels())
+  CHECK_EQ(num_priors_ * num_classes_, bottom[1]->channels())
       << "Number of priors must match number of confidence predictions.";
-  num_gt_ = bottom[3]->height();
   vector<int> loss_shape(0);
   top[0]->Reshape(loss_shape);
 }
@@ -170,10 +170,10 @@ void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const Dtype* prior_data = bottom[0]->cpu_data();
-  const Dtype* loc_data = bottom[1]->cpu_data();
+  const Dtype* loc_data = bottom[0]->cpu_data();
+  const Dtype* conf_data = bottom[1]->cpu_data();
+  const Dtype* prior_data = bottom[2]->cpu_data();
   const Dtype* gt_data = bottom[3]->cpu_data();
-
 
   // Retrieve all ground truth.
   map<int, vector<NormalizedBBox> > all_gt_bboxes;
@@ -284,13 +284,12 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   conf_pred_.Reshape(conf_shape);
   Dtype* conf_pred_data = conf_pred_.mutable_cpu_data();
   Dtype* conf_gt_data = conf_gt_.mutable_cpu_data();
-  const Dtype* conf_data = bottom[2]->cpu_data();
   if (conf_loss_type_ == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
     if (background_label_id_ > -1) {
       // Need to consider background.
       // Directory copy the confidence prediction (but with different shape).
-      CHECK_EQ(conf_pred_.count(), bottom[2]->count());
-      caffe_copy(bottom[2]->count(), conf_data, conf_pred_.mutable_cpu_data());
+      CHECK_EQ(conf_pred_.count(), bottom[1]->count());
+      caffe_copy(bottom[1]->count(), conf_data, conf_pred_.mutable_cpu_data());
       caffe_set(conf_gt_.count(), Dtype(background_label_id_), conf_gt_data);
     }
   } else {
@@ -324,18 +323,18 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     if (background_label_id_ > -1) {
       conf_gt_data += num_priors_;
-      conf_data += bottom[2]->offset(1);
+      conf_data += bottom[1]->offset(1);
     }
   }
   conf_loss_layer_->Reshape(conf_bottom_vec_, conf_top_vec_);
   conf_loss_layer_->Forward(conf_bottom_vec_, conf_top_vec_);
 
   top[0]->mutable_cpu_data()[0] = 0;
-  if (this->layer_param_.propagate_down(1)) {
+  if (this->layer_param_.propagate_down(0)) {
     // TODO(weiliu89): Understand why it needs to divide 2.
     top[0]->mutable_cpu_data()[0] += loc_weight_ * loc_loss_.cpu_data()[0] / 2;
   }
-  if (this->layer_param_.propagate_down(2)) {
+  if (this->layer_param_.propagate_down(1)) {
     // TODO(weiliu89): Understand why it needs to divide 2.
     top[0]->mutable_cpu_data()[0] += conf_loss_.cpu_data()[0] / 2;
   }
@@ -346,7 +345,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
 
-  if (propagate_down[0]) {
+  if (propagate_down[2]) {
     LOG(FATAL) << this->type()
         << " Layer cannot backpropagate to prior inputs.";
   }
@@ -356,7 +355,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 
   // Back propagate on location prediction.
-  if (propagate_down[1]) {
+  if (propagate_down[0]) {
     vector<bool> loc_propagate_down;
     // Only back propagate on prediction, not ground truth.
     loc_propagate_down.push_back(true);
@@ -364,8 +363,8 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     loc_loss_layer_->Backward(loc_top_vec_, loc_propagate_down,
                               loc_bottom_vec_);
     const Dtype* loc_pred_diff = loc_pred_.cpu_diff();
-    Dtype* loc_bottom_diff = bottom[1]->mutable_cpu_diff();
-    caffe_set(bottom[1]->count(), Dtype(0), loc_bottom_diff);
+    Dtype* loc_bottom_diff = bottom[0]->mutable_cpu_diff();
+    caffe_set(bottom[0]->count(), Dtype(0), loc_bottom_diff);
     int count = 0;
     for (int i = 0; i < num_; ++i) {
       const map<int, vector<int> >& match_indices = all_match_indices_[i];
@@ -385,20 +384,20 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           count++;
         }
       }
-      loc_bottom_diff += bottom[1]->offset(1);
+      loc_bottom_diff += bottom[0]->offset(1);
     }
   }
 
   // Back propagate on confidence prediction.
-  if (propagate_down[2]) {
+  if (propagate_down[1]) {
     vector<bool> conf_propagate_down;
     // Only back propagate on prediction, not ground truth.
     conf_propagate_down.push_back(true);
     conf_propagate_down.push_back(false);
     conf_loss_layer_->Backward(conf_top_vec_, conf_propagate_down,
                                conf_bottom_vec_);
-    Dtype* conf_bottom_diff = bottom[2]->mutable_cpu_diff();
-    caffe_set(bottom[2]->count(), Dtype(0), conf_bottom_diff);
+    Dtype* conf_bottom_diff = bottom[1]->mutable_cpu_diff();
+    caffe_set(bottom[1]->count(), Dtype(0), conf_bottom_diff);
     const Dtype* conf_pred_diff = conf_pred_.cpu_diff();
     if (background_label_id_ == -1) {
       int count = 0;
@@ -420,7 +419,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             ++count;
           }
         }
-        conf_bottom_diff += bottom[2]->offset(1);
+        conf_bottom_diff += bottom[1]->offset(1);
       }
     } else {
       // Copy the whole diff back.

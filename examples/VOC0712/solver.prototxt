@@ -1,7 +1,7 @@
 train_net: "examples/VOC0712/train.prototxt"
 base_lr: 0.4
-display: 20
-max_iter: 30000
+display: 2
+max_iter: 50000
 lr_policy: "step"
 gamma: 0.1
 momentum: 0.9
@@ -14,6 +14,6 @@ device_id: 1
 debug_info: false
 snapshot_after_train: true
 solver_type: SGD
-average_loss: 100
+average_loss: 10
 iter_size: 8
 

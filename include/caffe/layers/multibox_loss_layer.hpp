@@ -47,12 +47,12 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  // bottom[0] stores the prior bboxes.
+  // bottom[0] stores the location predictions.
+  void GetLocPredictions(const Dtype* loc_data, vector<LabelBBox>* loc_preds);
+  // bottom[2] stores the prior bboxes.
   void GetPriorBBoxes(const Dtype* prior_data,
       vector<NormalizedBBox>* prior_boxes,
       vector<vector<float> >* prior_variances);
-  // bottom[1] stores the location predictions.
-  void GetLocPredictions(const Dtype* loc_data, vector<LabelBBox>* loc_preds);
   // Get all the inputs from bottom layers.
   // bottom[3] stores the ground truth bounding box labels.
   void GetGroundTruth(const Dtype* gt_data,

@@ -134,18 +134,12 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
     for i in range(0, num):
         from_layer = from_layers[i]
 
-        # Create prior generation layer.
+        # Estimate number of priors per location given provided parameters.
         aspect_ratio = [2, 3]
         if len(aspect_ratios) > i:
             aspect_ratio = aspect_ratios[i]
             if type(aspect_ratio) is not list:
                 aspect_ratio = [aspect_ratio]
-        name = "{}_mbox_priorbox".format(from_layer)
-        net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
-                aspect_ratio=aspect_ratio, flip=flip, clip=clip)
-        priorbox_layers.append(net[name])
-
-        # Estimate number of priors per location given provided parameters.
         num_priors_per_location = 2 + len(aspect_ratio)
         if flip:
             num_priors_per_location += len(aspect_ratio)
@@ -178,16 +172,22 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
         net[flatten_name] = L.Flatten(net[permute_name], axis=1)
         conf_layers.append(net[flatten_name])
 
+        # Create prior generation layer.
+        name = "{}_mbox_priorbox".format(from_layer)
+        net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
+                aspect_ratio=aspect_ratio, flip=flip, clip=clip)
+        priorbox_layers.append(net[name])
+
     # Concatenate priorbox, loc, and conf layers.
     mbox_layers = []
-    name = "mbox_priorbox"
-    net[name] = L.Concat(*priorbox_layers, axis=2)
-    mbox_layers.append(net[name])
     name = "mbox_loc"
     net[name] = L.Concat(*loc_layers, axis=1)
     mbox_layers.append(net[name])
     name = "mbox_conf"
     net[name] = L.Concat(*conf_layers, axis=1)
+    mbox_layers.append(net[name])
+    name = "mbox_priorbox"
+    net[name] = L.Concat(*priorbox_layers, axis=2)
     mbox_layers.append(net[name])
 
     return mbox_layers

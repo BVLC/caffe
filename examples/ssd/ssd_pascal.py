@@ -94,7 +94,7 @@ name = "mbox_loss"
 mbox_layers.append(net.label)
 net[name] = L.MultiBoxLoss(*mbox_layers, multibox_loss_param=multibox_loss_param,
         include=dict(phase=caffe_pb2.Phase.Value('TRAIN')),
-        propagate_down=[False, True, True, False])
+        propagate_down=[True, True, False, False])
 
 with open(train_net_file, 'w') as f:
     print('name: "VGG_SSD_PASCAL0712_train"', file=f)
