@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/internode/configuration.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
@@ -62,6 +63,50 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   delete raw_input;
   close(fd);
   return success;
+}
+
+bool ReceiveProtoFromRemote(const string& address, Message* proto) {
+  try {
+    using internode::Daemon;
+    using internode::Waypoint;
+    using internode::RemoteId;
+    shared_ptr<Daemon> comm = internode::create_communication_daemon();
+    shared_ptr<Waypoint> remote_client =
+      internode::configure_client(comm, address);
+    string msg_name = proto->GetTypeName();
+    ModelReq request;
+    request.set_name(msg_name);
+
+    string str;
+    request.SerializeToString(&str);
+    remote_client->send(str.c_str(), str.size());
+
+    struct Handler : Waypoint::Handler {
+      Message* proto;
+      bool* handled;
+      Handler(Message* dest, bool* handled)
+        : proto(dest), handled(handled) {}
+
+      void received(char* data, size_t size, RemoteId) {
+        *handled = true;
+        if (!proto->ParseFromArray(data, size)) {
+          throw std::runtime_error("parse failed");
+        }
+      }
+    };
+
+    bool received = false;
+    Handler handler(proto, &received);
+    remote_client->register_receive_handler(&handler);
+
+    while (!received) {
+      poll_one(comm);
+    }
+
+    return true;
+  } catch(...) {
+    return false;
+  }
 }
 
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {

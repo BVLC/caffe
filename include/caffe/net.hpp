@@ -62,6 +62,7 @@ class Net {
    * @brief Zeroes out the diffs of all net parameters.
    *        Should be run before Backward.
    */
+  void ClearParamDiffs(int learnable_param_id);
   void ClearParamDiffs();
 
   /**
@@ -177,6 +178,9 @@ class Net {
   inline const vector<Blob<Dtype>*>& learnable_params() const {
     return learnable_params_;
   }
+
+  vector<int> get_layer_learnable_param_ids(int layer_id) const;
+
   /// @brief returns the learnable parameter learning rate multipliers
   inline const vector<float>& params_lr() const { return params_lr_; }
   inline const vector<bool>& has_params_lr() const { return has_params_lr_; }

@@ -50,6 +50,11 @@ inline void MakeTempFilename(string* temp_filename) {
 }
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
+bool ReceiveProtoFromRemote(const string& address, Message* proto);
+
+inline void ReceiveProtoFromRemoteOrDie(const string& address, Message* proto) {
+  CHECK(ReceiveProtoFromRemote(address.c_str(), proto));
+}
 
 inline bool ReadProtoFromTextFile(const string& filename, Message* proto) {
   return ReadProtoFromTextFile(filename.c_str(), proto);

@@ -6,6 +6,18 @@
 
 namespace caffe {
 
+class Element {
+ public:
+  template <typename T>
+  inline T* cast() {
+    T* ret = dynamic_cast<T*>(this);
+    CHECK(ret != NULL);
+    return ret;
+  }
+
+  virtual inline ~Element() {}
+};
+
 template<typename T>
 class BlockingQueue {
  public:

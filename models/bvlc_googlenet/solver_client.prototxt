@@ -1,0 +1,10 @@
+train_net: "models/bvlc_googlenet/train_val_client.prototxt"
+display: 40
+average_loss: 40
+base_lr: 0.01
+lr_policy: "poly"
+power: 0.5
+max_iter: 2400000
+momentum: 0.9
+weight_decay: 0.0002
+solver_mode: CPU

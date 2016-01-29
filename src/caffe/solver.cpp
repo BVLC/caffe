@@ -1,8 +1,8 @@
 #include <cstdio>
-
 #include <string>
 #include <vector>
 
+#include "boost/bind.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -28,14 +28,16 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
-      requested_early_exit_(false) {
+      requested_early_exit_(false),
+      forward_backward_(boost::bind(&Solver<Dtype>::ForwardBackward, this)) {
   Init(param);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
     : net_(), callbacks_(), root_solver_(root_solver),
-      requested_early_exit_(false) {
+      requested_early_exit_(false),
+      forward_backward_(boost::bind(&Solver<Dtype>::ForwardBackward, this)) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -191,8 +193,22 @@ void Solver<Dtype>::InitTestNets() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Step(int iters) {
+Dtype Solver<Dtype>::ForwardBackward() {
+  // zero-init the params
+  net_->ClearParamDiffs();
+
+  Dtype loss = Dtype();
   vector<Blob<Dtype>*> bottom_vec;
+
+  // accumulate the loss and gradient
+  for (int i = 0; i < param_.iter_size(); ++i) {
+    loss += net_->ForwardBackward(bottom_vec);
+  }
+  return loss / param_.iter_size();
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Step(int iters) {
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;
   int average_loss = this->param_.average_loss();
@@ -200,8 +216,6 @@ void Solver<Dtype>::Step(int iters) {
   Dtype smoothed_loss = 0;
 
   while (iter_ < stop_iter) {
-    // zero-init the params
-    net_->ClearParamDiffs();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())
         && Caffe::root_solver()) {
@@ -217,12 +231,8 @@ void Solver<Dtype>::Step(int iters) {
     }
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
-    // accumulate the loss and gradient
-    Dtype loss = 0;
-    for (int i = 0; i < param_.iter_size(); ++i) {
-      loss += net_->ForwardBackward(bottom_vec);
-    }
-    loss /= param_.iter_size();
+    Dtype loss = forward_backward_();
+
     // average the loss across iterations for smoothed reporting
     if (losses.size() < average_loss) {
       losses.push_back(loss);
@@ -483,6 +493,16 @@ void Solver<Dtype>::Restore(const char* state_file) {
   }
 }
 
+template <typename Dtype>
+class DisabledUpdateSolver : public WorkerSolver<Dtype> {
+ public:
+  virtual inline const char* type() const { return "DisabledUpdate"; }
+  explicit DisabledUpdateSolver(const SolverParameter& param)
+      : WorkerSolver<Dtype>(param) {}
+};
+
 INSTANTIATE_CLASS(Solver);
+INSTANTIATE_CLASS(DisabledUpdateSolver);
+REGISTER_SOLVER_CLASS(DisabledUpdate);
 
 }  // namespace caffe

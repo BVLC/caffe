@@ -987,23 +987,28 @@ void Net<Dtype>::Update() {
 }
 
 template <typename Dtype>
+void Net<Dtype>::ClearParamDiffs(int learnable_param_id) {
+  Blob<Dtype>* blob = learnable_params_[learnable_param_id];
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    caffe_set(blob->count(), static_cast<Dtype>(0),
+              blob->mutable_cpu_diff());
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
+                  blob->mutable_gpu_diff());
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+}
+
+template <typename Dtype>
 void Net<Dtype>::ClearParamDiffs() {
   for (int i = 0; i < learnable_params_.size(); ++i) {
-    Blob<Dtype>* blob = learnable_params_[i];
-    switch (Caffe::mode()) {
-    case Caffe::CPU:
-      caffe_set(blob->count(), static_cast<Dtype>(0),
-                blob->mutable_cpu_diff());
-      break;
-    case Caffe::GPU:
-#ifndef CPU_ONLY
-      caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
-                    blob->mutable_gpu_diff());
-#else
-      NO_GPU;
-#endif
-      break;
-    }
+    ClearParamDiffs(i);
   }
 }
 
@@ -1014,6 +1019,19 @@ void Net<Dtype>::ShareWeights() {
     params_[i]->ShareData(*params_[param_owners_[i]]);
     params_[i]->ShareDiff(*params_[param_owners_[i]]);
   }
+}
+
+template <typename Dtype>
+vector<int> Net<Dtype>::get_layer_learnable_param_ids(int layer_id) const {
+  CHECK_GE(layer_id, 0);
+  CHECK(layer_id < param_id_vecs_.size());
+  const vector<int>& layer_param_ids = param_id_vecs_[layer_id];
+  vector<int> ret;
+  for (int i = 0; i < layer_param_ids.size(); ++i) {
+    ret.push_back(learnable_param_ids_[layer_param_ids[i]]);
+    CHECK(params_[layer_param_ids[i]].get() == learnable_params_[ret.back()]);
+  }
+  return ret;
 }
 
 template <typename Dtype>
