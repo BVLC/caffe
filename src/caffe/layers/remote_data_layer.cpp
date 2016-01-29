@@ -230,7 +230,7 @@ struct SimpleDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
   }
 
   virtual void get(string msg, const vector<Blob<Dtype>*>& ret) {
-    Data<Dtype>* data = cached.pop(msg)->cast<Data<Dtype> >();
+    Data<Dtype>* data = cached.pop(msg)->template cast<Data<Dtype> >();
     CHECK(data->top.size() == ret.size());
     for (int i = 0; i < ret.size(); ++i) {
       ret[i]->ReshapeLike(*data->top[i]);

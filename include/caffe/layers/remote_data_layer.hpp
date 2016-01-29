@@ -44,7 +44,7 @@ class RemoteDataLayer : public BaseDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "RemoteData"; }
 
-  class RemoteDataQueue;
+  struct RemoteDataQueue;
  private:
   shared_ptr<RemoteDataQueue> queue;
   Blob<Dtype>* transform_blob;
