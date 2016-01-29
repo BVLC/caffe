@@ -88,6 +88,8 @@ namespace caffe {
           }
           // retry once
           CUDA_CHECK(cubAlloc->DeviceAllocate(ptr, size, stream));
+          // If retry succeeds we need to clean up last error:
+          cudaGetLastError();
         }
       break;
     default:
