@@ -15,7 +15,7 @@ void LMDB::Open(const string& source, Mode mode) {
   if (mode == NEW) {
     CHECK_EQ(mkdir(source.c_str(), 0744), 0) << "mkdir " << source << "failed";
   }
-  int flags = 0;
+  int_tp flags = 0;
   if (mode == READ) {
     flags = MDB_RDONLY | MDB_NOTLS;
   }

@@ -36,8 +36,8 @@ class HDF5OutputLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "HDF5Output"; }
   // TODO: no limit on the number of blobs
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 0; }
 
   inline std::string file_name() const { return file_name_; }
 

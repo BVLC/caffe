@@ -28,12 +28,12 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     // Create test input file.
     MakeTempFilename(&filename_);
     std::ofstream outfile(filename_.c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename_;
-    for (int i = 0; i < 5; ++i) {
+    for (int_tp i = 0; i < 5; ++i) {
       outfile << EXAMPLES_SOURCE_DIR "images/cat.jpg " << i;
     }
     outfile.close();
@@ -51,7 +51,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_label_;
   }
 
-  int seed_;
+  int_tp seed_;
   string filename_;
   string filename_reshape_;
   Blob<Dtype>* const blob_top_data_;
@@ -80,9 +80,9 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
-  for (int iter = 0; iter < 2; ++iter) {
+  for (int_tp iter = 0; iter < 2; ++iter) {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
+    for (int_tp i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
   }
@@ -108,9 +108,9 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
-  for (int iter = 0; iter < 2; ++iter) {
+  for (int_tp iter = 0; iter < 2; ++iter) {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
+    for (int_tp i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
   }
@@ -161,11 +161,11 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
-  for (int iter = 0; iter < 2; ++iter) {
+  for (int_tp iter = 0; iter < 2; ++iter) {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    map<Dtype, int> values_to_indices;
-    int num_in_order = 0;
-    for (int i = 0; i < 5; ++i) {
+    map<Dtype, int_tp> values_to_indices;
+    int_tp num_in_order = 0;
+    for (int_tp i = 0; i < 5; ++i) {
       Dtype value = this->blob_top_label_->cpu_data()[i];
       // Check that the value has not been seen already (no duplicates).
       EXPECT_EQ(values_to_indices.find(value), values_to_indices.end());

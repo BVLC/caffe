@@ -77,16 +77,15 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char label_j;
   char* pixels = new char[2 * rows * cols];
   std::string value;
-
   caffe::Datum datum;
   datum.set_channels(2);  // one channel for each image in the pair
   datum.set_height(rows);
   datum.set_width(cols);
   LOG(INFO) << "A total of " << num_items << " items.";
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
-  for (int itemid = 0; itemid < num_items; ++itemid) {
-    int i = caffe::caffe_rng_rand() % num_items;  // pick a random  pair
-    int j = caffe::caffe_rng_rand() % num_items;
+  for (int_tp itemid = 0; itemid < num_items; ++itemid) {
+    int_tp i = caffe::caffe_rng_rand() % num_items;  // pick a random  pair
+    int_tp j = caffe::caffe_rng_rand() % num_items;
     read_image(&image_file, &label_file, i, rows, cols,
         pixels, &label_i);
     read_image(&image_file, &label_file, j, rows, cols,
@@ -123,7 +122,7 @@ int main(int argc, char** argv) {
   return 0;
 }
 #else
-int main(int argc, char** argv) {
+int_tp main(int_tp argc, char** argv) {
   LOG(FATAL) << "This example requires LevelDB; compile with USE_LEVELDB.";
 }
 #endif  // USE_LEVELDB

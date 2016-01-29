@@ -12,7 +12,7 @@ namespace caffe {
 const float kLOG_THRESHOLD = 1e-20;
 
 /**
- * @brief An interface for Layer%s that take two Blob%s as input -- usually
+ * @brief An int_tperface for Layer%s that take two Blob%s as input -- usually
  *        (1) predictions and (2) ground-truth labels -- and output a
  *        singleton Blob representing the loss.
  *
@@ -29,21 +29,21 @@ class LossLayer : public Layer<Dtype> {
   virtual void Reshape(
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
 
   /**
    * @brief For convenience and backwards compatibility, instruct the Net to
-   *        automatically allocate a single top Blob for LossLayers, into which
+   *        automatically allocate a single top Blob for LossLayers, int_tpo which
    *        they output their singleton loss, (even if the user didn't specify
    *        one in the prototxt, etc.).
    */
   virtual inline bool AutoTopBlobs() const { return true; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
   /**
    * We usually cannot backpropagate to the labels; ignore force_backward for
    * these inputs.
    */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
+  virtual inline bool AllowForceBackward(const int_tp bottom_index) const {
     return bottom_index != 1;
   }
 };

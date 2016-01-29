@@ -11,12 +11,12 @@ template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int_tp i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
 
     // Forward through cuDNN in parallel over groups.
-    for (int g = 0; g < this->group_; g++) {
+    for (int_tp g = 0; g < this->group_; g++) {
       // Filters.
       CUDNN_CHECK(cudnnConvolutionForward(handle_[g],
             cudnn::dataType<Dtype>::one,
@@ -49,7 +49,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    sync_conv_groups CUDA_KERNEL(1, 1)();
   }
 }
 
@@ -66,10 +66,10 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (this->bias_term_ && this->param_propagate_down_[1]) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
   }
-  for (int i = 0; i < top.size(); ++i) {
+  for (int_tp i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     // Backward through cuDNN in parallel over groups and gradients.
-    for (int g = 0; g < this->group_; g++) {
+    for (int_tp g = 0; g < this->group_; g++) {
       // Gradient w.r.t. bias.
       if (this->bias_term_ && this->param_propagate_down_[1]) {
         CUDNN_CHECK(cudnnConvolutionBackwardBias(handle_[0*this->group_ + g],
@@ -82,7 +82,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       // Gradient w.r.t. weights.
       if (this->param_propagate_down_[0]) {
         const Dtype* bottom_data = bottom[i]->gpu_data();
-        CUDNN_CHECK(cudnnConvolutionBackwardFilter_v3(
+        CUDNN_CHECK(cudnnConvolutionBackwardFilter(
               handle_[1*this->group_ + g],
               cudnn::dataType<Dtype>::one,
               bottom_descs_[i], bottom_data + bottom_offset_ * g,
@@ -100,7 +100,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           weight = this->blobs_[0]->gpu_data();
         }
         Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-        CUDNN_CHECK(cudnnConvolutionBackwardData_v3(
+        CUDNN_CHECK(cudnnConvolutionBackwardData(
               handle_[2*this->group_ + g],
               cudnn::dataType<Dtype>::one,
               filter_desc_, weight + this->weight_offset_ * g,
@@ -116,7 +116,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    sync_conv_groups CUDA_KERNEL(1, 1)();
   }
 }
 

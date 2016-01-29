@@ -169,7 +169,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 4:
         print_help()
     else:
-        chart_type = int(sys.argv[1])
+        chart_type = int_tp(sys.argv[1])
         if not is_valid_chart_type(chart_type):
             print_help()
         path_to_png = sys.argv[2]

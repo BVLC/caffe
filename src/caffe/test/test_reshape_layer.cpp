@@ -65,7 +65,7 @@ TYPED_TEST(ReshapeLayerTest, TestFlattenValues) {
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int c = 0; c < 3 * 6 * 5; ++c) {
+  for (int_tp c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, c / (6 * 5), (c / 5) % 6, c % 5));
     EXPECT_EQ(this->blob_top_->data_at(1, c, 0, 0),
@@ -230,7 +230,7 @@ TYPED_TEST(ReshapeLayerTest, TestForward) {
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_EQ(this->blob_top_->cpu_data()[i],
               this->blob_bottom_->cpu_data()[i]);
   }
@@ -249,14 +249,14 @@ TYPED_TEST(ReshapeLayerTest, TestForwardAfterReshape) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We know the above produced the correct result from TestForward.
   // Reshape the bottom and call layer.Reshape, then try again.
-  vector<int> new_bottom_shape(1, 2 * 3 * 6 * 5);
+  vector<int_tp> new_bottom_shape(1, 2 * 3 * 6 * 5);
   this->blob_bottom_->Reshape(new_bottom_shape);
   layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_EQ(this->blob_top_->cpu_data()[i],
               this->blob_bottom_->cpu_data()[i]);
   }

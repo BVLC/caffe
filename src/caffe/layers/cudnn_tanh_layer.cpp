@@ -11,8 +11,8 @@ void CuDNNTanHLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   TanHLayer<Dtype>::LayerSetUp(bottom, top);
   // initialize cuDNN
   CUDNN_CHECK(cudnnCreate(&handle_));
-  cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
-  cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+  cudnn::createTensorNdDesc<Dtype>(&bottom_desc_);
+  cudnn::createTensorNdDesc<Dtype>(&top_desc_);
   handles_setup_ = true;
 }
 
@@ -20,12 +20,10 @@ template <typename Dtype>
 void CuDNNTanHLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   TanHLayer<Dtype>::Reshape(bottom, top);
-  const int N = bottom[0]->num();
-  const int K = bottom[0]->channels();
-  const int H = bottom[0]->height();
-  const int W = bottom[0]->width();
-  cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
-  cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
+  const int_tp* shape = &(bottom[0]->shape()[0]);
+  cudnn::setTensorNdDesc<Dtype>(&bottom_desc_, bottom[0]->shape().size(),
+                                shape);
+  cudnn::setTensorNdDesc<Dtype>(&top_desc_, bottom[0]->shape().size(), shape);
 }
 
 template <typename Dtype>

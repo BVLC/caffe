@@ -1,6 +1,10 @@
 #ifndef CAFFE_PARALLEL_HPP_
 #define CAFFE_PARALLEL_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <vector>
@@ -26,7 +30,7 @@ class Params {
   virtual ~Params() {
   }
 
-  inline size_t size() const {
+  inline uint_tp size() const {
     return size_;
   }
   inline Dtype* data() const {
@@ -37,7 +41,7 @@ class Params {
   }
 
  protected:
-  const size_t size_;           // Size of buffers
+  const uint_tp size_;           // Size of buffers
   Dtype* data_;                 // Network parameters
   Dtype* diff_;                 // Gradient
 
@@ -61,23 +65,26 @@ class GPUParams : public Params<Dtype> {
 
 class DevicePair {
  public:
-  DevicePair(int parent, int device)
+  DevicePair(device* parent, device* dev)
       : parent_(parent),
-        device_(device) {
+        device_(dev) {
   }
-  inline int parent() {
+
+  inline device* get_parent() {
     return parent_;
   }
-  inline int device() {
+
+  inline device* get_device() {
     return device_;
   }
 
   // Group GPUs in pairs, by proximity depending on machine's topology
-  static void compute(const vector<int> devices, vector<DevicePair>* pairs);
+  static void compute(const vector<device*> devices,
+                      vector<DevicePair>* pairs);
 
  protected:
-  int parent_;
-  int device_;
+  device* parent_;
+  device* device_;
 };
 
 // Synchronous data parallelism using map-reduce between local GPUs.
@@ -93,7 +100,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
     return solver_;
   }
 
-  void run(const vector<int>& gpus);
+  void run(const vector<device*>& gpus);
 
  protected:
   void on_start();

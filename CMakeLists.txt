@@ -26,8 +26,13 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
-caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" ON IF NOT CPU_ONLY)
+caffe_option(CPU_ONLY "Build Caffe without CUDA and OpenCL support" OFF)
+caffe_option(USE_INDEX_64 "Build Caffe with 64 bit indexing" OFF)
+caffe_option(USE_CUDA "Build Caffe with CUDA support" ON)
+caffe_option(USE_GREENTEA "Build Caffe with OpenCL support" ON)
+caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using ViennaClBLAS)" OFF)
+caffe_option(USE_ISAAC "Build Caffe with ISAAC support (instead of using ViennaClBLAS)" OFF)
+caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" OFF)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
 set(python_version "2" CACHE STRING "Specify which Python version to use")
@@ -39,16 +44,28 @@ caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 
+# ---[ Flag consistency check
+if(CPU_ONLY)
+  set(USE_CUDA OFF)
+  set(USE_GREENTEA OFF)
+  set(USE_CUDNN OFF)
+  set(USE_CLBLAS OFF)
+endif()
+
+if(USE_ISAAC)
+  set(USE_CLBLAS ON)
+endif()
+
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
 
 # ---[ Flags
 if(UNIX OR APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++11 -DCMAKE_BUILD")
 endif()
 
 if(USE_libstdcpp)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -std=c++11")
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 

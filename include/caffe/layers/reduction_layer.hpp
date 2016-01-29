@@ -27,8 +27,8 @@ class ReductionLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Reduction"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -45,11 +45,11 @@ class ReductionLayer : public Layer<Dtype> {
   /// @brief a scalar coefficient applied to all outputs
   Dtype coeff_;
   /// @brief the index of the first input axis to reduce
-  int axis_;
+  int_tp axis_;
   /// @brief the number of reductions performed
-  int num_;
+  int_tp num_;
   /// @brief the input size of each reduction
-  int dim_;
+  int_tp dim_;
   /// @brief a helper Blob used for summation (op_ == SUM)
   Blob<Dtype> sum_multiplier_;
 };

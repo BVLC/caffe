@@ -3,7 +3,8 @@
 # Travis CI tests are CPU-only for lack of compatible hardware.
 
 set -e
-MAKE="make --jobs=$NUM_THREADS --keep-going"
+# Limit jobs to stay within available RAM/Swap
+MAKE="make --jobs=2 --keep-going"
 
 if $WITH_CMAKE; then
   mkdir build

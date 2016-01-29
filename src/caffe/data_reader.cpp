@@ -17,14 +17,15 @@ static boost::mutex bodies_mutex_;
 
 DataReader::DataReader(const LayerParameter& param)
     : queue_pair_(new QueuePair(  //
-        param.data_param().prefetch() * param.data_param().batch_size())) {
+        param.data_param().prefetch() * param.data_param().batch_size())),
+      device_(Caffe::GetDevice(param.device(), true)) {
   // Get or create a body
   boost::mutex::scoped_lock lock(bodies_mutex_);
   string key = source_key(param);
   weak_ptr<Body>& weak = bodies_[key];
   body_ = weak.lock();
   if (!body_) {
-    body_.reset(new Body(param));
+    body_.reset(new Body(param, device_));
     bodies_[key] = weak_ptr<Body>(body_);
   }
   body_->new_queue_pairs_.push(queue_pair_);
@@ -41,9 +42,9 @@ DataReader::~DataReader() {
 
 //
 
-DataReader::QueuePair::QueuePair(int size) {
+DataReader::QueuePair::QueuePair(int_tp size) {
   // Initialize the free queue with requested number of datums
-  for (int i = 0; i < size; ++i) {
+  for (int_tp i = 0; i < size; ++i) {
     free_.push(new Datum());
   }
 }
@@ -60,10 +61,10 @@ DataReader::QueuePair::~QueuePair() {
 
 //
 
-DataReader::Body::Body(const LayerParameter& param)
+DataReader::Body::Body(const LayerParameter& param, device* device_context)
     : param_(param),
       new_queue_pairs_() {
-  StartInternalThread();
+  StartInternalThread(device_context);
 }
 
 DataReader::Body::~Body() {
@@ -76,19 +77,19 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   vector<shared_ptr<QueuePair> > qps;
   try {
-    int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
+    int_tp solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
 
     // To ensure deterministic runs, only start running once all solvers
     // are ready. But solvers need to peek on one item during initialization,
     // so read one item, then wait for the next solver.
-    for (int i = 0; i < solver_count; ++i) {
+    for (int_tp i = 0; i < solver_count; ++i) {
       shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
       read_one(cursor.get(), qp.get());
       qps.push_back(qp);
     }
     // Main loop
     while (!must_stop()) {
-      for (int i = 0; i < solver_count; ++i) {
+      for (int_tp i = 0; i < solver_count; ++i) {
         read_one(cursor.get(), qps[i].get());
       }
       // Check no additional readers have been created. This can happen if

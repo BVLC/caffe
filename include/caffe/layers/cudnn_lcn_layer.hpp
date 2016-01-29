@@ -10,6 +10,10 @@
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/power_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
@@ -36,7 +40,7 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   cudnnLRNDescriptor_t norm_desc_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 
-  int size_, pre_pad_;
+  int_tp size_, pre_pad_;
   Dtype alpha_, beta_, k_;
 
   size_t tempDataSize;

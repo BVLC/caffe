@@ -1,32 +1,40 @@
+#ifndef CAFFE_CONFIG_HPP_
+#define CAFFE_CONFIG_HPP_
+
 /* Sources directory */
 #define SOURCE_FOLDER "${PROJECT_SOURCE_DIR}"
 
 /* Binaries directory */
 #define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 
+/* 64 bit indexing */
+#cmakedefine USE_INDEX_64
+
 /* NVIDA Cuda */
 #cmakedefine HAVE_CUDA
+#cmakedefine USE_CUDA
+
+/* OpenCl kernels */
+#cmakedefine USE_GREENTEA
+#cmakedefine VIENNACL_WITH_OPENCL
+
+/* clBLAS */
+#cmakedefine HAVE_CLBLAS
+#cmakedefine USE_CLBLAS
 
 /* NVIDA cuDNN */
 #cmakedefine HAVE_CUDNN
 #cmakedefine USE_CUDNN
 
-/* NVIDA cuDNN */
+/* Disable CUDA and OpenCL */
 #cmakedefine CPU_ONLY
 
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
 
-/* Temporary (TODO: remove) */
-#if 1
-  #define CMAKE_SOURCE_DIR SOURCE_FOLDER "/src/"
-  #define EXAMPLES_SOURCE_DIR BINARY_FOLDER "/examples/"
-  #define CMAKE_EXT ".gen.cmake"
-#else
-  #define CMAKE_SOURCE_DIR "src/"
-  #define EXAMPLES_SOURCE_DIR "examples/"
-  #define CMAKE_EXT ""
-#endif
+#define CMAKE_SOURCE_DIR "src/"
+#define EXAMPLES_SOURCE_DIR "examples/"
+#define CMAKE_EXT ""
 
 /* Matlab */
 #cmakedefine HAVE_MATLAB
@@ -36,3 +44,5 @@
 #cmakedefine USE_LEVELDB
 #cmakedefine USE_LMDB
 #cmakedefine ALLOW_LMDB_NOLOCK
+
+#endif  // CAFFE_CONFIG_HPP_

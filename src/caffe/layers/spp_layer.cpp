@@ -14,25 +14,27 @@ using std::min;
 using std::max;
 
 template <typename Dtype>
-LayerParameter SPPLayer<Dtype>::GetPoolingParam(const int pyramid_level,
-      const int bottom_h, const int bottom_w, const SPPParameter spp_param) {
+LayerParameter SPPLayer<Dtype>::GetPoolingParam(const int_tp pyramid_level,
+                                                const int_tp bottom_h,
+                                                const int_tp bottom_w,
+                                                const SPPParameter spp_param) {
   LayerParameter pooling_param;
-  int num_bins = pow(2, pyramid_level);
+  int_tp num_bins = pow(2, pyramid_level);
 
   // find padding and kernel size so that the pooling is
   // performed across the entire image
-  int kernel_h = ceil(bottom_h / static_cast<double>(num_bins));
+  int_tp kernel_h = ceil(bottom_h / static_cast<double>(num_bins));
   // remainder_h is the min number of pixels that need to be padded before
   // entire image height is pooled over with the chosen kernel dimension
-  int remainder_h = kernel_h * num_bins - bottom_h;
+  int_tp remainder_h = kernel_h * num_bins - bottom_h;
   // pooling layer pads (2 * pad_h) pixels on the top and bottom of the
   // image.
-  int pad_h = (remainder_h + 1) / 2;
+  int_tp pad_h = (remainder_h + 1) / 2;
 
   // similar logic for width
-  int kernel_w = ceil(bottom_w / static_cast<double>(num_bins));
-  int remainder_w = kernel_w * num_bins - bottom_w;
-  int pad_w = (remainder_w + 1) / 2;
+  int_tp kernel_w = ceil(bottom_w / static_cast<double>(num_bins));
+  int_tp remainder_w = kernel_w * num_bins - bottom_w;
+  int_tp pad_w = (remainder_w + 1) / 2;
 
   pooling_param.mutable_pooling_param()->set_pad_h(pad_h);
   pooling_param.mutable_pooling_param()->set_pad_w(pad_w);
@@ -95,7 +97,7 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     return;
   }
   // split layer output holders setup
-  for (int i = 0; i < pyramid_height_; i++) {
+  for (int_tp i = 0; i < pyramid_height_; i++) {
     split_top_vec_.push_back(new Blob<Dtype>());
   }
 
@@ -104,7 +106,7 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   split_layer_.reset(new SplitLayer<Dtype>(split_param));
   split_layer_->SetUp(bottom, split_top_vec_);
 
-  for (int i = 0; i < pyramid_height_; i++) {
+  for (int_tp i = 0; i < pyramid_height_; i++) {
     // pooling layer input holders setup
     pooling_bottom_vecs_.push_back(new vector<Blob<Dtype>*>);
     pooling_bottom_vecs_[i]->push_back(split_top_vec_[i]);
@@ -168,7 +170,7 @@ void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     return;
   }
   split_layer_->Reshape(bottom, split_top_vec_);
-  for (int i = 0; i < pyramid_height_; i++) {
+  for (int_tp i = 0; i < pyramid_height_; i++) {
     LayerParameter pooling_param = GetPoolingParam(
         i, bottom_h_, bottom_w_, spp_param);
 
@@ -192,7 +194,7 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     return;
   }
   split_layer_->Forward(bottom, split_top_vec_);
-  for (int i = 0; i < pyramid_height_; i++) {
+  for (int_tp i = 0; i < pyramid_height_; i++) {
     pooling_layers_[i]->Forward(
         *pooling_bottom_vecs_[i], *pooling_top_vecs_[i]);
     flatten_layers_[i]->Forward(
@@ -213,7 +215,7 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   vector<bool> concat_propagate_down(pyramid_height_, true);
   concat_layer_->Backward(top, concat_propagate_down, concat_bottom_vec_);
-  for (int i = 0; i < pyramid_height_; i++) {
+  for (int_tp i = 0; i < pyramid_height_; i++) {
     flatten_layers_[i]->Backward(
         *flatten_top_vecs_[i], propagate_down, *pooling_top_vecs_[i]);
     pooling_layers_[i]->Backward(

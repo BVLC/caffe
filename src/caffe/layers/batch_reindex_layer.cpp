@@ -9,19 +9,19 @@ template<typename Dtype>
 void BatchReindexLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(1, bottom[1]->num_axes());
-  vector<int> newshape;
+  vector<int_tp> newshape;
   newshape.push_back(bottom[1]->shape(0));
-  for (int i = 1; i < bottom[0]->shape().size(); ++i) {
+  for (int_tp i = 1; i < bottom[0]->shape().size(); ++i) {
     newshape.push_back(bottom[0]->shape()[i]);
   }
   top[0]->Reshape(newshape);
 }
 
 template<typename Dtype>
-void BatchReindexLayer<Dtype>::check_batch_reindex(int initial_num,
-                                                   int final_num,
+void BatchReindexLayer<Dtype>::check_batch_reindex(int_tp initial_num,
+                                                   int_tp final_num,
                                                    const Dtype* ridx_data) {
-  for (int i = 0; i < final_num; ++i) {
+  for (int_tp i = 0; i < final_num; ++i) {
     CHECK_GE(ridx_data[i], 0)
         << "Index specified for reindex layer was negative.";
     CHECK_LT(ridx_data[i], initial_num)
@@ -37,13 +37,13 @@ void BatchReindexLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (top[0]->count() == 0) {
     return;
   }
-  int inner_dim = bottom[0]->count() / bottom[0]->shape(0);
+  int_tp inner_dim = bottom[0]->count() / bottom[0]->shape(0);
   const Dtype* in = bottom[0]->cpu_data();
   const Dtype* permut = bottom[1]->cpu_data();
   Dtype* out = top[0]->mutable_cpu_data();
-  for (int index = 0; index < top[0]->count(); ++index) {
-    int n = index / (inner_dim);
-    int in_n = static_cast<int>(permut[n]);
+  for (int_tp index = 0; index < top[0]->count(); ++index) {
+    int_tp n = index / (inner_dim);
+    int_tp in_n = static_cast<int_tp>(permut[n]);
     out[index] = in[in_n * (inner_dim) + index % (inner_dim)];
   }
 }
@@ -56,14 +56,14 @@ void BatchReindexLayer<Dtype>::Backward_cpu(
   if (!propagate_down[0]) {
     return;
   }
-  int inner_dim = bottom[0]->count() / bottom[0]->shape(0);
+  int_tp inner_dim = bottom[0]->count() / bottom[0]->shape(0);
   Dtype* bot_diff = bottom[0]->mutable_cpu_diff();
   const Dtype* permut = bottom[1]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
   caffe_set(bottom[0]->count(), Dtype(0), bot_diff);
-  for (int index = 0; index < top[0]->count(); ++index) {
-    int n = index / (inner_dim);
-    int in_n = static_cast<int>(permut[n]);
+  for (int_tp index = 0; index < top[0]->count(); ++index) {
+    int_tp n = index / (inner_dim);
+    int_tp in_n = static_cast<int_tp>(permut[n]);
     bot_diff[in_n * (inner_dim) + index % (inner_dim)] += top_diff[index];
   }
 }

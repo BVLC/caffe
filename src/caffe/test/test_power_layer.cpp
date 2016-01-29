@@ -21,7 +21,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
   PowerLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_top_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -43,7 +43,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
     const Dtype min_precision = 1e-5;
-    for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
       Dtype expected_value = pow(shift + scale * bottom_data[i], power);
       if (power == Dtype(0) || power == Dtype(1) || power == Dtype(2)) {
         EXPECT_FALSE(isnan(top_data[i]));
@@ -68,7 +68,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
       // Avoid NaNs by forcing (shift + scale * x) >= 0
       Dtype* bottom_data = this->blob_bottom_->mutable_cpu_data();
       Dtype min_value = -shift / scale;
-      for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+      for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
         if (bottom_data[i] < min_value) {
           bottom_data[i] = min_value + (min_value - bottom_data[i]);
         }

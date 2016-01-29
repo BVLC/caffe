@@ -11,7 +11,7 @@ namespace caffe {
 
 /**
  * @brief Creates a "split" path in the network by copying the bottom Blob
- *        into multiple top Blob%s to be used by multiple consuming layers.
+ *        int_tpo multiple top Blob%s to be used by multiple consuming layers.
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
@@ -24,8 +24,8 @@ class SplitLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Split"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -37,7 +37,7 @@ class SplitLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int count_;
+  int_tp count_;
 };
 
 }  // namespace caffe

@@ -1,6 +1,26 @@
 ## Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
+# 32 bit / 64 bit indexing
+# USE_INDEX_64 := 1
+
+# GreenTea (ViennaCL/OpenCL) backend switch
+
+# Enable the CUDA backend
+USE_CUDA := 1
+
+# Enable the OpenCL/Greentea backend
+USE_GREENTEA := 0
+
+# Folder of the ViennaCL header-only library
+VIENNACL_DIR = ../ViennaCL
+
+# Override BLAS, use clBLAS insead of ViennaclBLAS.
+# USE_CLBLAS := 1
+
+# Override BLAS, use ISAAC instead of ViennaclBLAS.
+# USE_ISAAC := 1
+
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 # USE_CUDNN := 1
 
@@ -103,6 +123,7 @@ DISTRIBUTE_DIR := distribute
 
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
+# VIENNACL_DEBUG := 0
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0

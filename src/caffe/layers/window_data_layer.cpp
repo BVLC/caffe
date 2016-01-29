@@ -69,7 +69,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->transform_param_.mirror() ||
       this->transform_param_.crop_size();
   if (prefetch_needs_rand) {
-    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    const uint_tp prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
   } else {
     prefetch_rng_.reset();
@@ -79,11 +79,11 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(infile.good()) << "Failed to open window file "
       << this->layer_param_.window_data_param().source() << std::endl;
 
-  map<int, int> label_hist;
+  map<int_tp, int_tp> label_hist;
   label_hist.insert(std::make_pair(0, 0));
 
   string hashtag;
-  int image_index, channels;
+  int_tp image_index, channels;
   if (!(infile >> hashtag >> image_index)) {
     LOG(FATAL) << "Window file is empty";
   }
@@ -94,7 +94,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     infile >> image_path;
     image_path = root_folder + image_path;
     // read image dimensions
-    vector<int> image_size(3);
+    vector<int_tp> image_size(3);
     infile >> image_size[0] >> image_size[1] >> image_size[2];
     channels = image_size[0];
     image_database_.push_back(std::make_pair(image_path, image_size));
@@ -108,14 +108,14 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       image_database_cache_.push_back(std::make_pair(image_path, datum));
     }
     // read each box
-    int num_windows;
+    int_tp num_windows;
     infile >> num_windows;
     const float fg_threshold =
         this->layer_param_.window_data_param().fg_threshold();
     const float bg_threshold =
         this->layer_param_.window_data_param().bg_threshold();
-    for (int i = 0; i < num_windows; ++i) {
-      int label, x1, y1, x2, y2;
+    for (int_tp i = 0; i < num_windows; ++i) {
+      int_tp label, x1, y1, x2, y2;
       float overlap;
       infile >> label >> overlap >> x1 >> y1 >> x2 >> y2;
 
@@ -130,7 +130,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
       // add window to foreground list or background list
       if (overlap >= fg_threshold) {
-        int label = window[WindowDataLayer::LABEL];
+        int_tp label = window[WindowDataLayer::LABEL];
         CHECK_GT(label, 0);
         fg_windows_.push_back(window);
         label_hist.insert(std::make_pair(label, 0));
@@ -156,7 +156,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   LOG(INFO) << "Number of images: " << image_index+1;
 
-  for (map<int, int>::iterator it = label_hist.begin();
+  for (map<int_tp, int_tp>::iterator it = label_hist.begin();
       it != label_hist.end(); ++it) {
     LOG(INFO) << "class " << it->first << " has " << label_hist[it->first]
               << " samples";
@@ -169,11 +169,11 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << this->layer_param_.window_data_param().crop_mode();
 
   // image
-  const int crop_size = this->transform_param_.crop_size();
+  const int_tp crop_size = this->transform_param_.crop_size();
   CHECK_GT(crop_size, 0);
-  const int batch_size = this->layer_param_.window_data_param().batch_size();
+  const int_tp batch_size = this->layer_param_.window_data_param().batch_size();
   top[0]->Reshape(batch_size, channels, crop_size, crop_size);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i)
+  for (int_tp i = 0; i < this->PREFETCH_COUNT; ++i)
     this->prefetch_[i].data_.Reshape(
         batch_size, channels, crop_size, crop_size);
 
@@ -181,9 +181,9 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
-  vector<int> label_shape(1, batch_size);
+  vector<int_tp> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+  for (int_tp i = 0; i < this->PREFETCH_COUNT; ++i) {
     this->prefetch_[i].label_.Reshape(label_shape);
   }
 
@@ -201,14 +201,14 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (has_mean_values_) {
     CHECK(has_mean_file_ == false) <<
       "Cannot specify mean_file and mean_value at the same time";
-    for (int c = 0; c < this->transform_param_.mean_value_size(); ++c) {
+    for (int_tp c = 0; c < this->transform_param_.mean_value_size(); ++c) {
       mean_values_.push_back(this->transform_param_.mean_value(c));
     }
     CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
      "Specify either 1 mean_value or as many as channels: " << channels;
     if (channels > 1 && mean_values_.size() == 1) {
       // Replicate the mean_value for simplicity
-      for (int c = 1; c < channels; ++c) {
+      for (int_tp c = 1; c < channels; ++c) {
         mean_values_.push_back(mean_values_[0]);
       }
     }
@@ -216,7 +216,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-unsigned int WindowDataLayer<Dtype>::PrefetchRand() {
+uint_tp WindowDataLayer<Dtype>::PrefetchRand() {
   CHECK(prefetch_rng_);
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
@@ -236,16 +236,17 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* top_data = batch->data_.mutable_cpu_data();
   Dtype* top_label = batch->label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
-  const int batch_size = this->layer_param_.window_data_param().batch_size();
-  const int context_pad = this->layer_param_.window_data_param().context_pad();
-  const int crop_size = this->transform_param_.crop_size();
+  const int_tp batch_size = this->layer_param_.window_data_param().batch_size();
+  const int_tp context_pad =
+      this->layer_param_.window_data_param().context_pad();
+  const int_tp crop_size = this->transform_param_.crop_size();
   const bool mirror = this->transform_param_.mirror();
   const float fg_fraction =
       this->layer_param_.window_data_param().fg_fraction();
   Dtype* mean = NULL;
-  int mean_off = 0;
-  int mean_width = 0;
-  int mean_height = 0;
+  int_tp mean_off = 0;
+  int_tp mean_width = 0;
+  int_tp mean_height = 0;
   if (this->has_mean_file_) {
     mean = this->data_mean_.mutable_cpu_data();
     mean_off = (this->data_mean_.width() - crop_size) / 2;
@@ -260,17 +261,17 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // zero out batch
   caffe_set(batch->data_.count(), Dtype(0), top_data);
 
-  const int num_fg = static_cast<int>(static_cast<float>(batch_size)
+  const int_tp num_fg = static_cast<int_tp>(static_cast<float>(batch_size)
       * fg_fraction);
-  const int num_samples[2] = { batch_size - num_fg, num_fg };
+  const int_tp num_samples[2] = { batch_size - num_fg, num_fg };
 
-  int item_id = 0;
+  int_tp item_id = 0;
   // sample from bg set then fg set
-  for (int is_fg = 0; is_fg < 2; ++is_fg) {
-    for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
+  for (int_tp is_fg = 0; is_fg < 2; ++is_fg) {
+    for (int_tp dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
       // sample a window
       timer.Start();
-      const unsigned int rand_index = PrefetchRand();
+      const uint_tp rand_index = PrefetchRand();
       vector<float> window = (is_fg) ?
           fg_windows_[rand_index % fg_windows_.size()] :
           bg_windows_[rand_index % bg_windows_.size()];
@@ -278,7 +279,7 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       bool do_mirror = mirror && PrefetchRand() % 2;
 
       // load the image containing the window
-      pair<std::string, vector<int> > image =
+      pair<std::string, vector<int_tp> > image =
           image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
       cv::Mat cv_img;
@@ -295,16 +296,16 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
       read_time += timer.MicroSeconds();
       timer.Start();
-      const int channels = cv_img.channels();
+      const int_tp channels = cv_img.channels();
 
       // crop window out of image and warp it
-      int x1 = window[WindowDataLayer<Dtype>::X1];
-      int y1 = window[WindowDataLayer<Dtype>::Y1];
-      int x2 = window[WindowDataLayer<Dtype>::X2];
-      int y2 = window[WindowDataLayer<Dtype>::Y2];
+      int_tp x1 = window[WindowDataLayer<Dtype>::X1];
+      int_tp y1 = window[WindowDataLayer<Dtype>::Y1];
+      int_tp x2 = window[WindowDataLayer<Dtype>::X2];
+      int_tp y2 = window[WindowDataLayer<Dtype>::Y2];
 
-      int pad_w = 0;
-      int pad_h = 0;
+      int_tp pad_w = 0;
+      int_tp pad_h = 0;
       if (context_pad > 0 || use_square) {
         // scale factor by which to expand the original region
         // such that after warping the expanded region to crop_size x crop_size
@@ -324,20 +325,20 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
             half_height = half_width;
           }
         }
-        x1 = static_cast<int>(round(center_x - half_width*context_scale));
-        x2 = static_cast<int>(round(center_x + half_width*context_scale));
-        y1 = static_cast<int>(round(center_y - half_height*context_scale));
-        y2 = static_cast<int>(round(center_y + half_height*context_scale));
+        x1 = static_cast<int_tp>(round(center_x - half_width*context_scale));
+        x2 = static_cast<int_tp>(round(center_x + half_width*context_scale));
+        y1 = static_cast<int_tp>(round(center_y - half_height*context_scale));
+        y2 = static_cast<int_tp>(round(center_y + half_height*context_scale));
 
         // the expanded region may go outside of the image
         // so we compute the clipped (expanded) region and keep track of
         // the extent beyond the image
-        int unclipped_height = y2-y1+1;
-        int unclipped_width = x2-x1+1;
-        int pad_x1 = std::max(0, -x1);
-        int pad_y1 = std::max(0, -y1);
-        int pad_x2 = std::max(0, x2 - cv_img.cols + 1);
-        int pad_y2 = std::max(0, y2 - cv_img.rows + 1);
+        int_tp unclipped_height = y2-y1+1;
+        int_tp unclipped_width = x2-x1+1;
+        int_tp pad_x1 = std::max((int_tp)0, -x1);
+        int_tp pad_y1 = std::max((int_tp)0, -y1);
+        int_tp pad_x2 = std::max((int_tp)0, x2 - cv_img.cols + 1);
+        int_tp pad_y2 = std::max((int_tp)0, y2 - cv_img.rows + 1);
         // clip bounds
         x1 = x1 + pad_x1;
         x2 = x2 - pad_x2;
@@ -348,8 +349,8 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         CHECK_LT(x2, cv_img.cols);
         CHECK_LT(y2, cv_img.rows);
 
-        int clipped_height = y2-y1+1;
-        int clipped_width = x2-x1+1;
+        int_tp clipped_height = y2-y1+1;
+        int_tp clipped_width = x2-x1+1;
 
         // scale factors that would be used to warp the unclipped
         // expanded region
@@ -359,14 +360,15 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
             static_cast<Dtype>(crop_size)/static_cast<Dtype>(unclipped_height);
 
         // size to warp the clipped expanded region to
-        cv_crop_size.width =
-            static_cast<int>(round(static_cast<Dtype>(clipped_width)*scale_x));
-        cv_crop_size.height =
-            static_cast<int>(round(static_cast<Dtype>(clipped_height)*scale_y));
-        pad_x1 = static_cast<int>(round(static_cast<Dtype>(pad_x1)*scale_x));
-        pad_x2 = static_cast<int>(round(static_cast<Dtype>(pad_x2)*scale_x));
-        pad_y1 = static_cast<int>(round(static_cast<Dtype>(pad_y1)*scale_y));
-        pad_y2 = static_cast<int>(round(static_cast<Dtype>(pad_y2)*scale_y));
+        cv_crop_size.width = static_cast<int_tp>(round(
+            static_cast<Dtype>(clipped_width) * scale_x));
+        cv_crop_size.height = static_cast<int_tp>(round(
+            static_cast<Dtype>(clipped_height) * scale_y));
+        pad_x1 =
+            static_cast<int_tp>(round(static_cast<Dtype>(pad_x1) * scale_x));
+        pad_x2 = static_cast<int_tp>(round(static_cast<Dtype>(pad_x2)*scale_x));
+        pad_y1 = static_cast<int_tp>(round(static_cast<Dtype>(pad_y1)*scale_y));
+        pad_y2 = static_cast<int_tp>(round(static_cast<Dtype>(pad_y2)*scale_y));
 
         pad_h = pad_y1;
         // if we're mirroring, we mirror the padding too (to be pedantic)
@@ -397,17 +399,18 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       }
 
       // copy the warped window into top_data
-      for (int h = 0; h < cv_cropped_img.rows; ++h) {
+      for (int_tp h = 0; h < cv_cropped_img.rows; ++h) {
         const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
-        int img_index = 0;
-        for (int w = 0; w < cv_cropped_img.cols; ++w) {
-          for (int c = 0; c < channels; ++c) {
-            int top_index = ((item_id * channels + c) * crop_size + h + pad_h)
-                     * crop_size + w + pad_w;
-            // int top_index = (c * height + h) * width + w;
+        int_tp img_index = 0;
+        for (int_tp w = 0; w < cv_cropped_img.cols; ++w) {
+          for (int_tp c = 0; c < channels; ++c) {
+            int_tp top_index =
+                ((item_id * channels + c) * crop_size + h + pad_h) * crop_size
+                    + w + pad_w;
+            // int_tp top_index = (c * height + h) * width + w;
             Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
             if (this->has_mean_file_) {
-              int mean_index = (c * mean_height + h + mean_off + pad_h)
+              int_tp mean_index = (c * mean_height + h + mean_off + pad_h)
                            * mean_width + w + mean_off + pad_w;
               top_data[top_index] = (pixel - mean[mean_index]) * scale;
             } else {
@@ -444,9 +447,9 @@ void WindowDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       std::ofstream top_data_file((string("dump/") + file_id +
           string("_data.txt")).c_str(),
           std::ofstream::out | std::ofstream::binary);
-      for (int c = 0; c < channels; ++c) {
-        for (int h = 0; h < crop_size; ++h) {
-          for (int w = 0; w < crop_size; ++w) {
+      for (int_tp c = 0; c < channels; ++c) {
+        for (int_tp h = 0; h < crop_size; ++h) {
+          for (int_tp w = 0; w < crop_size; ++w) {
             top_data_file.write(reinterpret_cast<char*>(
                 &top_data[((item_id * channels + c) * crop_size + h)
                           * crop_size + w]),

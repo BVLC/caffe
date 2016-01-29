@@ -31,7 +31,7 @@ namespace caffe {
  *      should sum to 1 as in a probability distribution: @f$
  *      \forall n \sum\limits_{k=1}^K \hat{p}_{nk} = 1 @f$.
  *   -# @f$ (N \times 1 \times 1 \times 1) @f$
- *      the labels @f$ l @f$, an integer-valued Blob with values
+ *      the labels @f$ l @f$, an int_tpeger-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
  *      indicating the correct class label among the @f$ K @f$ classes
  * @param top output Blob vector (length 1)

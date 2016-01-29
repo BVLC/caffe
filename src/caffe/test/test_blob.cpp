@@ -55,7 +55,7 @@ TYPED_TEST(BlobSimpleTest, TestLegacyBlobProtoShapeEquals) {
   BlobProto blob_proto;
 
   // Reshape to (3 x 2).
-  vector<int> shape(2);
+  vector<int_tp> shape(2);
   shape[0] = 3;
   shape[1] = 2;
   this->blob_->Reshape(shape);
@@ -132,7 +132,7 @@ TYPED_TEST(BlobMathTest, TestSumOfSquares) {
   filler.Fill(this->blob_);
   Dtype expected_sumsq = 0;
   const Dtype* data = this->blob_->cpu_data();
-  for (int i = 0; i < this->blob_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_->count(); ++i) {
     expected_sumsq += data[i] * data[i];
   }
   // Do a mutable access on the current device,
@@ -187,7 +187,7 @@ TYPED_TEST(BlobMathTest, TestAsum) {
   filler.Fill(this->blob_);
   Dtype expected_asum = 0;
   const Dtype* data = this->blob_->cpu_data();
-  for (int i = 0; i < this->blob_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_->count(); ++i) {
     expected_asum += std::fabs(data[i]);
   }
   // Do a mutable access on the current device,

@@ -18,7 +18,7 @@ namespace caffe {
  *                  p_n \log \hat{p}_n +
  *                  (1 - p_n) \log(1 - \hat{p}_n)
  *              \right]
- *        @f$, often used for predicting targets interpreted as probabilities.
+ *        @f$, often used for predicting targets int_tperpreted as probabilities.
  *
  * This layer is implemented rather than separate
  * SigmoidLayer + CrossEntropyLayer
@@ -95,7 +95,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  /// The internal SigmoidLayer used to map predictions to probabilities.
+  /// The int_tpernal SigmoidLayer used to map predictions to probabilities.
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
   /// sigmoid_output stores the output of the SigmoidLayer.
   shared_ptr<Blob<Dtype> > sigmoid_output_;

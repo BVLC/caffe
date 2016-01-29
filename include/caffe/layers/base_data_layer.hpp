@@ -68,7 +68,7 @@ class BasePrefetchingDataLayer :
       const vector<Blob<Dtype>*>& top);
 
   // Prefetches batches (asynchronously if to GPU memory)
-  static const int PREFETCH_COUNT = 3;
+  static const int_tp PREFETCH_COUNT = 3;
 
  protected:
   virtual void InternalThreadEntry();

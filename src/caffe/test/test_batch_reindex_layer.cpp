@@ -23,14 +23,14 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {
   }
   virtual void SetUp() {
-    Caffe::set_random_seed(1701);
-    vector<int> sz;
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
+    vector<int_tp> sz;
     sz.push_back(5);
     sz.push_back(4);
     sz.push_back(3);
     sz.push_back(2);
     blob_bottom_->Reshape(sz);
-    vector<int> permsz;
+    vector<int_tp> permsz;
     permsz.push_back(6);
     blob_bottom_permute_->Reshape(permsz);
 
@@ -38,8 +38,8 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
-    int perm[] = { 4, 0, 4, 0, 1, 2 };
-    for (int i = 0; i < blob_bottom_permute_->count(); ++i) {
+    int_tp perm[] = { 4, 0, 4, 0, 1, 2 };
+    for (int_tp i = 0; i < blob_bottom_permute_->count(); ++i) {
       blob_bottom_permute_->mutable_cpu_data()[i] = perm[i];
     }
 
@@ -61,21 +61,21 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
   void TestForward() {
     LayerParameter layer_param;
 
-    vector<int> sz;
+    vector<int_tp> sz;
     sz.push_back(5);
     sz.push_back(4);
     sz.push_back(3);
     sz.push_back(2);
     blob_bottom_->Reshape(sz);
-    for (int i = 0; i < blob_bottom_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_->count(); ++i) {
       blob_bottom_->mutable_cpu_data()[i] = i;
     }
 
-    vector<int> permsz;
+    vector<int_tp> permsz;
     permsz.push_back(6);
     blob_bottom_permute_->Reshape(permsz);
-    int perm[] = { 4, 0, 4, 0, 1, 2 };
-    for (int i = 0; i < blob_bottom_permute_->count(); ++i) {
+    int_tp perm[] = { 4, 0, 4, 0, 1, 2 };
+    for (int_tp i = 0; i < blob_bottom_permute_->count(); ++i) {
       blob_bottom_permute_->mutable_cpu_data()[i] = perm[i];
     }
     BatchReindexLayer<Dtype> layer(layer_param);
@@ -86,12 +86,12 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_->width(), blob_bottom_->width());
 
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
-    int channels = blob_top_->channels();
-    int height = blob_top_->height();
-    int width = blob_top_->width();
-    for (int i = 0; i < blob_top_->count(); ++i) {
-      int n = i / (channels * width * height);
-      int inner_idx = (i % (channels * width * height));
+    int_tp channels = blob_top_->channels();
+    int_tp height = blob_top_->height();
+    int_tp width = blob_top_->width();
+    for (int_tp i = 0; i < blob_top_->count(); ++i) {
+      int_tp n = i / (channels * width * height);
+      int_tp inner_idx = (i % (channels * width * height));
       EXPECT_EQ(
           blob_top_->cpu_data()[i],
           blob_bottom_->cpu_data()[perm[n] * channels * width * height

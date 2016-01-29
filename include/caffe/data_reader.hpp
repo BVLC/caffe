@@ -36,7 +36,7 @@ class DataReader {
   // Queue pairs are shared between a body and its readers
   class QueuePair {
    public:
-    explicit QueuePair(int size);
+    explicit QueuePair(int_tp size);
     ~QueuePair();
 
     BlockingQueue<Datum*> free_;
@@ -48,7 +48,7 @@ class DataReader {
   // A single body is created per source
   class Body : public InternalThread {
    public:
-    explicit Body(const LayerParameter& param);
+    explicit Body(const LayerParameter& param, device* device_context);
     virtual ~Body();
 
    protected:
@@ -71,6 +71,7 @@ class DataReader {
 
   const shared_ptr<QueuePair> queue_pair_;
   shared_ptr<Body> body_;
+  device* device_;
 
   static map<const string, boost::weak_ptr<DataReader::Body> > bodies_;
 

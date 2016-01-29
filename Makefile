@@ -7,6 +7,15 @@ $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
+ifeq ($(CPU_ONLY),1)
+	USE_CUDA := 0
+	USE_GREENTEA := 0
+endif
+
+CXXFLAGS += -std=c++11 -fopenmp -Wno-deprecated-declarations
+LINKFLAGS += -std=c++11 -fopenmp -Wno-deprecated-declarations
+NVCCFLAGS += -Xcompiler "-Wno-deprecated-declarations" -Xlinker "-Wno-deprecated-declarations" -Xarchive "-Wno-deprecated-declarations" -Xnvlink "-Wno-deprecated-declarations"
+
 BUILD_DIR_LINK := $(BUILD_DIR)
 ifeq ($(RELEASE_BUILD_DIR),)
 	RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
@@ -23,6 +32,7 @@ else
 	BUILD_DIR := $(RELEASE_BUILD_DIR)
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
+
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -160,6 +170,82 @@ EMPTY_WARN_REPORT := $(BUILD_DIR)/.$(WARNS_EXT)
 NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 
 ##############################
+# GreenTea backend related include and lib
+##############################
+
+ifeq ($(USE_INDEX_64),1)
+	COMMON_FLAGS += -DUSE_INDEX_64
+endif
+
+ifeq ($(USE_GREENTEA),1)
+	# Find a valid OpenCL library
+	# TODO: Validate and complete this based on different SDKs
+	ifdef OPENCL_INC
+		CLLINC = '$(OPENCL_INC)'
+	endif
+	
+	ifdef OPENCL_LIB
+		CLLIBS = '$(OPENCL_LIB)'
+	endif
+	
+	ifdef OPENCLROOT
+		CLLIBS = '$(OPENCLROOT)'
+	endif
+	
+	ifdef CUDA_PATH
+		CLLIBS = '$(CUDA_PATH)/lib/x64'
+	endif
+	
+	ifdef INTELOCLSDKROOT
+		CLLIBS = '$(INTELOCLSDKROOT)/lib/x64'
+	endif
+	
+	ifdef AMDAPPSDKROOT
+		CLLIBS = '$(AMDAPPSDKROOT)/lib/x86_64'
+		CLLINC = '$(AMDAPPSDKROOT)/include'
+	endif
+	
+	# Use AMD clBLAS
+	ifeq ($(USE_CLBLAS), 1)
+		LIBRARIES += clBLAS
+		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+	
+	# Use ISAAC clBLAS replacement
+	ifeq ($(USE_ISAAC), 1)
+		LIBRARIES += isaac
+		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+	
+	# Requires valid OpenCL library
+	LIBRARY_DIRS += $(CLLIBS)
+	# Requires valid OpenCL headers and valid ViennaCL
+	INCLUDE_DIRS += $(CLLINC) $(VIENNACL_DIR)
+	# Requires OpenCL compile library flag and librt
+	ifeq ($(OS_X), 1)
+		LDFLAGS += -framework OpenCL
+	else
+		LIBRARIES += OpenCL rt
+	endif
+	# Additional flags
+	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
+	
+	# Viennacl runtime debug output
+	ifeq ($(VIENNACL_DEBUG), 1)
+		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
+	endif
+	
+	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
+	CL_KERNELS = src/caffe/greentea/cl_kernels/*.cl
+	CL_HEADERS = src/caffe/greentea/cl_headers/*.cl
+	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
+endif
+
+ifeq ($(USE_CUDA), 1)
+	COMMON_FLAGS += -DUSE_CUDA
+endif
+
+##############################
 # Derive include and lib directories
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
@@ -172,10 +258,10 @@ endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
 INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
-ifneq ($(CPU_ONLY), 1)
+ifeq ($(USE_CUDA), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
-	LIBRARIES := cudart cublas curand
+	LIBRARIES += cudart cublas curand
 endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
@@ -206,7 +292,6 @@ WARNINGS := -Wall -Wno-sign-compare
 # Set build directories
 ##############################
 
-DISTRIBUTE_DIR ?= distribute
 DISTRIBUTE_SUBDIRS := $(DISTRIBUTE_DIR)/bin $(DISTRIBUTE_DIR)/lib
 DIST_ALIASES := dist
 ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
@@ -278,6 +363,8 @@ ifeq ($(OSX), 1)
 		# clang throws this warning for cuda headers
 		WARNINGS += -Wno-unneeded-internal-declaration
 	endif
+	# clang throws this warning for cuda headers
+	WARNINGS += -Wno-unneeded-internal-declaration
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
@@ -434,7 +521,7 @@ endif
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-all: lib tools examples
+all: $(CL_KERNELS_CPP) lib tools examples
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
@@ -573,12 +660,19 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 	@ cat $@.$(WARNS_EXT)
 
 $(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
+ifeq ($(USE_CUDA), 1)
 	@ echo NVCC $<
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
 	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
+else
+	@ echo CXX $<
+	$(Q)$(CXX) $(CXXFLAGS) -c -x c++ $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+endif
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
 		| $(DYNAMIC_NAME) $(TEST_BIN_DIR)
@@ -612,6 +706,11 @@ $(EXAMPLE_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 	@ echo CXX/LD -o $@
 	$(Q)$(CXX) $< -o $@ $(LINKFLAGS) -l$(LIBRARY_NAME) $(LDFLAGS) \
 		-Wl,-rpath,$(ORIGIN)/../../lib
+
+# Copy the OpenCL kernels into C++ char strings
+$(CL_KERNELS_CPP) : $(CL_HEADERS) $(CL_KERNELS)
+	chmod +x $(CL_KERNELS_SH)
+	$(CL_KERNELS_SH)
 
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 

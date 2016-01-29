@@ -57,7 +57,7 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+    LossParameter_NormalizationMode normalization_mode, int_tp valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:
@@ -92,12 +92,12 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
   const Dtype* prob_data = prob_.cpu_data();
   const Dtype* label = bottom[1]->cpu_data();
-  int dim = prob_.count() / outer_num_;
-  int count = 0;
+  int_tp dim = prob_.count() / outer_num_;
+  int_tp count = 0;
   Dtype loss = 0;
-  for (int i = 0; i < outer_num_; ++i) {
-    for (int j = 0; j < inner_num_; j++) {
-      const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+  for (int_tp i = 0; i < outer_num_; ++i) {
+    for (int_tp j = 0; j < inner_num_; j++) {
+      const int_tp label_value = static_cast<int_tp>(label[i * inner_num_ + j]);
       if (has_ignore_label_ && label_value == ignore_label_) {
         continue;
       }
@@ -124,15 +124,16 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const Dtype* prob_data = prob_.cpu_data();
-    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    caffe_cpu_copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = bottom[1]->cpu_data();
-    int dim = prob_.count() / outer_num_;
-    int count = 0;
-    for (int i = 0; i < outer_num_; ++i) {
-      for (int j = 0; j < inner_num_; ++j) {
-        const int label_value = static_cast<int>(label[i * inner_num_ + j]);
+    int_tp dim = prob_.count() / outer_num_;
+    int_tp count = 0;
+    for (int_tp i = 0; i < outer_num_; ++i) {
+      for (int_tp j = 0; j < inner_num_; ++j) {
+        const int_tp label_value = static_cast<int_tp>
+            (label[i * inner_num_ + j]);
         if (has_ignore_label_ && label_value == ignore_label_) {
-          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+          for (int_tp c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
             bottom_diff[i * dim + c * inner_num_ + j] = 0;
           }
         } else {

@@ -12,7 +12,7 @@ caffe_default_properties(proto)
 # creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists
 caffe_pickup_caffe_sources(${PROJECT_SOURCE_DIR})
 
-if(HAVE_CUDA)
+if(USE_CUDA AND HAVE_CUDA)
   caffe_cuda_compile(cuda_objs ${cuda})
   list(APPEND srcs ${cuda_objs} ${cuda})
 endif()

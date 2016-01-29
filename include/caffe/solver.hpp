@@ -1,11 +1,12 @@
-#ifndef CAFFE_SOLVER_HPP_
-#define CAFFE_SOLVER_HPP_
+#ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
+#define CAFFE_OPTIMIZATION_SOLVER_HPP_
 #include <boost/function.hpp>
 #include <string>
 #include <vector>
 
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
+#include "device.hpp"
 
 namespace caffe {
 
@@ -37,7 +38,7 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
  * Requires implementation of ApplyUpdate to compute a parameter update
  * given the current state of the Net parameters.
  */
-template <typename Dtype>
+template<typename Dtype>
 class Solver {
  public:
   explicit Solver(const SolverParameter& param,
@@ -47,6 +48,10 @@ class Solver {
   void InitTrainNet();
   void InitTestNets();
 
+  // Allows to change the solver parameters during training
+  void UpdateSolverParams(const SolverParameter& param);
+  SolverParameter GetSolverParams();
+
   // Client of the Solver optionally may call this in order to set the function
   // that the solver uses to see what action it should take (e.g. snapshot or
   // exit training early).
@@ -55,8 +60,10 @@ class Solver {
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
-  inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
-  void Step(int iters);
+  inline void Solve(const string resume_file) {
+    Solve(resume_file.c_str());
+  }
+  Dtype Step(int_tp iters);
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
   // methods to restore the state from the appropriate snapshot type.
@@ -72,7 +79,17 @@ class Solver {
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+
+  int_tp iter() {
+    return iter_;
+  }
+
+  int_tp max_iter() {
+    return param_.max_iter();
+  }
+
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -89,10 +106,18 @@ class Solver {
   }
 
   void CheckSnapshotWritePermissions();
+
   /**
    * @brief Returns the solver type.
    */
-  virtual inline const char* type() const { return ""; }
+  virtual inline const char* type() const {
+    return "";
+  }
+
+  inline device *get_device() {
+    return device_;
+  }
+
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -102,18 +127,19 @@ class Solver {
   string SnapshotToHDF5();
   // The test routine
   void TestAll();
-  void Test(const int test_net_id = 0);
-  virtual void SnapshotSolverState(const string& model_filename) = 0;
+  void Test(const int_tp test_net_id = 0);
   virtual void RestoreSolverStateFromHDF5(const string& state_file) = 0;
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
-  void DisplayOutputBlobs(const int net_id);
-  void UpdateSmoothedLoss(Dtype loss, int start_iter, int average_loss);
+
+  void DisplayOutputBlobs(const int_tp net_id);
+  void UpdateSmoothedLoss(Dtype loss, int_tp start_iter, int_tp average_loss);
 
   SolverParameter param_;
-  int iter_;
-  int current_step_;
+  int_tp iter_;
+  int_tp current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
+  device* device_;
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
@@ -132,21 +158,24 @@ class Solver {
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
+
 /**
  * @brief Solver that only computes gradients, used as worker
  *        for multi-GPU training.
  */
-template <typename Dtype>
+template<typename Dtype>
 class WorkerSolver : public Solver<Dtype> {
  public:
   explicit WorkerSolver(const SolverParameter& param,
-      const Solver<Dtype>* root_solver = NULL)
-      : Solver<Dtype>(param, root_solver) {}
+                        const Solver<Dtype>* root_solver = NULL)
+      : Solver<Dtype>(param, root_solver) {
+  }
 
  protected:
-  void ApplyUpdate() {}
+  void ApplyUpdate() {
+  }
   void SnapshotSolverState(const string& model_filename) {
-    LOG(FATAL) << "Should not be called on worker solver.";
+    LOG(FATAL)<< "Should not be called on worker solver.";
   }
   void RestoreSolverStateFromBinaryProto(const string& state_file) {
     LOG(FATAL) << "Should not be called on worker solver.";
@@ -158,4 +187,4 @@ class WorkerSolver : public Solver<Dtype> {
 
 }  // namespace caffe
 
-#endif  // CAFFE_SOLVER_HPP_
+#endif  // CAFFE_OPTIMIZATION_SOLVER_HPP_

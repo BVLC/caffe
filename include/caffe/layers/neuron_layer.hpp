@@ -10,7 +10,7 @@
 namespace caffe {
 
 /**
- * @brief An interface for layers that take one blob as input (@f$ x @f$)
+ * @brief An int_tperface for layers that take one blob as input (@f$ x @f$)
  *        and produce one equally-sized blob as output (@f$ y @f$), where
  *        each element of the output depends only on the corresponding input
  *        element.
@@ -23,8 +23,8 @@ class NeuronLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 };
 
 }  // namespace caffe

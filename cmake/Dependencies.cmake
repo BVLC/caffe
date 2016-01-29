@@ -57,14 +57,45 @@ endif()
 # ---[ CUDA
 include(cmake/Cuda.cmake)
 if(NOT HAVE_CUDA)
-  if(CPU_ONLY)
+  if(CPU_ONLY OR NOT USE_CUDA)
     message(STATUS "-- CUDA is disabled. Building without it...")
   else()
     message(WARNING "-- CUDA is not detected by cmake. Building without it...")
   endif()
+endif()
 
-  # TODO: remove this not cross platform define in future. Use caffe_config.h instead.
-  add_definitions(-DCPU_ONLY)
+# ---[ ViennaCL
+if (USE_GREENTEA)
+  find_package(ViennaCL)
+  if (NOT ViennaCL_FOUND)
+    message(FATAL_ERROR "ViennaCL required for GREENTEA but not found.")
+  endif()
+  include_directories(SYSTEM ${ViennaCL_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS ${ViennaCL_LIBRARIES})
+  set(HAVE_VIENNACL TRUE)
+  set(VIENNACL_WITH_OPENCL ${ViennaCL_WITH_OPENCL})
+endif()
+
+# ---[ clBLAS
+if (USE_CLBLAS AND NOT USE_ISAAC)
+  find_package(clBLAS)
+  if (NOT CLBLAS_FOUND)
+    message(FATAL_ERROR "clBLAS required but not found.")
+  endif()
+  include_directories(SYSTEM ${CLBLAS_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${CLBLAS_LIBRARY})
+  set(HAVE_CLBLAS TRUE)
+endif()
+
+# ---[ ISAAC
+if (USE_ISAAC)
+  find_package(ISAAC)
+  if (NOT ISAAC_FOUND)
+    message(FATAL_ERROR "ISAAC required but not found.")
+  endif()
+  # include_directories(SYSTEM ${CLBLAS_INCLUDE_DIR})
+  list(APPEND Caffe_LINKER_LIBS ${ISAAC_LIBRARY})
+  set(HAVE_ISAAC TRUE)
 endif()
 
 # ---[ OpenCV
@@ -78,6 +109,11 @@ if(USE_OPENCV)
   message(STATUS "OpenCV found (${OpenCV_CONFIG_PATH})")
   add_definitions(-DUSE_OPENCV)
 endif()
+
+# ---[ OpenMP
+find_package(OpenMP QUIET)
+# If OpenMP is not found then OpenMP_CXX_FLAGS will be empty
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 # ---[ BLAS
 if(NOT APPLE)

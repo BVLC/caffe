@@ -46,15 +46,15 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     scoped_ptr<db::DB> db(db::GetDB(backend));
     db->Open(*filename_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
-    for (int i = 0; i < 5; ++i) {
+    for (int_tp i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
       datum.set_channels(2);
       datum.set_height(3);
       datum.set_width(4);
       std::string* data = datum.mutable_data();
-      for (int j = 0; j < 24; ++j) {
-        int datum = unique_pixels ? j : i;
+      for (int_tp j = 0; j < 24; ++j) {
+        int_tp datum = unique_pixels ? j : i;
         data->push_back(static_cast<uint8_t>(datum));
       }
       stringstream ss;
@@ -91,13 +91,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
-    for (int iter = 0; iter < 100; ++iter) {
+    for (int_tp iter = 0; iter < 100; ++iter) {
       layer.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int_tp i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
-      for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 24; ++j) {
+      for (int_tp i = 0; i < 5; ++i) {
+        for (int_tp j = 0; j < 24; ++j) {
           EXPECT_EQ(scale * i, blob_top_data_->cpu_data()[i * 24 + j])
               << "debug: iter " << iter << " i " << i << " j " << j;
         }
@@ -106,21 +106,22 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   }
 
   void TestReshape(DataParameter_DB backend) {
-    const int num_inputs = 5;
+    const int_tp num_inputs = 5;
     // Save data of varying shapes.
     LOG(INFO) << "Using temporary dataset " << *filename_;
     scoped_ptr<db::DB> db(db::GetDB(backend));
     db->Open(*filename_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
-    for (int i = 0; i < num_inputs; ++i) {
+    for (int_tp i = 0; i < num_inputs; ++i) {
       Datum datum;
       datum.set_label(i);
       datum.set_channels(2);
       datum.set_height(i % 2 + 1);
       datum.set_width(i % 4 + 1);
       std::string* data = datum.mutable_data();
-      const int data_size = datum.channels() * datum.height() * datum.width();
-      for (int j = 0; j < data_size; ++j) {
+      const int_tp data_size = datum.channels() * datum.height()
+          * datum.width();
+      for (int_tp j = 0; j < data_size; ++j) {
         data->push_back(static_cast<uint8_t>(j));
       }
       stringstream ss;
@@ -149,19 +150,19 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
-    for (int iter = 0; iter < num_inputs; ++iter) {
+    for (int_tp iter = 0; iter < num_inputs; ++iter) {
       layer.Forward(blob_bottom_vec_, blob_top_vec_);
       EXPECT_EQ(blob_top_data_->height(), iter % 2 + 1);
       EXPECT_EQ(blob_top_data_->width(), iter % 4 + 1);
       EXPECT_EQ(iter, blob_top_label_->cpu_data()[0]);
-      const int channels = blob_top_data_->channels();
-      const int height = blob_top_data_->height();
-      const int width = blob_top_data_->width();
-      for (int c = 0; c < channels; ++c) {
-        for (int h = 0; h < height; ++h) {
-          for (int w = 0; w < width; ++w) {
-            const int idx = (c * height + h) * width + w;
-            EXPECT_EQ(idx, static_cast<int>(blob_top_data_->cpu_data()[idx]))
+      const int_tp channels = blob_top_data_->channels();
+      const int_tp height = blob_top_data_->height();
+      const int_tp width = blob_top_data_->width();
+      for (int_tp c = 0; c < channels; ++c) {
+        for (int_tp h = 0; h < height; ++h) {
+          for (int_tp w = 0; w < width; ++w) {
+            const int_tp idx = (c * height + h) * width + w;
+            EXPECT_EQ(idx, static_cast<int_tp>(blob_top_data_->cpu_data()[idx]))
                 << "debug: iter " << iter << " c " << c
                 << " h " << h << " w " << w;
           }
@@ -174,7 +175,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype scale = 3;
     LayerParameter param;
     param.set_phase(phase);
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
 
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
@@ -197,14 +198,14 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
-    for (int iter = 0; iter < 2; ++iter) {
+    for (int_tp iter = 0; iter < 2; ++iter) {
       layer.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int_tp i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
-      int num_with_center_value = 0;
-      for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 2; ++j) {
+      int_tp num_with_center_value = 0;
+      for (int_tp i = 0; i < 5; ++i) {
+        for (int_tp j = 0; j < 2; ++j) {
           const Dtype center_value = scale * (j ? 17 : 5);
           num_with_center_value +=
               (center_value == blob_top_data_->cpu_data()[i * 2 + j]);
@@ -238,19 +239,19 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701.
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     vector<vector<Dtype> > crop_sequence;
     {
       DataLayer<Dtype> layer1(param);
       layer1.SetUp(blob_bottom_vec_, blob_top_vec_);
-      for (int iter = 0; iter < 2; ++iter) {
+      for (int_tp iter = 0; iter < 2; ++iter) {
         layer1.Forward(blob_bottom_vec_, blob_top_vec_);
-        for (int i = 0; i < 5; ++i) {
+        for (int_tp i = 0; i < 5; ++i) {
           EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
         }
         vector<Dtype> iter_crop_sequence;
-        for (int i = 0; i < 5; ++i) {
-          for (int j = 0; j < 2; ++j) {
+        for (int_tp i = 0; i < 5; ++i) {
+          for (int_tp j = 0; j < 2; ++j) {
             iter_crop_sequence.push_back(
                 blob_top_data_->cpu_data()[i * 2 + j]);
           }
@@ -261,16 +262,16 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
     // Get crop sequence after reseeding Caffe with 1701.
     // Check that the sequence is the same as the original.
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     DataLayer<Dtype> layer2(param);
     layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
-    for (int iter = 0; iter < 2; ++iter) {
+    for (int_tp iter = 0; iter < 2; ++iter) {
       layer2.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int_tp i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
-      for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 2; ++j) {
+      for (int_tp i = 0; i < 5; ++i) {
+        for (int_tp j = 0; j < 2; ++j) {
           EXPECT_EQ(crop_sequence[iter][i * 2 + j],
                     blob_top_data_->cpu_data()[i * 2 + j])
               << "debug: iter " << iter << " i " << i << " j " << j;
@@ -293,20 +294,20 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701, srand seed 1701.
-    Caffe::set_random_seed(seed_);
+    Caffe::set_random_seed(seed_, Caffe::GetDefaultDevice());
     srand(seed_);
     vector<vector<Dtype> > crop_sequence;
     {
       DataLayer<Dtype> layer1(param);
       layer1.SetUp(blob_bottom_vec_, blob_top_vec_);
-      for (int iter = 0; iter < 2; ++iter) {
+      for (int_tp iter = 0; iter < 2; ++iter) {
         layer1.Forward(blob_bottom_vec_, blob_top_vec_);
-        for (int i = 0; i < 5; ++i) {
+        for (int_tp i = 0; i < 5; ++i) {
           EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
         }
         vector<Dtype> iter_crop_sequence;
-        for (int i = 0; i < 5; ++i) {
-          for (int j = 0; j < 2; ++j) {
+        for (int_tp i = 0; i < 5; ++i) {
+          for (int_tp j = 0; j < 2; ++j) {
             iter_crop_sequence.push_back(
                 blob_top_data_->cpu_data()[i * 2 + j]);
           }
@@ -320,14 +321,14 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     srand(seed_);
     DataLayer<Dtype> layer2(param);
     layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
-    for (int iter = 0; iter < 2; ++iter) {
+    for (int_tp iter = 0; iter < 2; ++iter) {
       layer2.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int_tp i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
-      int num_sequence_matches = 0;
-      for (int i = 0; i < 5; ++i) {
-        for (int j = 0; j < 2; ++j) {
+      int_tp num_sequence_matches = 0;
+      for (int_tp i = 0; i < 5; ++i) {
+        for (int_tp j = 0; j < 2; ++j) {
           num_sequence_matches += (crop_sequence[iter][i * 2 + j] ==
                                    blob_top_data_->cpu_data()[i * 2 + j]);
         }
@@ -344,7 +345,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-  int seed_;
+  int_tp seed_;
 };
 
 TYPED_TEST_CASE(DataLayerTest, TestDtypesAndDevices);

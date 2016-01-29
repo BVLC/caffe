@@ -26,8 +26,8 @@ class SliceLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Slice"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -39,11 +39,11 @@ class SliceLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int count_;
-  int num_slices_;
-  int slice_size_;
-  int slice_axis_;
-  vector<int> slice_point_;
+  int_tp count_;
+  int_tp num_slices_;
+  int_tp slice_size_;
+  int_tp slice_axis_;
+  vector<int_tp> slice_point_;
 };
 
 }  // namespace caffe

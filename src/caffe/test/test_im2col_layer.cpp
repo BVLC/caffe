@@ -20,7 +20,7 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
@@ -41,7 +41,7 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  vector<int> bottom_shape;
+  vector<int_tp> bottom_shape;
   bottom_shape.push_back(2);
   bottom_shape.push_back(3);
   bottom_shape.push_back(10);
@@ -69,7 +69,7 @@ TYPED_TEST(Im2colLayerTest, TestForward) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
-  for (int c = 0; c < 27; ++c) {
+  for (int_tp c = 0; c < 27; ++c) {
     EXPECT_EQ(this->blob_bottom_->data_at(0, (c / 9), (c / 3) % 3, c % 3),
         this->blob_top_->data_at(0, c, 0, 0));
   }
@@ -93,7 +93,7 @@ TYPED_TEST(Im2colLayerTest, TestDilatedGradient) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  vector<int> bottom_shape;
+  vector<int_tp> bottom_shape;
   bottom_shape.push_back(2);
   bottom_shape.push_back(3);
   bottom_shape.push_back(10);
@@ -127,7 +127,7 @@ TYPED_TEST(Im2colLayerTest, TestDilatedGradientForceND) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  vector<int> bottom_shape;
+  vector<int_tp> bottom_shape;
   bottom_shape.push_back(2);
   bottom_shape.push_back(3);
   bottom_shape.push_back(10);
@@ -155,7 +155,7 @@ TYPED_TEST(Im2colLayerTest, TestRect) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
-  for (int c = 0; c < 45; ++c) {
+  for (int_tp c = 0; c < 45; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, (c / 15), (c / 3) % 5, c % 3));
   }

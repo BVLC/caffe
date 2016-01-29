@@ -8,14 +8,19 @@ namespace caffe {
 template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  PoolingLayer<Dtype>::LayerSetUp(bottom, top);
   CUDNN_CHECK(cudnnCreate(&handle_));
-  cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
-  cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+  cudnn::createTensorNdDesc<Dtype>(&bottom_desc_);
+  cudnn::createTensorNdDesc<Dtype>(&top_desc_);
+  PoolingLayer<Dtype>::LayerSetUp(bottom, top);
+
+  const int_tp* kernel_data = this->kernel_shape_.cpu_data();
+  const int_tp* pad_data = this->pad_.cpu_data();
+  const int_tp* stride_data = this->stride_.cpu_data();
+
   cudnn::createPoolingDesc<Dtype>(&pooling_desc_,
       this->layer_param_.pooling_param().pool(), &mode_,
-      this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
-      this->stride_h_, this->stride_w_);
+      this->num_spatial_axes_,
+      kernel_data, pad_data, stride_data);
   handles_setup_ = true;
 }
 
@@ -23,10 +28,18 @@ template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   PoolingLayer<Dtype>::Reshape(bottom, top);
-  cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, bottom[0]->num(),
-      this->channels_, this->height_, this->width_);
-  cudnn::setTensor4dDesc<Dtype>(&top_desc_, bottom[0]->num(),
-      this->channels_, this->pooled_height_, this->pooled_width_);
+
+  cudnn::setTensorNdDesc<Dtype>(&bottom_desc_,
+                                bottom[0]->shape().size() - 2,
+                                bottom[0]->shape()[0],
+                                this->channels_,
+                                &(bottom[0]->shape()[2]));
+  const int_tp* pooled_size_data = this->pooled_size_.cpu_data();
+  cudnn::setTensorNdDesc<Dtype>(&top_desc_,
+                                bottom[0]->shape().size() - 2,
+                                bottom[0]->shape()[0],
+                                this->channels_,
+                                pooled_size_data);
 }
 
 template <typename Dtype>

@@ -1,5 +1,8 @@
 ## General
 
+# Fuse files
+*.fuse*
+
 # Compiled Object files
 *.slo
 *.lo
@@ -69,6 +72,7 @@ models/*
 *lmdb
 
 # build, distribute, and bins (+ python proto bindings)
+cmake_build
 build
 .build_debug/*
 .build_release/*
@@ -78,6 +82,7 @@ distribute/*
 python/caffe/proto/
 cmake_build
 .cmake_build
+*.gen.cmake
 
 # Generated documentation
 docs/_site

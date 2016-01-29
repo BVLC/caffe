@@ -1,10 +1,15 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
+#include <math.h>
 #include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
@@ -16,6 +21,8 @@
 #include <utility>  // pair
 #include <vector>
 
+#include "caffe/definitions.hpp"
+#include "caffe/greentea/greentea.hpp"
 #include "caffe/util/device_alternate.hpp"
 
 // Convert macro to string
@@ -70,9 +77,11 @@ private:\
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 // See PR #1236
-namespace cv { class Mat; }
+namespace cv {class Mat;}
 
 namespace caffe {
+
+class device;
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
@@ -101,6 +110,8 @@ void GlobalInit(int* pargc, char*** pargv);
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
  public:
+  Caffe();
+  Caffe(const Caffe &obj);
   ~Caffe();
 
   // Thread local context for Caffe. Moved to common.cpp instead of
@@ -115,7 +126,7 @@ class Caffe {
   class RNG {
    public:
     RNG();
-    explicit RNG(unsigned int seed);
+    explicit RNG(size_t);
     explicit RNG(const RNG&);
     RNG& operator=(const RNG&);
     void* generator();
@@ -132,11 +143,16 @@ class Caffe {
     return *(Get().random_generator_);
   }
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
-#endif
+  inline static curandGenerator_t curand_generator64() {
+    return Get().curand_generator64_;
+  }
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
@@ -147,10 +163,14 @@ class Caffe {
   // it personally but better to note it here in the header file.
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the random seed of both boost and curand
-  static void set_random_seed(const unsigned int seed);
+  static void set_random_seed(const size_t seed, device* device_context);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
+  // Switch the current device
+  static void SelectDevice(device* device_context);
+  static void SelectDevice(int id, bool listId);
+
   // Prints the current GPU status.
   static void DeviceQuery();
   // Parallel training info
@@ -159,22 +179,40 @@ class Caffe {
   inline static bool root_solver() { return Get().root_solver_; }
   inline static void set_root_solver(bool val) { Get().root_solver_ = val; }
 
+  // Get the default device
+  static device *GetDefaultDevice();
+  static device *GetCPUDevice();
+
+  // Prints info about all devices
+  static int EnumerateDevices(bool silent = false);
+  // Prepares contexts for devices to use
+  static void SetDevices(std::vector<int> device_ids);
+  // Finish executing gpu kernels on the specified-device.
+  static void Synchronize(int device_id);
+
+  // Get a device context
+  static device *GetDevice(int id, bool listId);
+
  protected:
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
-#endif
+  curandGenerator_t curand_generator64_;
+#endif  // USE_CUDA
+#endif  // !CPU_ONLY
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
+
+  // The shared ptrs are being referenced on every thread,
+  // while the default device will be handled thread local
+  static vector<shared_ptr< device> > devices_;
+  shared_ptr<device> cpu_device_;
+  device* default_device_;
+
   int solver_count_;
   bool root_solver_;
-
- private:
-  // The private constructor to avoid duplicate instantiation.
-  Caffe();
-
-  DISABLE_COPY_AND_ASSIGN(Caffe);
 };
 
 }  // namespace caffe

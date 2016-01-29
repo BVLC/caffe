@@ -10,7 +10,7 @@
 namespace caffe {
 
 /**
- * @brief Takes two+ Blobs, interprets last Blob as a selector and
+ * @brief Takes two+ Blobs, int_tperprets last Blob as a selector and
  *  filter remaining Blobs accordingly with selector data (0 means that
  * the corresponding item has to be filtered, non-zero means that corresponding
  * item needs to stay).
@@ -26,8 +26,8 @@ class FilterLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Filter"; }
-  virtual inline int MinBottomBlobs() const { return 2; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int_tp MinBottomBlobs() const { return 2; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -60,7 +60,7 @@ class FilterLayer : public Layer<Dtype> {
    * @param top output Blob vector (length 1+), providing the error gradient with
    *        respect to the outputs
    * @param propagate_down see Layer::Backward.
-   * @param bottom input Blob vector (length 2+), into which the top error
+   * @param bottom input Blob vector (length 2+), int_tpo which the top error
    *        gradient is copied
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -69,7 +69,7 @@ class FilterLayer : public Layer<Dtype> {
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool first_reshape_;
-  vector<int> indices_to_forward_;
+  vector<int_tp> indices_to_forward_;
 };
 
 }  // namespace caffe

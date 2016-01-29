@@ -10,16 +10,16 @@ void AdaDeltaSolver<Dtype>::AdaDeltaPreSolve() {
   // SGDSolver::PreSolve
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   for (int i = 0; i < net_params.size(); ++i) {
-        const vector<int>& shape = net_params[i]->shape();
+        const vector<int_tp>& shape = net_params[i]->shape();
         this->history_.push_back(
-                shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+         shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape, this->device_)));
   }
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype>
-void adadelta_update_gpu(int N, Dtype* g, Dtype* h, Dtype* h2, Dtype momentum,
-    Dtype delta, Dtype local_rate);
+template<typename Dtype>
+void adadelta_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype* h2,
+                         Dtype momentum, Dtype delta, Dtype local_rate);
 #endif
 
 template <typename Dtype>
@@ -91,7 +91,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    adadelta_update_gpu(net_params[param_id]->count(),
+    adadelta_update_gpu(this->device_, net_params[param_id]->count(),
         net_params[param_id]->mutable_gpu_diff(),
         this->history_[param_id]->mutable_gpu_data(),
         this->history_[update_history_offset + param_id]->mutable_gpu_data(),

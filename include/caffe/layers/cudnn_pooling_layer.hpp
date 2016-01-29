@@ -9,6 +9,10 @@
 
 #include "caffe/layers/pooling_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
@@ -27,8 +31,8 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNPoolingLayer();
   // Currently, cuDNN does not support the extra top blob.
-  virtual inline int MinTopBlobs() const { return -1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinTopBlobs() const { return -1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,

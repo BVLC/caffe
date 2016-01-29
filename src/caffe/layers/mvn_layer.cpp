@@ -32,13 +32,13 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  int num;
+  int_tp num;
   if (this->layer_param_.mvn_param().across_channels())
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
 
-  int dim = bottom[0]->count() / num;
+  int_tp dim = bottom[0]->count() / num;
 
   // subtract mean
   caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
@@ -79,13 +79,13 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
 
-  int num;
+  int_tp num;
   if (this->layer_param_.mvn_param().across_channels())
     num = bottom[0]->num();
   else
     num = bottom[0]->num() * bottom[0]->channels();
 
-  int dim = bottom[0]->count() / num;
+  int_tp dim = bottom[0]->count() / num;
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
     caffe_mul(temp_.count(), top_data, top_diff, bottom_diff);

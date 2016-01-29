@@ -30,15 +30,15 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "WindowData"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual unsigned int PrefetchRand();
+  virtual uint_tp PrefetchRand();
   virtual void load_batch(Batch<Dtype>* batch);
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
-  vector<std::pair<std::string, vector<int> > > image_database_;
+  vector<std::pair<std::string, vector<int_tp> > > image_database_;
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;

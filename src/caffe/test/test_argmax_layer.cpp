@@ -19,7 +19,7 @@ class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
       : blob_bottom_(new Blob<Dtype>(10, 10, 20, 20)),
         blob_top_(new Blob<Dtype>()),
         top_k_(5) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -32,7 +32,7 @@ class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-  size_t top_k_;
+  uint_tp top_k_;
 };
 
 TYPED_TEST_CASE(ArgMaxLayerTest, TestDtypes);
@@ -100,16 +100,16 @@ TYPED_TEST(ArgMaxLayerTest, TestCPU) {
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  int max_ind;
+  int_tp max_ind;
   TypeParam max_val;
-  int num = this->blob_bottom_->num();
-  int dim = this->blob_bottom_->count() / num;
-  for (int i = 0; i < num; ++i) {
+  int_tp num = this->blob_bottom_->num();
+  int_tp dim = this->blob_bottom_->count() / num;
+  for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(top_data[i], 0);
     EXPECT_LE(top_data[i], dim);
     max_ind = top_data[i];
     max_val = bottom_data[i * dim + max_ind];
-    for (int j = 0; j < dim; ++j) {
+    for (int_tp j = 0; j < dim; ++j) {
       EXPECT_LE(bottom_data[i * dim + j], max_val);
     }
   }
@@ -125,17 +125,17 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  int max_ind;
+  int_tp max_ind;
   TypeParam max_val;
-  int num = this->blob_bottom_->num();
-  int dim = this->blob_bottom_->count() / num;
-  for (int i = 0; i < num; ++i) {
+  int_tp num = this->blob_bottom_->num();
+  int_tp dim = this->blob_bottom_->count() / num;
+  for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(top_data[i], 0);
     EXPECT_LE(top_data[i], dim);
     max_ind = top_data[i * 2];
     max_val = top_data[i * 2 + 1];
     EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
-    for (int j = 0; j < dim; ++j) {
+    for (int_tp j = 0; j < dim; ++j) {
       EXPECT_LE(bottom_data[i * dim + j], max_val);
     }
   }
@@ -150,18 +150,18 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUTopK) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  int max_ind;
+  int_tp max_ind;
   TypeParam max_val;
-  int num = this->blob_bottom_->num();
-  int dim = this->blob_bottom_->count() / num;
-  for (int i = 0; i < num; ++i) {
+  int_tp num = this->blob_bottom_->num();
+  int_tp dim = this->blob_bottom_->count() / num;
+  for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(this->blob_top_->data_at(i, 0, 0, 0), 0);
     EXPECT_LE(this->blob_top_->data_at(i, 0, 0, 0), dim);
-    for (int j = 0; j < this->top_k_; ++j) {
+    for (int_tp j = 0; j < this->top_k_; ++j) {
       max_ind = this->blob_top_->data_at(i, 0, j, 0);
       max_val = bottom_data[i * dim + max_ind];
-      int count = 0;
-      for (int k = 0; k < dim; ++k) {
+      int_tp count = 0;
+      for (int_tp k = 0; k < dim; ++k) {
         if (bottom_data[i * dim + k] > max_val) {
           ++count;
         }
@@ -181,19 +181,19 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxValTopK) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  int max_ind;
+  int_tp max_ind;
   TypeParam max_val;
-  int num = this->blob_bottom_->num();
-  int dim = this->blob_bottom_->count() / num;
-  for (int i = 0; i < num; ++i) {
+  int_tp num = this->blob_bottom_->num();
+  int_tp dim = this->blob_bottom_->count() / num;
+  for (int_tp i = 0; i < num; ++i) {
     EXPECT_GE(this->blob_top_->data_at(i, 0, 0, 0), 0);
     EXPECT_LE(this->blob_top_->data_at(i, 0, 0, 0), dim);
-    for (int j = 0; j < this->top_k_; ++j) {
+    for (int_tp j = 0; j < this->top_k_; ++j) {
       max_ind = this->blob_top_->data_at(i, 0, j, 0);
       max_val = this->blob_top_->data_at(i, 1, j, 0);
       EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
-      int count = 0;
-      for (int k = 0; k < dim; ++k) {
+      int_tp count = 0;
+      for (int_tp k = 0; k < dim; ++k) {
         if (bottom_data[i * dim + k] > max_val) {
           ++count;
         }
@@ -211,17 +211,17 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxis) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
-  int max_ind;
+  int_tp max_ind;
   TypeParam max_val;
-  std::vector<int> shape = this->blob_bottom_->shape();
-  for (int i = 0; i < shape[1]; ++i) {
-    for (int j = 0; j < shape[2]; ++j) {
-      for (int k = 0; k < shape[3]; ++k) {
+  std::vector<int_tp> shape = this->blob_bottom_->shape();
+  for (int_tp i = 0; i < shape[1]; ++i) {
+    for (int_tp j = 0; j < shape[2]; ++j) {
+      for (int_tp k = 0; k < shape[3]; ++k) {
         max_ind = this->blob_top_->data_at(0, i, j, k);
         max_val = this->blob_bottom_->data_at(max_ind, i, j, k);
         EXPECT_GE(max_ind, 0);
         EXPECT_LE(max_ind, shape[0]);
-        for (int l = 0; l < shape[0]; ++l) {
+        for (int_tp l = 0; l < shape[0]; ++l) {
           EXPECT_LE(this->blob_bottom_->data_at(l, i, j, k), max_val);
         }
       }
@@ -238,19 +238,19 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxisTopK) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
-  int max_ind;
+  int_tp max_ind;
   TypeParam max_val;
-  std::vector<int> shape = this->blob_bottom_->shape();
-  for (int i = 0; i < shape[0]; ++i) {
-    for (int j = 0; j < shape[1]; ++j) {
-      for (int k = 0; k < shape[3]; ++k) {
-        for (int m = 0; m < this->top_k_; ++m) {
+  std::vector<int_tp> shape = this->blob_bottom_->shape();
+  for (int_tp i = 0; i < shape[0]; ++i) {
+    for (int_tp j = 0; j < shape[1]; ++j) {
+      for (int_tp k = 0; k < shape[3]; ++k) {
+        for (int_tp m = 0; m < this->top_k_; ++m) {
           max_ind = this->blob_top_->data_at(i, j, m, k);
           max_val = this->blob_bottom_->data_at(i, j, max_ind, k);
           EXPECT_GE(max_ind, 0);
           EXPECT_LE(max_ind, shape[2]);
-          int count = 0;
-          for (int l = 0; l < shape[2]; ++l) {
+          int_tp count = 0;
+          for (int_tp l = 0; l < shape[2]; ++l) {
             if (this->blob_bottom_->data_at(i, j, l, k) > max_val) {
               ++count;
             }
@@ -273,14 +273,14 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxisMaxValTopK) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   TypeParam max_val;
-  std::vector<int> shape = this->blob_bottom_->shape();
-  for (int i = 0; i < shape[0]; ++i) {
-    for (int j = 0; j < shape[1]; ++j) {
-      for (int k = 0; k < shape[2]; ++k) {
-        for (int m = 0; m < this->top_k_; ++m) {
+  std::vector<int_tp> shape = this->blob_bottom_->shape();
+  for (int_tp i = 0; i < shape[0]; ++i) {
+    for (int_tp j = 0; j < shape[1]; ++j) {
+      for (int_tp k = 0; k < shape[2]; ++k) {
+        for (int_tp m = 0; m < this->top_k_; ++m) {
           max_val = this->blob_top_->data_at(i, j, k, m);
-          int count = 0;
-          for (int l = 0; l < shape[3]; ++l) {
+          int_tp count = 0;
+          for (int_tp l = 0; l < shape[3]; ++l) {
             if (this->blob_bottom_->data_at(i, j, k, l) > max_val) {
               ++count;
             }

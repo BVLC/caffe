@@ -90,38 +90,38 @@ inline void WriteProtoToBinaryFile(
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
-bool ReadFileToDatum(const string& filename, const int label, Datum* datum);
+bool ReadFileToDatum(const string& filename, const int_tp label, Datum* datum);
 
 inline bool ReadFileToDatum(const string& filename, Datum* datum) {
   return ReadFileToDatum(filename, -1, datum);
 }
 
-bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color,
+bool ReadImageToDatum(const string& filename, const int_tp label,
+    const int_tp height, const int_tp width, const bool is_color,
     const std::string & encoding, Datum* datum);
 
-inline bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum) {
-  return ReadImageToDatum(filename, label, height, width, is_color,
-                          "", datum);
+inline bool ReadImageToDatum(const string& filename, const int_tp label,
+                             const int_tp height, const int_tp width,
+                             const bool is_color, Datum* datum) {
+  return ReadImageToDatum(filename, label, height, width, is_color, "", datum);
 }
 
-inline bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, Datum* datum) {
+inline bool ReadImageToDatum(const string& filename, const int_tp label,
+    const int_tp height, const int_tp width, Datum* datum) {
   return ReadImageToDatum(filename, label, height, width, true, datum);
 }
 
-inline bool ReadImageToDatum(const string& filename, const int label,
+inline bool ReadImageToDatum(const string& filename, const int_tp label,
     const bool is_color, Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, is_color, datum);
 }
 
-inline bool ReadImageToDatum(const string& filename, const int label,
+inline bool ReadImageToDatum(const string& filename, const int_tp label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, true, datum);
 }
 
-inline bool ReadImageToDatum(const string& filename, const int label,
+inline bool ReadImageToDatum(const string& filename, const int_tp label,
     const std::string & encoding, Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, true, encoding, datum);
 }
@@ -131,10 +131,10 @@ bool DecodeDatum(Datum* datum, bool is_color);
 
 #ifdef USE_OPENCV
 cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width, const bool is_color);
+    const int_tp height, const int_tp width, const bool is_color);
 
 cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width);
+    const int_tp height, const int_tp width);
 
 cv::Mat ReadImageToCVMat(const string& filename,
     const bool is_color);

@@ -34,7 +34,7 @@ namespace caffe {
  * the BatchNorm layer's output.
  *
  * [1] S. Ioffe and C. Szegedy, "Batch Normalization: Accelerating Deep Network
- *     Training by Reducing Internal Covariate Shift." arXiv preprint
+ *     Training by Reducing int_tpernal Covariate Shift." arXiv preprint_tp
  *     arXiv:1502.03167 (2015).
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
@@ -50,8 +50,8 @@ class BatchNormLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "BatchNorm"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -66,7 +66,7 @@ class BatchNormLayer : public Layer<Dtype> {
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;
   Dtype moving_average_fraction_;
-  int channels_;
+  int_tp channels_;
   Dtype eps_;
 
   // extra temporarary variables is used to carry out sums/broadcasting

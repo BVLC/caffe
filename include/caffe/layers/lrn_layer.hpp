@@ -30,8 +30,8 @@ class LRNLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "LRN"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -56,18 +56,18 @@ class LRNLayer : public Layer<Dtype> {
   virtual void WithinChannelBackward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int size_;
-  int pre_pad_;
+  int_tp size_;
+  int_tp pre_pad_;
   Dtype alpha_;
   Dtype beta_;
   Dtype k_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
+  int_tp num_;
+  int_tp channels_;
+  int_tp height_;
+  int_tp width_;
 
   // Fields used for normalization ACROSS_CHANNELS
-  // scale_ stores the intermediate summing results
+  // scale_ stores the int_tpermediate summing results
   Blob<Dtype> scale_;
 
   // Fields used for normalization WITHIN_CHANNEL
