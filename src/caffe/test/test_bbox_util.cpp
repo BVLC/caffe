@@ -1,3 +1,4 @@
+#include <map>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -413,6 +414,295 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
   EXPECT_NEAR(match_overlaps[3], 4./8, eps);
   EXPECT_NEAR(match_overlaps[4], 1./11, eps);
   EXPECT_NEAR(match_overlaps[5], 0., eps);
+}
+
+TEST_F(BBoxUtilTest, TestGetGroundTruth) {
+  const int num_gt = 4;
+  Blob<float> gt_blob(1, 1, num_gt, 7);
+  float* gt_data = gt_blob.mutable_cpu_data();
+  for (int i = 0; i < 4; ++i) {
+    int image_id = ceil(i / 2.);
+    gt_data[i * 7] = image_id;
+    gt_data[i * 7 + 1] = i;
+    gt_data[i * 7 + 2] = 0;
+    gt_data[i * 7 + 3] = 0.1;
+    gt_data[i * 7 + 4] = 0.1;
+    gt_data[i * 7 + 5] = 0.3;
+    gt_data[i * 7 + 6] = 0.3;
+  }
+
+  map<int, vector<NormalizedBBox> > all_gt_bboxes;
+  GetGroundTruth(gt_data, num_gt, -1, &all_gt_bboxes);
+
+  EXPECT_EQ(all_gt_bboxes.size(), 3);
+
+  EXPECT_EQ(all_gt_bboxes[0].size(), 1);
+  EXPECT_EQ(all_gt_bboxes[0][0].label(), 0);
+  EXPECT_NEAR(all_gt_bboxes[0][0].xmin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].ymin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].xmax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].ymax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].size(), 0.04, eps);
+
+  EXPECT_EQ(all_gt_bboxes[1].size(), 2);
+  for (int i = 1; i < 3; ++i) {
+    EXPECT_EQ(all_gt_bboxes[1][i-1].label(), i);
+    EXPECT_NEAR(all_gt_bboxes[1][i-1].xmin(), 0.1, eps);
+    EXPECT_NEAR(all_gt_bboxes[1][i-1].ymin(), 0.1, eps);
+    EXPECT_NEAR(all_gt_bboxes[1][i-1].xmax(), 0.3, eps);
+    EXPECT_NEAR(all_gt_bboxes[1][i-1].ymax(), 0.3, eps);
+    EXPECT_NEAR(all_gt_bboxes[1][i-1].size(), 0.04, eps);
+  }
+
+  EXPECT_EQ(all_gt_bboxes[2].size(), 1);
+  EXPECT_EQ(all_gt_bboxes[2][0].label(), 3);
+  EXPECT_NEAR(all_gt_bboxes[2][0].xmin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[2][0].ymin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[2][0].xmax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[2][0].ymax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[2][0].size(), 0.04, eps);
+}
+
+TEST_F(BBoxUtilTest, TestGetLocPredictionsShared) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_loc_classes = 1;
+  const bool share_location = true;
+  const int dim = num_preds_per_class * num_loc_classes * 4;
+  Blob<float> loc_blob(num, dim, 1, 1);
+  float* loc_data = loc_blob.mutable_cpu_data();
+  for (int i = 0; i < num; ++i) {
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      int start_idx = i * dim + j * 4;
+      loc_data[start_idx] = i * num_preds_per_class * 0.1 + j * 0.1;
+      loc_data[start_idx + 1] = i * num_preds_per_class * 0.1 + j * 0.1;
+      loc_data[start_idx + 2] = i * num_preds_per_class * 0.1 + j * 0.1 + 0.2;
+      loc_data[start_idx + 3] = i * num_preds_per_class * 0.1 + j * 0.1 + 0.2;
+    }
+  }
+
+  vector<LabelBBox> all_loc_bboxes;
+  GetLocPredictions(loc_data, num, num_preds_per_class, num_loc_classes,
+                    share_location, &all_loc_bboxes);
+
+  EXPECT_EQ(all_loc_bboxes.size(), num);
+
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_loc_bboxes[i].size(), 1);
+    LabelBBox::iterator it = all_loc_bboxes[i].begin();
+    EXPECT_EQ(it->first, -1);
+    const vector<NormalizedBBox>& bboxes = it->second;
+    EXPECT_EQ(bboxes.size(), num_preds_per_class);
+    float start_value = i * num_preds_per_class * 0.1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      EXPECT_EQ(bboxes[j].has_label(), false);
+      EXPECT_NEAR(bboxes[j].xmin(), start_value + j * 0.1, eps);
+      EXPECT_NEAR(bboxes[j].ymin(), start_value + j * 0.1, eps);
+      EXPECT_NEAR(bboxes[j].xmax(), start_value + j * 0.1 + 0.2, eps);
+      EXPECT_NEAR(bboxes[j].ymax(), start_value + j * 0.1 + 0.2, eps);
+      EXPECT_EQ(bboxes[j].has_size(), false);
+    }
+  }
+}
+
+TEST_F(BBoxUtilTest, TestGetLocPredictionsUnShared) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_loc_classes = 2;
+  const bool share_location = false;
+  const int dim = num_preds_per_class * num_loc_classes * 4;
+  Blob<float> loc_blob(num, dim, 1, 1);
+  float* loc_data = loc_blob.mutable_cpu_data();
+  for (int i = 0; i < num; ++i) {
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      float start_value = (i * num_preds_per_class + j) * num_loc_classes * 0.1;
+      for (int c = 0; c < num_loc_classes; ++c) {
+        int idx = ((i * num_preds_per_class + j) * num_loc_classes + c) * 4;
+        loc_data[idx] = start_value + c * 0.1;
+        loc_data[idx + 1] = start_value + c * 0.1;
+        loc_data[idx + 2] = start_value + c * 0.1 + 0.2;
+        loc_data[idx + 3] = start_value + c * 0.1 + 0.2;
+      }
+    }
+  }
+
+  vector<LabelBBox> all_loc_bboxes;
+  GetLocPredictions(loc_data, num, num_preds_per_class, num_loc_classes,
+                    share_location, &all_loc_bboxes);
+
+  EXPECT_EQ(all_loc_bboxes.size(), num);
+
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_loc_bboxes[i].size(), num_loc_classes);
+    for (int c = 0; c < num_loc_classes; ++c) {
+      LabelBBox::iterator it = all_loc_bboxes[i].find(c);
+      EXPECT_EQ(it->first, c);
+      const vector<NormalizedBBox>& bboxes = it->second;
+      EXPECT_EQ(bboxes.size(), num_preds_per_class);
+      for (int j = 0; j < num_preds_per_class; ++j) {
+        float start_value =
+            (i * num_preds_per_class + j) * num_loc_classes * 0.1;
+        EXPECT_EQ(bboxes[j].has_label(), false);
+        EXPECT_NEAR(bboxes[j].xmin(), start_value + c * 0.1, eps);
+        EXPECT_NEAR(bboxes[j].ymin(), start_value + c * 0.1, eps);
+        EXPECT_NEAR(bboxes[j].xmax(), start_value + c * 0.1 + 0.2, eps);
+        EXPECT_NEAR(bboxes[j].ymax(), start_value + c * 0.1 + 0.2, eps);
+        EXPECT_EQ(bboxes[j].has_size(), false);
+      }
+    }
+  }
+}
+
+TEST_F(BBoxUtilTest, TestGetConfidenceScores) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_classes = 2;
+  const int dim = num_preds_per_class * num_classes;
+  Blob<float> conf_blob(num, dim, 1, 1);
+  float* conf_data = conf_blob.mutable_cpu_data();
+  for (int i = 0; i < num; ++i) {
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      for (int c = 0; c < num_classes; ++c) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        conf_data[idx] = idx * 0.1;
+      }
+    }
+  }
+
+  vector<map<int, vector<float> > > all_conf_preds;
+  GetConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
+                      &all_conf_preds);
+
+  EXPECT_EQ(all_conf_preds.size(), num);
+
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(all_conf_preds[i].size(), num_classes);
+    for (int c = 0; c < num_classes; ++c) {
+      map<int, vector<float> >::iterator it = all_conf_preds[i].find(c);
+      EXPECT_EQ(it->first, c);
+      const vector<float>& confidences = it->second;
+      EXPECT_EQ(confidences.size(), num_preds_per_class);
+      for (int j = 0; j < num_preds_per_class; ++j) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        EXPECT_NEAR(confidences[j], idx * 0.1, eps);
+      }
+    }
+  }
+}
+
+TEST_F(BBoxUtilTest, TestGetPriorBBoxes) {
+  const int num_channels = 2;
+  const int num_priors = 2;
+  const int dim = num_priors * 4;
+  Blob<float> prior_blob(1, num_channels, dim, 1);
+  float* prior_data = prior_blob.mutable_cpu_data();
+  for (int i = 0; i < num_priors; ++i) {
+    prior_data[i * 4] = i * 0.1;
+    prior_data[i * 4 + 1] = i * 0.1;
+    prior_data[i * 4 + 2] = i * 0.1 + 0.2;
+    prior_data[i * 4 + 3] = i * 0.1 + 0.1;
+    for (int j = 0; j < 4; ++j) {
+      prior_data[dim + i * 4 + j]  = 0.1;
+    }
+  }
+
+  vector<NormalizedBBox> prior_bboxes;
+  vector<vector<float> > prior_variances;
+  GetPriorBBoxes(prior_data, num_priors, &prior_bboxes, &prior_variances);
+
+  EXPECT_EQ(prior_bboxes.size(), num_priors);
+  EXPECT_EQ(prior_variances.size(), num_priors);
+
+  for (int i = 0; i < num_priors; ++i) {
+    EXPECT_NEAR(prior_bboxes[i].xmin(), i * 0.1, eps);
+    EXPECT_NEAR(prior_bboxes[i].ymin(), i * 0.1, eps);
+    EXPECT_NEAR(prior_bboxes[i].xmax(), i * 0.1 + 0.2, eps);
+    EXPECT_NEAR(prior_bboxes[i].ymax(), i * 0.1 + 0.1, eps);
+    EXPECT_EQ(prior_variances[i].size(), 4);
+    for (int j = 0; j < 4; ++j) {
+      EXPECT_NEAR(prior_variances[i][j], 0.1, eps);
+    }
+  }
+}
+
+TEST_F(BBoxUtilTest, TestApplyNMS) {
+  vector<NormalizedBBox> bboxes;
+  vector<float> scores;
+  float nms_threshold = 0.3;
+  int top_k = -1;
+  bool reuse_overlaps = false;
+  map<int, map<int, float> > overlaps;
+  vector<int> indices;
+
+  // Fill in bboxes and confidences.
+  NormalizedBBox bbox;
+  bbox.set_xmin(0.1);
+  bbox.set_ymin(0.1);
+  bbox.set_xmax(0.3);
+  bbox.set_ymax(0.3);
+  bboxes.push_back(bbox);
+  scores.push_back(0.8);
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.1);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.3);
+  bboxes.push_back(bbox);
+  scores.push_back(0.7);
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.0);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.2);
+  bboxes.push_back(bbox);
+  scores.push_back(0.4);
+
+  bbox.set_xmin(0.1);
+  bbox.set_ymin(0.2);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.4);
+  bboxes.push_back(bbox);
+  scores.push_back(0.5);
+
+  ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
+           &indices);
+
+  EXPECT_EQ(overlaps.size(), 0);  // reuse_overlaps is false.
+  EXPECT_EQ(indices.size(), 3);
+  EXPECT_EQ(indices[0], 0);
+  EXPECT_EQ(indices[1], 3);
+  EXPECT_EQ(indices[2], 2);
+
+  top_k = 2;
+  ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
+           &indices);
+  EXPECT_EQ(indices.size(), 2);
+  EXPECT_EQ(indices[0], 0);
+  EXPECT_EQ(indices[1], 3);
+
+  top_k = 3;
+  nms_threshold = 0.2;
+  ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
+           &indices);
+  EXPECT_EQ(indices.size(), 2);
+  EXPECT_EQ(indices[0], 0);
+  EXPECT_EQ(indices[1], 2);
+
+  reuse_overlaps = true;
+  ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
+           &indices);
+  EXPECT_EQ(overlaps.size(), 1);
+  EXPECT_NEAR(overlaps[0][1], 1./3, eps);
+  EXPECT_NEAR(overlaps[0][2], 1./7, eps);
+  EXPECT_NEAR(overlaps[0][3], 2./8, eps);
+
+  map<int, map<int, float> > old_overlaps = overlaps;
+  ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
+           &indices);
+  EXPECT_EQ(old_overlaps.size(), overlaps.size());
+  for (int i = 1; i <= 3; ++i) {
+    EXPECT_NEAR(old_overlaps[0][i], overlaps[0][i], eps);
+  }
 }
 
 }  // namespace caffe

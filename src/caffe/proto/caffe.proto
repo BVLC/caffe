@@ -357,11 +357,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-<<<<<<< 98f57962c7ca9232434686b5ef2e87ff342618a5
-// LayerParameter next available layer-specific ID: 143 (last added: annotated_data_param)
-=======
 // LayerParameter next available layer-specific ID: 145 (last added: permute_param)
->>>>>>> add PermuteLayer
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
