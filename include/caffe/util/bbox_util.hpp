@@ -73,6 +73,18 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
       const int num_preds_per_class, const int num_loc_classes,
       const bool share_location, vector<LabelBBox>* loc_preds);
 
+// Get confidence predictions from conf_data.
+//    conf_data: num x num_preds_per_location * num_classes blob.
+//    num: the number of images.
+//    num_preds_per_location: number of predictions per location.
+//    num_classes: number of classes.
+//    conf_preds: stores the confidence prediction, where each item contains
+//      confidence prediction for an image.
+template <typename Dtype>
+void GetConfidenceScores(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      vector<map<int, vector<float> > >* conf_scores);
+
 // Get prior bounding boxes from prior_data.
 //    prior_data: 1 x 2 x num_priors * 4 x 1 blob.
 //    num_priors: number of priors.
@@ -82,6 +94,21 @@ template <typename Dtype>
 void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
+
+// Do non maximum suppression given bboxes and scores.
+//    bboxes: a set of bounding boxes.
+//    scores: a set of corresponding confidences.
+//    threshold: the threshold used in non maximu suppression.
+//    top_k: if not -1, keep at most top_k picked indices.
+//    reuse_overlaps: if true, use and update overlaps; otherwise, always
+//      compute overlap.
+//    overlaps: a temp place to optionally store the overlaps between pairs of
+//      bboxes if reuse_overlaps is true.
+//    indices: the kept indices of bboxes after nms.
+void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
+      const float threshold, const int top_k, const bool reuse_overlaps,
+      map<int, map<int, float> >* overlaps, vector<int>* indices);
+
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_BBOX_UTIL_H_

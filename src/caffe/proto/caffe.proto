@@ -60,6 +60,7 @@ message NormalizedBBox {
   optional float xmax = 3;
   optional float ymax = 4;
   optional int32 label = 5;
+  optional float size = 6;
 }
 
 // Annotation for each object instance.

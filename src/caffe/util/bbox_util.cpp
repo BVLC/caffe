@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <map>
+#include <utility>
 #include <vector>
 
 #include "caffe/3rdparty/hungarian.h"
@@ -29,7 +30,11 @@ float BBoxSize(const NormalizedBBox& bbox) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
     return 0;
   } else {
-    return (bbox.xmax() - bbox.xmin()) * (bbox.ymax() - bbox.ymin());
+    if (bbox.has_size()) {
+      return bbox.size();
+    } else {
+      return (bbox.xmax() - bbox.xmin()) * (bbox.ymax() - bbox.ymin());
+    }
   }
 }
 
@@ -66,6 +71,8 @@ void DecodeBBox(
   decode_bbox->set_ymin(prior_bbox.ymin() + prior_variance[1] * bbox.ymin());
   decode_bbox->set_xmax(prior_bbox.xmax() + prior_variance[2] * bbox.xmax());
   decode_bbox->set_ymax(prior_bbox.ymax() + prior_variance[3] * bbox.ymax());
+  float bbox_size = BBoxSize(*decode_bbox);
+  decode_bbox->set_size(bbox_size);
 }
 
 void DecodeBBoxes(
@@ -239,6 +246,8 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
     bbox.set_ymin(gt_data[start_idx + 4]);
     bbox.set_xmax(gt_data[start_idx + 5]);
     bbox.set_ymax(gt_data[start_idx + 6]);
+    float bbox_size = BBoxSize(bbox);
+    bbox.set_size(bbox_size);
     (*all_gt_bboxes)[item_id].push_back(bbox);
   }
 }
@@ -256,6 +265,9 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
       const int num_preds_per_class, const int num_loc_classes,
       const bool share_location, vector<LabelBBox>* loc_preds) {
   loc_preds->clear();
+  if (share_location) {
+    CHECK_EQ(num_loc_classes, 1);
+  }
   for (int i = 0; i < num; ++i) {
     LabelBBox label_bbox;
     for (int p = 0; p < num_preds_per_class; ++p) {
@@ -284,6 +296,32 @@ template void GetLocPredictions(const double* loc_data, const int num,
       const bool share_location, vector<LabelBBox>* loc_preds);
 
 template <typename Dtype>
+void GetConfidenceScores(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      vector<map<int, vector<float> > >* conf_preds) {
+  conf_preds->clear();
+  for (int i = 0; i < num; ++i) {
+    map<int, vector<float> > label_scores;
+    for (int p = 0; p < num_preds_per_class; ++p) {
+      int start_idx = p * num_classes;
+      for (int c = 0; c < num_classes; ++c) {
+        label_scores[c].push_back(conf_data[start_idx + c]);
+      }
+    }
+    conf_data += num_preds_per_class * num_classes;
+    conf_preds->push_back(label_scores);
+  }
+}
+
+// Explicit initialization.
+template void GetConfidenceScores(const float* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      vector<map<int, vector<float> > >* conf_preds);
+template void GetConfidenceScores(const double* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes,
+      vector<map<int, vector<float> > >* conf_preds);
+
+template <typename Dtype>
 void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances) {
@@ -296,6 +334,8 @@ void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
     bbox.set_ymin(prior_data[start_idx + 1]);
     bbox.set_xmax(prior_data[start_idx + 2]);
     bbox.set_ymax(prior_data[start_idx + 3]);
+    float bbox_size = BBoxSize(bbox);
+    bbox.set_size(bbox_size);
     prior_bboxes->push_back(bbox);
   }
 
@@ -316,5 +356,80 @@ template void GetPriorBBoxes(const float* prior_data, const int num_priors,
 template void GetPriorBBoxes(const double* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
+
+// define the score index pair
+typedef std::pair<int, float> IndexScore;
+bool SortIndexScore(const IndexScore& is1, const IndexScore& is2) {
+  return is1.second < is2.second;
+}
+
+void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
+      const float threshold, const int top_k, const bool reuse_overlaps,
+      map<int, map<int, float> >* overlaps, vector<int>* indices) {
+  // Sanity check.
+  CHECK_EQ(bboxes.size(), scores.size())
+      << "bboxes and scores have different size.";
+  int num_bboxes = bboxes.size();
+
+  // Generate index score pairs.
+  vector<IndexScore> index_score_vec;
+  for (int i = 0; i < num_bboxes; ++i) {
+    index_score_vec.push_back(IndexScore(i, scores[i]));
+  }
+
+  // Sort the score pair according to the scores in ascending order
+  std::sort(index_score_vec.begin(), index_score_vec.end(), SortIndexScore);
+
+  // Do nms.
+  indices->clear();
+  while (index_score_vec.size() != 0) {
+    // Get the current highest score box.
+    int best_idx = index_score_vec.back().first;
+    const NormalizedBBox& best_bbox = bboxes[best_idx];
+    indices->push_back(best_idx);
+    // Erase the best box.
+    index_score_vec.pop_back();
+
+    if (top_k > -1 && indices->size() >= top_k) {
+      // Stop if finding enough bboxes for nms.
+      break;
+    }
+
+    // Compute overlap between best_bbox and other remaining bboxes.
+    // Remove a bbox if the overlap with best_bbox is larger than nms_threshold.
+    for (vector<IndexScore>::iterator it = index_score_vec.begin();
+         it != index_score_vec.end(); ) {
+      int cur_idx = it->first;
+      const NormalizedBBox& cur_bbox = bboxes[cur_idx];
+      float cur_overlap = 0.;
+      if (reuse_overlaps) {
+        if (overlaps->find(best_idx) != overlaps->end() &&
+            overlaps->find(best_idx)->second.find(cur_idx) !=
+            (*overlaps)[best_idx].end()) {
+          // Use the computed overlap.
+          cur_overlap = (*overlaps)[best_idx][cur_idx];
+        } else if (overlaps->find(cur_idx) != overlaps->end() &&
+                   overlaps->find(cur_idx)->second.find(best_idx) !=
+                   (*overlaps)[cur_idx].end()) {
+          // Use the computed overlap.
+          cur_overlap = (*overlaps)[cur_idx][best_idx];
+        } else {
+          cur_overlap = JaccardOverlap(best_bbox, cur_bbox);
+          // Store the overlap for future use.
+          (*overlaps)[best_idx][cur_idx] = cur_overlap;
+        }
+      } else {
+        cur_overlap = JaccardOverlap(best_bbox, cur_bbox);
+      }
+
+      // Remove it if necessary
+      if (cur_overlap > threshold) {
+        it = index_score_vec.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
+}
 
 }  // namespace caffe
