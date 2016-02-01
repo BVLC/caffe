@@ -261,9 +261,9 @@ ifeq ($(LINUX), 1)
 	# boost::thread is reasonably called boost_thread (compare OS X)
 	# We will also explicitly add stdc++ to the link target.
 	LIBRARIES += boost_thread stdc++
-	VERSIONFLAGS   := -Wl,-soname,$(DYNAMIC_VERSIONED_NAME_SHORT)
-	LDFLAGS        := -Wl,-rpath,'$$ORIGIN/../lib'
-	PYTHON_LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib'
+	DYNAMIC_LDFLAGS := -Wl,-soname,$(DYNAMIC_VERSIONED_NAME_SHORT)
+	LDFLAGS         := -Wl,-rpath,'$$ORIGIN/../lib'
+	PYTHON_LDFLAGS  := -Wl,-rpath,'$$ORIGIN/../lib'
 endif
 
 # OS X:
@@ -286,9 +286,9 @@ ifeq ($(OSX), 1)
 	LIBRARIES += boost_thread-mt
 	ORIGIN := @loader_path
 	# we need to explicitly ask for the rpath to be obeyed
-	VERSIONFLAGS   := -Wl,-install_name,@rpath/lib/$(DYNAMIC_VERSIONED_NAME_SHORT)
-	LDFLAGS        := -Wl,-rpath,$(ORIGIN)/..
-	PYTHON_LDFLAGS := -Wl,-rpath,$(ORIGIN)/..
+	DYNAMIC_LDFLAGS := -Wl,-install_name,@rpath/lib/$(DYNAMIC_VERSIONED_NAME_SHORT)
+	LDFLAGS         := -Wl,-rpath,$(ORIGIN)/..
+	PYTHON_LDFLAGS  := -Wl,-rpath,$(ORIGIN)/..
 else
 	ORIGIN := \$$ORIGIN
 endif
@@ -554,7 +554,7 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 
 $(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo LD -o $@
-	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(LDFLAGS)
+	$(Q)$(CXX) -shared -o $@ $(OBJS) $(DYNAMIC_LDFLAGS) $(LINKFLAGS) $(LDFLAGS)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_NAME_SHORT)
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
