@@ -15,6 +15,9 @@ namespace caffe {
 typedef MultiBoxLossParameter_MatchType MatchType;
 typedef map<int, vector<NormalizedBBox> > LabelBBox;
 
+bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+bool SortBBoxDescend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+
 // Compute the intersection between two bboxes.
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox);
@@ -58,6 +61,10 @@ template <typename Dtype>
 void GetGroundTruth(const Dtype* gt_data, const int num_gt,
       const int background_label_id,
       map<int, vector<NormalizedBBox> >* all_gt_bboxes);
+// Store ground truth bboxes of same label in a group.
+template <typename Dtype>
+void GetGroundTruth(const Dtype* gt_data, const int num_gt,
+      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes);
 
 // Get location predictions from loc_data.
 //    loc_data: num x num_preds_per_location * num_loc_classes * 4 blob.
@@ -94,6 +101,17 @@ template <typename Dtype>
 void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
+
+// Get detection results from det_data.
+//    det_data: 1 x 1 x num_det x 7 blob.
+//    num_det: the number of detections.
+//    background_label_id: the label for background class which is used to do
+//      santity check so that no detection contains it.
+//    all_detections: stores detection results for each class from each image.
+template <typename Dtype>
+void GetDetectionResults(const Dtype* det_data, const int num_det,
+      const int background_label_id,
+      map<int, LabelBBox>* all_detections);
 
 // Do non maximum suppression given bboxes and scores.
 //    bboxes: a set of bounding boxes.

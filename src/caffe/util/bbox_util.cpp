@@ -8,6 +8,18 @@
 
 namespace caffe {
 
+// Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
+// in ascend order based on the score value.
+bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
+  return bbox1.score() < bbox2.score();
+}
+
+// Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
+// in descend order based on the score value.
+bool SortBBoxDescend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
+  return bbox1.score() > bbox2.score();
+}
+
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox) {
   if (bbox2.xmin() > bbox1.xmax() || bbox2.xmax() < bbox1.xmin() ||
@@ -261,6 +273,36 @@ template void GetGroundTruth(const double* gt_data, const int num_gt,
       map<int, vector<NormalizedBBox> >* all_gt_bboxes);
 
 template <typename Dtype>
+void GetGroundTruth(const Dtype* gt_data, const int num_gt,
+      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes) {
+  all_gt_bboxes->clear();
+  for (int i = 0; i < num_gt; ++i) {
+    int start_idx = i * 7;
+    int item_id = gt_data[start_idx];
+    if (item_id == -1) {
+      break;
+    }
+    NormalizedBBox bbox;
+    int label = gt_data[start_idx + 1];
+    CHECK_NE(background_label_id, label)
+        << "Found background label in the dataset.";
+    bbox.set_xmin(gt_data[start_idx + 3]);
+    bbox.set_ymin(gt_data[start_idx + 4]);
+    bbox.set_xmax(gt_data[start_idx + 5]);
+    bbox.set_ymax(gt_data[start_idx + 6]);
+    float bbox_size = BBoxSize(bbox);
+    bbox.set_size(bbox_size);
+    (*all_gt_bboxes)[item_id][label].push_back(bbox);
+  }
+}
+
+// Explicit initialization.
+template void GetGroundTruth(const float* gt_data, const int num_gt,
+      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes);
+template void GetGroundTruth(const double* gt_data, const int num_gt,
+      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes);
+
+template <typename Dtype>
 void GetLocPredictions(const Dtype* loc_data, const int num,
       const int num_preds_per_class, const int num_loc_classes,
       const bool share_location, vector<LabelBBox>* loc_preds) {
@@ -356,6 +398,37 @@ template void GetPriorBBoxes(const float* prior_data, const int num_priors,
 template void GetPriorBBoxes(const double* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
+
+template <typename Dtype>
+void GetDetectionResults(const Dtype* det_data, const int num_det,
+      const int background_label_id,
+      map<int, map<int, vector<NormalizedBBox> > >* all_detections) {
+  all_detections->clear();
+  for (int i = 0; i < num_det; ++i) {
+    int start_idx = i * 7;
+    int item_id = det_data[start_idx];
+    int label = det_data[start_idx + 1];
+    CHECK_NE(background_label_id, label)
+        << "Found background label in the detection results.";
+    NormalizedBBox bbox;
+    bbox.set_score(det_data[start_idx + 2]);
+    bbox.set_xmin(det_data[start_idx + 3]);
+    bbox.set_ymin(det_data[start_idx + 4]);
+    bbox.set_xmax(det_data[start_idx + 5]);
+    bbox.set_ymax(det_data[start_idx + 6]);
+    float bbox_size = BBoxSize(bbox);
+    bbox.set_size(bbox_size);
+    (*all_detections)[item_id][label].push_back(bbox);
+  }
+}
+
+// Explicit initialization.
+template void GetDetectionResults(const float* det_data, const int num_det,
+      const int background_label_id,
+      map<int, map<int, vector<NormalizedBBox> > >* all_detections);
+template void GetDetectionResults(const double* det_data, const int num_det,
+      const int background_label_id,
+      map<int, map<int, vector<NormalizedBBox> > >* all_detections);
 
 // define the score index pair
 typedef std::pair<int, float> IndexScore;
