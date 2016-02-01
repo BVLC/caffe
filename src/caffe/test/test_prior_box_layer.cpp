@@ -21,7 +21,7 @@ class PriorBoxLayerTest : public CPUDeviceTest<Dtype> {
         blob_top_(new Blob<Dtype>()),
         min_size_(4),
         max_size_(9) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);

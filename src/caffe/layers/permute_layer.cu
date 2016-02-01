@@ -4,7 +4,7 @@
 
 #include "caffe/layers/permute_layer.hpp"
 #include "caffe/util/math_functions.hpp"
-
+#ifdef USE_CUDA
 namespace caffe {
 
 template <typename Dtype>
@@ -76,3 +76,4 @@ void PermuteLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 INSTANTIATE_LAYER_GPU_FUNCS(PermuteLayer);
 
 }  // namespace caffe
+#endif

@@ -11,7 +11,6 @@
 #include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
-
 static const float eps = 1e-6;
 
 template <typename TypeParam>
@@ -21,7 +20,7 @@ class PermuteLayerTest : public MultiDeviceTest<TypeParam> {
   PermuteLayerTest()
     : blob_bottom_(new Blob<Dtype>(2, 2, 2, 3)),
       blob_top_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -199,7 +198,7 @@ TYPED_TEST(PermuteLayerTest, TestTwoPermute) {
   PermuteLayer<Dtype> layer1(layer_param);
 
   Blob<Dtype> input1(2, 3, 4, 5);
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   // fill the values
   FillerParameter filler_param;
   GaussianFiller<Dtype> filler(filler_param);

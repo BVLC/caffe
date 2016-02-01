@@ -357,7 +357,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 145 (last added: permute_param)
+// LayerParameter next available layer-specific ID: 148 (last added: detection_output_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -418,7 +418,7 @@ message LayerParameter {
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
-  optional AnnotatedDataParameter annotated_data_param = 142;
+  optional AnnotatedDataParameter annotated_data_param = 200;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
@@ -427,6 +427,7 @@ message LayerParameter {
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
+  optional DetectionOutputParameter detection_output_param = 204;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -444,7 +445,7 @@ message LayerParameter {
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
-  optional MultiBoxLossParameter multibox_loss_param = 150;
+  optional MultiBoxLossParameter multibox_loss_param = 201;
   optional MVNParameter mvn_param = 120;
   optional ParameterParameter parameter_param = 145;
   optional PermuteParameter permute_param = 202;
@@ -758,6 +759,26 @@ message DataParameter {
   // Prefetch queue (Increase if data feeding bandwidth varies, within the
   // limit of device memory for GPU training)
   optional uint64 prefetch = 10 [default = 4];
+}
+
+message NonMaximumSuppressionParameter {
+  // Threshold to be used in nms.
+  optional float nms_threshold = 1 [default = 0.3];
+  // Maximum number of results to be kept.
+  optional int32 top_k = 2;
+}
+
+// Message that store parameters used by DetectionOutputLayer
+message DetectionOutputParameter {
+  // Number of classes to be predicted. Required!
+  optional uint32 num_classes = 1;
+  // If true, bounding box are shared among different classes.
+  optional bool share_location = 2 [default = true];
+  // Background label id. If there is no background class,
+  // set it as -1.
+  optional int32 background_label_id = 3 [default = 0];
+  // Parameters used for non maximum suppression.
+  optional NonMaximumSuppressionParameter nms_param = 4;
 }
 
 message DropoutParameter {
