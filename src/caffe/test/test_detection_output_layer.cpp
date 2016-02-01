@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <iterator>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -49,6 +51,7 @@ class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
         num_loc_classes_(share_location_ ? 1 : num_classes_),
         background_label_id_(0),
         nms_threshold_(0.1),
+        top_k_(2),
         blob_bottom_loc_(
             new Blob<Dtype>(num_, num_priors_ * num_loc_classes_ * 4, 1, 1)),
         blob_bottom_conf_(
@@ -183,6 +186,33 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocation) {
   CheckEqual(*(this->blob_top_), 5, "1 1 0.0 0.25 0.25 0.55 0.55");
 }
 
+TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
+  LayerParameter layer_param;
+  DetectionOutputParameter* detection_output_param =
+      layer_param.mutable_detection_output_param();
+  detection_output_param->set_num_classes(this->num_classes_);
+  detection_output_param->set_share_location(true);
+  detection_output_param->set_background_label_id(0);
+  detection_output_param->mutable_nms_param()->set_nms_threshold(
+      this->nms_threshold_);
+  detection_output_param->mutable_nms_param()->set_top_k(this->top_k_);
+  DetectionOutputLayer<TypeParam> layer(layer_param);
+
+  this->FillLocData(true);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 4);
+  EXPECT_EQ(this->blob_top_->width(), 7);
+
+  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.15 0.15 0.45 0.45");
+  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.55 0.15 0.85 0.45");
+  CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.45 0.45 0.75 0.75");
+  CheckEqual(*(this->blob_top_), 3, "1 1 0.0 0.25 0.25 0.55 0.55");
+}
+
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
@@ -214,6 +244,89 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
   CheckEqual(*(this->blob_top_), 8, "1 0 1.0 0.25 0.25 0.55 0.55");
   CheckEqual(*(this->blob_top_), 9, "1 0 0.4 0.45 0.45 0.75 0.75");
   CheckEqual(*(this->blob_top_), 10, "1 1 0.6 0.40 0.40 0.70 0.70");
+}
+
+TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
+  LayerParameter layer_param;
+  DetectionOutputParameter* detection_output_param =
+      layer_param.mutable_detection_output_param();
+  detection_output_param->set_num_classes(this->num_classes_);
+  detection_output_param->set_share_location(false);
+  detection_output_param->set_background_label_id(-1);
+  detection_output_param->mutable_nms_param()->set_nms_threshold(
+      this->nms_threshold_);
+  detection_output_param->mutable_nms_param()->set_top_k(this->top_k_);
+  DetectionOutputLayer<TypeParam> layer(layer_param);
+
+  this->FillLocData(false);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 7);
+  EXPECT_EQ(this->blob_top_->width(), 7);
+
+  CheckEqual(*(this->blob_top_), 0, "0 0 0.6 0.55 0.55 0.85 0.85");
+  CheckEqual(*(this->blob_top_), 1, "0 0 0.4 0.15 0.55 0.45 0.85");
+  CheckEqual(*(this->blob_top_), 2, "0 1 1.0 0.20 0.20 0.50 0.50");
+  CheckEqual(*(this->blob_top_), 3, "0 1 0.8 0.50 0.20 0.80 0.50");
+  CheckEqual(*(this->blob_top_), 4, "1 0 1.0 0.25 0.25 0.55 0.55");
+  CheckEqual(*(this->blob_top_), 5, "1 0 0.4 0.45 0.45 0.75 0.75");
+  CheckEqual(*(this->blob_top_), 6, "1 1 0.6 0.40 0.40 0.70 0.70");
+}
+
+TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
+  LayerParameter layer_param;
+  DetectionOutputParameter* detection_output_param =
+      layer_param.mutable_detection_output_param();
+  detection_output_param->set_num_classes(this->num_classes_);
+  detection_output_param->set_share_location(false);
+  detection_output_param->set_background_label_id(0);
+  detection_output_param->mutable_nms_param()->set_nms_threshold(
+      this->nms_threshold_);
+  DetectionOutputLayer<TypeParam> layer(layer_param);
+
+  this->FillLocData(false);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 5);
+  EXPECT_EQ(this->blob_top_->width(), 7);
+
+  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.20 0.20 0.50 0.50");
+  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.50 0.20 0.80 0.50");
+  CheckEqual(*(this->blob_top_), 2, "0 1 0.6 0.20 0.50 0.50 0.80");
+  CheckEqual(*(this->blob_top_), 3, "0 1 0.4 0.50 0.50 0.80 0.80");
+  CheckEqual(*(this->blob_top_), 4, "1 1 0.6 0.40 0.40 0.70 0.70");
+}
+
+TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0TopK) {
+  LayerParameter layer_param;
+  DetectionOutputParameter* detection_output_param =
+      layer_param.mutable_detection_output_param();
+  detection_output_param->set_num_classes(this->num_classes_);
+  detection_output_param->set_share_location(false);
+  detection_output_param->set_background_label_id(0);
+  detection_output_param->mutable_nms_param()->set_nms_threshold(
+      this->nms_threshold_);
+  detection_output_param->mutable_nms_param()->set_top_k(this->top_k_);
+  DetectionOutputLayer<TypeParam> layer(layer_param);
+
+  this->FillLocData(false);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 3);
+  EXPECT_EQ(this->blob_top_->width(), 7);
+
+  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.20 0.20 0.50 0.50");
+  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.50 0.20 0.80 0.50");
+  CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.40 0.40 0.70 0.70");
 }
 
 }  // namespace caffe

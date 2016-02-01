@@ -130,7 +130,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       int loc_label = share_location_ ? -1 : label;
       if (decode_bboxes.find(loc_label) == decode_bboxes.end()) {
         // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << loc_label;
+        LOG(FATAL) << "Could not find location predictions for " << loc_label;
         continue;
       }
       const vector<NormalizedBBox>& bboxes =
