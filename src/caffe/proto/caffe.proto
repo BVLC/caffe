@@ -357,7 +357,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 148 (last added: detection_output_param)
+// LayerParameter next available layer-specific ID: 149 (last added: detection_evaluate_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -427,6 +427,7 @@ message LayerParameter {
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
+  optional DetectionEvaluateParameter detection_evaluate_param = 205;
   optional DetectionOutputParameter detection_output_param = 204;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
@@ -759,6 +760,15 @@ message DataParameter {
   // Prefetch queue (Increase if data feeding bandwidth varies, within the
   // limit of device memory for GPU training)
   optional uint64 prefetch = 10 [default = 4];
+}
+
+// Message that store parameters used by DetectionEvaluateLayer
+message DetectionEvaluateParameter {
+  // Label id for background class. Needed for sanity check so that
+  // background class is neither in the ground truth nor the detections.
+  optional uint32 background_label_id = 1 [default = 0];
+  // Threshold for deciding true/false positive.
+  optional float overlap_threshold = 2 [default = 0.5];
 }
 
 message NonMaximumSuppressionParameter {

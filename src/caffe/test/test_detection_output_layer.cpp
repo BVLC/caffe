@@ -19,28 +19,6 @@ namespace caffe {
 static const float eps = 1e-6;
 
 template <typename Dtype>
-void CheckEqual(const Blob<Dtype>& blob, const int num, const string values) {
-  CHECK_LT(num, blob.height());
-
-  // Split values to vector of items.
-  vector<string> items;
-  std::istringstream iss(values);
-  std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(),
-            back_inserter(items));
-  EXPECT_EQ(items.size(), 7);
-
-  // Check data.
-  const Dtype* blob_data = blob.cpu_data();
-  for (int i = 0; i < 2; ++i) {
-    EXPECT_EQ(static_cast<int>(blob_data[num * blob.width() + i]),
-              atoi(items[i].c_str()));
-  }
-  for (int i = 2; i < 7; ++i) {
-    EXPECT_NEAR(blob_data[num * blob.width() + i], atof(items[i].c_str()), eps);
-  }
-}
-
-template <typename Dtype>
 class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
  protected:
   DetectionOutputLayerTest()
@@ -126,6 +104,27 @@ class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
     }
   }
 
+  void CheckEqual(const Blob<Dtype>& blob, const int num, const string values) {
+    CHECK_LT(num, blob.height());
+
+    // Split values to vector of items.
+    vector<string> items;
+    std::istringstream iss(values);
+    std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(),
+              back_inserter(items));
+    EXPECT_EQ(items.size(), 7);
+
+    // Check data.
+    const Dtype* blob_data = blob.cpu_data();
+    for (int i = 0; i < 2; ++i) {
+      EXPECT_EQ(static_cast<int>(blob_data[num * blob.width() + i]),
+                atoi(items[i].c_str()));
+    }
+    for (int i = 2; i < 7; ++i) {
+      EXPECT_NEAR(blob_data[num * blob.width() + i], atof(items[i].c_str()), eps);
+    }
+  }
+
   int num_;
   int num_priors_;
   int num_classes_;
@@ -178,12 +177,12 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocation) {
   EXPECT_EQ(this->blob_top_->height(), 6);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
-  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.15 0.15 0.45 0.45");
-  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.55 0.15 0.85 0.45");
-  CheckEqual(*(this->blob_top_), 2, "0 1 0.6 0.15 0.55 0.45 0.85");
-  CheckEqual(*(this->blob_top_), 3, "0 1 0.4 0.55 0.55 0.85 0.85");
-  CheckEqual(*(this->blob_top_), 4, "1 1 0.6 0.45 0.45 0.75 0.75");
-  CheckEqual(*(this->blob_top_), 5, "1 1 0.0 0.25 0.25 0.55 0.55");
+  this->CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.15 0.15 0.45 0.45");
+  this->CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.55 0.15 0.85 0.45");
+  this->CheckEqual(*(this->blob_top_), 2, "0 1 0.6 0.15 0.55 0.45 0.85");
+  this->CheckEqual(*(this->blob_top_), 3, "0 1 0.4 0.55 0.55 0.85 0.85");
+  this->CheckEqual(*(this->blob_top_), 4, "1 1 0.6 0.45 0.45 0.75 0.75");
+  this->CheckEqual(*(this->blob_top_), 5, "1 1 0.0 0.25 0.25 0.55 0.55");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
@@ -207,10 +206,10 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
   EXPECT_EQ(this->blob_top_->height(), 4);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
-  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.15 0.15 0.45 0.45");
-  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.55 0.15 0.85 0.45");
-  CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.45 0.45 0.75 0.75");
-  CheckEqual(*(this->blob_top_), 3, "1 1 0.0 0.25 0.25 0.55 0.55");
+  this->CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.15 0.15 0.45 0.45");
+  this->CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.55 0.15 0.85 0.45");
+  this->CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.45 0.45 0.75 0.75");
+  this->CheckEqual(*(this->blob_top_), 3, "1 1 0.0 0.25 0.25 0.55 0.55");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
@@ -233,17 +232,17 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
   EXPECT_EQ(this->blob_top_->height(), 11);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
-  CheckEqual(*(this->blob_top_), 0, "0 0 0.6 0.55 0.55 0.85 0.85");
-  CheckEqual(*(this->blob_top_), 1, "0 0 0.4 0.15 0.55 0.45 0.85");
-  CheckEqual(*(this->blob_top_), 2, "0 0 0.2 0.55 0.15 0.85 0.45");
-  CheckEqual(*(this->blob_top_), 3, "0 0 0.0 0.15 0.15 0.45 0.45");
-  CheckEqual(*(this->blob_top_), 4, "0 1 1.0 0.20 0.20 0.50 0.50");
-  CheckEqual(*(this->blob_top_), 5, "0 1 0.8 0.50 0.20 0.80 0.50");
-  CheckEqual(*(this->blob_top_), 6, "0 1 0.6 0.20 0.50 0.50 0.80");
-  CheckEqual(*(this->blob_top_), 7, "0 1 0.4 0.50 0.50 0.80 0.80");
-  CheckEqual(*(this->blob_top_), 8, "1 0 1.0 0.25 0.25 0.55 0.55");
-  CheckEqual(*(this->blob_top_), 9, "1 0 0.4 0.45 0.45 0.75 0.75");
-  CheckEqual(*(this->blob_top_), 10, "1 1 0.6 0.40 0.40 0.70 0.70");
+  this->CheckEqual(*(this->blob_top_), 0, "0 0 0.6 0.55 0.55 0.85 0.85");
+  this->CheckEqual(*(this->blob_top_), 1, "0 0 0.4 0.15 0.55 0.45 0.85");
+  this->CheckEqual(*(this->blob_top_), 2, "0 0 0.2 0.55 0.15 0.85 0.45");
+  this->CheckEqual(*(this->blob_top_), 3, "0 0 0.0 0.15 0.15 0.45 0.45");
+  this->CheckEqual(*(this->blob_top_), 4, "0 1 1.0 0.20 0.20 0.50 0.50");
+  this->CheckEqual(*(this->blob_top_), 5, "0 1 0.8 0.50 0.20 0.80 0.50");
+  this->CheckEqual(*(this->blob_top_), 6, "0 1 0.6 0.20 0.50 0.50 0.80");
+  this->CheckEqual(*(this->blob_top_), 7, "0 1 0.4 0.50 0.50 0.80 0.80");
+  this->CheckEqual(*(this->blob_top_), 8, "1 0 1.0 0.25 0.25 0.55 0.55");
+  this->CheckEqual(*(this->blob_top_), 9, "1 0 0.4 0.45 0.45 0.75 0.75");
+  this->CheckEqual(*(this->blob_top_), 10, "1 1 0.6 0.40 0.40 0.70 0.70");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
@@ -267,13 +266,13 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
   EXPECT_EQ(this->blob_top_->height(), 7);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
-  CheckEqual(*(this->blob_top_), 0, "0 0 0.6 0.55 0.55 0.85 0.85");
-  CheckEqual(*(this->blob_top_), 1, "0 0 0.4 0.15 0.55 0.45 0.85");
-  CheckEqual(*(this->blob_top_), 2, "0 1 1.0 0.20 0.20 0.50 0.50");
-  CheckEqual(*(this->blob_top_), 3, "0 1 0.8 0.50 0.20 0.80 0.50");
-  CheckEqual(*(this->blob_top_), 4, "1 0 1.0 0.25 0.25 0.55 0.55");
-  CheckEqual(*(this->blob_top_), 5, "1 0 0.4 0.45 0.45 0.75 0.75");
-  CheckEqual(*(this->blob_top_), 6, "1 1 0.6 0.40 0.40 0.70 0.70");
+  this->CheckEqual(*(this->blob_top_), 0, "0 0 0.6 0.55 0.55 0.85 0.85");
+  this->CheckEqual(*(this->blob_top_), 1, "0 0 0.4 0.15 0.55 0.45 0.85");
+  this->CheckEqual(*(this->blob_top_), 2, "0 1 1.0 0.20 0.20 0.50 0.50");
+  this->CheckEqual(*(this->blob_top_), 3, "0 1 0.8 0.50 0.20 0.80 0.50");
+  this->CheckEqual(*(this->blob_top_), 4, "1 0 1.0 0.25 0.25 0.55 0.55");
+  this->CheckEqual(*(this->blob_top_), 5, "1 0 0.4 0.45 0.45 0.75 0.75");
+  this->CheckEqual(*(this->blob_top_), 6, "1 1 0.6 0.40 0.40 0.70 0.70");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
@@ -296,11 +295,11 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
   EXPECT_EQ(this->blob_top_->height(), 5);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
-  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.20 0.20 0.50 0.50");
-  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.50 0.20 0.80 0.50");
-  CheckEqual(*(this->blob_top_), 2, "0 1 0.6 0.20 0.50 0.50 0.80");
-  CheckEqual(*(this->blob_top_), 3, "0 1 0.4 0.50 0.50 0.80 0.80");
-  CheckEqual(*(this->blob_top_), 4, "1 1 0.6 0.40 0.40 0.70 0.70");
+  this->CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.20 0.20 0.50 0.50");
+  this->CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.50 0.20 0.80 0.50");
+  this->CheckEqual(*(this->blob_top_), 2, "0 1 0.6 0.20 0.50 0.50 0.80");
+  this->CheckEqual(*(this->blob_top_), 3, "0 1 0.4 0.50 0.50 0.80 0.80");
+  this->CheckEqual(*(this->blob_top_), 4, "1 1 0.6 0.40 0.40 0.70 0.70");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0TopK) {
@@ -324,9 +323,9 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0TopK) {
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
-  CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.20 0.20 0.50 0.50");
-  CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.50 0.20 0.80 0.50");
-  CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.40 0.40 0.70 0.70");
+  this->CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.20 0.20 0.50 0.50");
+  this->CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.50 0.20 0.80 0.50");
+  this->CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.40 0.40 0.70 0.70");
 }
 
 }  // namespace caffe
