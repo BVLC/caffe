@@ -1,6 +1,9 @@
 # Caffe
 
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
+[![Travis Build Status](https://travis-ci.org/pavlejosipovic/caffe.svg?branch=bvlc_win)](https://travis-ci.org/pavlejosipovic/caffe) Travis (Linux build)
+
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/oagoige3a0kdg4dp/branch/bvlc_win?svg=true)] (https://ci.appveyor.com/project/pavlejosipovic/caffe) AppVeyor (Windows build)
+
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
 
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
@@ -15,12 +18,38 @@ Check out the [project site](http://caffe.berkeleyvision.org) for all the detail
 
 and step-by-step examples.
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+## Windows Setup
+**Requirements**: Visual Studio 2013
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+By defaults Windows build requires `CUDA` and `cuDNN` libraries.
+Both can be disabled by adjusting build variables in `.\windows\CommonSettings.props`.
+Python support is disabled by default, but can be enabled via `.\windows\CommonSettings.props` as well.
+3rd party dependencies required by Caffe are automatically resolved via NuGet.
 
-Happy brewing!
+### CUDA
+Download `CUDA Toolkit 7.5` [from nVidia website](https://developer.nvidia.com/cuda-toolkit).
+If you don't have CUDA installed, you can experiment with CPU_ONLY build.
+In `.\windows\CommonSettings.props` set `CpuOnlyBuild` to `true` and set `UseCuDNN` to `false`.
+
+### cuDNN
+Download `cuDNN v3` or `cuDNN v4` [from nVidia website](https://developer.nvidia.com/cudnn).
+Unpack downloaded zip to `CuDnnPath` defined in `.\windows\CommonSettings.props`.
+Alternatively, you can disable cuDNN by setting `UseCuDNN` to `false` in the property file.
+
+### Python
+To build Caffe Python wrapper set `PythonSupport` to `true` in `.\windows\CommonSettings.props`.
+Download Miniconda 2.7 64-bit Windows installer [from Miniconda website] (http://conda.pydata.org/miniconda.html).
+Install for all users and add Python to PATH (through installer).
+
+Run the following commands from elevated command prompt:
+
+```
+conda install --yes numpy scipy matplotlib scikit-image pip
+pip install protobuf
+```
+
+### Build
+Now, you should be able to build `.\windows\Caffe.sln`
 
 ## License and Citation
 

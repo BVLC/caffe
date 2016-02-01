@@ -1,4 +1,9 @@
 #include <fcntl.h>
+
+#if defined(_MSC_VER)
+#include <io.h>
+#endif
+
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
@@ -50,7 +55,11 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
+#if defined (_MSC_VER)  // for MSC compiler binary flag needs to be specified
+  int fd = open(filename, O_RDONLY | O_BINARY);
+#else
   int fd = open(filename, O_RDONLY);
+#endif
   CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
