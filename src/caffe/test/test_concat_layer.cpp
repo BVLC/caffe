@@ -1,4 +1,3 @@
-#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -6,7 +5,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/concat_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -99,6 +98,19 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannelsNegativeIndexing) {
   EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_0_->width());
 }
 
+TYPED_TEST(ConcatLayerTest, TestForwardTrivial) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConcatLayer<Dtype> layer(layer_param);
+  this->blob_bottom_vec_0_.resize(1);
+  layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  for (int i = 0; i < this->blob_bottom_0_->count(); ++i) {
+    EXPECT_EQ(this->blob_bottom_0_->cpu_data()[i],
+              this->blob_top_->cpu_data()[i]);
+  }
+}
+
 TYPED_TEST(ConcatLayerTest, TestForwardNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -154,6 +166,16 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
   }
 }
 
+TYPED_TEST(ConcatLayerTest, TestGradientTrivial) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConcatLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  this->blob_bottom_vec_0_.resize(1);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_0_,
+      this->blob_top_vec_);
+}
+
 TYPED_TEST(ConcatLayerTest, TestGradientNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -171,6 +193,15 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannels) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_);
+}
+
+TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConcatLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
+    this->blob_top_vec_, 1);
 }
 
 }  // namespace caffe

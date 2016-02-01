@@ -1,9 +1,11 @@
 name: "CIFAR10_quick_test"
 input: "data"
-input_dim: 1
-input_dim: 3
-input_dim: 32
-input_dim: 32
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 32
+  dim: 32
+}
 layer {
   name: "conv1"
   type: "Convolution"

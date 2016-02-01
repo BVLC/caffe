@@ -1,9 +1,11 @@
 name: "mnist_siamese"
 input: "data"
-input_dim: 10000
-input_dim: 1
-input_dim: 28
-input_dim: 28
+input_shape {
+  dim: 10000
+  dim: 1
+  dim: 28
+  dim: 28
+}
 layer {
   name: "conv1"
   type: "Convolution"
