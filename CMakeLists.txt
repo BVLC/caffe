@@ -6,6 +6,13 @@ if(POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
 endif()
 
+# ---[ Installation and linking
+if(UNIX)
+  set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+endif()
+SET(CMAKE_INSTALL_PREFIX /usr/local
+  CACHE STRING "CMAKE_INSTALL_PREFIX defaulting to '/usr/local'")
+
 # ---[ Caffe project
 project(Caffe C CXX)
 
@@ -13,13 +20,6 @@ project(Caffe C CXX)
 set(CAFFE_TARGET_VERSION "1.0.0-rc3")
 set(CAFFE_TARGET_SOVERSION "1.0.0-rc3")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
-
-# ---[ Installation and linking
-if(UNIX)
-  set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
-endif()
-SET(CMAKE_INSTALL_PREFIX /usr/local
-  CACHE STRING "CMAKE_INSTALL_PREFIX defaulting to '/usr/local'")
 
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
