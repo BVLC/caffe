@@ -73,6 +73,46 @@ should look like:
 
 If you have any questions, please do not hesitate to ask.
 
+## Multinode Training
+
+Please see the example how to run in examples/cifar10/train_full_multinode.sh.
+The script will run data server, synchronous parameter server and 4 clients.
+Prepared proto solvers should result in exactly the same behavior as single
+node full cifar training.
+The basic setup is to run parameter server with command like this:
+"$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port"
+Than run clients on machines you want with:
+"$TOOLS/caffe train --solver=/path/to/proto --param_server:tcp://127.0.0.1:7777"
+
+Data server is for convenience. By the default you could use data shard prepared
+on each node separetely, either by shuffling the data uniquely or by creating
+a subset of your training data. The remote data layer can be used to get data
+from data server. It can also be used to cache data from the server in order
+to reduce the network traffic.
+In the case of choosing caching policy USE_CACHE_WHEN_FULL, it will first
+download cache_size batches and then will randomized the cached data for actual
+training.
+
+The proto files need to be set up manually at the time, although you can use
+model server to distribute some proto files among clients. To run model
+server use the caffe tool similar to data server:
+"$TOOLS/caffe model_server --solver=/path/to/proto --listen_address=tcp://*:6666"
+To use the model in clients, replace the path to solver with model server
+address: "$TOOLS/caffe train --solver=address"
+
+Please see also prepared examples (for 2 nodes only) for googlenet in:
+models/bvlc_googlenet/solver_param_server.prototxt 
+models/bvlc_googlenet/solver_client.prototxt 
+The solver tries to offset the bigger batch size with bigger learning rate.
+According to paper 
+    @article{
+      Author = {Forrest N. Iandola, Khalid Ashraf, Matthew W. Moskewicz, Kurt Keutzer},
+      Journal = {arXiv preprint arXiv:1511.00175},
+      Title = {FireCaffe: near-linear acceleration of deep neural network training on compute clusters},
+      Year = {2016}
+    }
+this should use 72 epochs to train googlenet. 
+
 ## License and Citation
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 The BVLC reference models are released for unrestricted use.
