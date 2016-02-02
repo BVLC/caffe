@@ -1047,6 +1047,8 @@ message MultiBoxLossParameter {
   // Background label id. To ignore background class for confidence loss,
   // set it as -1.
   optional int32 background_label_id = 9 [default = 0];
+  // If true, normalize both loc and conf loss; otherwise, do not normalize.
+  optional bool normalize = 10 [default = true];
 }
 
 message MVNParameter {
