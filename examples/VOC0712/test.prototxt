@@ -1,20 +1,19 @@
-name: "VGG_SSD_PASCAL0712_train"
+name: "VGG_SSD_PASCAL0712_test"
 layer {
   name: "data"
   type: "AnnotatedData"
   top: "data"
   top: "label"
   include {
-    phase: TRAIN
+    phase: TEST
   }
   transform_param {
-    mirror: true
     mean_value: 104
     mean_value: 117
     mean_value: 123
   }
   data_param {
-    source: "examples/VOC0712/VOC0712_trainval_lmdb"
+    source: "examples/VOC0712/VOC0712_test_lmdb"
     batch_size: 1
     backend: LMDB
   }
@@ -1035,29 +1034,37 @@ layer {
   }
 }
 layer {
-  name: "mbox_loss"
-  type: "MultiBoxLoss"
+  name: "detection_out"
+  type: "DetectionOutput"
   bottom: "mbox_loc"
   bottom: "mbox_conf"
   bottom: "mbox_priorbox"
-  bottom: "label"
-  top: "mbox_loss"
+  top: "detection_out"
   include {
-    phase: TRAIN
+    phase: TEST
   }
-  propagate_down: true
-  propagate_down: true
-  propagate_down: false
-  propagate_down: false
-  multibox_loss_param {
-    loc_loss_type: L2
-    conf_loss_type: SOFTMAX
-    loc_weight: 1
+  detection_output_param {
     num_classes: 21
     share_location: true
-    match_type: PER_PREDICTION
+    background_label_id: 0
+    nms_param {
+      nms_threshold: 0.3
+      top_k: 400
+    }
+  }
+}
+layer {
+  name: "detection_eval"
+  type: "DetectionEvaluate"
+  bottom: "detection_out"
+  bottom: "label"
+  top: "detection_eval"
+  include {
+    phase: TEST
+  }
+  detection_evaluate_param {
+    background_label_id: 0
     overlap_threshold: 0.5
-    use_prior_for_matching: true
   }
 }
 

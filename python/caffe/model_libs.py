@@ -38,7 +38,9 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
 
 def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
     kwargs = {
-            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)]}
+            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+            'weight_filler': dict(type='msra'),
+            'bias_filler': dict(type='constant', value=0)}
 
     net.conv1_1 = L.Convolution(net.data, num_output=64, pad=1, kernel_size=3, **kwargs)
     net.relu1_1 = L.ReLU(net.conv1_1, in_place=True)
@@ -103,8 +105,7 @@ def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
         net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
 
     # Update freeze layers.
-    kwargs = {
-            'param': [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)]}
+    kwargs['param'] = [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)]
     layers = net.keys()
     for freeze_layer in freeze_layers:
         if freeze_layer in layers:
@@ -122,10 +123,23 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
     net_layers = net.keys()
     assert data_layer in net_layers, "data_layer is not in net's layers"
 
-    kwargs = {
-            'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
-            'weight_filler': dict(type='xavier'),
-            'bias_filler': dict(type='constant', value=0)}
+    if use_batchnorm:
+        # No bias in conv.
+        kwargs = {
+            'param': [dict(lr_mult=1, decay_mult=1)],
+            'weight_filler': dict(type='gaussian', std=0.01)}
+        # parameters for scale bias layer after batchnorm.
+        sb_kwargs = {
+            'param': [dict(lr_mult=1.00001)],
+            'filler': dict(type='constant', value=1),
+            'bias_term': True,
+            'bias_filler': dict(type='constant', value=0.001)
+            }
+    else:
+        kwargs = {
+                'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+                'weight_filler': dict(type='msra'),
+                'bias_filler': dict(type='constant', value=0)}
 
     num = len(from_layers)
     priorbox_layers = []
@@ -153,6 +167,8 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
         if use_batchnorm:
             batchnorm_name = "{}_bn".format(name)
             net[batchnorm_name] = L.BatchNorm(net[name], in_place=True)
+            scalebias_name = "{}_sb".format(batchnorm_name)
+            net[scalebias_name] = L.Scale(net[batchnorm_name], in_place=True, **sb_kwargs)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
@@ -166,6 +182,8 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
         if use_batchnorm:
             batchnorm_name = "{}_bn".format(name)
             net[batchnorm_name] = L.BatchNorm(net[name], in_place=True)
+            scalebias_name = "{}_sb".format(batchnorm_name)
+            net[scalebias_name] = L.Scale(net[batchnorm_name], in_place=True, **sb_kwargs)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
