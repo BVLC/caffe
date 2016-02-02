@@ -93,6 +93,8 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
 
   vector<map<int, vector<int> > > all_match_indices_;
   vector<map<int, vector<float> > > all_match_overlaps_;
+
+  bool normalize_;
 };
 
 }  // namespace caffe

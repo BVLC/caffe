@@ -310,13 +310,17 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
       MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
       for (int k = 0; k < 2; ++k) {
         bool use_prior = kBoolChoices[k];
-        multibox_loss_param->set_share_location(share_location);
-        multibox_loss_param->set_match_type(match_type);
-        multibox_loss_param->set_use_prior_for_matching(use_prior);
-        MultiBoxLossLayer<Dtype> layer(layer_param);
-        GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-        checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                        this->blob_top_vec_, 0);
+        for (int n = 0; n < 2; ++n) {
+          bool normalize = kBoolChoices[n];
+          multibox_loss_param->set_share_location(share_location);
+          multibox_loss_param->set_match_type(match_type);
+          multibox_loss_param->set_use_prior_for_matching(use_prior);
+          multibox_loss_param->set_normalize(normalize);
+          MultiBoxLossLayer<Dtype> layer(layer_param);
+          GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+          checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                          this->blob_top_vec_, 0);
+        }
       }
     }
   }
@@ -337,16 +341,20 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
       MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
       for (int k = 0; k < 2; ++k) {
         bool use_prior = kBoolChoices[k];
-        for (int l = 0; l < 1; ++l) {
-          // TODO(weiliu89): Fix the bug when background_label_id is -1.
-          multibox_loss_param->set_share_location(share_location);
-          multibox_loss_param->set_match_type(match_type);
-          multibox_loss_param->set_use_prior_for_matching(use_prior);
-          multibox_loss_param->set_background_label_id(l);
-          MultiBoxLossLayer<Dtype> layer(layer_param);
-          GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-          checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                          this->blob_top_vec_, 1);
+        for (int n = 0; n < 2; ++n) {
+          bool normalize = kBoolChoices[n];
+          for (int l = 0; l < 1; ++l) {
+            // TODO(weiliu89): Fix the bug when background_label_id is -1.
+            multibox_loss_param->set_share_location(share_location);
+            multibox_loss_param->set_match_type(match_type);
+            multibox_loss_param->set_use_prior_for_matching(use_prior);
+            multibox_loss_param->set_normalize(normalize);
+            multibox_loss_param->set_background_label_id(l);
+            MultiBoxLossLayer<Dtype> layer(layer_param);
+            GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+            checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                            this->blob_top_vec_, 1);
+          }
         }
       }
     }
