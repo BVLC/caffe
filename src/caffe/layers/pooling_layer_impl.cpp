@@ -16,17 +16,17 @@ template <typename Dtype>
 PoolingCodeGeneratorForward<Dtype>::~PoolingCodeGeneratorForward() {}
 
 template <typename Dtype>
-typename PoolingCodeGeneratorForward<Dtype>::Callback_t* PoolingCodeGeneratorForward<Dtype>::Get_callback(
-  PoolingLayer<Dtype>* layer, 
-  Blob<Dtype>* top, 
+typename PoolingCodeGeneratorForward<Dtype>::Callback_t PoolingCodeGeneratorForward<Dtype>::Get_callback(
+  PoolingLayer<Dtype>* layer,
+  Blob<Dtype>* top,
   bool use_top_mask) {
   // Wrapper for lazy initialization.
   // Also check if top shape din't change.
   // TODO: do we need to check all blobs' shapes?
-  // In future we may add cache for all already found options. 
+  // In future we may add cache for all already found options.
   // Currently there is only one code for last used shape.
-  if(Callback == NULL || 
-     top->shape() != Layer_output_shape_signature || 
+  if(Callback == NULL ||
+     top->shape() != Layer_output_shape_signature ||
      Use_top_mask != use_top_mask ||
      Method != layer->layer_param_.pooling_param().pool())
   {
@@ -41,8 +41,8 @@ typename PoolingCodeGeneratorForward<Dtype>::Callback_t* PoolingCodeGeneratorFor
 // Implementation of CodeGenerator classes for Pooling.
 template <typename Dtype>
 void PoolingCodeGeneratorForward<Dtype>::Naive(
-  const Dtype* bottom_data, 
-  Dtype* top_data, 
+  const Dtype* bottom_data,
+  Dtype* top_data,
   int top_count,
   int batch_start,
   int batch_end,
@@ -159,7 +159,7 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
 template <typename Dtype>
 void PoolingCodeGeneratorForward<Dtype>::Create_callback(PoolingLayer<Dtype>* layer)
 {
-  Callback = Naive;
+  Callback = &Naive;
 }
 
 #if defined __x86_64__ || defined _M_X64
@@ -188,8 +188,8 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
     const int height_kernel_h_pad_h_ = height_kernel_h_ + layer->pad_h_;
     const int width_kernel_w_pad_w_ = width_kernel_w_ + layer->pad_w_;
 
-    int64_t internal_mask_ptr = 
-      (Use_top_mask || param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE) 
+    int64_t internal_mask_ptr =
+      (Use_top_mask || param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE)
         ? 0 : reinterpret_cast<int64_t>(layer->max_idx_.cpu_data());
 
     bool optimal_version = false;
@@ -301,7 +301,7 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
       cmp(stack_channel_cnt, layer->channels_);
       jae("channel_loop_end", T_NEAR);
 
-        // Compute batch/channel offsets for buffers.  
+        // Compute batch/channel offsets for buffers.
         // input: (batch_size*batch+fm_size*fm)*4 + ptr
         mov(reg_mul_param, batch_size);
         mul(stack_batch_cnt);
@@ -438,7 +438,7 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
 
             if(param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE)
             {
-              // true_height = min(hstart, height_ - kernel_h_ + pad_h_) + kernel_h_ - hstart; 
+              // true_height = min(hstart, height_ - kernel_h_ + pad_h_) + kernel_h_ - hstart;
               // required to compute pooling size
               mov(reg_scratch0, reg_scratch3);
               mov(reg_scratch1, height_kernel_h_pad_h_);
@@ -483,22 +483,22 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
             cmp(stack_out_w_cnt, layer->pooled_width_);
             jae("out_w_loop_end", T_NEAR);
 
-              // wend = min(wstart0, width_ - kernel_w_) + kernel_w_; stored in reg_scratch7      
+              // wend = min(wstart0, width_ - kernel_w_) + kernel_w_; stored in reg_scratch7
               mov(reg_scratch7, stack_wstart0);
               mov(reg_scratch1, width_kernel_w_);
               cmp(reg_scratch7, reg_scratch1);
               cmovg(reg_scratch7, reg_scratch1);
-              add(reg_scratch7, layer->kernel_w_);   
+              add(reg_scratch7, layer->kernel_w_);
 
               if(param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE)
               {
-                // true_width = min(wstart0, width_ - kernel_w_ + pad_h_) + kernel_w_ - wstart0; 
+                // true_width = min(wstart0, width_ - kernel_w_ + pad_h_) + kernel_w_ - wstart0;
                 // required to compute pooling size
                 mov(reg_scratch0, stack_wstart0);
                 mov(reg_scratch1, width_kernel_w_pad_w_);
                 cmp(reg_scratch0, reg_scratch1);
                 cmovg(reg_scratch0, reg_scratch1);
-                add(reg_scratch0, layer->kernel_w_); 
+                add(reg_scratch0, layer->kernel_w_);
                 sub(reg_scratch0, stack_wstart0);
                 mov(stack_true_width, reg_scratch0);
               }
@@ -578,7 +578,7 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
               L("kern_h_loop_end");
 
               // Save accumulators.
-              if(param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE) 
+              if(param.pooling_param().pool() == PoolingParameter_PoolMethod_AVE)
               {
                 mov(reg_mul_param, stack_true_height);
                 imul(stack_true_width);
@@ -632,33 +632,33 @@ void PoolingCodeGeneratorForward<float>::Create_callback(PoolingLayer<float>* la
     pop(rbp);
     ret();
 
-    Callback = getCode<Callback_t*>();
+    Callback = getCode<Callback_t>();
   }
   else
   { // Take naive path.
-    Callback = Naive;
+    Callback = &Naive;
   }
 }
 #endif
 
 template <typename Dtype>
-PoolingCodeGeneratorBackward<Dtype>::PoolingCodeGeneratorBackward() 
+PoolingCodeGeneratorBackward<Dtype>::PoolingCodeGeneratorBackward()
 {
-  Callback = NULL; 
+  Callback = NULL;
 }
 
 template <typename Dtype>
-PoolingCodeGeneratorBackward<Dtype>::~PoolingCodeGeneratorBackward() 
+PoolingCodeGeneratorBackward<Dtype>::~PoolingCodeGeneratorBackward()
 {
 }
 
 template <typename Dtype>
-typename PoolingCodeGeneratorBackward<Dtype>::Callback_t* PoolingCodeGeneratorBackward<Dtype>::Get_callback(PoolingLayer<Dtype>* layer, Blob<Dtype>* top) 
+typename PoolingCodeGeneratorBackward<Dtype>::Callback_t PoolingCodeGeneratorBackward<Dtype>::Get_callback(PoolingLayer<Dtype>* layer, Blob<Dtype>* top)
 {
   // Wrapper for lazy initialization.
   // Also check if top shape din't change.
   // TODO: do we need to check all blobs' shapes?
-  // In future we may add cache for all already found options. 
+  // In future we may add cache for all already found options.
   // Currently there is only one code for last used shape.
   if(Callback == NULL || top->shape() != layer_output_shape_signature)
   {
@@ -671,8 +671,8 @@ typename PoolingCodeGeneratorBackward<Dtype>::Callback_t* PoolingCodeGeneratorBa
 
 template <typename Dtype>
 void PoolingCodeGeneratorBackward<Dtype>::Naive(
-  const Dtype* top_diff, 
-  Dtype* bottom_diff, 
+  const Dtype* top_diff,
+  Dtype* bottom_diff,
   int batch_start,
   int batch_end,
   bool use_top_mask,
@@ -778,7 +778,7 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
 template <typename Dtype>
 void PoolingCodeGeneratorBackward<Dtype>::Create_callback(PoolingLayer<Dtype>* layer)
 {
-  Callback = Naive;
+  Callback = &Naive;
 }
 
 #if defined __x86_64__ || defined _M_X64
@@ -796,7 +796,7 @@ void PoolingCodeGeneratorBackward<float>::Create_callback(PoolingLayer<float>* l
     if(Callback) // It seems we are regenerating the code due to output reshape.
       reset();
 
-    Callback = getCode<Callback_t*>();
+    Callback = getCode<Callback_t>();
   }
   else
   { // Take naive path.
