@@ -61,7 +61,7 @@ NONGEN_CXX_SRCS := $(shell find \
 	src/$(PROJECT) \
 	include/$(PROJECT) \
 	python/$(PROJECT) \
-	matlab/$(PROJECT) \
+	matlab/+$(PROJECT)/private	 \
 	examples \
 	tools \
 	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh")
@@ -74,14 +74,14 @@ NONEMPTY_LINT_REPORT := $(BUILD_DIR)/$(LINT_EXT)
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/_$(PROJECT).cpp
 #PY$(PROJECT)_HXX_SRC := python/$(PROJECT)/_$(PROJECT).hpp
-PY$(PROJECT)_HXX := include/$(PROJECT)/python_layer.hpp
+PY$(PROJECT)_HXX := include/$(PROJECT)/layers/python_layer.hpp
 PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
 # MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
-MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
+MAT$(PROJECT)_SRC := matlab/+$(PROJECT)/private/$(PROJECT)_.cpp
 ifneq ($(MATLAB_DIR),)
 	MAT_SO_EXT := $(shell $(MATLAB_DIR)/bin/mexext)
 endif
-MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT).$(MAT_SO_EXT)
+MAT$(PROJECT)_SO := matlab/+$(PROJECT)/private/$(PROJECT)_.$(MAT_SO_EXT)
 
 ##############################
 # Derive generated files
@@ -105,6 +105,8 @@ CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 OBJ_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)
 LAYER_BUILD_DIR := $(OBJ_BUILD_DIR)/layers
+SOLVER_BUILD_DIR := $(OBJ_BUILD_DIR)/solvers
+
 UTIL_BUILD_DIR := $(OBJ_BUILD_DIR)/util
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
@@ -169,11 +171,29 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-LIBRARIES += gflags protobuf leveldb snappy \
-	lmdb \
-	boost_system \
-	hdf5_hl hdf5 \
-	opencv_core opencv_highgui opencv_imgproc pthread 
+
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
+
+# handle IO dependencies
+USE_LEVELDB ?= 1
+USE_LMDB ?= 1
+USE_OPENCV ?= 1
+
+ifeq ($(USE_LEVELDB), 1)
+	LIBRARIES += leveldb snappy
+endif
+ifeq ($(USE_LMDB), 1)
+	LIBRARIES += lmdb
+endif
+ifeq ($(USE_OPENCV), 1)
+	LIBRARIES += opencv_core opencv_highgui opencv_imgproc 
+
+	ifeq ($(OPENCV_VERSION), 3)
+		LIBRARIES += opencv_imgcodecs
+	endif
+
+endif
+
 PYTHON_LIBRARIES := boost_python python2.7 
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -189,7 +209,7 @@ endif
 
 ALL_BUILD_DIRS := $(sort \
 		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
-		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
+		$(LAYER_BUILD_DIR) $(SOLVER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
 		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
 		$(LINT_OUTPUT_DIR) \
@@ -278,6 +298,20 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
+# configure IO libraries
+ifeq ($(USE_OPENCV), 1)
+	COMMON_FLAGS += -DUSE_OPENCV
+endif
+ifeq ($(USE_LEVELDB), 1)
+	COMMON_FLAGS += -DUSE_LEVELDB
+endif
+ifeq ($(USE_LMDB), 1)
+	COMMON_FLAGS += -DUSE_LMDB
+ifeq ($(ALLOW_LMDB_NOLOCK), 1)
+	COMMON_FLAGS += -DALLOW_LMDB_NOLOCK
+endif
+endif
+
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
@@ -349,19 +383,12 @@ ifeq ($(MPI),1)
 	COMMON_FLAGS += -DUSE_MPI
 endif
 
-PCL_LIB := ../branch_libcut/
-PCL_INC := $(PCL_LIB)
-
-PCL_LIB := ../mkl_dnn/lib
-
-
 DNN_LIB := $(DNN_ROOT)/lib
 DNN_INC := $(DNN_ROOT)/include
 
-INCLUDE_DIRS += $(BLAS_INCLUDE) $(PCL_INC) $(DNN_INC)
-LIBRARY_DIRS += $(BLAS_LIB) $(PCL_LIB) $(MLP_LIB)
-PCL_NAME := $(PCL_LIB)/libmkl_dnn.a
-DNN_NAME := -Wl,--whole-archive -Wl,--start-group $(DNN_LIB)/libdnn.a -Wl,--end-group -Wl,--no-whole-archive 
+INCLUDE_DIRS += $(BLAS_INCLUDE) $(DNN_INC)
+LIBRARY_DIRS += $(BLAS_LIB)  $(MLP_LIB)
+DNN_NAME := -Wl,--whole-archive -Wl,--start-group $(DNN_LIB)/libmkl_dnn.a -Wl,--end-group -Wl,--no-whole-archive 
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
@@ -499,7 +526,7 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
-	$(CXX) -fPIC -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DNN_NAME) $(PCL_NAME)
+	$(CXX) -fPIC -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS) $(DNN_NAME) 
 	@ echo
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
@@ -558,6 +585,13 @@ $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
 	@ cat $@.$(WARNS_EXT)
 	@ echo
 
+$(SOLVER_BUILD_DIR)/%.o: src/$(PROJECT)/solvers/%.cpp $(HXX_SRCS) \
+		| $(SOLVER_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
+	@ echo
+	
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		| $(PROTO_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \

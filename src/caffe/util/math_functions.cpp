@@ -59,10 +59,12 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
-  if (alpha == 0) {
-    memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
-    return;
-  }
+
+ // TODO: Temporarily disabled until AVX-based memset is available
+ // if (alpha == 0) {
+ //   memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+ //   return;
+ // }
 #ifdef _OPENMP
   #pragma omp parallel if (omp_in_parallel() == 0)
   #pragma omp for
