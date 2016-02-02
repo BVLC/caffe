@@ -147,7 +147,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 42 (last added: layer_wise_reduce)
+// SolverParameter next available ID: 43 (last added: ap_version)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -182,6 +182,10 @@ message SolverParameter {
   // Other defaults are set according to the NetState defaults.
   optional NetState train_state = 26;
   repeated NetState test_state = 27;
+
+  // Evaluation type.
+  optional string eval_type = 41 [default = "classification"];
+  optional string ap_version = 42 [default = "Integral"];
 
   // The number of iterations for each test net.
   repeated int64 test_iter = 3;
@@ -289,7 +293,7 @@ message SolverParameter {
   optional SolverType solver_type = 30 [default = SGD];
 
   // Overlap compute and communication for data parallel training
-  optional bool layer_wise_reduce = 41 [default = true];
+  optional bool layer_wise_reduce = 43 [default = true];
 }
 
 // A message that stores the solver snapshots
