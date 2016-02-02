@@ -1,4 +1,5 @@
 #include <map>
+#include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -817,6 +818,121 @@ TEST_F(BBoxUtilTest, TestApplyNMS) {
   EXPECT_EQ(old_overlaps.size(), overlaps.size());
   for (int i = 1; i <= 3; ++i) {
     EXPECT_NEAR(old_overlaps[0][i], overlaps[0][i], eps);
+  }
+}
+
+TEST_F(BBoxUtilTest, TestCumSum) {
+  vector<pair<float, int> > pairs;
+  vector<int> cumsum;
+
+  pairs.push_back(std::make_pair(0.1, 0));
+  pairs.push_back(std::make_pair(0.2, 1));
+  pairs.push_back(std::make_pair(0.3, 0));
+
+  CumSum(pairs, &cumsum);
+
+  EXPECT_EQ(cumsum.size(), 3);
+  EXPECT_EQ(cumsum[0], 0);
+  EXPECT_EQ(cumsum[1], 1);
+  EXPECT_EQ(cumsum[2], 1);
+}
+
+TEST_F(BBoxUtilTest, TestComputeAP) {
+  vector<pair<float, int> > tp;
+  vector<pair<float, int> > fp;
+
+  tp.push_back(std::make_pair(1.0, 0));
+  tp.push_back(std::make_pair(1.0, 1));
+  tp.push_back(std::make_pair(0.9, 1));
+  tp.push_back(std::make_pair(0.9, 0));
+  tp.push_back(std::make_pair(0.8, 1));
+  tp.push_back(std::make_pair(0.7, 0));
+  tp.push_back(std::make_pair(0.7, 1));
+  tp.push_back(std::make_pair(0.6, 0));
+  tp.push_back(std::make_pair(0.5, 0));
+  tp.push_back(std::make_pair(0.4, 0));
+  tp.push_back(std::make_pair(0.4, 1));
+
+  fp.push_back(std::make_pair(1.0, 1));
+  fp.push_back(std::make_pair(1.0, 0));
+  fp.push_back(std::make_pair(0.9, 0));
+  fp.push_back(std::make_pair(0.9, 1));
+  fp.push_back(std::make_pair(0.8, 0));
+  fp.push_back(std::make_pair(0.7, 1));
+  fp.push_back(std::make_pair(0.7, 0));
+  fp.push_back(std::make_pair(0.6, 1));
+  fp.push_back(std::make_pair(0.5, 1));
+  fp.push_back(std::make_pair(0.4, 1));
+  fp.push_back(std::make_pair(0.4, 0));
+
+  float eps = 1e-5;
+  vector<float> prec, rec;
+  float ap;
+
+  ComputeAP(tp, 5, fp, "Integral", &prec, &rec, &ap);
+
+  EXPECT_NEAR(ap, 0.558528, eps);
+
+  EXPECT_EQ(prec.size(), 11);
+  EXPECT_NEAR(prec[0], 0.0/1.0, eps);
+  EXPECT_NEAR(prec[1], 1.0/2.0, eps);
+  EXPECT_NEAR(prec[2], 2.0/3.0, eps);
+  EXPECT_NEAR(prec[3], 2.0/4.0, eps);
+  EXPECT_NEAR(prec[4], 3.0/5.0, eps);
+  EXPECT_NEAR(prec[5], 3.0/6.0, eps);
+  EXPECT_NEAR(prec[6], 4.0/7.0, eps);
+  EXPECT_NEAR(prec[7], 4.0/8.0, eps);
+  EXPECT_NEAR(prec[8], 4.0/9.0, eps);
+  EXPECT_NEAR(prec[9], 4.0/10.0, eps);
+  EXPECT_NEAR(prec[10], 5.0/11.0, eps);
+
+  EXPECT_EQ(rec.size(), 11);
+  EXPECT_NEAR(rec[0], 0.0, eps);
+  EXPECT_NEAR(rec[1], 0.2, eps);
+  EXPECT_NEAR(rec[2], 0.4, eps);
+  EXPECT_NEAR(rec[3], 0.4, eps);
+  EXPECT_NEAR(rec[4], 0.6, eps);
+  EXPECT_NEAR(rec[5], 0.6, eps);
+  EXPECT_NEAR(rec[6], 0.8, eps);
+  EXPECT_NEAR(rec[7], 0.8, eps);
+  EXPECT_NEAR(rec[8], 0.8, eps);
+  EXPECT_NEAR(rec[9], 0.8, eps);
+  EXPECT_NEAR(rec[10], 1.0, eps);
+
+  vector<float> prec_old = prec;
+  vector<float> rec_old = rec;
+  ComputeAP(tp, 5, fp, "11point", &prec, &rec, &ap);
+
+  EXPECT_NEAR(ap, 0.598662, eps);
+  EXPECT_EQ(prec.size(), 11);
+  EXPECT_EQ(rec.size(), 11);
+  for (int i = 0; i < 11; ++i) {
+    EXPECT_NEAR(prec_old[i], prec[i], eps);
+    EXPECT_NEAR(rec_old[i], rec[i], eps);
+  }
+
+  // Cut the last 4 predictions.
+  tp.resize(7);
+  fp.resize(7);
+
+  ComputeAP(tp, 5, fp, "Integral", &prec, &rec, &ap);
+
+  EXPECT_NEAR(ap, 0.558528 - prec_old.back() * 0.2, eps);
+  EXPECT_EQ(prec.size(), 7);
+  EXPECT_EQ(rec.size(), 7);
+  for (int i = 0; i < 7; ++i) {
+    EXPECT_NEAR(prec_old[i], prec[i], eps);
+    EXPECT_NEAR(rec_old[i], rec[i], eps);
+  }
+
+  ComputeAP(tp, 5, fp, "11point", &prec, &rec, &ap);
+
+  EXPECT_NEAR(ap, 0.598662 - prec_old.back() * 2 / 11., eps);
+  EXPECT_EQ(prec.size(), 7);
+  EXPECT_EQ(rec.size(), 7);
+  for (int i = 0; i < 7; ++i) {
+    EXPECT_NEAR(prec_old[i], prec[i], eps);
+    EXPECT_NEAR(rec_old[i], rec[i], eps);
   }
 }
 

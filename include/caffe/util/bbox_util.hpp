@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
 #include <map>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "glog/logging.h"
@@ -15,8 +17,23 @@ namespace caffe {
 typedef MultiBoxLossParameter_MatchType MatchType;
 typedef map<int, vector<NormalizedBBox> > LabelBBox;
 
+// Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
+// in ascend order based on the score value.
 bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+
+// Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
+// in descend order based on the score value.
 bool SortBBoxDescend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+
+// Function sued to sort pair<float, int>, stored in STL container (e.g. vector)
+// in descend order based on the score (first) value.
+bool SortScorePairAscend(const pair<float, int>& pair1,
+                         const pair<float, int>& pair2);
+
+// Function sued to sort pair<float, int>, stored in STL container (e.g. vector)
+// in descend order based on the score (first) value.
+bool SortScorePairDescend(const pair<float, int>& pair1,
+                          const pair<float, int>& pair2);
 
 // Compute the intersection between two bboxes.
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
@@ -126,6 +143,24 @@ void GetDetectionResults(const Dtype* det_data, const int num_det,
 void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       const float threshold, const int top_k, const bool reuse_overlaps,
       map<int, map<int, float> >* overlaps, vector<int>* indices);
+
+// Compute cumsum of a set of pairs.
+void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
+
+// Compute average precision given true positive and false positive vectors.
+//    tp: contains pairs of scores and true positive.
+//    num_pos: number of positives.
+//    fp: contains pairs of scores and false positive.
+//    ap_version: different way of computing Average Precision.
+//      Check https://sanchom.wordpress.com/tag/average-precision/ for details.
+//      11point: the 11-point interpolcated average precision.
+//      Integral: the natural integral of the precision-recall curve.
+//    prec: stores the computed precisions.
+//    rec: stores the computed recalls.
+//    ap: the computed Average Precision.
+void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
+               const vector<pair<float, int> >& fp, const string ap_version,
+               vector<float>* prec, vector<float>* rec, float* ap);
 
 }  // namespace caffe
 
