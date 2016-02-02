@@ -1,5 +1,4 @@
 # Caffe
-
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
 
@@ -7,7 +6,6 @@ Caffe is a deep learning framework made with expression, speed, and modularity i
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
 
 Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
-
 - [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
 - [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
 - [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
@@ -23,54 +21,99 @@ Framework development discussions and thorough bug reports are collected on [Iss
 Happy brewing!
 
 # Intel Caffe
-This fork is dedicated to improving Caffe performance when running on CPU (in particular Xeon servers)
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Xeon
+servers.
 
-## Performance Results :
-Time measures are: average Forward-Backward as stated by *caffe time*. *speedup* is (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
+## Performance Results
+Time measures are: average Forward-Backward as stated by *caffe time*.*speedup* is
+(bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
 
-#### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (MKL 11.3, GCC 4.8.3):
-Branch | googlenet(speedup: 6.5) | caffenet (speedup: 6.4) | alexnet(speedup: 6.2) | cifar10-sigmoid-bn(speedup: 9.5) 
-----------|-----------------------|-------------------------------|-----------------------------|---------------------
-intelcaffe-master |682ms|1276ms|1387ms|34ms
-bvlc-caffe-master |4438ms|8164ms|8644ms |323ms
+### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
+|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] |
+|------------------:|---------------:|--------------:|-------------:|
+| intelcaffe-master |            682 |          1250 |         1380 |
+| bvlc-caffe-master |           3872 |          6899 |         7343 |
+|    speedup factor |           x5.7 |          x5.5 |         x5.3 |
 
-#### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (OpenBLAS 0.2.14, GCC 4.8.3):
-Branch | googlenet(speedup: 17.0) | caffenet (speedup: 8.7) | alexnet(speedup: 15.4)| ciphar10-sigmoid-bn(speedup: 8.4) 
-----------|-----------------------|-------------------------------|----------|-------------------
-intelcaffe-openmp |1169ms|3088ms|4628ms|63ms  
-bvlc-caffe-master |19767|26993ms|71152ms|529ms
+### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (72 threads, MKL 11.3, GCC 4.8.3)
+|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] |
+|------------------:|---------------:|--------------:|-------------:|
+| intelcaffe-master |            989 |          1558 |         1725 |
+| bvlc-caffe-master |           3846 |          6810 |         7358 |
+|    speedup factor |           x3.9 |          x4.4 |         x4.3 |
 
-So there is significant speedup, that depends on how many CPU cores the platform does have. Tests were made using MKL(it is available free of charge now) and OpenBLAS.
+### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
+|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] |
+|------------------:|---------------:|--------------:|-------------:|
+| intelcaffe-master |           1412 |          3329 |         3977 |
+| bvlc-caffe-master |          14892 |         25920 |        67542 |
+|    speedup factor |          x10.5 |          x7.8 |        x17.0 |
 
-- **It is best to have HT disabled in BIOS as using OMP_NUM_THREADS may not always prevent
-OS kernel for running two OpenMP threads on the same phyisical core (eg. using HT).** 
-- Without using OMP_NUM_THREADS and with HT enabled performance is still better than single threaded version (data not included here)
+Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
+The speedup factor highly depends on the amount of running threads and system load.
+Upper tables also shows, the optimal configuration is to use one thread per CPU core.
 
-### Building:
-Build as usual, either from makefile or cmake. Both build systems will detect if openmp is available for compiler of your choice and use it
+## Building
+Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
+When OpenMP is available will be used automatically.
 
-### Running:
-It is best NOT to use Hyperthreading . So either disable it in BIOS or limit OpenMP threads number by using OMP_NUM_THREADS env variable. If not sure how to set OMP_NUM_THREADS  and you cannot disable HT in BIOS, then do not do it, you should still observe performance gain , but not that
-significant as when not relying on HT.
+## Running
+To utilize all hardware resources right, it is recommended to set OMP_NUM_THREADS environmental
+variable to the number of all available CPU cores, which on Linux can be determined by typing
+*lscpu* and is equal to number of "CPU socket(s)" times number of "Core(s) per socket".
 
-##### Example of running:
-###### Intel(R) Xeon(R) E5-2699 v3 @ 2.30GHz, two sockets, 18 cpu cores in each socket
-* GOMP_CPU_AFFINITY="0-35" OMP_PROC_BIND=false OMP_NUM_THREADS=36 ./build/tools/caffe time -iterations 50  --model=models/bvlc_googlenet/train_val.prototxt*  
+It is also recommended to avoid movement of threads between processors by setting CPU affinity
+which can be done by GOMP_CPU_AFFINITY environmental variable. It is achieved by setting its value
+to "0-N", where N is total the number of physical cores MINUS ONE. For example a single
+Intel(R) Xeon(R) E5-2699 v3 @ 2.30GHz have 18 CPU cores. When two sockets are used, there
+will be in total 72 processing units. To bind threads to all 36 cores, a following command line
+should look like:
 
-##### Notes:
-To check if you have HT enabled:
-*sudo dmidecode -t processor | grep HTT*
-or 
-*cat /proc/cpuinfo | grep ht*
-
-With HT (usually) You have twice as much processors online that physical cpu cores. So get this number of processors online , divide by 2 and make this result a value to which
- OMP_NUM_THREADS will be set to.
+    GOMP_CPU_AFFINITY="0-35" OMP_PROC_BIND="False" OMP_NUM_THREADS="36" ./build/tools/caffe time -iterations 50 --model=models/bvlc_googlenet/train_val.prototxt*  
 
 If you have any questions, please do not hesitate to ask.
 
+## Multinode Training
+
+Please see the example how to run in examples/cifar10/train_full_multinode.sh.
+The script will run data server, synchronous parameter server and 4 clients.
+Prepared proto solvers should result in exactly the same behavior as single
+node full cifar training.
+The basic setup is to run parameter server with command like this:
+"$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port"
+Than run clients on machines you want with:
+"$TOOLS/caffe train --solver=/path/to/proto --param_server:tcp://127.0.0.1:7777"
+
+Data server is for convenience. By the default you could use data shard prepared
+on each node separetely, either by shuffling the data uniquely or by creating
+a subset of your training data. The remote data layer can be used to get data
+from data server. It can also be used to cache data from the server in order
+to reduce the network traffic.
+In the case of choosing caching policy USE_CACHE_WHEN_FULL, it will first
+download cache_size batches and then will randomized the cached data for actual
+training.
+
+The proto files need to be set up manually at the time, although you can use
+model server to distribute some proto files among clients. To run model
+server use the caffe tool similar to data server:
+"$TOOLS/caffe model_server --solver=/path/to/proto --listen_address=tcp://*:6666"
+To use the model in clients, replace the path to solver with model server
+address: "$TOOLS/caffe train --solver=address"
+
+Please see also prepared examples (for 2 nodes only) for googlenet in:
+models/bvlc_googlenet/solver_param_server.prototxt 
+models/bvlc_googlenet/solver_client.prototxt 
+The solver tries to offset the bigger batch size with bigger learning rate.
+According to paper 
+    @article{
+      Author = {Forrest N. Iandola, Khalid Ashraf, Matthew W. Moskewicz, Kurt Keutzer},
+      Journal = {arXiv preprint arXiv:1511.00175},
+      Title = {FireCaffe: near-linear acceleration of deep neural network training on compute clusters},
+      Year = {2016}
+    }
+this should use 72 epochs to train googlenet. 
 
 ## License and Citation
-
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 The BVLC reference models are released for unrestricted use.
 

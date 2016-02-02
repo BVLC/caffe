@@ -115,6 +115,7 @@ template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
 template void caffe_copy<float>(const int N, const float* X, float* Y);
 template void caffe_copy<double>(const int N, const double* X, double* Y);
+template void caffe_copy<char>(const int N, const char* X, char* Y);
 template void caffe_copy<size_t>(const int N, const size_t* X, size_t* Y);
 
 template <>
