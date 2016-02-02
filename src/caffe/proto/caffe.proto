@@ -148,7 +148,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 41 (last added: type)
+// SolverParameter next available ID: 43 (last added: ap_version)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -184,6 +184,10 @@ message SolverParameter {
   // Other defaults are set according to the NetState defaults.
   optional NetState train_state = 26;
   repeated NetState test_state = 27;
+
+  // Evaluation type.
+  optional string eval_type = 41 [default = "classification"];
+  optional string ap_version = 42 [default = "Integral"];
 
   // The number of iterations for each test net.
   repeated int32 test_iter = 3;
