@@ -39,7 +39,7 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
 def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
     kwargs = {
             'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
-            'weight_filler': dict(type='msra'),
+            'weight_filler': dict(type='xavier'),
             'bias_filler': dict(type='constant', value=0)}
 
     net.conv1_1 = L.Convolution(net.data, num_output=64, pad=1, kernel_size=3, **kwargs)
@@ -138,7 +138,7 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
     else:
         kwargs = {
                 'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
-                'weight_filler': dict(type='msra'),
+                'weight_filler': dict(type='xavier'),
                 'bias_filler': dict(type='constant', value=0)}
 
     num = len(from_layers)

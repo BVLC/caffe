@@ -39,7 +39,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -71,7 +71,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -114,7 +114,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -146,7 +146,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -189,7 +189,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -221,7 +221,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -253,7 +253,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -296,7 +296,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -328,7 +328,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -360,7 +360,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -403,7 +403,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -435,7 +435,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -467,7 +467,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -510,7 +510,7 @@ layer {
     pad: 3
     kernel_size: 7
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -550,7 +550,7 @@ layer {
     num_output: 4096
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -590,7 +590,7 @@ layer {
     num_output: 512
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -622,7 +622,7 @@ layer {
     pad: 1
     kernel_size: 3
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -655,7 +655,7 @@ layer {
     kernel_size: 3
     stride: 2
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -696,7 +696,7 @@ layer {
     num_output: 32
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -742,7 +742,7 @@ layer {
     num_output: 168
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -804,7 +804,7 @@ layer {
     num_output: 24
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -850,7 +850,7 @@ layer {
     num_output: 126
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -911,7 +911,7 @@ layer {
     num_output: 16
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -957,7 +957,7 @@ layer {
     num_output: 84
     kernel_size: 1
     weight_filler {
-      type: "msra"
+      type: "xavier"
     }
     bias_filler {
       type: "constant"
@@ -994,7 +994,7 @@ layer {
   top: "pool6_mbox_priorbox"
   prior_box_param {
     min_size: 600
-    max_size: 1000
+    max_size: 600
     aspect_ratio: 2
     flip: true
     clip: true

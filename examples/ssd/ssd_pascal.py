@@ -21,10 +21,10 @@ def AddExtraLayers(net, use_batchnorm=True):
             'bias_filler': dict(type='constant', value=0.001)
             }
     else:
-        # Use msra filler.
+        # Use xavier filler.
         kwargs = {
             'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
-            'weight_filler': dict(type='msra'),
+            'weight_filler': dict(type='xavier'),
             'bias_filler': dict(type='constant', value=0)}
 
     # Add additional convolutional layers.
@@ -78,7 +78,7 @@ if use_batchnorm:
     base_lr = 0.4
 else:
     base_lr = 0.001
-batch_size = 1
+batch_size = 12
 multibox_loss_param = {
     'loc_loss_type': P.MultiBoxLoss.L2,
     'conf_loss_type': P.MultiBoxLoss.SOFTMAX,
@@ -88,22 +88,24 @@ multibox_loss_param = {
     'match_type': P.MultiBoxLoss.PER_PREDICTION,
     'overlap_threshold': 0.5,
     'use_prior_for_matching': True,
+    'normalize': True,
     }
 # parameters for generating priors.
 min_dim = 600
-max_dim = 1000
+max_dim = 600
 # mbox_source_layers = ['conv4_3', 'conv5_3', 'fc7', 'conv6_3', 'pool6']
 # min_sizes = [40, 92, 196, 404, 600]
 # max_sizes = [92, 196, 404, 596, 1000]
 # aspect_ratios = [[2, 4], [2, 4], [2, 3, 4], [2], [2, 3]]
 mbox_source_layers = ['fc7', 'conv6_3', 'pool6']
-min_sizes = [196, 404, 600]
-max_sizes = [404, 596, 1000]
+min_sizes = [196, 404, min_dim]
+max_sizes = [404, 596, max_dim]
 aspect_ratios = [[2, 3, 4], [2, 3], [2]]
 flip = True
 clip = True
 # parameters for solver.
 freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
+iter_size = 12 / batch_size
 solver_param = {
     # Train parameters
     'base_lr': base_lr,
@@ -111,12 +113,12 @@ solver_param = {
     'weight_decay': 0.0005,
     'lr_policy': "step",
     'gamma': 0.1,
-    'stepsize': 5000,
-    'iter_size': 8,
+    'stepsize': 3000,
+    'iter_size': iter_size,
     'max_iter': 30000,
-    'snapshot': 10000,
+    'snapshot': 6000,
     'display': 10,
-    'average_loss': 20,
+    'average_loss': 10,
     'solver_type': P.Solver.SGD,
     'solver_mode': P.Solver.GPU,
     'device_id': 1,
@@ -124,7 +126,7 @@ solver_param = {
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [4952],
-    'test_interval': 2500,
+    'test_interval': 1500,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
@@ -184,7 +186,7 @@ with open(train_net_file, 'w') as f:
 
 # Create test net.
 net = caffe.NetSpec()
-net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=batch_size,
+net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=1,
         train=False, output_label=True, label_map_file=label_map_file)
 
 VGGNetBody(net, fully_conv=True, reduced=False, freeze_layers=freeze_layers)
