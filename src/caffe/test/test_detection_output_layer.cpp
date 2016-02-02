@@ -110,8 +110,8 @@ class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
     // Split values to vector of items.
     vector<string> items;
     std::istringstream iss(values);
-    std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(),
-              back_inserter(items));
+    std::copy(std::istream_iterator<string>(iss),
+              std::istream_iterator<string>(), back_inserter(items));
     EXPECT_EQ(items.size(), 7);
 
     // Check data.
@@ -121,7 +121,8 @@ class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
                 atoi(items[i].c_str()));
     }
     for (int i = 2; i < 7; ++i) {
-      EXPECT_NEAR(blob_data[num * blob.width() + i], atof(items[i].c_str()), eps);
+      EXPECT_NEAR(blob_data[num * blob.width() + i],
+                  atof(items[i].c_str()), eps);
     }
   }
 
