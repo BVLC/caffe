@@ -1,36 +1,24 @@
 name: "CIFAR10_full"
 layer {
   name: "cifar"
-  type: "Data"
+  type: "RemoteData"
   top: "data"
   top: "label"
   include {
     phase: TRAIN
   }
-  transform_param {
-    mean_file: "examples/cifar10/mean.binaryproto"
-  }
-  data_param {
-    source: "examples/cifar10/cifar10_train_lmdb"
-    batch_size: 25
-    backend: LMDB
-  }
-}
-layer {
-  name: "cifar"
-  type: "Data"
-  top: "data"
-  top: "label"
-  include {
-    phase: TEST
-  }
-  transform_param {
-    mean_file: "examples/cifar10/mean.binaryproto"
-  }
-  data_param {
-    source: "examples/cifar10/cifar10_test_lmdb"
-    batch_size: 100
-    backend: LMDB
+  remote_data_param {
+    address: "tcp://127.0.0.1:8888"
+    cache_size: 1
+    shape {
+      dim: 100
+      dim: 3
+      dim: 32
+      dim: 32
+    }
+    shape {
+      dim: 100
+    }
   }
 }
 layer {

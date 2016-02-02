@@ -4,31 +4,33 @@
 #include <string>
 #include <vector>
 #include "caffe/multinode/DataServer.hpp"
+#include "caffe/multinode/SendCallback.hpp"
 
 namespace caffe {
 
 using ::google::protobuf::Message;
 using internode::RemoteId;
-using internode::create_communication_daemon;
-using internode::configure_server;
+using internode::Waypoint;
 
 template <typename Dtype>
 DataServer<Dtype>::DataServer(shared_ptr<Solver<Dtype> > solver,
                                 string bind_address)
-  : daemon(create_communication_daemon())
+  : daemon(internode::create_communication_daemon())
   , solver(solver)
-  , waypoint(configure_server(daemon, bind_address)) {
+  , waypoint(internode::configure_server(daemon, bind_address)) {
   waypoint->register_receive_handler(this);
   LOG(INFO) << solver->param().DebugString();
 }
 
 template <typename Dtype>
-void DataServer<Dtype>::received(char* buffer, size_t size, RemoteId id) {
+void DataServer<Dtype>::received(char* buffer,
+                                 size_t size,
+                                 Waypoint* remote) {
   DataReq req;
   if (!req.ParseFromArray(buffer, size)) {
     LOG(ERROR) << "parsing data request failed";
   }
-  VLOG(2) << "received data request for "
+  DLOG(INFO) << "received data request for "
     << req.layer_name() << " (iters: " << req.iters() << ")";
 
   Net<Dtype>& net = *solver->net();
@@ -61,10 +63,13 @@ void DataServer<Dtype>::received(char* buffer, size_t size, RemoteId id) {
     }
   }
 
-  string str;
-  msg.SerializeToString(&str);
-  VLOG(2) << "sending data to " << id;
-  waypoint->send_to(str.c_str(), str.size(), id);
+
+  SendCallback callback;
+  msg.SerializeToString(callback.buffer.get());
+  DLOG(INFO) << "sending data to " << remote->id();
+
+  remote->async_send(
+    callback.buffer->c_str(), callback.buffer->size(), callback);
 }
 
 template <typename Dtype>

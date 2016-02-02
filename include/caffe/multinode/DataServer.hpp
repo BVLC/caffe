@@ -19,7 +19,7 @@ class DataServer : public internode::Waypoint::Handler {
   DataServer(shared_ptr<Solver<Dtype> >, string bind_address);
   void run();
 
-  virtual void received(char* buffer, size_t size, internode::RemoteId);
+  virtual void received(char* buffer, size_t size, internode::Waypoint*);
 };
 
 }  // namespace caffe
