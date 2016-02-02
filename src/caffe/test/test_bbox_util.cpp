@@ -792,24 +792,22 @@ TEST_F(BBoxUtilTest, TestApplyNMS) {
   top_k = 2;
   ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
            &indices);
-  EXPECT_EQ(indices.size(), 2);
+  EXPECT_EQ(indices.size(), 1);
   EXPECT_EQ(indices[0], 0);
-  EXPECT_EQ(indices[1], 3);
 
   top_k = 3;
   nms_threshold = 0.2;
   ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
            &indices);
-  EXPECT_EQ(indices.size(), 2);
+  EXPECT_EQ(indices.size(), 1);
   EXPECT_EQ(indices[0], 0);
-  EXPECT_EQ(indices[1], 2);
 
   reuse_overlaps = true;
   ApplyNMS(bboxes, scores, nms_threshold, top_k, reuse_overlaps, &overlaps,
            &indices);
   EXPECT_EQ(overlaps.size(), 1);
   EXPECT_NEAR(overlaps[0][1], 1./3, eps);
-  EXPECT_NEAR(overlaps[0][2], 1./7, eps);
+  EXPECT_NEAR(overlaps[0][2], 0.0, eps);
   EXPECT_NEAR(overlaps[0][3], 2./8, eps);
 
   map<int, map<int, float> > old_overlaps = overlaps;
