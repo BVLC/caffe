@@ -26,7 +26,7 @@ class DetectionEvaluateLayerTest : public CPUDeviceTest<Dtype> {
         blob_bottom_det_(new Blob<Dtype>(1, 1, 8, 7)),
         blob_bottom_gt_(new Blob<Dtype>(1, 1, 4, 7)),
         blob_top_(new Blob<Dtype>()) {
-    // Fill prior data first.
+    this->FillData();
     blob_bottom_vec_.push_back(blob_bottom_det_);
     blob_bottom_vec_.push_back(blob_bottom_gt_);
     blob_top_vec_.push_back(blob_top_);
@@ -62,8 +62,8 @@ class DetectionEvaluateLayerTest : public CPUDeviceTest<Dtype> {
     // Split values to vector of items.
     vector<string> items;
     std::istringstream iss(values);
-    std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(),
-              back_inserter(items));
+    std::copy(std::istream_iterator<string>(iss),
+              std::istream_iterator<string>(), back_inserter(items));
     EXPECT_EQ(items.size(), 7);
 
     // Fill item.
@@ -76,24 +76,24 @@ class DetectionEvaluateLayerTest : public CPUDeviceTest<Dtype> {
     }
   }
 
-  void CheckEqual(const Blob<Dtype>& blob, const int item, const string values) {
-    CHECK_LT(item, blob.height());
+  void CheckEqual(const Blob<Dtype>& blob, const int num, const string values) {
+    CHECK_LT(num, blob.height());
 
     // Split values to vector of items.
     vector<string> items;
     std::istringstream iss(values);
-    std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(),
-              back_inserter(items));
+    std::copy(std::istream_iterator<string>(iss),
+              std::istream_iterator<string>(), back_inserter(items));
     EXPECT_EQ(items.size(), 5);
 
     // Check data.
     const Dtype* blob_data = blob.cpu_data();
     for (int i = 0; i < 5; ++i) {
       if (i == 2) {
-        EXPECT_NEAR(blob_data[item * blob.width() + i],
+        EXPECT_NEAR(blob_data[num * blob.width() + i],
                     atof(items[i].c_str()), eps);
       } else {
-        EXPECT_EQ(static_cast<int>(blob_data[item * blob.width() + i]),
+        EXPECT_EQ(static_cast<int>(blob_data[num * blob.width() + i]),
                   atoi(items[i].c_str()));
       }
     }
@@ -121,7 +121,7 @@ TYPED_TEST(DetectionEvaluateLayerTest, TestSetup) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_det_->height());
+  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_det_->height() + 2);
   EXPECT_EQ(this->blob_top_->width(), 5);
 }
 
@@ -139,17 +139,19 @@ TYPED_TEST(DetectionEvaluateLayerTest, TestForward) {
 
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_det_->height());
+  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_det_->height() + 2);
   EXPECT_EQ(this->blob_top_->width(), 5);
 
-  this->CheckEqual(*(this->blob_top_), 0, "0 1 0.9 1 0");
-  this->CheckEqual(*(this->blob_top_), 1, "0 1 0.7 1 0");
-  this->CheckEqual(*(this->blob_top_), 2, "0 1 0.3 0 1");
-  this->CheckEqual(*(this->blob_top_), 3, "1 1 0.2 1 0");
-  this->CheckEqual(*(this->blob_top_), 4, "1 2 0.8 0 1");
-  this->CheckEqual(*(this->blob_top_), 5, "1 2 0.1 1 0");
-  this->CheckEqual(*(this->blob_top_), 6, "1 3 0.2 0 1");
-  this->CheckEqual(*(this->blob_top_), 7, "2 1 0.2 0 1");
+  this->CheckEqual(*(this->blob_top_), 0, "-1 1 3 -1 -1");
+  this->CheckEqual(*(this->blob_top_), 1, "-1 2 1 -1 -1");
+  this->CheckEqual(*(this->blob_top_), 2, "0 1 0.9 1 0");
+  this->CheckEqual(*(this->blob_top_), 3, "0 1 0.7 1 0");
+  this->CheckEqual(*(this->blob_top_), 4, "0 1 0.3 0 1");
+  this->CheckEqual(*(this->blob_top_), 5, "1 1 0.2 1 0");
+  this->CheckEqual(*(this->blob_top_), 6, "1 2 0.8 0 1");
+  this->CheckEqual(*(this->blob_top_), 7, "1 2 0.1 1 0");
+  this->CheckEqual(*(this->blob_top_), 8, "1 3 0.2 0 1");
+  this->CheckEqual(*(this->blob_top_), 9, "2 1 0.2 0 1");
 }
 
 }  // namespace caffe

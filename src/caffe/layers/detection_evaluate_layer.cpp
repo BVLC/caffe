@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "caffe/layers/detection_evaluate_layer.hpp"
@@ -26,9 +27,15 @@ void DetectionEvaluateLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom[1]->num(), 1);
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->width(), 7);
+
+  set<int> labels;
+  for (int i = 0; i < bottom[1]->height(); ++i) {
+    int label = bottom[1]->cpu_data()[i * 7 + 1];
+    labels.insert(label);
+  }
   // num() and channels() are 1.
   vector<int> top_shape(2, 1);
-  top_shape.push_back(bottom[0]->height());
+  top_shape.push_back(labels.size() + bottom[0]->height());
   // Each row is a 5 dimension vector, which stores
   // [image_id, label, confidence, true_pos, false_pos]
   top_shape.push_back(5);
@@ -53,6 +60,30 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
 
   Dtype* top_data = top[0]->mutable_cpu_data();
   int num_det = 0;
+  // Insert number of ground truth for each labe.
+  map<int, int> num_pos;
+  for (map<int, LabelBBox>::iterator it = all_gt_bboxes.begin();
+       it != all_gt_bboxes.end(); ++it) {
+    for (LabelBBox::iterator iit = it->second.begin(); iit != it->second.end();
+         ++iit) {
+      if (num_pos.find(iit->first) == num_pos.end()) {
+        num_pos[iit->first] = iit->second.size();
+      } else {
+        num_pos[iit->first] += iit->second.size();
+      }
+    }
+  }
+  for (map<int, int>::iterator it = num_pos.begin(); it != num_pos.end();
+       ++it) {
+    top_data[num_det * 5] = -1;
+    top_data[num_det * 5 + 1] = it->first;
+    top_data[num_det * 5 + 2] = it->second;
+    top_data[num_det * 5 + 3] = -1;
+    top_data[num_det * 5 + 4] = -1;
+    ++num_det;
+  }
+
+  // Insert detection evaluate status.
   for (map<int, LabelBBox>::iterator it = all_detections.begin();
        it != all_detections.end(); ++it) {
     int image_id = it->first;
