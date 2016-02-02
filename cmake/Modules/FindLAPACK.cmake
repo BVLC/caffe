@@ -139,7 +139,7 @@ if(BLAS_FOUND)
     endif()
   endif()
 
-  # vecLib
+  # Accelerate
   IF((NOT LAPACK_INFO) AND (BLAS_INFO STREQUAL "veclib"))
     SET(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES})
     check_function_exists("cheev_" VECLIB_LAPACK_WORKS)
