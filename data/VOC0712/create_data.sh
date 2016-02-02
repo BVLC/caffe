@@ -9,10 +9,10 @@ dataset_name="VOC0712"
 mapfile="$root_dir/data/$dataset_name/labelmap_voc.prototxt"
 anno_type="detection"
 db="lmdb"
-min_dim=600
-max_dim=1000
-width=0
-height=0
+min_dim=0
+max_dim=0
+width=600
+height=600
 
 extra_cmd=""
 for subset in trainval test
