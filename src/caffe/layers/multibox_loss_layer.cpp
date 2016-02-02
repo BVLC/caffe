@@ -33,13 +33,15 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   overlap_threshold_ = multibox_loss_param.overlap_threshold();
   use_prior_for_matching_ = multibox_loss_param.use_prior_for_matching();
   background_label_id_ = multibox_loss_param.background_label_id();
+  normalize_ = multibox_loss_param.normalize();
 
   vector<int> loss_shape(1, 1);
   // Set up localization loss layer.
   loc_weight_ = multibox_loss_param.loc_weight();
   loc_loss_type_ = multibox_loss_param.loc_loss_type();
   // fake shape.
-  vector<int> loc_shape(1, 4);
+  vector<int> loc_shape(1, 1);
+  loc_shape.push_back(4);
   loc_pred_.Reshape(loc_shape);
   loc_gt_.Reshape(loc_shape);
   loc_bottom_vec_.push_back(&loc_pred_);
@@ -67,12 +69,16 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     layer_param.set_name(this->layer_param_.name() + "_softmax_conf");
     layer_param.set_type("SoftmaxWithLoss");
     layer_param.add_loss_weight(Dtype(1.));
+    if (normalize_) {
+      layer_param.mutable_loss_param()->set_normalization(
+          LossParameter_NormalizationMode_BATCH_SIZE);
+    } else {
+      layer_param.mutable_loss_param()->set_normalization(
+          LossParameter_NormalizationMode_NONE);
+    }
     SoftmaxParameter* softmax_param = layer_param.mutable_softmax_param();
     softmax_param->set_axis(1);
-    vector<int> conf_shape(1);
-    // If we do not need to consider background, assume there is one match to
-    // setup SoftmaxWithLossLayer correctly.
-    conf_shape[0] = background_label_id_ > -1 ? num_ * num_priors_ : 1;
+    vector<int> conf_shape(1, 1);
     conf_gt_.Reshape(conf_shape);
     conf_shape.push_back(num_classes_);
     conf_pred_.Reshape(conf_shape);
@@ -163,8 +169,13 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (num_matches >= 1) {
     // Form data to pass on to loc_loss_layer_.
     vector<int> loc_shape(2);
-    loc_shape[0] = num_matches;
-    loc_shape[1] = 4;
+    if (normalize_) {
+      loc_shape[0] = num_matches;
+      loc_shape[1] = 4;
+    } else {
+      loc_shape[0] = 1;
+      loc_shape[1] = num_matches * 4;
+    }
     loc_pred_.Reshape(loc_shape);
     loc_gt_.Reshape(loc_shape);
     Dtype* loc_pred_data = loc_pred_.mutable_cpu_data();
