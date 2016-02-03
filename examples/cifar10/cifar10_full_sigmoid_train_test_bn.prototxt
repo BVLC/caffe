@@ -71,13 +71,17 @@ layer {
   bottom: "pool1"
   top: "bn1"
   param {
-    lr_mult: 0
+    lr_mult: 1
   }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
+  batch_norm_param {
+    scale_filler {
+      type: "constant"
+      value: 1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 
@@ -115,13 +119,17 @@ layer {
   bottom: "conv2"
   top: "bn2"
   param {
-    lr_mult: 0
+    lr_mult: 1
   }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
+  batch_norm_param {
+    scale_filler {
+      type: "constant"
+      value: 1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 
@@ -169,13 +177,17 @@ layer {
   bottom: "conv3"
   top: "bn3"
   param {
-    lr_mult: 0
+    lr_mult: 1
   }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
+  batch_norm_param {
+    scale_filler {
+      type: "constant"
+      value: 1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 
