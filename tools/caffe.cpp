@@ -199,7 +199,6 @@ int train() {
       s << (i ? ", " : "") << gpus[i];
     }
     LOG(INFO) << "Using GPUs " << s.str();
-
     solver_param.set_device_id(gpus[0]);
     // Initialize the first device
     Caffe::SetDevice(gpus[0]);
