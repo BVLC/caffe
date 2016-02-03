@@ -59,16 +59,37 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
+  // TODO: linux memset for AVX2 is very poor (glibc 2.20)
+  // I hope it will get rewritten. So no parallelization of memset(Y,0,N)
+  // will be needed
   if (alpha == 0) {
     memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     return;
   }
-#ifdef _OPENMP
-  #pragma omp parallel if (omp_in_parallel() == 0)
-  #pragma omp for
-#endif
-  for (int i = 0; i < N; ++i) {
-    Y[i] = alpha;
+
+  // If we are executing parallel region already then do not start another one
+  // if also number of data to be processed is smaller than arbitrary:
+  // threashold 12*4 cachelines per thread then no parallelization is to be made
+
+  // TODO: Threshold is a function of num threads and CPU speed and constant
+  bool run_parallel = false;
+  #ifdef _OPENMP
+  int threshold = omp_get_max_threads()*768;
+  run_parallel = (omp_in_parallel() == 0) &&
+                  (N >= threshold) ? true : false;
+  #endif
+
+  if (run_parallel) {
+  #ifdef _OPENMP
+    #pragma omp parallel for
+  #endif
+    for (int i = 0; i < N; ++i) {
+      Y[i] = alpha;
+    }
+  } else {
+    for (int i = 0; i < N; ++i) {
+      Y[i] = alpha;
+    }
   }
 }
 
