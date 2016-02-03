@@ -204,13 +204,12 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
 
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), 4);
+  EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
   this->CheckEqual(*(this->blob_top_), 0, "0 1 1.0 0.15 0.15 0.45 0.45");
   this->CheckEqual(*(this->blob_top_), 1, "0 1 0.8 0.55 0.15 0.85 0.45");
   this->CheckEqual(*(this->blob_top_), 2, "1 1 0.6 0.45 0.45 0.75 0.75");
-  this->CheckEqual(*(this->blob_top_), 3, "1 1 0.0 0.25 0.25 0.55 0.55");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
@@ -264,7 +263,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
 
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), 7);
+  EXPECT_EQ(this->blob_top_->height(), 6);
   EXPECT_EQ(this->blob_top_->width(), 7);
 
   this->CheckEqual(*(this->blob_top_), 0, "0 0 0.6 0.55 0.55 0.85 0.85");
@@ -272,8 +271,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
   this->CheckEqual(*(this->blob_top_), 2, "0 1 1.0 0.20 0.20 0.50 0.50");
   this->CheckEqual(*(this->blob_top_), 3, "0 1 0.8 0.50 0.20 0.80 0.50");
   this->CheckEqual(*(this->blob_top_), 4, "1 0 1.0 0.25 0.25 0.55 0.55");
-  this->CheckEqual(*(this->blob_top_), 5, "1 0 0.4 0.45 0.45 0.75 0.75");
-  this->CheckEqual(*(this->blob_top_), 6, "1 1 0.6 0.40 0.40 0.70 0.70");
+  this->CheckEqual(*(this->blob_top_), 5, "1 1 0.6 0.40 0.40 0.70 0.70");
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
