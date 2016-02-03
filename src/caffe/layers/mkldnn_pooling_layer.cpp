@@ -16,14 +16,14 @@ using std::min;
 using std::max;
 
 template <typename Dtype>
-DnnPoolingLayer<Dtype>::~DnnPoolingLayer()
+MklDnnPoolingLayer<Dtype>::~MklDnnPoolingLayer()
 {
   dnnDelete<Dtype>(poolingFwd);
   dnnDelete<Dtype>(poolingBwd);
 }
 
 template <typename Dtype>
-void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MklDnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
 
@@ -156,7 +156,7 @@ void DnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void MklDnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
@@ -206,7 +206,7 @@ void DnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?
 template <typename Dtype>
-void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   //printf(" len(top_data) = %i\n", sizeof(top_data)/sizeof(Dtype));
   const int top_count = top[0]->count();
@@ -290,7 +290,7 @@ void DnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MklDnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
@@ -338,9 +338,8 @@ void DnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 
 #ifdef CPU_ONLY
-STUB_GPU(DnnPoolingLayer);
+STUB_GPU(MklDnnPoolingLayer);
 #endif
 
-INSTANTIATE_CLASS(DnnPoolingLayer);
-REGISTER_LAYER_CLASS(DnnPooling);
+INSTANTIATE_CLASS(MklDnnPoolingLayer);
 }  // namespace caffe

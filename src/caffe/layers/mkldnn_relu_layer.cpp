@@ -6,13 +6,13 @@
 
 namespace caffe {
 template <typename Dtype>
-DnnReLULayer<Dtype>::~DnnReLULayer() {
+MklDnnReLULayer<Dtype>::~MklDnnReLULayer() {
     dnnDelete<Dtype>(&this->reluFwd);
     dnnDelete<Dtype>(&this->reluBwd);
 }
 
 template <typename Dtype>
-void DnnReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MklDnnReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
 
@@ -43,23 +43,19 @@ void DnnReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MklDnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   void* bottom_data = (void*)bottom[0]->prv_data();
   void* top_data = NULL;
 
   if(NULL == bottom_data)
   {
-    LOG(INFO) << "Using cpu_data in DnnReLULayer.";
+    LOG(INFO) << "Using cpu_data in MklDnnReLULayer.";
     bottom_data = (void*)bottom[0]->cpu_data();
     top_data = top[0]->mutable_cpu_data();
   }
   else
-  {
-    //TODO: Add top converter
-    //LOG(INFO) << "Using prv_data in DnnReLULayer.";
     top_data = top[0]->mutable_prv_data();
-  }
 
   dnnError_t e;
   void* relu_res[dnnResourceNumber];
@@ -70,7 +66,7 @@ void DnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MklDnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
@@ -101,9 +97,8 @@ void DnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(DnnReLULayer);
+STUB_GPU(MklDnnReLULayer);
 #endif
 
-INSTANTIATE_CLASS(DnnReLULayer);
-REGISTER_LAYER_CLASS(DnnReLU);
+INSTANTIATE_CLASS(MklDnnReLULayer);
 }  // namespace caffe

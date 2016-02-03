@@ -7,7 +7,7 @@
 
 namespace caffe {
 template <typename Dtype>
-DnnConvolutionLayer<Dtype>::DnnConvolutionLayer(const LayerParameter& param)
+MklDnnConvolutionLayer<Dtype>::MklDnnConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param),
         fwd_bottom_data   (new MklDnnData<Dtype>()),
         fwd_top_data      (new MklDnnData<Dtype>()),
@@ -26,7 +26,7 @@ DnnConvolutionLayer<Dtype>::DnnConvolutionLayer(const LayerParameter& param)
         bwdb_bias_diff    (new MklDnnDiff<Dtype>()) {}
 
 template <typename Dtype>
-void DnnConvolutionLayer<Dtype>::compute_output_shape() {
+void MklDnnConvolutionLayer<Dtype>::compute_output_shape() {
   ConvolutionLayer<Dtype>::compute_output_shape();
   this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
       / this->stride_h_ + 1;
@@ -35,7 +35,7 @@ void DnnConvolutionLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-DnnConvolutionLayer<Dtype>::~DnnConvolutionLayer()
+MklDnnConvolutionLayer<Dtype>::~MklDnnConvolutionLayer()
 {
     dnnDelete<Dtype>(convolutionFwd);
     dnnDelete<Dtype>(convolutionBwdData);
@@ -47,7 +47,7 @@ DnnConvolutionLayer<Dtype>::~DnnConvolutionLayer()
 }
 
 template <typename Dtype>
-void DnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
@@ -424,7 +424,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
 
 
 template <typename Dtype>
-void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MklDnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top)
 {
   int status;
@@ -470,7 +470,7 @@ void DnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
 {
   int status;
@@ -581,9 +581,8 @@ void DnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(DnnConvolutionLayer);
+STUB_GPU(MklDnnConvolutionLayer);
 #endif
 
-INSTANTIATE_CLASS(DnnConvolutionLayer);
-REGISTER_LAYER_CLASS(DnnConvolution);
+INSTANTIATE_CLASS(MklDnnConvolutionLayer);
 }  // namespace caffe

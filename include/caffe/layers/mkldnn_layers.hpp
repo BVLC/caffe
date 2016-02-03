@@ -28,8 +28,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
     dnnDelete<Dtype>(convert_from_int);
   }
 
-  shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > get_shared_ptr()
-  {
+  shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > get_shared_ptr() {
     return this->shared_from_this();
   }
 
@@ -39,8 +38,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
   dnnPrimitive_t convert_to_int;
   dnnPrimitive_t convert_from_int;
   std::string name;  // for debugging purposes
-  void create_conversions()
-  {
+  void create_conversions() {
     if (!dnnLayoutCompare<Dtype>(layout_usr, layout_int))
     {
       int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr , layout_int);
@@ -66,12 +64,12 @@ struct MklDnnDiff : MklDnnMemoryDescriptor<Dtype, true>
 {};
 
 template <typename Dtype>
-class DnnConvolutionLayer : public ConvolutionLayer<Dtype> {
+class MklDnnConvolutionLayer : public ConvolutionLayer<Dtype> {
 public:
-  explicit DnnConvolutionLayer(const LayerParameter& param);
+  explicit MklDnnConvolutionLayer(const LayerParameter& param);
 
   virtual inline const char* type() const { return "DnnConvolution"; }
-  virtual ~DnnConvolutionLayer();
+  virtual ~MklDnnConvolutionLayer();
 
 protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -131,15 +129,15 @@ private:
  */
 
 template <typename Dtype>
-class DnnLRNLayer : public Layer<Dtype> {
+class MklDnnLRNLayer : public Layer<Dtype> {
  public:
-  explicit DnnLRNLayer(const LayerParameter& param)
+  explicit MklDnnLRNLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual ~DnnLRNLayer();
+  virtual ~MklDnnLRNLayer();
 
   virtual inline const char* type() const { return "DnnLRN"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -188,15 +186,15 @@ private:
 
 
 template <typename Dtype>
-class DnnPoolingLayer : public Layer<Dtype> {
+class MklDnnPoolingLayer : public Layer<Dtype> {
 public:
-  explicit DnnPoolingLayer(const LayerParameter& param)
+  explicit MklDnnPoolingLayer(const LayerParameter& param)
     : Layer<Dtype>(param),
       fwd_top_data    (new MklDnnData<Dtype>()),
       bwd_top_diff    (new MklDnnDiff<Dtype>()),
       bwd_bottom_diff (new MklDnnDiff<Dtype>())
   {}
-  ~DnnPoolingLayer();
+  ~MklDnnPoolingLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -242,7 +240,7 @@ private:
 };
 
 template <typename Dtype>
-class DnnReLULayer : public NeuronLayer<Dtype> {
+class MklDnnReLULayer : public NeuronLayer<Dtype> {
 public:
   /**
    * @param param provides ReLUParameter relu_param,
@@ -250,9 +248,9 @@ public:
    *   - negative_slope (\b optional, default 0).
    *     the value @f$ \nu @f$ by which negative values are multiplied.
    */
-  explicit DnnReLULayer(const LayerParameter& param)
+  explicit MklDnnReLULayer(const LayerParameter& param)
     : NeuronLayer<Dtype>(param) {}
-  ~DnnReLULayer();
+  ~MklDnnReLULayer();
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);

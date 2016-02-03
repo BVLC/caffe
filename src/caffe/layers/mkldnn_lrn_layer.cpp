@@ -8,7 +8,7 @@ namespace caffe {
 
 
 template <typename Dtype>
-DnnLRNLayer<Dtype>::~DnnLRNLayer()
+MklDnnLRNLayer<Dtype>::~MklDnnLRNLayer()
 {
   dnnDelete<Dtype>(lrnFwd);
   dnnDelete<Dtype>(lrnBwd);
@@ -17,7 +17,7 @@ DnnLRNLayer<Dtype>::~DnnLRNLayer()
 
 
 template <typename Dtype>
-void DnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MklDnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   size_ = this->layer_param_.lrn_param().local_size();
   CHECK_EQ(size_ % 2, 1) << "LRN only supports odd values for local_size";
@@ -35,7 +35,7 @@ void DnnLRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void MklDnnLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
@@ -51,7 +51,7 @@ void DnnLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MklDnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
@@ -63,7 +63,7 @@ void DnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
+void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   void* bottom_data = (void*)bottom[0]->prv_data();
   void* top_data = NULL;
@@ -94,7 +94,7 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
 
   } else {
     LOG(FATAL) << "Not yet implemented for default caffe data layout";
-    LOG(INFO) << "Using cpu_data in DnnLRNLayer.";
+    LOG(INFO) << "Using cpu_data in MklDnnLRNLayer.";
     bottom_data = (void*)bottom[0]->cpu_data();
     top_data = top[0]->mutable_cpu_data();
 
@@ -112,7 +112,7 @@ void DnnLRNLayer<Dtype>::CrossChannelForward_cpu(
 }
 
 template <typename Dtype>
-void DnnLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void MklDnnLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
@@ -124,7 +124,7 @@ void DnnLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
-void DnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
+void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   void* top_diff = (void*)top[0]->prv_diff();
@@ -172,12 +172,10 @@ void DnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
 
 
 #ifdef CPU_ONLY
-STUB_GPU(DnnLRNLayer);
-STUB_GPU_FORWARD(DnnLRNLayer, CrossChannelForward);
-STUB_GPU_BACKWARD(DnnLRNLayer, CrossChannelBackward);
+STUB_GPU(MklDnnLRNLayer);
+STUB_GPU_FORWARD(MklDnnLRNLayer, CrossChannelForward);
+STUB_GPU_BACKWARD(MklDnnLRNLayer, CrossChannelBackward);
 #endif
 
-INSTANTIATE_CLASS(DnnLRNLayer);
-REGISTER_LAYER_CLASS(DnnLRN);
-
+INSTANTIATE_CLASS(MklDnnLRNLayer);
 }  // namespace caffe
