@@ -311,7 +311,8 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   bwdd_bottom_diff_no_padding->name = "bwdd_bot_diff_NP  @ " + this->layer_param_.name();
 
   convert_to_bottom_diff_no_padding = NULL;
-  if (!dnnLayoutCompare<Dtype>(bwdd_bottom_diff->layout_int, bwdd_bottom_diff_no_padding->layout_int))
+  if (bwdd_bottom_diff->convert_from_int &&
+      !dnnLayoutCompare<Dtype>(bwdd_bottom_diff->layout_int, bwdd_bottom_diff_no_padding->layout_int))
   {
     int status = dnnConversionCreate<Dtype>(&convert_to_bottom_diff_no_padding,
                                             bwdd_bottom_diff->layout_int ,
@@ -531,7 +532,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
       convert_resources[dnnResourceFrom] = (void *)bwdd_bottom_diff->internal_ptr;
       convert_resources[dnnResourceTo]   = (void *)bwdd_bottom_diff_no_padding->internal_ptr;
       status = dnnExecute<Dtype>(convert_to_bottom_diff_no_padding, convert_resources);
-      CHECK(status == 0) << "Conversion      prv failed with status " << status;
+      CHECK(status == 0) << "Conversion failed with status " << status;
 
       bottom[0]->set_prv_diff(bwdd_bottom_diff_no_padding->internal_ptr,
                               bwdd_bottom_diff_no_padding, false);
