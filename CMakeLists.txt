@@ -8,7 +8,7 @@ endif()
 
 # ---[ Installation and linking
 if(UNIX)
-  set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
 endif()
 SET(CMAKE_INSTALL_PREFIX /usr/local
   CACHE STRING "CMAKE_INSTALL_PREFIX defaulting to '/usr/local'")
