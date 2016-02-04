@@ -17,6 +17,7 @@ void AccuracyLayer<Dtype>::LayerSetUp(
   if (has_ignore_label_) {
     ignore_label_ = this->layer_param_.accuracy_param().ignore_label();
   }
+  return_count_ = this->layer_param_.accuracy_param().return_count();
 }
 
 template <typename Dtype>
@@ -34,7 +35,11 @@ void AccuracyLayer<Dtype>::Reshape(
       << "label count (number of labels) must be N*H*W, "
       << "with integer values in {0, 1, ..., C-1}.";
   vector<int> top_shape(0);  // Accuracy is a scalar; 0 axes.
+  if (return_count_) {
+    top_shape = vector<int>(1, 2);
+  }
   top[0]->Reshape(top_shape);
+
   if (top.size() > 1) {
     // Per-class accuracy is a vector; 1 axes.
     vector<int> top_shape_per_class(1);
@@ -92,6 +97,9 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // LOG(INFO) << "Accuracy: " << accuracy;
   top[0]->mutable_cpu_data()[0] = accuracy / count;
+  if (return_count_) {
+    top[0]->mutable_cpu_data()[1] = count;
+  }
   if (top.size() > 1) {
     for (int i = 0; i < top[1]->count(); ++i) {
       top[1]->mutable_cpu_data()[i] =
