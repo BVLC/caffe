@@ -339,11 +339,12 @@ void Solver<Dtype>::Test(const int test_net_id) {
             << ", Testing net (#" << test_net_id << ")";
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
       ShareTrainedLayersWith(net_.get());
-  vector<Dtype> test_score;
-  vector<int> test_score_output_id;
   vector<Blob<Dtype>*> bottom_vec;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
+  int num_output_blobs = test_net->num_outputs();
+  vector< vector<Dtype> > test_score(num_output_blobs);
+  vector< int > test_count(num_output_blobs, 0);
   for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
     SolverAction::Enum request = GetRequestedAction();
     // Check to see if stoppage of testing/training has been requested.
@@ -359,28 +360,33 @@ void Solver<Dtype>::Test(const int test_net_id) {
       // break out of test loop.
       break;
     }
-
     Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
         test_net->Forward(bottom_vec, &iter_loss);
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }
-    if (i == 0) {
-      for (int j = 0; j < result.size(); ++j) {
+    // Check that we have the right number of output blobs
+    // probably a bit redundant
+    CHECK_EQ(test_score.size(), result.size());
+    for (int j = 0; j < result.size(); ++j) {
+      // Ignore all output blobs with size 0
+      if (result[j]->count() > 0) {
         const Dtype* result_vec = result[j]->cpu_data();
-        for (int k = 0; k < result[j]->count(); ++k) {
-          test_score.push_back(result_vec[k]);
-          test_score_output_id.push_back(j);
+        if (test_score[j].size() == 0) {
+          // Encountering this output blob for the first time.
+          for (int k = 0; k < result[j]->count(); ++k) {
+            test_score[j].push_back(result_vec[k]);
+          }
+        } else {
+          // Encountering this ouput blob again, make sure it has the same size
+          CHECK_EQ(test_score[j].size(), result[j]->count())
+            << "Output blobs size must be same between iterations.";
+          for (int k = 0; k < result[j]->count(); ++k) {
+            test_score[j][k] += result_vec[k];
+          }
         }
-      }
-    } else {
-      int idx = 0;
-      for (int j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
-        for (int k = 0; k < result[j]->count(); ++k) {
-          test_score[idx++] += result_vec[k];
-        }
+        test_count[j] += 1;
       }
     }
   }
@@ -392,19 +398,24 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+  int output_count = 0;
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
-        test_net->output_blob_indices()[test_score_output_id[i]];
+        test_net->output_blob_indices()[i];
     const string& output_name = test_net->blob_names()[output_blob_index];
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
-    const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
-    if (loss_weight) {
-      loss_msg_stream << " (* " << loss_weight
-                      << " = " << loss_weight * mean_score << " loss)";
+    for (int j = 0; j < test_score[i].size(); ++j) {
+        const Dtype mean_score = test_score[i][j] / test_count[i];
+        if (loss_weight) {
+          loss_msg_stream << " (* " << loss_weight
+                          << " = " << loss_weight * mean_score << " loss)";
+        }
+        LOG(INFO) << "    Test net output #" << output_count << ": "
+                  << output_name << " = " << mean_score
+                  << loss_msg_stream.str();
+        output_count += 1;
     }
-    LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
-              << mean_score << loss_msg_stream.str();
   }
 }
 
