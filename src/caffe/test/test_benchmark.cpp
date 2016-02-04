@@ -63,17 +63,13 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_FALSE(timer.has_run_at_least_once());
-
-  //REVIEW zer0n: the timer logic in GPU mode seems flawed
-  if (Caffe::mode() == Caffe::CPU) {
-    timer.Start();
-    boost::this_thread::sleep(boost::posix_time::milliseconds(300));
-    EXPECT_GE(timer.MilliSeconds(), 300 - kMillisecondsThreshold);
-    EXPECT_LE(timer.MilliSeconds(), 300 + kMillisecondsThreshold);
-    EXPECT_TRUE(timer.initted());
-    EXPECT_FALSE(timer.running());
-    EXPECT_TRUE(timer.has_run_at_least_once());
-  }
+  timer.Start();
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+  EXPECT_GE(timer.MilliSeconds(), 300 - kMillisecondsThreshold);
+  EXPECT_LE(timer.MilliSeconds(), 300 + kMillisecondsThreshold);
+  EXPECT_TRUE(timer.initted());
+  EXPECT_FALSE(timer.running());
+  EXPECT_TRUE(timer.has_run_at_least_once());
 }
 
 TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
@@ -82,17 +78,13 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_FALSE(timer.has_run_at_least_once());
-
-  //REVIEW zer0n: the timer logic in GPU mode seems flawed
-  if (Caffe::mode() == Caffe::CPU) {
-    timer.Start();
-    boost::this_thread::sleep(boost::posix_time::milliseconds(300));
-    EXPECT_GE(timer.Seconds(), 0.3 - kMillisecondsThreshold / 1000.);
-    EXPECT_LE(timer.Seconds(), 0.3 + kMillisecondsThreshold / 1000.);
-    EXPECT_TRUE(timer.initted());
-    EXPECT_FALSE(timer.running());
-    EXPECT_TRUE(timer.has_run_at_least_once());
-  }
+  timer.Start();
+  boost::this_thread::sleep(boost::posix_time::milliseconds(300));
+  EXPECT_GE(timer.Seconds(), 0.3 - kMillisecondsThreshold / 1000.);
+  EXPECT_LE(timer.Seconds(), 0.3 + kMillisecondsThreshold / 1000.);
+  EXPECT_TRUE(timer.initted());
+  EXPECT_FALSE(timer.running());
+  EXPECT_TRUE(timer.has_run_at_least_once());
 }
 
 }  // namespace caffe

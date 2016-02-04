@@ -6,7 +6,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
-#include "caffe/util/msvc.hpp"
 
 namespace caffe {
 
