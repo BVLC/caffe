@@ -1,6 +1,7 @@
 #ifndef CAFFE_DETECTION_OUTPUT_LAYER_HPP_
 #define CAFFE_DETECTION_OUTPUT_LAYER_HPP_
 
+#include <string>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -65,6 +66,15 @@ class DetectionOutputLayer : public Layer<Dtype> {
 
   float nms_threshold_;
   int top_k_;
+
+  bool need_save_;
+  string output_directory_;
+  string output_name_prefix_;
+  string output_format_;
+  map<int, string> label_to_name_;
+  vector<string> names_;
+  vector<pair<int, int> > sizes_;
+  int name_count_;
 };
 
 }  // namespace caffe

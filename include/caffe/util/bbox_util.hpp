@@ -42,6 +42,10 @@ void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
 // Compute bbox size.
 float BBoxSize(const NormalizedBBox& bbox);
 
+// Output the real bbox in the original image space.
+void OutputBBox(const NormalizedBBox& bbox, const int height, const int width,
+                const bool clip, NormalizedBBox* outbbox);
+
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 

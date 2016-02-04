@@ -57,6 +57,21 @@ float BBoxSize(const NormalizedBBox& bbox) {
   }
 }
 
+void OutputBBox(const NormalizedBBox& bbox, const int height, const int width,
+                const bool clip, NormalizedBBox* outbbox) {
+  if (clip) {
+    outbbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f) * width);
+    outbbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f) * height);
+    outbbox->set_xmax(std::max(std::min(bbox.xmax(), 1.f), 0.f) * width);
+    outbbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f) * height);
+  } else {
+    outbbox->set_xmin(bbox.xmin() * width);
+    outbbox->set_ymin(bbox.ymin() * height);
+    outbbox->set_xmax(bbox.xmax() * width);
+    outbbox->set_ymax(bbox.ymax() * height);
+  }
+}
+
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
   NormalizedBBox intersect_bbox;
   IntersectBBox(bbox1, bbox2, &intersect_bbox);
