@@ -783,6 +783,25 @@ message NonMaximumSuppressionParameter {
   optional int32 top_k = 2;
 }
 
+message SaveOutputParameter {
+  // Output directory. If not empty, we will save the results.
+  optional string output_directory = 1;
+  // Output name prefix.
+  optional string output_name_prefix = 2;
+  // Output format.
+  //    VOC - PASCAL VOC output format.
+  optional string output_format = 3;
+  // If output_format is VOC, must provide the following two files.
+  // Otherwise, we will ignore saving results.
+  // label map file.
+  optional string label_map_file = 4;
+  // A file which contains a list of names and sizes with same order
+  // of the input DB. The file is in the following format:
+  //    name height width
+  //    ...
+  optional string name_size_file = 5;
+}
+
 // Message that store parameters used by DetectionOutputLayer
 message DetectionOutputParameter {
   // Number of classes to be predicted. Required!
@@ -794,6 +813,8 @@ message DetectionOutputParameter {
   optional int32 background_label_id = 3 [default = 0];
   // Parameters used for non maximum suppression.
   optional NonMaximumSuppressionParameter nms_param = 4;
+  // Parameters used for saving detection results.
+  optional SaveOutputParameter save_output_param = 5;
 }
 
 message DropoutParameter {

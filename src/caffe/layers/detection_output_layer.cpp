@@ -1,5 +1,8 @@
+#include <fstream>
 #include <map>
 #include <vector>
+
+#include "boost/filesystem.hpp"
 
 #include "caffe/layers/detection_output_layer.hpp"
 #include "caffe/util/bbox_util.hpp"
@@ -22,6 +25,68 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top_k_ = -1;
   if (detection_output_param.nms_param().has_top_k()) {
     top_k_ = detection_output_param.nms_param().top_k();
+  }
+  const SaveOutputParameter& save_output_param =
+      detection_output_param.save_output_param();
+  output_directory_ = save_output_param.output_directory();
+  if (!output_directory_.empty() &&
+      !boost::filesystem::is_directory(output_directory_)) {
+    if (!boost::filesystem::create_directories(output_directory_)) {
+        LOG(FATAL) << "Failed to create directory: " << output_directory_;
+    }
+  }
+  output_name_prefix_ = save_output_param.output_name_prefix();
+  need_save_ = output_directory_ == "" ? false : true;
+  output_format_ = save_output_param.output_format();
+  if (output_format_ == "VOC") {
+    string label_map_file = save_output_param.label_map_file();
+    if (label_map_file.empty()) {
+      // Ignore saving if there is no label_map_file provided for VOC output.
+      LOG(WARNING) << "Provide label_map_file if output results for VOC.";
+      need_save_ = false;
+    } else {
+      LabelMap label_map;
+      CHECK(ReadProtoFromTextFile(label_map_file, &label_map))
+          << "Failed to read label map file: " << label_map_file;
+      CHECK(MapLabelToName(label_map, true, &label_to_name_))
+          << "Failed to convert label to name.";
+    }
+    string name_size_file = save_output_param.name_size_file();
+    if (name_size_file.empty()) {
+      // Ignore saving if there is no name_size_file provided for VOC output.
+      LOG(WARNING) << "Provide name_size_file if output results for VOC.";
+      need_save_ = false;
+    } else {
+      std::ifstream infile(name_size_file.c_str());
+      CHECK(infile.good()) << "Failed to open name size file: " << name_size_file;
+      // The file is in the following format:
+      //    name height width
+      //    ...
+      string name;
+      int height, width;
+      while(infile >> name >> height >> width) {
+        // Get the basename without extension of the filename
+        names_.push_back(name);
+        sizes_.push_back(std::make_pair(height, width));
+      }
+      infile.close();
+      name_count_ = 0;
+    }
+    // Clean all output files.
+    if (need_save_) {
+      boost::filesystem::path output_directory(output_directory_);
+      for (map<int, string>::iterator it = label_to_name_.begin();
+           it != label_to_name_.end(); ++it) {
+        if (it->first == background_label_id_) {
+          continue;
+        }
+        std::ofstream outfile;
+        boost::filesystem::path file(
+            output_name_prefix_ + it->second + ".txt");
+        boost::filesystem::path out_file = output_directory / file;
+        outfile.open(out_file.string().c_str(), std::ofstream::out);
+      }
+    }
   }
 }
 
@@ -122,6 +187,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   Dtype* top_data = top[0]->mutable_cpu_data();
 
   int count = 0;
+  boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
     for (map<int, vector<int> >::iterator it = all_indices[i].begin();
@@ -136,6 +202,17 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       const vector<NormalizedBBox>& bboxes =
           decode_bboxes.find(loc_label)->second;
       vector<int>& indices = it->second;
+      std::ofstream outfile;
+      if (need_save_) {
+        CHECK(label_to_name_.find(label) != label_to_name_.end())
+            << "Cannot find label: " << label << " in the label map.";
+        boost::filesystem::path file(
+            output_name_prefix_ + label_to_name_[label] + ".txt");
+        boost::filesystem::path out_file = output_directory / file;
+        outfile.open(out_file.string().c_str(),
+                     std::ofstream::out | std::ofstream::app);
+        CHECK_LT(name_count_, names_.size());
+      }
       for (int j = 0; j < indices.size(); ++j) {
         int idx = indices[j];
         top_data[count * 7] = i;
@@ -145,8 +222,27 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7 + 4] = bboxes[idx].ymin();
         top_data[count * 7 + 5] = bboxes[idx].xmax();
         top_data[count * 7 + 6] = bboxes[idx].ymax();
+        if (need_save_) {
+          outfile << names_[name_count_];
+          outfile << " " << all_conf_scores[i][label][idx];
+          NormalizedBBox outbbox;
+          OutputBBox(bboxes[idx], sizes_[name_count_].first,
+                     sizes_[name_count_].second, true, &outbbox);
+          outfile << " " << static_cast<int>(outbbox.xmin());
+          outfile << " " << static_cast<int>(outbbox.ymin());
+          outfile << " " << static_cast<int>(outbbox.xmax());
+          outfile << " " << static_cast<int>(outbbox.ymax());
+          outfile << std::endl;
+          outfile.flush();
+        }
         ++count;
       }
+      if (need_save_) {
+        outfile.close();
+      }
+    }
+    if (need_save_) {
+      ++name_count_;
     }
   }
 }

@@ -207,6 +207,23 @@ void ComputeAP(const vector<pair<float, int_tp> >& tp, int_tp num_pos,
   }
 }
 
+void OutputBBox(const NormalizedBBox& bbox, const int height, const int width,
+                const bool clip, NormalizedBBox* outbbox) {
+  if (clip) {
+    outbbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f) * width);
+    outbbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f) * height);
+    outbbox->set_xmax(std::max(std::min(bbox.xmax(), 1.f), 0.f) * width);
+    outbbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f) * height);
+  } else {
+    outbbox->set_xmin(bbox.xmin() * width);
+    outbbox->set_ymin(bbox.ymin() * height);
+    outbbox->set_xmax(bbox.xmax() * width);
+    outbbox->set_ymax(bbox.ymax() * height);
+  }
+}
+
+
+
 void EncodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
     const NormalizedBBox& bbox, NormalizedBBox* encode_bbox) {
@@ -661,78 +678,6 @@ void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum) {
     } else {
       cumsum->push_back(cumsum->back() + sort_pairs[i].second);
     }
-  }
-}
-
-void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
-               const vector<pair<float, int> >& fp, const string ap_version,
-               vector<float>* prec, vector<float>* rec, float* ap) {
-  const float eps = 1e-6;
-  CHECK_EQ(tp.size(), fp.size()) << "tp must have same size as fp.";
-  // Make sure that tp and fp have complement value.
-  for (int i = 0; i < tp.size(); ++i) {
-    CHECK_LE(fabs(tp[i].first - fp[i].first), eps);
-    CHECK_EQ(tp[i].second, 1 - fp[i].second);
-  }
-  prec->clear();
-  rec->clear();
-  *ap = 0;
-  if (tp.size() == 0) {
-    return;
-  }
-
-  // Compute cumsum of tp.
-  vector<int> tp_cumsum;
-  CumSum(tp, &tp_cumsum);
-
-  // Compute cumsum of fp.
-  vector<int> fp_cumsum;
-  CumSum(fp, &fp_cumsum);
-
-  // Compute precision.
-  for (int i = 0; i < tp_cumsum.size(); ++i) {
-    prec->push_back(static_cast<float>(tp_cumsum[i]) /
-                    (tp_cumsum[i] + fp_cumsum[i]));
-  }
-
-  // Compute recall.
-  for (int i = 0; i < tp_cumsum.size(); ++i) {
-    rec->push_back(static_cast<float>(tp_cumsum[i]) / num_pos);
-  }
-
-  if (ap_version == "11point") {
-    // VOC2007 style for computing AP.
-    vector<float> max_precs(11, 0.);
-    int start_idx = rec->size() - 1;
-    for (int j = 10; j >= 0; --j) {
-      for (int i = start_idx; i >= 0 ; --i) {
-        if ((*rec)[i] < j / 10.) {
-          start_idx = i;
-          if (j > 0) {
-            max_precs[j-1] = max_precs[j];
-          }
-          break;
-        } else {
-          if (max_precs[j] < (*prec)[i]) {
-            max_precs[j] = (*prec)[i];
-          }
-        }
-      }
-    }
-    for (int j = 10; j >= 0; --j) {
-      *ap += max_precs[j] / 11;
-    }
-  } else if (ap_version == "Integral") {
-    // Natural integral.
-    float prev_rec = 0.;
-    for (int i = 0; i < rec->size(); ++i) {
-      if (fabs((*rec)[i] - prev_rec) > eps) {
-        *ap += (*prec)[i] * fabs((*rec)[i] - prev_rec);
-      }
-      prev_rec = (*rec)[i];
-    }
-  } else {
-    LOG(FATAL) << "Unknown ap_version: " << ap_version;
   }
 }
 

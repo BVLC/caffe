@@ -264,6 +264,10 @@ template bool SortScorePairDescend(const pair<float, pair<int_tp, int_tp> >& pai
                                    const pair<float, pair<int_tp, int_tp> >& pair2);
               
 typedef MultiBoxLossParameter_MatchType MatchType;
+// Output the real bbox in the original image space.
+void OutputBBox(const NormalizedBBox& bbox, const int height, const int width,
+                const bool clip, NormalizedBBox* outbbox);
+
 
 // Encode a bbox according to a prior bbox.
 void EncodeBBox(const NormalizedBBox& prior_bbox,
