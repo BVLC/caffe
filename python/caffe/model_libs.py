@@ -113,11 +113,13 @@ def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
 
     return net
 
-def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=True,
-        min_sizes=[], max_sizes=[], aspect_ratios=[], num_classes=[],
-        share_location=True, flip=True, clip=True):
+def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
+        normalizations=[], use_batchnorm=True, min_sizes=[], max_sizes=[],
+        aspect_ratios=[], share_location=True, flip=True, clip=True):
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
+    if normalizations:
+        assert len(from_layers) == len(normalizations), "from_layers and normalizations should have same length"
     assert len(from_layers) == len(min_sizes), "from_layers and min_sizes should have same length"
     assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
     net_layers = net.keys()
@@ -147,6 +149,14 @@ def CreateMultiBoxHead(net, data_layer="data", from_layers=[], use_batchnorm=Tru
     conf_layers = []
     for i in range(0, num):
         from_layer = from_layers[i]
+
+        # Get the normalize value.
+        if normalizations:
+            if normalizations[i] != -1:
+                norm_name = "{}_norm".format(from_layer)
+                net[norm_name] = L.Normalize(net[from_layer], scale_filler=dict(type="constant", value=normalizations[i]),
+                    across_spatial=False, channel_shared=False, fix_scale=False)
+                from_layer = norm_name
 
         # Estimate number of priors per location given provided parameters.
         aspect_ratio = [2, 3]
