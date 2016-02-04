@@ -51,7 +51,7 @@ Extract Features
 
 Now everything necessary is in place.
 
-    ./build/tools/extract_features.bin models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10 lmdb
+    ./build/tools/extract_features.bin models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10 leveldb
 
 The name of feature blob that you extract is `fc7`, which represents the highest level feature of the reference model.
 We can use any other layer, as well, such as `conv5` or `pool3`.
