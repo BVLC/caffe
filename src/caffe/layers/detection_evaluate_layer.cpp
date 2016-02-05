@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <map>
-#include <set>
 #include <vector>
 
 #include "caffe/layers/detection_evaluate_layer.hpp"
@@ -13,6 +12,9 @@ void DetectionEvaluateLayer<Dtype>::LayerSetUp(
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const DetectionEvaluateParameter& detection_evaluate_param =
       this->layer_param_.detection_evaluate_param();
+  CHECK(detection_evaluate_param.has_num_classes())
+      << "Must provide num_classes.";
+  num_classes_ = detection_evaluate_param.num_classes();
   background_label_id_ = detection_evaluate_param.background_label_id();
   overlap_threshold_ = detection_evaluate_param.overlap_threshold();
   CHECK_GT(overlap_threshold_, 0.) << "overlap_threshold must be non negative.";
@@ -28,14 +30,11 @@ void DetectionEvaluateLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->width(), 7);
 
-  set<int> labels;
-  for (int i = 0; i < bottom[1]->height(); ++i) {
-    int label = bottom[1]->cpu_data()[i * 7 + 1];
-    labels.insert(label);
-  }
   // num() and channels() are 1.
   vector<int> top_shape(2, 1);
-  top_shape.push_back(labels.size() + bottom[0]->height());
+  int num_pos_classes = background_label_id_ == -1 ?
+      num_classes_ : num_classes_ - 1;
+  top_shape.push_back(num_pos_classes + bottom[0]->height());
   // Each row is a 5 dimension vector, which stores
   // [image_id, label, confidence, true_pos, false_pos]
   top_shape.push_back(5);
@@ -60,7 +59,8 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
 
   Dtype* top_data = top[0]->mutable_cpu_data();
   int num_det = 0;
-  // Insert number of ground truth for each labe.
+
+  // Insert number of ground truth for each label.
   map<int, int> num_pos;
   for (map<int, LabelBBox>::iterator it = all_gt_bboxes.begin();
        it != all_gt_bboxes.end(); ++it) {
@@ -73,11 +73,17 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
       }
     }
   }
-  for (map<int, int>::iterator it = num_pos.begin(); it != num_pos.end();
-       ++it) {
+  for (int c = 0; c < num_classes_; ++c) {
+    if (c == background_label_id_) {
+      continue;
+    }
     top_data[num_det * 5] = -1;
-    top_data[num_det * 5 + 1] = it->first;
-    top_data[num_det * 5 + 2] = it->second;
+    top_data[num_det * 5 + 1] = c;
+    if (num_pos.find(c) == num_pos.end()) {
+      top_data[num_det * 5 + 2] = 0;
+    } else {
+      top_data[num_det * 5 + 2] = num_pos.find(c)->second;
+    }
     top_data[num_det * 5 + 3] = -1;
     top_data[num_det * 5 + 4] = -1;
     ++num_det;

@@ -21,7 +21,8 @@ template <typename Dtype>
 class DetectionEvaluateLayerTest : public CPUDeviceTest<Dtype> {
  protected:
   DetectionEvaluateLayerTest()
-      : background_label_id_(0),
+      : num_classes_(3),
+        background_label_id_(0),
         overlap_threshold_(0.3),
         blob_bottom_det_(new Blob<Dtype>(1, 1, 8, 7)),
         blob_bottom_gt_(new Blob<Dtype>(1, 1, 4, 7)),
@@ -99,6 +100,7 @@ class DetectionEvaluateLayerTest : public CPUDeviceTest<Dtype> {
     }
   }
 
+  int num_classes_;
   int background_label_id_;
   float overlap_threshold_;
 
@@ -115,6 +117,7 @@ TYPED_TEST(DetectionEvaluateLayerTest, TestSetup) {
   LayerParameter layer_param;
   DetectionEvaluateParameter* detection_evaluate_param =
       layer_param.mutable_detection_evaluate_param();
+  detection_evaluate_param->set_num_classes(this->num_classes_);
   detection_evaluate_param->set_background_label_id(this->background_label_id_);
   detection_evaluate_param->set_overlap_threshold(this->overlap_threshold_);
   DetectionEvaluateLayer<TypeParam> layer(layer_param);
@@ -129,6 +132,7 @@ TYPED_TEST(DetectionEvaluateLayerTest, TestForward) {
   LayerParameter layer_param;
   DetectionEvaluateParameter* detection_evaluate_param =
       layer_param.mutable_detection_evaluate_param();
+  detection_evaluate_param->set_num_classes(this->num_classes_);
   detection_evaluate_param->set_background_label_id(this->background_label_id_);
   detection_evaluate_param->set_overlap_threshold(this->overlap_threshold_);
   DetectionEvaluateLayer<TypeParam> layer(layer_param);
