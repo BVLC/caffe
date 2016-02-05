@@ -1,6 +1,4 @@
-#include <algorithm>
 #include <vector>
-#include <cmath>
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/normalize_layer.hpp"
@@ -28,7 +26,8 @@ void NormalizeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int spatial_dim = bottom[0]->width() * bottom[0]->height();
   sum_channel_multiplier_.Reshape(1, channels, 1, 1);
   caffe_set(channels, Dtype(1), sum_channel_multiplier_.mutable_cpu_data());
-  sum_spatial_multiplier_.Reshape(1, 1, bottom[0]->height(), bottom[0]->width());
+  sum_spatial_multiplier_.Reshape(
+      1, 1, bottom[0]->height(), bottom[0]->width());
   caffe_set(spatial_dim, Dtype(1), sum_spatial_multiplier_.mutable_cpu_data());
   channel_shared_ = norm_param.channel_shared();
   if (this->blobs_.size() > 0) {
@@ -58,13 +57,7 @@ void NormalizeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(this->blobs_[0]->count(), channels)
         << "Scale size is inconsistent with prototxt config";
   }
-
-  // Propagate gradients to the parameters (as directed by backward pass).
-  if (norm_param.fix_scale()) {
-    this->param_propagate_down_.resize(this->blobs_.size(), false);
-  } else {
-    this->param_propagate_down_.resize(this->blobs_.size(), true);
-  }
+  this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
 template <typename Dtype>
@@ -80,8 +73,10 @@ void NormalizeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   int spatial_dim = bottom[0]->height() * bottom[0]->width();
   if (spatial_dim != sum_spatial_multiplier_.count()) {
-    sum_spatial_multiplier_.Reshape(1, 1, bottom[0]->height(), bottom[0]->width());
-    caffe_set(spatial_dim, Dtype(1), sum_spatial_multiplier_.mutable_cpu_data());
+    sum_spatial_multiplier_.Reshape(
+        1, 1, bottom[0]->height(), bottom[0]->width());
+    caffe_set(spatial_dim, Dtype(1),
+              sum_spatial_multiplier_.mutable_cpu_data());
     buffer_spatial_.Reshape(1, 1, bottom[0]->height(), bottom[0]->width());
   }
 }
@@ -106,16 +101,20 @@ void NormalizeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_sqr<Dtype>(dim, bottom_data, buffer_data);
     if (across_spatial_) {
       // add eps to avoid overflow
-      norm_data[n] = pow(caffe_cpu_asum<Dtype>(dim, buffer_data)+eps_, Dtype(0.5));
-      caffe_cpu_scale<Dtype>(dim, Dtype(1.0 / norm_data[n]), bottom_data, top_data);
+      norm_data[n] = pow(caffe_cpu_asum<Dtype>(dim, buffer_data)+eps_,
+                         Dtype(0.5));
+      caffe_cpu_scale<Dtype>(dim, Dtype(1.0 / norm_data[n]), bottom_data,
+                             top_data);
     } else {
-      caffe_cpu_gemv<Dtype>(CblasTrans, channels, spatial_dim, Dtype(1), buffer_data,
-          sum_channel_multiplier, Dtype(1), norm_data);
+      caffe_cpu_gemv<Dtype>(CblasTrans, channels, spatial_dim, Dtype(1),
+                            buffer_data, sum_channel_multiplier, Dtype(1),
+                            norm_data);
       // compute norm
       caffe_powx<Dtype>(spatial_dim, norm_data, Dtype(0.5), norm_data);
       // scale the layer
-      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim, 1,
-          Dtype(1), sum_channel_multiplier, norm_data, Dtype(0), buffer_data);
+      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim,
+                            1, Dtype(1), sum_channel_multiplier, norm_data,
+                            Dtype(0), buffer_data);
       caffe_div<Dtype>(dim, bottom_data, buffer_data, top_data);
       norm_data += spatial_dim;
     }
@@ -123,8 +122,9 @@ void NormalizeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (channel_shared_) {
       caffe_scal<Dtype>(dim, scale[0], top_data);
     } else {
-      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim, 1,
-                            Dtype(1), scale, sum_spatial_multiplier, Dtype(0),
+      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim,
+                            1, Dtype(1), scale, sum_spatial_multiplier,
+                            Dtype(0),
                             buffer_data);
       caffe_mul<Dtype>(dim, top_data, buffer_data, top_data);
     }
@@ -152,17 +152,19 @@ void NormalizeLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   int dim = count / num;
   int spatial_dim = top[0]->height() * top[0]->width();
   int channels = top[0]->channels();
-  
+
   // Propagate to param
   if (this->param_propagate_down_[0]) {
     Dtype* scale_diff = this->blobs_[0]->mutable_cpu_diff();
     if (channel_shared_) {
-      scale_diff[0] += caffe_cpu_dot<Dtype>(count, top_data, top_diff) / scale[0];
+      scale_diff[0] +=
+          caffe_cpu_dot<Dtype>(count, top_data, top_diff) / scale[0];
     } else {
       for (int n = 0; n < num; ++n) {
         caffe_mul<Dtype>(dim, top_data+n*dim, top_diff+n*dim, buffer_data);
         caffe_cpu_gemv<Dtype>(CblasNoTrans, channels, spatial_dim, Dtype(1),
-            buffer_data, sum_spatial_multiplier, Dtype(0), buffer_channel);
+                              buffer_data, sum_spatial_multiplier, Dtype(0),
+                              buffer_channel);
         // store a / scale[i] in buffer_data temporary
         caffe_div<Dtype>(channels, buffer_channel, scale, buffer_channel);
         caffe_add<Dtype>(channels, buffer_channel, scale_diff, scale_diff);
@@ -175,29 +177,33 @@ void NormalizeLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int n = 0; n < num; ++n) {
       if (across_spatial_) {
         Dtype a = caffe_cpu_dot<Dtype>(dim, bottom_data, top_diff);
-        caffe_cpu_scale<Dtype>(dim, a / norm_data[n] / norm_data[n], bottom_data,
-                               bottom_diff);
+        caffe_cpu_scale<Dtype>(dim, a / norm_data[n] / norm_data[n],
+                               bottom_data, bottom_diff);
         caffe_sub<Dtype>(dim, top_diff, bottom_diff, bottom_diff);
         caffe_scal<Dtype>(dim, Dtype(1.0 / norm_data[n]), bottom_diff);
       } else {
         // dot product between bottom_data and top_diff
         caffe_mul<Dtype>(dim, bottom_data, top_diff, buffer_data);
         caffe_cpu_gemv<Dtype>(CblasTrans, channels, spatial_dim, Dtype(1),
-            buffer_data, sum_channel_multiplier, Dtype(0), buffer_spatial);
+                              buffer_data, sum_channel_multiplier, Dtype(0),
+                              buffer_spatial);
         // scale bottom_diff
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim,
-            1, Dtype(1), sum_channel_multiplier, buffer_spatial, Dtype(0), buffer_data);
+                              1, Dtype(1), sum_channel_multiplier,
+                              buffer_spatial, Dtype(0), buffer_data);
         caffe_mul<Dtype>(dim, bottom_data, buffer_data, bottom_diff);
         // divide by square of norm
         caffe_powx<Dtype>(spatial_dim, norm_data, Dtype(2), buffer_spatial);
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim,
-            1, Dtype(1), sum_channel_multiplier, buffer_spatial, Dtype(0), buffer_data);
+                              1, Dtype(1), sum_channel_multiplier,
+                              buffer_spatial, Dtype(0), buffer_data);
         caffe_div<Dtype>(dim, bottom_diff, buffer_data, bottom_diff);
         // subtract
         caffe_sub<Dtype>(dim, top_diff, bottom_diff, bottom_diff);
         // divide by norm
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim,
-            1, Dtype(1), sum_channel_multiplier, norm_data, Dtype(0), buffer_data);
+                              1, Dtype(1), sum_channel_multiplier, norm_data,
+                              Dtype(0), buffer_data);
         caffe_div<Dtype>(dim, bottom_diff, buffer_data, bottom_diff);
         norm_data += spatial_dim;
       }
@@ -206,7 +212,8 @@ void NormalizeLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_scal<Dtype>(dim, scale[0], bottom_diff);
       } else {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, spatial_dim,
-            1, Dtype(1), scale, sum_spatial_multiplier, Dtype(0), buffer_data);
+                              1, Dtype(1), scale, sum_spatial_multiplier,
+                              Dtype(0), buffer_data);
         caffe_mul<Dtype>(dim, bottom_diff, buffer_data, bottom_diff);
       }
       bottom_data += dim;
