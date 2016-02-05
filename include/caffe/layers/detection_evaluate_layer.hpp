@@ -53,6 +53,7 @@ class DetectionEvaluateLayer : public Layer<Dtype> {
     NOT_IMPLEMENTED;
   }
 
+  int num_classes_;
   int background_label_id_;
   float overlap_threshold_;
 };
