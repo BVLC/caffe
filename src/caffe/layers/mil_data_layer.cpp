@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #include <stdint.h>
 
 #include <algorithm>
@@ -243,3 +244,4 @@ namespace caffe {
   INSTANTIATE_CLASS(MILDataLayer);
   REGISTER_LAYER_CLASS(MILData);
 }  // namespace caffe
+#endif
