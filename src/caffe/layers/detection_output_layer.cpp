@@ -218,20 +218,22 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
         top_data[count * 7 + 2] = all_conf_scores[i][label][idx];
-        top_data[count * 7 + 3] = bboxes[idx].xmin();
-        top_data[count * 7 + 4] = bboxes[idx].ymin();
-        top_data[count * 7 + 5] = bboxes[idx].xmax();
-        top_data[count * 7 + 6] = bboxes[idx].ymax();
+        NormalizedBBox clip_bbox;
+        ClipBBox(bboxes[idx], &clip_bbox);
+        top_data[count * 7 + 3] = clip_bbox.xmin();
+        top_data[count * 7 + 4] = clip_bbox.ymin();
+        top_data[count * 7 + 5] = clip_bbox.xmax();
+        top_data[count * 7 + 6] = clip_bbox.ymax();
         if (need_save_) {
           outfile << names_[name_count_];
           outfile << " " << all_conf_scores[i][label][idx];
-          NormalizedBBox outbbox;
-          OutputBBox(bboxes[idx], sizes_[name_count_].first,
-                     sizes_[name_count_].second, true, &outbbox);
-          outfile << " " << static_cast<int>(outbbox.xmin());
-          outfile << " " << static_cast<int>(outbbox.ymin());
-          outfile << " " << static_cast<int>(outbbox.xmax());
-          outfile << " " << static_cast<int>(outbbox.ymax());
+          NormalizedBBox scale_bbox;
+          ScaleBBox(clip_bbox, sizes_[name_count_].first,
+                    sizes_[name_count_].second, &scale_bbox);
+          outfile << " " << static_cast<int>(scale_bbox.xmin());
+          outfile << " " << static_cast<int>(scale_bbox.ymin());
+          outfile << " " << static_cast<int>(scale_bbox.xmax());
+          outfile << " " << static_cast<int>(scale_bbox.ymax());
           outfile << std::endl;
           outfile.flush();
         }
