@@ -1,7 +1,9 @@
 #ifndef CAFFE_DETECTION_OUTPUT_LAYER_HPP_
 #define CAFFE_DETECTION_OUTPUT_LAYER_HPP_
 
+#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/blob.hpp"
