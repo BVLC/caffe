@@ -41,11 +41,13 @@ Currently, we will read the MNIST data from the lmdb we created earlier in the d
     layer {
       name: "mnist"
       type: "Data"
+      transform_param {
+        scale: 0.00390625
+      }
       data_param {
         source: "mnist_train_lmdb"
         backend: LMDB
         batch_size: 64
-        scale: 0.00390625
       }
       top: "data"
       top: "label"

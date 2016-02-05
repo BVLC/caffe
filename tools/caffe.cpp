@@ -3,6 +3,7 @@
 namespace bp = boost::python;
 #endif
 
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include <cstring>
@@ -164,7 +165,7 @@ int train() {
   if (FLAGS_gpu.size() == 0
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
       if (solver_param.has_device_id()) {
-          FLAGS_gpu = ""  +
+          FLAGS_gpu = "" +
               boost::lexical_cast<string>(solver_param.device_id());
       } else {  // Set default GPU if unspecified
           FLAGS_gpu = "" + boost::lexical_cast<string>(0);
@@ -182,7 +183,13 @@ int train() {
       s << (i ? ", " : "") << gpus[i];
     }
     LOG(INFO) << "Using GPUs " << s.str();
-
+#ifndef CPU_ONLY
+    cudaDeviceProp device_prop;
+    for (int i = 0; i < gpus.size(); ++i) {
+      cudaGetDeviceProperties(&device_prop, gpus[i]);
+      LOG(INFO) << "GPU " << gpus[i] << ": " << device_prop.name;
+    }
+#endif
     solver_param.set_device_id(gpus[0]);
     Caffe::SetDevice(gpus[0]);
     Caffe::set_mode(Caffe::GPU);
@@ -228,6 +235,11 @@ int test() {
   get_gpus(&gpus);
   if (gpus.size() != 0) {
     LOG(INFO) << "Use GPU with device ID " << gpus[0];
+#ifndef CPU_ONLY
+    cudaDeviceProp device_prop;
+    cudaGetDeviceProperties(&device_prop, gpus[0]);
+    LOG(INFO) << "GPU device name: " << device_prop.name;
+#endif
     Caffe::SetDevice(gpus[0]);
     Caffe::set_mode(Caffe::GPU);
   } else {
@@ -378,6 +390,8 @@ RegisterBrewFunction(time);
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
+  // Set version
+  gflags::SetVersionString(AS_STRING(CAFFE_VERSION));
   // Usage message.
   gflags::SetUsageMessage("command line brew\n"
       "usage: caffe <command> <args>\n\n"
