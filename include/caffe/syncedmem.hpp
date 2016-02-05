@@ -12,9 +12,11 @@ namespace caffe {
 // The improvement in performance seems negligible in the single GPU case,
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
-inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
+inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda,
+                            int* gpu_device) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaGetDevice(gpu_device));
     CUDA_CHECK(cudaMallocHost(ptr, size));
     *use_cuda = true;
     return;
@@ -25,10 +27,15 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
-inline void CaffeFreeHost(void* ptr, bool use_cuda) {
+inline void CaffeFreeHost(void* ptr, bool use_cuda, int gpu_device) {
 #ifndef CPU_ONLY
   if (use_cuda) {
+    int initial_device;
+    cudaGetDevice(&initial_device);
+    if (gpu_device != -1)
+        CUDA_CHECK(cudaSetDevice(gpu_device));
     CUDA_CHECK(cudaFreeHost(ptr));
+    cudaSetDevice(initial_device);
     return;
   }
 #endif
