@@ -1093,10 +1093,8 @@ message NormalizeParameter {
   optional FillerParameter scale_filler = 2;
   // Whether or not scale parameters are shared across channels.
   optional bool channel_shared = 3 [default = true];
-  // Whether we learn the scale parameter or fix it
-  optional bool fix_scale = 4 [default = true];
   // Epsilon for not dividing by zero while normalizing variance
-  optional float eps = 5 [default = 1e-10];
+  optional float eps = 4 [default = 1e-10];
 }
 
 message ParameterParameter {
