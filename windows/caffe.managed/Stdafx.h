@@ -4,6 +4,8 @@
 
 #pragma once
 #include <msclr\marshal_cppstd.h>
+#ifndef CPU_ONLY
 #include <cuda_runtime.h> 
+#endif
 #include "_CaffeModel.h"
 
