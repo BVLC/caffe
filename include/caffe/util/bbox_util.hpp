@@ -267,6 +267,12 @@ typedef MultiBoxLossParameter_MatchType MatchType;
 // Output the real bbox in the original image space.
 void OutputBBox(const NormalizedBBox& bbox, const int height, const int width,
                 const bool clip, NormalizedBBox* outbbox);
+// Clip the NormalizedBBox such that the range for each corner is [0, 1].
+void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox);
+
+// Scale the NormalizedBBox w.r.t. height and width.
+void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
+               NormalizedBBox* scale_bbox);
 
 
 // Encode a bbox according to a prior bbox.
