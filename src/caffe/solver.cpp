@@ -488,7 +488,6 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
           int fp = static_cast<int>(result_vec[k * 5 + 4]);
           all_true_pos[j][label].push_back(std::make_pair(score, tp));
           all_false_pos[j][label].push_back(std::make_pair(score, fp));
-          all_num_pos[j][label] = 0;
         }
       }
     }
@@ -538,6 +537,7 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
                 param_.ap_version(), &prec, &rec, &(APs[label]));
       mAP += APs[label];
     }
+    mAP /= num_pos.size();
     const int output_blob_index = test_net->output_blob_indices()[i];
     const string& output_name = test_net->blob_names()[output_blob_index];
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
