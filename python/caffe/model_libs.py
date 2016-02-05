@@ -12,6 +12,79 @@ def make_if_not_exist(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output, kernel_size, pad, stride, use_global_stats=True, conv_prefix='', bn_prefix='bn_', scale_prefix='scale_'):
+  if use_bn:
+    # parameters for convolution layer with batchnorm.
+    kwargs = {
+        'param': [dict(lr_mult=1, decay_mult=1)],
+        'weight_filler': dict(type='gaussian', std=0.01),
+        'bias_term': False
+        }
+    # parameters for scale bias layer after batchnorm.
+    sb_kwargs = {
+        'bias_term': True,
+        'param': [dict(lr_mult=1.00001)],
+        'filler': dict(type='constant', value=1),
+        'bias_filler': dict(type='constant', value=0.001)
+        }
+  else:
+    kwargs = {
+        'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
+        'weight_filler': dict(type='xavier'),
+        'bias_filler': dict(type='constant', value=0)
+        }
+
+  conv_name = '{}{}'.format(conv_prefix, out_layer)
+  net[conv_name] = L.Convolution(net[from_layer], num_output=num_output, kernel_size=kernel_size, pad=pad, stride=stride, **kwargs)
+  if use_bn:
+    bn_name = '{}{}'.format(bn_prefix, out_layer)
+    net[bn_name] = L.BatchNorm(net[conv_name], in_place=True, use_global_stats=use_global_stats)
+    sb_name = '{}{}'.format(scale_prefix, out_layer)
+    net[sb_name] = L.Scale(net[conv_name], in_place=True, **sb_kwargs)
+  if use_relu:
+    relu_name = '{}_relu'.format(conv_name)
+    net[relu_name] = L.ReLU(net[conv_name], in_place=True)
+
+def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch1):
+  # ResBody(net, 'pool1', '2a', 64, 64, 256, 1, True)
+
+  conv_prefix = 'res{}_'.format(block_name)
+  bn_prefix = 'bn{}_'.format(block_name)
+  scale_prefix = 'scale{}_'.format(block_name)
+
+  if use_branch1:
+    branch_name = 'branch1'
+    ConvBNLayer(net, from_layer, branch_name, use_bn=True, use_relu=False,
+        num_output=out2c, kernel_size=1, pad=0, stride=stride, conv_prefix=conv_prefix,
+        bn_prefix=bn_prefix, scale_prefix=scale_prefix)
+    branch1 = '{}{}'.format(conv_prefix, branch_name)
+  else:
+    branch1 = from_layer
+
+  branch_name = 'branch2a'
+  ConvBNLayer(net, from_layer, branch_name, use_bn=True, use_relu=True,
+      num_output=out2a, kernel_size=1, pad=0, stride=stride, conv_prefix=conv_prefix,
+      bn_prefix=bn_prefix, scale_prefix=scale_prefix)
+  out_name = '{}{}'.format(conv_prefix, branch_name)
+
+  branch_name = 'branch2b'
+  ConvBNLayer(net, out_name, branch_name, use_bn=True, use_relu=True,
+      num_output=out2b, kernel_size=3, pad=1, stride=1, conv_prefix=conv_prefix,
+      bn_prefix=bn_prefix, scale_prefix=scale_prefix)
+  out_name = '{}{}'.format(conv_prefix, branch_name)
+
+  branch_name = 'branch2c'
+  ConvBNLayer(net, out_name, branch_name, use_bn=True, use_relu=False,
+      num_output=out2c, kernel_size=1, pad=0, stride=1, conv_prefix=conv_prefix,
+      bn_prefix=bn_prefix, scale_prefix=scale_prefix)
+  branch2 = '{}{}'.format(conv_prefix, branch_name)
+
+  res_name = 'res{}'.format(block_name)
+  net[res_name] = L.Eltwise(net[branch1], net[branch2])
+  relu_name = '{}_relu'.format(res_name)
+  net[relu_name] = L.ReLU(net[res_name], in_place=True)
+
+
 def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
         output_label=True, train=True, mean_value=[104, 117, 123], mirror=True,
         label_map_file=''):
@@ -35,6 +108,7 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
                 data_param=dict(batch_size=batch_size, backend=backend, source=source),
                 ntop=1, **kwargs)
         return data
+
 
 def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
     kwargs = {
@@ -113,6 +187,43 @@ def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
 
     return net
 
+
+def ResNet152Body(net, from_layer, use_pool5=True):
+    ConvBNLayer(net, from_layer, 'conv1', use_bn=True, use_relu=True,
+        num_output=64, kernel_size=7, pad=3, stride=2)
+
+    net.pool1 = L.Pooling(net.conv1, pool=P.Pooling.MAX, kernel_size=3, stride=2)
+
+    ResBody(net, 'pool1', '2a', out2a=64, out2b=64, out2c=256, stride=1, use_branch1=True)
+    ResBody(net, 'res2a', '2b', out2a=64, out2b=64, out2c=256, stride=1, use_branch1=False)
+    ResBody(net, 'res2b', '2c', out2a=64, out2b=64, out2c=256, stride=1, use_branch1=False)
+
+    ResBody(net, 'res2c', '3a', out2a=128, out2b=128, out2c=512, stride=2, use_branch1=True)
+
+    from_layer = 'res3a'
+    for i in xrange(1, 8):
+      block_name = '3b{}'.format(i)
+      ResBody(net, from_layer, block_name, out2a=128, out2b=128, out2c=512, stride=1, use_branch1=False)
+      from_layer = 'res{}'.format(block_name)
+
+    ResBody(net, from_layer, '4a', out2a=256, out2b=256, out2c=1024, stride=2, use_branch1=True)
+
+    from_layer = 'res4a'
+    for i in xrange(1, 36):
+      block_name = '4b{}'.format(i)
+      ResBody(net, from_layer, block_name, out2a=256, out2b=256, out2c=1024, stride=1, use_branch1=False)
+      from_layer = 'res{}'.format(block_name)
+
+    ResBody(net, from_layer, '5a', out2a=512, out2b=512, out2c=2048, stride=2, use_branch1=True)
+    ResBody(net, 'res5a', '5b', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False)
+    ResBody(net, 'res5b', '5c', out2a=512, out2b=512, out2c=2048, stride=1, use_branch1=False)
+
+    if use_pool5:
+      net.pool5 = L.Pooling(net.res5c, pool=P.Pooling.AVE, global_pooling=True)
+
+    return net
+
+
 def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         normalizations=[], use_batchnorm=True, min_sizes=[], max_sizes=[],
         aspect_ratios=[], share_location=True, flip=True, clip=True):
@@ -124,24 +235,6 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
     assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
     net_layers = net.keys()
     assert data_layer in net_layers, "data_layer is not in net's layers"
-
-    if use_batchnorm:
-        # No bias in conv.
-        kwargs = {
-            'param': [dict(lr_mult=1, decay_mult=1)],
-            'weight_filler': dict(type='gaussian', std=0.01)}
-        # parameters for scale bias layer after batchnorm.
-        sb_kwargs = {
-            'param': [dict(lr_mult=1.00001)],
-            'filler': dict(type='constant', value=1),
-            'bias_term': True,
-            'bias_filler': dict(type='constant', value=0.001)
-            }
-    else:
-        kwargs = {
-                'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
-                'weight_filler': dict(type='xavier'),
-                'bias_filler': dict(type='constant', value=0)}
 
     num = len(from_layers)
     priorbox_layers = []
@@ -173,12 +266,9 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         num_loc_output = num_priors_per_location * 4;
         if not share_location:
             num_loc_output *= num_classes
-        net[name] = L.Convolution(net[from_layer], num_output=num_loc_output, kernel_size=1, **kwargs)
-        if use_batchnorm:
-            batchnorm_name = "{}_bn".format(name)
-            net[batchnorm_name] = L.BatchNorm(net[name], in_place=True)
-            scalebias_name = "{}_sb".format(batchnorm_name)
-            net[scalebias_name] = L.Scale(net[batchnorm_name], in_place=True, **sb_kwargs)
+        ConvBNLayer(net, from_layer, name, use_bn=True, use_relu=False,
+            num_output=num_loc_output, kernel_size=1, pad=0, stride=1,
+            use_global_stats=False)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
@@ -188,12 +278,9 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         # Create location prediction layer.
         name = "{}_mbox_conf".format(from_layer)
         num_conf_output = num_priors_per_location * num_classes;
-        net[name] = L.Convolution(net[from_layer], num_output=num_conf_output, kernel_size=1, **kwargs)
-        if use_batchnorm:
-            batchnorm_name = "{}_bn".format(name)
-            net[batchnorm_name] = L.BatchNorm(net[name], in_place=True)
-            scalebias_name = "{}_sb".format(batchnorm_name)
-            net[scalebias_name] = L.Scale(net[batchnorm_name], in_place=True, **sb_kwargs)
+        ConvBNLayer(net, from_layer, name, use_bn=True, use_relu=False,
+            num_output=num_conf_output, kernel_size=1, pad=0, stride=1,
+            use_global_stats=False)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
