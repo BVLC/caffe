@@ -18,7 +18,7 @@
     <ScriptsDir>$(SolutionDir)\scripts</ScriptsDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
-    <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
+    <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UseCuDNN)'=='true'">
     <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
