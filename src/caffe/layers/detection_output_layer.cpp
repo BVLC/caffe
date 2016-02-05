@@ -1,5 +1,6 @@
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 #include <map>
+#include <string>
 #include <vector>
 
 #include "boost/filesystem.hpp"
@@ -58,13 +59,14 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       need_save_ = false;
     } else {
       std::ifstream infile(name_size_file.c_str());
-      CHECK(infile.good()) << "Failed to open name size file: " << name_size_file;
+      CHECK(infile.good())
+          << "Failed to open name size file: " << name_size_file;
       // The file is in the following format:
       //    name height width
       //    ...
       string name;
       int height, width;
-      while(infile >> name >> height >> width) {
+      while (infile >> name >> height >> width) {
         // Get the basename without extension of the filename
         names_.push_back(name);
         sizes_.push_back(std::make_pair(height, width));
