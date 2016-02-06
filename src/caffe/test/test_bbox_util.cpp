@@ -953,6 +953,16 @@ TEST_F(BBoxUtilTest, TestComputeAP) {
 
   vector<float> prec_old = prec;
   vector<float> rec_old = rec;
+  ComputeAP(tp, 5, fp, "MaxIntegral", &prec, &rec, &ap);
+
+  EXPECT_NEAR(ap, 0.591861, eps);
+  EXPECT_EQ(prec.size(), 11);
+  EXPECT_EQ(rec.size(), 11);
+  for (int i = 0; i < 11; ++i) {
+    EXPECT_NEAR(prec_old[i], prec[i], eps);
+    EXPECT_NEAR(rec_old[i], rec[i], eps);
+  }
+
   ComputeAP(tp, 5, fp, "11point", &prec, &rec, &ap);
 
   EXPECT_NEAR(ap, 0.598662, eps);
@@ -970,6 +980,16 @@ TEST_F(BBoxUtilTest, TestComputeAP) {
   ComputeAP(tp, 5, fp, "Integral", &prec, &rec, &ap);
 
   EXPECT_NEAR(ap, 0.558528 - prec_old.back() * 0.2, eps);
+  EXPECT_EQ(prec.size(), 7);
+  EXPECT_EQ(rec.size(), 7);
+  for (int i = 0; i < 7; ++i) {
+    EXPECT_NEAR(prec_old[i], prec[i], eps);
+    EXPECT_NEAR(rec_old[i], rec[i], eps);
+  }
+
+  ComputeAP(tp, 5, fp, "MaxIntegral", &prec, &rec, &ap);
+
+  EXPECT_NEAR(ap, 0.591861 - prec_old.back() * 0.2, eps);
   EXPECT_EQ(prec.size(), 7);
   EXPECT_EQ(rec.size(), 7);
   for (int i = 0; i < 7; ++i) {

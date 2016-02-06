@@ -185,6 +185,11 @@ message SolverParameter {
 
   // Evaluation type.
   optional string eval_type = 41 [default = "classification"];
+  // ap_version: different ways of computing Average Precision.
+  //    Check https://sanchom.wordpress.com/tag/average-precision/ for details.
+  //    11point: the 11-point interpolated average precision. Used in VOC2007.
+  //    MaxIntegral: maximally interpolated AP. Used in VOC2012/ILSVRC.
+  //    Integral: the natural integral of the precision-recall curve.
   optional string ap_version = 42 [default = "Integral"];
 
   // The number of iterations for each test net.
