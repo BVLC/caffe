@@ -34,6 +34,7 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   use_prior_for_matching_ = multibox_loss_param.use_prior_for_matching();
   background_label_id_ = multibox_loss_param.background_label_id();
   normalize_ = multibox_loss_param.normalize();
+  use_difficult_gt_ = multibox_loss_param.use_difficult_gt();
 
   vector<int> loss_shape(1, 1);
   // Set up localization loss layer.
@@ -115,7 +116,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // Retrieve all ground truth.
   map<int, vector<NormalizedBBox> > all_gt_bboxes;
-  GetGroundTruth(gt_data, num_gt_, background_label_id_, &all_gt_bboxes);
+  GetGroundTruth(gt_data, num_gt_, background_label_id_, use_difficult_gt_,
+                 &all_gt_bboxes);
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
   // images in a batch are of same dimension.

@@ -263,23 +263,30 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
 
 template <typename Dtype>
 void GetGroundTruth(const Dtype* gt_data, const int num_gt,
-      const int background_label_id,
+      const int background_label_id, const bool use_difficult_gt,
       map<int, vector<NormalizedBBox> >* all_gt_bboxes) {
   all_gt_bboxes->clear();
   for (int i = 0; i < num_gt; ++i) {
-    int start_idx = i * 7;
+    int start_idx = i * 8;
     int item_id = gt_data[start_idx];
     if (item_id == -1) {
       break;
     }
-    NormalizedBBox bbox;
-    bbox.set_label(gt_data[start_idx + 1]);
-    CHECK_NE(background_label_id, bbox.label())
+    int label = gt_data[start_idx + 1];
+    CHECK_NE(background_label_id, label)
         << "Found background label in the dataset.";
+    bool difficult = static_cast<bool>(gt_data[start_idx + 7]);
+    if (!use_difficult_gt && difficult) {
+      // Skip reading difficult ground truth.
+      continue;
+    }
+    NormalizedBBox bbox;
+    bbox.set_label(label);
     bbox.set_xmin(gt_data[start_idx + 3]);
     bbox.set_ymin(gt_data[start_idx + 4]);
     bbox.set_xmax(gt_data[start_idx + 5]);
     bbox.set_ymax(gt_data[start_idx + 6]);
+    bbox.set_difficult(difficult);
     float bbox_size = BBoxSize(bbox);
     bbox.set_size(bbox_size);
     (*all_gt_bboxes)[item_id].push_back(bbox);
@@ -288,18 +295,19 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
 
 // Explicit initialization.
 template void GetGroundTruth(const float* gt_data, const int num_gt,
-      const int background_label_id,
+      const int background_label_id, const bool use_difficult_gt,
       map<int, vector<NormalizedBBox> >* all_gt_bboxes);
 template void GetGroundTruth(const double* gt_data, const int num_gt,
-      const int background_label_id,
+      const int background_label_id, const bool use_difficult_gt,
       map<int, vector<NormalizedBBox> >* all_gt_bboxes);
 
 template <typename Dtype>
 void GetGroundTruth(const Dtype* gt_data, const int num_gt,
-      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes) {
+      const int background_label_id, const bool use_difficult_gt,
+      map<int, LabelBBox>* all_gt_bboxes) {
   all_gt_bboxes->clear();
   for (int i = 0; i < num_gt; ++i) {
-    int start_idx = i * 7;
+    int start_idx = i * 8;
     int item_id = gt_data[start_idx];
     if (item_id == -1) {
       break;
@@ -308,10 +316,16 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
     int label = gt_data[start_idx + 1];
     CHECK_NE(background_label_id, label)
         << "Found background label in the dataset.";
+    bool difficult = static_cast<bool>(gt_data[start_idx + 7]);
+    if (!use_difficult_gt && difficult) {
+      // Skip reading difficult ground truth.
+      continue;
+    }
     bbox.set_xmin(gt_data[start_idx + 3]);
     bbox.set_ymin(gt_data[start_idx + 4]);
     bbox.set_xmax(gt_data[start_idx + 5]);
     bbox.set_ymax(gt_data[start_idx + 6]);
+    bbox.set_difficult(difficult);
     float bbox_size = BBoxSize(bbox);
     bbox.set_size(bbox_size);
     (*all_gt_bboxes)[item_id][label].push_back(bbox);
@@ -320,9 +334,11 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
 
 // Explicit initialization.
 template void GetGroundTruth(const float* gt_data, const int num_gt,
-      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes);
+      const int background_label_id, const bool use_difficult_gt,
+      map<int, LabelBBox>* all_gt_bboxes);
 template void GetGroundTruth(const double* gt_data, const int num_gt,
-      const int background_label_id, map<int, LabelBBox>* all_gt_bboxes);
+      const int background_label_id, const bool use_difficult_gt,
+      map<int, LabelBBox>* all_gt_bboxes);
 
 template <typename Dtype>
 void GetLocPredictions(const Dtype* loc_data, const int num,

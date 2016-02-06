@@ -85,6 +85,7 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   float overlap_threshold_;
   bool use_prior_for_matching_;
   int background_label_id_;
+  bool use_difficult_gt_;
 
   int loc_classes_;
   int num_gt_;

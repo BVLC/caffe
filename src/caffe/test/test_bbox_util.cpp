@@ -419,21 +419,22 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
 
 TEST_F(BBoxUtilTest, TestGetGroundTruth) {
   const int num_gt = 4;
-  Blob<float> gt_blob(1, 1, num_gt, 7);
+  Blob<float> gt_blob(1, 1, num_gt, 8);
   float* gt_data = gt_blob.mutable_cpu_data();
   for (int i = 0; i < 4; ++i) {
     int image_id = ceil(i / 2.);
-    gt_data[i * 7] = image_id;
-    gt_data[i * 7 + 1] = i;
-    gt_data[i * 7 + 2] = 0;
-    gt_data[i * 7 + 3] = 0.1;
-    gt_data[i * 7 + 4] = 0.1;
-    gt_data[i * 7 + 5] = 0.3;
-    gt_data[i * 7 + 6] = 0.3;
+    gt_data[i * 8] = image_id;
+    gt_data[i * 8 + 1] = i;
+    gt_data[i * 8 + 2] = 0;
+    gt_data[i * 8 + 3] = 0.1;
+    gt_data[i * 8 + 4] = 0.1;
+    gt_data[i * 8 + 5] = 0.3;
+    gt_data[i * 8 + 6] = 0.3;
+    gt_data[i * 8 + 7] = i % 2;
   }
 
   map<int, vector<NormalizedBBox> > all_gt_bboxes;
-  GetGroundTruth(gt_data, num_gt, -1, &all_gt_bboxes);
+  GetGroundTruth(gt_data, num_gt, -1, true, &all_gt_bboxes);
 
   EXPECT_EQ(all_gt_bboxes.size(), 3);
 
@@ -443,6 +444,7 @@ TEST_F(BBoxUtilTest, TestGetGroundTruth) {
   EXPECT_NEAR(all_gt_bboxes[0][0].ymin(), 0.1, eps);
   EXPECT_NEAR(all_gt_bboxes[0][0].xmax(), 0.3, eps);
   EXPECT_NEAR(all_gt_bboxes[0][0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[0][0].difficult(), false);
   EXPECT_NEAR(all_gt_bboxes[0][0].size(), 0.04, eps);
 
   EXPECT_EQ(all_gt_bboxes[1].size(), 2);
@@ -452,6 +454,7 @@ TEST_F(BBoxUtilTest, TestGetGroundTruth) {
     EXPECT_NEAR(all_gt_bboxes[1][i-1].ymin(), 0.1, eps);
     EXPECT_NEAR(all_gt_bboxes[1][i-1].xmax(), 0.3, eps);
     EXPECT_NEAR(all_gt_bboxes[1][i-1].ymax(), 0.3, eps);
+    EXPECT_EQ(all_gt_bboxes[1][i-1].difficult(), i % 2);
     EXPECT_NEAR(all_gt_bboxes[1][i-1].size(), 0.04, eps);
   }
 
@@ -461,26 +464,51 @@ TEST_F(BBoxUtilTest, TestGetGroundTruth) {
   EXPECT_NEAR(all_gt_bboxes[2][0].ymin(), 0.1, eps);
   EXPECT_NEAR(all_gt_bboxes[2][0].xmax(), 0.3, eps);
   EXPECT_NEAR(all_gt_bboxes[2][0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[2][0].difficult(), true);
   EXPECT_NEAR(all_gt_bboxes[2][0].size(), 0.04, eps);
+
+  // Skip difficult ground truth.
+  GetGroundTruth(gt_data, num_gt, -1, false, &all_gt_bboxes);
+
+  EXPECT_EQ(all_gt_bboxes.size(), 2);
+
+  EXPECT_EQ(all_gt_bboxes[0].size(), 1);
+  EXPECT_EQ(all_gt_bboxes[0][0].label(), 0);
+  EXPECT_NEAR(all_gt_bboxes[0][0].xmin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].ymin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].xmax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[0][0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[0][0].difficult(), false);
+  EXPECT_NEAR(all_gt_bboxes[0][0].size(), 0.04, eps);
+
+  EXPECT_EQ(all_gt_bboxes[1].size(), 1);
+  EXPECT_EQ(all_gt_bboxes[1][0].label(), 2);
+  EXPECT_NEAR(all_gt_bboxes[1][0].xmin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[1][0].ymin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[1][0].xmax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[1][0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[1][0].difficult(), false);
+  EXPECT_NEAR(all_gt_bboxes[1][0].size(), 0.04, eps);
 }
 
 TEST_F(BBoxUtilTest, TestGetGroundTruthLabelBBox) {
   const int num_gt = 4;
-  Blob<float> gt_blob(1, 1, num_gt, 7);
+  Blob<float> gt_blob(1, 1, num_gt, 8);
   float* gt_data = gt_blob.mutable_cpu_data();
   for (int i = 0; i < 4; ++i) {
     int image_id = ceil(i / 2.);
-    gt_data[i * 7] = image_id;
-    gt_data[i * 7 + 1] = i;
-    gt_data[i * 7 + 2] = 0;
-    gt_data[i * 7 + 3] = 0.1;
-    gt_data[i * 7 + 4] = 0.1;
-    gt_data[i * 7 + 5] = 0.3;
-    gt_data[i * 7 + 6] = 0.3;
+    gt_data[i * 8] = image_id;
+    gt_data[i * 8 + 1] = i;
+    gt_data[i * 8 + 2] = 0;
+    gt_data[i * 8 + 3] = 0.1;
+    gt_data[i * 8 + 4] = 0.1;
+    gt_data[i * 8 + 5] = 0.3;
+    gt_data[i * 8 + 6] = 0.3;
+    gt_data[i * 8 + 7] = i % 2;
   }
 
   map<int, LabelBBox> all_gt_bboxes;
-  GetGroundTruth(gt_data, num_gt, -1, &all_gt_bboxes);
+  GetGroundTruth(gt_data, num_gt, -1, true, &all_gt_bboxes);
 
   EXPECT_EQ(all_gt_bboxes.size(), 3);
 
@@ -490,6 +518,7 @@ TEST_F(BBoxUtilTest, TestGetGroundTruthLabelBBox) {
   EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].ymin(), 0.1, eps);
   EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].xmax(), 0.3, eps);
   EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[0].find(0)->second[0].difficult(), false);
   EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].size(), 0.04, eps);
 
   EXPECT_EQ(all_gt_bboxes[1].size(), 2);
@@ -499,6 +528,7 @@ TEST_F(BBoxUtilTest, TestGetGroundTruthLabelBBox) {
     EXPECT_NEAR(all_gt_bboxes[1].find(i)->second[0].ymin(), 0.1, eps);
     EXPECT_NEAR(all_gt_bboxes[1].find(i)->second[0].xmax(), 0.3, eps);
     EXPECT_NEAR(all_gt_bboxes[1].find(i)->second[0].ymax(), 0.3, eps);
+    EXPECT_EQ(all_gt_bboxes[1].find(i)->second[0].difficult(), i % 2);
     EXPECT_NEAR(all_gt_bboxes[1].find(i)->second[0].size(), 0.04, eps);
   }
 
@@ -508,7 +538,31 @@ TEST_F(BBoxUtilTest, TestGetGroundTruthLabelBBox) {
   EXPECT_NEAR(all_gt_bboxes[2].find(3)->second[0].ymin(), 0.1, eps);
   EXPECT_NEAR(all_gt_bboxes[2].find(3)->second[0].xmax(), 0.3, eps);
   EXPECT_NEAR(all_gt_bboxes[2].find(3)->second[0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[2].find(3)->second[0].difficult(), true);
   EXPECT_NEAR(all_gt_bboxes[2].find(3)->second[0].size(), 0.04, eps);
+
+  // Skip difficult ground truth.
+  GetGroundTruth(gt_data, num_gt, -1, false, &all_gt_bboxes);
+
+  EXPECT_EQ(all_gt_bboxes.size(), 2);
+
+  EXPECT_EQ(all_gt_bboxes[0].size(), 1);
+  EXPECT_EQ(all_gt_bboxes[0].find(0)->first, 0);
+  EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].xmin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].ymin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].xmax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[0].find(0)->second[0].difficult(), false);
+  EXPECT_NEAR(all_gt_bboxes[0].find(0)->second[0].size(), 0.04, eps);
+
+  EXPECT_EQ(all_gt_bboxes[1].size(), 1);
+  EXPECT_EQ(all_gt_bboxes[1].find(2)->first, 2);
+  EXPECT_NEAR(all_gt_bboxes[1].find(2)->second[0].xmin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[1].find(2)->second[0].ymin(), 0.1, eps);
+  EXPECT_NEAR(all_gt_bboxes[1].find(2)->second[0].xmax(), 0.3, eps);
+  EXPECT_NEAR(all_gt_bboxes[1].find(2)->second[0].ymax(), 0.3, eps);
+  EXPECT_EQ(all_gt_bboxes[1].find(2)->second[0].difficult(), false);
+  EXPECT_NEAR(all_gt_bboxes[1].find(2)->second[0].size(), 0.04, eps);
 }
 
 TEST_F(BBoxUtilTest, TestGetLocPredictionsShared) {
