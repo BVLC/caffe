@@ -563,9 +563,12 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
                vector<float>* prec, vector<float>* rec, float* ap) {
   const float eps = 1e-6;
   CHECK_EQ(tp.size(), fp.size()) << "tp must have same size as fp.";
+  const int num = tp.size();
   // Make sure that tp and fp have complement value.
-  for (int i = 0; i < tp.size(); ++i) {
+  for (int i = 0; i < num; ++i) {
     CHECK_LE(fabs(tp[i].first - fp[i].first), eps);
+    CHECK_GE(tp[i].second, 0);
+    CHECK_GE(fp[i].second, 0);
     CHECK_EQ(tp[i].second, 1 - fp[i].second);
   }
   prec->clear();
@@ -578,26 +581,29 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
   // Compute cumsum of tp.
   vector<int> tp_cumsum;
   CumSum(tp, &tp_cumsum);
+  CHECK_EQ(tp_cumsum.size(), num);
 
   // Compute cumsum of fp.
   vector<int> fp_cumsum;
   CumSum(fp, &fp_cumsum);
+  CHECK_EQ(fp_cumsum.size(), num);
 
   // Compute precision.
-  for (int i = 0; i < tp_cumsum.size(); ++i) {
+  for (int i = 0; i < num; ++i) {
     prec->push_back(static_cast<float>(tp_cumsum[i]) /
                     (tp_cumsum[i] + fp_cumsum[i]));
   }
 
   // Compute recall.
-  for (int i = 0; i < tp_cumsum.size(); ++i) {
+  for (int i = 0; i < num; ++i) {
+    CHECK_LE(tp_cumsum[i], num_pos);
     rec->push_back(static_cast<float>(tp_cumsum[i]) / num_pos);
   }
 
   if (ap_version == "11point") {
     // VOC2007 style for computing AP.
     vector<float> max_precs(11, 0.);
-    int start_idx = rec->size() - 1;
+    int start_idx = num - 1;
     for (int j = 10; j >= 0; --j) {
       for (int i = start_idx; i >= 0 ; --i) {
         if ((*rec)[i] < j / 10.) {
@@ -616,10 +622,22 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
     for (int j = 10; j >= 0; --j) {
       *ap += max_precs[j] / 11;
     }
+  } else if (ap_version == "MaxIntegral") {
+    // VOC2012 or ILSVRC style for computing AP.
+    float cur_rec = rec->back();
+    float cur_prec = prec->back();
+    for (int i = num - 2; i >= 0; --i) {
+      cur_prec = std::max<float>((*prec)[i], cur_prec);
+      if (fabs(cur_rec - (*rec)[i]) > eps) {
+        *ap += cur_prec * fabs(cur_rec - (*rec)[i]);
+      }
+      cur_rec = (*rec)[i];
+    }
+    *ap += cur_rec * cur_prec;
   } else if (ap_version == "Integral") {
     // Natural integral.
     float prev_rec = 0.;
-    for (int i = 0; i < rec->size(); ++i) {
+    for (int i = 0; i < num; ++i) {
       if (fabs((*rec)[i] - prev_rec) > eps) {
         *ap += (*prec)[i] * fabs((*rec)[i] - prev_rec);
       }

@@ -159,9 +159,10 @@ void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
 //    tp: contains pairs of scores and true positive.
 //    num_pos: number of positives.
 //    fp: contains pairs of scores and false positive.
-//    ap_version: different way of computing Average Precision.
+//    ap_version: different ways of computing Average Precision.
 //      Check https://sanchom.wordpress.com/tag/average-precision/ for details.
-//      11point: the 11-point interpolcated average precision.
+//      11point: the 11-point interpolated average precision. Used in VOC2007.
+//      MaxIntegral: maximally interpolated AP. Used in VOC2012/ILSVRC.
 //      Integral: the natural integral of the precision-recall curve.
 //    prec: stores the computed precisions.
 //    rec: stores the computed recalls.
