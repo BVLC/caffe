@@ -776,6 +776,8 @@ message DetectionEvaluateParameter {
   optional uint32 background_label_id = 2 [default = 0];
   // Threshold for deciding true/false positive.
   optional float overlap_threshold = 3 [default = 0.5];
+  // If true, also consider difficult ground truth for evaluation.
+  optional bool evaluate_difficult_gt = 4 [default = true];
 }
 
 message NonMaximumSuppressionParameter {
@@ -1073,6 +1075,8 @@ message MultiBoxLossParameter {
   optional int32 background_label_id = 9 [default = 0];
   // If true, normalize both loc and conf loss; otherwise, do not normalize.
   optional bool normalize = 10 [default = true];
+  // If true, also consider difficult ground truth.
+  optional bool use_difficult_gt = 11 [default = true];
 }
 
 message MVNParameter {

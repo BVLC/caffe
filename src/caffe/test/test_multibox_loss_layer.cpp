@@ -105,6 +105,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         bbox->set_ymin(0.1);
         bbox->set_xmax(0.3);
         bbox->set_ymax(0.3);
+        bbox->set_difficult(i % 2);
       }
       if (i == 2) {
         AnnotationGroup* anno_group = anno_datum.add_annotation_group();
@@ -116,6 +117,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         bbox->set_ymin(0.2);
         bbox->set_xmax(0.4);
         bbox->set_ymax(0.4);
+        bbox->set_difficult(i % 2);
         anno = anno_group->add_annotation();
         anno->set_instance_id(1);
         bbox = anno->mutable_bbox();
@@ -123,6 +125,7 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
         bbox->set_ymin(0.6);
         bbox->set_xmax(0.8);
         bbox->set_ymax(0.9);
+        bbox->set_difficult((i + 1) % 2);
       }
       string key_str = caffe::format_int(i, 3);
       string out;
@@ -312,14 +315,18 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
         bool use_prior = kBoolChoices[k];
         for (int n = 0; n < 2; ++n) {
           bool normalize = kBoolChoices[n];
-          multibox_loss_param->set_share_location(share_location);
-          multibox_loss_param->set_match_type(match_type);
-          multibox_loss_param->set_use_prior_for_matching(use_prior);
-          multibox_loss_param->set_normalize(normalize);
-          MultiBoxLossLayer<Dtype> layer(layer_param);
-          GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-          checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                          this->blob_top_vec_, 0);
+          for (int u = 0; u < 2; ++u) {
+            bool use_difficult_gt = kBoolChoices[u];
+            multibox_loss_param->set_share_location(share_location);
+            multibox_loss_param->set_match_type(match_type);
+            multibox_loss_param->set_use_prior_for_matching(use_prior);
+            multibox_loss_param->set_normalize(normalize);
+            multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
+            MultiBoxLossLayer<Dtype> layer(layer_param);
+            GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+            checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                            this->blob_top_vec_, 0);
+          }
         }
       }
     }
@@ -343,17 +350,21 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
         bool use_prior = kBoolChoices[k];
         for (int n = 0; n < 2; ++n) {
           bool normalize = kBoolChoices[n];
-          for (int l = 0; l < 1; ++l) {
-            // TODO(weiliu89): Fix the bug when background_label_id is -1.
-            multibox_loss_param->set_share_location(share_location);
-            multibox_loss_param->set_match_type(match_type);
-            multibox_loss_param->set_use_prior_for_matching(use_prior);
-            multibox_loss_param->set_normalize(normalize);
-            multibox_loss_param->set_background_label_id(l);
-            MultiBoxLossLayer<Dtype> layer(layer_param);
-            GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-            checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                            this->blob_top_vec_, 1);
+          for (int u = 0; u < 2; ++u) {
+            bool use_difficult_gt = kBoolChoices[u];
+            for (int l = 0; l < 1; ++l) {
+              // TODO(weiliu89): Fix the bug when background_label_id is -1.
+              multibox_loss_param->set_share_location(share_location);
+              multibox_loss_param->set_match_type(match_type);
+              multibox_loss_param->set_use_prior_for_matching(use_prior);
+              multibox_loss_param->set_normalize(normalize);
+              multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
+              multibox_loss_param->set_background_label_id(l);
+              MultiBoxLossLayer<Dtype> layer(layer_param);
+              GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+              checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                              this->blob_top_vec_, 1);
+            }
           }
         }
       }

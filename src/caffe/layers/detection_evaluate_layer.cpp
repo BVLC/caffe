@@ -18,6 +18,7 @@ void DetectionEvaluateLayer<Dtype>::LayerSetUp(
   background_label_id_ = detection_evaluate_param.background_label_id();
   overlap_threshold_ = detection_evaluate_param.overlap_threshold();
   CHECK_GT(overlap_threshold_, 0.) << "overlap_threshold must be non negative.";
+  evaluate_difficult_gt_ = detection_evaluate_param.evaluate_difficult_gt();
 }
 
 template <typename Dtype>
@@ -28,7 +29,7 @@ void DetectionEvaluateLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom[0]->width(), 7);
   CHECK_EQ(bottom[1]->num(), 1);
   CHECK_EQ(bottom[1]->channels(), 1);
-  CHECK_EQ(bottom[1]->width(), 7);
+  CHECK_EQ(bottom[1]->width(), 8);
 
   // num() and channels() are 1.
   vector<int> top_shape(2, 1);
@@ -55,7 +56,7 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
   // Retrieve all ground truth.
   map<int, LabelBBox> all_gt_bboxes;
   GetGroundTruth(gt_data, bottom[1]->height(), background_label_id_,
-                 &all_gt_bboxes);
+                 evaluate_difficult_gt_, &all_gt_bboxes);
 
   Dtype* top_data = top[0]->mutable_cpu_data();
   int num_det = 0;
