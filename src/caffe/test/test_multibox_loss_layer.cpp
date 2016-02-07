@@ -30,6 +30,9 @@ using boost::scoped_ptr;
 namespace caffe {
 
 static bool kBoolChoices[] = {true, false};
+static MultiBoxLossParameter_LocLossType kLocLossTypes[] = {
+  MultiBoxLossParameter_LocLossType_L2,
+  MultiBoxLossParameter_LocLossType_SMOOTH_L1};
 static MultiBoxLossParameter_MatchType kMatchTypes[] = {
   MultiBoxLossParameter_MatchType_BIPARTITE,
   MultiBoxLossParameter_MatchType_PER_PREDICTION};
@@ -306,26 +309,30 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
   MultiBoxLossParameter* multibox_loss_param =
       layer_param.mutable_multibox_loss_param();
   multibox_loss_param->set_num_classes(this->num_classes_);
-  for (int i = 0; i < 2; ++i) {
-    bool share_location = kBoolChoices[i];
-    this->Fill(share_location);
-    for (int j = 0; j < 2; ++j) {
-      MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
-      for (int k = 0; k < 2; ++k) {
-        bool use_prior = kBoolChoices[k];
-        for (int n = 0; n < 2; ++n) {
-          bool normalize = kBoolChoices[n];
-          for (int u = 0; u < 2; ++u) {
-            bool use_difficult_gt = kBoolChoices[u];
-            multibox_loss_param->set_share_location(share_location);
-            multibox_loss_param->set_match_type(match_type);
-            multibox_loss_param->set_use_prior_for_matching(use_prior);
-            multibox_loss_param->set_normalize(normalize);
-            multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
-            MultiBoxLossLayer<Dtype> layer(layer_param);
-            GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-            checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                            this->blob_top_vec_, 0);
+  for (int l = 0; l < 2; ++l) {
+    MultiBoxLossParameter_LocLossType loc_loss_type = kLocLossTypes[l];
+    for (int i = 0; i < 2; ++i) {
+      bool share_location = kBoolChoices[i];
+      this->Fill(share_location);
+      for (int j = 0; j < 2; ++j) {
+        MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
+        for (int k = 0; k < 2; ++k) {
+          bool use_prior = kBoolChoices[k];
+          for (int n = 0; n < 2; ++n) {
+            bool normalize = kBoolChoices[n];
+            for (int u = 0; u < 2; ++u) {
+              bool use_difficult_gt = kBoolChoices[u];
+              multibox_loss_param->set_loc_loss_type(loc_loss_type);
+              multibox_loss_param->set_share_location(share_location);
+              multibox_loss_param->set_match_type(match_type);
+              multibox_loss_param->set_use_prior_for_matching(use_prior);
+              multibox_loss_param->set_normalize(normalize);
+              multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
+              MultiBoxLossLayer<Dtype> layer(layer_param);
+              GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+              checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                              this->blob_top_vec_, 0);
+            }
           }
         }
       }

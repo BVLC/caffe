@@ -56,6 +56,13 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     layer_param.add_loss_weight(loc_weight_);
     loc_loss_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
     loc_loss_layer_->SetUp(loc_bottom_vec_, loc_top_vec_);
+  } else if (loc_loss_type_ == MultiBoxLossParameter_LocLossType_SMOOTH_L1) {
+    LayerParameter layer_param;
+    layer_param.set_name(this->layer_param_.name() + "_smooth_L1_loc");
+    layer_param.set_type("SmoothL1Loss");
+    layer_param.add_loss_weight(loc_weight_);
+    loc_loss_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
+    loc_loss_layer_->SetUp(loc_bottom_vec_, loc_top_vec_);
   } else {
     LOG(FATAL) << "Unknown localization loss type.";
   }
@@ -94,6 +101,7 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::Reshape(bottom, top);
   num_ = bottom[0]->num();
   num_priors_ = bottom[2]->height() / 4;
   num_gt_ = bottom[3]->height();
@@ -102,8 +110,6 @@ void MultiBoxLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       << "Number of priors must match number of location predictions.";
   CHECK_EQ(num_priors_ * num_classes_, bottom[1]->channels())
       << "Number of priors must match number of confidence predictions.";
-  vector<int> loss_shape(0);
-  top[0]->Reshape(loss_shape);
 }
 
 template <typename Dtype>
