@@ -4,6 +4,8 @@ build_script:
 - cmd: >-
     cd C:\projects\caffe\windows
 
+    copy CommonSettings.props.example CommonSettings.props
+
     nuget restore Caffe.sln -PackagesDirectory ..\..\NugetPackages -ConfigFile nuget.config
 
     set PATH=%PATH:nuget=hello%
@@ -14,4 +16,4 @@ build_script:
 
     cd ..
 
-    Build\x64\Release\test_all.testbin.exe --gtest_filter=-*TestTimer*
+    Build\x64\Release\test_all.exe --gtest_filter=-*TestTimer*

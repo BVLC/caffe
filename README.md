@@ -21,6 +21,9 @@ and step-by-step examples.
 ## Windows Setup
 **Requirements**: Visual Studio 2013
 
+### Pre-Build Steps
+Copy `.\windows\CommonSettings.props.example` to `.\windows\CommonSettings.props`
+
 By defaults Windows build requires `CUDA` and `cuDNN` libraries.
 Both can be disabled by adjusting build variables in `.\windows\CommonSettings.props`.
 Python support is disabled by default, but can be enabled via `.\windows\CommonSettings.props` as well.
