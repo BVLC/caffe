@@ -12,6 +12,7 @@
 #include "caffe/net.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/cpu_info.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -280,6 +281,16 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   ShareWeights();
   debug_info_ = param.debug_info();
+
+#ifdef _OPENMP
+  if (Caffe::mode() == Caffe::GPU) {
+    caffe::cpu::OpenMpManager::setGpuEnabled();
+  } else {
+    caffe::cpu::OpenMpManager::setGpuDisabled();
+  }
+  caffe::cpu::OpenMpManager::applyConfiguration();
+#endif
+
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
 

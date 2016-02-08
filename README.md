@@ -31,23 +31,16 @@ Time measures are: average Forward-Backward as stated by *caffe time*.*speedup* 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            682 |          1250 |         1380 |               24|
+| intelcaffe-master |            661 |          1237 |         1356 |               23|
 | bvlc-caffe-master |           3872 |          6899 |         7343 |              323|
-|    speedup factor |           x5.7 |          x5.5 |         x5.3 |            x13.4|
-
-### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (72 threads, MKL 11.3, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
-|------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            989 |          1558 |         1725 |               35|
-| bvlc-caffe-master |           3846 |          6810 |         7358 |              323|
-|    speedup factor |           x3.9 |          x4.4 |         x4.3 |             x9.2|
+|    speedup factor |           x5.9 |          x5.6 |         x5.4 |            x14.0|
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |           1412 |          3329 |         3977 |               56|
+| intelcaffe-master |           1047 |          3004 |         3786 |               47|
 | bvlc-caffe-master |          14892 |         25920 |        67542 |              530|
-|    speedup factor |          x10.5 |          x7.8 |        x17.0 |             x9.4|
+|    speedup factor |          x14.2 |          x8.6 |        x17.8 |            x11.3|
 
 Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
 The speedup factor highly depends on the amount of running threads and system load.
