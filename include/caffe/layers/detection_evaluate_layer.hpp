@@ -1,6 +1,7 @@
 #ifndef CAFFE_DETECTION_EVALUATE_LAYER_HPP_
 #define CAFFE_DETECTION_EVALUATE_LAYER_HPP_
 
+#include <utility>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -57,6 +58,8 @@ class DetectionEvaluateLayer : public Layer<Dtype> {
   int background_label_id_;
   float overlap_threshold_;
   bool evaluate_difficult_gt_;
+  vector<pair<int, int> > sizes_;
+  int count_;
 };
 
 }  // namespace caffe

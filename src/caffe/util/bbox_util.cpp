@@ -208,10 +208,12 @@ void ComputeAP(const vector<pair<float, int_tp> >& tp, int_tp num_pos,
 }
 
 void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox) {
-    clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f));
-    clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f));
-    clip_bbox->set_xmax(std::max(std::min(bbox.xmax(), 1.f), 0.f));
-    clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f));
+  clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f));
+  clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f));
+  clip_bbox->set_xmax(std::max(std::min(bbox.xmax(), 1.f), 0.f));
+  clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f));
+  clip_bbox->clear_size();
+  clip_bbox->set_size(BBoxSize(*clip_bbox));
 }
 
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
@@ -220,6 +222,9 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
   scale_bbox->set_ymin(bbox.ymin() * height);
   scale_bbox->set_xmax(bbox.xmax() * width);
   scale_bbox->set_ymax(bbox.ymax() * height);
+  scale_bbox->clear_size();
+  bool normalized = !(width > 1 || height > 1);
+  scale_bbox->set_size(BBoxSize(*scale_bbox, normalized));
 }
 
 

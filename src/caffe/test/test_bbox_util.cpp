@@ -147,6 +147,61 @@ TEST_F(BBoxUtilTest, TestBBoxSize) {
   EXPECT_NEAR(size, 0., eps);
 }
 
+TEST_F(BBoxUtilTest, TestScaleBBox) {
+  NormalizedBBox bbox;
+  bbox.set_xmin(0.21);
+  bbox.set_ymin(0.32);
+  bbox.set_xmax(0.33);
+  bbox.set_ymax(0.54);
+  NormalizedBBox scale_bbox;
+  float eps = 1e-5;
+
+  int height = 10;
+  int width = 20;
+  ScaleBBox(bbox, height, width, &scale_bbox);
+  EXPECT_NEAR(scale_bbox.xmin(), 4.2, eps);
+  EXPECT_NEAR(scale_bbox.ymin(), 3.2, eps);
+  EXPECT_NEAR(scale_bbox.xmax(), 6.6, eps);
+  EXPECT_NEAR(scale_bbox.ymax(), 5.4, eps);
+  EXPECT_NEAR(scale_bbox.size(), 10.88, eps);
+
+  height = 1;
+  width = 1;
+  ScaleBBox(bbox, height, width, &scale_bbox);
+  EXPECT_NEAR(bbox.xmin(), scale_bbox.xmin(), eps);
+  EXPECT_NEAR(bbox.ymin(), scale_bbox.ymin(), eps);
+  EXPECT_NEAR(bbox.xmax(), scale_bbox.xmax(), eps);
+  EXPECT_NEAR(bbox.ymax(), scale_bbox.ymax(), eps);
+  EXPECT_NEAR(scale_bbox.size(), 0.0264, eps);
+}
+
+TEST_F(BBoxUtilTest, TestClipBBox) {
+  NormalizedBBox bbox;
+  NormalizedBBox clip_bbox;
+
+  bbox.set_xmin(0.2);
+  bbox.set_ymin(0.3);
+  bbox.set_xmax(0.3);
+  bbox.set_ymax(0.5);
+  ClipBBox(bbox, &clip_bbox);
+  EXPECT_NEAR(bbox.xmin(), clip_bbox.xmin(), eps);
+  EXPECT_NEAR(bbox.ymin(), clip_bbox.ymin(), eps);
+  EXPECT_NEAR(bbox.xmax(), clip_bbox.xmax(), eps);
+  EXPECT_NEAR(bbox.ymax(), clip_bbox.ymax(), eps);
+  EXPECT_NEAR(clip_bbox.size(), 0.02, eps);
+
+  bbox.set_xmin(-0.2);
+  bbox.set_ymin(-0.3);
+  bbox.set_xmax(1.3);
+  bbox.set_ymax(1.5);
+  ClipBBox(bbox, &clip_bbox);
+  EXPECT_NEAR(clip_bbox.xmin(), 0., eps);
+  EXPECT_NEAR(clip_bbox.ymin(), 0., eps);
+  EXPECT_NEAR(clip_bbox.xmax(), 1., eps);
+  EXPECT_NEAR(clip_bbox.ymax(), 1., eps);
+  EXPECT_NEAR(clip_bbox.size(), 1., eps);
+}
+
 TEST_F(BBoxUtilTest, TestJaccardOverlap) {
   NormalizedBBox bbox1;
   bbox1.set_xmin(0.2);

@@ -67,12 +67,10 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       string name;
       int height, width;
       while (infile >> name >> height >> width) {
-        // Get the basename without extension of the filename
         names_.push_back(name);
         sizes_.push_back(std::make_pair(height, width));
       }
       infile.close();
-      name_count_ = 0;
     }
     // Clean all output files.
     if (need_save_) {
@@ -90,11 +88,17 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
+  name_count_ = 0;
 }
 
 template <typename Dtype>
 void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  CHECK_LE(name_count_, names_.size());
+  if (names_.size() > 0 && name_count_ == names_.size()) {
+    // reset count after a full iterations through the DB.
+    name_count_ = 0;
+  }
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   num_priors_ = bottom[2]->height() / 4;
   CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[0]->channels())
@@ -232,10 +236,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           NormalizedBBox scale_bbox;
           ScaleBBox(clip_bbox, sizes_[name_count_].first,
                     sizes_[name_count_].second, &scale_bbox);
-          outfile << " " << static_cast<int>(scale_bbox.xmin());
-          outfile << " " << static_cast<int>(scale_bbox.ymin());
-          outfile << " " << static_cast<int>(scale_bbox.xmax());
-          outfile << " " << static_cast<int>(scale_bbox.ymax());
+          outfile << " " << scale_bbox.xmin();
+          outfile << " " << scale_bbox.ymin();
+          outfile << " " << scale_bbox.xmax();
+          outfile << " " << scale_bbox.ymax();
           outfile << std::endl;
           outfile.flush();
         }

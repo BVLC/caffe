@@ -783,6 +783,13 @@ message DetectionEvaluateParameter {
   optional float overlap_threshold = 3 [default = 0.5];
   // If true, also consider difficult ground truth for evaluation.
   optional bool evaluate_difficult_gt = 4 [default = true];
+  // A file which contains a list of names and sizes with same order
+  // of the input DB. The file is in the following format:
+  //    name height width
+  //    ...
+  // If provided, we will scale the prediction and ground truth NormalizedBBox
+  // for evaluation.
+  optional string name_size_file = 5;
 }
 
 message NonMaximumSuppressionParameter {

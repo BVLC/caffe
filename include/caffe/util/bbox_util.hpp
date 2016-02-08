@@ -80,8 +80,6 @@ void setNormalizedBBox(NormalizedBBox& bbox, Dtype x, Dtype y, Dtype w, Dtype h)
   bbox.set_size(bbox_size);
 }
 
-
-
 template <typename Dtype>
 void GetDetectionResults(const Dtype* det_data, const int_tp num_det,
       map<int_tp, LabelBBox>* all_detections) {
@@ -104,7 +102,6 @@ void GetDetectionResults(const Dtype* det_data, const int_tp num_det,
     (*all_detections)[item_id][label].push_back(bbox);
   }
 }
-
 template <typename Dtype>
 void GetGroundTruth(const Dtype* gt_data, const int_tp num_gt,
       map<int_tp, LabelBBox >* all_gt_bboxes) {
