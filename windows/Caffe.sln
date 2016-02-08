@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "caffe\caffe.vcxproj", "{A9ACEF83-7B63-4574-A554-89CE869EA141}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcaffe", "libcaffe\libcaffe.vcxproj", "{A9ACEF83-7B63-4574-A554-89CE869EA141}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffeBin", "caffeBin\caffeBin.vcxproj", "{CE6BBC46-9EFC-4029-9065-85A023866AFB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "caffe\caffe.vcxproj", "{CE6BBC46-9EFC-4029-9065-85A023866AFB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "compute_image_mean", "compute_image_mean\compute_image_mean.vcxproj", "{09A8EDAC-20B9-414F-9654-961388FD5A8C}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -22,7 +22,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extract_features", "extract
 		{CE6BBC46-9EFC-4029-9065-85A023866AFB} = {CE6BBC46-9EFC-4029-9065-85A023866AFB}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_all.testbin", "test_all.testbin\test_all.testbin.vcxproj", "{00BBA8C0-707D-42A7-82FF-D5211185ED7F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_all", "test_all\test_all.vcxproj", "{00BBA8C0-707D-42A7-82FF-D5211185ED7F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CE6BBC46-9EFC-4029-9065-85A023866AFB} = {CE6BBC46-9EFC-4029-9065-85A023866AFB}
 	EndProjectSection
