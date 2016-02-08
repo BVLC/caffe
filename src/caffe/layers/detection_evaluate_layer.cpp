@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "caffe/layers/detection_evaluate_layer.hpp"
@@ -19,11 +20,32 @@ void DetectionEvaluateLayer<Dtype>::LayerSetUp(
   overlap_threshold_ = detection_evaluate_param.overlap_threshold();
   CHECK_GT(overlap_threshold_, 0.) << "overlap_threshold must be non negative.";
   evaluate_difficult_gt_ = detection_evaluate_param.evaluate_difficult_gt();
+  if (detection_evaluate_param.has_name_size_file()) {
+    string name_size_file = detection_evaluate_param.name_size_file();
+    std::ifstream infile(name_size_file.c_str());
+    CHECK(infile.good())
+        << "Failed to open name size file: " << name_size_file;
+    // The file is in the following format:
+    //    name height width
+    //    ...
+    string name;
+    int height, width;
+    while (infile >> name >> height >> width) {
+      sizes_.push_back(std::make_pair(height, width));
+    }
+    infile.close();
+  }
+  count_ = 0;
 }
 
 template <typename Dtype>
 void DetectionEvaluateLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  CHECK_LE(count_, sizes_.size());
+  if (sizes_.size() > 0 && count_ == sizes_.size()) {
+    // reset count after a full iterations through the DB.
+    count_ = 0;
+  }
   CHECK_EQ(bottom[0]->num(), 1);
   CHECK_EQ(bottom[0]->channels(), 1);
   CHECK_EQ(bottom[0]->width(), 7);
@@ -111,7 +133,7 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
         }
       }
     } else {
-      const LabelBBox& label_bboxes = all_gt_bboxes.find(image_id)->second;
+      LabelBBox& label_bboxes = all_gt_bboxes.find(image_id)->second;
       for (LabelBBox::iterator iit = detections.begin();
            iit != detections.end(); ++iit) {
         int label = iit->first;
@@ -127,8 +149,15 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
             ++num_det;
           }
         } else {
-          const vector<NormalizedBBox>& gt_bboxes =
-              label_bboxes.find(label)->second;
+          vector<NormalizedBBox>& gt_bboxes = label_bboxes.find(label)->second;
+          // Scale ground truth if needed.
+          if (sizes_.size() > 0) {
+            CHECK_LT(count_, sizes_.size());
+            for (int i = 0; i < gt_bboxes.size(); ++i) {
+              ScaleBBox(gt_bboxes[i], sizes_[count_].first,
+                        sizes_[count_].second, &(gt_bboxes[i]));
+            }
+          }
           vector<bool> visited(gt_bboxes.size(), false);
           // Sort detections in descend order based on scores.
           std::sort(bboxes.begin(), bboxes.end(), SortBBoxDescend);
@@ -136,6 +165,10 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
             top_data[num_det * 5] = image_id;
             top_data[num_det * 5 + 1] = label;
             top_data[num_det * 5 + 2] = bboxes[i].score();
+            if (sizes_.size() > 0) {
+              ScaleBBox(bboxes[i], sizes_[count_].first, sizes_[count_].second,
+                        &(bboxes[i]));
+            }
             // Compare with each ground truth bbox.
             float overlap_max = -1;
             int jmax = -1;
@@ -166,6 +199,9 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
           }
         }
       }
+    }
+    if (sizes_.size() > 0) {
+      ++count_;
     }
   }
 }

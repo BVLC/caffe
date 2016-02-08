@@ -44,7 +44,7 @@ void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
   }
 }
 
-float BBoxSize(const NormalizedBBox& bbox) {
+float BBoxSize(const NormalizedBBox& bbox, const bool normalized) {
   if (bbox.xmax() < bbox.xmin() || bbox.ymax() < bbox.ymin()) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
     return 0;
@@ -52,16 +52,25 @@ float BBoxSize(const NormalizedBBox& bbox) {
     if (bbox.has_size()) {
       return bbox.size();
     } else {
-      return (bbox.xmax() - bbox.xmin()) * (bbox.ymax() - bbox.ymin());
+      float width = bbox.xmax() - bbox.xmin();
+      float height = bbox.ymax() - bbox.ymin();
+      if (normalized) {
+        return width * height;
+      } else {
+        // If bbox is not within range [0, 1].
+        return (width + 1) * (height + 1);
+      }
     }
   }
 }
 
 void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox) {
-    clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f));
-    clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f));
-    clip_bbox->set_xmax(std::max(std::min(bbox.xmax(), 1.f), 0.f));
-    clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f));
+  clip_bbox->set_xmin(std::max(std::min(bbox.xmin(), 1.f), 0.f));
+  clip_bbox->set_ymin(std::max(std::min(bbox.ymin(), 1.f), 0.f));
+  clip_bbox->set_xmax(std::max(std::min(bbox.xmax(), 1.f), 0.f));
+  clip_bbox->set_ymax(std::max(std::min(bbox.ymax(), 1.f), 0.f));
+  clip_bbox->clear_size();
+  clip_bbox->set_size(BBoxSize(*clip_bbox));
 }
 
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
@@ -70,6 +79,9 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
   scale_bbox->set_ymin(bbox.ymin() * height);
   scale_bbox->set_xmax(bbox.xmax() * width);
   scale_bbox->set_ymax(bbox.ymax() * height);
+  scale_bbox->clear_size();
+  bool normalized = !(width > 1 || height > 1);
+  scale_bbox->set_size(BBoxSize(*scale_bbox, normalized));
 }
 
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {

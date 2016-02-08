@@ -40,7 +40,7 @@ void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox);
 
 // Compute bbox size.
-float BBoxSize(const NormalizedBBox& bbox);
+float BBoxSize(const NormalizedBBox& bbox, const bool normalized = true);
 
 // Clip the NormalizedBBox such that the range for each corner is [0, 1].
 void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox);
