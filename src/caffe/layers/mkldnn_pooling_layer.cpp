@@ -138,6 +138,8 @@ void MklDnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   kernel_size[1] = kernel_h_;
 
   dnnError_t e;
+  e = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dim, src_sizes, src_strides);
+  CHECK_EQ(e, E_SUCCESS);
   e = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr, dim, dst_sizes, dst_strides);
   CHECK_EQ(e, E_SUCCESS);
   e = dnnLayoutCreate<Dtype>(&bwd_bottom_diff->layout_usr, dim, src_sizes, src_strides);
@@ -146,6 +148,7 @@ void MklDnnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(e, E_SUCCESS);
 
   // Names are for debugging only
+  fwd_bottom_data->name = "fwd_bottom_data   @ " + this->layer_param_.name();
   fwd_top_data->name =    "fwd_top_data      @ " + this->layer_param_.name();
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
@@ -212,30 +215,44 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   size_t* mask = NULL;  // suppress warnings about uninitalized variables
-  // Different pooling methods. We explicitly do the switch outside the for
-  // loop to save time, although this results in more code.
+
+  // We'll output the mask to top[1] if it's of size >1.
+  const bool use_top_mask = top.size() > 1;
+
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     {
-    void* bottom_data = (void*)bottom[0]->prv_data();
     dnnError_t status;
     void* pooling_res[dnnResourceNumber];
-    pooling_res[dnnResourceSrc] = (void *)bottom_data;
-    mask = max_idx_.mutable_cpu_data();
+    mask = (use_top_mask) ? reinterpret_cast<size_t*>(top[1]->mutable_cpu_data()) :
+                            (max_idx_.mutable_cpu_data());
     caffe_set(top_count, -1, (int*)mask);
     pooling_res[dnnResourceWorkspace] = (void*)mask;
 
+    void* bottom_data = (void*)bottom[0]->prv_data();
     if(NULL == bottom_data)
     {
-      LOG(FATAL) << "TODO: Not yet implemented for default caffe data layout";
+      bottom_data = (void*)bottom[0]->cpu_data();
+      if(NULL == poolingFwd) {
+        // Now create poolingFwd
+        status = dnnPoolingCreateForward<Dtype>(&poolingFwd, dnnAlgorithmPoolingMax,
+                                                fwd_bottom_data->layout_usr, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
+        CHECK_EQ(status, E_SUCCESS);
+
+        // Now create poolingBwd
+        status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, dnnAlgorithmPoolingMax,
+                 fwd_bottom_data->layout_usr, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
+        CHECK_EQ(status, E_SUCCESS);
+      }
     }
     else if(NULL == poolingFwd) {
       // Is it the first pass? Create a primitive.
+      CHECK((bottom[0]->get_prv_descriptor_data())->get_descr_type() == PrvMemDescr::PRV_DESCR_MKLDNN);
       shared_ptr<MklDnnData<Dtype> > mem_descr
         =  boost::static_pointer_cast<MklDnnData<Dtype> > (bottom[0]->get_prv_descriptor_data());
       CHECK(mem_descr != NULL);
 
-      DLOG(INFO) << "Using layout for " << mem_descr->name << " as input layout for " << this->layer_param_.name();
+      DLOG(INFO) << "Using layout of " << mem_descr->name << " as input layout for " << this->layer_param_.name();
 
       // copy shared_ptr
       fwd_bottom_data = mem_descr;
@@ -265,14 +282,15 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       bwd_bottom_diff->create_conversions();
     }
 
+    pooling_res[dnnResourceSrc] = (void *)bottom_data;
     if (fwd_top_data->convert_from_int)
     {
       top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
       pooling_res[dnnResourceDst] = (void *)fwd_top_data->internal_ptr;
     }
     else {
-      pooling_res[dnnResourceDst] = (void*)top[0]->mutable_cpu_data();;
-      LOG(INFO) << "Using cpu_data for top in DnnPooling.";
+      pooling_res[dnnResourceDst] = (void*)top[0]->mutable_cpu_data();
+      DLOG(INFO) << "Using cpu_data for top in DnnPooling.";
     }
     status = dnnExecute<Dtype>(poolingFwd, pooling_res);
     CHECK_EQ(status, E_SUCCESS);
@@ -295,7 +313,6 @@ void MklDnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (!propagate_down[0]) {
     return;
   }
-
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
 

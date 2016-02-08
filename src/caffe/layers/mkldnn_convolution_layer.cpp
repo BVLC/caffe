@@ -299,32 +299,27 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   bwdb_bias_diff     ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 
 #ifndef BWDD_DISABLE_PAD_REMOVING
-  /* Temporary workaround for removing padding from bwdd_bottom_diff */
-  status = dnnLayoutPCLCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_int, dimension, bdata_sizes);
-  CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
-
-  status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_usr, dimension, bdata_sizes, bdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
-
-  bwdd_bottom_diff_no_padding->create_conversions();
-
-  bwdd_bottom_diff_no_padding->name = "bwdd_bot_diff_NP  @ " + this->layer_param_.name();
-
   convert_to_bottom_diff_no_padding = NULL;
-  if (bwdd_bottom_diff->convert_from_int &&
-      !dnnLayoutCompare<Dtype>(bwdd_bottom_diff->layout_int, bwdd_bottom_diff_no_padding->layout_int))
-  {
-    int status = dnnConversionCreate<Dtype>(&convert_to_bottom_diff_no_padding,
-                                            bwdd_bottom_diff->layout_int ,
-                                            bwdd_bottom_diff_no_padding->layout_int);
-    CHECK(status == 0) << "Failed creation convert_to_bottom_diff_no_padding with status " << status << "\n";
+  if (bwdd_bottom_diff->convert_from_int) {
+    /* Temporary workaround for removing padding from bwdd_bottom_diff */
+    status = dnnLayoutPCLCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_int, dimension, bdata_sizes);
+    CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
+
+    status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_usr, dimension, bdata_sizes, bdata_strides);
+    CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
+
+    bwdd_bottom_diff_no_padding->create_conversions();
+
+    bwdd_bottom_diff_no_padding->name = "bwdd_bot_diff_NP  @ " + this->layer_param_.name();
+
+    if (!dnnLayoutCompare<Dtype>(bwdd_bottom_diff->layout_int, bwdd_bottom_diff_no_padding->layout_int)) {
+      int status = dnnConversionCreate<Dtype>(&convert_to_bottom_diff_no_padding,
+                                              bwdd_bottom_diff->layout_int ,
+                                              bwdd_bottom_diff_no_padding->layout_int);
+      CHECK(status == 0) << "Failed creation convert_to_bottom_diff_no_padding with status " << status << "\n";
+    }
   }
 #endif
-}
-
-template <typename Dtype, bool is_diff>
-PrvMemDescr::PrvDescrType MklDnnMemoryDescriptor<Dtype, is_diff>::get_descr_type() {
-    return PRV_DESCR_MKLDNN;
 }
 
 template <typename Dtype, bool is_diff>
@@ -375,10 +370,13 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
     {
       // This section helps if padding needs to be added (or removed...)
       // TODO: consider removing when no longer needed.
+      shared_ptr<PrvMemDescr> prv_mem_descriptor =
+          is_diff ? (blob->get_prv_descriptor_diff()) : (blob->get_prv_descriptor_data());
+
+      CHECK(prv_mem_descriptor->get_descr_type() == PrvMemDescr::PRV_DESCR_MKLDNN);
 
       shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > current_descr =
-        is_diff ?  boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> > (blob->get_prv_descriptor_diff())
-        : boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> > (blob->get_prv_descriptor_data());
+        boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> > (prv_mem_descriptor);
 
       if(!dnnLayoutCompare<Dtype>(current_descr->layout_int , this->layout_int))
       {

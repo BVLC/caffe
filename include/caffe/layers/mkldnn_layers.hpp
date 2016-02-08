@@ -39,8 +39,10 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
   dnnPrimitive_t convert_from_int;
   std::string name;  // for debugging purposes
   void create_conversions() {
-    if (!dnnLayoutCompare<Dtype>(layout_usr, layout_int))
+    if (layout_int
+        && !dnnLayoutCompare<Dtype>(layout_usr, layout_int))
     {
+      CHECK(layout_usr);
       int status = dnnConversionCreate<Dtype>(&convert_to_int, layout_usr , layout_int);
       CHECK(status == 0) << "Failed creation convert_to_int with status " << status << "\n";
       status = dnnConversionCreate<Dtype>(&convert_from_int, layout_int , layout_usr);
@@ -51,7 +53,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
   }
 
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
-  virtual PrvDescrType get_descr_type();
+  virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;};
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout, bool set_prv_ptr=true);
 };
 
@@ -132,7 +134,7 @@ template <typename Dtype>
 class MklDnnLRNLayer : public Layer<Dtype> {
  public:
   explicit MklDnnLRNLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param), layout_usr_(NULL) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -173,7 +175,6 @@ class MklDnnLRNLayer : public Layer<Dtype> {
   int channels_;
   int height_;
   int width_;
-
   // Fields used for normalization ACROSS_CHANNELS
   // scale_ stores the intermediate summing results
 private:
@@ -181,6 +182,7 @@ private:
   shared_ptr<MklDnnData<Dtype> > fwd_top_data;
   shared_ptr<MklDnnDiff<Dtype> > bwd_bottom_diff;
   Dtype *lrn_buffer_;
+  dnnLayout_t layout_usr_;
 };
 
 
@@ -191,8 +193,10 @@ public:
   explicit MklDnnPoolingLayer(const LayerParameter& param)
     : Layer<Dtype>(param),
       fwd_top_data    (new MklDnnData<Dtype>()),
+      fwd_bottom_data (new MklDnnData<Dtype>()),
       bwd_top_diff    (new MklDnnDiff<Dtype>()),
-      bwd_bottom_diff (new MklDnnDiff<Dtype>())
+      bwd_bottom_diff (new MklDnnDiff<Dtype>()),
+      poolingFwd(NULL), poolingBwd(NULL)
   {}
   ~MklDnnPoolingLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
