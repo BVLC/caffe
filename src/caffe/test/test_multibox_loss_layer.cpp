@@ -292,6 +292,9 @@ TYPED_TEST(MultiBoxLossLayerTest, TestSetUp) {
       MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
       for (int k = 0; k < 2; ++k) {
         bool use_prior = kBoolChoices[k];
+        if (!share_location && use_prior) {
+          continue;
+        }
         multibox_loss_param->set_share_location(share_location);
         multibox_loss_param->set_match_type(match_type);
         multibox_loss_param->set_use_prior_for_matching(use_prior);
@@ -318,6 +321,9 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
         MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
         for (int k = 0; k < 2; ++k) {
           bool use_prior = kBoolChoices[k];
+          if (!share_location && use_prior) {
+            continue;
+          }
           for (int n = 0; n < 2; ++n) {
             bool normalize = kBoolChoices[n];
             for (int u = 0; u < 2; ++u) {
@@ -355,12 +361,14 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
       MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
       for (int k = 0; k < 2; ++k) {
         bool use_prior = kBoolChoices[k];
+        if (!share_location && use_prior) {
+          continue;
+        }
         for (int n = 0; n < 2; ++n) {
           bool normalize = kBoolChoices[n];
           for (int u = 0; u < 2; ++u) {
             bool use_difficult_gt = kBoolChoices[u];
-            for (int l = 0; l < 1; ++l) {
-              // TODO(weiliu89): Fix the bug when background_label_id is -1.
+            for (int l = -1; l < 1; ++l) {
               multibox_loss_param->set_share_location(share_location);
               multibox_loss_param->set_match_type(match_type);
               multibox_loss_param->set_use_prior_for_matching(use_prior);
