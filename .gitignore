@@ -94,11 +94,10 @@ LOG*
 CURRENT
 MANIFEST-*
 
-
-# Windows dev files
-Release/
-Debug/
-3rdparty/
-*.*sdf
-*.deps
-ipch/
+#Visual Studio files
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.pdb
+*.props

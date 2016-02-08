@@ -26,9 +26,13 @@ namespace CaffeLibMC {
 
     static CaffeModel()
     {
+#ifndef CPU_ONLY
       int count;
       cudaGetDeviceCount(&count);
       DeviceCount = count;
+#else
+      DeviceCount = 0;
+#endif
     }
 
     static void SetDevice(int deviceId)
@@ -67,7 +71,7 @@ namespace CaffeLibMC {
       for each(String^ name in blobNames)
         names.push_back(TO_NATIVE_STRING(name));
       std::vector<FloatArray> intermediates = m_net->ExtractOutputs(TO_NATIVE_STRING(imageFile), interpolation, names);
-      auto outputs = gcnew array<array<float>^>(names.size());
+      auto outputs = gcnew array<array<float>^>(static_cast<int>(names.size()));
       for (int i = 0; i < names.size(); ++i)
       {
         auto intermediate = intermediates[i];
@@ -137,7 +141,7 @@ namespace CaffeLibMC {
         for each(String^ name in blobNames)
             names.push_back(TO_NATIVE_STRING(name));
         vector<FloatArray> intermediates = m_net->ExtractBitmapOutputs(datum_string, 0, names);
-        auto outputs = gcnew array<array<float>^>(names.size());
+        auto outputs = gcnew array<array<float>^>(static_cast<int>(names.size()));
         for (int i = 0; i < names.size(); ++i)
         {
             auto intermediate = intermediates[i];

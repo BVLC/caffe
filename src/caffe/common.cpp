@@ -1,3 +1,8 @@
+#if defined(_MSC_VER)
+#include <process.h>
+#define getpid() _getpid()
+#endif
+
 #include <boost/thread.hpp>
 #include <glog/logging.h>
 #include <cmath>
@@ -6,7 +11,6 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
-#include "caffe/util/MSVC.hpp"
 
 namespace caffe {
 
@@ -47,7 +51,9 @@ void GlobalInit(int* pargc, char*** pargv) {
   // Google logging.
   ::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
-#ifndef _MSC_VER  // InstallFailureSignalHandler is not defined windows glog
+
+  // Windows port of glogs doesn't have this function built
+#if !defined(_MSC_VER)
   ::google::InstallFailureSignalHandler();
 #endif
 }
