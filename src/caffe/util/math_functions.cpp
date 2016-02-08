@@ -70,26 +70,28 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   // If we are executing parallel region already then do not start another one
   // if also number of data to be processed is smaller than arbitrary:
   // threashold 12*4 cachelines per thread then no parallelization is to be made
+  #ifdef _OPENMP
 
   // TODO: Threshold is a function of num threads and CPU speed and constant
-  bool run_parallel = false;
-  #ifdef _OPENMP
   int threshold = omp_get_max_threads()*768;
-  run_parallel = (omp_in_parallel() == 0) &&
-                  (N >= threshold) ? true : false;
-  #endif
+  bool run_parallel =
+    (Caffe::mode() != Caffe::GPU) &&
+    (omp_in_parallel() == 0) &&
+    (N >= threshold);
 
   if (run_parallel) {
-  #ifdef _OPENMP
     #pragma omp parallel for
+    for (int i = 0; i < N; ++i) {
+      Y[i] = alpha;
+    }
+
+    return;
+  }
+
   #endif
-    for (int i = 0; i < N; ++i) {
-      Y[i] = alpha;
-    }
-  } else {
-    for (int i = 0; i < N; ++i) {
-      Y[i] = alpha;
-    }
+
+  for (int i = 0; i < N; ++i) {
+    Y[i] = alpha;
   }
 }
 
