@@ -36,6 +36,7 @@ def AddExtraLayers(net, use_batchnorm=True):
 
 
 ### Modify the following parameters accordingly ###
+snapshot_iter = 30600
 # configuration for PASCAL VOC
 caffe_root = '{}/projects/caffe'.format(os.environ['HOME'])
 size = "0x0_300x300"
@@ -44,16 +45,16 @@ if use_batchnorm:
     base_lr = 0.4
 else:
     base_lr = 0.001
-job_name = "SSD_{}_{}".format(size, base_lr)
-save_dir = "models/VGGNet/VOC0712/{}".format(job_name)
+job_name = "SSD_{}_{}_p2p".format(size, base_lr)
+save_dir = "models/VGGNet/VOC0712/{}_score".format(job_name)
 snapshot_dir = "models/VGGNet/VOC0712/{}".format(job_name)
-job_dir = "jobs/VGGNet/VOC0712/{}".format(job_name)
+job_dir = "jobs/VGGNet/VOC0712/{}_score".format(job_name)
 model_name = "VGG_VOC0712_{}".format(job_name)
 train_data = "examples/VOC0712/VOC0712_trainval_{}_lmdb".format(size)
 test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
 label_map_file = "data/VOC0712/labelmap_voc.prototxt"
 pretrain_model = "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
-output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}/Main".format(os.environ['HOME'], job_name)
+output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}_score{}/Main".format(os.environ['HOME'], job_name, snapshot_iter)
 device_id = 5
 num_gpus = 1
 gpus = "5"
@@ -112,7 +113,7 @@ solver_param = {
     'weight_decay': 0.0005,
     'lr_policy': "fixed",
     'iter_size': iter_size,
-    'max_iter': 500000,
+    'max_iter': snapshot_iter,
     'snapshot': 100000,
     'display': 10,
     'average_loss': 10,
@@ -120,13 +121,13 @@ solver_param = {
     'solver_mode': P.Solver.GPU,
     'device_id': device_id,
     'debug_info': False,
-    'snapshot_after_train': True,
+    'snapshot_after_train': False,
     # Test parameters
     'test_iter': [4952],
-    'test_interval': 10000,
+    'test_interval': snapshot_iter,
     'eval_type': "detection",
     'ap_version': "11point",
-    'test_initialization': False,
+    'test_initialization': True,
     }
 # parameters for non maximum suppression at TEST phase
 det_out_param = {
@@ -233,10 +234,10 @@ with open(job_file, 'w') as f:
   f.write('cd {}\n'.format(caffe_root))
   f.write('./build/tools/caffe train \\\n')
   f.write('--solver="{}" \\\n'.format(solver_file))
-  f.write('--weights="{}" \\\n'.format(pretrain_model))
+  f.write('--snapshot="{}_iter_{}.solverstate" \\\n'.format(snapshot_prefix, snapshot_iter))
   f.write('--sighup_effect="stop" \\\n')
   if solver_param['solver_mode'] == P.Solver.GPU:
-    f.write('--gpu {} 2>&1 | tee {}/{}.log\n'.format(gpus, job_dir, model_name))
+    f.write('--gpu {} 2>&1 | tee {}/{}_test{}.log\n'.format(gpus, job_dir, model_name, snapshot_iter))
   else:
     f.write('2>&1 | tee {}/{}.log\n'.format(job_dir, model_name))
 
