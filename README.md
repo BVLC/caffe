@@ -1,8 +1,8 @@
 # Caffe
 
-[![Travis Build Status](https://travis-ci.org/pavlejosipovic/caffe.svg?branch=master)](https://travis-ci.org/pavlejosipovic/caffe) Travis (Linux build)
+[![Travis Build Status](https://api.travis-ci.org/Microsoft/caffe.svg?branch=master)](https://travis-ci.org/Microsoft/caffe) Travis (Linux build)
 
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/oagoige3a0kdg4dp/branch/master?svg=true)] (https://ci.appveyor.com/project/pavlejosipovic/caffe) AppVeyor (Windows build)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/58wvckt0rcqtwnr5/branch/master?svg=true)] (https://ci.appveyor.com/project/pavlejosipovic/caffe-3a30a) AppVeyor (Windows build)
 
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
 
