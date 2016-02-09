@@ -62,8 +62,8 @@ class PriorBoxLayer : public Layer<Dtype> {
     NOT_IMPLEMENTED;
   }
 
-  int min_size_;
-  int max_size_;
+  float min_size_;
+  float max_size_;
   vector<float> aspect_ratios_;
   bool flip_;
   int num_priors_;

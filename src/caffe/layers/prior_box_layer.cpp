@@ -87,8 +87,7 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data[idx++] = (center_y + box_height / 2.) / img_height;
 
       // second prior: aspect_ratio = 1, size = sqrt(min_size * max_size)
-      box_width = box_height =
-          sqrt(static_cast<float>(min_size_ * max_size_));
+      box_width = box_height = sqrt(min_size_ * max_size_);
       // xmin
       top_data[idx++] = (center_x - box_width / 2.) / img_width;
       // ymin

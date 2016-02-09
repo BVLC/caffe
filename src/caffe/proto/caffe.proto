@@ -1174,9 +1174,9 @@ message PowerParameter {
 // Message that store parameters used by PriorBoxLayer
 message PriorBoxParameter {
   // Minimum box size (in pixels). Required!
-  optional int32 min_size = 1;
+  optional float min_size = 1;
   // Maximum box size (in pixels). Required!
-  optional int32 max_size = 2;
+  optional float max_size = 2;
   // Various of aspect ratios. Duplicate ratios will be ignored.
   // If none is provided, we use default ratio 1.
   repeated float aspect_ratio = 3;
