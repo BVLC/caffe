@@ -11,8 +11,8 @@ anno_type="detection"
 db="lmdb"
 min_dim=0
 max_dim=0
-width=600
-height=600
+width=300
+height=300
 
 extra_cmd=""
 for subset in trainval test
@@ -26,5 +26,5 @@ do
   then
     extra_cmd="$extra_cmd --shuffle"
   fi
-  python $root_dir/scripts/create_annoset.py --anno-type=$anno_type --label-map-file=$mapfile --min-dim=$min_dim --max-dim=$max_dim --resize-width=$width --resize-height=$height --check-label $extra_cmd $data_root_dir $root_dir/data/$dataset_name/$subset.txt $data_root_dir/$dataset_name/$db/$dataset_name"_"$subset"_"$db examples/$dataset_name
+  python $root_dir/scripts/create_annoset.py --anno-type=$anno_type --label-map-file=$mapfile --min-dim=$min_dim --max-dim=$max_dim --resize-width=$width --resize-height=$height --check-label $extra_cmd $data_root_dir $root_dir/data/$dataset_name/$subset.txt $data_root_dir/$dataset_name/$db/$dataset_name"_"$subset"_"$min_dim"x"$max_dim"_"$width"x"$height"_"$db examples/$dataset_name
 done
