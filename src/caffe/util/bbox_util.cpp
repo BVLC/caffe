@@ -178,6 +178,7 @@ void MatchBBox(const vector<NormalizedBBox>& gt_bboxes,
     for (int j = 0; j < num_gt; ++j) {
       float overlap = JaccardOverlap(pred_bboxes[i], gt_bboxes[gt_indices[j]]);
       if (overlap > 1e-6) {
+        (*match_overlaps)[i] = std::max((*match_overlaps)[i], overlap);
         overlaps[i][j] = overlap;
       }
     }
