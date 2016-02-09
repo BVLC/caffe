@@ -12,10 +12,6 @@
 
 namespace caffe {
 
-#ifndef CPU_ONLY
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-#endif
-
 template <typename TypeParam>
 class EmbedLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;

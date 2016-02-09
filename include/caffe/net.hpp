@@ -149,6 +149,18 @@ class Net {
   inline const vector<vector<Blob<Dtype>*> >& top_vecs() const {
     return top_vecs_;
   }
+  /// @brief returns the ids of the top blobs of layer i
+  inline const vector<int> & top_ids(int i) const {
+    CHECK_GE(i, 0) << "Invalid layer id";
+    CHECK_LT(i, top_id_vecs_.size()) << "Invalid layer id";
+    return top_id_vecs_[i];
+  }
+  /// @brief returns the ids of the bottom blobs of layer i
+  inline const vector<int> & bottom_ids(int i) const {
+    CHECK_GE(i, 0) << "Invalid layer id";
+    CHECK_LT(i, bottom_id_vecs_.size()) << "Invalid layer id";
+    return bottom_id_vecs_[i];
+  }
   inline const vector<vector<bool> >& bottom_need_backward() const {
     return bottom_need_backward_;
   }
@@ -179,6 +191,9 @@ class Net {
     return param_names_index_;
   }
   inline const vector<int>& param_owners() const { return param_owners_; }
+  inline const vector<string>& param_display_names() const {
+    return param_display_names_;
+  }
   /// @brief Input and output blob numbers
   inline int num_inputs() const { return net_input_blobs_.size(); }
   inline int num_outputs() const { return net_output_blobs_.size(); }
