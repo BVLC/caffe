@@ -12,7 +12,7 @@ def make_if_not_exist(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output, kernel_size, pad, stride, use_global_stats=True, conv_prefix='', bn_prefix='bn_', scale_prefix='scale_'):
+def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output, kernel_size, pad, stride, conv_prefix='', bn_prefix='bn_', scale_prefix='scale_'):
   if use_bn:
     # parameters for convolution layer with batchnorm.
     kwargs = {
@@ -38,7 +38,7 @@ def ConvBNLayer(net, from_layer, out_layer, use_bn, use_relu, num_output, kernel
   net[conv_name] = L.Convolution(net[from_layer], num_output=num_output, kernel_size=kernel_size, pad=pad, stride=stride, **kwargs)
   if use_bn:
     bn_name = '{}{}'.format(bn_prefix, out_layer)
-    net[bn_name] = L.BatchNorm(net[conv_name], in_place=True, use_global_stats=use_global_stats)
+    net[bn_name] = L.BatchNorm(net[conv_name], in_place=True)
     sb_name = '{}{}'.format(scale_prefix, out_layer)
     net[sb_name] = L.Scale(net[conv_name], in_place=True, **sb_kwargs)
   if use_relu:
@@ -268,8 +268,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         if not share_location:
             num_loc_output *= num_classes
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
-            num_output=num_loc_output, kernel_size=1, pad=0, stride=1,
-            use_global_stats=False)
+            num_output=num_loc_output, kernel_size=1, pad=0, stride=1)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
@@ -280,8 +279,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         name = "{}_mbox_conf".format(from_layer)
         num_conf_output = num_priors_per_location * num_classes;
         ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
-            num_output=num_conf_output, kernel_size=1, pad=0, stride=1,
-            use_global_stats=False)
+            num_output=num_conf_output, kernel_size=1, pad=0, stride=1)
         permute_name = "{}_perm".format(name)
         net[permute_name] = L.Permute(net[name], order=[0, 2, 3, 1])
         flatten_name = "{}_flat".format(name)
