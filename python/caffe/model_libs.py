@@ -155,12 +155,13 @@ def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
     net.conv5_3 = L.Convolution(net.relu5_2, num_output=512, pad=1, kernel_size=3, **kwargs)
     net.relu5_3 = L.ReLU(net.conv5_3, in_place=True)
 
-    net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=2, stride=2)
 
     if fully_conv:
         if reduced:
-            net.fc6 = L.Convolution(net.pool5, num_output=1024, pad=1, kernel_size=3, dilation=3, **kwargs)
+            net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=3, pad=1, stride=1)
+            net.fc6 = L.Convolution(net.pool5, num_output=1024, pad=6, kernel_size=3, dilation=6, **kwargs)
         else:
+            net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=2, stride=2)
             net.fc6 = L.Convolution(net.pool5, num_output=4096, pad=3, kernel_size=7, **kwargs)
         net.relu6 = L.ReLU(net.fc6, in_place=True)
         net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
