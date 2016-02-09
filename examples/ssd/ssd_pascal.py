@@ -61,6 +61,10 @@ batch_size = 32 / num_gpus
 iter_size = 32 / batch_size / num_gpus
 # Set true if you want to start training right after generating all files.
 run_soon = True
+# Set true if you want to load from previously saved snapshot.
+resume_training = True
+# If true, Remove old model files.
+remove_old_models = True
 # MultiBoxLoss parameters.
 num_classes = 21
 share_location = True
@@ -228,12 +232,39 @@ solver = caffe_pb2.SolverParameter(
 with open(solver_file, 'w') as f:
     print(solver, file=f)
 
+train_src_param = '--weights="{}" \\\n'.format(pretrain_model)
+max_iter = 0
+if resume_training:
+  # Find most recent snapshot.
+  for file in os.listdir(snapshot_dir):
+    if file.endswith(".solverstate"):
+      basename = os.path.splitext(file)[0]
+      iter = int(basename.split("{}_iter_".format(model_name))[1])
+      if iter > max_iter:
+        max_iter = iter
+  if max_iter > 0:
+    train_src_param = '--snapshot="{}_iter_{}.solverstate" \\\n'.format(snapshot_prefix, max_iter)
+
+if remove_old_models:
+  # Find most recent snapshot.
+  for file in os.listdir(snapshot_dir):
+    if file.endswith(".solverstate"):
+      basename = os.path.splitext(file)[0]
+      iter = int(basename.split("{}_iter_".format(model_name))[1])
+      if max_iter > iter:
+        os.remove("{}/{}".format(snapshot_dir, file))
+    if file.endswith(".caffemodel"):
+      basename = os.path.splitext(file)[0]
+      iter = int(basename.split("{}_iter_".format(model_name))[1])
+      if max_iter > iter:
+        os.remove("{}/{}".format(snapshot_dir, file))
+
 # Create job file.
 with open(job_file, 'w') as f:
   f.write('cd {}\n'.format(caffe_root))
   f.write('./build/tools/caffe train \\\n')
   f.write('--solver="{}" \\\n'.format(solver_file))
-  f.write('--weights="{}" \\\n'.format(pretrain_model))
+  f.write(train_src_param)
   f.write('--sighup_effect="stop" \\\n')
   if solver_param['solver_mode'] == P.Solver.GPU:
     f.write('--gpu {} 2>&1 | tee {}/{}.log\n'.format(gpus, job_dir, model_name))
