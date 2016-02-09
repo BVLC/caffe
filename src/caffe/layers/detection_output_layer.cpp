@@ -94,10 +94,25 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK_LE(name_count_, names_.size());
-  if (names_.size() > 0 && name_count_ == names_.size()) {
-    // reset count after a full iterations through the DB.
-    name_count_ = 0;
+  if (need_save_) {
+    CHECK_LE(name_count_, names_.size());
+    if (name_count_ == names_.size()) {
+      // reset count after a full iterations through the DB.
+      name_count_ = 0;
+      // Clean all outputs.
+      boost::filesystem::path output_directory(output_directory_);
+      for (map<int, string>::iterator it = label_to_name_.begin();
+           it != label_to_name_.end(); ++it) {
+        if (it->first == background_label_id_) {
+          continue;
+        }
+        std::ofstream outfile;
+        boost::filesystem::path file(
+            output_name_prefix_ + it->second + ".txt");
+        boost::filesystem::path out_file = output_directory / file;
+        outfile.open(out_file.string().c_str(), std::ofstream::out);
+      }
+    }
   }
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   num_priors_ = bottom[2]->height() / 4;
