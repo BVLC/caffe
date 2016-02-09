@@ -11,6 +11,7 @@
 #include "caffe/layers/absval_layer.hpp"
 #include "caffe/layers/bnll_layer.hpp"
 #include "caffe/layers/dropout_layer.hpp"
+#include "caffe/layers/elu_layer.hpp"
 #include "caffe/layers/exp_layer.hpp"
 #include "caffe/layers/inner_product_layer.hpp"
 #include "caffe/layers/log_layer.hpp"
@@ -254,6 +255,64 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradientWithNegativeSlope) {
   CHECK(google::protobuf::TextFormat::ParseFromString(
       "relu_param { negative_slope: 0.01 }", &layer_param));
   ReLULayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestELU) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "elu_param { alpha: 0.5 }", &layer_param));
+  ELULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype kDelta = 2e-4;
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (bottom_data[i] > 0) {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+    } else {
+      EXPECT_NEAR(top_data[i], 0.5 * (exp(bottom_data[i]) - 1), kDelta);
+    }
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestELUasReLU) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "elu_param { alpha: 0 }", &layer_param));
+  ELULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestELUGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ELULayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestELUasReLUGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "elu_param { alpha: 0 }", &layer_param));
+  ELULayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
