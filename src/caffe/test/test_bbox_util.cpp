@@ -35,36 +35,48 @@ void FillBBoxes(vector<NormalizedBBox>* gt_bboxes,
   gt_bboxes->push_back(bbox);
 
   // Fill in prediction bboxes.
+  // 4/9 with label 1
+  // 0 with label 2
   bbox.set_xmin(0.1);
   bbox.set_ymin(0);
   bbox.set_xmax(0.4);
   bbox.set_ymax(0.3);
   pred_bboxes->push_back(bbox);
 
+  // 2/6 with label 1
+  // 0 with label 2
   bbox.set_xmin(0);
   bbox.set_ymin(0.1);
   bbox.set_xmax(0.2);
   bbox.set_ymax(0.3);
   pred_bboxes->push_back(bbox);
 
+  // 2/8 with label 1
+  // 1/11 with label 2
   bbox.set_xmin(0.2);
   bbox.set_ymin(0.1);
   bbox.set_xmax(0.4);
   bbox.set_ymax(0.4);
   pred_bboxes->push_back(bbox);
 
+  // 0 with label 1
+  // 4/8 with label 2
   bbox.set_xmin(0.4);
   bbox.set_ymin(0.3);
   bbox.set_xmax(0.7);
   bbox.set_ymax(0.5);
   pred_bboxes->push_back(bbox);
 
+  // 0 with label 1
+  // 1/11 with label 2
   bbox.set_xmin(0.5);
   bbox.set_ymin(0.4);
   bbox.set_xmax(0.7);
   bbox.set_ymax(0.7);
   pred_bboxes->push_back(bbox);
 
+  // 0 with label 1
+  // 0 with label 2
   bbox.set_xmin(0.7);
   bbox.set_ymin(0.7);
   bbox.set_xmax(0.8);
@@ -337,8 +349,12 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableOneBipartite) {
   EXPECT_EQ(match_overlaps.size(), 6);
 
   EXPECT_EQ(match_indices[0], 0);
+  EXPECT_EQ(match_indices[1], -1);
+  EXPECT_EQ(match_indices[2], -1);
   EXPECT_NEAR(match_overlaps[0], 4./9, eps);
-  for (int i = 1; i < 6; ++i) {
+  EXPECT_NEAR(match_overlaps[1], 2./6, eps);
+  EXPECT_NEAR(match_overlaps[2], 2./8, eps);
+  for (int i = 3; i < 6; ++i) {
     EXPECT_EQ(match_indices[i], -1);
     EXPECT_NEAR(match_overlaps[i], 0, eps);
   }
@@ -366,13 +382,16 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllBipartite) {
   EXPECT_EQ(match_indices[0], 0);
   EXPECT_EQ(match_indices[3], 1);
   EXPECT_NEAR(match_overlaps[0], 4./9, eps);
+  EXPECT_NEAR(match_overlaps[1], 2./6, eps);
+  EXPECT_NEAR(match_overlaps[2], 2./8, eps);
   EXPECT_NEAR(match_overlaps[3], 4./8, eps);
-  for (int i = 1; i < 6; ++i) {
+  EXPECT_NEAR(match_overlaps[4], 1./11, eps);
+  EXPECT_NEAR(match_overlaps[5], 0., eps);
+  for (int i = 0; i < 6; ++i) {
     if (i == 0 || i == 3) {
       continue;
     }
     EXPECT_EQ(match_indices[i], -1);
-    EXPECT_NEAR(match_overlaps[i], 0, eps);
   }
 }
 
@@ -397,9 +416,11 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableOnePerPrediction) {
 
   EXPECT_EQ(match_indices[0], 0);
   EXPECT_EQ(match_indices[1], 0);
+  EXPECT_EQ(match_indices[2], -1);
   EXPECT_NEAR(match_overlaps[0], 4./9, eps);
   EXPECT_NEAR(match_overlaps[1], 2./6, eps);
-  for (int i = 2; i < 6; ++i) {
+  EXPECT_NEAR(match_overlaps[2], 2./8, eps);
+  for (int i = 3; i < 6; ++i) {
     EXPECT_EQ(match_indices[i], -1);
     EXPECT_NEAR(match_overlaps[i], 0, eps);
   }
@@ -426,17 +447,16 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPrediction) {
 
   EXPECT_EQ(match_indices[0], 0);
   EXPECT_EQ(match_indices[1], 0);
+  EXPECT_EQ(match_indices[2], -1);
   EXPECT_EQ(match_indices[3], 1);
+  EXPECT_EQ(match_indices[4], -1);
+  EXPECT_EQ(match_indices[5], -1);
   EXPECT_NEAR(match_overlaps[0], 4./9, eps);
   EXPECT_NEAR(match_overlaps[1], 2./6, eps);
+  EXPECT_NEAR(match_overlaps[2], 2./8, eps);
   EXPECT_NEAR(match_overlaps[3], 4./8, eps);
-  for (int i = 2; i < 6; ++i) {
-    if (i == 3) {
-      continue;
-    }
-    EXPECT_EQ(match_indices[i], -1);
-    EXPECT_NEAR(match_overlaps[i], 0, eps);
-  }
+  EXPECT_NEAR(match_overlaps[4], 1./11, eps);
+  EXPECT_NEAR(match_overlaps[5], 0, eps);
 }
 
 TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
