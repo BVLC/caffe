@@ -1090,6 +1090,13 @@ message MultiBoxLossParameter {
   optional bool normalize = 10 [default = true];
   // If true, also consider difficult ground truth.
   optional bool use_difficult_gt = 11 [default = true];
+  // If true, perform negative mining.
+  optional bool do_neg_mining = 12 [default = false];
+  // The following two parameters are only effective if do_neg_mining is true.
+  // The maximum overlap with ground truth for negative samples.
+  optional float max_neg_overlap = 13 [default = 0.5];
+  // The minimum overlap with ground truth for negative samples.
+  optional float min_neg_overlap = 14 [default = 0.1];
 }
 
 message MVNParameter {

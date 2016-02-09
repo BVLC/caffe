@@ -35,10 +35,20 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   background_label_id_ = multibox_loss_param.background_label_id();
   normalize_ = multibox_loss_param.normalize();
   use_difficult_gt_ = multibox_loss_param.use_difficult_gt();
+  do_neg_mining_ = multibox_loss_param.do_neg_mining();
+  max_neg_overlap_ = multibox_loss_param.max_neg_overlap();
+  min_neg_overlap_ = multibox_loss_param.min_neg_overlap();
 
   if (!share_location_) {
-  CHECK(!use_prior_for_matching_)
-      << "When not sharing location, cannot use prior for matching.";
+    CHECK(!use_prior_for_matching_)
+        << "When not sharing location, cannot use prior for matching.";
+  }
+  if (do_neg_mining_) {
+    CHECK_NE(background_label_id_, -1)
+        << "When doing negative mining, background_label_id should not be -1.";
+    CHECK(share_location_)
+        << "Can only do negative mining when share_location is true.";
+    CHECK_LE(max_neg_overlap_, overlap_threshold_);
   }
 
   vector<int> loss_shape(1, 1);
@@ -142,6 +152,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                     &all_loc_preds);
 
   int num_matches = 0;
+  int num_negs = 0;
   for (int i = 0; i < num_; ++i) {
     map<int, vector<int> > match_indices;
     map<int, vector<float> > match_overlaps;
@@ -176,6 +187,13 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int m = 0; m < match_indices[label].size(); ++m) {
         if (match_indices[label][m] != -1) {
           num_matches++;
+        } else {
+          if (do_neg_mining_) {
+            if (match_overlaps[label][m] >= min_neg_overlap_ &&
+                match_overlaps[label][m] < max_neg_overlap_) {
+              num_negs++;
+            }
+          }
         }
       }
     }
@@ -239,7 +257,17 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // Form data to pass on to conf_loss_layer_.
   vector<int> conf_shape(1);
-  conf_shape[0] = background_label_id_ > -1 ? num_ * num_priors_ : num_matches;
+  int num_conf;
+  if (background_label_id_ > -1) {
+    if (do_neg_mining_) {
+      num_conf = num_matches + num_negs;
+    } else {
+      num_conf = num_ * num_priors_;
+    }
+  } else {
+    num_conf = num_matches;
+  }
+  conf_shape[0] = num_conf;
   if (conf_shape[0] >= 1) {
     conf_gt_.Reshape(conf_shape);
     conf_shape.push_back(num_classes_);
@@ -247,7 +275,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* conf_pred_data = conf_pred_.mutable_cpu_data();
     Dtype* conf_gt_data = conf_gt_.mutable_cpu_data();
     if (conf_loss_type_ == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
-      if (background_label_id_ > -1) {
+      if (background_label_id_ > -1 && !do_neg_mining_) {
         // Need to consider background.
         // Share data and diff with bottom[1].
         CHECK_EQ(conf_pred_.count(), bottom[1]->count());
@@ -261,33 +289,48 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < num_; ++i) {
       if (all_gt_bboxes.find(i) != all_gt_bboxes.end()) {
         const map<int, vector<int> >& match_indices = all_match_indices_[i];
+        const map<int, vector<float> >& match_overlaps = all_match_overlaps_[i];
         for (int j = 0; j < num_priors_; ++j) {
-          for (map<int, vector<int> >::const_iterator it = match_indices.begin();
-               it != match_indices.end(); ++it) {
+          for (map<int, vector<int> >::const_iterator it =
+               match_indices.begin(); it != match_indices.end(); ++it) {
+            const int label = it->first;
             const vector<int>& match_index = it->second;
+            const vector<float>& match_overlap =
+                match_overlaps.find(label)->second;
             CHECK_EQ(match_index.size(), num_priors_);
+            CHECK_EQ(match_index.size(), match_overlap.size());
             if (match_index[j] == -1) {
-              continue;
+              if (do_neg_mining_) {
+                // Copy scores for negative bboxes.
+                if (match_overlap[j] >= min_neg_overlap_ &&
+                    match_overlap[j] < max_neg_overlap_) {
+                  caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
+                                    conf_pred_data + count * num_classes_);
+                  conf_gt_data[count] = background_label_id_;
+                  ++count;
+                }
+              }
+            } else {
+              const int gt_idx = match_index[j];
+              if (background_label_id_ == -1 || do_neg_mining_) {
+                // Copy scores for matched bboxes.
+                caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
+                                  conf_pred_data + count * num_classes_);
+                conf_gt_data[count] = all_gt_bboxes[i][gt_idx].label();
+                ++count;
+              } else {
+                conf_gt_data[j] = all_gt_bboxes[i][gt_idx].label();
+              }
             }
-            int idx = background_label_id_ > -1 ? j : count;
-            if (background_label_id_ == -1) {
-              // Copy scores for matched bboxes.
-              caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
-                                conf_pred_data + idx * num_classes_);
-            }
-            const int gt_idx = match_index[j];
-            conf_gt_data[idx] = all_gt_bboxes[i][gt_idx].label();
-            ++count;
           }
         }
       }
-      if (background_label_id_ == -1) {
+      if (background_label_id_ == -1 || do_neg_mining_) {
         conf_data += bottom[1]->offset(1);
       } else {
         conf_gt_data += num_priors_;
       }
     }
-    CHECK_EQ(count, num_matches);
     conf_loss_layer_->Reshape(conf_bottom_vec_, conf_top_vec_);
     conf_loss_layer_->Forward(conf_bottom_vec_, conf_top_vec_);
   }
@@ -360,23 +403,38 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                conf_bottom_vec_);
     Dtype* conf_bottom_diff = bottom[1]->mutable_cpu_diff();
     const Dtype* conf_pred_diff = conf_pred_.cpu_diff();
-    if (background_label_id_ == -1) {
+    if (background_label_id_ == -1 || do_neg_mining_) {
       caffe_set(bottom[1]->count(), Dtype(0), conf_bottom_diff);
       int count = 0;
       for (int i = 0; i < num_; ++i) {
-        map<int, vector<int> >& match_indices = all_match_indices_[i];
+        const map<int, vector<int> >& match_indices = all_match_indices_[i];
+        const map<int, vector<float> >& match_overlaps = all_match_overlaps_[i];
         for (int j = 0; j < num_priors_; ++j) {
-          for (map<int, vector<int> >::iterator it = match_indices.begin();
-               it != match_indices.end(); ++it) {
+          for (map<int, vector<int> >::const_iterator it =
+               match_indices.begin(); it != match_indices.end(); ++it) {
+            const int label = it->first;
             const vector<int>& match_index = it->second;
+            const vector<float>& match_overlap =
+                match_overlaps.find(label)->second;
             CHECK_EQ(match_index.size(), num_priors_);
+            CHECK_EQ(match_index.size(), match_overlap.size());
             if (match_index[j] == -1) {
-              continue;
+              if (do_neg_mining_) {
+                if (match_overlap[j] >= min_neg_overlap_ &&
+                    match_overlap[j] < max_neg_overlap_) {
+                  caffe_copy<Dtype>(num_classes_,
+                                    conf_pred_diff + count * num_classes_,
+                                    conf_bottom_diff + j * num_classes_);
+                  ++count;
+                }
+              }
+            } else {
+              // Copy the diff to the right place.
+              caffe_copy<Dtype>(num_classes_,
+                                conf_pred_diff + count * num_classes_,
+                                conf_bottom_diff + j * num_classes_);
+              ++count;
             }
-            // Copy the diff to the right place.
-            caffe_copy<Dtype>(num_classes_, conf_pred_diff + count*num_classes_,
-                       conf_bottom_diff + j * num_classes_);
-            ++count;
           }
         }
         conf_bottom_diff += bottom[1]->offset(1);

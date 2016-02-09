@@ -369,16 +369,23 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
           for (int u = 0; u < 2; ++u) {
             bool use_difficult_gt = kBoolChoices[u];
             for (int l = -1; l < 1; ++l) {
-              multibox_loss_param->set_share_location(share_location);
-              multibox_loss_param->set_match_type(match_type);
-              multibox_loss_param->set_use_prior_for_matching(use_prior);
-              multibox_loss_param->set_normalize(normalize);
-              multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
-              multibox_loss_param->set_background_label_id(l);
-              MultiBoxLossLayer<Dtype> layer(layer_param);
-              GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-              checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-                                              this->blob_top_vec_, 1);
+              for (int m = 0; m < 2; ++m) {
+                bool do_neg_mining = kBoolChoices[m];
+                if (do_neg_mining && (!share_location || l == -1)) {
+                  continue;
+                }
+                multibox_loss_param->set_share_location(share_location);
+                multibox_loss_param->set_match_type(match_type);
+                multibox_loss_param->set_use_prior_for_matching(use_prior);
+                multibox_loss_param->set_normalize(normalize);
+                multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
+                multibox_loss_param->set_background_label_id(l);
+                multibox_loss_param->set_do_neg_mining(do_neg_mining);
+                MultiBoxLossLayer<Dtype> layer(layer_param);
+                GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+                checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+                                                this->blob_top_vec_, 1);
+              }
             }
           }
         }
