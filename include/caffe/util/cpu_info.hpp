@@ -1,6 +1,7 @@
 #ifndef CAFFE_UTIL_CPU_INFO_HPP
 #define CAFFE_UTIL_CPU_INFO_HPP
 
+#include <sched.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -74,9 +75,12 @@ class OpenMpManager {
   OpenMpManager();
   void testForEnvVariablePresence(const char *envVariableName);
   void bindOpenMpCores();
+  void getCoreMask(cpu_set_t *core_set, cpu_set_t *current_set);
+  unsigned getPhysicalCoreId(cpu_set_t *core_set, unsigned logicalId);
   unsigned getRecommendedNumberOfOpenMpThreads();
-  void setCpuAffinityThreadLimit(unsigned usedProcessorsLimit);
-  void printVerboseInformation(unsigned recommendedNumberOfOpenMpThreads);
+  unsigned setCpuAffinityThreadLimit(unsigned usedProcessorsLimit);
+  void printVerboseInformation(unsigned recommendedNumberOfOpenMpThreads,
+    unsigned usedProcessorsLimit);
 };
 
 #endif  // _OPENMP

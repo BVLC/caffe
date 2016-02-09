@@ -206,62 +206,107 @@ OpenMpManager::OpenMpManager() {
 }
 
 void OpenMpManager::testForEnvVariablePresence(const char *envVariableName) {
-  if (getenv(envVariableName))
+  if (getenv(envVariableName)) {
     areEnvVarsSpecified = true;
+  }
 }
 
 void OpenMpManager::bindOpenMpCores() {
-  unsigned usedProcessorsLimit = getRecommendedNumberOfOpenMpThreads();
+  unsigned recommendedNumberOfOpenMpThreads =
+    getRecommendedNumberOfOpenMpThreads();
+  unsigned usedProcessorsLimit = recommendedNumberOfOpenMpThreads;
 
-  if (!areEnvVarsSpecified)
-    setCpuAffinityThreadLimit(usedProcessorsLimit);
+  if (!areEnvVarsSpecified) {
+    usedProcessorsLimit = setCpuAffinityThreadLimit(usedProcessorsLimit);
+  }
 
-  printVerboseInformation(usedProcessorsLimit);
+  printVerboseInformation(recommendedNumberOfOpenMpThreads,
+    usedProcessorsLimit);
 }
 
 unsigned OpenMpManager::getRecommendedNumberOfOpenMpThreads() {
   unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
   unsigned maximalNumberOfOpenMpThreads = omp_get_max_threads();
 
-  if (isGpuEnabled)
+  if (isGpuEnabled) {
     return 1;
+  }
 
-  if (areEnvVarsSpecified)
+  if (areEnvVarsSpecified) {
     return omp_get_num_threads();
+  }
 
   return totalNumberOfCpuCores < maximalNumberOfOpenMpThreads ?
     totalNumberOfCpuCores : maximalNumberOfOpenMpThreads;
 }
 
-void OpenMpManager::setCpuAffinityThreadLimit(unsigned usedProcessorsLimit) {
+void OpenMpManager::getCoreMask(cpu_set_t *core_set, cpu_set_t *current_set) {
   unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
 
-  cpu_set_t *set = CPU_ALLOC(numberOfProcessors);
-  if (!set)
-    return;
+  cpu_set_t used_cores_set;
+  CPU_ZERO(&used_cores_set);
 
-  size_t size = CPU_ALLOC_SIZE(numberOfProcessors);
+  CPU_ZERO(core_set);
+  for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
+    if (CPU_ISSET(processorId, current_set)) {
+      unsigned coreId = processorId % totalNumberOfCpuCores;
+      if (!CPU_ISSET(coreId, &used_cores_set)) {
+        CPU_SET(coreId, &used_cores_set);
+        CPU_SET(processorId, core_set);
+      }
+    }
+  }
+}
+
+unsigned OpenMpManager::getPhysicalCoreId(cpu_set_t *core_set,
+    unsigned logicalId) {
+  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
+    if (CPU_ISSET(processorId, core_set)) {
+      if (!logicalId--) {
+        return processorId;
+      }
+    }
+  }
+
+  LOG(FATAL) << "This should never occur!";
+  return 0;
+}
+
+unsigned OpenMpManager::setCpuAffinityThreadLimit(
+    unsigned usedProcessorsLimit) {
+  cpu_set_t current_set;
+  if (sched_getaffinity(0, sizeof(current_set), &current_set))
+    return 0;
+
+  cpu_set_t core_set;
+  getCoreMask(&core_set, &current_set);
+
+  unsigned numberOfAvailableCores = CPU_COUNT(&core_set);
+  if (usedProcessorsLimit > numberOfAvailableCores) {
+    usedProcessorsLimit = numberOfAvailableCores;
+  }
 
   omp_set_num_threads(usedProcessorsLimit);
 
-  omp_lock_t criticalSection;
-  omp_init_lock(&criticalSection);
   #pragma omp parallel
   {
-    omp_set_lock(&criticalSection);
+    unsigned logicalCoreId = omp_get_thread_num();
+    unsigned physicalCoreId = getPhysicalCoreId(&core_set, logicalCoreId);
 
-    CPU_ZERO_S(size, set);
-    CPU_SET_S(omp_get_thread_num(), size, set);
-    sched_setaffinity(0, size, set);
-
-    omp_unset_lock(&criticalSection);
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(physicalCoreId, &set);
+    sched_setaffinity(0, sizeof(set), &set);
   }
 
-  CPU_FREE(set);
+  return usedProcessorsLimit;
 }
 
 void OpenMpManager::printVerboseInformation(
-    unsigned recommendedNumberOfOpenMpThreads) {
+    unsigned recommendedNumberOfOpenMpThreads,
+    unsigned usedProcessorsLimit) {
   LOG(INFO) << "Total number of sockets: "
     << Collection::getTotalNumberOfSockets();
 
@@ -285,6 +330,9 @@ void OpenMpManager::printVerboseInformation(
 
   LOG(INFO) << "Recommended number of OpenMP threads: "
     << recommendedNumberOfOpenMpThreads;
+
+  LOG(INFO) << "Number of OpenMP threads: "
+    << usedProcessorsLimit;
 }
 
 #endif  // _OPENMP
