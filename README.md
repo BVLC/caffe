@@ -31,23 +31,16 @@ Time measures are: average Forward-Backward as stated by *caffe time*.*speedup* 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            682 |          1250 |         1380 |               24|
+| intelcaffe-master |            661 |          1237 |         1356 |               23|
 | bvlc-caffe-master |           3872 |          6899 |         7343 |              323|
-|    speedup factor |           x5.7 |          x5.5 |         x5.3 |            x13.4|
-
-### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (72 threads, MKL 11.3, GCC 4.8.3)
-|            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
-|------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            989 |          1558 |         1725 |               35|
-| bvlc-caffe-master |           3846 |          6810 |         7358 |              323|
-|    speedup factor |           x3.9 |          x4.4 |         x4.3 |             x9.2|
+|    speedup factor |           x5.9 |          x5.6 |         x5.4 |            x14.0|
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |           1412 |          3329 |         3977 |               56|
+| intelcaffe-master |           1047 |          3004 |         3786 |               47|
 | bvlc-caffe-master |          14892 |         25920 |        67542 |              530|
-|    speedup factor |          x10.5 |          x7.8 |        x17.0 |             x9.4|
+|    speedup factor |          x14.2 |          x8.6 |        x17.8 |            x11.3|
 
 Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
 The speedup factor highly depends on the amount of running threads and system load.
@@ -58,23 +51,18 @@ Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake 
 When OpenMP is available will be used automatically.
 
 ## Running
-To utilize all hardware resources right, it is recommended to set OMP_NUM_THREADS environmental
-variable to the number of all available CPU cores, which on Linux can be determined by typing
-*lscpu* and is equal to number of "CPU socket(s)" times number of "Core(s) per socket".
+Run procedure is the same as on bvlc-caffe-master branch.
 
-It is also recommended to avoid movement of threads between processors by setting CPU affinity
-which can be done by GOMP_CPU_AFFINITY environmental variable. It is achieved by setting its value
-to "0-N", where N is total the number of physical cores MINUS ONE. For example a single
-Intel(R) Xeon(R) E5-2699 v3 @ 2.30GHz have 18 CPU cores. When two sockets are used, there
-will be in total 72 processing units. To bind threads to all 36 cores, a following command line
-should look like:
+Current implementation uses OpenMP threads. By default the number of OpenMP threads is set
+to the number of CPU cores. Each one thread is bound to a single core to achieve best
+performance results. It is however possible to use own configuration by providing right
+one through OpenMP environmental variables like OMP_NUM_THREADS or GOMP_CPU_AFFINITY.
 
-    GOMP_CPU_AFFINITY="0-35" OMP_PROC_BIND="False" OMP_NUM_THREADS="36" ./build/tools/caffe time -iterations 50 --model=models/bvlc_googlenet/train_val.prototxt*  
-
-If you have any questions, please do not hesitate to ask.
+If some system tool like numactl is used to control CPU affinity, by default caffe will prevent
+to use more than one thread per core. When less than required cores are specified, caffe will
+limit execution of OpenMP threads to specified cores only.
 
 ## Multinode Training
-
 Please see the example how to run in examples/cifar10/train_full_multinode.sh.
 The script will run data server, synchronous parameter server and 4 clients.
 Prepared proto solvers should result in exactly the same behavior as single
