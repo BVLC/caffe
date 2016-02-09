@@ -37,6 +37,9 @@
     <Filter Include="include\layers">
       <UniqueIdentifier>{f10cfd17-81b6-4a08-829d-1a1fa4769d2e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cu\solvers">
+      <UniqueIdentifier>{fcb8114c-3425-41da-b30a-af2cb33dd851}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\caffe\util\im2col.cpp">
@@ -310,6 +313,15 @@
       <Filter>src\layers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\window_data_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\elu_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\scale_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -596,6 +608,15 @@
     <ClInclude Include="..\..\include\caffe\syncedmem.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\bias_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\elu_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\scale_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cu">
@@ -738,6 +759,33 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\embed_layer.cu">
       <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\bias_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\elu_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\scale_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\solvers\adadelta_solver.cu">
+      <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\solvers\adagrad_solver.cu">
+      <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\solvers\adam_solver.cu">
+      <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\solvers\nesterov_solver.cu">
+      <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\solvers\rmsprop_solver.cu">
+      <Filter>cu\solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu">
+      <Filter>cu\solvers</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

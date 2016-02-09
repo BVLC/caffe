@@ -78,6 +78,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_benchmark.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_blob.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_caffe_main.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_common.cpp" />
@@ -121,6 +122,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_random_number_generator.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_reduction_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_reshape_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_scale_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_sigmoid_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_slice_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_softmax_layer.cpp" />
