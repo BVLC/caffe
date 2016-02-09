@@ -1,0 +1,15 @@
+average_loss: 25
+base_lr: 0.0001
+display: 1
+gamma: 0.1
+iter_size: 1
+lr_policy: "fixed"
+max_iter: 100000
+momentum: 0.9
+snapshot: 2500
+snapshot_prefix: "./examples/pascal/image_layer_snapshot"
+test_initialization: false
+test_interval: 250
+test_iter: 100
+net: "./examples/pascal/net_image_layer_cli.prototxt"
+weight_decay: 0.0005
