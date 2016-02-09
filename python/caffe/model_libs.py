@@ -266,7 +266,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         num_loc_output = num_priors_per_location * 4;
         if not share_location:
             num_loc_output *= num_classes
-        ConvBNLayer(net, from_layer, name, use_bn=True, use_relu=False,
+        ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
             num_output=num_loc_output, kernel_size=1, pad=0, stride=1,
             use_global_stats=False)
         permute_name = "{}_perm".format(name)
@@ -278,7 +278,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         # Create location prediction layer.
         name = "{}_mbox_conf".format(from_layer)
         num_conf_output = num_priors_per_location * num_classes;
-        ConvBNLayer(net, from_layer, name, use_bn=True, use_relu=False,
+        ConvBNLayer(net, from_layer, name, use_bn=use_batchnorm, use_relu=False,
             num_output=num_conf_output, kernel_size=1, pad=0, stride=1,
             use_global_stats=False)
         permute_name = "{}_perm".format(name)
