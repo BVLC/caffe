@@ -114,6 +114,19 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
 }
 
 template <typename Dtype>
+void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
+  if (X != Y) {
+    memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+  }
+}
+
+template void caffe_cpu_copy<int>(const int N, const int* X, int* Y);
+template void caffe_cpu_copy<unsigned int>(const int N, const unsigned int* X,
+    unsigned int* Y);
+template void caffe_cpu_copy<float>(const int N, const float* X, float* Y);
+template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
+
+template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
     if (Caffe::mode() == Caffe::GPU) {
