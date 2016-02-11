@@ -24,6 +24,13 @@
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 
+enum TrashClass {
+  COMPOST = 0,
+  RECYCLE = 1,
+  LANDFILL = 2,
+  ELECTRONICS = 3
+};
+
 /* Pair (label, confidence) representing a prediction. */
 typedef std::pair<string, float> Prediction;
 
@@ -254,11 +261,69 @@ std::pair<float, float> mean_and_variance(const boost::circular_buffer<float>& x
     return std::pair<float, float>(m, s2 / (N-1));
 }
 
-void print_prediction(const std::string& prediction, const std::string& trashClass, cv::Mat& image) {
-  cv::rectangle(image, cv::Point2f(0, 0), cv::Point2f(600, 250), cv::Scalar(255, 255, 255, 255), -1);
+std::string toPrettyText(TrashClass trashClass) {
+  switch (trashClass) {
+    case RECYCLE:
+      return "It should go to recycle";
+    case COMPOST:
+      return "It should go to compost";
+    case LANDFILL:
+      return "It should go to landfill";
+    case ELECTRONICS:
+      return "Electronics bin (building 17)";
+    default:
+      return "No object found";
+  }
+}
 
-  cv::putText(image, prediction, cv::Point2f(50, 100), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255, 255), 4);
-  cv::putText(image, "It should go to " + trashClass, cv::Point2f(50, 200), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255, 255), 2);
+void print_prediction(
+    const std::string& prediction,
+    TrashClass trashClass,
+    cv::Mat& image) {
+  cv::Scalar color;
+  switch(trashClass) {
+    case RECYCLE: 
+      // blue
+      color = cv::Scalar(255, 0, 0, 150);
+      break;
+    case COMPOST: 
+      // green
+      color = cv::Scalar(0, 255, 0, 150);
+      break;
+    case LANDFILL: 
+      // green
+      color = cv::Scalar(30, 30, 30, 150);
+      break;
+    case ELECTRONICS: 
+      // red
+      color = cv::Scalar(0, 0, 255, 150);
+      break;
+  }
+
+  cv::rectangle(
+    image,
+    cv::Point2f(0, 0),
+    cv::Point2f(600, 220),
+    color,
+    -1
+  );
+
+  cv::putText(
+      image,
+      prediction,
+      cv::Point2f(50, 100),
+      cv::FONT_HERSHEY_SIMPLEX,
+      2,
+      cv::Scalar(255, 255, 255, 255),
+      4);
+  cv::putText(
+      image,
+      toPrettyText(trashClass), 
+      cv::Point2f(50, 160),
+      cv::FONT_HERSHEY_SIMPLEX,
+      1,
+      cv::Scalar(255, 255, 255, 255),
+      2);
 }
 
 int main(int argc, char** argv) {
@@ -269,28 +334,34 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::unordered_map<std::string, std::string> labelToTrashClass {
-    {"bottle", "Recycle"},
-    {"remote control, remote", "nowhere. Keep it!"},
-    {"beer bottle", "Recycle"},
-    {"cup", "Recycle"},
-    {"carton", "Recycle"},
-    {"packet, packaging", "Landfill"},
-    {"soccer ball", "Landfill"},
-    {"pillow", "Landfill"},
-    {"paper towel", "Recycle"},
-    {"mouse, computer mouse", "electronics bin"},
-    {"water bottle", "Recycle"},
-    {"wine bottle", "Recycle"},
-    {"Granny Smith", "Compost"},
-    {"custard apple", "Compost"},
-    {"pomegranate", "Compost"},
-    {"dough", "Compost"},
-    {"coffee cup", "Recycle"},
-    {"banana", "Compost"},
-    {"cellular telephone, cellular phone, cellphone, cell, mobile phone", "electronics bin in building 17"},
-    {"hand-held computer, hand-held microcomputer", "electronics bin in building 17"},
-    {"iPod", "electronics bin in building 17"},
+  std::unordered_map<std::string, TrashClass> labelToTrashClass {
+    {"banana", COMPOST},
+    {"bottle", RECYCLE},
+    {"beer bottle", RECYCLE},
+    {"burrito", COMPOST},
+    {"carton", RECYCLE},
+    {"cellular telephone, cellular phone, cellphone, cell, mobile phone", ELECTRONICS},
+    {"coffee cup", RECYCLE},
+    {"cup", RECYCLE},
+    {"custard apple", COMPOST},
+    {"pot, flowerpot", LANDFILL},
+    {"Granny Smith", COMPOST},
+    {"hair spray", LANDFILL},
+    {"hand-held computer, hand-held microcomputer", ELECTRONICS},
+    {"iPod", ELECTRONICS},
+    {"computer keyboard, keypad", ELECTRONICS},
+    {"mouse, computer mouse", ELECTRONICS},
+    {"packet, packaging", LANDFILL},
+    {"paper towel", RECYCLE},
+    {"pizza, pizza pie", COMPOST},
+    {"plastic bag", LANDFILL},
+    {"pomegranate", COMPOST},
+    {"pop bottle, soda bottle", RECYCLE},
+    {"soccer ball", LANDFILL},
+    {"spaghetti squash", COMPOST},
+    {"water bottle", RECYCLE},
+    {"wine bottle", RECYCLE},
+    {"vase", LANDFILL},
   };
 
   ::google::InitGoogleLogging(argv[0]);
@@ -388,7 +459,7 @@ int main(int argc, char** argv) {
   std::cout << "Detaching " << std::endl;
   t.detach();
   std::cout << "Detached " << std::endl;
-  std::pair<std::string, std::string> previousResult;
+  std::pair<std::string, TrashClass> previousResult;
 
   while(1) {
     cv::Mat image;
