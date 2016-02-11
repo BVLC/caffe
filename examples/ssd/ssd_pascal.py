@@ -54,9 +54,9 @@ test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
 label_map_file = "data/VOC0712/labelmap_voc.prototxt"
 pretrain_model = "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
 output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}/Main".format(os.environ['HOME'], job_name)
-device_id = 5
-num_gpus = 1
-gpus = "5"
+device_id = 0
+num_gpus = 4
+gpus = "0,1,2,3"
 batch_size = 32 / num_gpus
 iter_size = 32 / batch_size / num_gpus
 # Set true if you want to start training right after generating all files.
@@ -73,7 +73,7 @@ train_on_diff_gt = False
 multibox_loss_param = {
     'loc_loss_type': P.MultiBoxLoss.SMOOTH_L1,
     'conf_loss_type': P.MultiBoxLoss.SOFTMAX,
-    'loc_weight': 0.06,
+    'loc_weight': 1.0,
     'num_classes': num_classes,
     'share_location': share_location,
     'match_type': P.MultiBoxLoss.PER_PREDICTION,
@@ -83,8 +83,7 @@ multibox_loss_param = {
     'normalize': False,
     'use_difficult_gt': False,
     'do_neg_mining': True,
-    'max_neg_overlap': 0.3,
-    'min_neg_overlap': 0.1,
+    'neg_pos_ratio': 3,
     }
 # parameters for generating priors.
 # minimum dimension of input image
@@ -232,16 +231,17 @@ solver = caffe_pb2.SolverParameter(
 with open(solver_file, 'w') as f:
     print(solver, file=f)
 
-train_src_param = '--weights="{}" \\\n'.format(pretrain_model)
 max_iter = 0
+# Find most recent snapshot.
+for file in os.listdir(snapshot_dir):
+  if file.endswith(".solverstate"):
+    basename = os.path.splitext(file)[0]
+    iter = int(basename.split("{}_iter_".format(model_name))[1])
+    if iter > max_iter:
+      max_iter = iter
+
+train_src_param = '--weights="{}" \\\n'.format(pretrain_model)
 if resume_training:
-  # Find most recent snapshot.
-  for file in os.listdir(snapshot_dir):
-    if file.endswith(".solverstate"):
-      basename = os.path.splitext(file)[0]
-      iter = int(basename.split("{}_iter_".format(model_name))[1])
-      if iter > max_iter:
-        max_iter = iter
   if max_iter > 0:
     train_src_param = '--snapshot="{}_iter_{}.solverstate" \\\n'.format(snapshot_prefix, max_iter)
 
