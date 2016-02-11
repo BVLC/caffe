@@ -74,8 +74,8 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
     layer_param.mutable_threshold_param()->set_threshold(kAlpha);
     TripletLossLayer<Dtype> layer_weight_2_alpha(layer_param);
     layer_weight_2_alpha.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-    const Dtype loss_weight_2_alpha =
-        layer_weight_2_alpha.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    const Dtype loss_weight_2_alpha = layer_weight_2_alpha.Forward(
+        this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_GE(loss_weight_2_alpha, loss_weight_2);
   }
 
@@ -89,9 +89,7 @@ class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(TripletLossLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(TripletLossLayerTest, TestForward) {
-  this->TestForward();
-}
+TYPED_TEST(TripletLossLayerTest, TestForward) { this->TestForward(); }
 
 TYPED_TEST(TripletLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
@@ -102,7 +100,7 @@ TYPED_TEST(TripletLossLayerTest, TestGradient) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+                                  this->blob_top_vec_);
 }
 
 }  // namespace caffe

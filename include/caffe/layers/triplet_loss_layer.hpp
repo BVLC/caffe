@@ -26,7 +26,7 @@ class TripletLossLayer : public LossLayer<Dtype> {
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
-  
+
  protected:
   /// @copydoc TripletLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -34,7 +34,7 @@ class TripletLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
-  
+
   Blob<Dtype> diff_same_class_;
   Blob<Dtype> diff_diff_class_;
   Dtype alpha_;
