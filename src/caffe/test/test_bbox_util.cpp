@@ -767,6 +767,49 @@ TEST_F(BBoxUtilTest, TestGetConfidenceScores) {
   }
 }
 
+TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
+  const int num = 2;
+  const int num_preds_per_class = 2;
+  const int num_classes = 2;
+  const int dim = num_preds_per_class * num_classes;
+  Blob<float> conf_blob(num, dim, 1, 1);
+  float* conf_data = conf_blob.mutable_cpu_data();
+  for (int i = 0; i < num; ++i) {
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      for (int c = 0; c < num_classes; ++c) {
+        int idx = (i * num_preds_per_class + j) * num_classes + c;
+        conf_data[idx] = sign * idx * 0.1;
+      }
+    }
+  }
+
+  vector<vector<float> > max_conf_scores;
+  bool prob = false;
+  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
+                         prob, &max_conf_scores);
+
+  EXPECT_EQ(max_conf_scores.size(), num);
+  EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
+  EXPECT_NEAR(max_conf_scores[0][0], 0, eps);
+  EXPECT_NEAR(max_conf_scores[0][1], -0.2, eps);
+  EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
+  EXPECT_NEAR(max_conf_scores[1][0], 0.5, eps);
+  EXPECT_NEAR(max_conf_scores[1][1], 0.7, eps);
+
+  prob = true;
+  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
+                         prob, &max_conf_scores);
+
+  EXPECT_EQ(max_conf_scores.size(), num);
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      EXPECT_NEAR(max_conf_scores[i][j], 1./(1+exp(-0.1)), eps);
+    }
+  }
+}
+
 TEST_F(BBoxUtilTest, TestGetPriorBBoxes) {
   const int num_channels = 2;
   const int num_priors = 2;

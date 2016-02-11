@@ -92,9 +92,9 @@ void GetGroundTruth(const Dtype* gt_data, const int num_gt,
       map<int, LabelBBox>* all_gt_bboxes);
 
 // Get location predictions from loc_data.
-//    loc_data: num x num_preds_per_location * num_loc_classes * 4 blob.
+//    loc_data: num x num_preds_per_class * num_loc_classes * 4 blob.
 //    num: the number of images.
-//    num_preds_per_location: number of predictions per location.
+//    num_preds_per_class: number of predictions per class.
 //    num_loc_classes: number of location classes. It is 1 if share_location is
 //      true; and is equal to number of classes needed to predict otherwise.
 //    share_location: if true, all classes share the same location prediction.
@@ -106,9 +106,9 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
       const bool share_location, vector<LabelBBox>* loc_preds);
 
 // Get confidence predictions from conf_data.
-//    conf_data: num x num_preds_per_location * num_classes blob.
+//    conf_data: num x num_preds_per_class * num_classes blob.
 //    num: the number of images.
-//    num_preds_per_location: number of predictions per location.
+//    num_preds_per_class: number of predictions per class.
 //    num_classes: number of classes.
 //    conf_preds: stores the confidence prediction, where each item contains
 //      confidence prediction for an image.
@@ -116,6 +116,18 @@ template <typename Dtype>
 void GetConfidenceScores(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
       vector<map<int, vector<float> > >* conf_scores);
+
+// Get max confidence scores for each prior from conf_data.
+//    conf_data: num x num_preds_per_class * num_classes blob.
+//    num: the number of images.
+//    num_preds_per_class: number of predictions per class.
+//    num_classes: number of classes.
+//    prob: if true, compute the softmax probability.
+//    all_max_scores: stores the max confidence per location for each image.
+template <typename Dtype>
+void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes, const bool prob,
+      vector<vector<float> >* all_max_scores);
 
 // Get prior bounding boxes from prior_data.
 //    prior_data: 1 x 2 x num_priors * 4 x 1 blob.

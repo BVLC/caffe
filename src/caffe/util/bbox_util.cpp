@@ -415,6 +415,42 @@ template void GetConfidenceScores(const double* conf_data, const int num,
       vector<map<int, vector<float> > >* conf_preds);
 
 template <typename Dtype>
+void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes, const bool prob,
+      vector<vector<float> >* all_max_scores) {
+  all_max_scores->clear();
+  for (int i = 0; i < num; ++i) {
+    vector<float> max_scores;
+    for (int p = 0; p < num_preds_per_class; ++p) {
+      int start_idx = p * num_classes;
+      Dtype maxval = -FLT_MAX;
+      for (int c = 0; c < num_classes; ++c) {
+        maxval = std::max<Dtype>(conf_data[start_idx + c], maxval);
+      }
+      if (prob) {
+        // Compute softmax probability.
+        Dtype sum = 0.;
+        for (int c = 0; c < num_classes; ++c) {
+          sum += std::exp(conf_data[start_idx + c] - maxval);
+        }
+        maxval = 1. / sum;
+      }
+      max_scores.push_back(maxval);
+    }
+    conf_data += num_preds_per_class * num_classes;
+    all_max_scores->push_back(max_scores);
+  }
+}
+
+// Explicit initialization.
+template void GetMaxConfidenceScores(const float* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes, const bool prob,
+      vector<vector<float> >* all_max_scores);
+template void GetMaxConfidenceScores(const double* conf_data, const int num,
+      const int num_preds_per_class, const int num_classes, const bool prob,
+      vector<vector<float> >* all_max_scores);
+
+template <typename Dtype>
 void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances) {

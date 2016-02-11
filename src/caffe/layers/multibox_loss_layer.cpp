@@ -36,19 +36,12 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   normalize_ = multibox_loss_param.normalize();
   use_difficult_gt_ = multibox_loss_param.use_difficult_gt();
   do_neg_mining_ = multibox_loss_param.do_neg_mining();
-  max_neg_overlap_ = multibox_loss_param.max_neg_overlap();
-  min_neg_overlap_ = multibox_loss_param.min_neg_overlap();
+  neg_pos_ratio_ = multibox_loss_param.neg_pos_ratio();
 
-  if (!share_location_) {
-    CHECK(!use_prior_for_matching_)
-        << "When not sharing location, cannot use prior for matching.";
-  }
   if (do_neg_mining_) {
-    CHECK_NE(background_label_id_, -1)
-        << "When doing negative mining, background_label_id should not be -1.";
     CHECK(share_location_)
-        << "Can only do negative mining when share_location is true.";
-    CHECK_LE(max_neg_overlap_, overlap_threshold_);
+        << "Currently only support negative mining if share_location is true.";
+    CHECK_GT(neg_pos_ratio_, 0);
   }
 
   vector<int> loss_shape(1, 1);
@@ -151,27 +144,36 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   GetLocPredictions(loc_data, num_, num_priors_, loc_classes_, share_location_,
                     &all_loc_preds);
 
+  // Retrieve max scores for each prior. Used in negative mining.
+  vector<vector<float> > all_max_scores;
+  if (do_neg_mining_) {
+    bool use_prob = true;
+    GetMaxConfidenceScores(conf_data, num_, num_priors_, num_classes_, use_prob,
+                           &all_max_scores);
+  }
+
   int num_matches = 0;
   int num_negs = 0;
   for (int i = 0; i < num_; ++i) {
     map<int, vector<int> > match_indices;
-    map<int, vector<float> > match_overlaps;
+    vector<int> neg_indices;
     // Check if there is ground truth for current image.
     if (all_gt_bboxes.find(i) == all_gt_bboxes.end()) {
       // There is no gt for current image. All predictions are negative.
       all_match_indices_.push_back(match_indices);
-      all_match_overlaps_.push_back(match_overlaps);
+      all_neg_indices_.push_back(neg_indices);
       continue;
     }
     // Find match between predictions and ground truth.
     const vector<NormalizedBBox>& gt_bboxes = all_gt_bboxes.find(i)->second;
-    for (int c = 0; c < loc_classes_; ++c) {
-      int label = share_location_ ? -1 : c;
-      if (!share_location_ && label == background_label_id_) {
-        // Ignore background loc predictions.
-        continue;
-      }
-      if (!use_prior_for_matching_) {
+    map<int, vector<float> > match_overlaps;
+    if (!use_prior_for_matching_) {
+      for (int c = 0; c < loc_classes_; ++c) {
+        int label = share_location_ ? -1 : c;
+        if (!share_location_ && label == background_label_id_) {
+          // Ignore background loc predictions.
+          continue;
+        }
         // Decode the prediction into bbox first.
         vector<NormalizedBBox> loc_bboxes;
         DecodeBBoxes(prior_bboxes, prior_variances, all_loc_preds[i][label],
@@ -179,26 +181,77 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         MatchBBox(gt_bboxes, loc_bboxes, label, match_type_,
                   overlap_threshold_, &match_indices[label],
                   &match_overlaps[label]);
-      } else {
-        MatchBBox(gt_bboxes, prior_bboxes, label, match_type_,
-                  overlap_threshold_, &match_indices[label],
-                  &match_overlaps[label]);
       }
-      for (int m = 0; m < match_indices[label].size(); ++m) {
-        if (match_indices[label][m] != -1) {
-          num_matches++;
-        } else {
-          if (do_neg_mining_) {
-            if (match_overlaps[label][m] >= min_neg_overlap_ &&
-                match_overlaps[label][m] < max_neg_overlap_) {
-              num_negs++;
+    } else {
+      // Use prior bboxes to match against all ground truth.
+      vector<int> temp_match_indices;
+      vector<float> temp_match_overlaps;
+      const int label = -1;
+      MatchBBox(gt_bboxes, prior_bboxes, label, match_type_, overlap_threshold_,
+                &temp_match_indices, &temp_match_overlaps);
+      if (share_location_) {
+        match_indices[label] = temp_match_indices;
+        match_overlaps[label] = temp_match_overlaps;
+      } else {
+        // Get ground truth label for each ground truth bbox.
+        vector<int> gt_labels;
+        for (int g = 0; g < gt_bboxes.size(); ++g) {
+          gt_labels.push_back(gt_bboxes[g].label());
+        }
+        // Distribute the matching results to different loc_class.
+        for (int c = 0; c < loc_classes_; ++c) {
+          if (c == background_label_id_) {
+            // Ignore background loc predictions.
+            continue;
+          }
+          match_indices[c].resize(temp_match_indices.size(), -1);
+          match_overlaps[c] = temp_match_overlaps;
+          for (int m = 0; m < temp_match_indices.size(); ++m) {
+            if (temp_match_indices[m] != -1) {
+              const int gt_idx = temp_match_indices[m];
+              CHECK_LT(gt_idx, gt_labels.size());
+              if (c == gt_labels[gt_idx]) {
+                match_indices[c][m] = gt_idx;
+              }
             }
           }
         }
       }
     }
+    // Record matching statistics.
+    for (map<int, vector<int> >::iterator it = match_indices.begin();
+         it != match_indices.end(); ++it) {
+      const int label = it->first;
+      // Get positive indies.
+      int num_pos = 0;
+      for (int m = 0; m < match_indices[label].size(); ++m) {
+        if (match_indices[label][m] != -1) {
+          ++num_pos;
+        }
+      }
+      num_matches += num_pos;
+      if (do_neg_mining_) {
+        // Get max scores for all the non-matched priors.
+        vector<pair<float, int> > scores_indices;
+        int num_neg = 0;
+        for (int m = 0; m < match_indices[label].size(); ++m) {
+          if (match_indices[label][m] == -1) {
+            scores_indices.push_back(std::make_pair(all_max_scores[i][m], m));
+            ++num_neg;
+          }
+        }
+        // Pick top num_neg negatives.
+        num_neg = std::min(static_cast<int>(num_pos * neg_pos_ratio_), num_neg);
+        std::sort(scores_indices.begin(), scores_indices.end(),
+                  SortScorePairDescend);
+        for (int n = 0; n < num_neg; ++n) {
+          neg_indices.push_back(scores_indices[n].second);
+        }
+        num_negs += num_neg;
+      }
+    }
     all_match_indices_.push_back(match_indices);
-    all_match_overlaps_.push_back(match_overlaps);
+    all_neg_indices_.push_back(neg_indices);
   }
 
   if (num_matches >= 1) {
@@ -217,37 +270,35 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* loc_gt_data = loc_gt_.mutable_cpu_data();
     int count = 0;
     for (int i = 0; i < num_; ++i) {
-      if (all_gt_bboxes.find(i) == all_gt_bboxes.end()) {
-        continue;
-      }
-      const map<int, vector<int> >& match_indices = all_match_indices_[i];
-      for (map<int, vector<int> >::const_iterator it = match_indices.begin();
-           it != match_indices.end(); ++it) {
+      for (map<int, vector<int> >::iterator it = all_match_indices_[i].begin();
+           it != all_match_indices_[i].end(); ++it) {
         const int label = it->first;
         const vector<int>& match_index = it->second;
+        CHECK(all_loc_preds[i].find(label) != all_loc_preds[i].end());
         const vector<NormalizedBBox>& loc_pred = all_loc_preds[i][label];
-        CHECK_EQ(match_index.size(), loc_pred.size());
-        CHECK_EQ(match_index.size(), prior_bboxes.size());
         for (int j = 0; j < match_index.size(); ++j) {
           if (match_index[j] == -1) {
             continue;
           }
           // Store location prediction.
+          CHECK_LT(j, loc_pred.size());
           loc_pred_data[count * 4] = loc_pred[j].xmin();
           loc_pred_data[count * 4 + 1] = loc_pred[j].ymin();
           loc_pred_data[count * 4 + 2] = loc_pred[j].xmax();
           loc_pred_data[count * 4 + 3] = loc_pred[j].ymax();
           // Store encoded ground truth.
           const int gt_idx = match_index[j];
-          CHECK_GT(all_gt_bboxes[i].size(), gt_idx);
+          CHECK(all_gt_bboxes.find(i) != all_gt_bboxes.end());
+          CHECK_LT(gt_idx, all_gt_bboxes[i].size());
           const NormalizedBBox& gt_bbox = all_gt_bboxes[i][gt_idx];
           NormalizedBBox gt_encode;
+          CHECK_LT(j, prior_bboxes.size());
           EncodeBBox(prior_bboxes[j], prior_variances[j], gt_bbox, &gt_encode);
           loc_gt_data[count * 4] = gt_encode.xmin();
           loc_gt_data[count * 4 + 1] = gt_encode.ymin();
           loc_gt_data[count * 4 + 2] = gt_encode.xmax();
           loc_gt_data[count * 4 + 3] = gt_encode.ymax();
-          count++;
+          ++count;
         }
       }
     }
@@ -256,27 +307,24 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Form data to pass on to conf_loss_layer_.
-  vector<int> conf_shape(1);
   int num_conf;
-  if (background_label_id_ > -1) {
-    if (do_neg_mining_) {
-      num_conf = num_matches + num_negs;
-    } else {
-      num_conf = num_ * num_priors_;
-    }
+  if (do_neg_mining_) {
+    num_conf = num_matches + num_negs;
   } else {
-    num_conf = num_matches;
+    num_conf = num_ * num_priors_;
   }
-  conf_shape[0] = num_conf;
-  if (conf_shape[0] >= 1) {
+  if (num_conf >= 1) {
+    // Reshape the confidence data.
+    vector<int> conf_shape(1);
+    conf_shape[0] = num_conf;
     conf_gt_.Reshape(conf_shape);
     conf_shape.push_back(num_classes_);
     conf_pred_.Reshape(conf_shape);
     Dtype* conf_pred_data = conf_pred_.mutable_cpu_data();
     Dtype* conf_gt_data = conf_gt_.mutable_cpu_data();
     if (conf_loss_type_ == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
-      if (background_label_id_ > -1 && !do_neg_mining_) {
-        // Need to consider background.
+      if (!do_neg_mining_) {
+        // Consider all scores.
         // Share data and diff with bottom[1].
         CHECK_EQ(conf_pred_.count(), bottom[1]->count());
         conf_pred_.ShareData(*(bottom[1]));
@@ -288,44 +336,42 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     int count = 0;
     for (int i = 0; i < num_; ++i) {
       if (all_gt_bboxes.find(i) != all_gt_bboxes.end()) {
+        // Save matched (positive) bboxes scores and labels.
         const map<int, vector<int> >& match_indices = all_match_indices_[i];
-        const map<int, vector<float> >& match_overlaps = all_match_overlaps_[i];
         for (int j = 0; j < num_priors_; ++j) {
           for (map<int, vector<int> >::const_iterator it =
                match_indices.begin(); it != match_indices.end(); ++it) {
-            const int label = it->first;
             const vector<int>& match_index = it->second;
-            const vector<float>& match_overlap =
-                match_overlaps.find(label)->second;
             CHECK_EQ(match_index.size(), num_priors_);
-            CHECK_EQ(match_index.size(), match_overlap.size());
             if (match_index[j] == -1) {
-              if (do_neg_mining_) {
-                // Copy scores for negative bboxes.
-                if (match_overlap[j] >= min_neg_overlap_ &&
-                    match_overlap[j] < max_neg_overlap_) {
-                  caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
-                                    conf_pred_data + count * num_classes_);
-                  conf_gt_data[count] = background_label_id_;
-                  ++count;
-                }
-              }
+              continue;
+            }
+            const int gt_idx = match_index[j];
+            if (do_neg_mining_) {
+              // Copy scores for matched bboxes.
+              caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
+                                conf_pred_data + count * num_classes_);
+              conf_gt_data[count] = all_gt_bboxes[i][gt_idx].label();
+              ++count;
             } else {
-              const int gt_idx = match_index[j];
-              if (background_label_id_ == -1 || do_neg_mining_) {
-                // Copy scores for matched bboxes.
-                caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
-                                  conf_pred_data + count * num_classes_);
-                conf_gt_data[count] = all_gt_bboxes[i][gt_idx].label();
-                ++count;
-              } else {
-                conf_gt_data[j] = all_gt_bboxes[i][gt_idx].label();
-              }
+              conf_gt_data[j] = all_gt_bboxes[i][gt_idx].label();
             }
           }
         }
+        if (do_neg_mining_) {
+          // Save negative bboxes scores and labels.
+          for (int n = 0; n < all_neg_indices_[i].size(); ++n) {
+            int j = all_neg_indices_[i][n];
+            CHECK_LT(j, num_priors_);
+            caffe_copy<Dtype>(num_classes_, conf_data + j * num_classes_,
+                              conf_pred_data + count * num_classes_);
+            conf_gt_data[count] = background_label_id_;
+            ++count;
+          }
+        }
       }
-      if (background_label_id_ == -1 || do_neg_mining_) {
+      // Go to next image.
+      if (do_neg_mining_) {
         conf_data += bottom[1]->offset(1);
       } else {
         conf_gt_data += num_priors_;
@@ -373,9 +419,8 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     caffe_set(bottom[0]->count(), Dtype(0), loc_bottom_diff);
     int count = 0;
     for (int i = 0; i < num_; ++i) {
-      const map<int, vector<int> >& match_indices = all_match_indices_[i];
-      for (map<int, vector<int> >::const_iterator it = match_indices.begin();
-           it != match_indices.end(); ++it) {
+      for (map<int, vector<int> >::iterator it = all_match_indices_[i].begin();
+           it != all_match_indices_[i].end(); ++it) {
         const int label = share_location_ ? 0 : it->first;
         const vector<int>& match_index = it->second;
         for (int j = 0; j < match_index.size(); ++j) {
@@ -386,7 +431,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           int start_idx = loc_classes_ * 4 * j + label * 4;
           caffe_copy<Dtype>(4, loc_pred_diff + count * 4,
                             loc_bottom_diff + start_idx);
-          count++;
+          ++count;
         }
       }
       loc_bottom_diff += bottom[0]->offset(1);
@@ -403,39 +448,35 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                conf_bottom_vec_);
     Dtype* conf_bottom_diff = bottom[1]->mutable_cpu_diff();
     const Dtype* conf_pred_diff = conf_pred_.cpu_diff();
-    if (background_label_id_ == -1 || do_neg_mining_) {
+    if (do_neg_mining_) {
       caffe_set(bottom[1]->count(), Dtype(0), conf_bottom_diff);
       int count = 0;
       for (int i = 0; i < num_; ++i) {
+        // Copy matched (positive) bboxes scores' diff.
         const map<int, vector<int> >& match_indices = all_match_indices_[i];
-        const map<int, vector<float> >& match_overlaps = all_match_overlaps_[i];
         for (int j = 0; j < num_priors_; ++j) {
           for (map<int, vector<int> >::const_iterator it =
                match_indices.begin(); it != match_indices.end(); ++it) {
-            const int label = it->first;
             const vector<int>& match_index = it->second;
-            const vector<float>& match_overlap =
-                match_overlaps.find(label)->second;
             CHECK_EQ(match_index.size(), num_priors_);
-            CHECK_EQ(match_index.size(), match_overlap.size());
             if (match_index[j] == -1) {
-              if (do_neg_mining_) {
-                if (match_overlap[j] >= min_neg_overlap_ &&
-                    match_overlap[j] < max_neg_overlap_) {
-                  caffe_copy<Dtype>(num_classes_,
-                                    conf_pred_diff + count * num_classes_,
-                                    conf_bottom_diff + j * num_classes_);
-                  ++count;
-                }
-              }
-            } else {
-              // Copy the diff to the right place.
-              caffe_copy<Dtype>(num_classes_,
-                                conf_pred_diff + count * num_classes_,
-                                conf_bottom_diff + j * num_classes_);
-              ++count;
+              continue;
             }
+            // Copy the diff to the right place.
+            caffe_copy<Dtype>(num_classes_,
+                              conf_pred_diff + count * num_classes_,
+                              conf_bottom_diff + j * num_classes_);
+            ++count;
           }
+        }
+        // Copy negative bboxes scores' diff.
+        for (int n = 0; n < all_neg_indices_[i].size(); ++n) {
+          int j = all_neg_indices_[i][n];
+          CHECK_LT(j, num_priors_);
+          caffe_copy<Dtype>(num_classes_,
+                            conf_pred_diff + count * num_classes_,
+                            conf_bottom_diff + j * num_classes_);
+          ++count;
         }
         conf_bottom_diff += bottom[1]->offset(1);
       }
@@ -447,7 +488,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   // After backward, remove match statistics.
   all_match_indices_.clear();
-  all_match_overlaps_.clear();
+  all_neg_indices_.clear();
 }
 
 
