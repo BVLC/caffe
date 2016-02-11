@@ -1060,14 +1060,14 @@ message MultiBoxLossParameter {
     L2 = 0;
     SMOOTH_L1 = 1;
   }
-  optional LocLossType loc_loss_type = 1 [default = L2];
+  optional LocLossType loc_loss_type = 1 [default = SMOOTH_L1];
   // Confidence loss type.
   enum ConfLossType {
     SOFTMAX = 0;
   }
   optional ConfLossType conf_loss_type = 2 [default = SOFTMAX];
   // Weight for localization loss.
-  optional float loc_weight = 3 [default = 0.06];
+  optional float loc_weight = 3 [default = 1.0];
   // Number of classes to be predicted. Required!
   optional uint32 num_classes = 4;
   // If true, bounding box are shared among different classes.
@@ -1083,20 +1083,16 @@ message MultiBoxLossParameter {
   optional float overlap_threshold = 7 [default = 0.5];
   // Use prior for matching.
   optional bool use_prior_for_matching = 8 [default = true];
-  // Background label id. To ignore background class for confidence loss,
-  // set it as -1.
-  optional int32 background_label_id = 9 [default = 0];
+  // Background label id.
+  optional uint32 background_label_id = 9 [default = 0];
   // If true, normalize both loc and conf loss; otherwise, do not normalize.
   optional bool normalize = 10 [default = true];
   // If true, also consider difficult ground truth.
   optional bool use_difficult_gt = 11 [default = true];
   // If true, perform negative mining.
-  optional bool do_neg_mining = 12 [default = false];
-  // The following two parameters are only effective if do_neg_mining is true.
-  // The maximum overlap with ground truth for negative samples.
-  optional float max_neg_overlap = 13 [default = 0.5];
-  // The minimum overlap with ground truth for negative samples.
-  optional float min_neg_overlap = 14 [default = 0.1];
+  optional bool do_neg_mining = 12 [default = true];
+  // The negative/positive ratio.
+  optional float neg_pos_ratio = 13 [default = 3.0];
 }
 
 message MVNParameter {
