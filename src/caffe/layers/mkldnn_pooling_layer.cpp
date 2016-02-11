@@ -11,10 +11,6 @@
 #include "dnn.h"
 
 namespace caffe {
-static const int print_conversion= 1;
-using std::min;
-using std::max;
-
 template <typename Dtype>
 MklDnnPoolingLayer<Dtype>::~MklDnnPoolingLayer()
 {
@@ -189,7 +185,8 @@ void MklDnnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
   if (top.size() > 1) {
-    top[1]->ReshapeLike(*top[0]);
+    (reinterpret_cast<Blob<size_t>* > (top[1]) )->Reshape(bottom[0]->num(), channels_, pooled_height_,
+        pooled_width_);
   }
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==

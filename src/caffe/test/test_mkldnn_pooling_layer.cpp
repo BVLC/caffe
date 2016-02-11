@@ -20,7 +20,7 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   MklDnnPoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
-        blob_top_mask_(new Blob<Dtype>()) {}
+        blob_top_mask_(new Blob<size_t>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 3, 6, 5);
@@ -38,7 +38,7 @@ class MklDnnPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
-  Blob<Dtype>* const blob_top_mask_;
+  Blob<size_t>* const blob_top_mask_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
   // Test for 2x 2 square pooling layer
@@ -444,15 +444,16 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMax) {
   this->TestForwardRectHigh();
   this->TestForwardRectWide();
 }
-#if 0
+
 TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxTopMask) {
-  this->blob_top_vec_.push_back(this->blob_top_mask_);
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* > (this->blob_top_mask_) );
   this->TestForwardSquare();
   this->TestForwardRectHigh();
   this->TestForwardRectWide();
 }
 
-#endif
+
 #if 0
 TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMax) {
   typedef typename TypeParam::Dtype Dtype;
