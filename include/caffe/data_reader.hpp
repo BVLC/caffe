@@ -57,6 +57,8 @@ class DataReader {
 
     const LayerParameter param_;
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
+    
+    int num_skips_;
 
     friend class DataReader;
 

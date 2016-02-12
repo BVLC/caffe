@@ -31,7 +31,7 @@ layer {
   name: "data"
   type: "Data"
   data_param {
-    source: "/media/data1/image/ilsvrc15/ilsvrc15_val_lmdb"
+    source: "/media/data0/image/ilsvrc15/ilsvrc15_val_lmdb"
     batch_size: 32
     backend: LMDB
   }
@@ -41,7 +41,7 @@ layer {
   transform_param {
     mirror: false
     crop_size: 224
-    mean_file: "/media/data1/image/ilsvrc15/imagenet_mean.binaryproto"
+    mean_file: "/media/data0/image/ilsvrc15/imagenet_mean.binaryproto"
   }
 }
 layer {
@@ -69,9 +69,6 @@ layer {
   name: "conv1/7x7_s2/bn"
   top: "conv1/7x7_s2/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "conv1/7x7_s2/bn"
@@ -124,9 +121,6 @@ layer {
   name: "conv2/3x3_reduce/bn"
   top: "conv2/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "conv2/3x3_reduce/bn"
@@ -145,8 +139,8 @@ layer {
 }
 layer {
  bottom: "conv2/3x3_reduce/bn/sc"
-  top: "conv2/3x3_reduce"
-  name: "conv2/3x3_reduce"
+  top: "conv2/3x3"
+  name: "conv2/3x3"
   type: "Convolution"
   param {
     lr_mult: 1
@@ -164,31 +158,28 @@ layer {
   }
 }
 layer {
-  bottom: "conv2/3x3_reduce"
-  name: "conv2/3x3_reduce/bn"
-  top: "conv2/3x3_reduce/bn"
+  bottom: "conv2/3x3"
+  name: "conv2/3x3/bn"
+  top: "conv2/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
-  bottom: "conv2/3x3_reduce/bn"
-  top: "conv2/3x3_reduce/bn/sc"
-  name: "conv2/3x3_reduce/bn/sc"
+  bottom: "conv2/3x3/bn"
+  top: "conv2/3x3/bn/sc"
+  name: "conv2/3x3/bn/sc"
   type: "Scale"
   scale_param {
     bias_term: true
   }
 }
 layer {
-  bottom: "conv2/3x3_reduce/bn/sc"
-  top: "conv2/3x3_reduce/bn/sc"
-  name: "conv2/3x3_reduce/bn/sc/relu"
+  bottom: "conv2/3x3/bn/sc"
+  top: "conv2/3x3/bn/sc"
+  name: "conv2/3x3/bn/sc/relu"
   type: "ReLU"
 }
 layer {
-  bottom: "conv2/3x3_reduce/bn/sc"
+  bottom: "conv2/3x3/bn/sc"
   top: "pool2/3x3_s2"
   name: "pool2/3x3_s2"
   type: "Pooling"
@@ -223,9 +214,6 @@ layer {
   name: "inception_3a/1x1/bn"
   top: "inception_3a/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/1x1/bn"
@@ -267,9 +255,6 @@ layer {
   name: "inception_3a/3x3_reduce/bn"
   top: "inception_3a/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/3x3_reduce/bn"
@@ -311,9 +296,6 @@ layer {
   name: "inception_3a/3x3/bn"
   top: "inception_3a/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/3x3/bn"
@@ -355,9 +337,6 @@ layer {
   name: "inception_3a/double3x3_reduce/bn"
   top: "inception_3a/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/double3x3_reduce/bn"
@@ -399,9 +378,6 @@ layer {
   name: "inception_3a/double3x3a/bn"
   top: "inception_3a/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/double3x3a/bn"
@@ -443,9 +419,6 @@ layer {
   name: "inception_3a/double3x3b/bn"
   top: "inception_3a/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/double3x3b/bn"
@@ -499,9 +472,6 @@ layer {
   name: "inception_3a/pool_proj/bn"
   top: "inception_3a/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3a/pool_proj/bn"
@@ -552,9 +522,6 @@ layer {
   name: "inception_3b/1x1/bn"
   top: "inception_3b/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/1x1/bn"
@@ -596,9 +563,6 @@ layer {
   name: "inception_3b/3x3_reduce/bn"
   top: "inception_3b/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/3x3_reduce/bn"
@@ -640,9 +604,6 @@ layer {
   name: "inception_3b/3x3/bn"
   top: "inception_3b/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/3x3/bn"
@@ -684,9 +645,6 @@ layer {
   name: "inception_3b/double3x3_reduce/bn"
   top: "inception_3b/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/double3x3_reduce/bn"
@@ -728,9 +686,6 @@ layer {
   name: "inception_3b/double3x3a/bn"
   top: "inception_3b/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/double3x3a/bn"
@@ -772,9 +727,6 @@ layer {
   name: "inception_3b/double3x3b/bn"
   top: "inception_3b/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/double3x3b/bn"
@@ -828,9 +780,6 @@ layer {
   name: "inception_3b/pool_proj/bn"
   top: "inception_3b/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3b/pool_proj/bn"
@@ -881,9 +830,6 @@ layer {
   name: "inception_3c/3x3_reduce/bn"
   top: "inception_3c/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3c/3x3_reduce/bn"
@@ -925,9 +871,6 @@ layer {
   name: "inception_3c/3x3/bn"
   top: "inception_3c/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3c/3x3/bn"
@@ -969,9 +912,6 @@ layer {
   name: "inception_3c/double3x3_reduce/bn"
   top: "inception_3c/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3c/double3x3_reduce/bn"
@@ -1013,9 +953,6 @@ layer {
   name: "inception_3c/double3x3a/bn"
   top: "inception_3c/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3c/double3x3a/bn"
@@ -1057,9 +994,6 @@ layer {
   name: "inception_3c/double3x3b/bn"
   top: "inception_3c/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_3c/double3x3b/bn"
@@ -1131,9 +1065,6 @@ layer {
   name: "loss1/conv/bn"
   top: "loss1/conv/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "loss1/conv/bn"
@@ -1172,9 +1103,6 @@ layer {
   name: "loss1/fc/bn"
   top: "loss1/fc/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "loss1/fc/bn"
@@ -1280,9 +1208,6 @@ layer {
   name: "inception_4a/1x1/bn"
   top: "inception_4a/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/1x1/bn"
@@ -1324,9 +1249,6 @@ layer {
   name: "inception_4a/3x3_reduce/bn"
   top: "inception_4a/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/3x3_reduce/bn"
@@ -1368,9 +1290,6 @@ layer {
   name: "inception_4a/3x3/bn"
   top: "inception_4a/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/3x3/bn"
@@ -1412,9 +1331,6 @@ layer {
   name: "inception_4a/double3x3_reduce/bn"
   top: "inception_4a/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/double3x3_reduce/bn"
@@ -1456,9 +1372,6 @@ layer {
   name: "inception_4a/double3x3a/bn"
   top: "inception_4a/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/double3x3a/bn"
@@ -1500,9 +1413,6 @@ layer {
   name: "inception_4a/double3x3b/bn"
   top: "inception_4a/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/double3x3b/bn"
@@ -1556,9 +1466,6 @@ layer {
   name: "inception_4a/pool_proj/bn"
   top: "inception_4a/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4a/pool_proj/bn"
@@ -1609,9 +1516,6 @@ layer {
   name: "inception_4b/1x1/bn"
   top: "inception_4b/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/1x1/bn"
@@ -1653,9 +1557,6 @@ layer {
   name: "inception_4b/3x3_reduce/bn"
   top: "inception_4b/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/3x3_reduce/bn"
@@ -1697,9 +1598,6 @@ layer {
   name: "inception_4b/3x3/bn"
   top: "inception_4b/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/3x3/bn"
@@ -1741,9 +1639,6 @@ layer {
   name: "inception_4b/double3x3_reduce/bn"
   top: "inception_4b/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/double3x3_reduce/bn"
@@ -1785,9 +1680,6 @@ layer {
   name: "inception_4b/double3x3a/bn"
   top: "inception_4b/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/double3x3a/bn"
@@ -1829,9 +1721,6 @@ layer {
   name: "inception_4b/double3x3b/bn"
   top: "inception_4b/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/double3x3b/bn"
@@ -1885,9 +1774,6 @@ layer {
   name: "inception_4b/pool_proj/bn"
   top: "inception_4b/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4b/pool_proj/bn"
@@ -1938,9 +1824,6 @@ layer {
   name: "inception_4c/1x1/bn"
   top: "inception_4c/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/1x1/bn"
@@ -1982,9 +1865,6 @@ layer {
   name: "inception_4c/3x3_reduce/bn"
   top: "inception_4c/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/3x3_reduce/bn"
@@ -2026,9 +1906,6 @@ layer {
   name: "inception_4c/3x3/bn"
   top: "inception_4c/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/3x3/bn"
@@ -2070,9 +1947,6 @@ layer {
   name: "inception_4c/double3x3_reduce/bn"
   top: "inception_4c/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/double3x3_reduce/bn"
@@ -2114,9 +1988,6 @@ layer {
   name: "inception_4c/double3x3a/bn"
   top: "inception_4c/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/double3x3a/bn"
@@ -2158,9 +2029,6 @@ layer {
   name: "inception_4c/double3x3b/bn"
   top: "inception_4c/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/double3x3b/bn"
@@ -2214,9 +2082,6 @@ layer {
   name: "inception_4c/pool_proj/bn"
   top: "inception_4c/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4c/pool_proj/bn"
@@ -2267,9 +2132,6 @@ layer {
   name: "inception_4d/1x1/bn"
   top: "inception_4d/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/1x1/bn"
@@ -2311,9 +2173,6 @@ layer {
   name: "inception_4d/3x3_reduce/bn"
   top: "inception_4d/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/3x3_reduce/bn"
@@ -2355,9 +2214,6 @@ layer {
   name: "inception_4d/3x3/bn"
   top: "inception_4d/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/3x3/bn"
@@ -2399,9 +2255,6 @@ layer {
   name: "inception_4d/double3x3_reduce/bn"
   top: "inception_4d/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/double3x3_reduce/bn"
@@ -2443,9 +2296,6 @@ layer {
   name: "inception_4d/double3x3a/bn"
   top: "inception_4d/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/double3x3a/bn"
@@ -2487,9 +2337,6 @@ layer {
   name: "inception_4d/double3x3b/bn"
   top: "inception_4d/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/double3x3b/bn"
@@ -2543,9 +2390,6 @@ layer {
   name: "inception_4d/pool_proj/bn"
   top: "inception_4d/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4d/pool_proj/bn"
@@ -2596,9 +2440,6 @@ layer {
   name: "inception_4e/3x3_reduce/bn"
   top: "inception_4e/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4e/3x3_reduce/bn"
@@ -2640,9 +2481,6 @@ layer {
   name: "inception_4e/3x3/bn"
   top: "inception_4e/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4e/3x3/bn"
@@ -2684,9 +2522,6 @@ layer {
   name: "inception_4e/double3x3_reduce/bn"
   top: "inception_4e/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4e/double3x3_reduce/bn"
@@ -2728,9 +2563,6 @@ layer {
   name: "inception_4e/double3x3a/bn"
   top: "inception_4e/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4e/double3x3a/bn"
@@ -2772,9 +2604,6 @@ layer {
   name: "inception_4e/double3x3b/bn"
   top: "inception_4e/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_4e/double3x3b/bn"
@@ -2846,9 +2675,6 @@ layer {
   name: "loss2/conv/bn"
   top: "loss2/conv/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "loss2/conv/bn"
@@ -2887,9 +2713,6 @@ layer {
   name: "loss2/fc/bn"
   top: "loss2/fc/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "loss2/fc/bn"
@@ -2995,9 +2818,6 @@ layer {
   name: "inception_5a/1x1/bn"
   top: "inception_5a/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/1x1/bn"
@@ -3039,9 +2859,6 @@ layer {
   name: "inception_5a/3x3_reduce/bn"
   top: "inception_5a/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/3x3_reduce/bn"
@@ -3083,9 +2900,6 @@ layer {
   name: "inception_5a/3x3/bn"
   top: "inception_5a/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/3x3/bn"
@@ -3127,9 +2941,6 @@ layer {
   name: "inception_5a/double3x3_reduce/bn"
   top: "inception_5a/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/double3x3_reduce/bn"
@@ -3171,9 +2982,6 @@ layer {
   name: "inception_5a/double3x3a/bn"
   top: "inception_5a/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/double3x3a/bn"
@@ -3215,9 +3023,6 @@ layer {
   name: "inception_5a/double3x3b/bn"
   top: "inception_5a/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/double3x3b/bn"
@@ -3271,9 +3076,6 @@ layer {
   name: "inception_5a/pool_proj/bn"
   top: "inception_5a/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5a/pool_proj/bn"
@@ -3324,9 +3126,6 @@ layer {
   name: "inception_5b/1x1/bn"
   top: "inception_5b/1x1/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/1x1/bn"
@@ -3368,9 +3167,6 @@ layer {
   name: "inception_5b/3x3_reduce/bn"
   top: "inception_5b/3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/3x3_reduce/bn"
@@ -3412,9 +3208,6 @@ layer {
   name: "inception_5b/3x3/bn"
   top: "inception_5b/3x3/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/3x3/bn"
@@ -3456,9 +3249,6 @@ layer {
   name: "inception_5b/double3x3_reduce/bn"
   top: "inception_5b/double3x3_reduce/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/double3x3_reduce/bn"
@@ -3500,9 +3290,6 @@ layer {
   name: "inception_5b/double3x3a/bn"
   top: "inception_5b/double3x3a/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/double3x3a/bn"
@@ -3544,9 +3331,6 @@ layer {
   name: "inception_5b/double3x3b/bn"
   top: "inception_5b/double3x3b/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/double3x3b/bn"
@@ -3600,9 +3384,6 @@ layer {
   name: "inception_5b/pool_proj/bn"
   top: "inception_5b/pool_proj/bn"
   type: "BatchNorm"
-  batch_norm_param {
-    use_global_stats: true
-  }
 }
 layer {
   bottom: "inception_5b/pool_proj/bn"

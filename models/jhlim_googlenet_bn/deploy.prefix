@@ -1,9 +1,0 @@
-# Inception Network (GoogLeNet Batch Normalization Network)
-name: "InceptionNetwork"
-input: "data"
-input_shape {
-  dim: 10
-  dim: 3
-  dim: 224
-  dim: 224
-}
