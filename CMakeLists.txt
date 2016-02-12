@@ -64,6 +64,8 @@ if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++11 -DCMAKE_BUILD")
 endif()
 
+caffe_set_caffe_link()
+
 if(USE_libstdcpp)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -std=c++11")
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
