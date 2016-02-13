@@ -3,8 +3,15 @@ cmake_minimum_required(VERSION 2.8.7)
 # ---[ Caffe project
 project(Caffe C CXX)
 
+# ---[ Caffe version
+set(CAFFE_TARGET_VERSION "0.14.2")
+set(CAFFE_TARGET_SOVERSION "0.14")
+add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
+
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+
+include(ExternalProject)
 
 include(cmake/Utils.cmake)
 include(cmake/Targets.cmake)
@@ -13,14 +20,18 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA support" OFF) # TODO: rename to USE_CUDA
-caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF NOT CPU_ONLY)
+caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
+caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" ON IF NOT CPU_ONLY)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
-set(python_version "2" CACHE STRING "Specify which python version to use")
+set(python_version "2" CACHE STRING "Specify which Python version to use")
 caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
-caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
+caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
+caffe_option(USE_OPENCV "Build with OpenCV support" ON)
+caffe_option(USE_LEVELDB "Build with levelDB" ON)
+caffe_option(USE_LMDB "Build with lmdb" ON)
+caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
@@ -45,7 +56,8 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 
 # ---[ Includes
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
+set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/3rdparty)
+include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR} ${THIRDPARTY_DIR})
 include_directories(BEFORE src) # This is needed for gtest.
 
 # ---[ Subdirectories
@@ -59,6 +71,10 @@ add_subdirectory(docs)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
+
+# ---[ pytest target
+add_custom_target(pytest COMMAND python${python_version} -m unittest discover -s caffe/test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python )
+add_dependencies(pytest pycaffe)
 
 # ---[ Configuration summary
 caffe_print_configuration_summary()

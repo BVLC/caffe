@@ -75,14 +75,12 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     bottom_data = bottom_memory_.gpu_data();
   }
 
-  // Propagte to param
+  // Propagate to param
   // Since to write bottom diff will affect top diff if top and bottom blobs
   // are identical (in-place computaion), we first compute param backward to
   // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
-    // slope_diff is set as 0, then accumulated over batches
-    caffe_gpu_set<Dtype>(this->blobs_[0]->count(), Dtype(0), slope_diff);
     int cdim = channels * dim;
     Dtype dsum = 0.;
     for (int n = 0; n < bottom[0]->num(); ++n) {
@@ -106,7 +104,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
     }
     if (channel_shared_) {
-      caffe_gpu_set(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
+      caffe_gpu_add_scalar(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
     }
   }
   // Propagate to bottom

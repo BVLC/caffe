@@ -193,7 +193,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_pad()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->set_pad(v0_layer_param.pad());
+        layer_param->mutable_convolution_param()->add_pad(v0_layer_param.pad());
       } else if (type == "pool") {
         layer_param->mutable_pooling_param()->set_pad(v0_layer_param.pad());
       } else {
@@ -203,7 +203,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_kernelsize()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->set_kernel_size(
+        layer_param->mutable_convolution_param()->add_kernel_size(
             v0_layer_param.kernelsize());
       } else if (type == "pool") {
         layer_param->mutable_pooling_param()->set_kernel_size(
@@ -224,7 +224,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_stride()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->set_stride(
+        layer_param->mutable_convolution_param()->add_stride(
             v0_layer_param.stride());
       } else if (type == "pool") {
         layer_param->mutable_pooling_param()->set_stride(
@@ -588,8 +588,8 @@ bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
   if (NetNeedsV0ToV1Upgrade(*param)) {
     // NetParameter was specified using the old style (V0LayerParameter); try to
     // upgrade it.
-    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
-               << "V0LayerParameter: " << param_file;
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "V0LayerParameter: " << param_file;
     NetParameter original_param(*param);
     if (!UpgradeV0Net(original_param, param)) {
       success = false;
@@ -599,29 +599,29 @@ bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
       LOG(INFO) << "Successfully upgraded file specified using deprecated "
                 << "V0LayerParameter";
     }
-    LOG(ERROR) << "Note that future Caffe releases will not support "
+    LOG(WARNING) << "Note that future Caffe releases will not support "
         << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
         << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
         << "weights upgrade this and any other net protos to the new format.";
   }
   // NetParameter uses old style data transformation fields; try to upgrade it.
   if (NetNeedsDataUpgrade(*param)) {
-    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
-               << "transformation parameters: " << param_file;
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "transformation parameters: " << param_file;
     UpgradeNetDataTransformation(param);
     LOG(INFO) << "Successfully upgraded file specified using deprecated "
               << "data transformation parameters.";
-    LOG(ERROR) << "Note that future Caffe releases will only support "
-               << "transform_param messages for transformation fields.";
+    LOG(WARNING) << "Note that future Caffe releases will only support "
+                 << "transform_param messages for transformation fields.";
   }
   if (NetNeedsV1ToV2Upgrade(*param)) {
-    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
-               << "V1LayerParameter: " << param_file;
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "V1LayerParameter: " << param_file;
     NetParameter original_param(*param);
     if (!UpgradeV1Net(original_param, param)) {
       success = false;
       LOG(ERROR) << "Warning: had one or more problems upgrading "
-          << "V1LayerParameter (see above); continuing anyway.";
+                 << "V1LayerParameter (see above); continuing anyway.";
     } else {
       LOG(INFO) << "Successfully upgraded file specified using deprecated "
                 << "V1LayerParameter";

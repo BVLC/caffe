@@ -18,8 +18,12 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       1, 1);
   temp_.Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
-  sum_multiplier_.Reshape(1, 1,
-      bottom[0]->height(), bottom[0]->width());
+  if ( this->layer_param_.mvn_param().across_channels() ) {
+    sum_multiplier_.Reshape(1, bottom[0]->channels(), bottom[0]->height(),
+                            bottom[0]->width());
+  } else {
+    sum_multiplier_.Reshape(1, 1, bottom[0]->height(), bottom[0]->width());
+  }
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   eps_ = this->layer_param_.mvn_param().eps();
@@ -130,7 +134,12 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
   } else {
-    caffe_copy(temp_.count(), top_diff, bottom_diff);
+    caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
+      sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
+      mean_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
+      temp_.mutable_cpu_data());
+    caffe_add(temp_.count(), top_diff, temp_.cpu_data(), bottom_diff);
   }
 }
 

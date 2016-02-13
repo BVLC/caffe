@@ -1,13 +1,25 @@
+#include <boost/thread.hpp>
 #include <glog/logging.h>
+#include <cmath>
 #include <cstdio>
 #include <ctime>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
 namespace caffe {
 
-shared_ptr<Caffe> Caffe::singleton_;
+// Make sure each thread can have different values.
+static boost::thread_specific_ptr<Caffe> thread_instance_;
+
+
+Caffe& Caffe::Get() {
+  if (!thread_instance_.get()) {
+    thread_instance_.reset(new Caffe());
+  }
+  return *(thread_instance_.get());
+}
 
 // random seeding
 int64_t cluster_seedgen(void) {
@@ -25,7 +37,7 @@ int64_t cluster_seedgen(void) {
 
   pid = getpid();
   s = time(NULL);
-  seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
+  seed = std::abs(((s * 181) * ((pid - 83) * 359)) % 104729);
   return seed;
 }
 
@@ -42,7 +54,8 @@ void GlobalInit(int* pargc, char*** pargv) {
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
-    : random_generator_(), mode_(Caffe::CPU) { }
+    : random_generator_(), mode_(Caffe::CPU),
+      solver_count_(1), root_solver_(true) { }
 
 Caffe::~Caffe() { }
 
@@ -85,8 +98,12 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
-    mode_(Caffe::CPU) {
+    : cublas_handle_(NULL), curand_generator_(NULL),
+#ifdef USE_CUDNN
+    cudnn_handle_(NULL),
+#endif
+    random_generator_(),
+    mode_(Caffe::CPU), solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
@@ -99,6 +116,11 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+#ifdef USE_CUDNN
+  if (cudnnCreate(&cudnn_handle_) != CUDNN_STATUS_SUCCESS) {
+    LOG(ERROR) << "Cannot create cuDNN handle. cuDNN won't be available.";
+  }
+#endif
 }
 
 Caffe::~Caffe() {
@@ -106,6 +128,9 @@ Caffe::~Caffe() {
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
+#ifdef USE_CUDNN
+  if (cudnn_handle_) CUDNN_CHECK(cudnnDestroy(cudnn_handle_));
+#endif
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -144,6 +169,10 @@ void Caffe::SetDevice(const int device_id) {
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
+#ifdef USE_CUDNN
+  if (Get().cudnn_handle_) CUDNN_CHECK(cudnnDestroy(Get().cudnn_handle_));
+  CUDNN_CHECK(cudnnCreate(&Get().cudnn_handle_));
+#endif
 }
 
 void Caffe::DeviceQuery() {
@@ -180,7 +209,6 @@ void Caffe::DeviceQuery() {
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
   return;
 }
-
 
 class Caffe::RNG::Generator {
  public:
@@ -269,3 +297,4 @@ const char* curandGetErrorString(curandStatus_t error) {
 #endif  // CPU_ONLY
 
 }  // namespace caffe
+

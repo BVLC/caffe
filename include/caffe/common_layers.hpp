@@ -21,7 +21,8 @@ namespace caffe {
  *
  * Intended for use after a classification layer to produce a prediction.
  * If parameter out_max_val is set to true, output is a vector of pairs
- * (max_ind, max_val) for each image.
+ * (max_ind, max_val) for each image. The axis parameter specifies an axis
+ * along which to maximise.
  *
  * NOTE: does not implement Backwards operation.
  */
@@ -34,7 +35,11 @@ class ArgMaxLayer : public Layer<Dtype> {
    *   - top_k (\b optional uint, default 1).
    *     the number @f$ K @f$ of maximal items to output.
    *   - out_max_val (\b optional bool, default false).
-   *     if set, output a vector of pairs (max_ind, max_val) for each image.
+   *     if set, output a vector of pairs (max_ind, max_val) unless axis is set then
+   *     output max_val along the specified axis.
+   *   - axis (\b optional int).
+   *     if set, maximise along the specified axis else maximise the flattened
+   *     trailing dimensions for each index of the first / num dimension.
    */
   explicit ArgMaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -54,7 +59,8 @@ class ArgMaxLayer : public Layer<Dtype> {
    *      the inputs @f$ x @f$
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times 1 \times K \times 1) @f$ or, if out_max_val
-   *      @f$ (N \times 2 \times K \times 1) @f$
+   *      @f$ (N \times 2 \times K \times 1) @f$ unless axis set than e.g.
+   *      @f$ (N \times K \times H \times W) @f$ if axis == 1
    *      the computed outputs @f$
    *       y_n = \arg\max\limits_i x_{ni}
    *      @f$ (for @f$ K = 1 @f$).
@@ -68,7 +74,105 @@ class ArgMaxLayer : public Layer<Dtype> {
   }
   bool out_max_val_;
   size_t top_k_;
+  bool has_axis_;
+  int axis_;
 };
+
+/**
+ * @brief Normalizes the input to have 0-mean and/or unit (1) variance across
+ *        the batch.
+ *
+ * This layer computes Batch Normalization described in [1].  For
+ * each channel in the data (i.e. axis 1), it subtracts the mean and divides
+ * by the variance, where both statistics are computed across both spatial
+ * dimensions and across the different examples in the batch.
+ * 
+ * By default, during training time, the network is computing global mean/
+ * variance statistics via a running average, which is then used at test
+ * time to allow deterministic outputs for each input.  You can manually
+ * toggle whether the network is accumulating or using the statistics via the
+ * use_global_stats option.  IMPORTANT: for this feature to work, you MUST
+ * set the learning rate to zero for all three parameter blobs, i.e., 
+ * param {lr_mult: 0} three times in the layer definition.
+ *
+ * Note that the original paper also included a per-channel learned bias and
+ * scaling factor.  It is possible (though a bit cumbersome) to implement
+ * this in caffe using a single-channel DummyDataLayer filled with zeros,
+ * followed by a Convolution layer with output the same size as the current.
+ * This produces a channel-specific value that can be added or multiplied by
+ * the BatchNorm layer's output.
+ * 
+ * [1] S. Ioffe and C. Szegedy, "Batch Normalization: Accelerating Deep Network
+ *     Training by Reducing Internal Covariate Shift." arXiv preprint 
+ *     arXiv:1502.03167 (2015).  
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
+template <typename Dtype>
+class BatchNormLayer : public Layer<Dtype> {
+ public:
+  explicit BatchNormLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "BatchNorm"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  Blob<Dtype> mean_, variance_, temp_, x_norm_;
+  bool use_global_stats_;
+  Dtype moving_average_fraction_;
+  int channels_;
+  Dtype eps_;
+
+  // extra temporarary variables is used to carry out sums/broadcasting
+  // using BLAS
+  Blob<Dtype> batch_sum_multiplier_;
+  Blob<Dtype> num_by_chans_;
+  Blob<Dtype> spatial_sum_multiplier_;
+};
+
+#ifdef USE_CUDNN
+template <typename Dtype>
+class CuDNNBatchNormLayer : public BatchNormLayer<Dtype> {
+ public:
+  explicit CuDNNBatchNormLayer(const LayerParameter& param)
+      : BatchNormLayer<Dtype>(param), epsilon_(1e-4), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual ~CuDNNBatchNormLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  // cuDNN descriptors / handles
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
+  cudnnTensorDescriptor_t scale_bias_mean_var_desc_;
+  cudnnBatchNormMode_t mode_;
+
+  double epsilon_;
+  Blob<Dtype> save_mean_, save_inv_var_;
+  bool handles_setup_;
+};
+#endif
 
 /**
  * @brief Takes at least two Blob%s and concatenates them along either the num
@@ -85,7 +189,7 @@ class ConcatLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Concat"; }
-  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
@@ -178,6 +282,107 @@ class EltwiseLayer : public Layer<Dtype> {
   Blob<int> max_idx_;
 
   bool stable_prod_grad_;
+};
+
+/**
+ * @brief A layer for learning "embeddings" of one-hot vector input.
+ *        Equivalent to an InnerProductLayer with one-hot vectors as input, but
+ *        for efficiency the input is the "hot" index of each column itself.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
+template <typename Dtype>
+class EmbedLayer : public Layer<Dtype> {
+ public:
+  explicit EmbedLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Embed"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int M_;
+  int K_;
+  int N_;
+  bool bias_term_;
+  Blob<Dtype> bias_multiplier_;
+};
+
+/**
+ * @brief Takes two+ Blobs, interprets last Blob as a selector and
+ *  filter remaining Blobs accordingly with selector data (0 means that
+ * the corresponding item has to be filtered, non-zero means that corresponding
+ * item needs to stay).
+ */
+template <typename Dtype>
+class FilterLayer : public Layer<Dtype> {
+ public:
+  explicit FilterLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Filter"; }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 2+)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs to be filtered @f$ x_1 @f$
+   *   -# ...
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs to be filtered @f$ x_K @f$
+   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *      the selector blob
+   * @param top output Blob vector (length 1+)
+   *   -# @f$ (S \times C \times H \times W) @f$ ()
+   *        the filtered output @f$ x_1 @f$
+   *        where S is the number of items
+   *        that haven't been filtered
+   *      @f$ (S \times C \times H \times W) @f$
+   *        the filtered output @f$ x_K @f$
+   *        where S is the number of items
+   *        that haven't been filtered
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the forwarded inputs.
+   *
+   * @param top output Blob vector (length 1+), providing the error gradient with
+   *        respect to the outputs
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 2+), into which the top error
+   *        gradient is copied
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool first_reshape_;
+  vector<int> indices_to_forward_;
 };
 
 /**
@@ -337,6 +542,51 @@ class ReshapeLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Compute "reductions" -- operations that return a scalar output Blob
+ *        for an input Blob of arbitrary size, such as the sum, absolute sum,
+ *        and sum of squares.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
+template <typename Dtype>
+class ReductionLayer : public Layer<Dtype> {
+ public:
+  explicit ReductionLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Reduction"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  /// @brief the reduction operation performed by the layer
+  ReductionParameter_ReductionOp op_;
+  /// @brief a scalar coefficient applied to all outputs
+  Dtype coeff_;
+  /// @brief the index of the first input axis to reduce
+  int axis_;
+  /// @brief the number of reductions performed
+  int num_;
+  /// @brief the input size of each reduction
+  int dim_;
+  /// @brief a helper Blob used for summation (op_ == SUM)
+  Blob<Dtype> sum_multiplier_;
+};
+
+/**
  * @brief Ignores bottom blobs while producing no top blobs. (This is useful
  *        to suppress outputs during testing.)
  */
@@ -424,7 +674,6 @@ class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool handles_setup_;
-  cudnnHandle_t             handle_;
   cudnnTensorDescriptor_t bottom_desc_;
   cudnnTensorDescriptor_t top_desc_;
 };
@@ -479,7 +728,7 @@ class SliceLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "Slice"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -496,6 +745,35 @@ class SliceLayer : public Layer<Dtype> {
   int slice_size_;
   int slice_axis_;
   vector<int> slice_point_;
+};
+
+/**
+ * @brief Copy a Blob along specified dimensions.
+ */
+template <typename Dtype>
+class TileLayer : public Layer<Dtype> {
+ public:
+  explicit TileLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Tile"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  unsigned int axis_, tiles_, outer_dim_, inner_dim_;
 };
 
 }  // namespace caffe

@@ -1,3 +1,8 @@
+// Make sure we include Python.h before any system header
+// to avoid _POSIX_C_SOURCE redefinition
+#ifdef WITH_PYTHON_LAYER
+#include <boost/python.hpp>
+#endif
 #include <string>
 
 #include "caffe/layer.hpp"
@@ -35,6 +40,29 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
+// Get BN layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetBatchNormLayer(const LayerParameter& param) {
+  BatchNormParameter_Engine engine = param.batch_norm_param().engine();
+  if (engine == BatchNormParameter_Engine_DEFAULT) {
+    engine = BatchNormParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = BatchNormParameter_Engine_CUDNN;
+#endif
+  }
+  if (engine == BatchNormParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new BatchNormLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == BatchNormParameter_Engine_CUDNN) {
+    return shared_ptr<Layer<Dtype> >(new CuDNNBatchNormLayer<Dtype>(param));
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(BatchNorm, GetBatchNormLayer);
+
 // Get pooling layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
@@ -50,13 +78,17 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     PoolingParameter p_param = param.pooling_param();
-    if (p_param.pad() || p_param.pad_h() || p_param.pad_w() ||
-        param.top_size() > 1) {
-      LOG(INFO) << "CUDNN does not support padding or multiple tops. "
-                << "Using Caffe's own pooling layer.";
-      return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+
+// CuDNN assumes layers are not being modified in place, thus breaking
+// our index tracking for updates in some cases in Caffe.  Until there
+// is a workaround in Caffe (index management) or cuDNN, use Caffe
+// layer to max pooling, or don't use in place layers after max
+// pooling layers
+    if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
+        return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+    } else {
+        return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
     }
-    return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -64,6 +96,43 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 }
 
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
+
+// Get LRN layer according to engine
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
+  LRNParameter_Engine engine = param.lrn_param().engine();
+
+  if (engine == LRNParameter_Engine_DEFAULT) {
+#ifdef USE_CUDNN
+    engine = LRNParameter_Engine_CUDNN;
+#else
+    engine = LRNParameter_Engine_CAFFE;
+#endif
+  }
+
+  if (engine == LRNParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == LRNParameter_Engine_CUDNN) {
+    LRNParameter lrn_param = param.lrn_param();
+
+    if (lrn_param.norm_region() ==LRNParameter_NormRegion_WITHIN_CHANNEL) {
+      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
+    } else {
+      // local size is too big to be handled through cuDNN
+      if (param.lrn_param().local_size() > CUDNN_LRN_MAX_N) {
+        return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+      } else {
+        return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
+      }
+    }
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
 
 // Get relu layer according to engine.
 template <typename Dtype>

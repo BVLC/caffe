@@ -1,4 +1,5 @@
-net: "hdf5_classification/train_val.prototxt"
+train_net: "examples/hdf5_classification/logreg_auto_train.prototxt"
+test_net: "examples/hdf5_classification/logreg_auto_test.prototxt"
 test_iter: 250
 test_interval: 1000
 base_lr: 0.01
@@ -10,5 +11,5 @@ max_iter: 10000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "hdf5_classification/data/train"
+snapshot_prefix: "examples/hdf5_classification/data/train"
 solver_mode: CPU
