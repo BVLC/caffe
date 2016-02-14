@@ -15,9 +15,12 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(prior_box_param.has_min_size()) << "must provide min_size.";
   min_size_ = prior_box_param.min_size();
   CHECK_GT(min_size_, 0) << "min_size must be positive.";
-  CHECK(prior_box_param.has_max_size()) << "must provide max_size.";
-  max_size_ = prior_box_param.max_size();
-  CHECK_GT(max_size_, 0) << "max_size must be positive.";
+  max_size_ = -1;
+  if (prior_box_param.has_max_size()) {
+    max_size_ = prior_box_param.max_size();
+    CHECK_GT(max_size_, min_size_) << "max_size must be greater than min_size.";
+    num_priors_ = 1;
+  }
   aspect_ratios_.clear();
   aspect_ratios_.push_back(1.);
   flip_ = prior_box_param.flip();
@@ -37,8 +40,10 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
-  num_priors_ = aspect_ratios_.size() + 1;
+  num_priors_ += aspect_ratios_.size();
   clip_ = prior_box_param.clip();
+  variance_ = prior_box_param.variance();
+  CHECK_GT(variance_, 0);
 }
 
 template <typename Dtype>
@@ -51,7 +56,7 @@ void PriorBoxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // generate one set of priors which can be shared across all images.
   top_shape[0] = 1;
   // 2 channels. First channel stores the mean of each prior coordinate.
-  // Second channel stores the variance (e.g. 0.1) of each prior coordinate.
+  // Second channel stores the variance of each prior coordinate.
   top_shape[1] = 2;
   top_shape[2] = layer_width * layer_height * num_priors_ * 4;
   CHECK_GT(top_shape[2], 0);
@@ -86,16 +91,18 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // ymax
       top_data[idx++] = (center_y + box_height / 2.) / img_height;
 
-      // second prior: aspect_ratio = 1, size = sqrt(min_size * max_size)
-      box_width = box_height = sqrt(min_size_ * max_size_);
-      // xmin
-      top_data[idx++] = (center_x - box_width / 2.) / img_width;
-      // ymin
-      top_data[idx++] = (center_y - box_height / 2.) / img_height;
-      // xmax
-      top_data[idx++] = (center_x + box_width / 2.) / img_width;
-      // ymax
-      top_data[idx++] = (center_y + box_height / 2.) / img_height;
+      if (max_size_ > 0) {
+        // second prior: aspect_ratio = 1, size = sqrt(min_size * max_size)
+        box_width = box_height = sqrt(min_size_ * max_size_);
+        // xmin
+        top_data[idx++] = (center_x - box_width / 2.) / img_width;
+        // ymin
+        top_data[idx++] = (center_y - box_height / 2.) / img_height;
+        // xmax
+        top_data[idx++] = (center_x + box_width / 2.) / img_width;
+        // ymax
+        top_data[idx++] = (center_y + box_height / 2.) / img_height;
+      }
 
       // rest of priors
       for (int r = 0; r < aspect_ratios_.size(); ++r) {
@@ -122,9 +129,9 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data[d] = std::min<Dtype>(std::max<Dtype>(top_data[d], 0.), 1.);
     }
   }
-  // set the variance to 0.1.
+  // set the variance.
   top_data += top[0]->offset(0, 1);
-  caffe_set<Dtype>(dim, Dtype(0.1), top_data);
+  caffe_set<Dtype>(dim, Dtype(variance_), top_data);
 }
 
 INSTANTIATE_CLASS(PriorBoxLayer);
