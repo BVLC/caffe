@@ -1184,6 +1184,8 @@ message PriorBoxParameter {
   optional bool flip = 4 [default = true];
   // If true, will clip the prior so that it is within [0, 1]
   optional bool clip = 5 [default = true];
+  // Variance for adjusting the prior bboxes.
+  optional float variance = 6 [default = 0.1];
 }
 
 message PythonParameter {
