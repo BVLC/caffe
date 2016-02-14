@@ -1093,6 +1093,8 @@ message MultiBoxLossParameter {
   optional bool do_neg_mining = 12 [default = true];
   // The negative/positive ratio.
   optional float neg_pos_ratio = 13 [default = 3.0];
+  // The negative overlap upperbound for the unmatched predictions.
+  optional float neg_overlap = 14 [default = 0.3];
 }
 
 message MVNParameter {

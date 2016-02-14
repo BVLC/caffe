@@ -37,6 +37,7 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   use_difficult_gt_ = multibox_loss_param.use_difficult_gt();
   do_neg_mining_ = multibox_loss_param.do_neg_mining();
   neg_pos_ratio_ = multibox_loss_param.neg_pos_ratio();
+  neg_overlap_ = multibox_loss_param.neg_overlap();
 
   if (do_neg_mining_) {
     CHECK(share_location_)
@@ -235,7 +236,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         vector<pair<float, int> > scores_indices;
         int num_neg = 0;
         for (int m = 0; m < match_indices[label].size(); ++m) {
-          if (match_indices[label][m] == -1) {
+          if (match_indices[label][m] == -1 &&
+              match_overlaps[label][m] < neg_overlap_) {
             scores_indices.push_back(std::make_pair(all_max_scores[i][m], m));
             ++num_neg;
           }
