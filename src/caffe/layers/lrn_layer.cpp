@@ -80,7 +80,7 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   //  ---- openmp ----
   num_of_threads_ = 1;
 #ifdef _OPENMP
-  num_of_threads_ = omp_get_max_threads();
+  num_of_threads_ = omp_get_max_threads() < num_ ? omp_get_max_threads() : num_;
   if (num_of_threads_ < 1) {
      LOG(WARNING) << "LRN layer: omp_get_max_threads() =" << num_of_threads_;
      num_of_threads_ = 1;
