@@ -41,6 +41,18 @@ template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK(Caffe::root_solver() || root_net_)
       << "root_net_ needs to be set for all non-root solvers";
+
+#ifdef _OPENMP
+  if (Caffe::mode() == Caffe::GPU) {
+    caffe::cpu::OpenMpManager::setGpuEnabled();
+  } else {
+    caffe::cpu::OpenMpManager::setGpuDisabled();
+  }
+
+  caffe::cpu::OpenMpManager::bindOpenMpThreads();
+  caffe::cpu::OpenMpManager::printVerboseInformation();
+#endif
+
   // Set phase from the state.
   phase_ = in_param.state().phase();
   // Filter layers based on their include/exclude rules and
@@ -281,15 +293,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   ShareWeights();
   debug_info_ = param.debug_info();
-
-#ifdef _OPENMP
-  if (Caffe::mode() == Caffe::GPU) {
-    caffe::cpu::OpenMpManager::setGpuEnabled();
-  } else {
-    caffe::cpu::OpenMpManager::setGpuDisabled();
-  }
-  caffe::cpu::OpenMpManager::applyConfiguration();
-#endif
 
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }

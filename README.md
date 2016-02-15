@@ -25,15 +25,15 @@ This fork is dedicated to improving Caffe performance when running on CPU, in pa
 servers.
 
 ## Performance Results
-Time measures are: average Forward-Backward as stated by *caffe time*.*speedup* is
+Time measures are average Forward-Backward as stated by caffe time. Speedup factor is
 (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            661 |          1237 |         1356 |               23|
+| intelcaffe-master |            624 |          1172 |         1297 |               21|
 | bvlc-caffe-master |           3872 |          6899 |         7343 |              323|
-|    speedup factor |           x5.9 |          x5.6 |         x5.4 |            x14.0|
+|    speedup factor |           x6.2 |          x5.9 |         x5.7 |            x15.4|
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |

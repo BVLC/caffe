@@ -32,15 +32,12 @@ class Collection {
   unsigned totalNumberOfSockets;
   unsigned totalNumberOfCpuCores;
   std::vector<Processor> processors;
-
   Processor *currentProcessor;
 
+  Collection();
   Collection(const Collection &collection);
   Collection &operator =(const Collection &collection);
-
   static Collection &getSingleInstance();
-
-  Collection();
 
   void parseCpuFile(const char *fileName);
   void parseCpuFileContent(FILE *file);
@@ -61,26 +58,32 @@ class OpenMpManager {
  public:
   static void setGpuEnabled();
   static void setGpuDisabled();
-  static void applyConfiguration();
+
+  static void bindCurrentThreadToPrimaryCore();
+  static void bindOpenMpThreads();
+
+  static void printVerboseInformation();
 
  private:
   bool isGpuEnabled;
-  bool areEnvVarsSpecified;
-
-  OpenMpManager(const OpenMpManager &collection);
-  OpenMpManager &operator =(const OpenMpManager &collection);
-
-  static OpenMpManager &getInstance();
+  bool isAnyOpenMpEnvVarSpecified;
+  cpu_set_t currentCpuSet;
+  cpu_set_t currentCoreSet;
 
   OpenMpManager();
-  void testForEnvVariablePresence(const char *envVariableName);
-  void bindOpenMpCores();
-  void getCoreMask(cpu_set_t *core_set, cpu_set_t *current_set);
-  unsigned getPhysicalCoreId(cpu_set_t *core_set, unsigned logicalId);
-  unsigned getRecommendedNumberOfOpenMpThreads();
-  unsigned setCpuAffinityThreadLimit(unsigned usedProcessorsLimit);
-  void printVerboseInformation(unsigned recommendedNumberOfOpenMpThreads,
-    unsigned usedProcessorsLimit);
+  OpenMpManager(const OpenMpManager &openMpManager);
+  OpenMpManager &operator =(const OpenMpManager &openMpManager);
+  static OpenMpManager &getInstance();
+
+  void getOpenMpEnvVars();
+  void getCurrentCpuSet();
+  void getDefaultCpuSet(cpu_set_t *defaultCpuSet);
+  void getCurrentCoreSet();
+
+  bool isThreadsBindAllowed();
+  void setOpenMpThreadNumberLimit();
+  void bindCurrentThreadToLogicalCore(unsigned logicalCoreId);
+  unsigned getPhysicalCoreId(unsigned logicalCoreId);
 };
 
 #endif  // _OPENMP
