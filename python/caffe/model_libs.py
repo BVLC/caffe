@@ -226,8 +226,8 @@ def ResNet152Body(net, from_layer, use_pool5=True):
 
 
 def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
-        normalizations=[], use_batchnorm=True, min_sizes=[], max_sizes=[],
-        aspect_ratios=[], share_location=True, flip=True, clip=True):
+        normalizations=[], use_batchnorm=True, min_sizes=[], max_sizes=[], prior_variance = 0.1,
+        aspect_ratios=[], share_location=True, flip=True, clip=True, inter_layer_depth=0):
     assert num_classes, "must provide num_classes"
     assert num_classes > 0, "num_classes must be positive number"
     if normalizations:
@@ -251,6 +251,13 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
                 net[norm_name] = L.Normalize(net[from_layer], scale_filler=dict(type="constant", value=normalizations[i]),
                     across_spatial=False, channel_shared=False, fix_scale=False)
                 from_layer = norm_name
+
+        # Add intermediate layers.
+        if inter_layer_depth > 0:
+            inter_name = "{}_inter".format(from_layer)
+            ConvBNLayer(net, from_layer, inter_name, use_bn=use_batchnorm, use_relu=True,
+                num_output=inter_layer_depth, kernel_size=1, pad=0, stride=1)
+            from_layer = inter_name
 
         # Estimate number of priors per location given provided parameters.
         aspect_ratio = [2, 3]
@@ -289,7 +296,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
         # Create prior generation layer.
         name = "{}_mbox_priorbox".format(from_layer)
         net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
-                aspect_ratio=aspect_ratio, flip=flip, clip=clip)
+                aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
         priorbox_layers.append(net[name])
 
     # Concatenate priorbox, loc, and conf layers.

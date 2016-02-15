@@ -19,7 +19,7 @@ def AddExtraLayers(net, use_batchnorm=True):
     out_layer = "conv6_2"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2)
 
-    for i in xrange(7, 10):
+    for i in xrange(7, 9):
       from_layer = out_layer
       out_layer = "conv{}_1".format(i)
       ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1)
@@ -52,6 +52,7 @@ model_name = "VGG_VOC0712_{}".format(job_name)
 train_data = "examples/VOC0712/VOC0712_trainval_{}_lmdb".format(size)
 test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
 label_map_file = "data/VOC0712/labelmap_voc.prototxt"
+name_size_file = "data/VOC0712/test_name_size.txt"
 pretrain_model = "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
 output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}/Main".format(os.environ['HOME'], job_name)
 device_id = 0
@@ -83,7 +84,8 @@ multibox_loss_param = {
     'normalize': False,
     'use_difficult_gt': False,
     'do_neg_mining': True,
-    'neg_pos_ratio': 3,
+    'neg_pos_ratio': 1,
+    'neg_overlap': 0.5,
     }
 # parameters for generating priors.
 # minimum dimension of input image
@@ -92,19 +94,18 @@ min_dim = 300
 # conv6_2 ==> 10 x 10
 # conv7_2 ==> 5 x 5
 # conv8_2 ==> 3 x 3
-# conv9_2 ==> 2 x 2
 # pool6 ==> 1 x 1
-mbox_source_layers = ['fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'conv9_2', 'pool6']
+mbox_source_layers = ['fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'pool6']
 # in percent %
-min_ratio = 10
+min_ratio = 20
 max_ratio = 100
-step = 15
+step = 18
 min_sizes = []
 max_sizes = []
 for ratio in xrange(min_ratio, max_ratio, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-aspect_ratios = [[2, 4], [2, 3], [2], [2], [2], [2]]
+aspect_ratios = [[2], [2], [2, 3], [2, 3], [2]]
 flip = True
 clip = True
 # parameters for solver.
@@ -115,8 +116,8 @@ solver_param = {
     'weight_decay': 0.0005,
     'lr_policy': "fixed",
     'iter_size': iter_size,
-    'max_iter': 500000,
-    'snapshot': 100000,
+    'max_iter': 50000,
+    'snapshot': 10000,
     'display': 10,
     'average_loss': 10,
     'type': "AdaGrad",
@@ -125,8 +126,8 @@ solver_param = {
     'debug_info': False,
     'snapshot_after_train': True,
     # Test parameters
-    'test_iter': [4952],
-    'test_interval': 10000,
+    'test_iter': [495],
+    'test_interval': 2000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
@@ -142,7 +143,7 @@ det_out_param = {
         'output_name_prefix': "comp4_det_test_",
         'output_format': "VOC",
         'label_map_file': "{}/{}".format(caffe_root, label_map_file),
-        'name_size_file': "{}/data/VOC0712/test_name_size.txt".format(caffe_root),
+        'name_size_file': "{}/{}".format(caffe_root, name_size_file),
         },
     }
 # parameters for evaluation
@@ -151,7 +152,7 @@ det_eval_param = {
     'background_label_id': background_label_id,
     'overlap_threshold': 0.5,
     'evaluate_difficult_gt': False,
-    'name_size_file': "{}/data/VOC0712/test_name_size.txt".format(caffe_root),
+    'name_size_file': "{}/{}".format(caffe_root, name_size_file),
     }
 
 train_net_file = "{}/train.prototxt".format(save_dir)
@@ -209,6 +210,16 @@ mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, num_classes=num_classes,
         share_location=share_location, flip=flip, clip=clip)
+
+if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:
+  conf_name = "mbox_conf"
+  reshape_name = "{}_reshape".format(conf_name)
+  net[reshape_name] = L.Reshape(net[conf_name], shape=dict(dim=[0, -1, num_classes]))
+  softmax_name = "{}_softmax".format(conf_name)
+  net[softmax_name] = L.Softmax(net[reshape_name], axis=2)
+  flatten_name = "{}_flatten".format(conf_name)
+  net[flatten_name] = L.Flatten(net[softmax_name], axis=1)
+  mbox_layers[1] = net[flatten_name]
 
 net.detection_out = L.DetectionOutput(*mbox_layers,
     detection_output_param=det_out_param,
