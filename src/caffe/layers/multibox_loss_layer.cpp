@@ -38,6 +38,7 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   do_neg_mining_ = multibox_loss_param.do_neg_mining();
   neg_pos_ratio_ = multibox_loss_param.neg_pos_ratio();
   neg_overlap_ = multibox_loss_param.neg_overlap();
+  code_type_ = multibox_loss_param.code_type();
 
   if (do_neg_mining_) {
     CHECK(share_location_)
@@ -177,8 +178,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         }
         // Decode the prediction into bbox first.
         vector<NormalizedBBox> loc_bboxes;
-        DecodeBBoxes(prior_bboxes, prior_variances, all_loc_preds[i][label],
-                     &loc_bboxes);
+        DecodeBBoxes(prior_bboxes, prior_variances, code_type_,
+                     all_loc_preds[i][label], &loc_bboxes);
         MatchBBox(gt_bboxes, loc_bboxes, label, match_type_,
                   overlap_threshold_, &match_indices[label],
                   &match_overlaps[label]);
@@ -295,7 +296,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           const NormalizedBBox& gt_bbox = all_gt_bboxes[i][gt_idx];
           NormalizedBBox gt_encode;
           CHECK_LT(j, prior_bboxes.size());
-          EncodeBBox(prior_bboxes[j], prior_variances[j], gt_bbox, &gt_encode);
+          EncodeBBox(prior_bboxes[j], prior_variances[j], code_type_, gt_bbox,
+                     &gt_encode);
           loc_gt_data[count * 4] = gt_encode.xmin();
           loc_gt_data[count * 4 + 1] = gt_encode.ymin();
           loc_gt_data[count * 4 + 2] = gt_encode.xmax();

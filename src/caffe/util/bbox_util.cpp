@@ -99,24 +99,74 @@ float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
 
 void EncodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
-    const NormalizedBBox& bbox, NormalizedBBox* encode_bbox) {
-  CHECK_EQ(prior_variance.size(), 4);
-  for (int i = 0; i < prior_variance.size(); ++i) {
-    CHECK_GT(prior_variance[i], 0);
+    const CodeType code_type, const NormalizedBBox& bbox,
+    NormalizedBBox* encode_bbox) {
+  if (code_type == PriorBoxParameter_CodeType_CORNER) {
+    CHECK_EQ(prior_variance.size(), 4);
+    for (int i = 0; i < prior_variance.size(); ++i) {
+      CHECK_GT(prior_variance[i], 0);
+    }
+    encode_bbox->set_xmin(
+        (bbox.xmin() - prior_bbox.xmin()) / prior_variance[0]);
+    encode_bbox->set_ymin(
+        (bbox.ymin() - prior_bbox.ymin()) / prior_variance[1]);
+    encode_bbox->set_xmax(
+        (bbox.xmax() - prior_bbox.xmax()) / prior_variance[2]);
+    encode_bbox->set_ymax(
+        (bbox.ymax() - prior_bbox.ymax()) / prior_variance[3]);
+  } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
+    float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
+    CHECK_GT(prior_width, 0);
+    float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
+    CHECK_GT(prior_height, 0);
+    float prior_center_x = (prior_bbox.xmin() + prior_bbox.xmax()) / 2.;
+    float prior_center_y = (prior_bbox.ymin() + prior_bbox.ymax()) / 2.;
+
+    float bbox_width = bbox.xmax() - bbox.xmin();
+    CHECK_GT(bbox_width, 0);
+    float bbox_height = bbox.ymax() - bbox.ymin();
+    CHECK_GT(bbox_height, 0);
+    float bbox_center_x = (bbox.xmin() + bbox.xmax()) / 2.;
+    float bbox_center_y = (bbox.ymin() + bbox.ymax()) / 2.;
+
+    encode_bbox->set_xmin((bbox_center_x - prior_center_x) / prior_width);
+    encode_bbox->set_ymin((bbox_center_y - prior_center_y) / prior_height);
+    encode_bbox->set_xmax(log(bbox_width / prior_width));
+    encode_bbox->set_ymax(log(bbox_height / prior_height));
+  } else {
+    LOG(FATAL) << "Unknown LocLossType.";
   }
-  encode_bbox->set_xmin((bbox.xmin() - prior_bbox.xmin()) / prior_variance[0]);
-  encode_bbox->set_ymin((bbox.ymin() - prior_bbox.ymin()) / prior_variance[1]);
-  encode_bbox->set_xmax((bbox.xmax() - prior_bbox.xmax()) / prior_variance[2]);
-  encode_bbox->set_ymax((bbox.ymax() - prior_bbox.ymax()) / prior_variance[3]);
 }
 
 void DecodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
-    const NormalizedBBox& bbox, NormalizedBBox* decode_bbox) {
-  decode_bbox->set_xmin(prior_bbox.xmin() + prior_variance[0] * bbox.xmin());
-  decode_bbox->set_ymin(prior_bbox.ymin() + prior_variance[1] * bbox.ymin());
-  decode_bbox->set_xmax(prior_bbox.xmax() + prior_variance[2] * bbox.xmax());
-  decode_bbox->set_ymax(prior_bbox.ymax() + prior_variance[3] * bbox.ymax());
+    const CodeType code_type, const NormalizedBBox& bbox,
+    NormalizedBBox* decode_bbox) {
+  if (code_type == PriorBoxParameter_CodeType_CORNER) {
+    decode_bbox->set_xmin(prior_bbox.xmin() + prior_variance[0] * bbox.xmin());
+    decode_bbox->set_ymin(prior_bbox.ymin() + prior_variance[1] * bbox.ymin());
+    decode_bbox->set_xmax(prior_bbox.xmax() + prior_variance[2] * bbox.xmax());
+    decode_bbox->set_ymax(prior_bbox.ymax() + prior_variance[3] * bbox.ymax());
+  } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
+    float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
+    CHECK_GT(prior_width, 0);
+    float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
+    CHECK_GT(prior_height, 0);
+    float prior_center_x = (prior_bbox.xmin() + prior_bbox.xmax()) / 2.;
+    float prior_center_y = (prior_bbox.ymin() + prior_bbox.ymax()) / 2.;
+
+    float decode_bbox_center_x = bbox.xmin() * prior_width + prior_center_x;
+    float decode_bbox_center_y = bbox.ymin() * prior_height + prior_center_y;
+    float decode_bbox_width = exp(bbox.xmax()) * prior_width;
+    float decode_bbox_height = exp(bbox.ymax()) * prior_height;
+
+    decode_bbox->set_xmin(decode_bbox_center_x - decode_bbox_width / 2.);
+    decode_bbox->set_ymin(decode_bbox_center_y - decode_bbox_height / 2.);
+    decode_bbox->set_xmax(decode_bbox_center_x + decode_bbox_width / 2.);
+    decode_bbox->set_ymax(decode_bbox_center_y + decode_bbox_height / 2.);
+  } else {
+    LOG(FATAL) << "Unknown LocLossType.";
+  }
   float bbox_size = BBoxSize(*decode_bbox);
   decode_bbox->set_size(bbox_size);
 }
@@ -124,6 +174,7 @@ void DecodeBBox(
 void DecodeBBoxes(
     const vector<NormalizedBBox>& prior_bboxes,
     const vector<vector<float> >& prior_variances,
+    const CodeType code_type,
     const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes) {
   CHECK_EQ(prior_bboxes.size(), prior_variances.size());
@@ -135,8 +186,8 @@ void DecodeBBoxes(
   decode_bboxes->clear();
   for (int i = 0; i < num_bboxes; ++i) {
     NormalizedBBox decode_bbox;
-    DecodeBBox(prior_bboxes[i], prior_variances[i], bboxes[i],
-               &decode_bbox);
+    DecodeBBox(prior_bboxes[i], prior_variances[i], code_type,
+               bboxes[i], &decode_bbox);
     decode_bboxes->push_back(decode_bbox);
   }
 }

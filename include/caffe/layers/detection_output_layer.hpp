@@ -9,6 +9,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
 
@@ -62,6 +63,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   bool share_location_;
   int loc_classes_;
   int background_label_id_;
+  CodeType code_type_;
 
   int num_;
   int num_priors_;

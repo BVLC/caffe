@@ -14,6 +14,7 @@
 
 namespace caffe {
 
+typedef PriorBoxParameter_CodeType CodeType;
 typedef MultiBoxLossParameter_MatchType MatchType;
 typedef map<int, vector<NormalizedBBox> > LabelBBox;
 
@@ -54,17 +55,17 @@ float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 
 // Encode a bbox according to a prior bbox.
 void EncodeBBox(const NormalizedBBox& prior_bbox,
-    const vector<float>& prior_variance,
+    const vector<float>& prior_variance, const CodeType code_type,
     const NormalizedBBox& bbox, NormalizedBBox* encode_bbox);
 
 // Decode a bbox according to a prior bbox.
 void DecodeBBox(const NormalizedBBox& prior_bbox,
-    const vector<float>& prior_variance,
+    const vector<float>& prior_variance, const CodeType code_type,
     const NormalizedBBox& bbox, NormalizedBBox* decode_bbox);
 
 // Decode a set of bboxes according to a set of prior bboxes.
 void DecodeBBoxes(const vector<NormalizedBBox>& prior_bboxes,
-    const vector<vector<float> >& prior_variances,
+    const vector<vector<float> >& prior_variances, const CodeType code_type,
     const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes);
 
