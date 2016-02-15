@@ -231,7 +231,8 @@ int main(int argc, char** argv) {
   bn_layers.resize(0); 
   for (int i = 0; i < layers.size(); ++i) {
     //if (LayerParameter_LayerType_BN == layers[i]->layer_param().type()) {
-    if ("BatchNorm" == layers[i]->layer_param().type()) {
+    if ("BatchNorm" == layers[i]->layer_param().type() ||
+        "BN" == layers[i]->layer_param().type()) {
       bn_layers.push_back(i); 
       LOG(INFO) << std::setfill(' ') << std::setw(10) << layers[i]->layer_param().name() << " (" << bn_layers[num_bn_layers]+1 << " th layer)";
       num_bn_layers++;     
@@ -521,7 +522,8 @@ int main(int argc, char** argv) {
 //
 //  int k_tmp = 0; 
 //  for (int i = 0; i < test_layers.size(); ++i) {
-//    if ("BatchNorm" == test_layers[i]->layer_param().type()) {
+//    if ("BatchNorm" == test_layers[i]->layer_param().type() ||
+//        "BN" == test_layers[i]->layer_param().type()) {
 //      bn_layers[k_tmp] = i; 
 //      LOG(INFO) << std::setfill(' ') << std::setw(10) << test_layers[i]->layer_param().name() << " (" << bn_layers[k_tmp]+1 << " th layer)";
 //      k_tmp++;
@@ -529,8 +531,22 @@ int main(int argc, char** argv) {
 //  }
 //  CHECK_EQ(k_tmp, num_bn_layers); 
 //
-//  ////////////assigning batch mean and batch variance. 
+//  ////////////assigning batch mean and batch variance.
+//  const vector<vector<Blob<float>*> >& bottom_vecs_test = caffe_test_net.bottom_vecs(); 
 //  for (int k = 0; k < num_bn_layers; ++k) {
+//    if ("BatchNorm" == test_layers[bn_layers[k]]->layer_param().type()) { // Resize if BatchNorm (else BN)
+//      // Get bottoms
+//      const vector<Blob<float>*>& bottom = bottom_vecs_test[bn_layers[k]];
+//      // Get dimension
+//      int C = bottom[0]->channels();
+//      // Reshape for BatchNorm Layer
+//      vector<int> sz;
+//      sz.push_back(C);
+//      batch_mean_vecs[k]->Reshape(sz);
+//      batch_variance_vecs[k]->Reshape(sz);
+//    }
+//
+//    // Assign (global) batch mean and variance.
 //    const shared_ptr<BatchNormLayer<float> > layer = 
 //        dynamic_pointer_cast<BatchNormLayer<float> >(test_layers[bn_layers[k]]);  
 //    layer->set_batch_mean_and_batch_variance(
