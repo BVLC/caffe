@@ -14,7 +14,6 @@
 
 namespace caffe {
 
-typedef MultiBoxLossParameter_MatchType MatchType;
 typedef MultiBoxLossParameter_LocLossType LocLossType;
 typedef MultiBoxLossParameter_ConfLossType ConfLossType;
 
@@ -89,6 +88,7 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   bool do_neg_mining_;
   float neg_pos_ratio_;
   float neg_overlap_;
+  CodeType code_type_;
 
   int loc_classes_;
   int num_gt_;

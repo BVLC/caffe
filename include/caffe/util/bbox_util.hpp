@@ -21,6 +21,7 @@
 namespace caffe {
 
 typedef map<int_tp, vector<NormalizedBBox> > LabelBBox;
+typedef PriorBoxParameter_CodeType CodeType;
 typedef MultiBoxLossParameter_MatchType MatchType;
 
 float BBoxSize(const NormalizedBBox& bbox, const bool normalized = true);
@@ -274,17 +275,17 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
 
 // Encode a bbox according to a prior bbox.
 void EncodeBBox(const NormalizedBBox& prior_bbox,
-    const vector<float>& prior_variance,
+    const vector<float>& prior_variance, const CodeType code_type,
     const NormalizedBBox& bbox, NormalizedBBox* encode_bbox);
 
 // Decode a bbox according to a prior bbox.
 void DecodeBBox(const NormalizedBBox& prior_bbox,
-    const vector<float>& prior_variance,
+    const vector<float>& prior_variance, const CodeType code_type,
     const NormalizedBBox& bbox, NormalizedBBox* decode_bbox);
 
 // Decode a set of bboxes according to a set of prior bboxes.
 void DecodeBBoxes(const vector<NormalizedBBox>& prior_bboxes,
-    const vector<vector<float> >& prior_variances,
+    const vector<vector<float> >& prior_variances, const CodeType code_type,
     const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes);
 

@@ -831,6 +831,8 @@ message DetectionOutputParameter {
   optional NonMaximumSuppressionParameter nms_param = 4;
   // Parameters used for saving detection results.
   optional SaveOutputParameter save_output_param = 5;
+  // Type of coding method for bbox.
+  optional PriorBoxParameter.CodeType code_type = 6 [default = CORNER];
 }
 
 message DropoutParameter {
@@ -1095,6 +1097,8 @@ message MultiBoxLossParameter {
   optional float neg_pos_ratio = 13 [default = 3.0];
   // The negative overlap upperbound for the unmatched predictions.
   optional float neg_overlap = 14 [default = 0.3];
+  // Type of coding method for bbox.
+  optional PriorBoxParameter.CodeType code_type = 15 [default = CORNER];
 }
 
 message MVNParameter {
@@ -1171,6 +1175,11 @@ message PowerParameter {
 
 // Message that store parameters used by PriorBoxLayer
 message PriorBoxParameter {
+  // Encode/decode type.
+  enum CodeType {
+    CORNER = 1;
+    CENTER_SIZE = 2;
+  }
   // Minimum box size (in pixels). Required!
   optional float min_size = 1;
   // Maximum box size (in pixels). Required!

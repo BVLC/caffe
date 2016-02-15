@@ -249,7 +249,7 @@ TEST_F(BBoxUtilTest, TestJaccardOverlap) {
   EXPECT_NEAR(overlap, 0., eps);
 }
 
-TEST_F(BBoxUtilTest, TestEncodeBBox) {
+TEST_F(BBoxUtilTest, TestEncodeBBoxCorner) {
   NormalizedBBox prior_bbox;
   prior_bbox.set_xmin(0.1);
   prior_bbox.set_ymin(0.1);
@@ -263,8 +263,9 @@ TEST_F(BBoxUtilTest, TestEncodeBBox) {
   bbox.set_xmax(0.4);
   bbox.set_ymax(0.5);
 
+  CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   NormalizedBBox encode_bbox;
-  EncodeBBox(prior_bbox, prior_variance, bbox, &encode_bbox);
+  EncodeBBox(prior_bbox, prior_variance, code_type, bbox, &encode_bbox);
 
   EXPECT_NEAR(encode_bbox.xmin(), -1, eps);
   EXPECT_NEAR(encode_bbox.ymin(), 1, eps);
@@ -272,7 +273,31 @@ TEST_F(BBoxUtilTest, TestEncodeBBox) {
   EXPECT_NEAR(encode_bbox.ymax(), 2, eps);
 }
 
-TEST_F(BBoxUtilTest, TestDecodeBBox) {
+TEST_F(BBoxUtilTest, TestEncodeBBoxCenterSize) {
+  NormalizedBBox prior_bbox;
+  prior_bbox.set_xmin(0.1);
+  prior_bbox.set_ymin(0.1);
+  prior_bbox.set_xmax(0.3);
+  prior_bbox.set_ymax(0.3);
+  vector<float> prior_variance(4, 0.1);
+
+  NormalizedBBox bbox;
+  bbox.set_xmin(0);
+  bbox.set_ymin(0.2);
+  bbox.set_xmax(0.4);
+  bbox.set_ymax(0.5);
+
+  CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
+  NormalizedBBox encode_bbox;
+  EncodeBBox(prior_bbox, prior_variance, code_type, bbox, &encode_bbox);
+
+  EXPECT_NEAR(encode_bbox.xmin(), 0, eps);
+  EXPECT_NEAR(encode_bbox.ymin(), 0.75, eps);
+  EXPECT_NEAR(encode_bbox.xmax(), log(2.), eps);
+  EXPECT_NEAR(encode_bbox.ymax(), log(3./2), eps);
+}
+
+TEST_F(BBoxUtilTest, TestDecodeBBoxCorner) {
   NormalizedBBox prior_bbox;
   prior_bbox.set_xmin(0.1);
   prior_bbox.set_ymin(0.1);
@@ -286,8 +311,9 @@ TEST_F(BBoxUtilTest, TestDecodeBBox) {
   bbox.set_xmax(1);
   bbox.set_ymax(2);
 
+  CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   NormalizedBBox decode_bbox;
-  DecodeBBox(prior_bbox, prior_variance, bbox, &decode_bbox);
+  DecodeBBox(prior_bbox, prior_variance, code_type, bbox, &decode_bbox);
 
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
@@ -295,7 +321,31 @@ TEST_F(BBoxUtilTest, TestDecodeBBox) {
   EXPECT_NEAR(decode_bbox.ymax(), 0.5, eps);
 }
 
-TEST_F(BBoxUtilTest, TestDecodeBBoxes) {
+TEST_F(BBoxUtilTest, TestDecodeBBoxCenterSize) {
+  NormalizedBBox prior_bbox;
+  prior_bbox.set_xmin(0.1);
+  prior_bbox.set_ymin(0.1);
+  prior_bbox.set_xmax(0.3);
+  prior_bbox.set_ymax(0.3);
+  vector<float> prior_variance(4, 0.1);
+
+  NormalizedBBox bbox;
+  bbox.set_xmin(0);
+  bbox.set_ymin(0.75);
+  bbox.set_xmax(log(2));
+  bbox.set_ymax(log(3./2));
+
+  CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
+  NormalizedBBox decode_bbox;
+  DecodeBBox(prior_bbox, prior_variance, code_type, bbox, &decode_bbox);
+
+  EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
+  EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
+  EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
+  EXPECT_NEAR(decode_bbox.ymax(), 0.5, eps);
+}
+
+TEST_F(BBoxUtilTest, TestDecodeBBoxesCorner) {
   vector<NormalizedBBox> prior_bboxes;
   vector<vector<float> > prior_variances;
   vector<NormalizedBBox> bboxes;
@@ -318,8 +368,10 @@ TEST_F(BBoxUtilTest, TestDecodeBBoxes) {
     bboxes.push_back(bbox);
   }
 
+  CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   vector<NormalizedBBox> decode_bboxes;
-  DecodeBBoxes(prior_bboxes, prior_variances, bboxes, &decode_bboxes);
+  DecodeBBoxes(prior_bboxes, prior_variances, code_type,
+               bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -0.1, eps);

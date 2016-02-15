@@ -6,7 +6,6 @@
 #include "boost/filesystem.hpp"
 
 #include "caffe/layers/detection_output_layer.hpp"
-#include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
 
@@ -20,6 +19,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   share_location_ = detection_output_param.share_location();
   loc_classes_ = share_location_ ? 1 : num_classes_;
   background_label_id_ = detection_output_param.background_label_id();
+  code_type_ = detection_output_param.code_type();
   // Parameters used in nms.
   nms_threshold_ = detection_output_param.nms_param().nms_threshold();
   CHECK_GE(nms_threshold_, 0.) << "nms_threshold must be non negative.";
@@ -171,8 +171,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         // Something bad happened if there are no predictions for current label.
         LOG(FATAL) << "Could not find location predictions for label " << label;
       }
-      DecodeBBoxes(prior_bboxes, prior_variances, all_loc_preds[i][label],
-                   &(decode_bboxes[label]));
+      DecodeBBoxes(prior_bboxes, prior_variances, code_type_,
+                   all_loc_preds[i][label], &(decode_bboxes[label]));
     }
     all_decode_bboxes.push_back(decode_bboxes);
 
