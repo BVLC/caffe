@@ -29,7 +29,7 @@ void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 #ifdef _OPENMP
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(this->num_of_threads_)
 #endif
     for (int n = 0; n < this->num_; ++n) {
       this->backward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
@@ -63,7 +63,7 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->param_propagate_down_[0] || propagate_down[i]) {
 #ifdef _OPENMP
       this->clear_weight_mt();
-      #pragma omp parallel
+      #pragma omp parallel num_threads(this->num_of_threads_)
 #endif
       {
 #ifdef _OPENMP
