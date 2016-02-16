@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -96,3 +97,4 @@ INSTANTIATE_CLASS(ConnectedComponentLayer);
 REGISTER_LAYER_CLASS(ConnectedComponent);
 
 }  // namespace caffe
+#endif  // USE_OPENCV
