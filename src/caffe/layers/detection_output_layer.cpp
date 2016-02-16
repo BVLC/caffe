@@ -71,6 +71,12 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         sizes_.push_back(std::make_pair(height, width));
       }
       infile.close();
+      if (save_output_param.has_num_test_image()) {
+        num_test_image_ = save_output_param.num_test_image();
+      } else {
+        num_test_image_ = names_.size();
+      }
+      CHECK_LE(num_test_image_, names_.size());
     }
     // Clean all output files.
     if (need_save_) {
@@ -99,6 +105,8 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     if (name_count_ == names_.size()) {
       // reset count after a full iterations through the DB.
       name_count_ = 0;
+    }
+    if (name_count_ % num_test_image_ == 0) {
       // Clean all outputs.
       boost::filesystem::path output_directory(output_directory_);
       for (map<int, string>::iterator it = label_to_name_.begin();

@@ -816,6 +816,10 @@ message SaveOutputParameter {
   //    name height width
   //    ...
   optional string name_size_file = 5;
+  // Number of test images. It can be less than the lines specified in
+  // name_size_file. For example, when we only want to evaluate on part
+  // of the test images.
+  optional uint32 num_test_image = 6;
 }
 
 // Message that store parameters used by DetectionOutputLayer

@@ -78,6 +78,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   map<int, string> label_to_name_;
   vector<string> names_;
   vector<pair<int, int> > sizes_;
+  int num_test_image_;
   int name_count_;
 };
 
