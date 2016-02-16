@@ -6,12 +6,15 @@ from google.protobuf import text_format
 import os
 import stat
 import subprocess
+import sys
 
+# Add extra layers on top of a "base" network (e.g. VGGNet or Inception).
 def AddExtraLayers(net, use_batchnorm=True):
     use_relu = True
 
     # Add additional convolutional layers.
     from_layer = net.keys()[-1]
+    # TODO(weiliu89): Construct the name using the last layer to avoid duplication.
     out_layer = "conv6_1"
     ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1)
 
@@ -36,36 +39,64 @@ def AddExtraLayers(net, use_batchnorm=True):
 
 
 ### Modify the following parameters accordingly ###
-# configuration for PASCAL VOC
-caffe_root = '{}/projects/caffe'.format(os.environ['HOME'])
+# The directory which contains the caffe code.
+caffe_root = os.getcwd()
+
+# Set true if you want to start training right after generating all files.
+run_soon = True
+# Set true if you want to load from most recently saved snapshot.
+# Otherwise, we will load from the pretrain_model defined below.
+resume_training = True
+# If true, Remove old model files.
+remove_old_models = True
+
+# The size of the images stored in lmdb in the format of
+# minsize x maxsize _ resizewidth x resizeheight
 size = "0x0_300x300"
+# The database file for training data. Created by data/VOC0712/create_data.sh
+train_data = "examples/VOC0712/VOC0712_trainval_{}_lmdb".format(size)
+# The database file for testing data. Created by data/VOC0712/create_data.sh
+test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
+
+# If true, use batch norm for all newly added layers.
+# Currently only the non batch norm version has been tested.
 use_batchnorm = False
+# Use different initial learning rate.
 if use_batchnorm:
     base_lr = 0.4
 else:
     base_lr = 0.001
-job_name = "SSD_{}_{}".format(size, base_lr)
-save_dir = "models/VGGNet/VOC0712/{}".format(job_name)
-snapshot_dir = "models/VGGNet/VOC0712/{}".format(job_name)
-job_dir = "jobs/VGGNet/VOC0712/{}".format(job_name)
+
+# Modify the job name if you want.
+job_name = "SSD_{}_{}_test".format(size, base_lr)
+# The name of the model. Modify it if you want.
 model_name = "VGG_VOC0712_{}".format(job_name)
-train_data = "examples/VOC0712/VOC0712_trainval_{}_lmdb".format(size)
-test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
-label_map_file = "data/VOC0712/labelmap_voc.prototxt"
-name_size_file = "data/VOC0712/test_name_size.txt"
-pretrain_model = "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
+
+# Directory which stores the model .prototxt file.
+save_dir = "models/VGGNet/VOC0712/{}".format(job_name)
+# Directory which stores the snapshot of models.
+snapshot_dir = "models/VGGNet/VOC0712/{}".format(job_name)
+# Directory which stores the job script and log file.
+job_dir = "jobs/VGGNet/VOC0712/{}".format(job_name)
+# Directory which stores the detection results.
 output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}/Main".format(os.environ['HOME'], job_name)
-device_id = 0
-num_gpus = 4
-gpus = "0,1,2,3"
-batch_size = 32 / num_gpus
-iter_size = 32 / batch_size / num_gpus
-# Set true if you want to start training right after generating all files.
-run_soon = True
-# Set true if you want to load from previously saved snapshot.
-resume_training = True
-# If true, Remove old model files.
-remove_old_models = True
+
+# model definition files.
+train_net_file = "{}/train.prototxt".format(save_dir)
+test_net_file = "{}/test.prototxt".format(save_dir)
+solver_file = "{}/solver.prototxt".format(save_dir)
+# snapshot prefix.
+snapshot_prefix = "{}/{}".format(snapshot_dir, model_name)
+# job script path.
+job_file = "{}/{}.sh".format(job_dir, model_name)
+
+# Stores the test image names and sizes. Created by data/VOC0712/create_list.sh
+name_size_file = "data/VOC0712/test_name_size.txt"
+# The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
+pretrain_model = "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
+# Stores LabelMapItem.
+label_map_file = "data/VOC0712/labelmap_voc.prototxt"
+
 # MultiBoxLoss parameters.
 num_classes = 21
 share_location = True
@@ -82,11 +113,12 @@ multibox_loss_param = {
     'use_prior_for_matching': True,
     'background_label_id': background_label_id,
     'normalize': False,
-    'use_difficult_gt': False,
+    'use_difficult_gt': train_on_diff_gt,
     'do_neg_mining': True,
     'neg_pos_ratio': 1,
     'neg_overlap': 0.5,
     }
+
 # parameters for generating priors.
 # minimum dimension of input image
 min_dim = 300
@@ -108,8 +140,27 @@ for ratio in xrange(min_ratio, max_ratio, step):
 aspect_ratios = [[2], [2], [2, 3], [2, 3], [2]]
 flip = True
 clip = True
-# parameters for solver.
+
+# Solver parameters.
+# Defining which GPUs to use.
+device_id = 0
+num_gpus = 4
+gpus = "0,1,2,3"
+
+# Divide the mini-batch to different GPUs.
+batch_size = 32 / num_gpus
+iter_size = 32 / batch_size / num_gpus
+
+# Which layers to freeze (no backward) during training.
 freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
+
+# Only evaluate on ~10% of the test data to speed up training.
+# Change to 4952 if you want to test on the full test set during
+# training.
+num_test_image = 495
+test_batch_size = 1
+test_iter = num_test_image / test_batch_size
+
 solver_param = {
     # Train parameters
     'base_lr': base_lr,
@@ -126,13 +177,14 @@ solver_param = {
     'debug_info': False,
     'snapshot_after_train': True,
     # Test parameters
-    'test_iter': [495],
+    'test_iter': [test_iter],
     'test_interval': 2000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
     }
-# parameters for non maximum suppression at TEST phase
+
+# parameters for generating detection output.
 det_out_param = {
     'num_classes': num_classes,
     'share_location': share_location,
@@ -144,9 +196,11 @@ det_out_param = {
         'output_format': "VOC",
         'label_map_file': "{}/{}".format(caffe_root, label_map_file),
         'name_size_file': "{}/{}".format(caffe_root, name_size_file),
+        'num_test_image': num_test_image,
         },
     }
-# parameters for evaluation
+
+# parameters for evaluating detection results.
 det_eval_param = {
     'num_classes': num_classes,
     'background_label_id': background_label_id,
@@ -154,13 +208,6 @@ det_eval_param = {
     'evaluate_difficult_gt': False,
     'name_size_file': "{}/{}".format(caffe_root, name_size_file),
     }
-
-train_net_file = "{}/train.prototxt".format(save_dir)
-test_net_file = "{}/test.prototxt".format(save_dir)
-solver_file = "{}/solver.prototxt".format(save_dir)
-snapshot_prefix = "{}/{}".format(snapshot_dir, model_name)
-job_file = "{}/{}.sh".format(job_dir, model_name)
-
 
 ### Hopefully you don't need to change the following ###
 # Check file.
@@ -199,10 +246,10 @@ with open(train_net_file, 'w') as f:
 
 # Create test net.
 net = caffe.NetSpec()
-net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=1,
+net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=test_batch_size,
         train=False, output_label=True, label_map_file=label_map_file)
 
-VGGNetBody(net, fully_conv=True, reduced=True, freeze_layers=freeze_layers)
+VGGNetBody(net, fully_conv=True, reduced=True)
 
 AddExtraLayers(net, use_batchnorm)
 
@@ -257,7 +304,7 @@ if resume_training:
     train_src_param = '--snapshot="{}_iter_{}.solverstate" \\\n'.format(snapshot_prefix, max_iter)
 
 if remove_old_models:
-  # Find most recent snapshot.
+  # Remove any snapshots smaller than max_iter.
   for file in os.listdir(snapshot_dir):
     if file.endswith(".solverstate"):
       basename = os.path.splitext(file)[0]

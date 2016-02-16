@@ -169,6 +169,10 @@ By [Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](http://research.
 
 SSD is an unified framework for object detection with a single network. You can use the code to train/evaluate a network for object detection task. For more details, please refer to our [arXiv paper](http://arxiv.org/abs/1512.02325).
 
+<p align="center">
+<img src="http://www.cs.unc.edu/~wliu/papers/ssd.png" alt="SSD Framework" width="600px">
+</p>
+
 ### Citing SSD
 
 Please cite SSD in your publications if it helps your research:
@@ -184,6 +188,8 @@ Please cite SSD in your publications if it helps your research:
 1. [Installation](#installation)
 2. [Preparation](#preparation)
 3. [Contact](#contact)
+
+:bangbang:**Disclaimer**: This software is still under active development. The result is not the optimal yet.
 
 ### Installation
 1. Get the code. We will call the directory that you cloned Caffe into `$CAFFE_ROOT`
