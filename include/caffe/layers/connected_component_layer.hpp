@@ -1,3 +1,4 @@
+#ifdef USE_OPENCV
 #ifndef CAFFE_CONNECTED_COMPONENT_LAYER_HPP_
 #define CAFFE_CONNECTED_COMPONENT_LAYER_HPP_
 
@@ -52,3 +53,4 @@ class ConnectedComponentLayer : public Layer<Dtype> {
 }  // namespace caffe
 
 #endif  // CAFFE_CONNECTED_COMPONENT_LAYER_HPP_
+#endif  // USE_OPENCV

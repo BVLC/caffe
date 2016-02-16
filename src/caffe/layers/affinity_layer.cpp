@@ -1,6 +1,4 @@
 #include <boost/pending/disjoint_sets.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -11,8 +9,6 @@
 #include "caffe/util/math_functions.hpp"
 
 #include "caffe/layers/affinity_layer.hpp"
-
-// #define CAFFE_AFFINITY_DEBUG
 
 namespace caffe {
 
@@ -29,11 +25,6 @@ void AffinityLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       offsets_[i] = affinity_param.offset(i);
     }
   }
-
-#ifdef CAFFE_AFFINITY_DEBUG
-  cv::namedWindow("prob");
-  cv::namedWindow("diff");
-#endif
 }
 
 template<typename Dtype>
