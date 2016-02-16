@@ -102,7 +102,7 @@ TYPED_TEST(EuclideanLossLayerTest, TestForwardIgnoreLabel) {
   // Then, manually compute the loss for known ignored indices
   int count = this->blob_bottom_label_->count();
   Dtype loss_manual = 0;
-  for(int i = 0; i < count; ++i) {
+  for (int i = 0; i < count; ++i) {
     if (i == 1 || i == 5 || i == 10) {
       continue;
     }
