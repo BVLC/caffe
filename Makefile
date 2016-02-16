@@ -601,7 +601,7 @@ $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 # Target for extension-less symlinks to tool binaries with extension '*.bin'.
 $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
 	@ $(RM) $@
-	@ ln -s $(abspath $<) $@
+	@ ln -s $(notdir $<) $@
 
 $(TOOL_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 	@ echo CXX/LD -o $@
@@ -662,6 +662,8 @@ superclean: clean supercleanfiles
 $(DIST_ALIASES): $(DISTRIBUTE_DIR)
 
 $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
+	# add proto
+	cp -r src/caffe/proto $(DISTRIBUTE_DIR)/
 	# add include
 	cp -r include $(DISTRIBUTE_DIR)/
 	mkdir -p $(DISTRIBUTE_DIR)/include/caffe/proto
