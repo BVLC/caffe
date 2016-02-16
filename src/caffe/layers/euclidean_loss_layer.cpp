@@ -12,12 +12,28 @@ void EuclideanLossLayer<Dtype>::Reshape(
   CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
       << "Inputs must have the same dimension.";
   diff_.ReshapeLike(*bottom[0]);
+
+  has_ignore_label_ =
+    this->layer_param_.loss_param().has_ignore_label();
+  if (has_ignore_label_) {
+    ignore_label_ = this->layer_param_.loss_param().ignore_label();
+  }
 }
 
 template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
+  if (has_ignore_label_) {
+    const Dtype* label_data = bottom[1]->cpu_data();
+    Dtype* bottom_data = bottom[0]->mutable_cpu_data();
+    for (int i = 0; i < count; ++i) {
+      const int label_value = static_cast<int>(label_data[i]);
+      if (label_value == ignore_label_) {
+        bottom_data[i] = label_data[i];
+      }
+    }
+  }
   caffe_sub(
       count,
       bottom[0]->cpu_data(),
