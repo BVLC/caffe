@@ -4,6 +4,7 @@ from caffe.model_libs import *
 from google.protobuf import text_format
 
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -305,6 +306,10 @@ with open(job_file, 'w') as f:
     f.write('--gpu {} 2>&1 | tee {}/{}_test{}.log\n'.format(gpus, job_dir, model_name, max_iter))
   else:
     f.write('2>&1 | tee {}/{}.log\n'.format(job_dir, model_name))
+
+# Copy the python script to job_dir.
+py_file = os.path.abspath(__file__)
+shutil.copy(py_file, job_dir)
 
 # Run the job.
 os.chmod(job_file, stat.S_IRWXU)
