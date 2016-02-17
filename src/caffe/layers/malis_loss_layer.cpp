@@ -1,6 +1,4 @@
 #include <boost/pending/disjoint_sets.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 #include <algorithm>
 #include <cfloat>
