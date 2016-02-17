@@ -80,7 +80,7 @@ class Blob {
    *
    * @param start_axis The first axis to include in the slice.
    *
-   * @param end_axis The first axis to exclude from the slice.
+   * @param end_axis The end axis to exclude from the slice.
    */
   inline int count(int start_axis, int end_axis) const {
     CHECK_LE(start_axis, end_axis);
