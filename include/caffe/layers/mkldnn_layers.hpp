@@ -49,11 +49,16 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
       CHECK(status == 0) << "Failed creation convert_from_int with status " << status << "\n";
       status = dnnAllocateBuffer<Dtype>((void **)&internal_ptr, layout_int);
       CHECK(status == 0) << "Failed internal_ptr memory allocation with status " << status << "\n";
+
+      memset(internal_ptr, 0, sizeof(Dtype) * dnnLayoutGetMemorySize<Dtype>(layout_int));
     }
   }
 
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
   virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;};
+  // TODO: dnnLayoutGetMemorySize will return number of bytes in next version
+  virtual size_t prv_count() { return dnnLayoutGetMemorySize<Dtype>(layout_int) /* /sizeof(Dtype)*/ ;};
+
   Dtype* get_converted_prv(Blob<Dtype> * blob, bool test_prv_layout, bool set_prv_ptr=true);
 };
 
@@ -273,7 +278,7 @@ protected:
                             const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
 private:
-  dnnPrimitive_t reluFwd, reluBwd;
+  dnnPrimitive_t reluFwd_, reluBwd_;
 };
 
 } // namespace caffe

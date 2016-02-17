@@ -5,6 +5,9 @@
 #include "caffe/layers/mkldnn_layers.hpp"
 #include "dnn.h"
 
+//#undef DLOG
+//#define DLOG LOG
+
 namespace caffe {
 template <typename Dtype>
 MklDnnConvolutionLayer<Dtype>::MklDnnConvolutionLayer(const LayerParameter& param)
@@ -299,8 +302,21 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   bwdb_bias_diff     ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 
 #ifndef BWDD_DISABLE_PAD_REMOVING
+  int is_Alexnet_pcl = 0;
+  is_Alexnet_pcl =
+   (   (ic ==   3 && iw == 227 && ih == 227 && oc ==   96 && kw == 11 && kh == 11
+        && convolutionStrides[0] == 4 && convolutionStrides[1] == 4 &&  this->pad_w_ ==  0 && this->pad_h_ == 0 && g == 1)
+    || (ic ==  96 && iw ==  27 && ih ==  27 && oc ==  256 && kw ==  5 && kh ==  5
+        && convolutionStrides[0] == 1 && convolutionStrides[1] == 1 &&  this->pad_w_ ==  2 && this->pad_h_ == 2 && g == 2)
+    || (ic == 256 && iw ==  13 && ih ==  13 && oc ==  384 && kw ==  3 && kh ==  3
+        && convolutionStrides[0] == 1 && convolutionStrides[1] == 1 &&  this->pad_w_ ==  1 && this->pad_h_ == 1 && g == 1)
+    || (ic == 384 && iw ==  13 && ih ==  13 && oc ==  384 && kw ==  3 && kh ==  3
+        && convolutionStrides[0] == 1 && convolutionStrides[1] == 1 &&  this->pad_w_ ==  1 && this->pad_h_ == 1 && g == 2)
+    || (ic == 384 && iw ==  13 && ih ==  13 && oc ==  256 && kw ==  3 && kh ==  3
+        && convolutionStrides[0] == 1 && convolutionStrides[1] == 1 &&  this->pad_w_ ==  1 && this->pad_h_ == 1 && g == 2)
+   );
   convert_to_bottom_diff_no_padding = NULL;
-  if (bwdd_bottom_diff->convert_from_int) {
+  if (is_Alexnet_pcl && bwdd_bottom_diff->convert_from_int) {
     /* Temporary workaround for removing padding from bwdd_bottom_diff */
     status = dnnLayoutPCLCreate<Dtype>(&bwdd_bottom_diff_no_padding->layout_int, dimension, bdata_sizes);
     CHECK(status == 0) << "Failed creation of bwdd_bottom_diff_no_padding->layout_usr with status " << status << "\n";
@@ -500,7 +516,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   {
     void *res_convolutionBwdData[dnnResourceNumber];
 
-    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true, true);
     // Currently this conversion adds padding to weights. We don't want that to be stored in the weights prv_ptr_
     res_convolutionBwdData[dnnResourceFilter]  =
       bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), true, false);
@@ -521,19 +537,27 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     // We need to remove padding from bwdd_bottom_diff
     if(convert_to_bottom_diff_no_padding)
     {
-      int status;
-      void *convert_resources[dnnResourceNumber];
+      // TODO: temporary work-around for problems with this conversion
+      if(this->layer_param_.name() == "conv4"
+          || this->layer_param_.name() == "conv5") {
+        bottom[0]->cpu_diff();          // force translation to caffe layout
+        bottom[0]->mutable_cpu_diff();  // fake diff changes in cpu_ptr
+      }
+      else {
+        int status;
+        void *convert_resources[dnnResourceNumber];
 
-      DLOG(INFO) << "convert priv => priv      "  << bwdd_bottom_diff->name << " => "
-                 << bwdd_bottom_diff_no_padding->name;
+        DLOG(INFO) << "convert priv => priv      "  << bwdd_bottom_diff->name << " => "
+                  << bwdd_bottom_diff_no_padding->name;
 
-      convert_resources[dnnResourceFrom] = (void *)bwdd_bottom_diff->internal_ptr;
-      convert_resources[dnnResourceTo]   = (void *)bwdd_bottom_diff_no_padding->internal_ptr;
-      status = dnnExecute<Dtype>(convert_to_bottom_diff_no_padding, convert_resources);
-      CHECK(status == 0) << "Conversion failed with status " << status;
+        convert_resources[dnnResourceFrom] = (void *)bwdd_bottom_diff->internal_ptr;
+        convert_resources[dnnResourceTo]   = (void *)bwdd_bottom_diff_no_padding->internal_ptr;
+        status = dnnExecute<Dtype>(convert_to_bottom_diff_no_padding, convert_resources);
+        CHECK(status == 0) << "Conversion failed with status " << status;
 
-      bottom[0]->set_prv_diff(bwdd_bottom_diff_no_padding->internal_ptr,
-                              bwdd_bottom_diff_no_padding, false);
+        bottom[0]->set_prv_diff(bwdd_bottom_diff_no_padding->internal_ptr,
+                                bwdd_bottom_diff_no_padding, false);
+      }
     }
     // *** end of the workaround ***
 #endif
@@ -543,7 +567,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   {
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
-    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true, true);
     res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], true);
 
     if (bwdf_filter_diff->convert_from_int)
@@ -563,7 +587,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   {
     void *res_convolutionBwdBias[dnnResourceNumber];
 
-    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true, true);
 
     if (bwdb_bias_diff->convert_from_int)
     {

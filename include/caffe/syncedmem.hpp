@@ -50,7 +50,7 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 // Base class
 struct PrvMemDescr {
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr) = 0;
-
+  virtual size_t prv_count() = 0;
   // This might help using prv_ptr_ by different accelerators/engines
   enum PrvDescrType {
     PRV_DESCR_MKLDNN

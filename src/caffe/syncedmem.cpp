@@ -193,7 +193,8 @@ void SyncedMemory::set_prv_data(void* data, bool same_data) {
       own_prv_data_ = true;
     }
 
-    if(same_data)
+    // If it wasn't synced before, it won't be now.
+    if((head_ != HEAD_AT_PRV) && same_data)
       head_ = SYNCED_PRV;
     else
       head_ = HEAD_AT_PRV;

@@ -7,8 +7,8 @@
 namespace caffe {
 template <typename Dtype>
 MklDnnReLULayer<Dtype>::~MklDnnReLULayer() {
-    dnnDelete<Dtype>(&this->reluFwd);
-    dnnDelete<Dtype>(&this->reluBwd);
+    dnnDelete<Dtype>(&reluFwd_);
+    dnnDelete<Dtype>(&reluBwd_);
 }
 
 template <typename Dtype>
@@ -30,16 +30,12 @@ void MklDnnReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   e = dnnLayoutCreate<Dtype>(&relu_layout, dim, sizes, strides);
   CHECK_EQ(e, E_SUCCESS);
 
-  dnnPrimitive_t reluFwd, reluBwd;
-  e = dnnReLUCreateForward<Dtype>(&reluFwd, relu_layout, negative_slope);
+  e = dnnReLUCreateForward<Dtype>(&reluFwd_, relu_layout, negative_slope);
   CHECK_EQ(e, E_SUCCESS);
-  e = dnnReLUCreateBackward<Dtype>(&reluBwd, relu_layout, relu_layout, negative_slope);
+  e = dnnReLUCreateBackward<Dtype>(&reluBwd_, relu_layout, relu_layout, negative_slope);
   CHECK_EQ(e, E_SUCCESS);
 
   dnnLayoutDelete<Dtype>(relu_layout);
-
-  this->reluFwd = reluFwd;
-  this->reluBwd = reluBwd;
 }
 
 template <typename Dtype>
@@ -48,20 +44,20 @@ void MklDnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   void* bottom_data = (void*)bottom[0]->prv_data();
   void* top_data = NULL;
 
-  if(NULL == bottom_data)
-  {
-    LOG(INFO) << "Using cpu_data in MklDnnReLULayer.";
+  if (bottom_data) {
+    top_data = top[0]->mutable_prv_data();
+  }
+  else {
+    DLOG(INFO) << "Using cpu_data in MklDnnReLULayer.";
     bottom_data = (void*)bottom[0]->cpu_data();
     top_data = top[0]->mutable_cpu_data();
   }
-  else
-    top_data = top[0]->mutable_prv_data();
 
   dnnError_t e;
   void* relu_res[dnnResourceNumber];
   relu_res[dnnResourceSrc] = bottom_data;
   relu_res[dnnResourceDst] = top_data;
-  e = dnnExecute<Dtype>(this->reluFwd, relu_res);
+  e = dnnExecute<Dtype>(reluFwd_, relu_res);
   CHECK_EQ(e, E_SUCCESS);
 }
 
@@ -74,13 +70,14 @@ void MklDnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     void* bottom_data = NULL;
     void* bottom_diff = NULL;
 
-    if (NULL != top_diff) {
+    if (top_diff && bottom[0]->prv_data()) {
       bottom_data = (void*)bottom[0]->prv_data();
       bottom_diff = (void*)bottom[0]->mutable_prv_diff();
 
       if (NULL == bottom_data)
         LOG(FATAL) << "bottom_data is NULL";
-    }else {
+    } else {
+      DLOG(INFO) << "Using cpu_data in MklDnnReLULayer.";
       top_diff = (void*)top[0]->cpu_diff();
       bottom_data = (void*)bottom[0]->cpu_data();
       bottom_diff = (void*)bottom[0]->mutable_cpu_diff();
@@ -91,7 +88,7 @@ void MklDnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     relu_res[dnnResourceSrc] = bottom_data;
     relu_res[dnnResourceDiffDst] = top_diff;
     relu_res[dnnResourceDiffSrc] = bottom_diff;
-    e = dnnExecute<Dtype>(this->reluBwd, relu_res);
+    e = dnnExecute<Dtype>(reluBwd_, relu_res);
     CHECK_EQ(e, E_SUCCESS);
   }
 }

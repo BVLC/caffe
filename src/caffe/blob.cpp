@@ -220,7 +220,7 @@ void Blob<Dtype>::Update() {
   case SyncedMemory::HEAD_AT_PRV:
     if( (diff_->head() == SyncedMemory::SYNCED_PRV) ||
         (diff_->head() == SyncedMemory::HEAD_AT_PRV)) {
-      caffe_axpy<Dtype>(count_, Dtype(-1),
+      caffe_axpy<Dtype>(prv_diff_count(), Dtype(-1),
           static_cast<const Dtype*>(diff_->prv_data()),
           static_cast<Dtype*>(data_->mutable_prv_data()));
       break;
