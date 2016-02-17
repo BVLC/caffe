@@ -4,6 +4,7 @@ from caffe.model_libs import *
 from google.protobuf import text_format
 
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -68,7 +69,7 @@ else:
     base_lr = 0.001
 
 # Modify the job name if you want.
-job_name = "SSD_{}_{}_test".format(size, base_lr)
+job_name = "SSD_{}_{}".format(size, base_lr)
 # The name of the model. Modify it if you want.
 model_name = "VGG_VOC0712_{}".format(job_name)
 
@@ -328,6 +329,10 @@ with open(job_file, 'w') as f:
     f.write('--gpu {} 2>&1 | tee {}/{}.log\n'.format(gpus, job_dir, model_name))
   else:
     f.write('2>&1 | tee {}/{}.log\n'.format(job_dir, model_name))
+
+# Copy the python script to job_dir.
+py_file = os.path.abspath(__file__)
+shutil.copy(py_file, job_dir)
 
 # Run the job.
 os.chmod(job_file, stat.S_IRWXU)

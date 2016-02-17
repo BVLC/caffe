@@ -110,7 +110,7 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
         return data
 
 
-def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
+def VGGNetBody(net, need_fc=True, fully_conv=False, reduced=False, freeze_layers=[]):
     kwargs = {
             'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
             'weight_filler': dict(type='xavier'),
@@ -155,29 +155,29 @@ def VGGNetBody(net, fully_conv=False, reduced=False, freeze_layers=[]):
     net.conv5_3 = L.Convolution(net.relu5_2, num_output=512, pad=1, kernel_size=3, **kwargs)
     net.relu5_3 = L.ReLU(net.conv5_3, in_place=True)
 
-
-    if fully_conv:
-        if reduced:
-            net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=3, pad=1, stride=1)
-            net.fc6 = L.Convolution(net.pool5, num_output=1024, pad=6, kernel_size=3, dilation=6, **kwargs)
+    if need_fc:
+        if fully_conv:
+            if reduced:
+                net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=3, pad=1, stride=1)
+                net.fc6 = L.Convolution(net.pool5, num_output=1024, pad=6, kernel_size=3, dilation=6, **kwargs)
+            else:
+                net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=2, stride=2)
+                net.fc6 = L.Convolution(net.pool5, num_output=4096, pad=3, kernel_size=7, **kwargs)
+            net.relu6 = L.ReLU(net.fc6, in_place=True)
+            net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+            if reduced:
+                net.fc7 = L.Convolution(net.relu6, num_output=1024, kernel_size=1, **kwargs)
+            else:
+                net.fc7 = L.Convolution(net.relu6, num_output=4096, kernel_size=1, **kwargs)
+            net.relu7 = L.ReLU(net.fc7, in_place=True)
+            net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
         else:
-            net.pool5 = L.Pooling(net.relu5_3, pool=P.Pooling.MAX, kernel_size=2, stride=2)
-            net.fc6 = L.Convolution(net.pool5, num_output=4096, pad=3, kernel_size=7, **kwargs)
-        net.relu6 = L.ReLU(net.fc6, in_place=True)
-        net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
-        if reduced:
-            net.fc7 = L.Convolution(net.relu6, num_output=1024, kernel_size=1, **kwargs)
-        else:
-            net.fc7 = L.Convolution(net.relu6, num_output=4096, kernel_size=1, **kwargs)
-        net.relu7 = L.ReLU(net.fc7, in_place=True)
-        net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
-    else:
-        net.fc6 = L.InnerProduct(net.pool5, num_output=4096)
-        net.relu6 = L.ReLU(net.fc6, in_place=True)
-        net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
-        net.fc7 = L.InnerProduct(net.relu6, num_output=4096)
-        net.relu7 = L.ReLU(net.fc7, in_place=True)
-        net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
+            net.fc6 = L.InnerProduct(net.pool5, num_output=4096)
+            net.relu6 = L.ReLU(net.fc6, in_place=True)
+            net.drop6 = L.Dropout(net.relu6, dropout_ratio=0.5, in_place=True)
+            net.fc7 = L.InnerProduct(net.relu6, num_output=4096)
+            net.relu7 = L.ReLU(net.fc7, in_place=True)
+            net.drop7 = L.Dropout(net.relu7, dropout_ratio=0.5, in_place=True)
 
     # Update freeze layers.
     kwargs['param'] = [dict(lr_mult=0, decay_mult=0), dict(lr_mult=0, decay_mult=0)]
@@ -233,7 +233,8 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
     if normalizations:
         assert len(from_layers) == len(normalizations), "from_layers and normalizations should have same length"
     assert len(from_layers) == len(min_sizes), "from_layers and min_sizes should have same length"
-    assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
+    if max_sizes:
+        assert len(from_layers) == len(max_sizes), "from_layers and max_sizes should have same length"
     net_layers = net.keys()
     assert data_layer in net_layers, "data_layer is not in net's layers"
 
@@ -265,7 +266,10 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
             aspect_ratio = aspect_ratios[i]
             if type(aspect_ratio) is not list:
                 aspect_ratio = [aspect_ratio]
-        num_priors_per_location = 2 + len(aspect_ratio)
+        if max_sizes:
+            num_priors_per_location = 2 + len(aspect_ratio)
+        else:
+            num_priors_per_location = 1 + len(aspect_ratio)
         if flip:
             num_priors_per_location += len(aspect_ratio)
 
@@ -295,7 +299,11 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
 
         # Create prior generation layer.
         name = "{}_mbox_priorbox".format(from_layer)
-        net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
+        if max_sizes:
+            net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i], max_size=max_sizes[i],
+                aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
+        else:
+            net[name] = L.PriorBox(net[from_layer], net[data_layer], min_size=min_sizes[i],
                 aspect_ratio=aspect_ratio, flip=flip, clip=clip, variance=prior_variance)
         priorbox_layers.append(net[name])
 
