@@ -24,22 +24,21 @@ template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
-  if (has_ignore_label_) {
-    Dtype* label_data = bottom[1]->mutable_cpu_data();
-    Dtype* bottom_data = bottom[0]->mutable_cpu_data();
-    for (int i = 0; i < count; ++i) {
-      const int label_value = static_cast<int>(label_data[i]);
-      if (label_value == ignore_label_) {
-        label_data[i] = ignore_label_;
-        bottom_data[i] = ignore_label_;
-      }
-    }
-  }
   caffe_sub(
       count,
       bottom[0]->cpu_data(),
       bottom[1]->cpu_data(),
       diff_.mutable_cpu_data());
+  if (has_ignore_label_) {
+    const Dtype* label_data = bottom[1]->cpu_data();
+    Dtype* diff__data = diff_.mutable_cpu_data();
+    for (int i = 0; i < count; ++i) {
+      const int label_value = static_cast<int>(label_data[i]);
+      if (label_value == ignore_label_) {
+        diff__data[i] = 0;
+      }
+    }
+  }
   Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
   Dtype loss = dot / bottom[0]->num() / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;

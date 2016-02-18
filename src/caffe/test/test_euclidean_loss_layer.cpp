@@ -106,10 +106,14 @@ TYPED_TEST(EuclideanLossLayerTest, TestForwardIgnoreLabel) {
     if (i == 1 || i == 5 || i == 10) {
       continue;
     }
-    const Dtype a = this->blob_bottom_label_->mutable_cpu_data()[i];
-    const Dtype b = this->blob_bottom_data_->mutable_cpu_data()[i];
-    Dtype dot = (a-b)*(a-b);
-    loss_manual += dot;
+    const Dtype label = this->blob_bottom_label_->cpu_data()[i];
+    // Some random labels might be typecast to ignored label
+    const int label_int = static_cast<int>(label);
+    if (label_int == static_cast<int>(kIgnoreLabelValue)) {
+      continue;
+    }
+    const Dtype data = this->blob_bottom_data_->cpu_data()[i];
+    loss_manual += (label-data)*(label-data);
   }
   loss_manual = loss_manual / this->blob_bottom_data_->num() / Dtype(2);
   // Finally, compare the two losses
@@ -126,6 +130,7 @@ TYPED_TEST(EuclideanLossLayerTest, TestGradientIgnoreLabel) {
   this->blob_bottom_label_->mutable_cpu_data()[11] = kIgnoreLabelValue;
   EuclideanLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check gradients
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
