@@ -110,7 +110,7 @@ void MklDnnLRNLayerTest<TypeParam>::ReferenceLRNForward(
 }
 
 TYPED_TEST_CASE(MklDnnLRNLayerTest, TestDtypesAndDevices);
-#if 0
+ 
 
 TYPED_TEST(MklDnnLRNLayerTest, TestSetupAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
@@ -122,7 +122,7 @@ TYPED_TEST(MklDnnLRNLayerTest, TestSetupAcrossChannels) {
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
-
+#if 0
 TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -137,7 +137,7 @@ TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannels) {
                 this->epsilon_);
   }
 }
-
+#endif
 TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -153,7 +153,7 @@ TYPED_TEST(MklDnnLRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
                 this->epsilon_);
   }
 }
-
+#if 0
 TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -174,7 +174,7 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannels) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
-
+#endif
 TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -197,7 +197,6 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
       this->blob_top_vec_);
 }
 
-#endif
 
 #if 0
 TYPED_TEST(MklDnnLRNLayerTest, TestSetupWithinChannel) {
