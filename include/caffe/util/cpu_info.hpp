@@ -80,10 +80,13 @@ class OpenMpManager {
   void getDefaultCpuSet(cpu_set_t *defaultCpuSet);
   void getCurrentCoreSet();
 
+  void selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId);
+  unsigned getPhysicalCoreId(unsigned logicalCoreId);
+
   bool isThreadsBindAllowed();
   void setOpenMpThreadNumberLimit();
-  void bindCurrentThreadToLogicalCore(unsigned logicalCoreId);
-  unsigned getPhysicalCoreId(unsigned logicalCoreId);
+  void bindCurrentThreadToLogicalCoreCpu(unsigned logicalCoreId);
+  void bindCurrentThreadToLogicalCoreCpus(unsigned logicalCoreId);
 };
 
 #endif  // _OPENMP
