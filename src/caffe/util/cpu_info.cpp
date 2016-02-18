@@ -64,7 +64,10 @@ void Collection::parseCpuFile(const char *fileName) {
 void Collection::parseCpuFileContent(FILE *file) {
   while (!feof(file)) {
     char lineBuffer[1024];
-    fgets(lineBuffer, sizeof(lineBuffer), file);
+    if (!fgets(lineBuffer, sizeof(lineBuffer), file)) {
+      break;
+    }
+
     parseCpuFileLine(lineBuffer);
   }
 }
@@ -196,7 +199,7 @@ void OpenMpManager::setGpuDisabled() {
 void OpenMpManager::bindCurrentThreadToPrimaryCore() {
   OpenMpManager &openMpManager = getInstance();
   if (openMpManager.isThreadsBindAllowed()) {
-    openMpManager.bindCurrentThreadToLogicalCore(0);
+    openMpManager.bindCurrentThreadToLogicalCoreCpus(0);
   }
 }
 
@@ -210,7 +213,7 @@ void OpenMpManager::bindOpenMpThreads() {
   #pragma omp parallel
   {
     unsigned logicalCoreId = 1 + omp_get_thread_num();
-    openMpManager.bindCurrentThreadToLogicalCore(logicalCoreId);
+    openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
   }
 }
 
@@ -261,26 +264,18 @@ void OpenMpManager::getCurrentCoreSet() {
   }
 }
 
-bool OpenMpManager::isThreadsBindAllowed() {
-  return !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
-}
+void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
+  unsigned numberOfProcessors = Collection::getNumberOfProcessors();
+  unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
 
-void OpenMpManager::setOpenMpThreadNumberLimit() {
-  unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
+  int processorId = physicalCoreId % totalNumberOfCpuCores;
+  while (processorId < numberOfProcessors) {
+    if (CPU_ISSET(processorId, &currentCpuSet)) {
+      CPU_SET(processorId, set);
+    }
 
-  if (totalNumberOfAvailableCores > 1)
-    omp_set_num_threads(totalNumberOfAvailableCores - 1);
-  else
-    omp_set_num_threads(1);
-}
-
-void OpenMpManager::bindCurrentThreadToLogicalCore(unsigned logicalCoreId) {
-  unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
-
-  cpu_set_t set;
-  CPU_ZERO(&set);
-  CPU_SET(physicalCoreId, &set);
-  sched_setaffinity(0, sizeof(set), &set);
+    processorId += totalNumberOfCpuCores;
+  }
 }
 
 unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
@@ -296,6 +291,37 @@ unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
 
   LOG(FATAL) << "This should never happen!";
   return 0;
+}
+
+bool OpenMpManager::isThreadsBindAllowed() {
+  return !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
+}
+
+void OpenMpManager::setOpenMpThreadNumberLimit() {
+  unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
+
+  if (totalNumberOfAvailableCores > 1)
+    omp_set_num_threads(totalNumberOfAvailableCores - 1);
+  else
+    omp_set_num_threads(1);
+}
+
+void OpenMpManager::bindCurrentThreadToLogicalCoreCpu(unsigned logicalCoreId) {
+  unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
+
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(physicalCoreId, &set);
+  sched_setaffinity(0, sizeof(set), &set);
+}
+
+void OpenMpManager::bindCurrentThreadToLogicalCoreCpus(unsigned logicalCoreId) {
+  unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
+
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  selectAllCoreCpus(&set, physicalCoreId);
+  sched_setaffinity(0, sizeof(set), &set);
 }
 
 void OpenMpManager::printVerboseInformation() {
