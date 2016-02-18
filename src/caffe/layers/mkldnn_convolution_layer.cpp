@@ -347,7 +347,7 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
   int status;
   void *convert_resources[dnnResourceNumber];
 
-  DLOG(INFO) << "convert priv =>           "  << this->name;
+  DLOG(INFO) << "convert priv =>           "  << this->name << " =>";
 
   convert_resources[dnnResourceFrom] = (void *)prv_ptr;
   convert_resources[dnnResourceTo]   = (void *)cpu_ptr;
@@ -468,7 +468,7 @@ void MklDnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 
 
   void *res_convolutionFwd[dnnResourceNumber];
-  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], true);
+  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], true, false);
   res_convolutionFwd[dnnResourceFilter] = fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
   res_convolutionFwd[dnnResourceBias]   = fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), false);
 
@@ -537,13 +537,6 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     // We need to remove padding from bwdd_bottom_diff
     if(convert_to_bottom_diff_no_padding)
     {
-      // TODO: temporary work-around for problems with this conversion
-      if(this->layer_param_.name() == "conv4"
-          || this->layer_param_.name() == "conv5") {
-        bottom[0]->cpu_diff();          // force translation to caffe layout
-        bottom[0]->mutable_cpu_diff();  // fake diff changes in cpu_ptr
-      }
-      else {
         int status;
         void *convert_resources[dnnResourceNumber];
 
@@ -557,7 +550,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 
         bottom[0]->set_prv_diff(bwdd_bottom_diff_no_padding->internal_ptr,
                                 bwdd_bottom_diff_no_padding, false);
-      }
+
     }
     // *** end of the workaround ***
 #endif
@@ -568,7 +561,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
     res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true, true);
-    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], true);
+    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], true, false);
 
     if (bwdf_filter_diff->convert_from_int)
     {
