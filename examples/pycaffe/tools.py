@@ -1,11 +1,14 @@
 import numpy as np
 
+
 class SimpleTransformer:
+
     """
-    SimpleTransformer is a simple class for preprocessing and deprocessing images for caffe.
+    SimpleTransformer is a simple class for preprocessing and deprocessing
+    images for caffe.
     """
 
-    def __init__(self, mean = [128, 128, 128]):
+    def __init__(self, mean=[128, 128, 128]):
         self.mean = np.array(mean, dtype=np.float32)
         self.scale = 1.0
 
@@ -23,15 +26,16 @@ class SimpleTransformer:
 
     def preprocess(self, im):
         """
-        preprocess() emulate the pre-processing occuring in the vgg16 caffe prototxt.
+        preprocess() emulate the pre-processing occuring in the vgg16 caffe
+        prototxt.
         """
-    
+
         im = np.float32(im)
-        im = im[:, :, ::-1] #change to BGR
+        im = im[:, :, ::-1]  # change to BGR
         im -= self.mean
         im *= self.scale
         im = im.transpose((2, 0, 1))
-        
+
         return im
 
     def deprocess(self, im):
@@ -41,33 +45,38 @@ class SimpleTransformer:
         im = im.transpose(1, 2, 0)
         im /= self.scale
         im += self.mean
-        im = im[:, :, ::-1] #change to RGB
-        
+        im = im[:, :, ::-1]  # change to RGB
+
         return np.uint8(im)
 
+
 class CaffeSolver:
+
     """
-    Caffesolver is a class for creating a solver.prototxt file. It sets default values and can export a solver parameter file.
-    Note that all parameters are stored as strings. Strings variables are stored as strings in strings.
+    Caffesolver is a class for creating a solver.prototxt file. It sets default
+    values and can export a solver parameter file.
+    Note that all parameters are stored as strings. Strings variables are
+    stored as strings in strings.
     """
 
-    def __init__(self, testnet_prototxt_path = "testnet.prototxt", trainnet_prototxt_path = "trainnet.prototxt", debug = False):
-        
+    def __init__(self, testnet_prototxt_path="testnet.prototxt",
+                 trainnet_prototxt_path="trainnet.prototxt", debug=False):
+
         self.sp = {}
 
         # critical:
         self.sp['base_lr'] = '0.001'
         self.sp['momentum'] = '0.9'
-        
+
         # speed:
         self.sp['test_iter'] = '100'
         self.sp['test_interval'] = '250'
-        
+
         # looks:
         self.sp['display'] = '25'
         self.sp['snapshot'] = '2500'
-        self.sp['snapshot_prefix'] = '"snapshot"' # string withing a string!
-        
+        self.sp['snapshot_prefix'] = '"snapshot"'  # string withing a string!
+
         # learning rate policy
         self.sp['lr_policy'] = '"fixed"'
 
@@ -80,8 +89,8 @@ class CaffeSolver:
         # pretty much never change these.
         self.sp['max_iter'] = '100000'
         self.sp['test_initialization'] = 'false'
-        self.sp['average_loss'] = '25' # this has to do with the display.
-        self.sp['iter_size'] = '1' #this is for accumulating gradients
+        self.sp['average_loss'] = '25'  # this has to do with the display.
+        self.sp['iter_size'] = '1'  # this is for accumulating gradients
 
         if (debug):
             self.sp['max_iter'] = '12'
@@ -91,7 +100,8 @@ class CaffeSolver:
 
     def add_from_file(self, filepath):
         """
-        Reads a caffe solver prototxt file and updates the Caffesolver instance parameters.
+        Reads a caffe solver prototxt file and updates the Caffesolver
+        instance parameters.
         """
         with open(filepath, 'r') as f:
             for line in f:
