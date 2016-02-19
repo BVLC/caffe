@@ -164,6 +164,16 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const bool use_top_mask = top.size() > 1;
   int* mask = NULL;
   Dtype* top_mask = NULL;
+  const int height_ = input_shape_[2];
+  const int width_ = input_shape_[3];
+  const int pooled_height_ = pooled_shape_[2];
+  const int pooled_width_ = pooled_shape_[3];
+  const int kernel_h_ = kernel_shape_[0];
+  const int kernel_w_ = kernel_shape_[1];
+  const int pad_h_ = pad_[0];
+  const int pad_w_ = pad_[1];
+  const int stride_h_ = stride_[0];
+  const int stride_w_ = stride_[1];
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     if (use_top_mask) {
@@ -344,6 +354,16 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;
   const Dtype* top_mask = NULL;
+  const int height_ = input_shape_[2];
+  const int width_ = input_shape_[3];
+  const int pooled_height_ = pooled_shape_[2];
+  const int pooled_width_ = pooled_shape_[3];
+  const int kernel_h_ = kernel_shape_[0];
+  const int kernel_w_ = kernel_shape_[1];
+  const int pad_h_ = pad_[0];
+  const int pad_w_ = pad_[1];
+  const int stride_h_ = stride_[0];
+  const int stride_w_ = stride_[1];
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     if (use_top_mask) {
