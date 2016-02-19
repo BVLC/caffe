@@ -887,24 +887,28 @@ message PoolingParameter {
   }
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in height and width or as Y, X pairs.
-  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
-  optional uint32 pad_h = 9 [default = 0]; // The padding height
-  optional uint32 pad_w = 10 [default = 0]; // The padding width
-  optional uint32 kernel_size = 2; // The kernel size (square)
-  optional uint32 kernel_h = 5; // The kernel height
-  optional uint32 kernel_w = 6; // The kernel width
-  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
-  optional uint32 stride_h = 7; // The stride height
-  optional uint32 stride_w = 8; // The stride width
+  // dimensions in all spatial dimensions, or once per spatial dimension.
+  repeated uint32 pad = 4; // The padding size; defaults to 0
+  repeated uint32 kernel_size = 2; // The kernel size
+  repeated uint32 stride = 3; // The stride; defaults to 1
+
+  // For 2D padding only, the *_h and *_w versions may also be used to
+  // specify both spatial dimensions.
+  optional uint32 pad_h = 9 [default = 0]; // The padding height (2D only)
+  optional uint32 pad_w = 10 [default = 0]; // The padding width (2D only)
+  optional uint32 kernel_h = 5; // The kernel height (2D only)
+  optional uint32 kernel_w = 6; // The kernel width (2D only)
+  optional uint32 stride_h = 7; // The stride height (2D only)
+  optional uint32 stride_w = 8; // The stride width (2D only)
+
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
     CUDNN = 2;
   }
   optional Engine engine = 11 [default = DEFAULT];
-  // If global_pooling then it will pool over the size of the bottom by doing
-  // kernel_h = bottom->height and kernel_w = bottom->width
+  // If global_pooling then it will pool over the size of the bottom by setting
+  // the size of the kernel to the size of the input image
   optional bool global_pooling = 12 [default = false];
 }
 

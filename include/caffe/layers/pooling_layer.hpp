@@ -44,10 +44,21 @@ class PoolingLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /// @brief The spatial dimensions of a filter kernel.
+  std::vector<int> kernel_shape_;
+  /// @brief The spatial dimensions of the stride.
+  std::vector<int> stride_;
+  /// @brief The spatial dimensions of the padding.
+  std::vector<int> pad_;
+
+  int num_spatial_axes_;
+
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int pad_h_, pad_w_;
   int channels_;
+  std::vector<int> input_shape_;
+  std::vector<int> pooled_shape_;
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
