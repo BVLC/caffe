@@ -442,6 +442,8 @@ message TransformationParameter {
   optional uint32 num_total_augs = 32 [default = 82];
   optional string aug_way = 33 [default = "rand"];
   optional uint32 gray = 34 [default = 0];
+  optional uint32 np_in_lmdb = 35 [default = 16];
+  optional bool transform_body_joint = 38 [default = true];
 }
 
 

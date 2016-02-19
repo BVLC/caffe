@@ -95,6 +95,7 @@ void DataTransformer<Dtype>::ReadMetaData(MetaData& meta, const string& data, si
        meta.joint_self.joints[i].x >= meta.img_size.width || meta.joint_self.joints[i].y >= meta.img_size.height){
       meta.joint_self.isVisible[i] = 2; // 2 means cropped, 0 means occluded by still on image
     }
+    //LOG(INFO) << meta.joint_self.joints[i].x << " " << meta.joint_self.joints[i].y << " " << meta.joint_self.isVisible[i];
   }
   
   //others (7 lines loaded)
@@ -158,7 +159,7 @@ void DataTransformer<Dtype>::SetAugTable(int numData){
 
 template<typename Dtype>
 void DataTransformer<Dtype>::TransformMetaJoints(MetaData& meta) {
-  //transform joints in meta from np_in_lmdb to np (specified in prototxt)
+  //transform joints in meta from np_in_lmdb (specified in prototxt) to np (specified in prototxt)
   TransformJoints(meta.joint_self);
   for(int i=0;i<meta.joint_others.size();i++){
     TransformJoints(meta.joint_others[i]);
@@ -167,7 +168,7 @@ void DataTransformer<Dtype>::TransformMetaJoints(MetaData& meta) {
 
 template<typename Dtype>
 void DataTransformer<Dtype>::TransformJoints(Joints& j) {
-  //transform joints in meta from np_in_lmdb to np (specified in prototxt)
+  //transform joints in meta from np_in_lmdb (specified in prototxt) to np (specified in prototxt)
   //MPII R leg: 0(ankle), 1(knee), 2(hip)
   //     L leg: 5(ankle), 4(knee), 3(hip)
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
@@ -229,7 +230,7 @@ template<typename Dtype> DataTransformer<Dtype>::DataTransformer(const Transform
     }
   }
   LOG(INFO) << "DataTransformer constructor done.";
-  np_in_lmdb = 16;
+  np_in_lmdb = param_.np_in_lmdb();
   np = param_.num_parts();
   is_table_set = false;
 }
@@ -457,7 +458,8 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   int offset3 = 3 * offset;
   int offset1 = datum_width;
   ReadMetaData(meta, data, offset3, offset1);
-  TransformMetaJoints(meta);
+  if(param_.transform_body_joint()) // we expect to transform body joints, and not to transform hand joints
+    TransformMetaJoints(meta);
 
   //visualize original
   if(0 && param_.visualize()) 
@@ -469,13 +471,21 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   // We only do random transform as augmentation when training.
   if (phase_ == TRAIN) {
     as.scale = augmentation_scale(img, img_temp, meta);
+    //LOG(INFO) << meta.joint_self.joints.size();
+    //LOG(INFO) << meta.joint_self.joints[0];
     as.degree = augmentation_rotate(img_temp, img_temp2, meta);
+    //LOG(INFO) << meta.joint_self.joints.size();
+    //LOG(INFO) << meta.joint_self.joints[0];
     if(0 && param_.visualize()) 
       visualize(img_temp2, meta, as);
     as.crop = augmentation_croppad(img_temp2, img_temp3, meta);
+    //LOG(INFO) << meta.joint_self.joints.size();
+    //LOG(INFO) << meta.joint_self.joints[0];
     if(0 && param_.visualize()) 
       visualize(img_temp3, meta, as);
     as.flip = augmentation_flip(img_temp3, img_aug, meta);
+    //LOG(INFO) << meta.joint_self.joints.size();
+    //LOG(INFO) << meta.joint_self.joints[0];
     if(param_.visualize()) 
       visualize(img_aug, meta, as);
   }
@@ -502,6 +512,7 @@ template<typename Dtype> void DataTransformer<Dtype>::Transform_nv(const Datum& 
   }
   
   putGaussianMaps(transformed_data + 3*offset, meta.objpos, 1, img_aug.cols, img_aug.rows, param_.sigma_center());
+  //LOG(INFO) << "image transformation done!";
   generateLabelMap(transformed_label, img_aug, meta);
 
   //starts to visualize everything (transformed_data in 4 ch, label) fed into conv1
@@ -652,14 +663,16 @@ bool DataTransformer<Dtype>::augmentation_flip(Mat& img_src, Mat& img_aug, MetaD
     for(int i=0; i<np; i++){
       meta.joint_self.joints[i].x = w - 1 - meta.joint_self.joints[i].x;
     }
-    swapLeftRight(meta.joint_self);
+    if(param_.transform_body_joint())
+      swapLeftRight(meta.joint_self);
 
     for(int p=0; p<meta.numOtherPeople; p++){
       meta.objpos_other[p].x = w - 1 - meta.objpos_other[p].x;
       for(int i=0; i<np; i++){
         meta.joint_others[p].joints[i].x = w - 1 - meta.joint_others[p].joints[i].x;
       }
-      swapLeftRight(meta.joint_others[p]);
+      if(param_.transform_body_joint())
+        swapLeftRight(meta.joint_others[p]);
     }
   }
   else {
@@ -721,6 +734,7 @@ float DataTransformer<Dtype>::augmentation_rotate(Mat& img_src, Mat& img_dst, Me
 
 template<typename Dtype>
 void DataTransformer<Dtype>::putGaussianMaps(Dtype* entry, Point2f center, int stride, int grid_x, int grid_y, float sigma){
+  //LOG(INFO) << "putGaussianMaps here we start for " << center.x << " " << center.y;
   float start = stride/2.0 - 0.5; //0 if stride = 1, 0.5 if stride = 2, 1.5 if stride = 4, ...
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
@@ -755,8 +769,10 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
       }
     }
   }
+  //LOG(INFO) << "label cleaned";
   
   for (int i = 0; i < np; i++){
+    //LOG(INFO) << i << meta.numOtherPeople;
     Point2f center = meta.joint_self.joints[i];
     if(meta.joint_self.isVisible[i] <= 1){
       putGaussianMaps(transformed_label + i*channelOffset, center, param_.stride(), 
@@ -764,6 +780,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
       putGaussianMaps(transformed_label + (i+np+1)*channelOffset, center, param_.stride(), 
                       grid_x, grid_y, param_.sigma()); //self
     }
+    //LOG(INFO) << "label put for" << i;
     //plot others
     for(int j = 0; j < meta.numOtherPeople; j++){ //for every other person
       Point2f center = meta.joint_others[j].joints[i];
@@ -773,6 +790,7 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
       }
     }
   }
+  
   //put background channel
   for (int g_y = 0; g_y < grid_y; g_y++){
     for (int g_x = 0; g_x < grid_x; g_x++){
@@ -789,9 +807,10 @@ void DataTransformer<Dtype>::generateLabelMap(Dtype* transformed_label, Mat& img
       transformed_label[(2*np+1)*channelOffset + g_y*grid_x + g_x] = max(1.0-maximum, 0.0);
     }
   }
+  //LOG(INFO) << "background put";
 
   //visualize
-  if(0 && param_.visualize()){
+  if(1 && param_.visualize()){
     Mat label_map;
     for(int i = 0; i < 2*(np+1); i++){      
       label_map = Mat::zeros(grid_y, grid_x, CV_8UC1);
@@ -872,24 +891,43 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
   static int counter = 0;
   rectangle(img_vis, meta.objpos-Point2f(3,3), meta.objpos+Point2f(3,3), CV_RGB(255,255,0), CV_FILLED);
   for(int i=0;i<np;i++){
+    //LOG(INFO) << "drawing part " << i << ": ";
+    //LOG(INFO) << meta.joint_self.joints.size();
+    //LOG(INFO) << meta.joint_self.joints[i];
     //if(meta.joint_self.isVisible[i])
-    if(i < 14){
-      if(i==2 || i==3 || i==4 || i==8 || i==9 || i==10)
+    if(np == 21){ // hand case
+      if(i < 4)
         circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,0,255), -1);
-      else if(i==5 || i==6 || i==7 || i==11 || i==12 || i==13)
+      else if(i < 6 || i == 12 || i == 13)
         circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
-      else
+      else if(i < 8 || i == 14 || i == 15)
         circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,255,0), -1);
-    }
-    else if(i < 16)
-      circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,255,0), -1);
-    else {
-      if(i==17 || i==18 || i==19 || i==23 || i==24)
-        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
-      else if(i==20 || i==21 || i==22 || i==25 || i==26)
+      else if(i < 10|| i == 16 || i == 17)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,0), -1);
+      else if(i < 12|| i == 18 || i == 19)
         circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,100), -1);
-      else
-        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,200,200), -1);
+      else 
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,100,100), -1);
+    }
+    else {//body case
+      if(i < 14){
+        if(i==2 || i==3 || i==4 || i==8 || i==9 || i==10)
+          circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,0,255), -1);
+        else if(i==5 || i==6 || i==7 || i==11 || i==12 || i==13)
+          circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
+        else
+          circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,255,0), -1);
+      }
+      else if(i < 16)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,255,0), -1);
+      else {
+        if(i==17 || i==18 || i==19 || i==23 || i==24)
+          circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
+        else if(i==20 || i==21 || i==22 || i==25 || i==26)
+          circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,100,100), -1);
+        else
+          circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,200,200), -1);
+      }
     }
   }
   line(img_vis, meta.objpos+Point2f(-368/2,-368/2), meta.objpos+Point2f(368/2,-368/2), CV_RGB(0,255,0), 2);
