@@ -52,15 +52,9 @@ class PoolingLayer : public Layer<Dtype> {
   std::vector<int> pad_;
 
   int num_spatial_axes_;
-
-  int kernel_h_, kernel_w_;
-  int stride_h_, stride_w_;
-  int pad_h_, pad_w_;
   int channels_;
   std::vector<int> input_shape_;
   std::vector<int> pooled_shape_;
-  int height_, width_;
-  int pooled_height_, pooled_width_;
   bool global_pooling_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
