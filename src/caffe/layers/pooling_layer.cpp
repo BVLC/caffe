@@ -14,111 +14,147 @@ template <typename Dtype>
 void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
-  if (pool_param.global_pooling()) {
-    CHECK(!(pool_param.has_kernel_size() ||
+  global_pooling_ = pool_param.global_pooling();
+  num_spatial_axes_ = bottom[0]->num_axes() - 2;
+  // Setup filter kernel dimensions (kernel_shape_).
+  kernel_shape_ = std::vector<int>(num_spatial_axes_, 0);
+  if (global_pooling_) {
+    CHECK(!((pool_param.kernel_size_size() > 0) ||
       pool_param.has_kernel_h() || pool_param.has_kernel_w()))
       << "With Global_pooling: true Filter size cannot specified";
+    for (int i = 0; i < num_spatial_axes_; ++i)
+      kernel_shape_[i] = bottom[0]->shape(i + 2);
   } else {
-    CHECK(!pool_param.has_kernel_size() !=
-      !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
-      << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-    CHECK(pool_param.has_kernel_size() ||
-      (pool_param.has_kernel_h() && pool_param.has_kernel_w()))
-      << "For non-square filters both kernel_h and kernel_w are required.";
-  }
-  CHECK((!pool_param.has_pad() && pool_param.has_pad_h()
-      && pool_param.has_pad_w())
-      || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
-      << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!pool_param.has_stride() && pool_param.has_stride_h()
-      && pool_param.has_stride_w())
-      || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
-      << "Stride is stride OR stride_h and stride_w are required.";
-  global_pooling_ = pool_param.global_pooling();
-  if (global_pooling_) {
-    kernel_h_ = bottom[0]->height();
-    kernel_w_ = bottom[0]->width();
-  } else {
-    if (pool_param.has_kernel_size()) {
-      kernel_h_ = kernel_w_ = pool_param.kernel_size();
+    if (pool_param.has_kernel_h() || pool_param.has_kernel_w()) {
+      CHECK_EQ(num_spatial_axes_, 2)
+          << "kernel_h & kernel_w can only be used for 2D pooling.";
+      CHECK_EQ(0, pool_param.kernel_size_size())
+          << "Either kernel_size or kernel_h/w should be specified; not both.";
+      kernel_shape_[0] = pool_param.kernel_h();
+      kernel_shape_[1] = pool_param.kernel_w();
     } else {
-      kernel_h_ = pool_param.kernel_h();
-      kernel_w_ = pool_param.kernel_w();
+      const int num_kernel_dims = pool_param.kernel_size_size();
+      CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
+          << "kernel_size must be specified once, or once per spatial "
+          << "dimension (kernel_size specified " << num_kernel_dims
+          << " times; " << num_spatial_axes_ << " spatial dims).";
+        for (int i = 0; i < num_spatial_axes_; ++i) {
+          kernel_shape_[i] =
+              pool_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
+        }
+    }
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      CHECK_GT(kernel_shape_[i], 0) << "Filter dimensions must be nonzero.";
     }
   }
-  CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
-  CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
-  if (!pool_param.has_pad_h()) {
-    pad_h_ = pad_w_ = pool_param.pad();
+  // Setup stride dimensions (stride_).
+  stride_ = std::vector<int>(num_spatial_axes_, 0);
+  if (pool_param.has_stride_h() || pool_param.has_stride_w()) {
+    CHECK_EQ(num_spatial_axes_, 2)
+        << "stride_h & stride_w can only be used for 2D pooling.";
+    CHECK_EQ(0, pool_param.stride_size())
+        << "Either stride or stride_h/w should be specified; not both.";
+    stride_[0] = pool_param.stride_h();
+    stride_[1] = pool_param.stride_w();
   } else {
-    pad_h_ = pool_param.pad_h();
-    pad_w_ = pool_param.pad_w();
+    const int num_stride_dims = pool_param.stride_size();
+    CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
+          num_stride_dims == num_spatial_axes_)
+        << "stride must be specified once, or once per spatial dimension "
+        << "(stride specified " << num_stride_dims << " times; "
+        << num_spatial_axes_ << " spatial dims).";
+    const int kDefaultStride = 1;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      stride_[i] = (num_stride_dims == 0) ? kDefaultStride :
+          pool_param.stride((num_stride_dims == 1) ? 0 : i);
+      CHECK_GT(stride_[i], 0) << "Stride dimensions must be nonzero.";
+    }
   }
-  if (!pool_param.has_stride_h()) {
-    stride_h_ = stride_w_ = pool_param.stride();
+  // Setup pad dimensions (pad_).
+  pad_ = std::vector<int>(num_spatial_axes_, 0);
+  if (pool_param.has_pad_h() || pool_param.has_pad_w()) {
+    CHECK_EQ(num_spatial_axes_, 2)
+        << "pad_h & pad_w can only be used for 2D pooling.";
+    CHECK_EQ(0, pool_param.pad_size())
+        << "Either pad or pad_h/w should be specified; not both.";
+    pad_[0] = pool_param.pad_h();
+    pad_[1] = pool_param.pad_w();
   } else {
-    stride_h_ = pool_param.stride_h();
-    stride_w_ = pool_param.stride_w();
+    const int num_pad_dims = pool_param.pad_size();
+    CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
+          num_pad_dims == num_spatial_axes_)
+        << "pad must be specified once, or once per spatial dimension "
+        << "(pad specified " << num_pad_dims << " times; "
+        << num_spatial_axes_ << " spatial dims).";
+    const int kDefaultPad = 0;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      pad_[i] = (num_pad_dims == 0) ? kDefaultPad :
+          pool_param.pad((num_pad_dims == 1) ? 0 : i);
+    }
   }
-  if (global_pooling_) {
-    CHECK(pad_h_ == 0 && pad_w_ == 0 && stride_h_ == 1 && stride_w_ == 1)
-      << "With Global_pooling: true; only pad = 0 and stride = 1";
-  }
-  if (pad_h_ != 0 || pad_w_ != 0) {
-    CHECK(this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_AVE
-        || this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_MAX)
-        << "Padding implemented only for average and max pooling.";
-    CHECK_LT(pad_h_, kernel_h_);
-    CHECK_LT(pad_w_, kernel_w_);
+  // remaining pooling sanity checks
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    if (global_pooling_) {
+      CHECK(pad_[i] == 0 && stride_[i] == 1)
+        << "With Global_pooling: true; only pad = 0 and stride = 1";
+    }
+    if (pad_[i] != 0) {
+      CHECK(this->layer_param_.pooling_param().pool()
+          == PoolingParameter_PoolMethod_AVE
+          || this->layer_param_.pooling_param().pool()
+          == PoolingParameter_PoolMethod_MAX)
+          << "Padding implemented only for average and max pooling.";
+    }
+    CHECK_LT(pad_[i], kernel_shape_[i]);
   }
 }
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
-      << "corresponding to (num, channels, height, width)";
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
+  CHECK_EQ(bottom[0]->num_axes() - 2, num_spatial_axes_)
+      << "bottom num_axes may not change.";
+  channels_ = bottom[0]->shape(1);
+  input_shape_ = bottom[0]->shape();
   if (global_pooling_) {
-    kernel_h_ = bottom[0]->height();
-    kernel_w_ = bottom[0]->width();
+    for (int i = 0; i < num_spatial_axes_; ++i)
+      kernel_shape_[i] = input_shape_[i + 2];
   }
-  pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      height_ + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
-  pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      width_ + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
-  if (pad_h_ || pad_w_) {
-    // If we have padding, ensure that the last pooling starts strictly
-    // inside the image (instead of at the padding); otherwise clip the last.
-    if ((pooled_height_ - 1) * stride_h_ >= height_ + pad_h_) {
-      --pooled_height_;
-    }
-    if ((pooled_width_ - 1) * stride_w_ >= width_ + pad_w_) {
-      --pooled_width_;
-    }
-    CHECK_LT((pooled_height_ - 1) * stride_h_, height_ + pad_h_);
-    CHECK_LT((pooled_width_ - 1) * stride_w_, width_ + pad_w_);
+  // setup pooled shape
+  pooled_shape_ = std::vector<int>(input_shape_.size());
+  pooled_shape_[0] = input_shape_[0];
+  pooled_shape_[1] = input_shape_[1];
+  for (unsigned int i = 0; i < num_spatial_axes_; ++i) {
+    pooled_shape_[i + 2] = static_cast<int>(std::ceil(static_cast<float>(
+        input_shape_[i + 2] + 2 * pad_[i] - kernel_shape_[i]) /
+        stride_[i])) + 1;
   }
-  top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
+  for (unsigned int i = 0; i < num_spatial_axes_; ++i) {
+    if (pad_[i]) {
+      // If we have padding, ensure that the last pooling starts strictly
+      // inside the image (instead of at the padding); otherwise clip the last.
+      if ((pooled_shape_[i + 2] - 1) * stride_[i] >=
+          input_shape_[i + 2] + pad_[i]) {
+        --pooled_shape_[i + 2];
+      }
+      CHECK_LT((pooled_shape_[i + 2] - 1) * stride_[i],
+          input_shape_[i + 2] + pad_[i]);
+    }
+  }
+  // reshape outputs
+  top[0]->Reshape(pooled_shape_);
   if (top.size() > 1) {
     top[1]->ReshapeLike(*top[0]);
   }
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX && top.size() == 1) {
-    max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-        pooled_width_);
+    max_idx_.Reshape(pooled_shape_);
   }
   // If stochastic pooling, we will initialize the random index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_STOCHASTIC) {
-    rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
+    rand_idx_.Reshape(pooled_shape_);
   }
 }
 
