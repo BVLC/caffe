@@ -517,7 +517,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxPadded) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[8], 1, epsilon);
 }
 
-#if 1
+#if 0
 TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMaxTopMask) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
