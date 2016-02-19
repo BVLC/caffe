@@ -318,7 +318,9 @@ void MklDnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
-    mask = max_idx_.cpu_data();
+    mask = (top.size() > 1) ? reinterpret_cast<const size_t*>(top[1]->cpu_data()) :
+                              (max_idx_.cpu_data());
+
     dnnError_t e;
     void* pooling_res[dnnResourceNumber];
 

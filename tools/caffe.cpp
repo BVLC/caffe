@@ -526,7 +526,7 @@ int compare() {
                params_ref[param_id]->cpu_data(),
                params[param_id]->mutable_cpu_data());
 
-    if(params[param_id]->prv_diff())
+    if (params[param_id]->prv_diff())
       caffe::caffe_set(
         params[param_id]->prv_diff_count(),
         0.f,
@@ -537,7 +537,7 @@ int compare() {
         0.f,
         params[param_id]->mutable_cpu_diff());
 
-    if(params_ref[param_id]->prv_diff())
+    if (params_ref[param_id]->prv_diff())
       caffe::caffe_set(
         params_ref[param_id]->prv_diff_count(),
         0.f,
@@ -579,7 +579,7 @@ int compare() {
 
     CHECK_EQ(top_vecs_ref[i][0]->count(), top_vecs[i][0]->count());
     for (int j = 0; j < top_vecs_ref[i][0]->count(); ++j) {
-      float err = ( ref[j] == 0 || ( fabs(ref[j]) < very_small_value) ) ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j] ) );
+      float err = (fabs(ref[j]) < very_small_value)  ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j]));
       if (err > max_allowed_error) LOG(INFO) <<
                                   "Forward: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
                                   << " layer: " << i << " name: " << layers[i]->layer_param().name();
@@ -613,7 +613,7 @@ int compare() {
 
     CHECK_EQ(bottom_vecs_ref[i][0]->count(), bottom_vecs[i][0]->count());
     for (int j = 0; j < bottom_vecs_ref[i][0]->count(); ++j) {
-      float err = ( ref[j] == 0 || ( fabs(ref[j]) < very_small_value) ) ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j] ) );
+      float err = (fabs(ref[j]) < very_small_value) ? (fabs(data[j] - ref[j])) : (fabs((data[j] - ref[j]) / ref[j]));
       if (err > max_allowed_error) LOG(INFO) <<
          "Backward: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
          << " layer: " << i << " name: " << layers[i]->layer_param().name();
@@ -636,10 +636,10 @@ int compare() {
     bool has_err = false;
 
     for (int j = 0; j < params_ref[param_id]->count(); ++j) {
-      float err = ( ref[j] == 0 || ( fabs(ref[j]) < very_small_value) ) ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j] ) );
+      float err = (fabs(ref[j]) < very_small_value)  ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j]));
       if (err > max_allowed_error) {
         LOG(INFO) <<
-          " Param diff: Error at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
+          " Param diff: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
           << "   param_id: " << param_id ;
         has_err = true;
       }
