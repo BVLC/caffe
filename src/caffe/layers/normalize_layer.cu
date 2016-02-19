@@ -8,6 +8,7 @@
 #include "caffe/layers/normalize_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef USE_CUDA
 namespace caffe {
 
 // divid a matrix with vector
@@ -218,3 +219,4 @@ INSTANTIATE_LAYER_GPU_FUNCS(NormalizeLayer);
 
 
 }  // namespace caffe
+#endif // USE_CUDA

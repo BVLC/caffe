@@ -172,12 +172,8 @@ bool ReadImageToDatum(const string& filename, const int label,
       if ( (cv_img.channels() == 3) == is_color && !height && !width &&
           matchExt(filename, encoding) )
         return ReadFileToDatum(filename, label, datum);
-      std::vector<uchar> buf;
-      cv::imencode("."+encoding, cv_img, buf);
-      datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
-                      buf.size()));
+      EncodeCVMatToDatum(cv_img, encoding, datum);
       datum->set_label(label);
-      datum->set_encoded(true);
       return true;
     }
     CVMatToDatum(cv_img, datum);
@@ -479,6 +475,15 @@ bool DecodeDatum(Datum* datum, bool is_color) {
   } else {
     return false;
   }
+}
+
+void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
+                        Datum* datum) {
+  std::vector<uchar> buf;
+  cv::imencode("."+encoding, cv_img, buf);
+  datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
+                              buf.size()));
+  datum->set_encoded(true);
 }
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {

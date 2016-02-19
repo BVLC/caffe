@@ -53,11 +53,201 @@ remove_old_models = True
 
 # The size of the images stored in lmdb in the format of
 # minsize x maxsize _ resizewidth x resizeheight
-size = "0x0_300x300"
+size = "0x0_0x0"
 # The database file for training data. Created by data/VOC0712/create_data.sh
 train_data = "examples/VOC0712/VOC0712_trainval_{}_lmdb".format(size)
 # The database file for testing data. Created by data/VOC0712/create_data.sh
 test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
+# Specify the batch sampler.
+resize_width = 300
+resize_height = 300
+batch_sampler = [
+        {
+                'sampler': {
+                        },
+                'max_trials': 12,
+                'max_sample': 12,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 1.0,
+                        },
+                'max_trials': 100,
+                'max_sample': 6,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 1.0,
+                        'min_sample_coverage': 0.1,
+                        },
+                'max_trials': 50,
+                'max_sample': 3,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 1.0,
+                        'min_sample_coverage': 0.3,
+                        },
+                'max_trials': 50,
+                'max_sample': 3,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 1.0,
+                        'min_sample_coverage': 0.5,
+                        },
+                'max_trials': 50,
+                'max_sample': 3,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 1.0,
+                        'min_sample_coverage': 0.7,
+                        },
+                'max_trials': 50,
+                'max_sample': 3,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 0.7,
+                        'max_sample_coverage': 1.0,
+                        },
+                'max_trials': 50,
+                'max_sample': 3,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 0.7,
+                        'max_sample_coverage': 0.7,
+                        },
+                'max_trials': 100,
+                'max_sample': 6,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 0.7,
+                        'max_sample_coverage': 0.5,
+                        },
+                'max_trials': 100,
+                'max_sample': 6,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 0.7,
+                        'max_sample_coverage': 0.3,
+                        },
+                'max_trials': 100,
+                'max_sample': 6,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'min_object_coverage': 0.7,
+                        'max_sample_coverage': 0.1,
+                        },
+                'max_trials': 50,
+                'max_sample': 3,
+        },
+        {
+                'sampler': {
+                        'min_scale': 0.3,
+                        'max_scale': 1.0,
+                        'min_aspect_ratio': 0.5,
+                        'max_aspect_ratio': 2.0,
+                        },
+                'sample_constraint': {
+                        'max_object_coverage': 0.5,
+                        },
+                'max_trials': 100,
+                'max_sample': 6,
+        },
+        ]
+train_transform_param = {
+        'mirror': True,
+        'mean_value': [104, 117, 123],
+        'resize_param': {
+                'prob': 1,
+                'resize_mode': P.Resize.WARP,
+                'height': resize_height,
+                'width': resize_width,
+                'interp_mode': [
+                        P.Resize.LINEAR,
+                        P.Resize.AREA,
+                        P.Resize.NEAREST,
+                        P.Resize.CUBIC,
+                        P.Resize.LANCZOS4,
+                        ],
+                },
+        }
+test_transform_param = {
+        'mean_value': [104, 117, 123],
+        'resize_param': {
+                'prob': 1,
+                'resize_mode': P.Resize.WARP,
+                'height': resize_height,
+                'width': resize_width,
+                'interp_mode': [P.Resize.LINEAR],
+                },
+        }
 
 # If true, use batch norm for all newly added layers.
 # Currently only the non batch norm version has been tested.
@@ -223,7 +413,8 @@ make_if_not_exist(snapshot_dir)
 # Create train net.
 net = caffe.NetSpec()
 net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size,
-        train=True, output_label=True, label_map_file=label_map_file)
+        train=True, output_label=True, label_map_file=label_map_file,
+        transform_param=train_transform_param, batch_sampler=batch_sampler)
 
 VGGNetBody(net, fully_conv=True, reduced=True, freeze_layers=freeze_layers)
 
@@ -248,7 +439,8 @@ with open(train_net_file, 'w') as f:
 # Create test net.
 net = caffe.NetSpec()
 net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=test_batch_size,
-        train=False, output_label=True, label_map_file=label_map_file)
+        train=False, output_label=True, label_map_file=label_map_file,
+        transform_param=test_transform_param)
 
 VGGNetBody(net, fully_conv=True, reduced=True)
 

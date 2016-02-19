@@ -271,6 +271,9 @@ cv::Mat ReadImageToCVMat(const string& filename);
 cv::Mat DecodeDatumToCVMatNative(const Datum& datum);
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color);
 
+void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
+                        Datum* datum);
+
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
 void GetImageSize(const string& filename, int* height, int* width);

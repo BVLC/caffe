@@ -53,6 +53,69 @@ message LabelMap {
   repeated LabelMapItem item = 1;
 }
 
+// Sample a bbox in the normalized space [0, 1] with provided constraints.
+message Sampler {
+  // Minimum scale of the sampled bbox.
+  optional float min_scale = 1 [default = 1.];
+  // Maximum scale of the sampled bbox.
+  optional float max_scale = 2 [default = 1.];
+
+  // Minimum aspect ratio of the sampled bbox.
+  optional float min_aspect_ratio = 3 [default = 1.];
+  // Maximum aspect ratio of the sampled bbox.
+  optional float max_aspect_ratio = 4 [default = 1.];
+}
+
+// Constraints for selecting sampled bbox.
+message SampleConstraint {
+  // Minimum Jaccard overlap between sampled bbox and all bboxes in
+  // AnnotationGroup.
+  optional float min_jaccard_overlap = 1;
+  // Maximum Jaccard overlap between sampled bbox and all bboxes in
+  // AnnotationGroup.
+  optional float max_jaccard_overlap = 2;
+
+  // Minimum coverage of sampled bbox by all bboxes in AnnotationGroup.
+  optional float min_sample_coverage = 3;
+  // Maximum coverage of sampled bbox by all bboxes in AnnotationGroup.
+  optional float max_sample_coverage = 4;
+
+  // Minimum coverage of all bboxes in AnnotationGroup by sampled bbox.
+  optional float min_object_coverage = 5;
+  // Maximum coverage of all bboxes in AnnotationGroup by sampled bbox.
+  optional float max_object_coverage = 6;
+}
+
+// Sample a batch of bboxes with provided constraints.
+message BatchSampler {
+  // Use original image as the source for sampling.
+  optional bool use_original_image = 1 [default = true];
+
+  // Constraints for sampling bbox.
+  optional Sampler sampler = 2;
+
+  // Constraints for determining if a sampled bbox is positive or negative.
+  optional SampleConstraint sample_constraint = 3;
+
+  // If provided, break when found certain number of samples satisfing the
+  // sample_constraint.
+  optional uint32 max_sample = 4;
+
+  // Maximum number of trials for sampling to avoid infinite loop.
+  optional uint32 max_trials = 5 [default = 100];
+}
+
+// Condition for emitting annotations.
+message EmitConstraint {
+  enum EmitType {
+    CENTER = 0;
+    MIN_OVERLAP = 1;
+  }
+  optional EmitType emit_type = 1 [default = CENTER];
+  // If emit_type is MIN_OVERLAP, provide the emit_overlap.
+  optional float emit_overlap = 2;
+}
+
 // The normalized bounding box [0, 1] w.r.t. the input image size.
 message NormalizedBBox {
   optional float xmin = 1;
@@ -493,6 +556,9 @@ message TransformationParameter {
   optional bool mirror = 2 [default = false];
   // Specify if we would like to randomly crop an image.
   optional uint64 crop_size = 3 [default = 0];
+  optional uint64 crop_h = 11 [default = 0];
+  optional uint64 crop_w = 12 [default = 0];
+
   // mean_file and mean_value cannot be specified at the same time
   optional string mean_file = 4;
   // if specified can be repeated once (would subtract it from all the channels)
@@ -503,6 +569,93 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  // Resize policy
+  optional ResizeParameter resize_param = 8;
+  // Noise policy
+  optional NoiseParameter noise_param = 9;
+  // Constraint for emitting the annotation after transformation.
+  optional EmitConstraint emit_constraint = 10;
+}
+
+// Message that stores parameters used by data transformer for transformation policy
+message ResizeParameter {
+  //Probability of using this resize policy
+  optional float prob = 1 [default = 1];
+
+  enum Resize_mode {
+    WARP = 1;
+    FIT_SMALL_SIZE = 2;
+    FIT_LARGE_SIZE_AND_PAD = 3;
+  }
+  optional Resize_mode resize_mode = 2 [default = WARP];
+  optional uint32 height = 3 [default = 0];
+  optional uint32 width = 4 [default = 0];
+
+  enum Pad_mode {
+    CONSTANT = 1;
+    MIRRORED = 2;
+    REPEAT_NEAREST = 3;
+  }
+  // Padding mode for BE_SMALL_SIZE_AND_PAD mode and object centering
+  optional Pad_mode pad_mode = 5 [default = CONSTANT];
+  // if specified can be repeated once (would fill all the channels)
+  // or can be repeated the same number of times as channels
+  // (would use it them to the corresponding channel)
+  repeated float pad_value = 6;
+
+  enum Interp_mode { //Same as in OpenCV
+    LINEAR = 1;
+    AREA = 2;
+    NEAREST = 3;
+    CUBIC = 4;
+    LANCZOS4 = 5;
+  }
+  //interpolation for for resizing
+  repeated Interp_mode interp_mode = 7;
+}
+
+message SaltPepperParameter {
+  //Percentage of pixels
+  optional float fraction = 1 [default = 0];
+  repeated float value = 2;
+}
+
+// Message that stores parameters used by data transformer for transformation
+// policy
+message NoiseParameter {
+  //Probability of using this resize policy
+  optional float prob = 1 [default = 0];
+  // Histogram equalized
+  optional bool hist_eq = 2 [default = false];
+  // Color inversion
+  optional bool inverse = 3 [default = false];
+  // Grayscale
+  optional bool decolorize = 4 [default = false];
+  // Gaussian blur
+  optional bool gauss_blur = 5 [default = false];
+
+  // JPEG compression quality (-1 = no compression)
+  optional float jpeg = 6 [default = -1];
+
+  // Posterization
+  optional bool posterize = 7 [default = false];
+
+  // Erosion
+  optional bool erode = 8 [default = false];
+
+  // Salt-and-pepper noise
+  optional bool saltpepper = 9 [default = false];
+
+  optional SaltPepperParameter saltpepper_param = 10;
+
+  // Local histogram equalization
+  optional bool clahe = 11 [default = false];
+
+  // Color space conversion
+  optional bool convert_to_hsv = 12 [default = false];
+
+  // Color space conversion
+  optional bool convert_to_lab = 13 [default = false];
 }
 
 // Message that stores parameters shared by loss layers
@@ -555,8 +708,10 @@ message AccuracyParameter {
 }
 
 message AnnotatedDataParameter {
+  // Define the sampler.
+  repeated BatchSampler batch_sampler = 1;
   // Store label name and label id in LabelMap format.
-  optional string label_map_file = 1;
+  optional string label_map_file = 2;
 }
 
 message ArgMaxParameter {
