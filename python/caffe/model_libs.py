@@ -86,27 +86,31 @@ def ResBody(net, from_layer, block_name, out2a, out2b, out2c, stride, use_branch
 
 
 def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
-        output_label=True, train=True, mean_value=[104, 117, 123], mirror=True,
-        label_map_file=''):
+        output_label=True, train=True, label_map_file='',
+        transform_param={}, batch_sampler=[{}]):
     if train:
         kwargs = {
                 'include': dict(phase=caffe_pb2.Phase.Value('TRAIN')),
-                'transform_param': dict(mean_value=mean_value, mirror=mirror)
+                'transform_param': transform_param,
                 }
     else:
         kwargs = {
                 'include': dict(phase=caffe_pb2.Phase.Value('TEST')),
-                'transform_param': dict(mean_value=mean_value)
+                'transform_param': transform_param,
                 }
     if output_label:
-        data, label = L.AnnotatedData(name="data", label_map_file=label_map_file,
-                data_param=dict(batch_size=batch_size, backend=backend, source=source),
-                ntop=2, **kwargs)
+        data, label = L.AnnotatedData(name="data",
+            annotated_data_param=dict(label_map_file=label_map_file,
+                batch_sampler=batch_sampler),
+            data_param=dict(batch_size=batch_size, backend=backend, source=source),
+            ntop=2, **kwargs)
         return [data, label]
     else:
-        data = L.AnnotatedData(name="data", label_map_file=label_map_file,
-                data_param=dict(batch_size=batch_size, backend=backend, source=source),
-                ntop=1, **kwargs)
+        data = L.AnnotatedData(name="data",
+            annotated_data_param=dict(label_map_file=label_map_file,
+                batch_sampler=batch_sampler),
+            data_param=dict(batch_size=batch_size, backend=backend, source=source),
+            ntop=1, **kwargs)
         return data
 
 

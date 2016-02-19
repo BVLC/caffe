@@ -14,6 +14,7 @@
 
 namespace caffe {
 
+typedef EmitConstraint_EmitType EmitType;
 typedef PriorBoxParameter_CodeType CodeType;
 typedef MultiBoxLossParameter_MatchType MatchType;
 typedef map<int, vector<NormalizedBBox> > LabelBBox;
@@ -36,6 +37,9 @@ bool SortScorePairAscend(const pair<float, int>& pair1,
 bool SortScorePairDescend(const pair<float, int>& pair1,
                           const pair<float, int>& pair2);
 
+// Generate unit bbox [0, 0, 1, 1]
+NormalizedBBox UnitBBox();
+
 // Compute the intersection between two bboxes.
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox);
@@ -50,13 +54,29 @@ void ClipBBox(const NormalizedBBox& bbox, NormalizedBBox* clip_bbox);
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
                NormalizedBBox* scale_bbox);
 
+// Locate bbox in the coordinate system that src_bbox sits.
+void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
+                NormalizedBBox* loc_bbox);
+
+// Project bbox onto the coordinate system defined by src_bbox.
+bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
+                 NormalizedBBox* proj_bbox);
+
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+
+// Compute the coverage of bbox1 by bbox2.
+float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 
 // Encode a bbox according to a prior bbox.
 void EncodeBBox(const NormalizedBBox& prior_bbox,
     const vector<float>& prior_variance, const CodeType code_type,
     const NormalizedBBox& bbox, NormalizedBBox* encode_bbox);
+
+// Check if a bbox meet emit constraint w.r.t. src_bbox.
+bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
+                        const NormalizedBBox& bbox,
+                        const EmitConstraint& emit_constraint);
 
 // Decode a bbox according to a prior bbox.
 void DecodeBBox(const NormalizedBBox& prior_bbox,

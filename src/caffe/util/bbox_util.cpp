@@ -27,6 +27,15 @@ bool SortScorePairDescend(const pair<float, int>& pair1,
   return pair1.first > pair2.first;
 }
 
+NormalizedBBox UnitBBox() {
+  NormalizedBBox unit_bbox;
+  unit_bbox.set_xmin(0.);
+  unit_bbox.set_ymin(0.);
+  unit_bbox.set_xmax(1.);
+  unit_bbox.set_ymax(1.);
+  return unit_bbox;
+}
+
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox) {
   if (bbox2.xmin() > bbox1.xmax() || bbox2.xmax() < bbox1.xmin() ||
@@ -84,6 +93,36 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
   scale_bbox->set_size(BBoxSize(*scale_bbox, normalized));
 }
 
+void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
+                NormalizedBBox* loc_bbox) {
+  float src_width = src_bbox.xmax() - src_bbox.xmin();
+  float src_height = src_bbox.ymax() - src_bbox.ymin();
+  loc_bbox->set_xmin(src_bbox.xmin() + bbox.xmin() * src_width);
+  loc_bbox->set_ymin(src_bbox.ymin() + bbox.ymin() * src_height);
+  loc_bbox->set_xmax(src_bbox.xmin() + bbox.xmax() * src_width);
+  loc_bbox->set_ymax(src_bbox.ymin() + bbox.ymax() * src_height);
+}
+
+bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
+                 NormalizedBBox* proj_bbox) {
+  if (bbox.xmin() >= src_bbox.xmax() || bbox.xmax() <= src_bbox.xmin() ||
+      bbox.ymin() >= src_bbox.ymax() || bbox.ymax() <= src_bbox.ymin()) {
+    return false;
+  }
+  float src_width = src_bbox.xmax() - src_bbox.xmin();
+  float src_height = src_bbox.ymax() - src_bbox.ymin();
+  proj_bbox->set_xmin((bbox.xmin() - src_bbox.xmin()) / src_width);
+  proj_bbox->set_ymin((bbox.ymin() - src_bbox.ymin()) / src_height);
+  proj_bbox->set_xmax((bbox.xmax() - src_bbox.xmin()) / src_width);
+  proj_bbox->set_ymax((bbox.ymax() - src_bbox.ymin()) / src_height);
+  ClipBBox(*proj_bbox, proj_bbox);
+  if (BBoxSize(*proj_bbox) > 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
   NormalizedBBox intersect_bbox;
   IntersectBBox(bbox1, bbox2, &intersect_bbox);
@@ -94,6 +133,39 @@ float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
     return intersect_size / (bbox1_size + bbox2_size - intersect_size);
   } else {
     return 0.;
+  }
+}
+
+float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
+  NormalizedBBox intersect_bbox;
+  IntersectBBox(bbox1, bbox2, &intersect_bbox);
+  float intersect_size = BBoxSize(intersect_bbox);
+  if (intersect_size > 0) {
+    float bbox1_size = BBoxSize(bbox1);
+    return intersect_size / bbox1_size;
+  } else {
+    return 0.;
+  }
+}
+
+bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
+                        const NormalizedBBox& bbox,
+                        const EmitConstraint& emit_constraint) {
+  EmitType emit_type = emit_constraint.emit_type();
+  if (emit_type == EmitConstraint_EmitType_CENTER) {
+    float x_center = (bbox.xmin() + bbox.xmax()) / 2;
+    float y_center = (bbox.ymin() + bbox.ymax()) / 2;
+    if (x_center >= src_bbox.xmin() && x_center <= src_bbox.xmax() &&
+        y_center >= src_bbox.ymin() && y_center <= src_bbox.ymax()) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if (emit_type == EmitConstraint_EmitType_MIN_OVERLAP) {
+    float bbox_coverage = BBoxCoverage(bbox, src_bbox);
+    return bbox_coverage > emit_constraint.emit_overlap();
+  } else {
+    LOG(FATAL) << "Unknown emit type.";
   }
 }
 
