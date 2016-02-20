@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 
 #include "caffe/util/bbox_util.hpp"
@@ -104,7 +105,7 @@ void SampleBBox(const Sampler& sampler, NormalizedBBox* sampled_bbox) {
   // Figure out bbox dimension.
   float bbox_width = scale * sqrt(aspect_ratio);
   float bbox_height = scale / sqrt(aspect_ratio);
-  
+
   // Figure out top left coordinates.
   float w_off, h_off;
   caffe_rng_uniform(1, 0.f, 1 - bbox_width, &w_off);

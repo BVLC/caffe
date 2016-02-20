@@ -149,8 +149,9 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     if (this->output_labels_) {
       if (has_anno_type_) {
         // Make sure all data have same annotation type.
-        CHECK(sampled_datum.has_type()) << "Some datum is missing AnnotationType.";
-        CHECK_EQ(anno_type_, sampled_datum.type()) << "Different AnnotationType.";
+        CHECK(sampled_datum.has_type()) << "Some datum misses AnnotationType.";
+        CHECK_EQ(anno_type_, sampled_datum.type()) <<
+            "Different AnnotationType.";
         // Transform datum and annotation_group at the same time
         transformed_anno_vec.clear();
         this->data_transformer_->Transform(sampled_datum,

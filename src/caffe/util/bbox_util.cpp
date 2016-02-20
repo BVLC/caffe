@@ -101,6 +101,7 @@ void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
   loc_bbox->set_ymin(src_bbox.ymin() + bbox.ymin() * src_height);
   loc_bbox->set_xmax(src_bbox.xmin() + bbox.xmax() * src_width);
   loc_bbox->set_ymax(src_bbox.ymin() + bbox.ymax() * src_height);
+  loc_bbox->set_difficult(bbox.difficult());
 }
 
 bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
@@ -115,6 +116,7 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
   proj_bbox->set_ymin((bbox.ymin() - src_bbox.ymin()) / src_height);
   proj_bbox->set_xmax((bbox.xmax() - src_bbox.xmin()) / src_width);
   proj_bbox->set_ymax((bbox.ymax() - src_bbox.ymin()) / src_height);
+  proj_bbox->set_difficult(bbox.difficult());
   ClipBBox(*proj_bbox, proj_bbox);
   if (BBoxSize(*proj_bbox) > 0) {
     return true;
