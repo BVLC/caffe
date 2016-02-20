@@ -187,7 +187,8 @@ Please cite SSD in your publications if it helps your research:
 ### Contents
 1. [Installation](#installation)
 2. [Preparation](#preparation)
-3. [Contact](#contact)
+3. [Train/Eval](#traineval)
+4. [Contact](#contact)
 
 :bangbang:**Disclaimer**: This software is still under active development. The result is not the optimal yet.
 
@@ -201,14 +202,14 @@ Please cite SSD in your publications if it helps your research:
 
 2. Build the code. Please follow [Caffe instruction](http://caffe.berkeleyvision.org/installation.html) to install all necessary packages and build it.
   ```Shell
-  # Modify Makefile.config according to your caffe installation.
+  # Modify Makefile.config according to your Caffe installation.
   cp Makefile.config.example Makefile.config
   make -j8
   make py
   make test -j8
-  make runtest -j8
+  make runtest
   # If you have multiple GPUs installed in your machine, make runtest might fail. If so, try following:
-  export CUDA_VISIBLE_DEVICES=0; make runtest -j8
+  export CUDA_VISIBLE_DEVICES=0; make runtest
   ```
 
 ### Preparation
@@ -230,25 +231,30 @@ Please cite SSD in your publications if it helps your research:
 3. Create the LMDB file.
   ```Shell
   cd $CAFFE_ROOT
-  # Create the trainval.txt and test.txt in data/VOC0712/
+  # Create the trainval.txt, test.txt, and test_name_size.txt in data/VOC0712/
   ./data/VOC0712/create_list.sh
   # You can modify the parameters in create_data.sh if needed.
-  # It will create lmdb files for trainval and test in:
-  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_trainval_0x0_300x300_lmdb
-  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_test_0x0_300x300_lmdb
+  # It will create lmdb files for trainval and test with encoded original image:
+  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_trainval_0x0_0x0_lmdb
+  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_test_0x0_0x0_lmdb
   # and make soft links at examples/VOC0712/
   ./data/VOC0712/create_data.sh
   ```
 
-4. Train your model and evaluate the model on the fly.
+### Train/Eval
+1. Train your model and evaluate the model on the fly.
   ```Shell
   # It will create model definition files (train.prototxt, test.prototxt, solver.prototxt) and save models in:
-  #   - $CAFFE_ROOT/models/VGGNet/VOC0712/SSD_0x0_300x300_0.001/
-  # and job file and log file in:
-  #   - $CAFFE_ROOT/jobs/VGGNet/VOC0712/SSD_0x0_300x300_0.001/
-  # and save evaluation results in:
-  #   - $HOME/data/VOCdevkit/results/VOC2007/SSD_0x0_300x300_0.001/
+  #   - $CAFFE_ROOT/models/VGGNet/VOC0712/SSD_0x0_0x0_0.001/
+  # and job file, log file, and the python script in:
+  #   - $CAFFE_ROOT/jobs/VGGNet/VOC0712/SSD_0x0_0x0_0.001/
+  # and save temporary evaluation results in:
+  #   - $HOME/data/VOCdevkit/results/VOC2007/SSD_0x0_0x0_0.001/
   python examples/ssd/ssd_pascal.py
+  ```
+
+2. Evaluate the most recent snapshot.
+  ```Shell
   # If you would like to test a model you trained, you can do:
   python examples/ssd/score_ssd_pascal.py
   ```

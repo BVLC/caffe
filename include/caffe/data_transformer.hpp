@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include <google/protobuf/repeated_field.h>
+#include "google/protobuf/repeated_field.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -71,6 +71,14 @@ class DataTransformer {
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  RepeatedPtrField<AnnotationGroup>* transformed_anno_vec);
+  void Transform(const AnnotatedDatum& anno_datum,
+                 Blob<Dtype>* transformed_blob,
+                 RepeatedPtrField<AnnotationGroup>* transformed_anno_vec,
+                 bool* do_mirror);
+  void Transform(const AnnotatedDatum& anno_datum,
+                 Blob<Dtype>* transformed_blob,
+                 vector<AnnotationGroup>* transformed_anno_vec,
+                 bool* do_mirror);
   void Transform(const AnnotatedDatum& anno_datum,
                  Blob<Dtype>* transformed_blob,
                  vector<AnnotationGroup>* transformed_anno_vec);

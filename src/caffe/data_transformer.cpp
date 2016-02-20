@@ -235,27 +235,45 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(
     const AnnotatedDatum& anno_datum, Blob<Dtype>* transformed_blob,
-    RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all) {
+    RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all,
+    bool* do_mirror) {
   // Transform datum.
   const Datum& datum = anno_datum.datum();
   NormalizedBBox crop_bbox;
-  bool do_mirror;
-  Transform(datum, transformed_blob, &crop_bbox, &do_mirror);
+  Transform(datum, transformed_blob, &crop_bbox, do_mirror);
 
   // Transform annotation.
-  TransformAnnotation(anno_datum, crop_bbox, do_mirror,
+  TransformAnnotation(anno_datum, crop_bbox, *do_mirror,
                       transformed_anno_group_all);
 }
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(
     const AnnotatedDatum& anno_datum, Blob<Dtype>* transformed_blob,
-    vector<AnnotationGroup>* transformed_anno_vec) {
+    RepeatedPtrField<AnnotationGroup>* transformed_anno_group_all) {
+  bool do_mirror;
+  Transform(anno_datum, transformed_blob, transformed_anno_group_all,
+            &do_mirror);
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(
+    const AnnotatedDatum& anno_datum, Blob<Dtype>* transformed_blob,
+    vector<AnnotationGroup>* transformed_anno_vec, bool* do_mirror) {
   RepeatedPtrField<AnnotationGroup> transformed_anno_group_all;
-  Transform(anno_datum, transformed_blob, &transformed_anno_group_all);
+  Transform(anno_datum, transformed_blob, &transformed_anno_group_all,
+            do_mirror);
   for (int g = 0; g < transformed_anno_group_all.size(); ++g) {
     transformed_anno_vec->push_back(transformed_anno_group_all.Get(g));
   }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(
+    const AnnotatedDatum& anno_datum, Blob<Dtype>* transformed_blob,
+    vector<AnnotationGroup>* transformed_anno_vec) {
+  bool do_mirror;
+  Transform(anno_datum, transformed_blob, transformed_anno_vec, &do_mirror);
 }
 
 template<typename Dtype>
@@ -273,10 +291,13 @@ void DataTransformer<Dtype>::TransformAnnotation(
       for (int a = 0; a < anno_group.annotation_size(); ++a) {
         const Annotation& anno = anno_group.annotation(a);
         const NormalizedBBox& bbox = anno.bbox();
+        if (param_.has_emit_constraint() &&
+            !MeetEmitConstraint(crop_bbox, bbox, param_.emit_constraint())) {
+          continue;
+        }
         // Adjust bounding box annotation.
         NormalizedBBox proj_bbox;
-        if (MeetEmitConstraint(crop_bbox, bbox, param_.emit_constraint()) &&
-            ProjectBBox(crop_bbox, bbox, &proj_bbox)) {
+        if (ProjectBBox(crop_bbox, bbox, &proj_bbox)) {
           has_valid_annotation = true;
           Annotation* transformed_anno =
               transformed_anno_group.add_annotation();

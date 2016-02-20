@@ -237,6 +237,9 @@ train_transform_param = {
                         P.Resize.LANCZOS4,
                         ],
                 },
+        'emit_constraint': {
+            'emit_type': caffe_pb2.EmitConstraint.CENTER,
+            }
         }
 test_transform_param = {
         'mean_value': [104, 117, 123],
@@ -345,10 +348,8 @@ iter_size = 32 / batch_size / num_gpus
 # Which layers to freeze (no backward) during training.
 freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
 
-# Only evaluate on ~10% of the test data to speed up training.
-# Change to 4952 if you want to test on the full test set during
-# training.
-num_test_image = 495
+# Evaluate on all test images.
+num_test_image = 4952
 test_batch_size = 1
 test_iter = num_test_image / test_batch_size
 
@@ -369,7 +370,7 @@ solver_param = {
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [test_iter],
-    'test_interval': 2000,
+    'test_interval': 5000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,

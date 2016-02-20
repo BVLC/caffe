@@ -354,7 +354,7 @@ cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
     }
   }
 
-  cv::Scalar pad_val = cv::Scalar(0, 0, 0); 
+  cv::Scalar pad_val = cv::Scalar(0, 0, 0);
   const int img_channels = in_img.channels();
   if (param.pad_value_size() > 0) {
     CHECK(param.pad_value_size() == 1 ||
