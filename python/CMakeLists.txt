@@ -22,13 +22,14 @@ if(UNIX OR APPLE)
 endif()
 
 # ---[ Install
+set(PYCAFFE_DIR lib/python${python_version}/site-packages)
 file(GLOB files1 *.py requirements.txt)
-install(FILES ${files1} DESTINATION python)
+install(FILES ${files1} DESTINATION ${PYCAFFE_DIR})
 
 file(GLOB files2 caffe/*.py)
-install(FILES  ${files2} DESTINATION python/caffe)
-install(TARGETS pycaffe  DESTINATION python/caffe)
-install(DIRECTORY caffe/imagenet caffe/proto caffe/test DESTINATION python/caffe)
+install(FILES  ${files2} DESTINATION ${PYCAFFE_DIR}/caffe)
+install(TARGETS pycaffe  DESTINATION ${PYCAFFE_DIR}/caffe)
+install(DIRECTORY caffe/imagenet caffe/proto caffe/test DESTINATION ${PYCAFFE_DIR}/caffe)
 
 
 
