@@ -248,6 +248,8 @@ ifeq ($(UNAME), Linux)
 	LINUX := 1
 else ifeq ($(UNAME), Darwin)
 	OSX := 1
+	OSX_MAJOR_VERSION := $(shell sw_vers -productVersion | cut -f 1 -d .)
+	OSX_MINOR_VERSION := $(shell sw_vers -productVersion | cut -f 2 -d .)
 endif
 
 # Linux
@@ -277,6 +279,14 @@ ifeq ($(OSX), 1)
 		endif
 		# clang throws this warning for cuda headers
 		WARNINGS += -Wno-unneeded-internal-declaration
+		# 10.11 strips DYLD_* env vars so link CUDA (rpath is available on 10.5+)
+		OSX_10_OR_LATER   := $(shell [ $(OSX_MAJOR_VERSION) -ge 10 ] && echo true)
+		OSX_10_5_OR_LATER := $(shell [ $(OSX_MINOR_VERSION) -ge 5 ] && echo true)
+		ifeq ($(OSX_10_OR_LATER),true)
+			ifeq ($(OSX_10_5_OR_LATER),true)
+				LDFLAGS += -Wl,-rpath,$(CUDA_LIB_DIR)
+			endif
+		endif
 	endif
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
