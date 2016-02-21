@@ -17,15 +17,29 @@ bool SortBBoxDescend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
   return bbox1.score() > bbox2.score();
 }
 
-bool SortScorePairAscend(const pair<float, int>& pair1,
-                         const pair<float, int>& pair2) {
+template <typename T>
+bool SortScorePairAscend(const pair<float, T>& pair1,
+                         const pair<float, T>& pair2) {
   return pair1.first < pair2.first;
 }
 
-bool SortScorePairDescend(const pair<float, int>& pair1,
-                          const pair<float, int>& pair2) {
+// Explicit initialization.
+template bool SortScorePairAscend(const pair<float, int>& pair1,
+                                  const pair<float, int>& pair2);
+template bool SortScorePairAscend(const pair<float, pair<int, int> >& pair1,
+                                  const pair<float, pair<int, int> >& pair2);
+
+template <typename T>
+bool SortScorePairDescend(const pair<float, T>& pair1,
+                          const pair<float, T>& pair2) {
   return pair1.first > pair2.first;
 }
+
+// Explicit initialization.
+template bool SortScorePairDescend(const pair<float, int>& pair1,
+                                   const pair<float, int>& pair2);
+template bool SortScorePairDescend(const pair<float, pair<int, int> >& pair1,
+                                   const pair<float, pair<int, int> >& pair2);
 
 NormalizedBBox UnitBBox() {
   NormalizedBBox unit_bbox;
@@ -168,6 +182,7 @@ bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
     return bbox_coverage > emit_constraint.emit_overlap();
   } else {
     LOG(FATAL) << "Unknown emit type.";
+    return false;
   }
 }
 
@@ -658,7 +673,7 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
 
   // Sort the score pair according to the scores in descending order
   std::stable_sort(score_index_vec.begin(), score_index_vec.end(),
-                   SortScorePairDescend);
+                   SortScorePairDescend<int>);
 
   // Keep top_k scores if needed.
   if (top_k > -1 && top_k < score_index_vec.size()) {
@@ -730,7 +745,8 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum) {
   // Sort the pairs based on first item of the pair.
   vector<pair<float, int> > sort_pairs = pairs;
-  std::stable_sort(sort_pairs.begin(), sort_pairs.end(), SortScorePairDescend);
+  std::stable_sort(sort_pairs.begin(), sort_pairs.end(),
+                   SortScorePairDescend<int>);
 
   cumsum->clear();
   for (int i = 0; i < sort_pairs.size(); ++i) {

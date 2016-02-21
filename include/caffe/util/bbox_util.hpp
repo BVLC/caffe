@@ -27,15 +27,17 @@ bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 // in descend order based on the score value.
 bool SortBBoxDescend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 
-// Function sued to sort pair<float, int>, stored in STL container (e.g. vector)
+// Function sued to sort pair<float, T>, stored in STL container (e.g. vector)
 // in descend order based on the score (first) value.
-bool SortScorePairAscend(const pair<float, int>& pair1,
-                         const pair<float, int>& pair2);
+template <typename T>
+bool SortScorePairAscend(const pair<float, T>& pair1,
+                         const pair<float, T>& pair2);
 
-// Function sued to sort pair<float, int>, stored in STL container (e.g. vector)
+// Function sued to sort pair<float, T>, stored in STL container (e.g. vector)
 // in descend order based on the score (first) value.
-bool SortScorePairDescend(const pair<float, int>& pair1,
-                          const pair<float, int>& pair2);
+template <typename T>
+bool SortScorePairDescend(const pair<float, T>& pair1,
+                          const pair<float, T>& pair2);
 
 // Generate unit bbox [0, 0, 1, 1]
 NormalizedBBox UnitBBox();

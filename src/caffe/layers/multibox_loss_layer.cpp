@@ -224,7 +224,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (map<int, vector<int> >::iterator it = match_indices.begin();
          it != match_indices.end(); ++it) {
       const int label = it->first;
-      // Get positive indies.
+      // Get positive indices.
       int num_pos = 0;
       for (int m = 0; m < match_indices[label].size(); ++m) {
         if (match_indices[label][m] != -1) {
@@ -246,7 +246,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // Pick top num_neg negatives.
         num_neg = std::min(static_cast<int>(num_pos * neg_pos_ratio_), num_neg);
         std::sort(scores_indices.begin(), scores_indices.end(),
-                  SortScorePairDescend);
+                  SortScorePairDescend<int>);
         for (int n = 0; n < num_neg; ++n) {
           neg_indices.push_back(scores_indices[n].second);
         }
