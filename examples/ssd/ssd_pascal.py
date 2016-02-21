@@ -359,8 +359,8 @@ solver_param = {
     'weight_decay': 0.0005,
     'lr_policy': "fixed",
     'iter_size': iter_size,
-    'max_iter': 50000,
-    'snapshot': 10000,
+    'max_iter': 500000,
+    'snapshot': 50000,
     'display': 10,
     'average_loss': 10,
     'type': "AdaGrad",
@@ -390,6 +390,7 @@ det_out_param = {
         'name_size_file': "{}/{}".format(caffe_root, name_size_file),
         'num_test_image': num_test_image,
         },
+    'keep_top_k': 200,
     }
 
 # parameters for evaluating detection results.
