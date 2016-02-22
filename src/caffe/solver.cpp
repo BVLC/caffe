@@ -524,11 +524,13 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
       int label_num_pos = it->second;
       if (true_pos.find(label) == true_pos.end()) {
         LOG(WARNING) << "Missing true_pos for label: " << label;
+        continue;
       }
       const vector<pair<float, int> >& label_true_pos =
           true_pos.find(label)->second;
       if (false_pos.find(label) == false_pos.end()) {
         LOG(WARNING) << "Missing false_pos for label: " << label;
+        continue;
       }
       const vector<pair<float, int> >& label_false_pos =
           false_pos.find(label)->second;
