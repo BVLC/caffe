@@ -556,7 +556,8 @@ template void GetConfidenceScores(const double* conf_data, const int num,
 
 template <typename Dtype>
 void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes, const bool prob,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const bool prob,
       vector<vector<float> >* all_max_scores) {
   all_max_scores->clear();
   for (int i = 0; i < num; ++i) {
@@ -564,8 +565,13 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
     for (int p = 0; p < num_preds_per_class; ++p) {
       int start_idx = p * num_classes;
       Dtype maxval = -FLT_MAX;
+      Dtype maxval_pos = -FLT_MAX;
       for (int c = 0; c < num_classes; ++c) {
         maxval = std::max<Dtype>(conf_data[start_idx + c], maxval);
+        if (c != background_label_id) {
+          // Find maximum scores for positive classes.
+          maxval_pos = std::max<Dtype>(conf_data[start_idx + c], maxval_pos);
+        }
       }
       if (prob) {
         // Compute softmax probability.
@@ -573,9 +579,9 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
         for (int c = 0; c < num_classes; ++c) {
           sum += std::exp(conf_data[start_idx + c] - maxval);
         }
-        maxval = 1. / sum;
+        maxval_pos = std::exp(maxval_pos - maxval) / sum;
       }
-      max_scores.push_back(maxval);
+      max_scores.push_back(maxval_pos);
     }
     conf_data += num_preds_per_class * num_classes;
     all_max_scores->push_back(max_scores);
@@ -584,10 +590,12 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
 
 // Explicit initialization.
 template void GetMaxConfidenceScores(const float* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes, const bool prob,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const bool prob,
       vector<vector<float> >* all_max_scores);
 template void GetMaxConfidenceScores(const double* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes, const bool prob,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const bool prob,
       vector<vector<float> >* all_max_scores);
 
 template <typename Dtype>

@@ -150,8 +150,8 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   vector<vector<float> > all_max_scores;
   if (do_neg_mining_) {
     bool use_prob = true;
-    GetMaxConfidenceScores(conf_data, num_, num_priors_, num_classes_, use_prob,
-                           &all_max_scores);
+    GetMaxConfidenceScores(conf_data, num_, num_priors_, num_classes_,
+                           background_label_id_, use_prob, &all_max_scores);
   }
 
   int num_matches = 0;

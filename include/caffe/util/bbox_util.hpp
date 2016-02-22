@@ -145,11 +145,14 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
 //    num: the number of images.
 //    num_preds_per_class: number of predictions per class.
 //    num_classes: number of classes.
+//    background_label_id: it is used to skip selecting max scores from
+//      background class.
 //    prob: if true, compute the softmax probability.
 //    all_max_scores: stores the max confidence per location for each image.
 template <typename Dtype>
 void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes, const bool prob,
+      const int num_preds_per_class, const int num_classes,
+      const int background_label_id, const bool prob,
       vector<vector<float> >* all_max_scores);
 
 // Get prior bounding boxes from prior_data.
