@@ -839,7 +839,7 @@ TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
   vector<vector<float> > max_conf_scores;
   bool prob = false;
   GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         prob, &max_conf_scores);
+                         -1, prob, &max_conf_scores);
 
   EXPECT_EQ(max_conf_scores.size(), num);
   EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
@@ -849,15 +849,42 @@ TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
   EXPECT_NEAR(max_conf_scores[1][0], 0.5, eps);
   EXPECT_NEAR(max_conf_scores[1][1], 0.7, eps);
 
+  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
+                         0, prob, &max_conf_scores);
+
+  EXPECT_EQ(max_conf_scores.size(), num);
+  EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
+  EXPECT_NEAR(max_conf_scores[0][0], -0.1, eps);
+  EXPECT_NEAR(max_conf_scores[0][1], -0.3, eps);
+  EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
+  EXPECT_NEAR(max_conf_scores[1][0], 0.5, eps);
+  EXPECT_NEAR(max_conf_scores[1][1], 0.7, eps);
+
   prob = true;
   GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         prob, &max_conf_scores);
+                         -1, prob, &max_conf_scores);
 
   EXPECT_EQ(max_conf_scores.size(), num);
   for (int i = 0; i < num; ++i) {
     EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
     for (int j = 0; j < num_preds_per_class; ++j) {
       EXPECT_NEAR(max_conf_scores[i][j], 1./(1+exp(-0.1)), eps);
+    }
+  }
+
+  GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
+                         0, prob, &max_conf_scores);
+
+  EXPECT_EQ(max_conf_scores.size(), num);
+  for (int i = 0; i < num; ++i) {
+    EXPECT_EQ(max_conf_scores[i].size(), num_preds_per_class);
+    int sign = i % 2 ? 1 : -1;
+    for (int j = 0; j < num_preds_per_class; ++j) {
+      if (sign == 1) {
+        EXPECT_NEAR(max_conf_scores[i][j], 1/(1+exp(-0.1)), eps);
+      } else {
+        EXPECT_NEAR(max_conf_scores[i][j], exp(-0.1)/(1+exp(-0.1)), eps);
+      }
     }
   }
 }
