@@ -156,7 +156,6 @@ void GenerateBatchSamples(const AnnotatedDatum& anno_datum,
       unit_bbox.set_ymax(1);
       GenerateSamples(unit_bbox, object_bboxes, batch_samplers[i],
                       sampled_bboxes);
-      sampled_bboxes->push_back(unit_bbox);
     }
   }
 }
