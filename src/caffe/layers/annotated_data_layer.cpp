@@ -135,10 +135,14 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       // Generate sampled bboxes from anno_datum.
       vector<NormalizedBBox> sampled_bboxes;
       GenerateBatchSamples(anno_datum, batch_samplers_, &sampled_bboxes);
-      // Randomly pick a sampled bbox and crop the anno_datum.
-      int rand_idx = caffe_rng_rand() % sampled_bboxes.size();
-      this->data_transformer_->CropImage(anno_datum, sampled_bboxes[rand_idx],
-                                         &sampled_datum);
+      if (sampled_bboxes.size() > 0) {
+        // Randomly pick a sampled bbox and crop the anno_datum.
+        int rand_idx = caffe_rng_rand() % sampled_bboxes.size();
+        this->data_transformer_->CropImage(anno_datum, sampled_bboxes[rand_idx],
+                                           &sampled_datum);
+      } else {
+        sampled_datum.CopyFrom(anno_datum);
+      }
     } else {
       sampled_datum.CopyFrom(anno_datum);
     }
