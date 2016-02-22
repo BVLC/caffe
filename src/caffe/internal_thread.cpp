@@ -2,6 +2,7 @@
 #include <exception>
 
 #include "caffe/internal_thread.hpp"
+#include "caffe/util/cpu_info.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -47,6 +48,10 @@ void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
   Caffe::set_random_seed(rand_seed);
   Caffe::set_solver_count(solver_count);
   Caffe::set_root_solver(root_solver);
+
+#ifdef _OPENMP
+  caffe::cpu::OpenMpManager::bindCurrentThreadToPrimaryCore();
+#endif
 
   InternalThreadEntry();
 }

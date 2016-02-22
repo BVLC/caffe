@@ -305,7 +305,7 @@ else ifneq (,$(findstring icpc,$(CXX)))
 	COMMON_FLAGS += -DNDEBUG -O3 -xCORE-AVX2 -no-prec-div -fp-model fast=2
 	CXXFLAGS += -O0 -xHOST -march=core-avx2
 else
-	COMMON_FLAGS += -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O3
 endif
 
 # cuDNN acceleration configuration.
@@ -435,6 +435,7 @@ USE_OPENMP ?= 1
 ifeq ($(USE_OPENMP), 1)
   DUMMY_OPENMP_BINARY := $(shell mktemp)
   DUMMY_OPENMP_FILE := $(shell mktemp).cpp
+  INTEL_OMP_DIR ?= $(shell find /opt/intel/ -readable -name libiomp5.so 2>/dev/null | grep -m 1 intel64 | xargs dirname)
   define OPENMP_VERIFYING_CODE =
     "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
   endef

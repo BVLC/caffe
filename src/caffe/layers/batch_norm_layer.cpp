@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 #include "caffe/layers/batch_norm_layer.hpp"
@@ -72,6 +73,50 @@ void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void BatchNormLayer<Dtype>::replicate(Dtype* buffer_to_write,
+                                      int num_batches,
+                                      unsigned int batch_offset_incr,
+                                      unsigned int channel_offset_incr,
+                                      const Dtype* data_to_be_replicated) {
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
+  for (unsigned int j = 0; j< channels_; ++j) {
+    Dtype value = *(data_to_be_replicated + j);
+    Dtype* buffer_offsetted = buffer_to_write + j*channel_offset_incr;
+    for (unsigned int n = 0; n < num_batches; ++n) {
+      caffe_set(channel_offset_incr, value, buffer_offsetted);
+      buffer_offsetted += batch_offset_incr;
+    }
+  }
+}
+
+template <typename Dtype>
+template <typename FuncTy>
+void BatchNormLayer<Dtype>::replicate_to_op(Dtype* buffer_to_write,
+                                      int num_batches,
+                                      unsigned int batch_offset_incr,
+                                      unsigned int channel_offset_incr,
+                                      const Dtype* data_to_be_replicated,
+                                      FuncTy op_func) {
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
+  for (unsigned int j = 0; j< channels_; ++j) {
+    Dtype value = *(data_to_be_replicated + j);
+    Dtype* buffer_offsetted = buffer_to_write + j*channel_offset_incr;
+    for (unsigned int n = 0; n < num_batches; ++n) {
+      for (unsigned int k = 0; k < channel_offset_incr; ++k) {
+        *(buffer_offsetted+k) = op_func(*(buffer_offsetted+k), value);
+      }
+      buffer_offsetted += batch_offset_incr;
+    }
+  }
+}
+
+
+
+template <typename Dtype>
 void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -103,12 +148,12 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // subtract mean
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
-      batch_sum_multiplier_.cpu_data(), mean_.cpu_data(), 0.,
-      num_by_chans_.mutable_cpu_data());
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
-      spatial_dim, 1, -1, num_by_chans_.cpu_data(),
-      spatial_sum_multiplier_.cpu_data(), 1., top_data);
+  replicate_to_op(top_data,
+                  num,
+                  spatial_dim*channels_,
+                  spatial_dim,
+                  mean_.cpu_data(),
+                  std::minus<Dtype>());
 
   if (!use_global_stats_) {
     // compute variance using var(X) = E((X-EX)^2)
@@ -140,12 +185,12 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
              variance_.mutable_cpu_data());
 
   // replicate variance to input size
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
-      batch_sum_multiplier_.cpu_data(), variance_.cpu_data(), 0.,
-      num_by_chans_.mutable_cpu_data());
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
-      spatial_dim, 1, 1., num_by_chans_.cpu_data(),
-      spatial_sum_multiplier_.cpu_data(), 0., temp_.mutable_cpu_data());
+  this->replicate(temp_.mutable_cpu_data(),
+                  num,
+                  spatial_dim*channels_,
+                  spatial_dim,
+                  variance_.cpu_data());
+
   caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
   // TODO(cdoersch): The caching is only needed because later in-place layers
   //                 might clobber the data.  Can we skip this if they won't?
@@ -193,13 +238,11 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
       mean_.mutable_cpu_data());
 
-  // reshape (broadcast) the above
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
-      batch_sum_multiplier_.cpu_data(), mean_.cpu_data(), 0.,
-      num_by_chans_.mutable_cpu_data());
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
-      spatial_dim, 1, 1., num_by_chans_.cpu_data(),
-      spatial_sum_multiplier_.cpu_data(), 0., bottom_diff);
+  this->replicate(bottom_diff,
+                  num,
+                  spatial_dim*channels_,
+                  spatial_dim,
+                  mean_.cpu_data());
 
   // sum(dE/dY \cdot Y) \cdot Y
   caffe_mul(temp_.count(), top_data, bottom_diff, bottom_diff);
@@ -213,12 +256,13 @@ void BatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       mean_.mutable_cpu_data());
   // reshape (broadcast) the above to make
   // sum(dE/dY)-sum(dE/dY \cdot Y) \cdot Y
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
-      batch_sum_multiplier_.cpu_data(), mean_.cpu_data(), 0.,
-      num_by_chans_.mutable_cpu_data());
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num * channels_,
-      spatial_dim, 1, 1., num_by_chans_.cpu_data(),
-      spatial_sum_multiplier_.cpu_data(), 1., bottom_diff);
+
+  replicate_to_op(bottom_diff,
+                  num,
+                  spatial_dim*channels_,
+                  spatial_dim,
+                  mean_.cpu_data(),
+                  std::plus<Dtype>());
 
   // dE/dY - mean(dE/dY)-mean(dE/dY \cdot Y) \cdot Y
   caffe_cpu_axpby(temp_.count(), Dtype(1), top_diff,

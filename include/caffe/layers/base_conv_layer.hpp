@@ -96,6 +96,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   bool is_1x1_;
   bool force_nd_im2col_;
 
+  int num_of_threads_;                 // openmp
+
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
@@ -171,7 +173,6 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
 
-  int num_of_threads_;                 // openmp
   std::vector<Dtype> col_buffer_mt_;   //  openmp
   std::vector<Dtype> weight_diff_mt_;  // openmp
 };

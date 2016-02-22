@@ -80,7 +80,7 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   //  ---- openmp ----
   num_of_threads_ = 1;
 #ifdef _OPENMP
-  num_of_threads_ = omp_get_max_threads();
+  num_of_threads_ = omp_get_max_threads() < num_ ? omp_get_max_threads() : num_;
   if (num_of_threads_ < 1) {
      LOG(WARNING) << "LRN layer: omp_get_max_threads() =" << num_of_threads_;
      num_of_threads_ = 1;
@@ -158,7 +158,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
     }
     for (int c = 1; c < channels_; ++c) {
       // copy previous scale
-      caffe_copy<Dtype>(height_ * width_,
+      caffe_cpu_copy<Dtype>(height_ * width_,
           scale_data + scale_.offset(n, c - 1),
           scale_data + scale_.offset(n, c));
       // add head

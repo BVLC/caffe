@@ -59,16 +59,36 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
-
- // TODO: Temporarily disabled until AVX-based memset is available
- // if (alpha == 0) {
+  // TODO: linux memset for AVX2 is very poor (glibc 2.20)
+  // I hope it will get rewritten. So no parallelization of memset(Y,0,N)
+  // will be needed
  //   memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
  //   return;
  // }
-#ifdef _OPENMP
-  #pragma omp parallel if (omp_in_parallel() == 0)
-  #pragma omp for
-#endif
+
+  // If we are executing parallel region already then do not start another one
+  // if also number of data to be processed is smaller than arbitrary:
+  // threashold 12*4 cachelines per thread then no parallelization is to be made
+  #ifdef _OPENMP
+
+  // TODO: Threshold is a function of num threads and CPU speed and constant
+  int threshold = omp_get_max_threads()*768;
+  bool run_parallel =
+    (Caffe::mode() != Caffe::GPU) &&
+    (omp_in_parallel() == 0) &&
+    (N >= threshold);
+
+  if (run_parallel) {
+    #pragma omp parallel for
+    for (int i = 0; i < N; ++i) {
+      Y[i] = alpha;
+    }
+
+    return;
+  }
+
+  #endif
+
   for (int i = 0; i < N; ++i) {
     Y[i] = alpha;
   }
@@ -93,6 +113,19 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
     Y[i] += alpha;
   }
 }
+
+template <typename Dtype>
+void caffe_cpu_copy(const int N, const Dtype* X, Dtype* Y) {
+  if (X != Y) {
+    memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+  }
+}
+
+template void caffe_cpu_copy<int>(const int N, const int* X, int* Y);
+template void caffe_cpu_copy<unsigned int>(const int N, const unsigned int* X,
+    unsigned int* Y);
+template void caffe_cpu_copy<float>(const int N, const float* X, float* Y);
+template void caffe_cpu_copy<double>(const int N, const double* X, double* Y);
 
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
