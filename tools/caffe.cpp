@@ -555,7 +555,7 @@ int compare() {
   // Reuse data layer output from reference net
   const_cast< vector<vector<Blob<float>*> >& > (bottom_vecs)[1] = bottom_vecs_ref[1];
 
-  LOG(INFO) << "\n\nPerforming Forward - gather data for comparison";
+  LOG(INFO) << "\n\nPerforming Forward - collect data for comparison";
   // start after the data layer
   for (int i = 1; i < layers.size(); ++i) {
 
@@ -586,7 +586,7 @@ int compare() {
     }
   }
 
-  LOG(INFO) << "\n\nPerforming Backward - gather data for comparison";
+  LOG(INFO) << "\n\nPerforming Backward - collect data for comparison";
   // Loss layer (we need loss based on the same labels)
   int loss_id = layers.size() -1;
   layers_ref[loss_id]->Backward(top_vecs_ref[loss_id], bottom_need_backward_ref[loss_id],
@@ -620,7 +620,7 @@ int compare() {
     }
   }
 
-  LOG(INFO) << "\n\nChecking parameters gradients ";
+  LOG(INFO) << "\n\nChecking parameters gradients";
   // compare parameters gradients
   for (int param_id = params_ref.size() - 1; param_id >= 0;
        --param_id) {
