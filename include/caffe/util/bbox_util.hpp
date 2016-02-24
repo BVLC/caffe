@@ -24,6 +24,8 @@ typedef map<int_tp, vector<NormalizedBBox> > LabelBBox;
 typedef EmitConstraint_EmitType EmitType;
 typedef PriorBoxParameter_CodeType CodeType;
 typedef MultiBoxLossParameter_MatchType MatchType;
+typedef MultiBoxLossParameter_LocLossType LocLossType;
+typedef MultiBoxLossParameter_ConfLossType ConfLossType;
 
 float BBoxSize(const NormalizedBBox& bbox, const bool normalized = true);
 // Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
@@ -366,12 +368,12 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
 //    num_classes: number of classes.
 //    background_label_id: it is used to skip selecting max scores from
 //      background class.
-//    prob: if true, compute the softmax probability.
+//    loss_type: compute the probability according to the loss type.
 //    all_max_scores: stores the max confidence per location for each image.
 template <typename Dtype>
 void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const bool prob,
+      const int background_label_id, const ConfLossType loss_type,
       vector<vector<float> >* all_max_scores);
 
 // Get prior bounding boxes from prior_data.

@@ -14,9 +14,6 @@
 
 namespace caffe {
 
-typedef MultiBoxLossParameter_LocLossType LocLossType;
-typedef MultiBoxLossParameter_ConfLossType ConfLossType;
-
 /**
  * @brief Perform MultiBox operations. Including the following:
  *
@@ -95,6 +92,8 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   int num_;
   int num_priors_;
 
+  int num_matches_;
+  int num_conf_;
   vector<map<int, vector<int> > > all_match_indices_;
   vector<vector<int> > all_neg_indices_;
 
