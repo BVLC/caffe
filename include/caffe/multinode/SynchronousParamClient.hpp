@@ -1,8 +1,6 @@
 #ifndef CAFFE_SYNCHRONOUSPARAMCLIENT_HPP_
 #define CAFFE_SYNCHRONOUSPARAMCLIENT_HPP_
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <string>
 #include <vector>
 
@@ -14,7 +12,6 @@
 #include "caffe/MultiSolver.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
-#include "caffe/syncedmem.hpp"
 
 namespace caffe {
 
@@ -40,7 +37,6 @@ class SynchronousParamClient : public MultiSolver<Dtype>::Callback {
 
   shared_ptr<MultiSolver<Dtype> >  solver_;
   shared_ptr<SynchronousParamSyncingImpl<Dtype> > sync;
-  int iters;
 };
 
 }  // namespace caffe

@@ -9,10 +9,15 @@
 #include "boost/unordered_map.hpp"
 #include "caffe/internode/configuration.hpp"
 #include "caffe/layers/remote_data_layer.hpp"
+#include "caffe/multinode/SendCallback.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/benchmark.hpp"
 
 namespace caffe {
+
+using internode::RemoteId;
+using internode::Waypoint;
+using internode::Daemon;
 
 template <typename Dtype>
 void RemoteDataLayer<Dtype>::prepare(const vector<Blob<Dtype>*>& bottom,
@@ -30,13 +35,6 @@ void RemoteDataLayer<Dtype>::prepare(const vector<Blob<Dtype>*>& bottom,
 
   CHECK(bottom.empty());
 }
-
-using internode::RemoteId;
-using internode::configure_client;
-using internode::Waypoint;
-using internode::Daemon;
-using internode::create_communication_daemon;
-using internode::is_remote_address;
 
 namespace {
 
@@ -253,9 +251,10 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
   bool finished;
 
   RemoteDataReader(string name, string address, shared_ptr<Queue> queue)
-    : daemon(create_communication_daemon())
-    , waypoint(is_remote_address(address) ?
-        configure_client(daemon, address) : boost::shared_ptr<Waypoint>())
+    : daemon(internode::create_communication_daemon())
+    , waypoint(internode::is_remote_address(address) ?
+        internode::configure_client(daemon, address) :
+        boost::shared_ptr<Waypoint>())
     , queue(queue)
     , name(name)
     , finished(false) {
@@ -270,13 +269,15 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
     DataReq req;
     req.set_layer_name(name);
     req.set_iters(1);
-    string str;
-    req.SerializeToString(&str);
-    VLOG(2) << "sent request for data " << name;
-    waypoint->send(str.c_str(), str.size());
+
+    SendCallback callback;
+    req.SerializeToString(callback.buffer.get());
+    DLOG(INFO) << "sent request for data " << name;
+    waypoint->async_send(
+      callback.buffer->c_str(), callback.buffer->size(), callback);
   }
 
-  virtual void received(char* buffer, size_t size, RemoteId) {
+  virtual void received(char* buffer, size_t size, Waypoint*) {
     using google::protobuf::io::ArrayInputStream;
     using google::protobuf::io::CodedInputStream;
     DataMsg msg;
@@ -288,7 +289,7 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
       LOG(ERROR) << "received blob update failed when parsing, ignoring";
       return;
     }
-    VLOG(2) << "received data";
+    DLOG(INFO) << "received data";
 
     if (queue->add_data(&msg)) {
       send_req();

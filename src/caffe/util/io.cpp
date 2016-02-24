@@ -17,6 +17,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/internode/configuration.hpp"
+#include "caffe/multinode/SendCallback.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
@@ -77,9 +78,10 @@ bool ReceiveProtoFromRemote(const string& address, Message* proto) {
     ModelReq request;
     request.set_name(msg_name);
 
-    string str;
-    request.SerializeToString(&str);
-    remote_client->send(str.c_str(), str.size());
+    SendCallback callback;
+    request.SerializeToString(callback.buffer.get());
+    remote_client->async_send(
+      callback.buffer->c_str(), callback.buffer->size(), callback);
 
     struct Handler : Waypoint::Handler {
       Message* proto;
@@ -87,7 +89,7 @@ bool ReceiveProtoFromRemote(const string& address, Message* proto) {
       Handler(Message* dest, bool* handled)
         : proto(dest), handled(handled) {}
 
-      void received(char* data, size_t size, RemoteId) {
+      void received(char* data, size_t size, Waypoint*) {
         *handled = true;
         if (!proto->ParseFromArray(data, size)) {
           throw std::runtime_error("parse failed");

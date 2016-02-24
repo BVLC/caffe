@@ -99,7 +99,7 @@ Dtype MultiSolver<Dtype>::ForwardBackward() {
     }
   }
 
-  return loss;
+  return loss / root_solver_->param().iter_size();
 }
 
 template <typename Dtype>

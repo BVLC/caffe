@@ -71,12 +71,14 @@ The basic setup is to run parameter server with command like this:
 "$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port"
 Than run clients on machines you want with:
 "$TOOLS/caffe train --solver=/path/to/proto --param_server:tcp://127.0.0.1:7777"
+The udp protocol can be used as well, for point to point communication
+and with multicast (i.e. "udp://127.0.0.1:7777;239.1.1.1:7778").
 
 Data server is for convenience. By the default you could use data shard prepared
 on each node separetely, either by shuffling the data uniquely or by creating
 a subset of your training data. The remote data layer can be used to get data
 from data server. It can also be used to cache data from the server in order
-to reduce the network traffic.
+to reduce the network traffic. Use only tcp protocol with data server.
 In the case of choosing caching policy USE_CACHE_WHEN_FULL, it will first
 download cache_size batches and then will randomized the cached data for actual
 training.

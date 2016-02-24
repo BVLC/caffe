@@ -4,21 +4,21 @@
 #include <string>
 #include <vector>
 #include "caffe/multinode/ModelServer.hpp"
+#include "caffe/multinode/SendCallback.hpp"
 
 namespace caffe {
 
 using ::google::protobuf::Message;
-using internode::create_communication_daemon;
 using internode::RemoteId;
-using internode::configure_server;
+using internode::Waypoint;
 
 template <typename Dtype>
 ModelServer<Dtype>::ModelServer(shared_ptr<Solver<Dtype> > solver,
                                 string bind_address)
-  : daemon(create_communication_daemon())
+  : daemon(internode::create_communication_daemon())
   , solver(solver)
   , param_(prepare_model())
-  , waypoint(configure_server(daemon, bind_address)) {
+  , waypoint(internode::configure_server(daemon, bind_address)) {
   waypoint->register_receive_handler(this);
   LOG(INFO) << param_.DebugString();
 }
@@ -65,7 +65,7 @@ SolverParameter ModelServer<Dtype>::prepare_model() {
 }
 
 template <typename DType>
-void ModelServer<DType>::received(char* data, size_t size, RemoteId from) {
+void ModelServer<DType>::received(char* data, size_t size, Waypoint* remote) {
   ModelReq req;
   bool ret = req.ParseFromArray(data, size);
   LOG(INFO) << "received message of size " << size;
@@ -80,10 +80,10 @@ void ModelServer<DType>::received(char* data, size_t size, RemoteId from) {
     return;
   }
 
-  string str;
-  param_.SerializeToString(&str);
-
-  waypoint->send_to(str.c_str(), str.size(), from);
+  SendCallback callback;
+  param_.SerializeToString(callback.buffer.get());
+  remote->async_send(
+    callback.buffer->c_str(), callback.buffer->size(), callback);
 }
 
 template <typename Dtype>
