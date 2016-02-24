@@ -238,6 +238,7 @@ TYPED_TEST(MSRAFillerTest, TestFillAverage) {
   this->test_params(FillerParameter_VarianceNorm_AVERAGE, n);
 }
 
+#ifdef USE_OPENCV
 template <typename Dtype>
 class OrthogonalFillerTest : public ::testing::Test {
  protected:
@@ -260,5 +261,6 @@ TYPED_TEST_CASE(OrthogonalFillerTest, TestDtypes);
 TYPED_TEST(OrthogonalFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
 }
+#endif
 
 }  // namespace caffe

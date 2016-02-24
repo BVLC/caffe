@@ -7,6 +7,10 @@
 
 #include <string>
 
+#ifdef USE_OPENCV
+#include <opencv/cv.hpp>
+#endif
+
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
@@ -268,37 +272,33 @@ class BilinearFiller : public Filler<Dtype> {
  * A filler based on the paper "Exact solutions to the nonlinear dynamics of
  * learning in deep linear neural networks". Saxe, McClelland, and Ganguli 2013.
  */
-#include <opencv/core.hpp>
-
 template <typename Dtype>
 class OrthogonalFiller : public Filler<Dtype> {
  public:
   explicit OrthogonalFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
+
   virtual void Fill(Blob<Dtype>* blob) {
+#ifdef USE_OPENCV
     Dtype* data = blob->mutable_cpu_data();
     CHECK(blob->count());
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
         Dtype(this->filler_param_.std()), blob->mutable_cpu_data());
-    cv::Mat svdi(blob->count(0,1), blob->count(2),
-                 CV_MAKETYPE( cv::DataDepth<Dtype>::value, 1);
+    cv::Mat svdi(blob->shape(0), blob->count(1),
+                 CV_MAKETYPE(cv::DataDepth<Dtype>::value, 1),
                  blob->mutable_cpu_data(),
-                 blob->count(2)*sizeof(Dtype));
+                 blob->count(1)*sizeof(Dtype));
     cv::Mat w, u, v;
     svd_.compute(svdi, w, u, v);
-    if (w.cols == svdi.cols && w.rows == svdi.rows)
-    {
-      w.copyTo(svdi);
-    }
-    else
-    {
-      v.copyTo(svdi);
-    }
     (w.cols == svdi.cols && w.rows == svdi.rows ? w : v).copyTo(svdi);
-
-  protected:
-    cv::SVD svd_;
   }
+
+ protected:
+  cv::SVD svd_;
+#else
+    LOG(FATAL) << "A build with OpenCV is required to use Orthogonal filler";
+  }
+#endif
 };
 
 /**
@@ -324,7 +324,7 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
-} } else if (type == "orthogonal") {
+  } else if (type == "orthogonal") {
     return new OrthogonalFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
