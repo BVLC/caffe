@@ -12,7 +12,7 @@ endif()
 
 set(__veclib_include_suffix "Frameworks/vecLib.framework/Versions/Current/Headers")
 
-find_path(vecLib_INCLUDE_DIR vecLib.h
+find_path(vecLib_INCLUDE_DIR vecLibTypes.h
           DOC "vecLib include directory"
           PATHS /System/Library/${__veclib_include_suffix}
                 /System/Library/Frameworks/Accelerate.framework/Versions/Current/${__veclib_include_suffix}
