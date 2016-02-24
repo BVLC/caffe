@@ -837,32 +837,32 @@ TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
   }
 
   vector<vector<float> > max_conf_scores;
-  bool prob = false;
+  ConfLossType loss_type = MultiBoxLossParameter_ConfLossType_LOGISTIC;
   GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         -1, prob, &max_conf_scores);
+                         -1, loss_type, &max_conf_scores);
 
   EXPECT_EQ(max_conf_scores.size(), num);
   EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[0][0], 0, eps);
-  EXPECT_NEAR(max_conf_scores[0][1], -0.2, eps);
+  EXPECT_NEAR(max_conf_scores[0][0], 1./(1.+exp(0.)), eps);
+  EXPECT_NEAR(max_conf_scores[0][1], 1./(1.+exp(0.2)), eps);
   EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[1][0], 0.5, eps);
-  EXPECT_NEAR(max_conf_scores[1][1], 0.7, eps);
+  EXPECT_NEAR(max_conf_scores[1][0], 1./(1.+exp(-0.5)), eps);
+  EXPECT_NEAR(max_conf_scores[1][1], 1./(1.+exp(-0.7)), eps);
 
   GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         0, prob, &max_conf_scores);
+                         0, loss_type, &max_conf_scores);
 
   EXPECT_EQ(max_conf_scores.size(), num);
   EXPECT_EQ(max_conf_scores[0].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[0][0], -0.1, eps);
-  EXPECT_NEAR(max_conf_scores[0][1], -0.3, eps);
+  EXPECT_NEAR(max_conf_scores[0][0], 1./(1.+exp(0.1)), eps);
+  EXPECT_NEAR(max_conf_scores[0][1], 1./(1.+exp(0.3)), eps);
   EXPECT_EQ(max_conf_scores[1].size(), num_preds_per_class);
-  EXPECT_NEAR(max_conf_scores[1][0], 0.5, eps);
-  EXPECT_NEAR(max_conf_scores[1][1], 0.7, eps);
+  EXPECT_NEAR(max_conf_scores[1][0], 1./(1.+exp(-0.5)), eps);
+  EXPECT_NEAR(max_conf_scores[1][1], 1./(1.+exp(-0.7)), eps);
 
-  prob = true;
+  loss_type = MultiBoxLossParameter_ConfLossType_SOFTMAX;
   GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         -1, prob, &max_conf_scores);
+                         -1, loss_type, &max_conf_scores);
 
   EXPECT_EQ(max_conf_scores.size(), num);
   for (int i = 0; i < num; ++i) {
@@ -873,7 +873,7 @@ TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
   }
 
   GetMaxConfidenceScores(conf_data, num, num_preds_per_class, num_classes,
-                         0, prob, &max_conf_scores);
+                         0, loss_type, &max_conf_scores);
 
   EXPECT_EQ(max_conf_scores.size(), num);
   for (int i = 0; i < num; ++i) {

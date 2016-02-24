@@ -557,7 +557,7 @@ template void GetConfidenceScores(const double* conf_data, const int num,
 template <typename Dtype>
 void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const bool prob,
+      const int background_label_id, const ConfLossType loss_type,
       vector<vector<float> >* all_max_scores) {
   all_max_scores->clear();
   for (int i = 0; i < num; ++i) {
@@ -573,13 +573,17 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
           maxval_pos = std::max<Dtype>(conf_data[start_idx + c], maxval_pos);
         }
       }
-      if (prob) {
+      if (loss_type == MultiBoxLossParameter_ConfLossType_SOFTMAX) {
         // Compute softmax probability.
         Dtype sum = 0.;
         for (int c = 0; c < num_classes; ++c) {
           sum += std::exp(conf_data[start_idx + c] - maxval);
         }
         maxval_pos = std::exp(maxval_pos - maxval) / sum;
+      } else if (loss_type == MultiBoxLossParameter_ConfLossType_LOGISTIC) {
+        maxval_pos = 1. / (1. + exp(-maxval_pos));
+      } else {
+        LOG(FATAL) << "Unknown conf loss type.";
       }
       max_scores.push_back(maxval_pos);
     }
@@ -591,11 +595,11 @@ void GetMaxConfidenceScores(const Dtype* conf_data, const int num,
 // Explicit initialization.
 template void GetMaxConfidenceScores(const float* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const bool prob,
+      const int background_label_id, const ConfLossType loss_type,
       vector<vector<float> >* all_max_scores);
 template void GetMaxConfidenceScores(const double* conf_data, const int num,
       const int num_preds_per_class, const int num_classes,
-      const int background_label_id, const bool prob,
+      const int background_label_id, const ConfLossType loss_type,
       vector<vector<float> >* all_max_scores);
 
 template <typename Dtype>
