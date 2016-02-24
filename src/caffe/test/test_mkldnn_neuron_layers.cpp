@@ -1,3 +1,4 @@
+#ifdef USE_MKLDNN
 #include <algorithm>
 #include <vector>
 
@@ -65,3 +66,4 @@ TYPED_TEST(MklDnnNeuronLayerTest, TestReLUGradient) {
 }
 
 }  // namespace caffe
+#endif //#ifdef USE_MKLDNN

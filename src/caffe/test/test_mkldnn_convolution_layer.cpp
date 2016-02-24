@@ -1,3 +1,4 @@
+#ifdef USE_MKLDNN
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -835,3 +836,4 @@ TYPED_TEST(MklDnnConvolutionLayerTest, TestGradientGroup) {
 }
 
 }  // namespace caffe
+#endif //#ifdef USE_MKLDNN
