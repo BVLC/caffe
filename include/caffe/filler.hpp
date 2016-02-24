@@ -262,6 +262,46 @@ class BilinearFiller : public Filler<Dtype> {
 };
 
 /**
+ * @brief Fills a Blob with orthogonal weights via applying SVD on top of weights
+ *        generated from a normal distribution.
+ *
+ * A filler based on the paper "Exact solutions to the nonlinear dynamics of
+ * learning in deep linear neural networks". Saxe, McClelland, and Ganguli 2013.
+ */
+#include <opencv/core.hpp>
+
+template <typename Dtype>
+class OrthogonalFiller : public Filler<Dtype> {
+ public:
+  explicit OrthogonalFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    Dtype* data = blob->mutable_cpu_data();
+    CHECK(blob->count());
+    caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
+        Dtype(this->filler_param_.std()), blob->mutable_cpu_data());
+    cv::Mat svdi(blob->count(0,1), blob->count(2),
+                 CV_MAKETYPE( cv::DataDepth<Dtype>::value, 1);
+                 blob->mutable_cpu_data(),
+                 blob->count(2)*sizeof(Dtype));
+    cv::Mat w, u, v;
+    svd_.compute(svdi, w, u, v);
+    if (w.cols == svdi.cols && w.rows == svdi.rows)
+    {
+      w.copyTo(svdi);
+    }
+    else
+    {
+      v.copyTo(svdi);
+    }
+    (w.cols == svdi.cols && w.rows == svdi.rows ? w : v).copyTo(svdi);
+
+  protected:
+    cv::SVD svd_;
+  }
+};
+
+/**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
  * Ideally this would be replaced by a factory pattern, but we will leave it
@@ -284,6 +324,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
+} } else if (type == "orthogonal") {
+    return new OrthogonalFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }

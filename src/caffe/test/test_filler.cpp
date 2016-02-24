@@ -238,4 +238,27 @@ TYPED_TEST(MSRAFillerTest, TestFillAverage) {
   this->test_params(FillerParameter_VarianceNorm_AVERAGE, n);
 }
 
+template <typename Dtype>
+class OrthogonalFillerTest : public ::testing::Test {
+ protected:
+  OrthogonalFillerTest()
+      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+        filler_param_() {
+    filler_param_.set_mean(0.0);
+    filler_param_.set_std(1.0);
+    filler_.reset(new OrthogonalFiller<Dtype>(filler_param_));
+    filler_->Fill(blob_);
+  }
+  virtual ~OrthogonalFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<OrthogonalFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(OrthogonalFillerTest, TestDtypes);
+
+TYPED_TEST(OrthogonalFillerTest, TestFill) {
+  EXPECT_TRUE(this->blob_);
+}
+
 }  // namespace caffe
