@@ -30,6 +30,15 @@ class LossLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
   virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  /**
+   * Read the normalization mode parameter and compute the normalizer based
+   * on the blob size. If normalization_mode is VALID, the count of valid
+   * outputs will be read from valid_count, unless it is -1 in which case
+   * all outputs are assumed to be valid.
+   */
+  Dtype GetNormalizer(
+      const LossParameter_NormalizationMode normalization_mode,
+      const int outer_num, const int inner_num, const int valid_count);
 
   /**
    * @brief For convenience and backwards compatibility, instruct the Net to

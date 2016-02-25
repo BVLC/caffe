@@ -106,8 +106,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// all outputs are assumed to be valid.
   virtual Dtype get_normalizer(
       LossParameter_NormalizationMode normalization_mode, int_tp valid_count);
-
-  /// The int_tpernal SoftmaxLayer used to map predictions to a distribution.
+  /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
   Blob<Dtype> prob_;

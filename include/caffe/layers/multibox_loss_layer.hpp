@@ -97,7 +97,8 @@ class MultiBoxLossLayer : public LossLayer<Dtype> {
   vector<map<int, vector<int> > > all_match_indices_;
   vector<vector<int> > all_neg_indices_;
 
-  bool normalize_;
+  // How to normalize the loss.
+  LossParameter_NormalizationMode normalization_;
 };
 
 }  // namespace caffe

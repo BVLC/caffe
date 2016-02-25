@@ -39,6 +39,11 @@ static MultiBoxLossParameter_ConfLossType kConfLossTypes[] = {
 static MultiBoxLossParameter_MatchType kMatchTypes[] = {
   MultiBoxLossParameter_MatchType_BIPARTITE,
   MultiBoxLossParameter_MatchType_PER_PREDICTION};
+static LossParameter_NormalizationMode kNormalizationModes[] = {
+  LossParameter_NormalizationMode_BATCH_SIZE,
+  LossParameter_NormalizationMode_FULL,
+  LossParameter_NormalizationMode_VALID,
+  LossParameter_NormalizationMode_NONE};
 
 template <typename TypeParam>
 class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
@@ -316,6 +321,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.add_propagate_down(true);
+  LossParameter* loss_param = layer_param.mutable_loss_param();
   MultiBoxLossParameter* multibox_loss_param =
       layer_param.mutable_multibox_loss_param();
   multibox_loss_param->set_num_classes(this->num_classes_);
@@ -328,15 +334,15 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
         MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
         for (int k = 0; k < 2; ++k) {
           bool use_prior = kBoolChoices[k];
-          for (int n = 0; n < 2; ++n) {
-            bool normalize = kBoolChoices[n];
+          for (int n = 0; n < 4; ++n) {
+            LossParameter_NormalizationMode normalize = kNormalizationModes[n];
+            loss_param->set_normalization(normalize);
             for (int u = 0; u < 2; ++u) {
               bool use_difficult_gt = kBoolChoices[u];
               multibox_loss_param->set_loc_loss_type(loc_loss_type);
               multibox_loss_param->set_share_location(share_location);
               multibox_loss_param->set_match_type(match_type);
               multibox_loss_param->set_use_prior_for_matching(use_prior);
-              multibox_loss_param->set_normalize(normalize);
               multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
               multibox_loss_param->set_do_neg_mining(false);
               MultiBoxLossLayer<Dtype> layer(layer_param);
@@ -354,6 +360,7 @@ TYPED_TEST(MultiBoxLossLayerTest, TestLocGradient) {
 TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
+  LossParameter* loss_param = layer_param.mutable_loss_param();
   layer_param.add_propagate_down(false);
   layer_param.add_propagate_down(true);
   MultiBoxLossParameter* multibox_loss_param =
@@ -368,8 +375,9 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
         MultiBoxLossParameter_MatchType match_type = kMatchTypes[j];
         for (int k = 0; k < 2; ++k) {
           bool use_prior = kBoolChoices[k];
-          for (int n = 0; n < 2; ++n) {
-            bool normalize = kBoolChoices[n];
+          for (int n = 0; n < 4; ++n) {
+            LossParameter_NormalizationMode normalize = kNormalizationModes[n];
+            loss_param->set_normalization(normalize);
             for (int u = 0; u < 2; ++u) {
               bool use_difficult_gt = kBoolChoices[u];
               for (int m = 0; m < 2; ++m) {
@@ -381,7 +389,6 @@ TYPED_TEST(MultiBoxLossLayerTest, TestConfGradient) {
                 multibox_loss_param->set_share_location(share_location);
                 multibox_loss_param->set_match_type(match_type);
                 multibox_loss_param->set_use_prior_for_matching(use_prior);
-                multibox_loss_param->set_normalize(normalize);
                 multibox_loss_param->set_use_difficult_gt(use_difficult_gt);
                 multibox_loss_param->set_background_label_id(0);
                 multibox_loss_param->set_do_neg_mining(do_neg_mining);

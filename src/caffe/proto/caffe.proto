@@ -1250,18 +1250,16 @@ message MultiBoxLossParameter {
   optional bool use_prior_for_matching = 8 [default = true];
   // Background label id.
   optional uint32 background_label_id = 9 [default = 0];
-  // If true, normalize both loc and conf loss; otherwise, do not normalize.
-  optional bool normalize = 10 [default = true];
   // If true, also consider difficult ground truth.
-  optional bool use_difficult_gt = 11 [default = true];
+  optional bool use_difficult_gt = 10 [default = true];
   // If true, perform negative mining.
-  optional bool do_neg_mining = 12 [default = true];
+  optional bool do_neg_mining = 11 [default = true];
   // The negative/positive ratio.
-  optional float neg_pos_ratio = 13 [default = 3.0];
+  optional float neg_pos_ratio = 12 [default = 3.0];
   // The negative overlap upperbound for the unmatched predictions.
-  optional float neg_overlap = 14 [default = 0.3];
+  optional float neg_overlap = 13 [default = 0.5];
   // Type of coding method for bbox.
-  optional PriorBoxParameter.CodeType code_type = 15 [default = CORNER];
+  optional PriorBoxParameter.CodeType code_type = 14 [default = CORNER];
 }
 
 message MVNParameter {
