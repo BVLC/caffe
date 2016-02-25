@@ -3,6 +3,7 @@ var searchData=
   ['scale_5f',['scale_',['../classcaffe_1_1DropoutLayer.html#ac8702c053de0fea389f5a0ded8cdc544',1,'caffe::DropoutLayer::scale_()'],['../classcaffe_1_1PowerLayer.html#a6684b2c6c2b2047d58c9d2809b86c39c',1,'caffe::PowerLayer::scale_()'],['../classcaffe_1_1SoftmaxLayer.html#a22a5348d7a31c512ac9d5dcfc066d4b1',1,'caffe::SoftmaxLayer::scale_()']]],
   ['scale_5fdata',['scale_data',['../classcaffe_1_1Blob.html#a535dd556e777f2e13b8c7438f40749a0',1,'caffe::Blob']]],
   ['scale_5fdiff',['scale_diff',['../classcaffe_1_1Blob.html#a6d2d83920d961fff033434347f64a3b0',1,'caffe::Blob']]],
+  ['scalelayer',['ScaleLayer',['../classcaffe_1_1ScaleLayer.html',1,'caffe']]],
   ['set_5floss',['set_loss',['../classcaffe_1_1Layer.html#a899b09f4b91ada8545b3a43ee91e0d69',1,'caffe::Layer']]],
   ['set_5fparam_5fpropagate_5fdown',['set_param_propagate_down',['../classcaffe_1_1Layer.html#a9a6fcb843803ed556f0a69cc2864379b',1,'caffe::Layer']]],
   ['setlossweights',['SetLossWeights',['../classcaffe_1_1Layer.html#a8bd62d1505dd35d6a3a25954ae9e6014',1,'caffe::Layer']]],

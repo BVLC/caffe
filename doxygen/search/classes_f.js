@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['scalelayer',['ScaleLayer',['../classcaffe_1_1ScaleLayer.html',1,'caffe']]],
   ['sgdsolver',['SGDSolver',['../classcaffe_1_1SGDSolver.html',1,'caffe']]],
   ['sigmoidcrossentropylosslayer',['SigmoidCrossEntropyLossLayer',['../classcaffe_1_1SigmoidCrossEntropyLossLayer.html',1,'caffe']]],
   ['sigmoidlayer',['SigmoidLayer',['../classcaffe_1_1SigmoidLayer.html',1,'caffe']]],

@@ -160,10 +160,14 @@ There are several implementations of this library. The choice is yours:</p>
 
 <h2 id="compilation">Compilation</h2>
 
-<p>Now that you have the prerequisites, edit your <code class="highlighter-rouge">Makefile.config</code> to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
+<p>Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community.</p>
+
+<h3 id="compilation-with-make">Compilation with Make</h3>
+
+<p>Configure the build by copying and modifying the example <code class="highlighter-rouge">Makefile.config</code> for your setup. The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>cp Makefile.config.example Makefile.config
-# Adjust Makefile.config (for example, if using Anaconda Python)
+# Adjust Makefile.config (for example, if using Anaconda Python, or if cuDNN is desired)
 make all
 make test
 make runtest
@@ -171,7 +175,8 @@ make runtest
 </div>
 
 <ul>
-  <li>For cuDNN acceleration, you should uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> switch in <code class="highlighter-rouge">Makefile.config</code>.</li>
+  <li>For CPU &amp; GPU accelerated Caffe, no changes are needed.</li>
+  <li>For cuDNN acceleration using NVIDIA’s proprietary cuDNN software, uncomment the <code class="highlighter-rouge">USE_CUDNN := 1</code> switch in <code class="highlighter-rouge">Makefile.config</code>. cuDNN is sometimes but not always faster than Caffe’s GPU acceleration.</li>
   <li>For CPU-only Caffe, uncomment <code class="highlighter-rouge">CPU_ONLY := 1</code> in <code class="highlighter-rouge">Makefile.config</code>.</li>
 </ul>
 
@@ -184,7 +189,7 @@ Be sure to set your MATLAB and Python paths in <code class="highlighter-rouge">M
 
 <p>Now that you have installed Caffe, check out the <a href="gathered/examples/mnist.html">MNIST tutorial</a> and the <a href="gathered/examples/imagenet.html">reference ImageNet model tutorial</a>.</p>
 
-<h3 id="cmake-compilation">CMake Compilation</h3>
+<h3 id="compilation-with-cmake">Compilation with CMake</h3>
 
 <p>In lieu of manually editing <code class="highlighter-rouge">Makefile.config</code> to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version &gt;= 2.8.7.
 The basic steps are as follows:</p>
@@ -193,6 +198,7 @@ The basic steps are as follows:</p>
 cd build
 cmake ..
 make all
+make install
 make runtest
 </code></pre>
 </div>

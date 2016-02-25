@@ -6,6 +6,7 @@ var searchData=
   ['batch',['Batch',['../classcaffe_1_1Batch.html',1,'caffe']]],
   ['batchnormlayer',['BatchNormLayer',['../classcaffe_1_1BatchNormLayer.html',1,'caffe']]],
   ['batchreindexlayer',['BatchReindexLayer',['../classcaffe_1_1BatchReindexLayer.html',1,'caffe']]],
+  ['biaslayer',['BiasLayer',['../classcaffe_1_1BiasLayer.html',1,'caffe']]],
   ['bilinearfiller',['BilinearFiller',['../classcaffe_1_1BilinearFiller.html',1,'caffe']]],
   ['blob',['Blob',['../classcaffe_1_1Blob.html',1,'caffe']]],
   ['blob_3c_20int_20_3e',['Blob&lt; int &gt;',['../classcaffe_1_1Blob.html',1,'caffe']]],
