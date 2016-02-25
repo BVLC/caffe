@@ -32,7 +32,7 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda, int gpu_device) {
   if (use_cuda) {
     int initial_device;
     cudaGetDevice(&initial_device);
-    if (gpu_device != -1)
+    if (gpu_device >= 0)
         CUDA_CHECK(cudaSetDevice(gpu_device));
     CUDA_CHECK(cudaFreeHost(ptr));
     cudaSetDevice(initial_device);
