@@ -294,7 +294,8 @@ unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
 }
 
 bool OpenMpManager::isThreadsBindAllowed() {
-  return !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
+  // TODO: Review needed
+  return false;  // !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
 }
 
 void OpenMpManager::setOpenMpThreadNumberLimit() {
