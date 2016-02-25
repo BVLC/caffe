@@ -19,33 +19,33 @@ do
     echo "Create list for $name $dataset..."
     dataset_file=$root_dir/$name/$sub_dir/$dataset.txt
 
-    rand_file=$bash_dir/$dataset.random
-    if [ $dataset == "test" ]
-    then
-      cp $dataset_file $rand_file
-    else
-      cat $dataset_file | perl -MList::Util=shuffle -e 'print shuffle(<STDIN>);' > $rand_file
-    fi
-
     img_file=$bash_dir/$dataset"_img.txt"
-    cp $rand_file $img_file
+    cp $dataset_file $img_file
     sed -i "s/^/$name\/JPEGImages\//g" $img_file
     sed -i "s/$/.jpg/g" $img_file
 
     label_file=$bash_dir/$dataset"_label.txt"
-    cp $rand_file $label_file
+    cp $dataset_file $label_file
     sed -i "s/^/$name\/Annotations\//g" $label_file
     sed -i "s/$/.xml/g" $label_file
 
     paste -d' ' $img_file $label_file >> $dst_file
 
-    if [ $dataset == "test" ]
-    then
-      $bash_dir/../../build/tools/get_image_size $root_dir $dst_file $bash_dir/$dataset"_name_size.txt"
-    fi
-
     rm -f $label_file
     rm -f $img_file
-    rm -f $rand_file
   done
+
+  # Generate image name and size infomation.
+  if [ $dataset == "test" ]
+  then
+    $bash_dir/../../build/tools/get_image_size $root_dir $dst_file $bash_dir/$dataset"_name_size.txt"
+  fi
+
+  # Shuffle trainval file.
+  if [ $dataset == "trainval" ]
+  then
+    rand_file=$dst_file.random
+    cat $dst_file | perl -MList::Util=shuffle -e 'print shuffle(<STDIN>);' > $rand_file
+    mv $rand_file $dst_file
+  fi
 done
