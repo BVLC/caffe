@@ -290,7 +290,7 @@ class OrthogonalFiller : public Filler<Dtype> {
                  blob->count(1)*sizeof(Dtype));
     cv::Mat w, u, v;
     svd_.compute(svdi, w, u, v);
-    (w.cols == svdi.cols && w.rows == svdi.rows ? w : v).copyTo(svdi);
+    (u.cols == svdi.cols && u.rows == svdi.rows ? u : v).copyTo(svdi);
   }
 
  protected:
