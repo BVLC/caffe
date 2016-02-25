@@ -27,6 +27,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual inline const char* type() const { return "MemoryData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline bool ShareInParallel() const { return share_in_parallel_; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
 #ifdef USE_OPENCV
@@ -47,6 +48,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
 
   int batch_size_, channels_, height_, width_, size_;
   Dtype* data_;
@@ -56,6 +59,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
+  bool share_in_parallel_;
 };
 
 }  // namespace caffe

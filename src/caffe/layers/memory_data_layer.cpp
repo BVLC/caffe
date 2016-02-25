@@ -15,6 +15,8 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   channels_ = this->layer_param_.memory_data_param().channels();
   height_ = this->layer_param_.memory_data_param().height();
   width_ = this->layer_param_.memory_data_param().width();
+  share_in_parallel_ = this->layer_param_.memory_data_param()
+                       .share_in_parallel();
   size_ = channels_ * height_ * width_;
   CHECK_GT(batch_size_ * size_, 0) <<
       "batch_size, channels, height, and width must be specified and"
@@ -112,6 +114,19 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   top[1]->Reshape(batch_size_, 1, 1, 1);
   top[0]->set_cpu_data(data_ + pos_ * size_);
   top[1]->set_cpu_data(labels_ + pos_);
+  pos_ = (pos_ + batch_size_) % n_;
+  if (pos_ == 0)
+    has_new_data_ = false;
+}
+
+template <typename Dtype>
+void MemoryDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
+  top[0]->Reshape(batch_size_, channels_, height_, width_);
+  top[1]->Reshape(batch_size_, 1, 1, 1);
+  top[0]->set_gpu_data(data_ + pos_ * size_);
+  top[1]->set_gpu_data(labels_ + pos_);
   pos_ = (pos_ + batch_size_) % n_;
   if (pos_ == 0)
     has_new_data_ = false;
