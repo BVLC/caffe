@@ -3,6 +3,7 @@ import caffe
 from caffe.model_libs import *
 from google.protobuf import text_format
 
+import math
 import os
 import shutil
 import stat
@@ -41,6 +42,7 @@ def AddExtraLayers(net, use_batchnorm=True):
 
 ### Modify the following parameters accordingly ###
 # The directory which contains the caffe code.
+# We assume you are running the script at the CAFFE_ROOT.
 caffe_root = os.getcwd()
 
 # Set true if you want to start training right after generating all files.
@@ -51,16 +53,14 @@ resume_training = True
 # If true, Remove old model files.
 remove_old_models = True
 
-# The size of the images stored in lmdb in the format of
-# minsize x maxsize _ resizewidth x resizeheight
-size = "0x0_0x0"
 # The database file for training data. Created by data/VOC0712/create_data.sh
-train_data = "examples/VOC0712/VOC0712_trainval_{}_lmdb".format(size)
+train_data = "examples/VOC0712/VOC0712_trainval_lmdb"
 # The database file for testing data. Created by data/VOC0712/create_data.sh
-test_data = "examples/VOC0712/VOC0712_test_{}_lmdb".format(size)
+test_data = "examples/VOC0712/VOC0712_test_lmdb"
 # Specify the batch sampler.
 resize_width = 300
 resize_height = 300
+resize = "{}x{}".format(resize_width, resize_height)
 batch_sampler = [
         {
                 'sampler': {
@@ -259,10 +259,10 @@ use_batchnorm = False
 if use_batchnorm:
     base_lr = 0.4
 else:
-    base_lr = 0.001
+    base_lr = 0.00016
 
 # Modify the job name if you want.
-job_name = "SSD_{}_{}".format(size, base_lr)
+job_name = "SSD_{}".format(resize)
 # The name of the model. Modify it if you want.
 model_name = "VGG_VOC0712_{}".format(job_name)
 
@@ -278,6 +278,7 @@ output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}/Main".format(os.enviro
 # model definition files.
 train_net_file = "{}/train.prototxt".format(save_dir)
 test_net_file = "{}/test.prototxt".format(save_dir)
+deploy_net_file = "{}/deploy.prototxt".format(save_dir)
 solver_file = "{}/solver.prototxt".format(save_dir)
 # snapshot prefix.
 snapshot_prefix = "{}/{}".format(snapshot_dir, model_name)
@@ -296,6 +297,7 @@ num_classes = 21
 share_location = True
 background_label_id=0
 train_on_diff_gt = False
+normalization_mode = P.Loss.BATCH_SIZE
 multibox_loss_param = {
     'loc_loss_type': P.MultiBoxLoss.SMOOTH_L1,
     'conf_loss_type': P.MultiBoxLoss.SOFTMAX,
@@ -306,11 +308,14 @@ multibox_loss_param = {
     'overlap_threshold': 0.5,
     'use_prior_for_matching': True,
     'background_label_id': background_label_id,
-    'normalize': False,
     'use_difficult_gt': train_on_diff_gt,
     'do_neg_mining': True,
-    'neg_pos_ratio': 1,
+    'neg_pos_ratio': 3,
     'neg_overlap': 0.5,
+    'code_type': P.PriorBox.CORNER,
+    }
+loss_param = {
+    'normalization': normalization_mode,
     }
 
 # parameters for generating priors.
@@ -337,18 +342,39 @@ clip = True
 
 # Solver parameters.
 # Defining which GPUs to use.
-device_id = 0
-num_gpus = 4
 gpus = "0,1,2,3"
+gpulist = gpus.split(",")
+num_gpus = len(gpulist)
 
 # Divide the mini-batch to different GPUs.
-batch_size = 32 / num_gpus
-iter_size = 32 / batch_size / num_gpus
+batch_size = 32
+accum_batch_size = 32
+iter_size = accum_batch_size / batch_size
+solver_mode = P.Solver.CPU
+device_id = 0
+batch_size_per_device = batch_size
+if num_gpus > 0:
+  batch_size_per_device = int(math.ceil(float(batch_size) / num_gpus))
+  iter_size = int(math.ceil(float(accum_batch_size) / (batch_size_per_device * num_gpus)))
+  solver_mode = P.Solver.GPU
+  device_id = int(gpulist[0])
+
+if normalization_mode == P.Loss.BATCH_SIZE:
+  base_lr /= iter_size * num_gpus
+elif normalization_mode == P.Loss.NONE:
+  base_lr /= batch_size
+elif normalization_mode == P.Loss.VALID:
+  # Roughly there are 8 matching bboxes per image.
+  base_lr *= 8. / iter_size * num_gpus
+elif normalization_mode == P.Loss.FULL:
+  # Roughly there are 2000 prior bboxes per image.
+  # TODO(weiliu89): Estimate the exact # of priors.
+  base_lr *= 2000. / iter_size * num_gpus
 
 # Which layers to freeze (no backward) during training.
 freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
 
-# Evaluate on all test images.
+# Evaluate on whole test set.
 num_test_image = 4952
 test_batch_size = 1
 test_iter = num_test_image / test_batch_size
@@ -357,20 +383,23 @@ solver_param = {
     # Train parameters
     'base_lr': base_lr,
     'weight_decay': 0.0005,
-    'lr_policy': "fixed",
+    'lr_policy': "step",
+    'stepsize': 30000,
+    'gamma': 0.1,
+    'momentum': 0.9,
     'iter_size': iter_size,
-    'max_iter': 500000,
-    'snapshot': 50000,
+    'max_iter': 90000,
+    'snapshot': 30000,
     'display': 10,
     'average_loss': 10,
-    'type': "AdaGrad",
-    'solver_mode': P.Solver.GPU,
+    'type': "SGD",
+    'solver_mode': solver_mode,
     'device_id': device_id,
     'debug_info': False,
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [test_iter],
-    'test_interval': 5000,
+    'test_interval': 3000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
@@ -386,11 +415,12 @@ det_out_param = {
         'output_directory': output_result_dir,
         'output_name_prefix': "comp4_det_test_",
         'output_format': "VOC",
-        'label_map_file': "{}/{}".format(caffe_root, label_map_file),
-        'name_size_file': "{}/{}".format(caffe_root, name_size_file),
+        'label_map_file': label_map_file,
+        'name_size_file': name_size_file,
         'num_test_image': num_test_image,
         },
     'keep_top_k': 200,
+    'code_type': P.PriorBox.CORNER,
     }
 
 # parameters for evaluating detection results.
@@ -399,7 +429,7 @@ det_eval_param = {
     'background_label_id': background_label_id,
     'overlap_threshold': 0.5,
     'evaluate_difficult_gt': False,
-    'name_size_file': "{}/{}".format(caffe_root, name_size_file),
+    'name_size_file': name_size_file,
     }
 
 ### Hopefully you don't need to change the following ###
@@ -414,11 +444,11 @@ make_if_not_exist(snapshot_dir)
 
 # Create train net.
 net = caffe.NetSpec()
-net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size,
+net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size_per_device,
         train=True, output_label=True, label_map_file=label_map_file,
         transform_param=train_transform_param, batch_sampler=batch_sampler)
 
-VGGNetBody(net, fully_conv=True, reduced=True, freeze_layers=freeze_layers)
+VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, freeze_layers=freeze_layers)
 
 AddExtraLayers(net, use_batchnorm)
 
@@ -431,7 +461,7 @@ mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source
 name = "mbox_loss"
 mbox_layers.append(net.label)
 net[name] = L.MultiBoxLoss(*mbox_layers, multibox_loss_param=multibox_loss_param,
-        include=dict(phase=caffe_pb2.Phase.Value('TRAIN')),
+        loss_param=loss_param, include=dict(phase=caffe_pb2.Phase.Value('TRAIN')),
         propagate_down=[True, True, False, False])
 
 with open(train_net_file, 'w') as f:
@@ -444,7 +474,7 @@ net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=test_batch_
         train=False, output_label=True, label_map_file=label_map_file,
         transform_param=test_transform_param)
 
-VGGNetBody(net, fully_conv=True, reduced=True)
+VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, freeze_layers=freeze_layers)
 
 AddExtraLayers(net, use_batchnorm)
 
@@ -453,8 +483,8 @@ mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source
         aspect_ratios=aspect_ratios, num_classes=num_classes,
         share_location=share_location, flip=flip, clip=clip)
 
+conf_name = "mbox_conf"
 if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:
-  conf_name = "mbox_conf"
   reshape_name = "{}_reshape".format(conf_name)
   net[reshape_name] = L.Reshape(net[conf_name], shape=dict(dim=[0, -1, num_classes]))
   softmax_name = "{}_softmax".format(conf_name)
@@ -462,6 +492,10 @@ if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:
   flatten_name = "{}_flatten".format(conf_name)
   net[flatten_name] = L.Flatten(net[softmax_name], axis=1)
   mbox_layers[1] = net[flatten_name]
+elif multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.LOGISTIC:
+  sigmoid_name = "{}_sigmoid".format(conf_name)
+  net[sigmoid_name] = L.Sigmoid(net[conf_name])
+  mbox_layers[1] = net[sigmoid_name]
 
 net.detection_out = L.DetectionOutput(*mbox_layers,
     detection_output_param=det_out_param,
@@ -473,6 +507,20 @@ net.detection_eval = L.DetectionEvaluate(net.detection_out, net.label,
 with open(test_net_file, 'w') as f:
     print('name: "{}_test"'.format(model_name), file=f)
     print(net.to_proto(), file=f)
+
+# Create deploy net.
+# Remove the first and last layer from test net.
+deploy_net = net
+with open(deploy_net_file, 'w') as f:
+    net_param = deploy_net.to_proto()
+    # Remove the first (AnnotatedData) and last (DetectionEvaluate) layer from test net.
+    del net_param.layer[0]
+    del net_param.layer[-1]
+    net_param.name = '{}_deploy'.format(model_name)
+    net_param.input.extend(['data'])
+    net_param.input_shape.extend([
+        caffe_pb2.BlobShape(dim=[1, 3, resize_height, resize_width])])
+    print(net_param, file=f)
 
 # Create solver.
 solver = caffe_pb2.SolverParameter(
@@ -518,7 +566,6 @@ with open(job_file, 'w') as f:
   f.write('./build/tools/caffe train \\\n')
   f.write('--solver="{}" \\\n'.format(solver_file))
   f.write(train_src_param)
-  f.write('--sighup_effect="stop" \\\n')
   if solver_param['solver_mode'] == P.Solver.GPU:
     f.write('--gpu {} 2>&1 | tee {}/{}.log\n'.format(gpus, job_dir, model_name))
   else:

@@ -114,13 +114,15 @@ def CreateAnnotatedDataLayer(source, batch_size=32, backend=P.Data.LMDB,
         return data
 
 
-def VGGNetBody(net, need_fc=True, fully_conv=False, reduced=False, freeze_layers=[]):
+def VGGNetBody(net, from_layer, need_fc=True, fully_conv=False, reduced=False, freeze_layers=[]):
     kwargs = {
             'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
             'weight_filler': dict(type='xavier'),
             'bias_filler': dict(type='constant', value=0)}
 
-    net.conv1_1 = L.Convolution(net.data, num_output=64, pad=1, kernel_size=3, **kwargs)
+    assert from_layer in net.keys()
+    net.conv1_1 = L.Convolution(net[from_layer], num_output=64, pad=1, kernel_size=3, **kwargs)
+
     net.relu1_1 = L.ReLU(net.conv1_1, in_place=True)
     net.conv1_2 = L.Convolution(net.relu1_1, num_output=64, pad=1, kernel_size=3, **kwargs)
     net.relu1_2 = L.ReLU(net.conv1_2, in_place=True)

@@ -235,8 +235,8 @@ Please cite SSD in your publications if it helps your research:
   ./data/VOC0712/create_list.sh
   # You can modify the parameters in create_data.sh if needed.
   # It will create lmdb files for trainval and test with encoded original image:
-  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_trainval_0x0_0x0_lmdb
-  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_test_0x0_0x0_lmdb
+  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_trainval_lmdb
+  #   - $HOME/data/VOCdevkit/VOC0712/lmdb/VOC0712_test_lmdb
   # and make soft links at examples/VOC0712/
   ./data/VOC0712/create_data.sh
   ```
@@ -244,12 +244,13 @@ Please cite SSD in your publications if it helps your research:
 ### Train/Eval
 1. Train your model and evaluate the model on the fly.
   ```Shell
-  # It will create model definition files (train.prototxt, test.prototxt, solver.prototxt) and save models in:
-  #   - $CAFFE_ROOT/models/VGGNet/VOC0712/SSD_0x0_0x0_0.001/
+  # It will create model definition files and save snapshot models in:
+  #   - $CAFFE_ROOT/models/VGGNet/VOC0712/SSD_300x300/
   # and job file, log file, and the python script in:
-  #   - $CAFFE_ROOT/jobs/VGGNet/VOC0712/SSD_0x0_0x0_0.001/
+  #   - $CAFFE_ROOT/jobs/VGGNet/VOC0712/SSD_300x300/
   # and save temporary evaluation results in:
-  #   - $HOME/data/VOCdevkit/results/VOC2007/SSD_0x0_0x0_0.001/
+  #   - $HOME/data/VOCdevkit/results/VOC2007/SSD_300x300/
+  # It should reach 62.* mAP at 60k iterations.
   python examples/ssd/ssd_pascal.py
   ```
 
