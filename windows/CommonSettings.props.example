@@ -14,25 +14,25 @@
         <CudaDependencies></CudaDependencies>
 
         <!-- Set CUDA architecture suitable for your GPU.
-         Setting proper architecture is important to mimize your run and compile time.
-         Only Kepler (K10, K20, K40, K80,...) and Maxwell (M4, M40, M6, M60, ...) architectures are supported.
-         For Kepler use "compute_35,sm_35".
-         For Maxwell use "compute_52,sm_52".-->
-        <CudaArchitecture>compute_35,sm_35</CudaArchitecture>
-        <!-- <CudaArchitecture>compute_52,sm_52</CudaArchitecture> -->
+         Setting proper architecture is important to mimize your run and compile time. -->
+        <CudaArchitecture>compute_35,sm_35;compute_52,sm_52</CudaArchitecture>
 
         <!-- CuDNN 3 and 4 are supported -->
-        <CuDnnPath>$(SolutionDir)..\..\CaffeCuDnn</CuDnnPath>
+        <CuDnnPath></CuDnnPath>
         <ScriptsDir>$(SolutionDir)\scripts</ScriptsDir>
     </PropertyGroup>
     <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
         <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
     </PropertyGroup>
+
     <PropertyGroup Condition="'$(UseCuDNN)'=='true'">
         <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(UseCuDNN)'=='true' And $(CuDnnPath)!=''">
         <LibraryPath>$(CuDnnPath)\cuda\lib\x64;$(LibraryPath)</LibraryPath>
         <IncludePath>$(CuDnnPath)\cuda\include;$(IncludePath)</IncludePath>
     </PropertyGroup>
+
     <PropertyGroup>
         <OutDir>$(BuildDir)\$(Platform)\$(Configuration)\</OutDir>
         <IntDir>$(BuildDir)\Int\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>

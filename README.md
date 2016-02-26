@@ -36,8 +36,10 @@ In `.\windows\CommonSettings.props` set `CpuOnlyBuild` to `true` and set `UseCuD
 
 ### cuDNN
 Download `cuDNN v3` or `cuDNN v4` [from nVidia website](https://developer.nvidia.com/cudnn).
-Unpack downloaded zip to `CuDnnPath` defined in `.\windows\CommonSettings.props`.
-Alternatively, you can disable cuDNN by setting `UseCuDNN` to `false` in the property file.
+Unpack downloaded zip to %CUDA_PATH% (environment variable set by CUDA installer).
+Alternatively, you can unpack zip to any location and set `CuDnnPath` to point to this location in `.\windows\CommonSettings.props`.
+`CuDnnPath` defined in `.\windows\CommonSettings.props`.
+Also, you can disable cuDNN by setting `UseCuDNN` to `false` in the property file.
 
 ### Python
 To build Caffe Python wrapper set `PythonSupport` to `true` in `.\windows\CommonSettings.props`.
@@ -51,6 +53,11 @@ conda install --yes numpy scipy matplotlib scikit-image pip
 pip install protobuf
 ```
 
+#### Remark
+After you have build solution with Python support, in order to use it you have to either:  
+1) set PythonPath environment variable to point to <caffe_root>\Build\x64\Release\pycaffe  
+or  
+2) cp –r <caffe_root>\Build\x64\Release\pycaffe\caffe $PYTHON_DIR\lib\site-packages  
 ### Build
 Now, you should be able to build `.\windows\Caffe.sln`
 
