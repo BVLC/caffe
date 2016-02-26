@@ -80,11 +80,11 @@ void KeyPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
+
   for (int i = 0; i < has_keys_.size(); ++i) {
-    // Create a local copy of the blobs for the top and the bottom
+    // Create local blobs for the per-key pooling.
     Blob<Dtype> key_bottom;
     Blob<Dtype> key_top;
-    Blob<Dtype> key_top_mask;
     vector<Blob<Dtype>*> pooling_bottoms;
     vector<Blob<Dtype>*> pooling_tops;
     pooling_bottoms.push_back(&key_bottom);
@@ -94,36 +94,33 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     bottom_shape[0] = key_end_[i] - key_start_[i];
     key_bottom.Reshape(bottom_shape);
 
-    const Dtype* bottom_data = bottom[0]->cpu_data();
-    caffe_copy(key_bottom.count(),
-               &bottom_data[bottom[0]->offset(key_start_[i])],
-               key_bottom.mutable_cpu_data());
+    // Set the bottom as a view into the alocated blob.
+    key_bottom.set_cpu_data(
+        &bottom[0]->mutable_cpu_data()[bottom[0]->offset(key_start_[i])]);
 
     // Perform pooling on this key.
     pooling_layer_.Forward(pooling_bottoms, pooling_tops);
 
-    key_top_mask.Reshape(key_top.shape());
-    Dtype* key_pool = key_top.mutable_cpu_data();
-    Dtype* key_mask = key_top_mask.mutable_cpu_data();
+    const Dtype *key_pool = key_top.cpu_data();
+    Dtype *top_data = &top[0]->mutable_cpu_data()[top[0]->offset(i)];
+    caffe_copy(top[0]->count(1), key_pool, top_data);
 
-    caffe_set(key_top_mask.count(), Dtype(key_start_[i]), key_mask);
+    Dtype *top_mask = NULL;
+    if (top.size() > 1) {
+      top_mask = &top[1]->mutable_cpu_data()[top[1]->offset(i)];
+      caffe_set(top[1]->count(1), Dtype(key_start_[i]), top_mask);
+    }
+
     for (int j = 1; j < key_top.shape(0); ++j) {
       int j_offset = key_top.offset(j);
       for (int k = 0; k < key_top.count(1); ++k) {
-        if (key_pool[j_offset + k] > key_pool[k]) {
-          key_pool[k] = key_pool[j_offset + k];
-          key_mask[k] = j + key_start_[i];
+        if (key_pool[j_offset + k] > top_data[k]) {
+          top_data[k] = key_pool[j_offset + k];
+          if (top_mask) {
+            top_mask[k] = j + key_start_[i];
+          }
         }
       }
-    }
-
-    Dtype* top_data = top[0]->mutable_cpu_data();
-    caffe_copy(key_top.count(1), key_top.cpu_data(),
-               &top_data[top[0]->offset(i)]);
-    if (top.size() > 1) {
-      Dtype* top_mask = top[1]->mutable_cpu_data();
-      caffe_copy(key_top_mask.count(1), key_top_mask.cpu_data(),
-                 &top_mask[top[1]->offset(i)]);
     }
   }
 
