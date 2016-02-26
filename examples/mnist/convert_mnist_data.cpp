@@ -178,6 +178,8 @@ int main(int argc, char** argv) {
   namespace gflags = google;
 #endif
 
+  FLAGS_alsologtostderr = 1;
+
   gflags::SetUsageMessage("This script converts the MNIST dataset to\n"
         "the lmdb/leveldb format used by Caffe to load data.\n"
         "Usage:\n"
