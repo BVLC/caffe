@@ -14,7 +14,7 @@ namespace {
   void handle_signal(int signal) {
     switch (signal) {
 #ifdef _MSC_VER
-    case SIGBREAK://there is no SIGHUP in windows, take SIGBREAK instead.
+    case SIGBREAK:  // there is no SIGHUP in windows, take SIGBREAK instead.
       got_sighup = true;
       break;
 #else
@@ -63,7 +63,7 @@ namespace {
     if (already_hooked_up) {
 #ifdef _MSC_VER
       if (signal(SIGBREAK, SIG_DFL) == SIG_ERR) {
-        LOG(FATAL) << "Cannot uninstall SIGHUP handler.";
+        LOG(FATAL) << "Cannot uninstall SIGBREAK handler.";
       }
       if (signal(SIGINT, SIG_DFL) == SIG_ERR) {
         LOG(FATAL) << "Cannot uninstall SIGINT handler.";
