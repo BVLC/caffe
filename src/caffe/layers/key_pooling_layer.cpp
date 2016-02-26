@@ -25,7 +25,7 @@ void KeyPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   int num_keys = bottom[1]->shape(0);
   has_keys_.clear();
   key_start_.clear();
-  key_end_.clear();
+  key_len_.clear();
 
   vector<Blob<Dtype>*> pooling_top;
   pooling_top.push_back(top[0]);
@@ -42,27 +42,21 @@ void KeyPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     has_keys_.push_back(current_key);
     key_start_.push_back(0);
 
-    int j = 0;
     for (int i = 1; i < num_keys; ++i) {
       if (keys[i] != current_key) {
-        j++;
-        key_end_.push_back(i);
-
-        largest_key_set_ =
-            std::max(key_end_[j - 1] - key_start_[j - 1], largest_key_set_);
+        key_len_.push_back(i - key_start_[key_start_.size()-1]);
 
         current_key = keys[i];
         has_keys_.push_back(current_key);
         key_start_.push_back(i);
       }
     }
-    key_end_.push_back(num_keys);
-
-    largest_key_set_ = std::max(
-        key_end_[num_keys - 1] - key_start_[num_keys - 1], largest_key_set_);
+    key_len_.push_back(num_keys - key_start_[key_start_.size()-1]);
   }
 
   CHECK_LE(has_keys_.size(), num_keys);
+  CHECK_EQ(has_keys_.size(), key_start_.size());
+  CHECK_EQ(has_keys_.size(), key_len_.size());
 
   // Resize the tops to match the keys.
   vector<int> required_shape(top[0]->shape());
@@ -91,7 +85,7 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     pooling_tops.push_back(&key_top);
 
     vector<int> bottom_shape = bottom[0]->shape();
-    bottom_shape[0] = key_end_[i] - key_start_[i];
+    bottom_shape[0] = key_len_[i];
     key_bottom.Reshape(bottom_shape);
 
     // Set the bottom as a view into the alocated blob.

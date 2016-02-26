@@ -52,10 +52,7 @@ class KeyPoolingLayer : public Layer<Dtype> {
   vector<Dtype> has_keys_;
   // Store the start and end indices for each key in the input array.
   vector<int> key_start_;
-  vector<int> key_end_;
-
-  int largest_key_set_;
-
+  vector<int> key_len_;
 
 };
 
