@@ -106,7 +106,7 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* key_pool = key_top.mutable_cpu_data();
     Dtype* key_mask = key_top_mask.mutable_cpu_data();
 
-    caffe_set(key_mask.count(), Dtype(key_start_[i]), key_mask);
+    caffe_set(key_top_mask.count(), Dtype(key_start_[i]), key_mask);
     for (int j = 1; j < key_top.shape(0); ++j) {
       int j_offset = key_top.offset(j);
       for (int k = 0; k < key_top.count(1); ++k) {

@@ -337,6 +337,15 @@ TYPED_TEST(KeyPoolingLayerTest, TestForwardMax) {
       EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 5], 4);
     }
   }
+  if (this->blob_top_vec_.size() > 2) {
+    // test the key map
+    // Expected output for every channel
+    // [0] ||  [1]  ||  [2]
+    const Dtype *key = this->blob_top_keys_->cpu_data();
+    EXPECT_EQ(key[0], 0);
+    EXPECT_EQ(key[1], 1);
+    EXPECT_EQ(key[2], 2);
+  }
 }
 
 
