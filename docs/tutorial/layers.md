@@ -494,7 +494,7 @@ The `SLICE` layer is a utility layer that slices an input layer to multiple outp
 * CUDA GPU implementation: `./src/caffe/layers/silence_layer.cu`
 * Sample
 
-layers { name: "silence" bottom: "input" type: SILENCE }
+	layers { name: "silence" bottom: "input" type: SILENCE }
 
-The `Silence` layer prevents its input (usually an unassigned top) from being considered an output of the network.
+The `Silence` layer prevents its input (an otherwise unassigned top) from being considered an output of the network.
 
