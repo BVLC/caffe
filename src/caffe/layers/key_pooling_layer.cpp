@@ -31,6 +31,9 @@ void KeyPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   vector<Blob<Dtype>*> pooling_top;
   pooling_top.push_back(top[0]);
+  if (top.size() > 1) {
+    pooling_top.push_back(top[1]);
+  }
 
   pooling_layer_.Reshape(bottom, pooling_top);
 
@@ -67,9 +70,12 @@ void KeyPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   vector<int> required_shape(top[0]->shape());
   required_shape[0] = has_keys_.size();
   top[0]->Reshape(required_shape);
-
   if (top.size() > 1) {
-    top[1]->Reshape(has_keys_.size(), 1, 1, 1);
+    top[1]->Reshape(required_shape);
+  }
+
+  if (top.size() > 2) {
+    top[2]->Reshape(has_keys_.size(), 1, 1, 1);
   }
 
 }
@@ -83,6 +89,7 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // Create a local copy of the blobs for the top and the bottom
     Blob<Dtype> key_bottom;
     Blob<Dtype> key_top;
+    Blob<Dtype> key_top_mask;
     vector<Blob<Dtype>*> pooling_bottoms;
     vector<Blob<Dtype>*> pooling_tops;
     pooling_bottoms.push_back(&key_bottom);
@@ -99,12 +106,17 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     pooling_layer_.Forward(pooling_bottoms, pooling_tops);
 
+    key_top_mask.Reshape(key_top.shape());
+
     Dtype *key_pool = key_top.mutable_cpu_data();
+    Dtype *key_mask = key_top_mask.mutable_cpu_data();
+    caffe_set(key_top.count(), Dtype(key_start_[i]), key_mask);
     for (int j = 1; j < key_top.shape(0); ++j) {
       int j_offset = key_top.offset(j);
       for (int k = 0; k < key_top.count(1); ++k) {
         if (key_pool[j_offset + k] > key_pool[k]) {
           key_pool[k] = key_pool[j_offset + k];
+          key_mask[k] = j + key_start_[i];
         }
       }
     }
@@ -112,10 +124,15 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* top_data = top[0]->mutable_cpu_data();
     caffe_copy(key_top.count(1), key_top.cpu_data(),
                &top_data[top[0]->offset(i)]);
+    if (top.size() > 1) {
+      Dtype* top_mask = top[1]->mutable_cpu_data();
+      caffe_copy(key_top_mask.count(1), key_top_mask.cpu_data(),
+                 &top_mask[top[1]->offset(i)]);
+    }
   }
 
-  if (top.size() > 1) {
-    caffe_copy(has_keys_.size(), &has_keys_[0], top[1]->mutable_cpu_data());
+  if (top.size() > 2) {
+    caffe_copy(has_keys_.size(), &has_keys_[0], top[2]->mutable_cpu_data());
   }
 
 }

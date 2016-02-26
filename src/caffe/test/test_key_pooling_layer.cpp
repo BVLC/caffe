@@ -24,6 +24,7 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_(new Blob<Dtype>()),
       	blob_bottom_keys_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
+        blob_top_mask_(new Blob<Dtype>()),
         blob_top_keys_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
@@ -45,12 +46,14 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_keys_);
     blob_top_vec_.push_back(blob_top_);
+    blob_top_vec_.push_back(blob_top_mask_);
     blob_top_vec_.push_back(blob_top_keys_);
   }
   virtual ~KeyPoolingLayerTest() {
     delete blob_bottom_;
     delete blob_bottom_keys_;
     delete blob_top_;
+    delete blob_top_mask_;
     delete blob_top_keys_;
   }
 
@@ -58,6 +61,7 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_bottom_keys_;
   Blob<Dtype>* const blob_top_;
+  Blob<Dtype>* const blob_top_mask_;
   Blob<Dtype>* const blob_top_keys_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
@@ -268,12 +272,12 @@ TYPED_TEST(KeyPoolingLayerTest, TestForwardMax) {
   EXPECT_EQ(this->blob_top_->channels(), channels);
   EXPECT_EQ(this->blob_top_->height(), height);
   EXPECT_EQ(this->blob_top_->width(), width);
-  // if (blob_top_vec_.size() > 1) {
-  //   EXPECT_EQ(blob_top_mask_->num(), num_collection);
-  //   EXPECT_EQ(blob_top_mask_->channels(), channels);
-  //   EXPECT_EQ(blob_top_mask_->height(), height);
-  //   EXPECT_EQ(blob_top_mask_->width(), width);
-  // }
+  if (this->blob_top_vec_.size() > 1) {
+    EXPECT_EQ(this->blob_top_mask_->num(), num_collection);
+    EXPECT_EQ(this->blob_top_mask_->channels(), channels);
+    EXPECT_EQ(this->blob_top_mask_->height(), height);
+    EXPECT_EQ(this->blob_top_mask_->width(), width);
+  }
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Expected output for channel = 0
   // [1 0 1]  ||  [3 3 0]  ||  [2 1 5]
@@ -303,35 +307,36 @@ TYPED_TEST(KeyPoolingLayerTest, TestForwardMax) {
     EXPECT_EQ(pooled[this->blob_top_->offset(2, i) + 4], 4 + i);
     EXPECT_EQ(pooled[this->blob_top_->offset(2, i) + 5], 1 + i);
   }
-  // if (blob_top_vec_.size() > 1) {
-  //   // test the mask
-  //   // Expected output for every channel
-  //   // [0 0 0]  ||  [3 3 1]  ||  [5 5 5]
-  //   // [0 0 0]  ||  [3 2 1]  ||  [4 4 4]
-  //   for (int i = 0; i < channels; ++i) {
-  //     // output 0
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(0 * channels  + i) * height * width  +  0], 0);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(0 * channels  + i) * height * width  +  1], 0);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(0 * channels  + i) * height * width  +  2], 0);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(0 * channels  + i) * height * width  +  3], 0);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(0 * channels  + i) * height * width  +  4], 0);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(0 * channels  + i) * height * width  +  5], 0);
-  //     // output 1
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(1 * channels  + i) * height * width  +  0], 3);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(1 * channels  + i) * height * width  +  1], 3);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(1 * channels  + i) * height * width  +  2], 1);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(1 * channels  + i) * height * width  +  3], 3);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(1 * channels  + i) * height * width  +  4], 2);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(1 * channels  + i) * height * width  +  5], 1);
-  //     // output 2
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(2 * channels  + i) * height * width  +  0], 5);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(2 * channels  + i) * height * width  +  1], 5);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(2 * channels  + i) * height * width  +  2], 5);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(2 * channels  + i) * height * width  +  3], 4);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(2 * channels  + i) * height * width  +  4], 4);
-  //     EXPECT_EQ(blob_top_mask_->mutable_cpu_data()[(2 * channels  + i) * height * width  +  5], 4);
-  //   }
-  // }
+  if (this->blob_top_vec_.size() > 1) {
+    // test the mask
+    // Expected output for every channel
+    // [0 0 0]  ||  [3 3 1]  ||  [5 5 5]
+    // [0 0 0]  ||  [3 2 1]  ||  [4 4 4]
+    const Dtype *mask = this->blob_top_mask_->cpu_data();
+    for (int i = 0; i < channels; ++i) {
+      // output 0
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 0], 0);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 1], 0);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 2], 0);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 3], 0);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 4], 0);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 5], 0);
+      // output 1
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 0], 3);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 1], 3);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 2], 1);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 3], 3);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 4], 2);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 5], 1);
+      // output 2
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 0], 5);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 1], 5);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 2], 5);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 3], 4);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 4], 4);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 5], 4);
+    }
+  }
 }
 
 
