@@ -197,19 +197,14 @@ int train() {
     Caffe::set_solver_count(gpus.size());
   }
 
-#if !defined(_MSC_VER)
-  // Signals are not properly supported in Windows.
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
-#endif
 
   shared_ptr<caffe::Solver<float> >
       solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
-#if !defined(_MSC_VER)
   solver->SetActionFunction(signal_handler.GetActionFunction());
-#endif
 
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
