@@ -261,7 +261,9 @@ void Solver<Dtype>::Step(int iters) {
     for (int i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_gradients_ready();
     }
-    ApplyUpdate();
+    if (!param().disabled_update()) {
+      ApplyUpdate();
+    }
 
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
@@ -503,16 +505,6 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
   }
 }
 
-template <typename Dtype>
-class DisabledUpdateSolver : public WorkerSolver<Dtype> {
- public:
-  virtual inline const char* type() const { return "DisabledUpdate"; }
-  explicit DisabledUpdateSolver(const SolverParameter& param)
-      : WorkerSolver<Dtype>(param) {}
-};
-
 INSTANTIATE_CLASS(Solver);
-INSTANTIATE_CLASS(DisabledUpdateSolver);
-REGISTER_SOLVER_CLASS(DisabledUpdate);
 
 }  // namespace caffe

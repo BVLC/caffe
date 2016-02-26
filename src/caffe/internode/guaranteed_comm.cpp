@@ -7,6 +7,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
+#include <algorithm>
 #include <deque>
 #include <string>
 #include <utility>
@@ -24,7 +25,9 @@ namespace {
 
 const int TIME_TO_RESEND_IN_UMS = 1;
 const int BUFFER_SIZE = 65535;
-const int MAX_BUFFERS = 4;
+const int MAX_BUFFERS = 4000;
+const size_t MAX_CHECKSUM_SIZE = 150;
+const size_t MAX_UNACKED = 100;
 
 class CommBuffers {
   const size_t buffer_size;
@@ -94,7 +97,9 @@ class CommBuffers {
 
 typedef uint64_t UID;
 UID generate_uid() {
+  static boost::mutex mtx;
   static UID gen_uid = 1;
+  boost::mutex::scoped_lock guard(mtx);
   return gen_uid++;
 }
 
@@ -126,7 +131,7 @@ class PacketCodec {
     encode_ack(dest_buffer, id);
     caffe_copy<char>(size, buffer, dest_buffer + msg_header_size);
     Checksum checksum = buffer[0];
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < std::min(MAX_CHECKSUM_SIZE, size); ++i) {
       checksum = checksum ^ (unsigned char)buffer[i];
     }
     dest_buffer[0] = msg_indicator;
@@ -147,7 +152,8 @@ class PacketCodec {
     CHECK((buffer[0] == ack_indicator) || (buffer[0] == msg_indicator));
     Checksum checksum = buffer[msg_header_size];
     Checksum received_checksum = (Checksum)buffer[ack_buffer_size];
-    for (int i = msg_header_size; i < size; ++i) {
+    size_t to_check = std::min(msg_header_size + MAX_CHECKSUM_SIZE, size);
+    for (int i = msg_header_size; i < to_check; ++i) {
       checksum = checksum ^ (Checksum)buffer[i];
     }
     if (checksum != received_checksum) {
@@ -165,7 +171,6 @@ class PacketCodec {
 
 class Resender {
   boost::shared_ptr<Waypoint> waypoint;
-  boost::shared_ptr<CommBuffers> buffs;
 
   struct SentBuffer {
     UID uid;
@@ -193,10 +198,8 @@ class Resender {
 
  public:
   Resender(boost::shared_ptr<Daemon> daemon,
-           boost::shared_ptr<Waypoint> waypoint,
-           boost::shared_ptr<CommBuffers> buffs)
-    : waypoint(waypoint)
-    , buffs(buffs) {
+           boost::shared_ptr<Waypoint> waypoint)
+    : waypoint(waypoint) {
   }
 
   void push(boost::shared_ptr<CommBuffers::Buffer> buffer,
@@ -233,6 +236,10 @@ class Resender {
                << "(" << waypoint->id() << ") "
                << " left: " << all_pushed.size();
   }
+
+  size_t size() const {
+    return all_pushed.size();
+  }
 };
 
 struct SentItem {
@@ -242,9 +249,9 @@ struct SentItem {
 
 struct SendItem {
   RemoteId id;
-  const char* buffer;
+  boost::shared_ptr<CommBuffers::Buffer> buffer;
   size_t size;
-  Waypoint::SentCallback callback;
+  UID uid;
 };
 
 struct RecvItem {
@@ -270,9 +277,11 @@ Item make_sent_item(Waypoint::SentCallback callback, bool result) {
   return ret;
 }
 
-Item make_send_item(RemoteId id, const char* buffer, size_t size,
-                    Waypoint::SentCallback callback) {
-  SendItem ret = {id, buffer, size, callback};
+Item make_send_item(RemoteId id,
+                    boost::shared_ptr<CommBuffers::Buffer> buffer,
+                    size_t size,
+                    UID uid) {
+  SendItem ret = {id, buffer, size, uid};
   return ret;
 }
 
@@ -292,12 +301,17 @@ class Queue {
   CommBuffers buffs;
 
  public:
-  explicit Queue(size_t buffer_size) : buffs(BUFFER_SIZE, MAX_BUFFERS * 100) {
+  explicit Queue(size_t buffer_size) : buffs(BUFFER_SIZE, MAX_BUFFERS) {
   }
 
   void push(Item item) {
     boost::mutex::scoped_lock lock(mtx);
     queue.push_back(item);
+  }
+
+  void push_front(Item item) {
+    boost::mutex::scoped_lock lock(mtx);
+    queue.push_front(item);
   }
 
   boost::optional<Item> pop() {
@@ -324,7 +338,6 @@ class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
   boost::shared_ptr<Queue> recv_queue;
   boost::shared_ptr<Daemon> daemon;
   boost::shared_ptr<Waypoint> waypoint;
-  boost::shared_ptr<CommBuffers> msg_buffers;
   CommBuffers ack_buffers;
   Resender resender_;
   std::vector<Waypoint::Handler*> handlers;
@@ -345,21 +358,18 @@ class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
   void sent_ack(bool, boost::shared_ptr<CommBuffers::Buffer>) {
   }
 
-  void sent(bool ok,
-            SentCallback callback,
-            boost::shared_ptr<CommBuffers::Buffer>) {
+  void sent(bool ok, boost::shared_ptr<CommBuffers::Buffer>) {
     sending = false;
-    recv_queue->push(make_sent_item(callback, ok));
   }
 
   void send_msg() {
     if (sending) return;
-    if (msg_buffers->fully_utilized()) return;
+    if (resender_.size() > MAX_UNACKED) return;
     boost::optional<Item> next = send_queue->pop();
     if (!next) return;
     const SendItem& to_send = boost::get<SendItem>(*next);
     CHECK(to_send.id == waypoint->id());
-    async_send(to_send.buffer, to_send.size, to_send.callback);
+    async_send(to_send.buffer, to_send.size, to_send.uid);
   }
 
  protected:
@@ -391,9 +401,8 @@ class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
     , recv_queue(recv_queue)
     , daemon(daemon)
     , waypoint(non_guaranteed_waypoint)
-    , msg_buffers(new CommBuffers(BUFFER_SIZE, MAX_BUFFERS))
-    , ack_buffers(codec.ack_size(), MAX_BUFFERS * 100)
-    , resender_(daemon, non_guaranteed_waypoint, msg_buffers)
+    , ack_buffers(codec.ack_size(), MAX_BUFFERS)
+    , resender_(daemon, non_guaranteed_waypoint)
     , sending(false) {
     CHECK(!non_guaranteed_waypoint->guaranteed_comm());
     if (set_timer) {
@@ -405,6 +414,16 @@ class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
     }
   }
 
+  virtual void async_send(boost::shared_ptr<CommBuffers::Buffer> buffer,
+                          size_t size,
+                          UID uid) {
+    sending = true;
+    waypoint->async_send(
+      buffer->ptr(), size,
+      boost::bind(&GuaranteedWaypoint::sent, this, _1, buffer));
+    resender_.push(buffer, size, uid);
+  }
+
   bool already_received(UID uid) {
     return boost::icl::contains(received_msgs, uid);
   }
@@ -414,24 +433,6 @@ class GuaranteedWaypoint : public InternalThread, public Waypoint::Handler {
 
   virtual void tick() {
     resender_.resend_some();
-  }
-
-  virtual void async_send(const char* buffer,
-                          size_t size,
-                          SentCallback callback) {
-    boost::shared_ptr<CommBuffers::Buffer> next_buffer = msg_buffers->pop();
-    UID uid = generate_uid();
-    DLOG(INFO) << "sending msg: " << uid << " of size: " << size;
-    size_t encoded_size =
-      codec.encode_msg(next_buffer->ptr(), buffer, size, uid);
-    CHECK(encoded_size <= max_packet_size());
-
-    sending = true;
-    waypoint->async_send(
-      next_buffer->ptr(), encoded_size,
-      boost::bind(&GuaranteedWaypoint::sent, this, _1,
-                  callback, next_buffer));
-    resender_.push(next_buffer, encoded_size, uid);
   }
 
   virtual void register_receive_handler(Waypoint::Handler* handler) {
@@ -469,7 +470,6 @@ class GuaranteedMultiWaypoint : public InternalThread
   boost::shared_ptr<Queue> recv_queue;
   boost::shared_ptr<Daemon> daemon;
   boost::shared_ptr<Waypoint> waypoint;
-  boost::shared_ptr<CommBuffers> msg_buffers;
   CommBuffers ack_buffers;
   typedef boost::tuple<const char*, size_t, SentCallback> ItemToSend;
   std::deque<ItemToSend> to_send;
@@ -498,40 +498,31 @@ class GuaranteedMultiWaypoint : public InternalThread
     return clients.find(id) == clients.end();
   }
 
-  void sent(bool ok,
-            SentCallback callback,
-            boost::shared_ptr<CommBuffers::Buffer>) {
+  void sent(bool ok, boost::shared_ptr<CommBuffers::Buffer>) {
     sending = false;
-    recv_queue->push(make_sent_item(callback, ok));
   }
 
   void send_msg() {
     if (sending) return;
-    if (msg_buffers->fully_utilized()) return;
+    if (clients.empty()) return;
+    if (clients.begin()->second->resender().size() > MAX_UNACKED) return;
     boost::optional<Item> next = send_queue->pop();
     if (!next) return;
     const SendItem& to_send = boost::get<SendItem>(*next);
     if (to_send.id != waypoint->id()) {
       Clients::iterator it = clients.find(to_send.id);
       if (it == clients.end()) return;
-      clients[to_send.id]->
-        async_send(to_send.buffer, to_send.size, to_send.callback);
+      clients[to_send.id]->async_send(
+        to_send.buffer, to_send.size, to_send.uid);
+      return;
     }
 
-    boost::shared_ptr<CommBuffers::Buffer> next_buffer = msg_buffers->pop();
-    UID uid = generate_uid();
-    size_t encoded_size =
-      codec.encode_msg(next_buffer->ptr(), to_send.buffer, to_send.size, uid);
-    DLOG(INFO) << "sending msg " << uid << " of size: " << to_send.size;
-    CHECK(encoded_size <= max_packet_size());
-
     sending = true;
-    waypoint->async_send(next_buffer->ptr(), encoded_size,
-      boost::bind(&GuaranteedMultiWaypoint::sent, this, _1,
-                  to_send.callback, next_buffer));
+    waypoint->async_send(to_send.buffer->ptr(), to_send.size,
+      boost::bind(&GuaranteedMultiWaypoint::sent, this, _1, to_send.buffer));
     typedef Clients::iterator It;
     for (It it = clients.begin(); it != clients.end(); ++it) {
-      it->second->resender().push(next_buffer, encoded_size, uid);
+      it->second->resender().push(to_send.buffer, to_send.size, to_send.uid);
     }
   }
 
@@ -585,8 +576,7 @@ class GuaranteedMultiWaypoint : public InternalThread
     , recv_queue(recv_queue)
     , daemon(daemon)
     , waypoint(waypoint)
-    , msg_buffers(new CommBuffers(BUFFER_SIZE, MAX_BUFFERS))
-    , ack_buffers(codec.ack_size(), MAX_BUFFERS * 100)
+    , ack_buffers(codec.ack_size(), MAX_BUFFERS)
     , sending(false) {
     create_timer(
       daemon,
@@ -608,12 +598,14 @@ class GuaranteedMultiWaypoint : public InternalThread
 };
 
 class ExternalClientWaypoint : public Waypoint, public boost::static_visitor<> {
+  PacketCodec codec;
   boost::shared_ptr<Queue> send_queue;
   boost::shared_ptr<Queue> recv_queue;
   const RemoteId id_;
   const string address_;
   const size_t max_packet_size_;
   std::vector<Waypoint::Handler*> receive_handlers;
+  boost::shared_ptr<CommBuffers> msg_buffers;
 
  public:
   void operator()(RecvItem recv) {
@@ -635,7 +627,8 @@ class ExternalClientWaypoint : public Waypoint, public boost::static_visitor<> {
     , recv_queue(recv_queue)
     , id_(id)
     , address_(address)
-    , max_packet_size_(max_packet_size) {
+    , max_packet_size_(max_packet_size)
+    , msg_buffers(new CommBuffers(BUFFER_SIZE, MAX_BUFFERS)) {
   }
 
   void received(char* buffer, size_t size) {
@@ -646,7 +639,13 @@ class ExternalClientWaypoint : public Waypoint, public boost::static_visitor<> {
   virtual void async_send(const char* buffer,
                           size_t size,
                           Waypoint::SentCallback callback) {
-    send_queue->push(make_send_item(id(), buffer, size, callback));
+    boost::shared_ptr<CommBuffers::Buffer> next_buffer = msg_buffers->pop();
+    UID uid = generate_uid();
+    size_t encoded_size =
+      codec.encode_msg(next_buffer->ptr(), buffer, size, uid);
+    CHECK(encoded_size <= max_packet_size());
+    send_queue->push(make_send_item(id(), next_buffer, encoded_size, uid));
+    recv_queue->push_front(make_sent_item(callback, true));
   }
 
   virtual void register_receive_handler(Waypoint::Handler* handler) {
@@ -690,6 +689,7 @@ class ExternalMultiWaypoint : public MultiWaypoint
   const string address_;
   const size_t max_packet_size_;
 
+  boost::shared_ptr<CommBuffers> msg_buffers;
   std::vector<Waypoint::Handler*> receive_handlers;
   std::vector<MultiWaypoint::Handler*> accept_handlers;
 
@@ -735,13 +735,20 @@ class ExternalMultiWaypoint : public MultiWaypoint
     , recv_queue(recv_queue)
     , id_(id)
     , address_(address)
-    , max_packet_size_(max_packet_size) {
+    , max_packet_size_(max_packet_size)
+    , msg_buffers(new CommBuffers(BUFFER_SIZE, MAX_BUFFERS)) {
   }
 
   virtual void async_send(const char* buffer,
                           size_t size,
                           SentCallback callback) {
-    send_queue->push(make_send_item(id(), buffer, size, callback));
+    boost::shared_ptr<CommBuffers::Buffer> next_buffer = msg_buffers->pop();
+    UID uid = generate_uid();
+    size_t encoded_size =
+      codec.encode_msg(next_buffer->ptr(), buffer, size, uid);
+    CHECK(encoded_size <= max_packet_size());
+    send_queue->push(make_send_item(id(), next_buffer, encoded_size, uid));
+    recv_queue->push_front(make_sent_item(callback, true));
   }
 
   virtual void register_receive_handler(Waypoint::Handler* handler) {

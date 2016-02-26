@@ -14,10 +14,12 @@ using internode::Waypoint;
 
 template <typename Dtype>
 DataServer<Dtype>::DataServer(shared_ptr<Solver<Dtype> > solver,
-                                string bind_address)
+                              string bind_address,
+                              string,
+                              int)
   : daemon(internode::create_communication_daemon())
   , solver(solver)
-  , waypoint(internode::configure_server(daemon, bind_address)) {
+  , waypoint(internode::configure_server(daemon, bind_address, UINT_MAX)) {
   waypoint->register_receive_handler(this);
   LOG(INFO) << solver->param().DebugString();
 }

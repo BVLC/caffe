@@ -24,7 +24,8 @@ class BlobCodec {
  public:
   typedef typename BlobEncoding::What What;
   static shared_ptr<BlobCodec> create_codec(
-    const MultinodeParameter& param);
+    const MultinodeParameter& param,
+    bool ensure_is_single_threaded);
 
   virtual uint32_t encode(BlobUpdate* msg,
                           const Blob<Dtype>* src,

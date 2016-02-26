@@ -23,10 +23,12 @@ void create_timer(
 
 boost::shared_ptr<Waypoint> configure_client(
     boost::shared_ptr<Daemon> communication_daemon,
-    std::string address);
+    std::string address,
+    size_t max_buffer_size);
 boost::shared_ptr<MultiWaypoint> configure_server(
     boost::shared_ptr<Daemon> communication_daemon,
-    std::string address);
+    std::string address,
+    size_t max_buffer_size);
 
 bool is_remote_address(std::string str);
 
