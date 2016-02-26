@@ -78,24 +78,41 @@ template <typename Dtype>
 void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-  vector<Blob<Dtype>*> pooling_top;
-  pooling_top.push_back(top[0]);
 
   for (int i = 0; i < has_keys_.size(); ++i) {
     // Create a local copy of the blobs for the top and the bottom
     Blob<Dtype> key_bottom;
     Blob<Dtype> key_top;
+    vector<Blob<Dtype>*> pooling_bottoms;
+    vector<Blob<Dtype>*> pooling_tops;
+    pooling_bottoms.push_back(&key_bottom);
+    pooling_tops.push_back(&key_top);
 
+    vector<int> bottom_shape = bottom[0]->shape();
+    bottom_shape[0] = key_end_[i] - key_start_[i];
+    key_bottom.Reshape(bottom_shape);
 
+    const Dtype *bottom_data = bottom[0]->cpu_data();
+    caffe_copy(key_bottom.count(),
+               &bottom_data[bottom[0]->offset(key_start_[i])],
+               key_bottom.mutable_cpu_data());
 
+    pooling_layer_.Forward(pooling_bottoms, pooling_tops);
 
+    Dtype *key_pool = key_top.mutable_cpu_data();
+    for (int j = 1; j < key_top.shape(0); ++j) {
+      int j_offset = key_top.offset(j);
+      for (int k = 0; k < key_top.count(1); ++k) {
+        if (key_pool[j_offset + k] > key_pool[k]) {
+          key_pool[k] = key_pool[j_offset + k];
+        }
+      }
+    }
 
-    pooling_layer_.Forward(bottom, pooling_top);
-
+    Dtype* top_data = top[0]->mutable_cpu_data();
+    caffe_copy(key_top.count(1), key_top.cpu_data(),
+               &top_data[top[0]->offset(i)]);
   }
-
-
-
 
   if (top.size() > 1) {
     caffe_copy(has_keys_.size(), &has_keys_[0], top[1]->mutable_cpu_data());
