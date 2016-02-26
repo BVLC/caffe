@@ -241,6 +241,10 @@ ifeq ($(USE_GREENTEA),1)
 	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
 endif
 
+ifeq ($(USE_LIBDNN), 1)
+	COMMON_FLAGS += -DUSE_LIBDNN
+endif
+
 ifeq ($(USE_CUDA), 1)
 	COMMON_FLAGS += -DUSE_CUDA
 endif
