@@ -60,6 +60,16 @@ bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
                 << "V1LayerParameter";
     }
   }
+  // NetParameter uses old style input fields; try to upgrade it.
+  if (NetNeedsInputUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "input fields: " << param_file;
+    UpgradeNetInput(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "input fields.";
+    LOG(WARNING) << "Note that future Caffe releases will only support "
+                 << "input layers and not input fields.";
+  }
   return success;
 }
 
@@ -935,6 +945,41 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     LOG(FATAL) << "Unknown V1LayerParameter layer type: " << type;
     return "";
   }
+}
+
+bool NetNeedsInputUpgrade(const NetParameter& net_param) {
+  return net_param.input_size() > 0;
+}
+
+void UpgradeNetInput(NetParameter* net_param) {
+  LayerParameter* layer_param = net_param->add_layer();
+  layer_param->set_name("input");
+  layer_param->set_type("Input");
+  InputParameter* input_param = layer_param->mutable_input_param();
+  bool has_shape = net_param->input_shape_size() > 0;
+  // Convert input fields into a layer.
+  for (int i = 0; i < net_param->input_size(); ++i) {
+    layer_param->add_top(net_param->input(i));
+    if (has_shape) {
+      input_param->add_shape()->CopyFrom(net_param->input_shape(i));
+    } else {
+      // Turn legacy input dimensions into shape.
+      BlobShape* shape = input_param->add_shape();
+      int first_dim = i*4;
+      int last_dim = first_dim + 4;
+      for (int j = first_dim; j < last_dim; j++) {
+        shape->add_dim(net_param->input_dim(j));
+      }
+    }
+  }
+  // Swap input layer to beginning of net to satisfy layer dependencies.
+  for (int i = net_param->layer_size() - 1; i > 0; --i) {
+    net_param->mutable_layer(i-1)->Swap(net_param->mutable_layer(i));
+  }
+  // Clear inputs.
+  net_param->clear_input();
+  net_param->clear_input_shape();
+  net_param->clear_input_dim();
 }
 
 // Return true iff the solver contains any old solver_type specified as enums
