@@ -134,10 +134,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
-  std::vector<Blob<float>*> input_vec;
   std::vector<int_tp> image_indices(num_features, 0);
   for (int_tp batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
-    feature_extraction_net->Forward(input_vec);
+    feature_extraction_net->Forward();
     for (int_tp i = 0; i < num_features; ++i) {
       const boost::shared_ptr<Blob<Dtype> > feature_blob =
         feature_extraction_net->blob_by_name(blob_names[i]);

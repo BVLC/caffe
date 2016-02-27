@@ -1,12 +1,11 @@
 name: "CIFAR10_full_deploy"
 # N.B. input image must be in CIFAR-10 format
 # as described at http://www.cs.toronto.edu/~kriz/cifar.html
-input: "data"
-input_shape {
-  dim: 1
-  dim: 3
-  dim: 32
-  dim: 32
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param { shape: { dim: 1 dim: 3 dim: 32 dim: 32 } }
 }
 layer {
   name: "conv1"
