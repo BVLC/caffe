@@ -8,7 +8,7 @@
 #include <string>
 
 #ifdef USE_OPENCV
-#include <opencv/cv.hpp>
+#include <opencv2/core/core.hpp>
 #endif
 
 #include "caffe/blob.hpp"
