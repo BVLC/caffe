@@ -266,7 +266,7 @@ TYPED_TEST(OrthogonalFillerTest, TestFill) {
                   this->blob_->count(1)*sizeof(TypeParam));
   cv::Mat transposed_weights;
   cv::transpose( weights, transposed_weights );
-  cv::Mat test_matrix = transposed_weights * weights;
+  cv::Mat test_matrix = weights * transposed_weights;
   for (int j = 0; j < test_matrix.rows; j++) {
     for (int i = 0; i < test_matrix.cols; i++) {
       if (i==j) {
