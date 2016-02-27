@@ -265,17 +265,17 @@ TYPED_TEST(OrthogonalFillerTest, TestFill) {
                   this->blob_->mutable_cpu_data(),
                   this->blob_->count(1)*sizeof(TypeParam));
   cv::Mat transposed_weights;
-  cv::transpose( weights, transposed_weights );
+  cv::transpose(weights, transposed_weights);
   cv::Mat test_matrix = weights * transposed_weights;
   for (int j = 0; j < test_matrix.rows; j++) {
     for (int i = 0; i < test_matrix.cols; i++) {
-      if (i==j) {
-        EXPECT_NEAR( test_matrix.at<TypeParam>(j,i), 1.0, 0.01 );
+      if (i == j) {
+        EXPECT_NEAR(test_matrix.at<TypeParam>(j, i), 1.0, 0.01);
       } else {
-        EXPECT_NEAR( test_matrix.at<TypeParam>(j,i), 0.0, 0.01 );
+        EXPECT_NEAR(test_matrix.at<TypeParam>(j, i), 0.0, 0.01);
       }
     }
-  }  
+  }
 }
 #endif
 
