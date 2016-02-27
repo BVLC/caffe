@@ -78,88 +78,6 @@ class PascalMultilabelDataLayerSync(caffe.Layer):
         pass
 
 
-class PascalMultilabelDataLayerAsync(caffe.Layer):
-
-    """
-    This is a simple asyncronous datalayer for training a multilabel model on
-    PASCAL.
-    """
-
-    def setup(self, bottom, top):
-
-        self.top_names = ['data', 'label']
-
-        # === Read input parameters ===
-
-        # params is a python dictionary with layer parameters.
-        params = eval(self.param_str)
-
-        # Check the paramameters for validity.
-        check_params(params)
-
-        # we need to store this as a local variable.
-        self.batch_size = params['batch_size']
-
-        # === We are going to do the actual data processing in a seperate,
-        # helperclass, called BatchLoader. So let's forward the parameters
-        # to that class ===
-        self.thread_result = {}
-        self.thread = None
-        self.batch_loader = BatchLoader(params, self.thread_result)
-        self.dispatch_worker()  # Let it start fetching data right away.
-
-        # === reshape tops ===
-        # since we use a fixed input image size, we can shape the data layer
-        # once. Else, we'd have to do it in the reshape call.
-        top[0].reshape(
-            self.batch_size, 3, params['im_shape'][0], params['im_shape'][1])
-        # Note the 20 channels (because PASCAL has 20 classes.)
-        top[1].reshape(self.batch_size, 20)
-
-        print_info("PascalMultilabelDataLayerAsync", params)
-
-    def forward(self, bottom, top):
-        """
-        This is the forward pass, where we load the data into the blobs.
-        Since we run the BatchLoader asynchronously, we just wait for it,
-        and then copy
-        """
-
-        if self.thread is not None:
-            self.join_worker()  # wait until it is done.
-
-        for top_index, name in zip(range(len(top)), self.top_names):
-            for i in range(self.batch_size):
-                # Copy the already-prepared data to caffe.
-                top[top_index].data[i, ...] = self.thread_result[name][i]
-
-        # let's go again while the GPU process this batch.
-        self.dispatch_worker()
-
-    def reshape(self, bottom, top):
-        """
-        There is no need to reshape the data, since the input is of fixed size
-        (rows and columns)
-        """
-        pass
-
-    def backward(self, top, propagate_down, bottom):
-        """
-        These layers does not back propagate
-        """
-        pass
-
-    def dispatch_worker(self):
-        assert self.thread is None
-        self.thread = Thread(target=self.batch_loader)
-        self.thread.start()
-
-    def join_worker(self):
-        assert self.thread is not None
-        self.thread.join()
-        self.thread = None
-
-
 class BatchLoader(object):
 
     """
@@ -184,23 +102,6 @@ class BatchLoader(object):
 
         print "BatchLoader initialized with {} images".format(
             len(self.indexlist))
-
-    def __call__(self):
-        """
-        This does the same stuff as the forward layer of the synchronous layer.
-        Exept that we store the data and labels in the result dictionary
-        (as lists of length batchsize).
-        """
-        self.result['data'] = []
-        self.result['label'] = []
-        for itt in range(self.batch_size):
-
-            # Get the next image in the batch
-            im, multilabel = self.load_next_image()
-
-            # Store in a result list.
-            self.result['data'].append(im)
-            self.result['label'].append(multilabel)
 
     def load_next_image(self):
         """
