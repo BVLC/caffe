@@ -12,8 +12,8 @@ ifeq ($(CPU_ONLY),1)
 	USE_GREENTEA := 0
 endif
 
-CXXFLAGS += -std=c++11 -fopenmp -Wno-deprecated-declarations
-LINKFLAGS += -std=c++11 -fopenmp -Wno-deprecated-declarations
+CXXFLAGS += -std=c++11 -Wno-deprecated-declarations
+LINKFLAGS += -std=c++11 -Wno-deprecated-declarations
 NVCCFLAGS += -Xcompiler "-Wno-deprecated-declarations" -Xlinker "-Wno-deprecated-declarations" -Xarchive "-Wno-deprecated-declarations" -Xnvlink "-Wno-deprecated-declarations"
 
 BUILD_DIR_LINK := $(BUILD_DIR)
@@ -32,7 +32,6 @@ else
 	BUILD_DIR := $(RELEASE_BUILD_DIR)
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
-
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -170,86 +169,6 @@ EMPTY_WARN_REPORT := $(BUILD_DIR)/.$(WARNS_EXT)
 NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 
 ##############################
-# GreenTea backend related include and lib
-##############################
-
-ifeq ($(USE_INDEX_64),1)
-	COMMON_FLAGS += -DUSE_INDEX_64
-endif
-
-ifeq ($(USE_GREENTEA),1)
-	# Find a valid OpenCL library
-	# TODO: Validate and complete this based on different SDKs
-	ifdef OPENCL_INC
-		CLLINC = '$(OPENCL_INC)'
-	endif
-	
-	ifdef OPENCL_LIB
-		CLLIBS = '$(OPENCL_LIB)'
-	endif
-	
-	ifdef OPENCLROOT
-		CLLIBS = '$(OPENCLROOT)'
-	endif
-	
-	ifdef CUDA_PATH
-		CLLIBS = '$(CUDA_PATH)/lib/x64'
-	endif
-	
-	ifdef INTELOCLSDKROOT
-		CLLIBS = '$(INTELOCLSDKROOT)/lib/x64'
-	endif
-	
-	ifdef AMDAPPSDKROOT
-		CLLIBS = '$(AMDAPPSDKROOT)/lib/x86_64'
-		CLLINC = '$(AMDAPPSDKROOT)/include'
-	endif
-	
-	# Use AMD clBLAS
-	ifeq ($(USE_CLBLAS), 1)
-		LIBRARIES += clBLAS
-		COMMON_FLAGS += -DUSE_CLBLAS
-	endif
-	
-	# Use ISAAC clBLAS replacement
-	ifeq ($(USE_ISAAC), 1)
-		LIBRARIES += isaac
-		COMMON_FLAGS += -DUSE_CLBLAS
-	endif
-	
-	# Requires valid OpenCL library
-	LIBRARY_DIRS += $(CLLIBS)
-	# Requires valid OpenCL headers and valid ViennaCL
-	INCLUDE_DIRS += $(CLLINC) $(VIENNACL_DIR)
-	# Requires OpenCL compile library flag and librt
-	ifeq ($(OS_X), 1)
-		LDFLAGS += -framework OpenCL
-	else
-		LIBRARIES += OpenCL rt
-	endif
-	# Additional flags
-	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
-	
-	# Viennacl runtime debug output
-	ifeq ($(VIENNACL_DEBUG), 1)
-		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
-	endif
-	
-	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
-	CL_KERNELS = src/caffe/greentea/cl_kernels/*.cl
-	CL_HEADERS = src/caffe/greentea/cl_headers/*.cl
-	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
-endif
-
-ifeq ($(USE_LIBDNN), 1)
-	COMMON_FLAGS += -DUSE_LIBDNN
-endif
-
-ifeq ($(USE_CUDA), 1)
-	COMMON_FLAGS += -DUSE_CUDA
-endif
-
-##############################
 # Derive include and lib directories
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
@@ -265,7 +184,7 @@ INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
 ifeq ($(USE_CUDA), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
-	LIBRARIES += cudart cublas curand
+	LIBRARIES := cudart cublas curand
 endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
@@ -358,16 +277,15 @@ endif
 # OS X:
 # clang++ instead of g++
 # libstdc++ for NVCC compatibility on OS X >= 10.9 with CUDA < 7.0
+# Current Xcode does not officially support openmp
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-	ifneq ($(CPU_ONLY), 1)
+	ifeq ($(USE_CUDA), 1)
 		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release \d' | grep -o '\d')
 		ifeq ($(shell echo | awk '{exit $(CUDA_VERSION) < 7.0;}'), 1)
 			CXXFLAGS += -stdlib=libstdc++
 			LINKFLAGS += -stdlib=libstdc++
 		endif
-		# clang throws this warning for cuda headers
-		WARNINGS += -Wno-unneeded-internal-declaration
 		# 10.11 strips DYLD_* env vars so link CUDA (rpath is available on 10.5+)
 		OSX_10_OR_LATER   := $(shell [ $(OSX_MAJOR_VERSION) -ge 10 ] && echo true)
 		OSX_10_5_OR_LATER := $(shell [ $(OSX_MINOR_VERSION) -ge 5 ] && echo true)
@@ -378,7 +296,9 @@ ifeq ($(OSX), 1)
 		endif
 	endif
 	# clang throws this warning for cuda headers
-	WARNINGS += -Wno-unneeded-internal-declaration
+	ifneq ($(CPU_ONLY), 1)
+		WARNINGS += -Wno-unneeded-internal-declaration
+	endif
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
@@ -387,7 +307,86 @@ ifeq ($(OSX), 1)
 	ORIGIN := @loader_path
 	VERSIONFLAGS += -Wl,-install_name,@rpath/$(DYNAMIC_VERSIONED_NAME_SHORT) -Wl,-rpath,$(ORIGIN)/../../build/lib
 else
+	CXXFLAGS += -fopenmp
+	LINKFLAGS += -fopenmp
 	ORIGIN := \$$ORIGIN
+endif
+
+# GreenTea backend related define, include, and lib
+ifeq ($(USE_LIBDNN), 1)
+	COMMON_FLAGS += -DUSE_LIBDNN
+endif
+
+ifeq ($(USE_CUDA), 1)
+	COMMON_FLAGS += -DUSE_CUDA
+endif
+
+ifeq ($(USE_INDEX_64),1)
+	COMMON_FLAGS += -DUSE_INDEX_64
+endif
+
+ifeq ($(USE_GREENTEA),1)
+	# Find a valid OpenCL library
+	# TODO: Validate and complete this based on different SDKs
+	ifdef OPENCL_INC
+		CLLINC = '$(OPENCL_INC)'
+	endif
+	
+	ifdef OPENCL_LIB
+		CLLIBS = '$(OPENCL_LIB)'
+	endif
+	
+	ifdef OPENCLROOT
+		CLLIBS = '$(OPENCLROOT)'
+	endif
+	
+	ifdef CUDA_PATH
+		CLLIBS = '$(CUDA_PATH)/lib/x64'
+	endif
+	
+	ifdef INTELOCLSDKROOT
+		CLLIBS = '$(INTELOCLSDKROOT)/lib/x64'
+	endif
+	
+	ifdef AMDAPPSDKROOT
+		CLLIBS = '$(AMDAPPSDKROOT)/lib/x86_64'
+		CLLINC = '$(AMDAPPSDKROOT)/include'
+	endif
+	
+	# Use AMD clBLAS
+	ifeq ($(USE_CLBLAS), 1)
+		LIBRARIES += clBLAS
+		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+	
+	# Use ISAAC clBLAS replacement
+	ifeq ($(USE_ISAAC), 1)
+		LIBRARIES += isaac
+		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+	
+	# Requires valid OpenCL library
+	LIBRARY_DIRS += $(CLLIBS)
+	# Requires valid OpenCL headers and valid ViennaCL
+	INCLUDE_DIRS += $(CLLINC) $(VIENNACL_DIR)
+	# Requires OpenCL compile library flag and librt
+	ifeq ($(OSX), 1)
+		LDFLAGS += -framework OpenCL
+	else
+		LIBRARIES += OpenCL rt
+	endif
+	# Additional flags
+	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
+	
+	# Viennacl runtime debug output
+	ifeq ($(VIENNACL_DEBUG), 1)
+		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
+	endif
+	
+	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
+	CL_KERNELS = src/caffe/greentea/cl_kernels/*.cl
+	CL_HEADERS = src/caffe/greentea/cl_headers/*.cl
+	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
 endif
 
 # Custom compiler
