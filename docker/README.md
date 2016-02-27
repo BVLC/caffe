@@ -28,15 +28,15 @@ docker run -ti caffe:cpu bash -c "cd /opt/caffe/build; make runtest"
 
 In order to get the most out of the caffe image, some more advanced `docker run` options could be used. For example, running:
 ```
-docker run -ti --volume $(pwd):/workspace caffe:cpu caffe train --solver=example_solver.prototxt
+docker run -ti --volume=$(pwd):/workspace caffe:cpu caffe train --solver=example_solver.prototxt
 ```
-will train a network defined in the `example_solver.prototxt` file in the current directory (`$(pwd)` is maped to the container volume `/workspace` using the `--volume` Docker flag).
+will train a network defined in the `example_solver.prototxt` file in the current directory (`$(pwd)` is maped to the container volume `/workspace` using the `--volume=` Docker flag).
 
 Note that docker runs all commands as root by default, and thus any output files (e.g. snapshots) generated will be owned by the root user. In order to ensure that the current user is used instead, the following command can be used:
 ```
-docker run -ti --volume $(pwd):/workspace -u $(id -u):$(id -g) caffe:cpu caffe train --solver=example_solver.prototxt
+docker run -ti --volume=$(pwd):/workspace -u $(id -u):$(id -g) caffe:cpu caffe train --solver=example_solver.prototxt
 ```
-where the `-u` Docker command line option runs the commands in the container as the specified user, and the shell command `id` is used to determine the user and group ID of the current user. Note that the Caffe docker images have `/workspace` defined as the default working directory. This can be overridden using the `--workdir` Docker command line option.
+where the `-u` Docker command line option runs the commands in the container as the specified user, and the shell command `id` is used to determine the user and group ID of the current user. Note that the Caffe docker images have `/workspace` defined as the default working directory. This can be overridden using the `--workdir=` Docker command line option.
 
 # Other use-cases
 
