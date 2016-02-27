@@ -85,7 +85,7 @@ fi
 #                              /workspace
 #   --workdir /workspace       Ensures that the docker container starts in the right
 #                              working directory
-DOCKER_OPTIONS="--rm -ti -u $CUID:$CGID --volume $(pwd):/workspace --workdir /workspace"
+DOCKER_OPTIONS="--rm -ti -u $CUID:$CGID --volume=$(pwd):/workspace --workdir=/workspace"
 DOCKER_RUN="$DOCKER_CMD run $DOCKER_OPTIONS $IMAGE"
 
 # Download the data
