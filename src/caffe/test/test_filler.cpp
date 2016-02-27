@@ -243,7 +243,7 @@ template <typename Dtype>
 class OrthogonalFillerTest : public ::testing::Test {
  protected:
   OrthogonalFillerTest()
-      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_(new Blob<Dtype>(10, 2, 3, 4)),
         filler_param_() {
     filler_param_.set_mean(0.0);
     filler_param_.set_std(1.0);
@@ -260,6 +260,22 @@ TYPED_TEST_CASE(OrthogonalFillerTest, TestDtypes);
 
 TYPED_TEST(OrthogonalFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
+  cv::Mat weights(this->blob_->shape(0), this->blob_->count(1),
+                  CV_MAKETYPE(cv::DataDepth<TypeParam>::value, 1),
+                  this->blob_->mutable_cpu_data(),
+                  this->blob_->count(1)*sizeof(TypeParam));
+  cv::Mat transposed_weights;
+  cv::transpose( weights, transposed_weights );
+  cv::Mat test_matrix = transposed_weights * weights;
+  for (int j = 0; j < test_matrix.rows; j++) {
+    for (int i = 0; i < test_matrix.cols; i++) {
+      if (i==j) {
+        EXPECT_NEAR( test_matrix.at<TypeParam>(j,i), 1.0, 0.01 );
+      } else {
+        EXPECT_NEAR( test_matrix.at<TypeParam>(j,i), 0.0, 0.01 );
+      }
+    }
+  }  
 }
 #endif
 
