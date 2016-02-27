@@ -213,12 +213,11 @@ void Solver<Dtype>::InitTestNets() {
   }
 }
 
-template<typename Dtype>
+template <typename Dtype>
 Dtype Solver<Dtype>::Step(int_tp iters) {
-  vector<Blob<Dtype>*> bottom_vec;
   const int_tp start_iter = iter_;
   const int_tp stop_iter = iter_ + iters;
-  int_tp average_loss = this->param_.average_loss();
+  int average_loss = this->param_.average_loss();
   losses_.clear();
   smoothed_loss_ = 0;
 
@@ -243,7 +242,7 @@ Dtype Solver<Dtype>::Step(int_tp iters) {
     // accumulate the loss and gradient
     Dtype loss = 0;
     for (int_tp i = 0; i < param_.iter_size(); ++i) {
-      loss += net_->ForwardBackward(bottom_vec);
+      loss += net_->ForwardBackward();
     }
     loss /= param_.iter_size();
     // average the loss across iterations for smoothed reporting
@@ -335,7 +334,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   if (param_.display() && iter_ % param_.display() == 0) {
     int average_loss = this->param_.average_loss();
     Dtype loss;
-    net_->ForwardPrefilled(&loss);
+    net_->Forward(&loss);
 
     UpdateSmoothedLoss(loss, start_iter, average_loss);
 
@@ -366,7 +365,6 @@ void Solver<Dtype>::Test(const int_tp test_net_id) {
   ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<int_tp> test_score_output_id;
-  vector<Blob<Dtype>*> bottom_vec;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
   for (int_tp i = 0; i < param_.test_iter(test_net_id); ++i) {
@@ -387,7 +385,7 @@ void Solver<Dtype>::Test(const int_tp test_net_id) {
 
     Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
-    test_net->Forward(bottom_vec, &iter_loss);
+        test_net->Forward(&iter_loss);
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }
