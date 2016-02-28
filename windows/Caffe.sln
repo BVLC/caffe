@@ -32,6 +32,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pycaffe", "pycaffe\pycaffe.
 		{CE6BBC46-9EFC-4029-9065-85A023866AFB} = {CE6BBC46-9EFC-4029-9065-85A023866AFB}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "matcaffe", "matcaffe\matcaffe.vcxproj", "{7173D611-3A7A-4F07-943A-727C6862E8D5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CE6BBC46-9EFC-4029-9065-85A023866AFB} = {CE6BBC46-9EFC-4029-9065-85A023866AFB}
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{632DD6E1-28DF-42F9-AD7F-1C1F2D38765C}"
 	ProjectSection(SolutionItems) = preProject
 		CommonSettings.props = CommonSettings.props
@@ -44,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{E2EF
 		scripts\ProtoCompile.cmd = scripts\ProtoCompile.cmd
 		scripts\PythonPostBuild.cmd = scripts\PythonPostBuild.cmd
 		scripts\PythonPreBuild.cmd = scripts\PythonPreBuild.cmd
+		scripts\MatlabPostBuild.cmd = scripts\MatlabPostBuild.cmd
+		scripts\MatlabPreBuild.cmd = scripts\MatlabPreBuild.cmd
 	EndProjectSection
 EndProject
 Global
@@ -80,6 +87,10 @@ Global
 		{38B6CE09-4B1A-4E72-A547-8A3299D8DA60}.Debug|x64.Build.0 = Debug|x64
 		{38B6CE09-4B1A-4E72-A547-8A3299D8DA60}.Release|x64.ActiveCfg = Release|x64
 		{38B6CE09-4B1A-4E72-A547-8A3299D8DA60}.Release|x64.Build.0 = Release|x64
+		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Debug|x64.ActiveCfg = Debug|x64
+		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Debug|x64.Build.0 = Debug|x64
+		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Release|x64.ActiveCfg = Release|x64
+		{7173D611-3A7A-4F07-943A-727C6862E8D5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
