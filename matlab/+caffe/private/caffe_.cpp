@@ -45,7 +45,14 @@ void mxCHECK_FILE_EXIST(const char* file) {
 static vector<shared_ptr<Solver<float> > > solvers_;
 static vector<shared_ptr<Net<float> > > nets_;
 // init_key is generated at the beginning and everytime you call reset
+#ifndef _MSC_VER  // We are not using MSVC.
 static double init_key = static_cast<double>(caffe_rng_rand());
+#else  // We are using MSVC.
+// The original statement may cause MATLAB halt on Windows when cuBLAS is used.
+// Using a negative number as a flag instead of calling caffe_rng_rand().
+// init_key will be generated in entry function: mexFunction().
+static double init_key = -1;
+#endif  // !_MSC_VER
 
 /** -----------------------------------------------------------------
  ** data conversion functions
@@ -559,6 +566,10 @@ static handler_registry handlers[] = {
  **/
 // Usage: caffe_(api_command, arg1, arg2, ...)
 void mexFunction(MEX_ARGS) {
+#ifdef _MSC_VER
+  if (init_key == -1)
+    init_key = static_cast<double>(caffe_rng_rand());
+#endif  // _MSC_VER
   mexLock();  // Avoid clearing the mex file.
   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
   // Handle input command
