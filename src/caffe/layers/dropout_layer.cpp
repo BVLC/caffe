@@ -27,6 +27,7 @@ void DropoutLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::Reshape(bottom, top);
   // Set up the cache for random number generation
+  // ReshapeLike does not work because rand_vec_ is of Dtype uint
   rand_vec_.Reshape(bottom[0]->shape());
 }
 
