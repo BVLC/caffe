@@ -73,6 +73,7 @@ def coord_map(fn):
         return None, 1, 0
     elif fn.type_name == 'Crop':
         axis, offset = crop_params(fn)
+        axis -= 1  # -1 for last non-coordinate dim.
         return axis, 1, - offset
     else:
         raise UndefinedMapException
@@ -176,9 +177,9 @@ def crop(top_from, top_to):
     """
     ax, a, b = coord_map_from_to(top_from, top_to)
     assert (a == 1).all(), 'scale mismatch on crop (a = {})'.format(a)
-    assert (b <= 0).all(), 'cannot crop negative width (b = {})'.format(b)
-    assert (np.round(b) == b).all(), 'cannot crop noninteger width ' \
+    assert (b <= 0).all(), 'cannot crop negative offset (b = {})'.format(b)
+    assert (np.round(b) == b).all(), 'cannot crop noninteger offset ' \
         '(b = {})'.format(b)
     return L.Crop(top_from, top_to,
-                  crop_param=dict(axis=ax,
-                                  crop=list(-np.round(b).astype(int))))
+                  crop_param=dict(axis=ax + 1,  # +1 for first cropping dim.
+                                  offset=list(-np.round(b).astype(int))))
