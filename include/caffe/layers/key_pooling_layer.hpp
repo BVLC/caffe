@@ -48,6 +48,7 @@ class KeyPoolingLayer : public Layer<Dtype> {
 
   // The following layer is used to perform the pooling per-key.
   PoolingLayer<Dtype> pooling_layer_;
+  Blob<Dtype> key_top_mask_;
   // Store the keys for each of the elements in the generated top.
   vector<Dtype> has_keys_;
   // Store the start and end indices for each key in the input array.

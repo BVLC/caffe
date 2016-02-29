@@ -22,7 +22,7 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   KeyPoolingLayerTest()
       : num_(5),
         blob_bottom_(new Blob<Dtype>()),
-      	blob_bottom_keys_(new Blob<Dtype>()),
+        blob_bottom_keys_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
         blob_top_mask_(new Blob<Dtype>()),
         blob_top_keys_(new Blob<Dtype>()) {}
@@ -65,6 +65,245 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_keys_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+  void CreateTopData() {
+    vector<int> shape;
+    shape.push_back(3);
+    shape.push_back(3);
+    shape.push_back(2);
+    shape.push_back(3);
+
+    // define top, meaning, partial derivatives
+    blob_top_->Reshape(shape);
+    // consider the following 3 partial derivatives
+    // [1 2 1]  ||  [3 2 6]  ||  [ 2 1 5]
+    // [1 0 1]  ||  [3 1 4]  ||  [-1 2 1]
+    // where the channel index is added to each pixel
+    // in order to produce different arrays for different channels
+    Dtype *top_diff = blob_top_->mutable_cpu_diff();
+    for (int i = 0; i < shape[1]; ++i) {
+      // diff 0
+      top_diff[blob_top_->offset(0,i,0,0)] = 1 + i;
+      top_diff[blob_top_->offset(0,i,0,1)] = 2 + i;
+      top_diff[blob_top_->offset(0,i,0,2)] = 1 + i;
+      top_diff[blob_top_->offset(0,i,1,0)] = 1 + i;
+      top_diff[blob_top_->offset(0,i,1,1)] = 0 + i;
+      top_diff[blob_top_->offset(0,i,1,2)] = 1 + i;
+      // diff 1
+      top_diff[blob_top_->offset(1,i,0,0)] = 3 + i;
+      top_diff[blob_top_->offset(1,i,0,1)] = 2 + i;
+      top_diff[blob_top_->offset(1,i,0,2)] = 6 + i;
+      top_diff[blob_top_->offset(1,i,1,0)] = 3 + i;
+      top_diff[blob_top_->offset(1,i,1,1)] = 1 + i;
+      top_diff[blob_top_->offset(1,i,1,2)] = 4 + i;
+      // diff 2
+      top_diff[blob_top_->offset(2,i,0,0)] = 2 + i;
+      top_diff[blob_top_->offset(2,i,0,1)] = 1 + i;
+      top_diff[blob_top_->offset(2,i,0,2)] = 5 + i;
+      top_diff[blob_top_->offset(2,i,1,0)] =-1 + i;
+      top_diff[blob_top_->offset(2,i,1,1)] = 2 + i;
+      top_diff[blob_top_->offset(2,i,1,2)] = 1 + i;
+    }
+    // define top_mask, needed for MAX pooling tests
+    blob_top_mask_->Reshape(shape);
+    // channel 0,1
+    // [0 0 0]  ||  [3 3 1]  ||  [5 5 5]
+    // [0 0 0]  ||  [3 2 1]  ||  [4 4 4]
+    // channel 2
+    // [0 0 0]  ||  [1 2 1]  ||  [5 4 5]
+    // [0 0 0]  ||  [3 1 3]  ||  [5 4 4]
+    Dtype *top_mask = blob_top_mask_->mutable_cpu_data();
+    for (int i = 0; i < shape[1] - 1; ++i) {
+      // mask 0
+      top_mask[blob_top_mask_->offset(0,i) + 0] = 0;
+      top_mask[blob_top_mask_->offset(0,i) + 1] = 0;
+      top_mask[blob_top_mask_->offset(0,i) + 2] = 0;
+      top_mask[blob_top_mask_->offset(0,i) + 3] = 0;
+      top_mask[blob_top_mask_->offset(0,i) + 4] = 0;
+      top_mask[blob_top_mask_->offset(0,i) + 5] = 0;
+      // mask 1
+      top_mask[blob_top_mask_->offset(1,i) + 0] = 3;
+      top_mask[blob_top_mask_->offset(1,i) + 1] = 3;
+      top_mask[blob_top_mask_->offset(1,i) + 2] = 1;
+      top_mask[blob_top_mask_->offset(1,i) + 3] = 3;
+      top_mask[blob_top_mask_->offset(1,i) + 4] = 2;
+      top_mask[blob_top_mask_->offset(1,i) + 5] = 1;
+      // mask 2
+      top_mask[blob_top_mask_->offset(2,i) + 0] = 5;
+      top_mask[blob_top_mask_->offset(2,i) + 1] = 5;
+      top_mask[blob_top_mask_->offset(2,i) + 2] = 5;
+      top_mask[blob_top_mask_->offset(2,i) + 3] = 4;
+      top_mask[blob_top_mask_->offset(2,i) + 4] = 4;
+      top_mask[blob_top_mask_->offset(2,i) + 5] = 4;
+    }
+    // mask 0
+    top_mask[blob_top_mask_->offset(0,2) + 0] = 0;
+    top_mask[blob_top_mask_->offset(0,2) + 1] = 0;
+    top_mask[blob_top_mask_->offset(0,2) + 2] = 0;
+    top_mask[blob_top_mask_->offset(0,2) + 3] = 0;
+    top_mask[blob_top_mask_->offset(0,2) + 4] = 0;
+    top_mask[blob_top_mask_->offset(0,2) + 5] = 0;
+    // mask 1
+    top_mask[blob_top_mask_->offset(1,2) + 0] = 1;
+    top_mask[blob_top_mask_->offset(1,2) + 1] = 2;
+    top_mask[blob_top_mask_->offset(1,2) + 2] = 1;
+    top_mask[blob_top_mask_->offset(1,2) + 3] = 3;
+    top_mask[blob_top_mask_->offset(1,2) + 4] = 1;
+    top_mask[blob_top_mask_->offset(1,2) + 5] = 3;
+    // mask 2
+    top_mask[blob_top_mask_->offset(2,2) + 0] = 5;
+    top_mask[blob_top_mask_->offset(2,2) + 1] = 4;
+    top_mask[blob_top_mask_->offset(2,2) + 2] = 5;
+    top_mask[blob_top_mask_->offset(2,2) + 3] = 5;
+    top_mask[blob_top_mask_->offset(2,2) + 4] = 4;
+    top_mask[blob_top_mask_->offset(2,2) + 5] = 4;
+  }
+  void TestBackwardMax() {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_kernel_size(1);
+    KeyPoolingLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+
+    vector<bool> propagate_down(1, true);
+    layer.Backward(blob_top_vec_, propagate_down, blob_bottom_vec_);
+    CheckBackwardMax();
+  }
+
+  void CheckBackwardMax() {
+    // Expected output for partial derivatives in cpu_diff, channel 0
+    // [1 2 1]  ||  [0 0 6] [0 0 0] [3 2 0]  ||  [0 0 0] [2 1 5]
+    // [1 0 1]  ||  [0 0 4] [0 1 0] [3 0 0]  || [-1 2 1] [0 0 0]
+    // channel 1
+    // [2 3 2]  ||  [0 0 7] [0 0 0] [4 3 0]  ||  [0 0 0] [3 2 6]
+    // [2 1 2]  ||  [0 0 5] [0 2 0] [4 0 0]  ||  [0 3 2] [0 0 0]
+    // channel 2
+    // [3 4 3]  ||  [5 0 8] [0 4 0] [0 0 0]  ||  [0 3 0] [4 0 7]
+    // [3 2 3]  ||  [0 3 0] [0 0 0] [5 0 6]  ||  [0 4 3] [1 0 0]
+    ASSERT_EQ(blob_bottom_keys_->shape(0), 6);
+    vector<int> shape;
+    shape.push_back(6);
+    shape.push_back(3);
+    shape.push_back(2);
+    shape.push_back(3);
+    ASSERT_EQ(blob_bottom_->shape(), shape);
+
+    const Dtype *bottom_diff = blob_bottom_->cpu_diff();
+    for (int i = 0; i < shape[1]; ++i) {
+      // output 0
+      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,0,0)], 1 + i);
+      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,0,1)], 2 + i);
+      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,0,2)], 1 + i);
+      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,1,0)], 1 + i);
+      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,1,1)], 0 + i);
+      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,1,2)], 1 + i);
+    }
+    // channel 0, output 1
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 2], 6);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 5], 4);
+    // channel 0, output 2
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 4], 1);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 5], 0);
+    // channel 0, output 3
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 0], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 1], 2);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 3], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 5], 0);
+    // channel 0, output 4
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 3],-1);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 4], 2);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 5], 1);
+    // channel 0, output 5
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 0], 2);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 1], 1);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 2], 5);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 5], 0);
+    // channel 1, output 1
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 2], 7);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 5], 5);
+    // channel 1, output 2
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 4], 2);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 5], 0);
+    // channel 1, output 3
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 0], 4);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 1], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 3], 4);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 5], 0);
+    // channel 1, output 4
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 4], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 5], 2);
+    // channel 1, output 5
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 0], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 1], 2);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 2], 6);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 5], 0);
+    // channel 2, output 1
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 0], 5);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 2], 8);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 4], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 5], 0);
+    // channel 2, output 2
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 1], 4);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 5], 0);
+    // channel 2, output 3
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 3], 5);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 5], 6);
+    // channel 2, output 4
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 0], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 1], 3);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 2], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 3], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 4], 4);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 5], 3);
+    // channel 2, output 5
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 0], 4);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 1], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 2], 7);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 3], 1);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 4], 0);
+    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 5], 0);
+  }
 
 };
 
@@ -315,26 +554,45 @@ TYPED_TEST(KeyPoolingLayerTest, TestForwardMax) {
     const Dtype *mask = this->blob_top_mask_->cpu_data();
     for (int i = 0; i < channels; ++i) {
       // output 0
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 0], 0);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 1], 0);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 2], 0);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 3], 0);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 4], 0);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i) + 5], 0);
+      // All MAX values are in image 0.
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i, 0, 0)],
+                this->blob_bottom_->offset(0, i, 0, 0));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i, 0, 1)],
+                this->blob_bottom_->offset(0, i, 0, 1));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i, 0, 2)],
+                this->blob_bottom_->offset(0, i, 0, 2));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i, 1, 0)],
+                this->blob_bottom_->offset(0, i, 1, 0));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i, 1, 1)],
+                this->blob_bottom_->offset(0, i, 1, 1));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(0, i, 1, 2)],
+                this->blob_bottom_->offset(0, i, 1, 2));
       // output 1
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 0], 3);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 1], 3);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 2], 1);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 3], 3);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 4], 2);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i) + 5], 1);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i, 0, 0)],
+                this->blob_bottom_->offset(3, i, 0, 0));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i, 0, 1)],
+                this->blob_bottom_->offset(3, i, 0, 1));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i, 0, 2)],
+                this->blob_bottom_->offset(1, i, 0, 2));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i, 1, 0)],
+                this->blob_bottom_->offset(3, i, 1, 0));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i, 1, 1)],
+                this->blob_bottom_->offset(2, i, 1, 1));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(1, i, 1, 2)],
+                this->blob_bottom_->offset(1, i, 1, 2));
       // output 2
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 0], 5);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 1], 5);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 2], 5);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 3], 4);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 4], 4);
-      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i) + 5], 4);
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i, 0, 0)],
+                this->blob_bottom_->offset(5, i, 0, 0));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i, 0, 1)],
+                this->blob_bottom_->offset(5, i, 0, 1));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i, 0, 2)],
+                this->blob_bottom_->offset(5, i, 0, 2));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i, 1, 0)],
+                this->blob_bottom_->offset(4, i, 1, 0));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i, 1, 1)],
+                this->blob_bottom_->offset(4, i, 1, 1));
+      EXPECT_EQ(mask[this->blob_top_mask_->offset(2, i, 1, 2)],
+                this->blob_bottom_->offset(4, i, 1, 2));
     }
   }
   if (this->blob_top_vec_.size() > 2) {
@@ -348,5 +606,17 @@ TYPED_TEST(KeyPoolingLayerTest, TestForwardMax) {
   }
 }
 
+TYPED_TEST(KeyPoolingLayerTest, TestBackwardMax) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_->Reshape(6, 3, 2, 3);
+  this->blob_bottom_keys_->Reshape(6, 1, 1, 1);
+  Dtype *key_data = this->blob_bottom_keys_->mutable_cpu_data();
+  key_data[0] = 0;
+  key_data[1] = 1; key_data[2] = 1; key_data[3] = 1;
+  key_data[4] = 2; key_data[5] = 2;
+
+  this->CreateTopData();
+  this->TestBackwardMax();
+}
 
 }
