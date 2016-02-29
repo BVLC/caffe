@@ -37,6 +37,19 @@ Net<Dtype>::Net(const string& param_file, Phase phase, const Net* root_net)
 }
 
 template <typename Dtype>
+Net<Dtype>::Net(const string& param_file, Phase phase,
+        const vector<string>& stages, const Net* root_net)
+    : root_net_(root_net) {
+  NetParameter param;
+  ReadNetParamsFromTextFileOrDie(param_file, &param);
+  param.mutable_state()->set_phase(phase);
+  for (int i = 0; i < stages.size(); i++) {
+    param.mutable_state()->add_stage(stages[i]);
+  }
+  Init(param);
+}
+
+template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK(Caffe::root_solver() || root_net_)
       << "root_net_ needs to be set for all non-root solvers";

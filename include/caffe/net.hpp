@@ -26,6 +26,8 @@ class Net {
   explicit Net(const NetParameter& param, const Net* root_net = NULL);
   explicit Net(const string& param_file, Phase phase,
       const Net* root_net = NULL);
+  explicit Net(const string& param_file, Phase phase,
+      const vector<string>& stages, const Net* root_net = NULL);
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.

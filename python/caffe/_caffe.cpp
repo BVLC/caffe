@@ -86,11 +86,34 @@ shared_ptr<Net<Dtype> > Net_Init(
 // Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
     string param_file, string pretrained_param_file, int phase) {
-  CheckFile(param_file);
+  shared_ptr<Net<Dtype> > net = Net_Init(param_file, phase);
   CheckFile(pretrained_param_file);
+  net->CopyTrainedLayersFrom(pretrained_param_file);
+  return net;
+}
+
+// Net constructor for passing phase and stage[s]
+shared_ptr<Net<Dtype> > Net_Init_Stages(
+    string param_file, int phase, const bp::list& python_stages) {
+  CheckFile(param_file);
+
+  vector<string> stages;
+  for (int i = 0; i < len(python_stages); i++) {
+    stages.push_back(bp::extract<string>(python_stages[i]));
+  }
 
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
-      static_cast<Phase>(phase)));
+      static_cast<Phase>(phase), stages));
+  return net;
+}
+
+// Net construct-and-load for passing phase and stage[s]
+shared_ptr<Net<Dtype> > Net_Init_Stages_Load(
+    string param_file, string pretrained_param_file,
+    int phase, const bp::list& python_stages) {
+  shared_ptr<Net<Dtype> > net = Net_Init_Stages(
+          param_file, phase, python_stages);
+  CheckFile(pretrained_param_file);
   net->CopyTrainedLayersFrom(pretrained_param_file);
   return net;
 }
@@ -226,6 +249,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     bp::no_init)
     .def("__init__", bp::make_constructor(&Net_Init))
     .def("__init__", bp::make_constructor(&Net_Init_Load))
+    .def("__init__", bp::make_constructor(&Net_Init_Stages))
+    .def("__init__", bp::make_constructor(&Net_Init_Stages_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
