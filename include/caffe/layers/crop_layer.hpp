@@ -11,8 +11,8 @@
 namespace caffe {
 
 /**
- * @brief Takes a Blob and crop it along either the width or height dimension,
- *        outputting a cropped Blob.
+ * @brief Takes a Blob and crop it, to the shape specified by the second input
+ *  Blob, across all dimensions after the specified axis.
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */

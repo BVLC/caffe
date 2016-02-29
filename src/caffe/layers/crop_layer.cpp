@@ -15,44 +15,52 @@ namespace caffe {
 template <typename Dtype>
 void CropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  // All logic that depends only on the number of dimensions is here,
+  // the rest is in Reshape because it depends on Blob size.
+  // bottom[0] supplies the data
+  // bottom[1] supplies the size
+  const CropParameter& param = this->layer_param_.crop_param();
   CHECK_EQ(bottom.size(), 2) << "Wrong number of bottom blobs.";
-  // parameter setup moved to Reshape because it depends on size.
+  int input_dim = bottom[0]->num_axes();
+  const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
+  CHECK_LT(start_axis, input_dim) << "crop axis bigger than input dim";
+  if (param.offset_size() > 1) {
+    // the number of crop values specified must be equal to the number
+    // of dimensions following axis
+    CHECK_EQ(start_axis + param.offset_size(), input_dim)
+      << "number of offset values specified must be equal to the number of "
+      << "dimensions following axis.";
+  }
 }
 
 template <typename Dtype>
 void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const CropParameter& param = this->layer_param_.crop_param();
-  // bottom[0] supplies the data
-  // bottom[1] supplies the size
   int input_dim = bottom[0]->num_axes();
-  CHECK_LT(param.axis(), input_dim) << "crop axis bigger than input dim";
+  const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
+
   // initialize all offsets to 0
   offsets = vector<int>(input_dim, 0);
   // initialize new shape to bottom[0]
   vector<int> new_shape(bottom[0]->shape());
 
-  if (param.offset_size() > 1) {
-    // the number of crop values specified must be equal to the number
-    // of dimensions following axis
-    CHECK_EQ(param.axis() + param.offset_size(), input_dim)
-      << "number of crop values specified must be equal to the number of "
-      << "dimensions following axis.";
-  }
   // apply crops
   for (int i = 0; i < input_dim; ++i) {
     int crop_offset = 0;
     int new_size    = bottom[0]->shape(i);
-    if (i >= param.axis() && param.offset_size() == 1) {
-      // if only one crop value is supplied, crop all dimensions after axis
-      // by this crop value
-      crop_offset = param.offset(0);
+    if (i >= start_axis) {
       new_size = bottom[1]->shape(i);
-    } else if (i >= param.axis() && param.offset_size() > 1) {
-      // crop values specified must be equal to the number of dimensions
-      // following axis
-      crop_offset = param.offset(i - param.axis());
-      new_size = bottom[1]->shape(i);
+
+      if (param.offset_size() == 1) {
+        // if only one crop value is supplied, crop all dimensions after axis
+        // by this crop value
+        crop_offset = param.offset(0);
+      } else if (param.offset_size() > 1) {
+        // crop values specified must be equal to the number of dimensions
+        // following axis
+        crop_offset = param.offset(i - start_axis);
+      }
     }
     // Check that the image we are cropping minus the margin is bigger
     // than the destination image.
@@ -77,7 +85,7 @@ void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
              Dtype* dest_data,
              bool is_forward) {
   if (cur_dim + 1 < top[0]->num_axes()) {
-    // We are not yet at the final dimension, call copy recursivley
+    // We are not yet at the final dimension, call copy recursively
     for (int i = 0; i < top[0]->shape(cur_dim); ++i) {
       indices[cur_dim] = i;
       crop_copy(bottom, top, offsets, indices, cur_dim+1,
