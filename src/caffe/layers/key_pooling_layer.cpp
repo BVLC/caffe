@@ -95,7 +95,7 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     per_key_bottom.Reshape(bottom_shape);
     per_key_top_mask.Reshape(top_shape);
 
-#if 0
+#ifdef USE_CPU_INPLACE
     // Set the bottom as a view into the alocated blob.
     per_key_bottom.set_cpu_data(
         &bottom[0]->mutable_cpu_data()[bottom[0]->offset(key_start_[i])]);
@@ -113,7 +113,7 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // Perform pooling on this key.
     pooling_layer_.Forward(pooling_bottoms, pooling_tops);
 
-#if 0
+#ifdef USE_CPU_INPLACE
     // TODO: Currently the max pooling layer returns indices for each image
     // channel. Update these by adding the collection and channel offsets.
     Dtype* top_mask =
@@ -146,7 +146,7 @@ void KeyPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
 
-#if 0
+#ifdef USE_CPU_INPLACE
 #else
     caffe_copy(per_key_top_mask.count(),
            per_key_top_mask.cpu_data(),
