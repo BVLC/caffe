@@ -165,14 +165,14 @@ void KeyPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                           const vector<bool>& propagate_down,
                                           const vector<Blob<Dtype>*>& bottom) {
 
-  Dtype *bottom_data = bottom[0]->mutable_cpu_data();
+  Dtype *bottom_diff = bottom[0]->mutable_cpu_diff();
   const Dtype *top_diff = top[0]->cpu_diff();
   const Dtype *mask = key_top_mask_.cpu_data();
   for (int i = 0; i < has_keys_.size(); ++i) {
     const int top_offset = top[0]->offset(i);
     for (int pi = 0; pi < key_top_mask_.count(1); ++pi) {
       const int bottom_index = mask[top_offset + pi];
-      bottom_data[bottom_index] += top_diff[top_offset + pi];
+      bottom_diff[bottom_index] += top_diff[top_offset + pi];
     }
   }
 }

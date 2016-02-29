@@ -80,30 +80,10 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     // [1 0 1]  ||  [3 1 4]  ||  [-1 2 1]
     // where the channel index is added to each pixel
     // in order to produce different arrays for different channels
-    Dtype *top_diff = blob_top_->mutable_cpu_diff();
-    for (int i = 0; i < shape[1]; ++i) {
-      // diff 0
-      top_diff[blob_top_->offset(0,i,0,0)] = 1 + i;
-      top_diff[blob_top_->offset(0,i,0,1)] = 2 + i;
-      top_diff[blob_top_->offset(0,i,0,2)] = 1 + i;
-      top_diff[blob_top_->offset(0,i,1,0)] = 1 + i;
-      top_diff[blob_top_->offset(0,i,1,1)] = 0 + i;
-      top_diff[blob_top_->offset(0,i,1,2)] = 1 + i;
-      // diff 1
-      top_diff[blob_top_->offset(1,i,0,0)] = 3 + i;
-      top_diff[blob_top_->offset(1,i,0,1)] = 2 + i;
-      top_diff[blob_top_->offset(1,i,0,2)] = 6 + i;
-      top_diff[blob_top_->offset(1,i,1,0)] = 3 + i;
-      top_diff[blob_top_->offset(1,i,1,1)] = 1 + i;
-      top_diff[blob_top_->offset(1,i,1,2)] = 4 + i;
-      // diff 2
-      top_diff[blob_top_->offset(2,i,0,0)] = 2 + i;
-      top_diff[blob_top_->offset(2,i,0,1)] = 1 + i;
-      top_diff[blob_top_->offset(2,i,0,2)] = 5 + i;
-      top_diff[blob_top_->offset(2,i,1,0)] =-1 + i;
-      top_diff[blob_top_->offset(2,i,1,1)] = 2 + i;
-      top_diff[blob_top_->offset(2,i,1,2)] = 1 + i;
-    }
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_top_);
+
     // define top_mask, needed for MAX pooling tests
     blob_top_mask_->Reshape(shape);
     // channel 0,1
@@ -113,50 +93,26 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     // [0 0 0]  ||  [1 2 1]  ||  [5 4 5]
     // [0 0 0]  ||  [3 1 3]  ||  [5 4 4]
     Dtype *top_mask = blob_top_mask_->mutable_cpu_data();
-    for (int i = 0; i < shape[1] - 1; ++i) {
-      // mask 0
-      top_mask[blob_top_mask_->offset(0,i) + 0] = 0;
-      top_mask[blob_top_mask_->offset(0,i) + 1] = 0;
-      top_mask[blob_top_mask_->offset(0,i) + 2] = 0;
-      top_mask[blob_top_mask_->offset(0,i) + 3] = 0;
-      top_mask[blob_top_mask_->offset(0,i) + 4] = 0;
-      top_mask[blob_top_mask_->offset(0,i) + 5] = 0;
-      // mask 1
-      top_mask[blob_top_mask_->offset(1,i) + 0] = 3;
-      top_mask[blob_top_mask_->offset(1,i) + 1] = 3;
-      top_mask[blob_top_mask_->offset(1,i) + 2] = 1;
-      top_mask[blob_top_mask_->offset(1,i) + 3] = 3;
-      top_mask[blob_top_mask_->offset(1,i) + 4] = 2;
-      top_mask[blob_top_mask_->offset(1,i) + 5] = 1;
-      // mask 2
-      top_mask[blob_top_mask_->offset(2,i) + 0] = 5;
-      top_mask[blob_top_mask_->offset(2,i) + 1] = 5;
-      top_mask[blob_top_mask_->offset(2,i) + 2] = 5;
-      top_mask[blob_top_mask_->offset(2,i) + 3] = 4;
-      top_mask[blob_top_mask_->offset(2,i) + 4] = 4;
-      top_mask[blob_top_mask_->offset(2,i) + 5] = 4;
+    // Collection 0
+    for (int i = 0; i < blob_top_mask_->count(1); ++i) {
+      top_mask[blob_top_mask_->offset(0) + i] = i;
     }
-    // mask 0
-    top_mask[blob_top_mask_->offset(0,2) + 0] = 0;
-    top_mask[blob_top_mask_->offset(0,2) + 1] = 0;
-    top_mask[blob_top_mask_->offset(0,2) + 2] = 0;
-    top_mask[blob_top_mask_->offset(0,2) + 3] = 0;
-    top_mask[blob_top_mask_->offset(0,2) + 4] = 0;
-    top_mask[blob_top_mask_->offset(0,2) + 5] = 0;
-    // mask 1
-    top_mask[blob_top_mask_->offset(1,2) + 0] = 1;
-    top_mask[blob_top_mask_->offset(1,2) + 1] = 2;
-    top_mask[blob_top_mask_->offset(1,2) + 2] = 1;
-    top_mask[blob_top_mask_->offset(1,2) + 3] = 3;
-    top_mask[blob_top_mask_->offset(1,2) + 4] = 1;
-    top_mask[blob_top_mask_->offset(1,2) + 5] = 3;
-    // mask 2
-    top_mask[blob_top_mask_->offset(2,2) + 0] = 5;
-    top_mask[blob_top_mask_->offset(2,2) + 1] = 4;
-    top_mask[blob_top_mask_->offset(2,2) + 2] = 5;
-    top_mask[blob_top_mask_->offset(2,2) + 3] = 5;
-    top_mask[blob_top_mask_->offset(2,2) + 4] = 4;
-    top_mask[blob_top_mask_->offset(2,2) + 5] = 4;
+    for (int i = 0; i < shape[1]; ++i) {
+      // Collection 1
+      top_mask[blob_top_mask_->offset(1,i,0,0)] = blob_bottom_->offset(1,i,0,0);
+      top_mask[blob_top_mask_->offset(1,i,0,1)] = blob_bottom_->offset(2,i,0,1);
+      top_mask[blob_top_mask_->offset(1,i,0,2)] = blob_bottom_->offset(3,i,0,2);
+      top_mask[blob_top_mask_->offset(1,i,1,0)] = blob_bottom_->offset(1,i,1,2);
+      top_mask[blob_top_mask_->offset(1,i,1,1)] = blob_bottom_->offset(2,i,1,1);
+      top_mask[blob_top_mask_->offset(1,i,1,2)] = blob_bottom_->offset(3,i,1,0);
+      // Collection 2
+      top_mask[blob_top_mask_->offset(2,i,0,0)] = blob_bottom_->offset(4,i,0,0);
+      top_mask[blob_top_mask_->offset(2,i,0,1)] = blob_bottom_->offset(5,i,0,1);
+      top_mask[blob_top_mask_->offset(2,i,0,2)] = blob_bottom_->offset(4,i,0,2);
+      top_mask[blob_top_mask_->offset(2,i,1,0)] = blob_bottom_->offset(5,i,1,2);
+      top_mask[blob_top_mask_->offset(2,i,1,1)] = blob_bottom_->offset(4,i,1,1);
+      top_mask[blob_top_mask_->offset(2,i,1,2)] = blob_bottom_->offset(5,i,1,0);
+    }
   }
   void TestBackwardMax() {
     LayerParameter layer_param;
@@ -188,121 +144,20 @@ class KeyPoolingLayerTest : public MultiDeviceTest<TypeParam> {
     shape.push_back(3);
     ASSERT_EQ(blob_bottom_->shape(), shape);
 
-    const Dtype *bottom_diff = blob_bottom_->cpu_diff();
-    for (int i = 0; i < shape[1]; ++i) {
-      // output 0
-      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,0,0)], 1 + i);
-      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,0,1)], 2 + i);
-      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,0,2)], 1 + i);
-      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,1,0)], 1 + i);
-      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,1,1)], 0 + i);
-      EXPECT_EQ(bottom_diff[blob_bottom_->offset(0,i,1,2)], 1 + i);
+    Blob<Dtype> store_diff;
+    store_diff.CopyFrom(*blob_bottom_, true, true);
+
+    Dtype *result = store_diff.mutable_cpu_data();
+    for (int i = 0; i < blob_top_mask_->count(); ++i) {
+      const int bottom_i = blob_top_mask_->cpu_data()[i];
+      const Dtype expected = blob_top_->cpu_data()[i];
+      EXPECT_EQ(result[bottom_i], expected);
+      result[bottom_i] = Dtype(0);
     }
-    // channel 0, output 1
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 2], 6);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 0) + 5], 4);
-    // channel 0, output 2
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 4], 1);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 0) + 5], 0);
-    // channel 0, output 3
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 0], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 1], 2);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 3], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 0) + 5], 0);
-    // channel 0, output 4
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 3],-1);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 4], 2);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 0) + 5], 1);
-    // channel 0, output 5
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 0], 2);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 1], 1);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 2], 5);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 0) + 5], 0);
-    // channel 1, output 1
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 2], 7);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 1) + 5], 5);
-    // channel 1, output 2
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 4], 2);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 1) + 5], 0);
-    // channel 1, output 3
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 0], 4);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 1], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 3], 4);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 1) + 5], 0);
-    // channel 1, output 4
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 4], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 1) + 5], 2);
-    // channel 1, output 5
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 0], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 1], 2);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 2], 6);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 1) + 5], 0);
-    // channel 2, output 1
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 0], 5);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 2], 8);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 4], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(1, 2) + 5], 0);
-    // channel 2, output 2
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 1], 4);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(2, 2) + 5], 0);
-    // channel 2, output 3
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 3], 5);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(3, 2) + 5], 6);
-    // channel 2, output 4
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 0], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 1], 3);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 2], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 3], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 4], 4);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(4, 2) + 5], 3);
-    // channel 2, output 5
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 0], 4);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 1], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 2], 7);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 3], 1);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 4], 0);
-    EXPECT_EQ(bottom_diff[blob_bottom_->offset(5, 2) + 5], 0);
+
+    for (int i = 0; i < store_diff.count(); ++i) {
+      EXPECT_EQ(result[i], Dtype(0));
+    }
   }
 
 };
