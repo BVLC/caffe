@@ -245,6 +245,7 @@ class Blob {
   shared_ptr<PrvMemDescr> get_prv_descriptor_diff();
 
   void Update();
+  void Update(Blob<Dtype>* difference);
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
