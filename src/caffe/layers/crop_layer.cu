@@ -100,9 +100,6 @@ template <typename Dtype>
 void CropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   std::vector<int> indices(top[0]->num_axes(), 0);
-  // This works because crop_copy uses caffe_copy which calls cudaMemcpy.
-  // My intuition is that calling this thousands of times is probably less
-  // efficient than writing a custom kernel.
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   crop_copy_gpu(bottom, top, offsets, indices, 0, bottom_data, top_data, true);
