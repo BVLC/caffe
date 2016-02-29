@@ -177,12 +177,12 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  // The input blobs to the network.
+  // DEPRECATED. See InputParameter. The input blobs to the network.
   repeated string input = 3;
-  // The shape of the input blobs.
+  // DEPRECATED. See InputParameter. The shape of the input blobs.
   repeated BlobShape input_shape = 8;
 
-  // 4D input dimensions -- deprecated.  Use "shape" instead.
+  // 4D input dimensions -- deprecated.  Use "input_shape" instead.
   // If specified, for each input blob there should be four
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
@@ -429,7 +429,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: norm_param)
+// LayerParameter next available layer-specific ID: 151 (last added: norm_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -477,7 +477,7 @@ message LayerParameter {
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
-  optional AnnotatedDataParameter annotated_data_param = 143;
+  optional AnnotatedDataParameter annotated_data_param = 144;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
@@ -485,8 +485,8 @@ message LayerParameter {
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
   optional DataParameter data_param = 107;
-  optional DetectionEvaluateParameter detection_evaluate_param = 148;
-  optional DetectionOutputParameter detection_output_param = 147;
+  optional DetectionEvaluateParameter detection_evaluate_param = 149;
+  optional DetectionOutputParameter detection_output_param = 148;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -500,17 +500,18 @@ message LayerParameter {
   optional ImageDataParameter image_data_param = 115;
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
+  optional InputParameter input_param = 143;
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
-  optional MultiBoxLossParameter multibox_loss_param = 144;
+  optional MultiBoxLossParameter multibox_loss_param = 145;
   optional MVNParameter mvn_param = 120;
-  optional NormalizeParameter norm_param = 149;
-  optional PermuteParameter permute_param = 145;
+  optional NormalizeParameter norm_param = 150;
+  optional PermuteParameter permute_param = 146;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
-  optional PriorBoxParameter prior_box_param = 146;
+  optional PriorBoxParameter prior_box_param = 147;
   optional PythonParameter python_param = 130;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
@@ -651,7 +652,7 @@ message LossParameter {
     // Outputs that receive the ignore label will NOT be ignored in computing
     // the normalization factor.
     FULL = 0;
-    // Divide by the total number of output locations that do not take the 
+    // Divide by the total number of output locations that do not take the
     // ignore_label.  If ignore_label is not set, this behaves like FULL.
     VALID = 1;
     // Divide by the batch size.
@@ -1083,6 +1084,19 @@ message InnerProductParameter {
   // all preceding axes are retained in the output.
   // May be negative to index from the end (e.g., -1 for the last axis).
   optional int32 axis = 5 [default = 1];
+  // Specify whether to transpose the weight matrix or not.
+  // If transpose == true, any operations will be performed on the transpose
+  // of the weight matrix. The weight matrix itself is not going to be transposed
+  // but rather the transfer flag of operations will be toggled accordingly.
+  optional bool transpose = 6 [default = false];
+}
+
+message InputParameter {
+  // This layer produces N >= 1 top blob(s) to be assigned manually.
+  // Define N shapes to set a shape for each top.
+  // Define 1 shape to set the same shape for every top.
+  // Define no shape to defer to reshaping manually.
+  repeated BlobShape shape = 1;
 }
 
 // Message that stores parameters used by LogLayer
