@@ -540,7 +540,7 @@ template&lt;typename Dtype &gt; </div>
 
 <p>Change the dimensions of the blob, allocating new memory if necessary. </p>
 <p>This function can be called both to create an initial allocation of memory, and to adjust the dimensions of a top blob during <a class="el" href="classcaffe_1_1Layer.html#ad9d391b972c769c0ebee34ca6d1c973e" title="Adjust the shapes of top blobs and internal buffers to accommodate the shapes of the bottom blobs...">Layer::Reshape</a> or <a class="el" href="classcaffe_1_1Layer.html#aa5fc9ddb31b58958653372bdaaccde94" title="Given the bottom blobs, compute the top blobs and the loss. ">Layer::Forward</a>. When changing the size of blob, memory will only be reallocated if sufficient memory does not already exist, and excess memory will never be freed.</p>
-<p>Note that reshaping an input blob and immediately calling <a class="el" href="classcaffe_1_1Net.html#a7a1a6d17347106dd1284b1b6d28cb4e9">Net::Backward</a> is an error; either <a class="el" href="classcaffe_1_1Net.html#ad12d1ab8e1beb2e407e82454b174f83a" title="Run forward using a set of bottom blobs, and return the result. ">Net::Forward</a> or <a class="el" href="classcaffe_1_1Net.html#a8417af82aa83be45d39aab735bdead1d" title="Reshape all layers from bottom to top. ">Net::Reshape</a> need to be called to propagate the new input shape to higher layers. </p>
+<p>Note that reshaping an input blob and immediately calling <a class="el" href="classcaffe_1_1Net.html#a7a1a6d17347106dd1284b1b6d28cb4e9">Net::Backward</a> is an error; either <a class="el" href="classcaffe_1_1Net.html#a6f6cf9d40637f7576828d856bb1b1826" title="Run Forward and return the result. ">Net::Forward</a> or <a class="el" href="classcaffe_1_1Net.html#a8417af82aa83be45d39aab735bdead1d" title="Reshape all layers from bottom to top. ">Net::Reshape</a> need to be called to propagate the new input shape to higher layers. </p>
 
 </div>
 </div>
@@ -627,7 +627,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Feb 24 2016 17:27:01 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 1 2016 15:30:50 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>

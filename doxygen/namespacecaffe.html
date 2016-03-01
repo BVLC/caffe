@@ -235,6 +235,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1InnerProductLayer.html">InnerProductLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Also known as a "fully-connected" layer, computes an inner product with a set of learned weights, and (optionally) adds biases.  <a href="classcaffe_1_1InnerProductLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1InputLayer.html">InputLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides data to the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> by assigning tops directly.  <a href="classcaffe_1_1InputLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1InternalThread.html">InternalThread</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html">Layer</a></td></tr>
@@ -847,6 +850,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeV1LayerParamet
 <tr class="memitem:a0c08684e0bf64620ba505b112b27067b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c08684e0bf64620ba505b112b27067b"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeV1LayerType</b> (const V1LayerParameter_LayerType type)</td></tr>
 <tr class="separator:a0c08684e0bf64620ba505b112b27067b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a5f01c2593233a787c5170dbfc20e3f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a5f01c2593233a787c5170dbfc20e3f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>NetNeedsInputUpgrade</b> (const NetParameter &amp;net_param)</td></tr>
+<tr class="separator:a3a5f01c2593233a787c5170dbfc20e3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f8203b685d821d3502f087a01ea23e4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2f8203b685d821d3502f087a01ea23e4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>UpgradeNetInput</b> (NetParameter *net_param)</td></tr>
+<tr class="separator:a2f8203b685d821d3502f087a01ea23e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94c0499a4e250e932475b98a0ed5aba6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94c0499a4e250e932475b98a0ed5aba6"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>SolverNeedsTypeUpgrade</b> (const SolverParameter &amp;solver_param)</td></tr>
 <tr class="separator:a94c0499a4e250e932475b98a0ed5aba6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1088,6 +1097,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a1c899720e9a6b5210ef8eae27530243f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c899720e9a6b5210ef8eae27530243f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (InnerProduct)</td></tr>
 <tr class="separator:a1c899720e9a6b5210ef8eae27530243f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9ba89bc413fa8daedd851b7a2cf5130"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9ba89bc413fa8daedd851b7a2cf5130"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1InputLayer.html">InputLayer</a>)</td></tr>
+<tr class="separator:ac9ba89bc413fa8daedd851b7a2cf5130"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe2a47b4dfeaff782d02928635646224"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe2a47b4dfeaff782d02928635646224"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Input)</td></tr>
+<tr class="separator:abe2a47b4dfeaff782d02928635646224"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0660db69c30c83d6ab786a31cb5d1601"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0660db69c30c83d6ab786a31cb5d1601"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1LogLayer.html">LogLayer</a>)</td></tr>
 <tr class="separator:a0660db69c30c83d6ab786a31cb5d1601"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1604,7 +1619,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Feb 24 2016 17:26:59 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 1 2016 15:30:48 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>

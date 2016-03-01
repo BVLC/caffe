@@ -115,9 +115,14 @@ Public Member Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ae9fcfaabc89165d6c0cb4b14b4c6b584">Init</a> (const NetParameter &amp;param)</td></tr>
 <tr class="memdesc:ae9fcfaabc89165d6c0cb4b14b4c6b584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a network with a NetParameter. <br /></td></tr>
 <tr class="separator:ae9fcfaabc89165d6c0cb4b14b4c6b584"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e2fd4143799072b500bc8ced53353cd"><td class="memItemLeft" align="right" valign="top">const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a7e2fd4143799072b500bc8ced53353cd">ForwardPrefilled</a> (Dtype *loss=NULL)</td></tr>
-<tr class="memdesc:a7e2fd4143799072b500bc8ced53353cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run Forward with the input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>s already fed separately.  <a href="#a7e2fd4143799072b500bc8ced53353cd">More...</a><br /></td></tr>
-<tr class="separator:a7e2fd4143799072b500bc8ced53353cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f6cf9d40637f7576828d856bb1b1826"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f6cf9d40637f7576828d856bb1b1826"></a>
+const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a6f6cf9d40637f7576828d856bb1b1826">Forward</a> (Dtype *loss=NULL)</td></tr>
+<tr class="memdesc:a6f6cf9d40637f7576828d856bb1b1826"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run Forward and return the result. <br /></td></tr>
+<tr class="separator:a6f6cf9d40637f7576828d856bb1b1826"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12f8c6cf9f453cdbc9fa8149986303c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12f8c6cf9f453cdbc9fa8149986303c6"></a>
+const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a12f8c6cf9f453cdbc9fa8149986303c6">ForwardPrefilled</a> (Dtype *loss=NULL)</td></tr>
+<tr class="memdesc:a12f8c6cf9f453cdbc9fa8149986303c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">DEPRECATED; use <a class="el" href="classcaffe_1_1Net.html#a6f6cf9d40637f7576828d856bb1b1826" title="Run Forward and return the result. ">Forward()</a> instead. <br /></td></tr>
+<tr class="separator:a12f8c6cf9f453cdbc9fa8149986303c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5354c03371d4cb7b18988561790e676"><td class="memItemLeft" align="right" valign="top">Dtype&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ae5354c03371d4cb7b18988561790e676">ForwardFromTo</a> (int start, int end)</td></tr>
 <tr class="separator:ae5354c03371d4cb7b18988561790e676"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7da4abdebcea6a65ca61ef6afb61665f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7da4abdebcea6a65ca61ef6afb61665f"></a>
@@ -128,12 +133,8 @@ Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>ForwardTo</b> (int e
 <tr class="separator:a9e78782abd9080626ad13daac3abf896"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad12d1ab8e1beb2e407e82454b174f83a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad12d1ab8e1beb2e407e82454b174f83a"></a>
 const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ad12d1ab8e1beb2e407e82454b174f83a">Forward</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, Dtype *loss=NULL)</td></tr>
-<tr class="memdesc:ad12d1ab8e1beb2e407e82454b174f83a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run forward using a set of bottom blobs, and return the result. <br /></td></tr>
+<tr class="memdesc:ad12d1ab8e1beb2e407e82454b174f83a"><td class="mdescLeft">&#160;</td><td class="mdescRight">DEPRECATED; set input blobs then use <a class="el" href="classcaffe_1_1Net.html#a6f6cf9d40637f7576828d856bb1b1826" title="Run Forward and return the result. ">Forward()</a> instead. <br /></td></tr>
 <tr class="separator:ad12d1ab8e1beb2e407e82454b174f83a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad97c5e2984017e0a893a5c396fc8beb8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad97c5e2984017e0a893a5c396fc8beb8"></a>
-string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ad97c5e2984017e0a893a5c396fc8beb8">Forward</a> (const string &amp;input_blob_protos, Dtype *loss=NULL)</td></tr>
-<tr class="memdesc:ad97c5e2984017e0a893a5c396fc8beb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run forward using a serialized BlobProtoVector and return the result as a serialized BlobProtoVector. <br /></td></tr>
-<tr class="separator:ad97c5e2984017e0a893a5c396fc8beb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d251c397f812a6d8e162db3a82bb198"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d251c397f812a6d8e162db3a82bb198"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a3d251c397f812a6d8e162db3a82bb198">ClearParamDiffs</a> ()</td></tr>
 <tr class="memdesc:a3d251c397f812a6d8e162db3a82bb198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zeroes out the diffs of all net parameters. Should be run before Backward. <br /></td></tr>
@@ -152,9 +153,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>BackwardTo</b> (int e
 <tr class="memitem:a8417af82aa83be45d39aab735bdead1d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a8417af82aa83be45d39aab735bdead1d">Reshape</a> ()</td></tr>
 <tr class="memdesc:a8417af82aa83be45d39aab735bdead1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reshape all layers from bottom to top.  <a href="#a8417af82aa83be45d39aab735bdead1d">More...</a><br /></td></tr>
 <tr class="separator:a8417af82aa83be45d39aab735bdead1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac735151133dcdc9e4ece8eca6c8c3835"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac735151133dcdc9e4ece8eca6c8c3835"></a>
-Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>ForwardBackward</b> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom)</td></tr>
-<tr class="separator:ac735151133dcdc9e4ece8eca6c8c3835"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ff72974f0f1ba2edc2cb0f76fd41b56"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ff72974f0f1ba2edc2cb0f76fd41b56"></a>
+Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>ForwardBackward</b> ()</td></tr>
+<tr class="separator:a3ff72974f0f1ba2edc2cb0f76fd41b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a2544cefc59d6cbe1bf634f5d5be1c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a2544cefc59d6cbe1bf634f5d5be1c5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a8a2544cefc59d6cbe1bf634f5d5be1c5">Update</a> ()</td></tr>
 <tr class="memdesc:a8a2544cefc59d6cbe1bf634f5d5be1c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the network weights based on the diff values computed. <br /></td></tr>
@@ -316,7 +317,7 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a3aab736bc72b29c84dc3ee765ee453c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3aab736bc72b29c84dc3ee765ee453c4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a3aab736bc72b29c84dc3ee765ee453c4">AppendTop</a> (const NetParameter &amp;param, const int layer_id, const int top_id, set&lt; string &gt; *available_blobs, map&lt; string, int &gt; *blob_name_to_idx)</td></tr>
-<tr class="memdesc:a3aab736bc72b29c84dc3ee765ee453c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a new input or top blob to the net. <br /></td></tr>
+<tr class="memdesc:a3aab736bc72b29c84dc3ee765ee453c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a new top blob to the net. <br /></td></tr>
 <tr class="separator:a3aab736bc72b29c84dc3ee765ee453c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ef3482f4e882e437c81affa77d91f32"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ef3482f4e882e437c81affa77d91f32"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a6ef3482f4e882e437c81affa77d91f32">AppendBottom</a> (const NetParameter &amp;param, const int layer_id, const int bottom_id, set&lt; string &gt; *available_blobs, map&lt; string, int &gt; *blob_name_to_idx)</td></tr>
@@ -326,10 +327,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a1fce7e829c10750543f3a79819d49393">AppendParam</a> (const NetParameter &amp;param, const int layer_id, const int param_id)</td></tr>
 <tr class="memdesc:a1fce7e829c10750543f3a79819d49393"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a new parameter blob to the net. <br /></td></tr>
 <tr class="separator:a1fce7e829c10750543f3a79819d49393"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad9ca7b6ee2615e493f62dc23d340818d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9ca7b6ee2615e493f62dc23d340818d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ad9ca7b6ee2615e493f62dc23d340818d">InputDebugInfo</a> (const int layer_id)</td></tr>
-<tr class="memdesc:ad9ca7b6ee2615e493f62dc23d340818d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper for displaying debug info in Forward about input Blobs. <br /></td></tr>
-<tr class="separator:ad9ca7b6ee2615e493f62dc23d340818d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3751d6095c3d4f4384c52ad80bbd0d88"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3751d6095c3d4f4384c52ad80bbd0d88"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a3751d6095c3d4f4384c52ad80bbd0d88">ForwardDebugInfo</a> (const int layer_id)</td></tr>
 <tr class="memdesc:a3751d6095c3d4f4384c52ad80bbd0d88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper for displaying debug info in Forward. <br /></td></tr>
@@ -517,27 +514,6 @@ template&lt;typename Dtype &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a7e2fd4143799072b500bc8ced53353cd"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Dtype &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp; <a class="el" href="classcaffe_1_1Net.html">caffe::Net</a>&lt; Dtype &gt;::ForwardPrefilled </td>
-          <td>(</td>
-          <td class="paramtype">Dtype *&#160;</td>
-          <td class="paramname"><em>loss</em> = <code>NULL</code></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Run Forward with the input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>s already fed separately. </p>
-<p>You can get the input blobs using input_blobs(). </p>
-
-</div>
-</div>
 <a class="anchor" id="a8417af82aa83be45d39aab735bdead1d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -655,7 +631,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Feb 24 2016 17:27:06 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 1 2016 15:30:55 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>
