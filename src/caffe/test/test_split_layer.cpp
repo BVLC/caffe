@@ -886,67 +886,6 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
   this->RunInsertionTest(input_proto, expected_output_proto);
 }
 
-TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
-  const string& input_proto =
-      "name: 'TestNetwork' "
-      "input: 'data' "
-      "input_dim: 10 "
-      "input_dim: 3 "
-      "input_dim: 227 "
-      "input_dim: 227 "
-      "layer { "
-      "  name: 'innerprod1' "
-      "  type: 'InnerProduct' "
-      "  bottom: 'data' "
-      "  top: 'innerprod1' "
-      "} "
-      "layer { "
-      "  name: 'innerprod2' "
-      "  type: 'InnerProduct' "
-      "  bottom: 'data' "
-      "  top: 'innerprod2' "
-      "} "
-      "layer { "
-      "  name: 'loss' "
-      "  type: 'EuclideanLoss' "
-      "  bottom: 'innerprod1' "
-      "  bottom: 'innerprod2' "
-      "} ";
-  const string& expected_output_proto =
-      "name: 'TestNetwork' "
-      "input: 'data' "
-      "input_dim: 10 "
-      "input_dim: 3 "
-      "input_dim: 227 "
-      "input_dim: 227 "
-      "layer { "
-      "  name: 'data_input_0_split' "
-      "  type: 'Split' "
-      "  bottom: 'data' "
-      "  top: 'data_input_0_split_0' "
-      "  top: 'data_input_0_split_1' "
-      "} "
-      "layer { "
-      "  name: 'innerprod1' "
-      "  type: 'InnerProduct' "
-      "  bottom: 'data_input_0_split_0' "
-      "  top: 'innerprod1' "
-      "} "
-      "layer { "
-      "  name: 'innerprod2' "
-      "  type: 'InnerProduct' "
-      "  bottom: 'data_input_0_split_1' "
-      "  top: 'innerprod2' "
-      "} "
-      "layer { "
-      "  name: 'loss' "
-      "  type: 'EuclideanLoss' "
-      "  bottom: 'innerprod1' "
-      "  bottom: 'innerprod2' "
-      "} ";
-  this->RunInsertionTest(input_proto, expected_output_proto);
-}
-
 TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
   const string& input_proto =
       "name: 'TestNetwork' "
