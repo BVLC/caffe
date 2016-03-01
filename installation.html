@@ -119,6 +119,7 @@ There are several implementations of this library. The choice is yours:</p>
   <li><a href="http://software.intel.com/en-us/intel-mkl">Intel MKL</a>: commercial and optimized for Intel CPUs, with a free trial and <a href="http://software.intel.com/en-us/intel-education-offerings">student</a> licenses.
     <ol>
       <li>Install MKL.</li>
+      <li>Set up MKL environment (Details: <a href="https://software.intel.com/en-us/node/528499">Linux</a>, <a href="https://software.intel.com/en-us/node/528659">OS X</a>). Example: <em>source /opt/intel/mkl/bin/mklvars.sh intel64</em></li>
       <li>Set <code class="highlighter-rouge">BLAS := mkl</code> in <code class="highlighter-rouge">Makefile.config</code></li>
     </ol>
   </li>
