@@ -188,6 +188,10 @@ template<> void Blob<int_tp>::Update() {
   NOT_IMPLEMENTED;
 }
 
+template <> void Blob<bool>::Update() {
+  NOT_IMPLEMENTED;
+}
+
 template<typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
@@ -242,7 +246,12 @@ template<> int_tp Blob<int_tp>::asum_data() const {
   return 0;
 }
 
-template<typename Dtype>
+template <> bool Blob<bool>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) {
     return (Dtype)0;
@@ -289,7 +298,12 @@ template<> int_tp Blob<int_tp>::asum_diff() const {
   return 0;
 }
 
-template<typename Dtype>
+template <> bool Blob<bool>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) {
     return 0;
@@ -336,7 +350,12 @@ template<> int_tp Blob<int_tp>::sumsq_data() const {
   return 0;
 }
 
-template<typename Dtype>
+template <> bool Blob<bool>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq;
   const Dtype* data;
@@ -386,7 +405,12 @@ template<> int_tp Blob<int_tp>::sumsq_diff() const {
   return 0;
 }
 
-template<typename Dtype>
+template <> bool Blob<bool>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+
+template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_diff() const {
   Dtype sumsq;
   const Dtype* diff;
@@ -434,7 +458,11 @@ template<> void Blob<int_tp>::scale_data(int_tp scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype>
+template <> void Blob<bool>::scale_data(bool scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
 void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
   if (!data_) {
@@ -480,7 +508,11 @@ template<> void Blob<int_tp>::scale_diff(int_tp scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype>
+template <> void Blob<bool>::scale_diff(bool scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template <typename Dtype>
 void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   Dtype* diff;
   if (!diff_) {
@@ -705,6 +737,7 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
 INSTANTIATE_CLASS(Blob);
 template class Blob<int_tp>;
 template class Blob<uint_tp>;
+template class Blob<bool>;
 
 }  // namespace caffe
 

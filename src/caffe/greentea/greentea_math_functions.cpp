@@ -147,6 +147,9 @@ template void greentea_copy<float>(const int_tp N, const cl_mem X,
 template void greentea_copy<double>(const int_tp N, const cl_mem X,
                                     const int_tp offX, double* Y,
                                     viennacl::ocl::context *ctx);
+template void greentea_copy<bool>(const int_tp N, const cl_mem X,
+                                    const int_tp offX, bool* Y,
+                                    viennacl::ocl::context *ctx);
 template void greentea_copy<int_tp>(const int_tp N, const int_tp* X, cl_mem Y,
                                     const int_tp offY,
                                     viennacl::ocl::context *ctx);
@@ -157,6 +160,9 @@ template void greentea_copy<float>(const int_tp N, const float* X, cl_mem Y,
                                    const int_tp offY,
                                    viennacl::ocl::context *ctx);
 template void greentea_copy<double>(const int_tp N, const double* X, cl_mem Y,
+                                    const int_tp offY,
+                                    viennacl::ocl::context *ctx);
+template void greentea_copy<bool>(const int_tp N, const bool* X, cl_mem Y,
                                     const int_tp offY,
                                     viennacl::ocl::context *ctx);
 template void greentea_copy<int_tp>(const int_tp N, const cl_mem X,
