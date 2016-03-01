@@ -16,6 +16,7 @@ using std::ofstream;
 using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
+  FLAGS_alsologtostderr = 1;  // Print output to stderr (while still logging)
   ::google::InitGoogleLogging(argv[0]);
   if (argc != 3) {
     LOG(ERROR) << "Usage: upgrade_solver_proto_text "
@@ -45,6 +46,6 @@ int main(int argc, char** argv) {
   // Save new format prototxt.
   WriteProtoToTextFile(solver_param, argv[2]);
 
-  LOG(ERROR) << "Wrote upgraded SolverParameter text proto to " << argv[2];
+  LOG(INFO) << "Wrote upgraded SolverParameter text proto to " << argv[2];
   return !success;
 }
