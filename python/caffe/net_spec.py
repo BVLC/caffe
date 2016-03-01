@@ -178,14 +178,14 @@ class NetSpec(object):
     def __setattr__(self, name, value):
         self.tops[name] = value
 
-    def __setitem__(self, name, value):
-        self.tops[name] = value
-
     def __getattr__(self, name):
         return self.tops[name]
 
-    def __getitem__(self, name):
-        return self.tops[name]
+    def __setitem__(self, key, value):
+        self.__setattr__(key, value)
+
+    def __getitem__(self, item):
+        return self.__getattr__(item)
 
     def __delitem__(self, name):
         del self.tops[name]
