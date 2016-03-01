@@ -19,7 +19,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(detection_output_param.has_num_classes()) << "Must specify num_classes";
   num_classes_ = detection_output_param.num_classes();
   share_location_ = detection_output_param.share_location();
-  loc_classes_ = share_location_ ? 1 : num_classes_;
+  num_loc_classes_ = share_location_ ? 1 : num_classes_;
   background_label_id_ = detection_output_param.background_label_id();
   code_type_ = detection_output_param.code_type();
   keep_top_k_ = detection_output_param.keep_top_k();
@@ -127,7 +127,7 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   num_priors_ = bottom[2]->height() / 4;
-  CHECK_EQ(num_priors_ * loc_classes_ * 4, bottom[0]->channels())
+  CHECK_EQ(num_priors_ * num_loc_classes_ * 4, bottom[0]->channels())
       << "Number of priors must match number of location predictions.";
   CHECK_EQ(num_priors_ * num_classes_, bottom[1]->channels())
       << "Number of priors must match number of confidence predictions.";
@@ -152,8 +152,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
 
   // Retrieve all location predictions.
   vector<LabelBBox> all_loc_preds;
-  GetLocPredictions(loc_data, num, num_priors_, loc_classes_, share_location_,
-                    &all_loc_preds);
+  GetLocPredictions(loc_data, num, num_priors_, num_loc_classes_,
+                    share_location_, &all_loc_preds);
 
   // Retrieve all confidences.
   vector<map<int, vector<float> > > all_conf_scores;
@@ -172,7 +172,7 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   for (int i = 0; i < num; ++i) {
     // Decode predictions into bboxes.
     LabelBBox decode_bboxes;
-    for (int c = 0; c < loc_classes_; ++c) {
+    for (int c = 0; c < num_loc_classes_; ++c) {
       int label = share_location_ ? -1 : c;
       if (label == background_label_id_) {
         // Ignore background class.
@@ -322,6 +322,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     }
   }
 }
+
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(DetectionOutputLayer, Forward);
+#endif
 
 INSTANTIATE_CLASS(DetectionOutputLayer);
 REGISTER_LAYER_CLASS(DetectionOutput);

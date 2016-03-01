@@ -84,9 +84,15 @@ void FillBBoxes(vector<NormalizedBBox>* gt_bboxes,
   pred_bboxes->push_back(bbox);
 }
 
-class BBoxUtilTest : public ::testing::Test {};
+template <typename TypeParam>
+class BBoxUtilTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+};
 
-TEST_F(BBoxUtilTest, TestIntersectBBox) {
+class CPUBBoxUtilTest : public BBoxUtilTest<CPUDevice<float> > {
+};
+
+TEST_F(CPUBBoxUtilTest, TestIntersectBBox) {
   NormalizedBBox bbox_ref;
   bbox_ref.set_xmin(0.2);
   bbox_ref.set_ymin(0.3);
@@ -130,7 +136,7 @@ TEST_F(BBoxUtilTest, TestIntersectBBox) {
   EXPECT_NEAR(bbox_intersect.ymax(), 0, eps);
 }
 
-TEST_F(BBoxUtilTest, TestBBoxSize) {
+TEST_F(CPUBBoxUtilTest, TestBBoxSize) {
   NormalizedBBox bbox;
   float size;
 
@@ -159,7 +165,7 @@ TEST_F(BBoxUtilTest, TestBBoxSize) {
   EXPECT_NEAR(size, 0., eps);
 }
 
-TEST_F(BBoxUtilTest, TestScaleBBox) {
+TEST_F(CPUBBoxUtilTest, TestScaleBBox) {
   NormalizedBBox bbox;
   bbox.set_xmin(0.21);
   bbox.set_ymin(0.32);
@@ -187,7 +193,7 @@ TEST_F(BBoxUtilTest, TestScaleBBox) {
   EXPECT_NEAR(scale_bbox.size(), 0.0264, eps);
 }
 
-TEST_F(BBoxUtilTest, TestClipBBox) {
+TEST_F(CPUBBoxUtilTest, TestClipBBox) {
   NormalizedBBox bbox;
   NormalizedBBox clip_bbox;
 
@@ -214,7 +220,7 @@ TEST_F(BBoxUtilTest, TestClipBBox) {
   EXPECT_NEAR(clip_bbox.size(), 1., eps);
 }
 
-TEST_F(BBoxUtilTest, TestJaccardOverlap) {
+TEST_F(CPUBBoxUtilTest, TestJaccardOverlap) {
   NormalizedBBox bbox1;
   bbox1.set_xmin(0.2);
   bbox1.set_ymin(0.3);
@@ -249,7 +255,7 @@ TEST_F(BBoxUtilTest, TestJaccardOverlap) {
   EXPECT_NEAR(overlap, 0., eps);
 }
 
-TEST_F(BBoxUtilTest, TestEncodeBBoxCorner) {
+TEST_F(CPUBBoxUtilTest, TestEncodeBBoxCorner) {
   NormalizedBBox prior_bbox;
   prior_bbox.set_xmin(0.1);
   prior_bbox.set_ymin(0.1);
@@ -273,7 +279,7 @@ TEST_F(BBoxUtilTest, TestEncodeBBoxCorner) {
   EXPECT_NEAR(encode_bbox.ymax(), 2, eps);
 }
 
-TEST_F(BBoxUtilTest, TestEncodeBBoxCenterSize) {
+TEST_F(CPUBBoxUtilTest, TestEncodeBBoxCenterSize) {
   NormalizedBBox prior_bbox;
   prior_bbox.set_xmin(0.1);
   prior_bbox.set_ymin(0.1);
@@ -297,7 +303,7 @@ TEST_F(BBoxUtilTest, TestEncodeBBoxCenterSize) {
   EXPECT_NEAR(encode_bbox.ymax(), log(3./2), eps);
 }
 
-TEST_F(BBoxUtilTest, TestDecodeBBoxCorner) {
+TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
   NormalizedBBox prior_bbox;
   prior_bbox.set_xmin(0.1);
   prior_bbox.set_ymin(0.1);
@@ -321,7 +327,7 @@ TEST_F(BBoxUtilTest, TestDecodeBBoxCorner) {
   EXPECT_NEAR(decode_bbox.ymax(), 0.5, eps);
 }
 
-TEST_F(BBoxUtilTest, TestDecodeBBoxCenterSize) {
+TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
   NormalizedBBox prior_bbox;
   prior_bbox.set_xmin(0.1);
   prior_bbox.set_ymin(0.1);
@@ -345,7 +351,7 @@ TEST_F(BBoxUtilTest, TestDecodeBBoxCenterSize) {
   EXPECT_NEAR(decode_bbox.ymax(), 0.5, eps);
 }
 
-TEST_F(BBoxUtilTest, TestDecodeBBoxesCorner) {
+TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCorner) {
   vector<NormalizedBBox> prior_bboxes;
   vector<vector<float> > prior_variances;
   vector<NormalizedBBox> bboxes;
@@ -381,7 +387,43 @@ TEST_F(BBoxUtilTest, TestDecodeBBoxesCorner) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestMatchBBoxLableOneBipartite) {
+TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
+  vector<NormalizedBBox> prior_bboxes;
+  vector<vector<float> > prior_variances;
+  vector<NormalizedBBox> bboxes;
+  for (int i = 1; i < 5; ++i) {
+    NormalizedBBox prior_bbox;
+    prior_bbox.set_xmin(0.1*i);
+    prior_bbox.set_ymin(0.1*i);
+    prior_bbox.set_xmax(0.1*i + 0.2);
+    prior_bbox.set_ymax(0.1*i + 0.2);
+    prior_bboxes.push_back(prior_bbox);
+
+    vector<float> prior_variance(4, 0.1);
+    prior_variances.push_back(prior_variance);
+
+    NormalizedBBox bbox;
+    bbox.set_xmin(0);
+    bbox.set_ymin(0.75);
+    bbox.set_xmax(log(2.));
+    bbox.set_ymax(log(3./2));
+    bboxes.push_back(bbox);
+  }
+
+  CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
+  vector<NormalizedBBox> decode_bboxes;
+  DecodeBBoxes(prior_bboxes, prior_variances, code_type,
+               bboxes, &decode_bboxes);
+  EXPECT_EQ(decode_bboxes.size(), 4);
+  for (int i = 1; i < 5; ++i) {
+    EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].ymin(), 0.2 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].xmax(), 0.4 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].ymax(), 0.5 + (i - 1) * 0.1, eps);
+  }
+}
+
+TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableOneBipartite) {
   vector<NormalizedBBox> gt_bboxes;
   vector<NormalizedBBox> pred_bboxes;
 
@@ -412,7 +454,7 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableOneBipartite) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestMatchBBoxLableAllBipartite) {
+TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllBipartite) {
   vector<NormalizedBBox> gt_bboxes;
   vector<NormalizedBBox> pred_bboxes;
 
@@ -447,7 +489,7 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllBipartite) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestMatchBBoxLableOnePerPrediction) {
+TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableOnePerPrediction) {
   vector<NormalizedBBox> gt_bboxes;
   vector<NormalizedBBox> pred_bboxes;
 
@@ -478,7 +520,7 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableOnePerPrediction) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPrediction) {
+TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllPerPrediction) {
   vector<NormalizedBBox> gt_bboxes;
   vector<NormalizedBBox> pred_bboxes;
 
@@ -511,7 +553,7 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPrediction) {
   EXPECT_NEAR(match_overlaps[5], 0, eps);
 }
 
-TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
+TEST_F(CPUBBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
   vector<NormalizedBBox> gt_bboxes;
   vector<NormalizedBBox> pred_bboxes;
 
@@ -544,7 +586,7 @@ TEST_F(BBoxUtilTest, TestMatchBBoxLableAllPerPredictionEx) {
   EXPECT_NEAR(match_overlaps[5], 0., eps);
 }
 
-TEST_F(BBoxUtilTest, TestGetGroundTruth) {
+TEST_F(CPUBBoxUtilTest, TestGetGroundTruth) {
   const int num_gt = 4;
   Blob<float> gt_blob(1, 1, num_gt, 8);
   float* gt_data = gt_blob.mutable_cpu_data();
@@ -618,7 +660,7 @@ TEST_F(BBoxUtilTest, TestGetGroundTruth) {
   EXPECT_NEAR(all_gt_bboxes[1][0].size(), 0.04, eps);
 }
 
-TEST_F(BBoxUtilTest, TestGetGroundTruthLabelBBox) {
+TEST_F(CPUBBoxUtilTest, TestGetGroundTruthLabelBBox) {
   const int num_gt = 4;
   Blob<float> gt_blob(1, 1, num_gt, 8);
   float* gt_data = gt_blob.mutable_cpu_data();
@@ -692,7 +734,7 @@ TEST_F(BBoxUtilTest, TestGetGroundTruthLabelBBox) {
   EXPECT_NEAR(all_gt_bboxes[1].find(2)->second[0].size(), 0.04, eps);
 }
 
-TEST_F(BBoxUtilTest, TestGetLocPredictionsShared) {
+TEST_F(CPUBBoxUtilTest, TestGetLocPredictionsShared) {
   const int num = 2;
   const int num_preds_per_class = 2;
   const int num_loc_classes = 1;
@@ -734,7 +776,7 @@ TEST_F(BBoxUtilTest, TestGetLocPredictionsShared) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestGetLocPredictionsUnShared) {
+TEST_F(CPUBBoxUtilTest, TestGetLocPredictionsUnShared) {
   const int num = 2;
   const int num_preds_per_class = 2;
   const int num_loc_classes = 2;
@@ -782,7 +824,7 @@ TEST_F(BBoxUtilTest, TestGetLocPredictionsUnShared) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestGetConfidenceScores) {
+TEST_F(CPUBBoxUtilTest, TestGetConfidenceScores) {
   const int num = 2;
   const int num_preds_per_class = 2;
   const int num_classes = 2;
@@ -819,7 +861,7 @@ TEST_F(BBoxUtilTest, TestGetConfidenceScores) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
+TEST_F(CPUBBoxUtilTest, TestGetMaxConfidenceScores) {
   const int num = 2;
   const int num_preds_per_class = 2;
   const int num_classes = 2;
@@ -889,7 +931,7 @@ TEST_F(BBoxUtilTest, TestGetMaxConfidenceScores) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestGetPriorBBoxes) {
+TEST_F(CPUBBoxUtilTest, TestGetPriorBBoxes) {
   const int num_channels = 2;
   const int num_priors = 2;
   const int dim = num_priors * 4;
@@ -924,7 +966,7 @@ TEST_F(BBoxUtilTest, TestGetPriorBBoxes) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestGetDetectionResults) {
+TEST_F(CPUBBoxUtilTest, TestGetDetectionResults) {
   const int num = 4;
   const int num_det = (1 + num) * num / 2;
   Blob<float> det_blob(1, 1, num_det, 7);
@@ -992,7 +1034,7 @@ TEST_F(BBoxUtilTest, TestGetDetectionResults) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestApplyNMS) {
+TEST_F(CPUBBoxUtilTest, TestApplyNMS) {
   vector<NormalizedBBox> bboxes;
   vector<float> scores;
   float nms_threshold = 0.3;
@@ -1070,7 +1112,7 @@ TEST_F(BBoxUtilTest, TestApplyNMS) {
   }
 }
 
-TEST_F(BBoxUtilTest, TestCumSum) {
+TEST_F(CPUBBoxUtilTest, TestCumSum) {
   vector<pair<float, int> > pairs;
   vector<int> cumsum;
 
@@ -1086,7 +1128,7 @@ TEST_F(BBoxUtilTest, TestCumSum) {
   EXPECT_EQ(cumsum[2], 1);
 }
 
-TEST_F(BBoxUtilTest, TestComputeAP) {
+TEST_F(CPUBBoxUtilTest, TestComputeAP) {
   vector<pair<float, int> > tp;
   vector<pair<float, int> > fp;
 
@@ -1204,5 +1246,394 @@ TEST_F(BBoxUtilTest, TestComputeAP) {
     EXPECT_NEAR(rec_old[i], rec[i], eps);
   }
 }
+
+#ifndef CPU_ONLY
+template <typename Dtype>
+void FillBBoxes(Dtype* gt_bboxes, Dtype* pred_bboxes) {
+}
+
+template <typename Dtype>
+class GPUBBoxUtilTest : public BBoxUtilTest<GPUDevice<Dtype> > {
+};
+
+TYPED_TEST_CASE(GPUBBoxUtilTest, TestDtypes);
+
+TYPED_TEST(GPUBBoxUtilTest, TestBBoxSize) {
+  float size;
+  Blob<TypeParam> bbox(1, 1, 1, 4);
+  TypeParam* bbox_data = bbox.mutable_cpu_data();
+
+  // Valid box.
+  bbox_data[0] = 0.2;
+  bbox_data[1] = 0.3;
+  bbox_data[2] = 0.3;
+  bbox_data[3] = 0.5;
+  size = BBoxSizeGPU(bbox_data);
+  EXPECT_NEAR(size, 0.02, eps);
+
+  // A line.
+  bbox_data[2] = 0.2;
+  size = BBoxSizeGPU(bbox_data);
+  EXPECT_NEAR(size, 0., eps);
+
+  // Invalid box.
+  bbox_data[2] = 0.1;
+  size = BBoxSizeGPU(bbox_data);
+  EXPECT_NEAR(size, 0., eps);
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestJaccardOverlap) {
+  float overlap;
+  Blob<TypeParam> bbox1(1, 1, 1, 4);
+  TypeParam* bbox1_data = bbox1.mutable_cpu_data();
+  bbox1_data[0] = 0.2;
+  bbox1_data[1] = 0.3;
+  bbox1_data[2] = 0.3;
+  bbox1_data[3] = 0.5;
+
+  Blob<TypeParam> bbox2(1, 1, 1, 4);
+  TypeParam* bbox2_data = bbox2.mutable_cpu_data();
+
+  // Partially overlapped.
+  bbox2_data[0] = 0.1;
+  bbox2_data[1] = 0.1;
+  bbox2_data[2] = 0.3;
+  bbox2_data[3] = 0.4;
+  overlap = JaccardOverlapGPU(bbox1_data, bbox2_data);
+  EXPECT_NEAR(overlap, 1./7, eps);
+
+  // Fully contain.
+  bbox2_data[0] = 0.1;
+  bbox2_data[1] = 0.1;
+  bbox2_data[2] = 0.4;
+  bbox2_data[3] = 0.6;
+  overlap = JaccardOverlapGPU(bbox1_data, bbox2_data);
+  EXPECT_NEAR(overlap, 2./15, eps);
+
+  // Outside.
+  bbox2_data[0] = 0.;
+  bbox2_data[1] = 0.;
+  bbox2_data[2] = 0.1;
+  bbox2_data[3] = 0.1;
+  overlap = JaccardOverlapGPU(bbox1_data, bbox2_data);
+  EXPECT_NEAR(overlap, 0., eps);
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
+  int num = 4;
+  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
+  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
+  Blob<TypeParam> loc_preds(1, num * 4, 1, 1);
+  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    prior_data[(i - 1) * 4] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    for (int j = 0; j < 4; ++j) {
+      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+    }
+
+    loc_data[(i - 1) * 4] = -1 * (i % 2);
+    loc_data[(i - 1) * 4 + 1] = ((i + 1) % 2);
+    loc_data[(i - 1) * 4 + 2] = ((i + 1) % 2);
+    loc_data[(i - 1) * 4 + 3] = i % 2;
+  }
+
+  CodeType code_type = PriorBoxParameter_CodeType_CORNER;
+  Blob<TypeParam> bboxes(1, num * 4, 1, 1);
+  TypeParam* bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type, num, false, 1, -1,
+                  bbox_data);
+  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
+
+  for (int i = 1; i <= num; ++i) {
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.1*i + (i+1)%2 * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2],
+                0.1*i + 0.2 + (i+1)%2 * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.1*i + 0.2 + i%2 * 0.1, eps);
+  }
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
+  int num = 4;
+  int num_loc_classes = 2;
+  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
+  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
+  Blob<TypeParam> loc_preds(1, num * num_loc_classes * 4, 1, 1);
+  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    prior_data[(i - 1) * 4] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    for (int j = 0; j < 4; ++j) {
+      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+    }
+
+    for (int j = 0; j < num_loc_classes; ++j) {
+      loc_data[((i - 1) * 2 + j) * 4] = -1 * (i % 2) * (2 - j);
+      loc_data[((i - 1) * 2 + j) * 4 + 1] = ((i + 1) % 2) * (2 - j);
+      loc_data[((i - 1) * 2 + j) * 4 + 2] = ((i + 1) % 2) * (2 - j);
+      loc_data[((i - 1) * 2 + j) * 4 + 3] = i % 2 * (2 - j);
+    }
+  }
+
+  CodeType code_type = PriorBoxParameter_CodeType_CORNER;
+  Blob<TypeParam> bboxes(1, num * num_loc_classes * 4, 1, 1);
+  TypeParam* bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+                  num, false, num_loc_classes, -1, bbox_data);
+  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    for (int j = 0; j < num_loc_classes; ++j) {
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
+                  0.1*i + i%2 * (2-j) * -0.1, eps);
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 1],
+                  0.1*i + (i+1)%2 * (2-j) * 0.1, eps);
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 2],
+                  0.1*i + 0.2 + (i+1)%2 * (2-j) * 0.1, eps);
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 3],
+                  0.1*i + 0.2 + i%2 * (2-j) * 0.1, eps);
+    }
+  }
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
+  int num = 4;
+  int num_loc_classes = 2;
+  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
+  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
+  Blob<TypeParam> loc_preds(1, num * num_loc_classes * 4, 1, 1);
+  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    prior_data[(i - 1) * 4] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    for (int j = 0; j < 4; ++j) {
+      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+    }
+
+    for (int j = 0; j < num_loc_classes; ++j) {
+      loc_data[((i - 1) * 2 + j) * 4] = -1 * (i % 2) * (2 - j);
+      loc_data[((i - 1) * 2 + j) * 4 + 1] = ((i + 1) % 2) * (2 - j);
+      loc_data[((i - 1) * 2 + j) * 4 + 2] = ((i + 1) % 2) * (2 - j);
+      loc_data[((i - 1) * 2 + j) * 4 + 3] = i % 2 * (2 - j);
+    }
+  }
+
+  CodeType code_type = PriorBoxParameter_CodeType_CORNER;
+  Blob<TypeParam> bboxes(1, num * num_loc_classes * 4, 1, 1);
+  TypeParam* bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+                  num, false, num_loc_classes, 0, bbox_data);
+  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    for (int j = 0; j < num_loc_classes; ++j) {
+      if (j == 0) {
+        for (int k = 0; k < 4; ++k) {
+          EXPECT_NEAR(bbox_cpu_data[(i - 1) * 2 * 4 + k], 0., eps);
+        }
+      } else {
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
+                    0.1*i + i%2 * - 0.1, eps);
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 1],
+                    0.1*i + (i+1)%2 * 0.1, eps);
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 2],
+                    0.1*i + 0.2 + (i+1)%2 * 0.1, eps);
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 3],
+                    0.1*i + 0.2 + i%2 * 0.1, eps);
+      }
+    }
+  }
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
+  int num = 2;
+  Blob<TypeParam> prior_bboxes(1, 2, num * 4, 1);
+  TypeParam* prior_data = prior_bboxes.mutable_cpu_data();
+  Blob<TypeParam> loc_preds(1, num * 4, 1, 1);
+  TypeParam* loc_data = loc_preds.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    prior_data[(i - 1) * 4] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 1] = 0.1 * i;
+    prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
+    prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
+    for (int j = 0; j < 4; ++j) {
+      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
+    }
+
+    loc_data[(i - 1) * 4] = 0;
+    loc_data[(i - 1) * 4 + 1] = 0.75;
+    loc_data[(i - 1) * 4 + 2] = log(2.);
+    loc_data[(i - 1) * 4 + 3] = log(3./2);
+  }
+
+  CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
+  Blob<TypeParam> bboxes(1, num * 4, 1, 1);
+  TypeParam* bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type, num, false, 1, -1,
+                  bbox_data);
+  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
+
+  for (int i = 1; i <= num; ++i) {
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.2 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2], 0.4 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.5 + (i - 1) * 0.1, eps);
+  }
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlapped) {
+  const int num = 2;
+  const int num_bboxes = 2;
+  const int num_loc_classes = 1;
+  const TypeParam overlap_threshold = 0.3;
+
+  // Fill bboxes.
+  Blob<TypeParam> bboxes(num, num_bboxes * num_loc_classes * 4, 1, 1);
+  TypeParam* bbox_data = bboxes.mutable_cpu_data();
+  // image1
+  // bbox1
+  bbox_data[0] = 0.1;
+  bbox_data[1] = 0.1;
+  bbox_data[2] = 0.3;
+  bbox_data[3] = 0.3;
+  // bbox2
+  bbox_data[4] = 0.2;
+  bbox_data[5] = 0.1;
+  bbox_data[6] = 0.4;
+  bbox_data[7] = 0.3;
+  // image2
+  // bbox1
+  bbox_data[8] = 0.2;
+  bbox_data[9] = 0.0;
+  bbox_data[10] = 0.4;
+  bbox_data[11] = 0.2;
+  // bbox2
+  bbox_data[12] = 0.2;
+  bbox_data[13] = 0.1;
+  bbox_data[14] = 0.4;
+  bbox_data[15] = 0.3;
+
+  Blob<bool> overlapped(num, num_loc_classes, num_bboxes, num_bboxes);
+  const int total_bboxes = overlapped.count();
+  bool* overlapped_data = overlapped.mutable_gpu_data();
+  ComputeOverlappedGPU(total_bboxes, bbox_data, num_bboxes, num_loc_classes,
+                       overlap_threshold, overlapped_data);
+  const bool* overlapped_cpu_data = overlapped.cpu_data();
+  // image1
+  // bbox1 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[0], 0);
+  EXPECT_EQ(overlapped_cpu_data[1], 1);
+  // bbox2 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[2], 1);
+  EXPECT_EQ(overlapped_cpu_data[3], 0);
+  // image2
+  // bbox1 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[4], 0);
+  EXPECT_EQ(overlapped_cpu_data[5], 1);
+  // bbox2 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[6], 1);
+  EXPECT_EQ(overlapped_cpu_data[7], 0);
+}
+
+TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlappedMultiClass) {
+  const int num = 2;
+  const int num_bboxes = 2;
+  const int num_loc_classes = 2;
+  const TypeParam overlap_threshold = 0.3;
+
+  // Fill bboxes.
+  Blob<TypeParam> bboxes(num, num_bboxes * num_loc_classes * 4, 1, 1);
+  TypeParam* bbox_data = bboxes.mutable_cpu_data();
+  // image1
+  // bbox1
+  // class1
+  bbox_data[0] = 0.1;
+  bbox_data[1] = 0.1;
+  bbox_data[2] = 0.3;
+  bbox_data[3] = 0.3;
+  // class2
+  bbox_data[4] = 0.0;
+  bbox_data[5] = 0.1;
+  bbox_data[6] = 0.2;
+  bbox_data[7] = 0.3;
+  // bbox2
+  // class1
+  bbox_data[8] = 0.2;
+  bbox_data[9] = 0.1;
+  bbox_data[10] = 0.4;
+  bbox_data[11] = 0.3;
+  // class2
+  bbox_data[12] = 0.2;
+  bbox_data[13] = 0.1;
+  bbox_data[14] = 0.4;
+  bbox_data[15] = 0.3;
+  // image2
+  // bbox1
+  // class1
+  bbox_data[16] = 0.2;
+  bbox_data[17] = 0.0;
+  bbox_data[18] = 0.4;
+  bbox_data[19] = 0.2;
+  // class2
+  bbox_data[20] = 0.2;
+  bbox_data[21] = 0.1;
+  bbox_data[22] = 0.4;
+  bbox_data[23] = 0.3;
+  // bbox2
+  // class1
+  bbox_data[24] = 0.1;
+  bbox_data[25] = 0.1;
+  bbox_data[26] = 0.3;
+  bbox_data[27] = 0.3;
+  // class2
+  bbox_data[28] = 0.1;
+  bbox_data[29] = 0.1;
+  bbox_data[30] = 0.3;
+  bbox_data[31] = 0.3;
+
+  Blob<bool> overlapped(num, num_loc_classes, num_bboxes, num_bboxes);
+  const int total_bboxes = overlapped.count();
+  bool* overlapped_data = overlapped.mutable_gpu_data();
+  ComputeOverlappedGPU(total_bboxes, bbox_data, num_bboxes, num_loc_classes,
+                       overlap_threshold, overlapped_data);
+  const bool* overlapped_cpu_data = overlapped.cpu_data();
+  // image1
+  // class1
+  // bbox1 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[0], 0);
+  EXPECT_EQ(overlapped_cpu_data[1], 1);
+  // bbox2 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[2], 1);
+  EXPECT_EQ(overlapped_cpu_data[3], 0);
+  // class2
+  // bbox1 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[4], 0);
+  EXPECT_EQ(overlapped_cpu_data[5], 0);
+  // bbox2 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[6], 0);
+  EXPECT_EQ(overlapped_cpu_data[7], 0);
+  // image2
+  // class1
+  // bbox1 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[8], 0);
+  EXPECT_EQ(overlapped_cpu_data[9], 0);
+  // bbox2 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[10], 0);
+  EXPECT_EQ(overlapped_cpu_data[11], 0);
+  // class2
+  // bbox1 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[12], 0);
+  EXPECT_EQ(overlapped_cpu_data[13], 1);
+  // bbox2 with all other bboxes
+  EXPECT_EQ(overlapped_cpu_data[14], 1);
+  EXPECT_EQ(overlapped_cpu_data[15], 0);
+}
+
+#endif
 
 }  // namespace caffe

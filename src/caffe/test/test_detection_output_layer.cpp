@@ -18,8 +18,10 @@ namespace caffe {
 
 static const float eps = 1e-6;
 
-template <typename Dtype>
-class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
+template <typename TypeParam>
+class DetectionOutputLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
  protected:
   DetectionOutputLayerTest()
       : num_(2),
@@ -143,14 +145,15 @@ class DetectionOutputLayerTest : public CPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(DetectionOutputLayerTest, TestDtypes);
+TYPED_TEST_CASE(DetectionOutputLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(DetectionOutputLayerTest, TestSetup) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
   detection_output_param->set_num_classes(this->num_classes_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -159,6 +162,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestSetup) {
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocation) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
@@ -167,7 +171,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocation) {
   detection_output_param->set_background_label_id(0);
   detection_output_param->mutable_nms_param()->set_nms_threshold(
       this->nms_threshold_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
 
   this->FillLocData(true);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -187,6 +191,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocation) {
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
@@ -196,7 +201,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
   detection_output_param->mutable_nms_param()->set_nms_threshold(
       this->nms_threshold_);
   detection_output_param->mutable_nms_param()->set_top_k(this->top_k_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
 
   this->FillLocData(true);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -213,6 +218,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardShareLocationTopK) {
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
@@ -221,7 +227,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
   detection_output_param->set_background_label_id(-1);
   detection_output_param->mutable_nms_param()->set_nms_threshold(
       this->nms_threshold_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
 
   this->FillLocData(false);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -246,6 +252,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocation) {
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
@@ -255,7 +262,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
   detection_output_param->mutable_nms_param()->set_nms_threshold(
       this->nms_threshold_);
   detection_output_param->mutable_nms_param()->set_top_k(this->top_k_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
 
   this->FillLocData(false);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -275,6 +282,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationTopK) {
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
@@ -283,7 +291,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
   detection_output_param->set_background_label_id(0);
   detection_output_param->mutable_nms_param()->set_nms_threshold(
       this->nms_threshold_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
 
   this->FillLocData(false);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -302,6 +310,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0) {
 }
 
 TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0TopK) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   DetectionOutputParameter* detection_output_param =
       layer_param.mutable_detection_output_param();
@@ -311,7 +320,7 @@ TYPED_TEST(DetectionOutputLayerTest, TestForwardNoShareLocationNeg0TopK) {
   detection_output_param->mutable_nms_param()->set_nms_threshold(
       this->nms_threshold_);
   detection_output_param->mutable_nms_param()->set_top_k(this->top_k_);
-  DetectionOutputLayer<TypeParam> layer(layer_param);
+  DetectionOutputLayer<Dtype> layer(layer_param);
 
   this->FillLocData(false);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);

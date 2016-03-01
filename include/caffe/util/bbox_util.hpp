@@ -180,6 +180,13 @@ void GetDetectionResults(const Dtype* det_data, const int num_det,
       const int background_label_id,
       map<int, LabelBBox>* all_detections);
 
+// Get top_k scores with corresponding indices.
+//    scores: a set of scores.
+//    top_k: if -1, keep all; otherwise, keep at most top_k.
+//    score_index_vec: store the sorted (score, index) pair.
+void GetTopKScoreIndex(const vector<float>& scores, const int top_k,
+                         vector<pair<float, int> >* score_index_vec);
+
 // Do non maximum suppression given bboxes and scores.
 //    bboxes: a set of bounding boxes.
 //    scores: a set of corresponding confidences.
@@ -193,6 +200,11 @@ void GetDetectionResults(const Dtype* det_data, const int num_det,
 void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       const float threshold, const int top_k, const bool reuse_overlaps,
       map<int, map<int, float> >* overlaps, vector<int>* indices);
+
+// Do non maximum suppression given bboxes and scores after computing the
+// overlap status between all pairs of bboxes. Usually used in GPU code.
+void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
+      const bool* overlapped_results, const int top_k, vector<int>* indices);
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
@@ -212,6 +224,29 @@ void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
 void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
                const vector<pair<float, int> >& fp, const string ap_version,
                vector<float>* prec, vector<float>* rec, float* ap);
+
+#ifndef CPU_ONLY  // GPU
+template <typename Dtype>
+__host__ __device__ Dtype BBoxSizeGPU(const Dtype* bbox,
+                                      const bool normalized = true);
+
+template <typename Dtype>
+__host__ __device__ Dtype JaccardOverlapGPU(const Dtype* bbox1,
+                                            const Dtype* bbox2);
+
+template <typename Dtype>
+void DecodeBBoxesGPU(const int nthreads,
+          const Dtype* loc_data, const Dtype* prior_data,
+          const CodeType code_type, const int num_priors,
+          const bool share_location, const int num_loc_classes,
+          const int background_label_id, Dtype* bbox_data);
+
+template <typename Dtype>
+void ComputeOverlappedGPU(const int nthreads,
+          const Dtype* bbox_data, const int num_bboxes, const int num_classes,
+          const Dtype overlap_threshold, bool* overlapped_data);
+
+#endif  // !CPU_ONLY
 
 }  // namespace caffe
 
