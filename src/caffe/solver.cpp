@@ -202,7 +202,7 @@ Dtype Solver<Dtype>::ForwardBackward() {
 
   // accumulate the loss and gradient
   for (int i = 0; i < param_.iter_size(); ++i) {
-    loss += net_->ForwardBackward(bottom_vec);
+    loss += net_->ForwardBackward();
   }
   return loss / param_.iter_size();
 }
@@ -490,7 +490,7 @@ void Solver<Dtype>::Restore(const char* state_file) {
   }
 }
 
-template <Dtype>
+template <typename Dtype>
 void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
     int average_loss) {
   if (losses_.size() < average_loss) {
