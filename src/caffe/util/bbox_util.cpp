@@ -105,6 +105,7 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
   scale_bbox->clear_size();
   bool normalized = !(width > 1 || height > 1);
   scale_bbox->set_size(BBoxSize(*scale_bbox, normalized));
+  scale_bbox->set_difficult(bbox.difficult());
 }
 
 void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
@@ -139,11 +140,20 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
   }
 }
 
-float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
+float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
+                     const bool normalized) {
   NormalizedBBox intersect_bbox;
   IntersectBBox(bbox1, bbox2, &intersect_bbox);
-  float intersect_size = BBoxSize(intersect_bbox);
-  if (intersect_size > 0) {
+  float intersect_width, intersect_height;
+  if (normalized) {
+    intersect_width = intersect_bbox.xmax() - intersect_bbox.xmin();
+    intersect_height = intersect_bbox.ymax() - intersect_bbox.ymin();
+  } else {
+    intersect_width = intersect_bbox.xmax() - intersect_bbox.xmin() + 1;
+    intersect_height = intersect_bbox.ymax() - intersect_bbox.ymin() + 1;
+  }
+  if (intersect_width > 0 && intersect_height > 0) {
+    float intersect_size = intersect_width * intersect_height;
     float bbox1_size = BBoxSize(bbox1);
     float bbox2_size = BBoxSize(bbox2);
     return intersect_size / (bbox1_size + bbox2_size - intersect_size);
@@ -781,7 +791,6 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
     CHECK_LE(fabs(tp[i].first - fp[i].first), eps);
     CHECK_GE(tp[i].second, 0);
     CHECK_GE(fp[i].second, 0);
-    CHECK_EQ(tp[i].second, 1 - fp[i].second);
   }
   prec->clear();
   rec->clear();

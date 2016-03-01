@@ -190,7 +190,7 @@ TYPED_TEST(DetectionEvaluateLayerTest, TestForwardSkipDifficult) {
 
   this->CheckEqual(*(this->blob_top_), 0, "-1 1 2 -1 -1");
   this->CheckEqual(*(this->blob_top_), 1, "-1 2 1 -1 -1");
-  this->CheckEqual(*(this->blob_top_), 2, "0 1 0.9 0 1");
+  this->CheckEqual(*(this->blob_top_), 2, "0 1 0.9 0 0");
   this->CheckEqual(*(this->blob_top_), 3, "0 1 0.7 1 0");
   this->CheckEqual(*(this->blob_top_), 4, "0 1 0.3 0 1");
   this->CheckEqual(*(this->blob_top_), 5, "1 1 0.2 1 0");

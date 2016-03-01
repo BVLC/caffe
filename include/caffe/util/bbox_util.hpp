@@ -68,7 +68,8 @@ bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
                  NormalizedBBox* proj_bbox);
 
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
-float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
+                     const bool normalized = true);
 
 // Compute the coverage of bbox1 by bbox2.
 float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
