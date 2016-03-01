@@ -656,12 +656,14 @@ void UpgradeNetDataTransformation(NetParameter* net_param) {
 }
 
 bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
-  bool is_fully_compatible = true;
   if (v1_net_param.layer_size() > 0) {
-    LOG(ERROR) << "Input NetParameter to be upgraded already specifies 'layer' "
-               << "fields; these will be ignored for the upgrade.";
-    is_fully_compatible = false;
+    LOG(FATAL) << "Refusing to upgrade inconsistent NetParameter input; "
+        << "the definition includes both 'layer' and 'layers' fields. "
+        << "The current format defines 'layer' fields with string type like "
+        << "layer { type: 'Layer' ... } and not layers { type: LAYER ... }. "
+        << "Manually switch the definition to 'layer' format to continue.";
   }
+  bool is_fully_compatible = true;
   net_param->CopyFrom(v1_net_param);
   net_param->clear_layers();
   net_param->clear_layer();
