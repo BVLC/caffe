@@ -36,6 +36,8 @@ void DetectionEvaluateLayer<Dtype>::LayerSetUp(
     infile.close();
   }
   count_ = 0;
+  // If there is no name_size_file provided, use normalized bbox to evaluate.
+  use_normalized_bbox_ = sizes_.size() == 0;
 }
 
 template <typename Dtype>
@@ -75,12 +77,13 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
   GetDetectionResults(det_data, bottom[0]->height(), background_label_id_,
                       &all_detections);
 
-  // Retrieve all ground truth.
+  // Retrieve all ground truth (including difficult ones).
   map<int, LabelBBox> all_gt_bboxes;
   GetGroundTruth(gt_data, bottom[1]->height(), background_label_id_,
-                 evaluate_difficult_gt_, &all_gt_bboxes);
+                 true, &all_gt_bboxes);
 
   Dtype* top_data = top[0]->mutable_cpu_data();
+  caffe_set(top[0]->count(), Dtype(0.), top_data);
   int num_det = 0;
 
   // Insert number of ground truth for each label.
@@ -89,10 +92,21 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
        it != all_gt_bboxes.end(); ++it) {
     for (LabelBBox::iterator iit = it->second.begin(); iit != it->second.end();
          ++iit) {
-      if (num_pos.find(iit->first) == num_pos.end()) {
-        num_pos[iit->first] = iit->second.size();
+      int count = 0;
+      if (evaluate_difficult_gt_) {
+        count = iit->second.size();
       } else {
-        num_pos[iit->first] += iit->second.size();
+        // Get number of non difficult ground truth.
+        for (int i = 0; i < iit->second.size(); ++i) {
+          if (!iit->second[i].difficult()) {
+            ++count;
+          }
+        }
+      }
+      if (num_pos.find(iit->first) == num_pos.end()) {
+        num_pos[iit->first] = count;
+      } else {
+        num_pos[iit->first] += count;
       }
     }
   }
@@ -151,7 +165,7 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
         } else {
           vector<NormalizedBBox>& gt_bboxes = label_bboxes.find(label)->second;
           // Scale ground truth if needed.
-          if (sizes_.size() > 0) {
+          if (!use_normalized_bbox_) {
             CHECK_LT(count_, sizes_.size());
             for (int i = 0; i < gt_bboxes.size(); ++i) {
               ScaleBBox(gt_bboxes[i], sizes_[count_].first,
@@ -165,7 +179,7 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
             top_data[num_det * 5] = image_id;
             top_data[num_det * 5 + 1] = label;
             top_data[num_det * 5 + 2] = bboxes[i].score();
-            if (sizes_.size() > 0) {
+            if (!use_normalized_bbox_) {
               ScaleBBox(bboxes[i], sizes_[count_].first, sizes_[count_].second,
                         &(bboxes[i]));
             }
@@ -173,22 +187,26 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
             float overlap_max = -1;
             int jmax = -1;
             for (int j = 0; j < gt_bboxes.size(); ++j) {
-              float overlap = JaccardOverlap(bboxes[i], gt_bboxes[j]);
+              float overlap = JaccardOverlap(bboxes[i], gt_bboxes[j],
+                                             use_normalized_bbox_);
               if (overlap > overlap_max) {
                 overlap_max = overlap;
                 jmax = j;
               }
             }
             if (overlap_max >= overlap_threshold_) {
-              if (!visited[jmax]) {
-                // true positive.
-                top_data[num_det * 5 + 3] = 1;
-                top_data[num_det * 5 + 4] = 0;
-                visited[jmax] = true;
-              } else {
-                // false positive (multiple detection).
-                top_data[num_det * 5 + 3] = 0;
-                top_data[num_det * 5 + 4] = 1;
+              if (evaluate_difficult_gt_ ||
+                  (!evaluate_difficult_gt_ && !gt_bboxes[jmax].difficult())) {
+                if (!visited[jmax]) {
+                  // true positive.
+                  top_data[num_det * 5 + 3] = 1;
+                  top_data[num_det * 5 + 4] = 0;
+                  visited[jmax] = true;
+                } else {
+                  // false positive (multiple detection).
+                  top_data[num_det * 5 + 3] = 0;
+                  top_data[num_det * 5 + 4] = 1;
+                }
               }
             } else {
               // false positive.

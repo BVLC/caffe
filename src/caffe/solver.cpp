@@ -442,7 +442,6 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
   map<int, map<int, vector<pair<float, int> > > > all_true_pos;
   map<int, map<int, vector<pair<float, int> > > > all_false_pos;
   map<int, map<int, int> > all_num_pos;
-  vector<Blob<Dtype>*> bottom_vec;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
   for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
@@ -462,8 +461,7 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
     }
 
     Dtype iter_loss;
-    const vector<Blob<Dtype>*>& result =
-        test_net->Forward(bottom_vec, &iter_loss);
+    const vector<Blob<Dtype>*>& result = test_net->Forward(&iter_loss);
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }

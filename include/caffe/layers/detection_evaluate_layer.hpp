@@ -60,6 +60,7 @@ class DetectionEvaluateLayer : public Layer<Dtype> {
   bool evaluate_difficult_gt_;
   vector<pair<int, int> > sizes_;
   int count_;
+  bool use_normalized_bbox_;
 };
 
 }  // namespace caffe

@@ -55,7 +55,7 @@ NormalizedBBox UnitBBox();
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                    NormalizedBBox* intersect_bbox);
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
-                     const bool normalized);
+                     const bool normalized = true);
 void CumSum(const vector<pair<float, int_tp> >& pairs, vector<int_tp>* cumsum);
 void ComputeAP(const vector<pair<float, int_tp> >& tp, int_tp num_pos,
                const vector<pair<float, int_tp> >& fp, string ap_version,
