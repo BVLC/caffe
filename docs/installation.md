@@ -29,6 +29,7 @@ Caffe has several dependencies:
 Optional dependencies:
 
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
+* [OpenMP](http://openmp.org/wp/)
 * IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
 * cuDNN for GPU acceleration (v3)
 
@@ -58,6 +59,10 @@ There are several implementations of this library. The choice is yours:
 * [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
+
+### OpenMP (optional)
+
+Caffe can use OpenMP for parallel execution of CPU layers. OpenMP is supported (and delivered) by most of [compilers](http://openmp.org/wp/openmp-compilers/). Caffe is using OpenMP be default, to have it disabled please uncomment USE_OPENMP := 0 Makefile.config (when using cmake, add -DUSE_OPENMP=OFF to your commandline invoking cmake)
 
 ### Python and/or MATLAB Caffe (optional)
 
