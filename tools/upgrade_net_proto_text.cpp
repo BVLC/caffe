@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
     return 2;
   }
   bool need_upgrade = NetNeedsUpgrade(net_param);
-  bool need_data_upgrade = NetNeedsDataUpgrade(net_param);
   bool success = true;
   if (need_upgrade) {
     success = UpgradeNetAsNeeded(input_filename, &net_param);
@@ -42,10 +41,6 @@ int main(int argc, char** argv) {
     }
   } else {
     LOG(ERROR) << "File already in latest proto format: " << input_filename;
-  }
-
-  if (need_data_upgrade) {
-    UpgradeNetDataTransformation(&net_param);
   }
 
   // Save new format prototxt.

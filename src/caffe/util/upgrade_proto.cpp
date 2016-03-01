@@ -13,7 +13,8 @@
 namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
-  return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param);
+  return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param)
+      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param);
 }
 
 bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
