@@ -14,9 +14,9 @@ Let's fine-tune the BVLC-distributed CaffeNet model on a different dataset, [Fli
 ## Explanation
 
 The Flickr-sourced images of the Style dataset are visually very similar to the ImageNet dataset, on which the `bvlc_reference_caffenet` was trained.
-Since that model works well for object category classification, we'd like to use it architecture for our style classifier.
+Since that model works well for object category classification, we'd like to use this architecture for our style classifier.
 We also only have 80,000 images to train on, so we'd like to start with the parameters learned on the 1,000,000 ImageNet images, and fine-tune as needed.
-If we give provide the `weights` argument to the `caffe train` command, the pretrained weights will be loaded into our model, matching layers by name.
+If we provide the `weights` argument to the `caffe train` command, the pretrained weights will be loaded into our model, matching layers by name.
 
 Because we are predicting 20 classes instead of a 1,000, we do need to change the last layer in the model.
 Therefore, we change the name of the last layer from `fc8` to `fc8_flickr` in our prototxt.
