@@ -11,13 +11,13 @@ layer {
     address: "tcp://127.0.0.1:8888"
     cache_size: 1
     shape {
-      dim: 100
+      dim: 25
       dim: 3
       dim: 32
       dim: 32
     }
     shape {
-      dim: 100
+      dim: 25
     }
   }
 }
