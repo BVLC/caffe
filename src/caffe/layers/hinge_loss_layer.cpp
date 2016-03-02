@@ -4,6 +4,9 @@
 #include "caffe/layers/hinge_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+
+
+
 namespace caffe {
 
 template <typename Dtype>
@@ -16,6 +19,11 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int count = bottom[0]->count();
   int dim = count / num;
 
+  // std::cout << "num" << num << std::endl;
+
+  const Dtype* class_weights_data = this->class_weights_.cpu_data();
+  Dtype* class_loss_data = this->class_weights_.mutable_cpu_diff();
+
   caffe_copy(count, bottom_data, bottom_diff);
   for (int i = 0; i < num; ++i) {
     bottom_diff[i * dim + static_cast<int>(label[i])] *= -1;
@@ -26,13 +34,28 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         Dtype(0), 1 + bottom_diff[i * dim + j]);
     }
   }
+
   Dtype* loss = top[0]->mutable_cpu_data();
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    loss[0] = caffe_cpu_asum(count, bottom_diff) / num;
+    if ( this->layer_param_.loss_param().class_weight_size() ) {
+      for (int c = 0; c < this->num_classes_; ++c){
+          class_loss_data[c] = caffe_cpu_strided_asum(num,bottom_diff+c,dim);
+      }
+      loss[0] = caffe_cpu_dot(this->num_classes_, class_weights_data, class_loss_data) / num;
+    } else {
+      loss[0] = caffe_cpu_asum(count, bottom_diff) / num;
+    }
     break;
   case HingeLossParameter_Norm_L2:
-    loss[0] = caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    if (this->layer_param_.loss_param().class_weight_size()) {
+        for (int c = 0; c < this->num_classes_; ++c) {
+          class_loss_data[c] = caffe_cpu_strided_dot(num,bottom_diff+c,dim,bottom_diff+c,dim);
+        }
+        loss[0] = caffe_cpu_dot(this->num_classes_, class_weights_data, class_loss_data) / num;
+    } else {
+      loss[0] = caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    }
     break;
   default:
     LOG(FATAL) << "Unknown Norm";

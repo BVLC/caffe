@@ -457,6 +457,10 @@ message LossParameter {
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+  optional int32 axis = 4 [default = 1];
+  repeated float class_weight = 5;
+
+
 }
 
 // Messages that store parameters used by individual layer types follow, in

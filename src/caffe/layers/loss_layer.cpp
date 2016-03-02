@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "caffe/layers/loss_layer.hpp"
+#include <algorithm>    // std::min
 
 namespace caffe {
 
@@ -11,6 +12,30 @@ void LossLayer<Dtype>::LayerSetUp(
   if (this->layer_param_.loss_weight_size() == 0) {
     this->layer_param_.add_loss_weight(Dtype(1));
   }
+
+  LossParameter loss_param = this->layer_param_.loss_param();
+  class_axis_ = loss_param.axis();
+  num_classes_ = bottom[0]->shape(class_axis_);
+
+
+  // std::cout << "loss_param " << loss_param.class_weight_size() << std::endl;
+  // std::cout << "class_axis_ " << class_axis_ << std::endl;
+  // std::cout << "num_classes_ " << num_classes_ << std::endl;
+
+  vector<int> temp_shape;
+  temp_shape.push_back(num_classes_);
+  class_weights_.Reshape(temp_shape);
+
+  // std::cout << "class_weights_ shape " << class_weights_.shape_string() << std::endl;
+  Dtype* class_weights_data = class_weights_.mutable_cpu_data();
+  caffe_set(num_classes_, Dtype(1), class_weights_data);
+
+  for (int i=0; i < std::min(num_classes_,loss_param.class_weight_size()); ++i )
+    class_weights_data[i] = loss_param.class_weight(i);
+
+  // for (int i=0; i < num_classes_; ++i )
+  //    std::cout << class_weights_data[i] << " ";
+  //  std::cout << std::endl;
 }
 
 template <typename Dtype>

@@ -376,6 +376,16 @@ void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,
 }
 
 template <>
+double caffe_cpu_strided_asum<double>(const int n, const double* x, int incx) {
+  return cblas_dasum(n, x, incx);
+}
+
+template <>
+float caffe_cpu_strided_asum<float>(const int n, const float* x, int incx) {
+  return cblas_sasum(n, x, incx);
+}
+
+template <>
 void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
   cblas_dcopy(n, x, 1, y, 1);
