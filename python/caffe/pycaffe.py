@@ -156,13 +156,16 @@ def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
     return {out: self.blobs[out].diff for out in outputs}
 
 
-def _Net_forward_all(self, blobs=None, **kwargs):
+def _Net_forward_all(self, blobs=None, start=None, end=None, **kwargs):
     """
     Run net forward in batches.
 
     Parameters
     ----------
     blobs : list of blobs to extract as in forward()
+    start : optional name of layer at which to begin the forward pass
+    end : optional name of layer at which to finish the forward pass
+          (inclusive)
     kwargs : Keys are input blob names and values are blob ndarrays.
              Refer to forward().
 
@@ -173,7 +176,7 @@ def _Net_forward_all(self, blobs=None, **kwargs):
     # Collect outputs from batches
     all_outs = {out: [] for out in set(self.outputs + (blobs or []))}
     for batch in self._batch(kwargs):
-        outs = self.forward(blobs=blobs, **batch)
+        outs = self.forward(blobs=blobs, start=start, end=end, **batch)
         for out, out_blob in outs.iteritems():
             all_outs[out].extend(out_blob.copy())
     # Package in ndarray.
@@ -187,7 +190,41 @@ def _Net_forward_all(self, blobs=None, **kwargs):
     return all_outs
 
 
-def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
+def _Net_backward_all(self, diffs=None, start=None, end=None, **kwargs):
+    """
+    Run net backward in batches.
+
+    Parameters
+    ----------
+    diffs: list of diffs to extract as in backward()
+    start : optional name of layer at which to begin the backward pass
+    end : optional name of layer at which to finish the backward pass
+          (inclusive)
+    kwargs : Keys are output blob names and values are diff ndarrays.
+             Refer to backward().
+
+    Returns
+    -------
+    all_diffs: {blob name: diff ndarray} dict.
+    """
+    # Collect diffs from batches
+    all_diffs = {diff: [] for diff in set(self.inputs + (diffs or []))}
+    for batch in self._batch(kwargs):
+        batch_diffs = self.backward(diffs=diffs, start=start, end=end, **batch)
+        for diff, out_diffs in batch_diffs.iteritems():
+            all_diffs[diff].extend(out_diffs.copy())
+    # Package in ndarray.
+    for diff in all_diffs:
+        all_diffs[diff] = np.asarray(all_diffs[diff])
+    # Discard padding.
+    pad = len(all_diffs.itervalues().next()) - len(kwargs.itervalues().next())
+    if pad:
+        for diff in all_diffs:
+            all_diffs[diff] = all_diffs[diff][:-pad]
+    return all_diffs
+
+
+def _Net_forward_backward_all(self, blobs=None, diffs=None, start=None, end=None, **kwargs):
     """
     Run net forward + backward in batches.
 
@@ -195,6 +232,10 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     ----------
     blobs: list of blobs to extract as in forward()
     diffs: list of diffs to extract as in backward()
+    start : optional name of layer at which to begin the forward pass
+            and finish the backward pass (inclusive)
+    end : optional name of layer at which to finish the forward pass
+          (inclusive) and begin the backward pass
     kwargs: Keys are input (for forward) and output (for backward) blob names
             and values are ndarrays. Refer to forward() and backward().
             Prefilled variants are called for lack of input or output blobs.
@@ -213,8 +254,8 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
                                     for out in self.outputs if out in kwargs})
     # Collect outputs from batches (and heed lack of forward/backward batches).
     for fb, bb in izip_longest(forward_batches, backward_batches, fillvalue={}):
-        batch_blobs = self.forward(blobs=blobs, **fb)
-        batch_diffs = self.backward(diffs=diffs, **bb)
+        batch_blobs = self.forward(blobs=blobs, start=start, end=end, **fb)
+        batch_diffs = self.backward(diffs=diffs, start=end, end=start, **bb)
         for out, out_blobs in batch_blobs.iteritems():
             all_outs[out].extend(out_blobs.copy())
         for diff, out_diffs in batch_diffs.iteritems():
@@ -299,6 +340,7 @@ Net.params = _Net_params
 Net.forward = _Net_forward
 Net.backward = _Net_backward
 Net.forward_all = _Net_forward_all
+Net.backward_all = _Net_backward_all
 Net.forward_backward_all = _Net_forward_backward_all
 Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
