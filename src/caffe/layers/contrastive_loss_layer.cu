@@ -106,13 +106,21 @@ template<typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_->id());
+    viennacl::ocl::program &program = this->device_->program();
+    const bool legacy_version = this->layer_param_.contrastive_loss_param()
+        .legacy_version();
+    viennacl::ocl::kernel &oclk_cll = program.get_kernel(
+        legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") : CL_KERNEL_SELECT("cll_backward"));
+#endif
+
   for (int_tp i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const int_tp count = bottom[0]->count();
       const int_tp channels = bottom[0]->channels();
       Dtype margin = this->layer_param_.contrastive_loss_param().margin();
-      const bool legacy_version = this->layer_param_.contrastive_loss_param()
-          .legacy_version();
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0]
           / static_cast<Dtype>(bottom[0]->num());
@@ -131,15 +139,9 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
 #endif  // USE_CUDA
       } else {
 #ifdef USE_GREENTEA
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            this->device_->id());
-        viennacl::ocl::program &program = this->device_->program();
-
-        viennacl::ocl::kernel &oclk_cll = program.get_kernel(
-            CL_KERNEL_SELECT("cll_backward"));
         viennacl::ocl::enqueue(
             oclk_cll(
-                count, channels, margin, legacy_version ? 1 : 0, alpha,
+                count, channels, margin, alpha,
                 WrapHandle((cl_mem) (bottom[2]->gpu_data()), &ctx),
                 WrapHandle((cl_mem) (diff_.gpu_data()), &ctx),
                 WrapHandle((cl_mem) (dist_sq_.gpu_data()), &ctx),
