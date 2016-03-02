@@ -11,6 +11,9 @@
          set to the root of your Python installation. If your Python installation
          does not contain debug libraries, debug build will not work. -->
         <PythonSupport>false</PythonSupport>
+        <!-- NOTE: If Matlab support is enabled, MatlabDir (below) needs to be
+         set to the root of your Matlab installation. -->
+        <MatlabSupport>false</MatlabSupport>
         <CudaDependencies></CudaDependencies>
 
         <!-- Set CUDA architecture suitable for your GPU.
@@ -46,6 +49,11 @@
         <LibraryPath>$(PythonDir)\libs;$(LibraryPath)</LibraryPath>
         <IncludePath>$(PythonDir)\include;$(IncludePath)</IncludePath>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(MatlabSupport)'=='true'">
+        <MatlabDir>C:\Program Files\MATLAB\R2014b</MatlabDir>
+        <LibraryPath>$(MatlabDir)\extern\lib\win64\microsoft;$(LibraryPath)</LibraryPath>
+        <IncludePath>$(MatlabDir)\extern\include;$(IncludePath)</IncludePath>
+    </PropertyGroup>
     <ItemDefinitionGroup Condition="'$(CpuOnlyBuild)'=='true'">
         <ClCompile>
             <PreprocessorDefinitions>CPU_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -62,6 +70,11 @@
     <ItemDefinitionGroup Condition="'$(PythonSupport)'=='true'">
         <ClCompile>
             <PreprocessorDefinitions>WITH_PYTHON_LAYER;BOOST_PYTHON_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+        </ClCompile>
+    </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(MatlabSupport)'=='true'">
+        <ClCompile>
+            <PreprocessorDefinitions>MATLAB_MEX_FILE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
         </ClCompile>
     </ItemDefinitionGroup>
     <ItemDefinitionGroup>
