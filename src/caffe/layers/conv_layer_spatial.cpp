@@ -87,46 +87,19 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  const int height = bottom[0]->shape(this->channel_axis_ + 1);
-  const int width = bottom[0]->shape(this->channel_axis_ + 2);
-  const int* pad_data = this->pad_.cpu_data();
-  const int pad_h = pad_data[0];
-  const int pad_w = pad_data[1];
-  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
-  const int kernel_h = kernel_shape_data[0];
-  const int kernel_w = kernel_shape_data[1];
-  const int* stride_data = this->stride_.cpu_data();
-  const int stride_h = stride_data[0];
-  const int stride_w = stride_data[1];
-
-  for (int i = 0; i < bottom.size(); ++i) {
-    const Dtype* bottom_data = bottom[i]->cpu_data();
-    Dtype* top_data = (top)[i]->mutable_cpu_data();
-    Dtype* col_data = col_buffer_.mutable_cpu_data();
     const Dtype* weight = this->blobs_[0]->cpu_data();
-    int weight_offset = M_ * K_;  // number of filter parameters in a group
-    int col_offset = K_ * N_;  // number of values in an input region / column
-    int top_offset = M_ * N_;  // number of values in an output region / column
-    for (int n = 0; n < this->num_; ++n) {
-      // im2col transformation: unroll input regions for filtering
-      // into column matrix for multplication.
-      im2col_cpu(bottom_data + n * this->bottom_dim_, this->channels_, height, width,
-          kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, 1, 1, col_data);
-      // Take inner products for groups.
-      for (int g = 0; g < this->group_; ++g) {
-        caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-            (Dtype) 1., weight + weight_offset * g, col_data + col_offset * g,
-            (Dtype) 0., top_data + n * this->top_dim_ + top_offset * g);
-      }
-      // Add bias.
-      if (this->bias_term_) {
-        caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, this->num_output_, N_, 1,
-            (Dtype) 1., this->blobs_[1]->cpu_data(),
-            bias_multiplier_.cpu_data(), (Dtype) 1.,
-            top_data + n * this->top_dim_);
+    for (int_tp i = 0; i < bottom.size(); ++i) {
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      Dtype* top_data = top[i]->mutable_cpu_data();
+      for (int_tp n = 0; n < this->num_; ++n) {
+        this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+                               top_data + n * this->top_dim_);
+        if (this->bias_term_) {
+          const Dtype* bias = this->blobs_[1]->cpu_data();
+          this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
+        }
       }
     }
-  }
 }
 
 template<typename Dtype>
