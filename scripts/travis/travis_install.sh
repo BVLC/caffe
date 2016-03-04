@@ -92,8 +92,4 @@ if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
   popd
 fi
 
-if [ "$PYTHON_VERSION" -eq "3" ]; then
-  pip install --pre protobuf
-else
-  pip install protobuf
-fi
+pip install protobuf
