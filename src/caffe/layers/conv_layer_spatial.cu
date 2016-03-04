@@ -1095,6 +1095,19 @@ namespace caffe {
   template <>
   void ConvolutionLayerSpatial<float>::Forward_gpu(
       const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
+
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+                this->device_->id());
+    const viennacl::ocl::device &device = ctx.current_device();
+#if 0
+    std::cout << device.extensions();
+    if (device.extensions().find("cl_intel_subgroup") == std::string::npos) {
+#else
+    if (device.vendor().find("Intel") == std::string::npos) {
+#endif
+      Forward_cpu(bottom, top);
+      return;
+    }
     for (int i = 0; i < bottom.size(); ++i) {
       bottom_index_ = i;
       bottom_data = bottom[i]->gpu_data();
@@ -1134,6 +1147,20 @@ namespace caffe {
   void ConvolutionLayerSpatial<float>::Backward_gpu(
       const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
       const vector<Blob<float>*>& bottom) {
+
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+                this->device_->id());
+    const viennacl::ocl::device &device = ctx.current_device();
+#if 0
+    std::cout << device.extensions();
+    if (device.extensions().find("cl_intel_subgroup") == std::string::npos) {
+#else
+    if (device.vendor().find("Intel") == std::string::npos) {
+#endif
+      Backward_cpu(top, propagate_down, bottom);
+      return;
+    }
+
     const float* weight = NULL;
     float* weight_diff = NULL;
 
