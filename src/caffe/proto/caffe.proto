@@ -992,6 +992,9 @@ message DetectionOutputParameter {
   optional SaveOutputParameter save_output_param = 5;
   // Type of coding method for bbox.
   optional PriorBoxParameter.CodeType code_type = 6 [default = CORNER];
+  // If true, variance is encoded in target; otherwise we need to adjust the
+  // predicted offset accordingly.
+  optional bool variance_encoded_in_target = 8 [default = false];
   // Number of total bboxes to be kept per image after nms step.
   // -1 means keeping all bboxes after nms step.
   optional int32 keep_top_k = 7 [default = -1];
@@ -1260,6 +1263,9 @@ message MultiBoxLossParameter {
   optional float neg_overlap = 13 [default = 0.5];
   // Type of coding method for bbox.
   optional PriorBoxParameter.CodeType code_type = 14 [default = CORNER];
+  // If true, encode the variance of prior box in the loc loss target instead of
+  // in bbox.
+  optional bool encode_variance_in_target = 16 [default = false];
 }
 
 message MVNParameter {

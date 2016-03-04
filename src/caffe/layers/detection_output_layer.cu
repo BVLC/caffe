@@ -25,8 +25,8 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   Dtype* bbox_data = bbox_preds.mutable_gpu_data();
   const int loc_count = bbox_preds.count();
   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
-      num_priors_, share_location_, num_loc_classes_, background_label_id_,
-      bbox_data);
+      variance_encoded_in_target_, num_priors_, share_location_,
+      num_loc_classes_, background_label_id_, bbox_data);
 
   // Compute overlap between detection results.
   Blob<bool> overlapped(num, num_loc_classes_, num_priors_, num_priors_);
