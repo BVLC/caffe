@@ -59,9 +59,10 @@ template __host__ __device__ double JaccardOverlapGPU(const double* bbox1,
 template <typename Dtype>
 __global__ void DecodeBBoxesKernel(const int nthreads,
           const Dtype* loc_data, const Dtype* prior_data,
-          const CodeType code_type, const int num_priors,
-          const bool share_location, const int num_loc_classes,
-          const int background_label_id, Dtype* bbox_data) {
+          const CodeType code_type, const bool variance_encoded_in_target,
+          const int num_priors, const bool share_location,
+          const int num_loc_classes, const int background_label_id,
+          Dtype* bbox_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int i = index % 4;
     const int c = (index / 4) % num_loc_classes;
@@ -70,11 +71,18 @@ __global__ void DecodeBBoxesKernel(const int nthreads,
       // Ignore background class if not share_location.
       return;
     }
-    int pi = d * 4;
+    const int pi = d * 4;
+    const int vi = pi + num_priors * 4;
     if (code_type == PriorBoxParameter_CodeType_CORNER) {
-      pi += i;
-      const int vi = pi + num_priors * 4;
-      bbox_data[index] = prior_data[pi] + loc_data[index] * prior_data[vi];
+      if (variance_encoded_in_target) {
+        // variance is encoded in target, we simply need to add the offset
+        // predictions.
+        bbox_data[index] = prior_data[pi + i] + loc_data[index];
+      } else {
+        // variance is encoded in bbox, we need to scale the offset accordingly.
+        bbox_data[index] =
+          prior_data[pi + i] + loc_data[index] * prior_data[vi + i];
+      }
     } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
       const Dtype p_xmin = prior_data[pi];
       const Dtype p_ymin = prior_data[pi + 1];
@@ -90,10 +98,26 @@ __global__ void DecodeBBoxesKernel(const int nthreads,
       const Dtype xmax = loc_data[index - i + 2];
       const Dtype ymax = loc_data[index - i + 3];
 
-      const Dtype decode_bbox_center_x = xmin * prior_width + prior_center_x;
-      const Dtype decode_bbox_center_y = ymin * prior_height + prior_center_y;
-      const Dtype decode_bbox_width = exp(xmax) * prior_width;
-      const Dtype decode_bbox_height = exp(ymax) * prior_height;
+      Dtype decode_bbox_center_x, decode_bbox_center_y;
+      Dtype decode_bbox_width, decode_bbox_height;
+      if (variance_encoded_in_target) {
+        // variance is encoded in target, we simply need to retore the offset
+        // predictions.
+        decode_bbox_center_x = xmin * prior_width + prior_center_x;
+        decode_bbox_center_y = ymin * prior_height + prior_center_y;
+        decode_bbox_width = exp(xmax) * prior_width;
+        decode_bbox_height = exp(ymax) * prior_height;
+      } else {
+        // variance is encoded in bbox, we need to scale the offset accordingly.
+        decode_bbox_center_x =
+          prior_data[vi] * xmin * prior_width + prior_center_x;
+        decode_bbox_center_y =
+          prior_data[vi + 1] * ymin * prior_height + prior_center_y;
+        decode_bbox_width =
+          exp(prior_data[vi + 2] * xmax) * prior_width;
+        decode_bbox_height =
+          exp(prior_data[vi + 3] * ymax) * prior_height;
+      }
 
       switch (i) {
         case 0:
@@ -118,27 +142,30 @@ __global__ void DecodeBBoxesKernel(const int nthreads,
 template <typename Dtype>
 void DecodeBBoxesGPU(const int nthreads,
           const Dtype* loc_data, const Dtype* prior_data,
-          const CodeType code_type, const int num_priors,
-          const bool share_location, const int num_loc_classes,
-          const int background_label_id, Dtype* bbox_data) {
+          const CodeType code_type, const bool variance_encoded_in_target,
+          const int num_priors, const bool share_location,
+          const int num_loc_classes, const int background_label_id,
+          Dtype* bbox_data) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   DecodeBBoxesKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
       CAFFE_CUDA_NUM_THREADS>>>(nthreads, loc_data, prior_data, code_type,
-      num_priors, share_location, num_loc_classes, background_label_id,
-      bbox_data);
+      variance_encoded_in_target, num_priors, share_location, num_loc_classes,
+      background_label_id, bbox_data);
   CUDA_POST_KERNEL_CHECK;
 }
 
 template void DecodeBBoxesGPU(const int nthreads,
           const float* loc_data, const float* prior_data,
-          const CodeType code_type, const int num_priors,
-          const bool share_location, const int num_loc_classes,
-          const int background_label_id, float* bbox_data);
+          const CodeType code_type, const bool variance_encoded_in_target,
+          const int num_priors, const bool share_location,
+          const int num_loc_classes, const int background_label_id,
+          float* bbox_data);
 template void DecodeBBoxesGPU(const int nthreads,
           const double* loc_data, const double* prior_data,
-          const CodeType code_type, const int num_priors,
-          const bool share_location, const int num_loc_classes,
-          const int background_label_id, double* bbox_data);
+          const CodeType code_type, const bool variance_encoded_in_target,
+          const int num_priors, const bool share_location,
+          const int num_loc_classes, const int background_label_id,
+          double* bbox_data);
 
 template <typename Dtype>
 __global__ void ComputeOverlappedKernel(const int nthreads,

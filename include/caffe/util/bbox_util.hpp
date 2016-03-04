@@ -77,21 +77,23 @@ float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 // Encode a bbox according to a prior bbox.
 void EncodeBBox(const NormalizedBBox& prior_bbox,
     const vector<float>& prior_variance, const CodeType code_type,
-    const NormalizedBBox& bbox, NormalizedBBox* encode_bbox);
+    const bool encode_variance_in_target, const NormalizedBBox& bbox,
+    NormalizedBBox* encode_bbox);
 
 // Check if a bbox meet emit constraint w.r.t. src_bbox.
 bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
-                        const NormalizedBBox& bbox,
-                        const EmitConstraint& emit_constraint);
+    const NormalizedBBox& bbox, const EmitConstraint& emit_constraint);
 
 // Decode a bbox according to a prior bbox.
 void DecodeBBox(const NormalizedBBox& prior_bbox,
     const vector<float>& prior_variance, const CodeType code_type,
-    const NormalizedBBox& bbox, NormalizedBBox* decode_bbox);
+    const bool variance_encoded_in_target, const NormalizedBBox& bbox,
+    NormalizedBBox* decode_bbox);
 
 // Decode a set of bboxes according to a set of prior bboxes.
 void DecodeBBoxes(const vector<NormalizedBBox>& prior_bboxes,
-    const vector<vector<float> >& prior_variances, const CodeType code_type,
+    const vector<vector<float> >& prior_variances,
+    const CodeType code_type, const bool variance_encoded_in_target,
     const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes);
 
@@ -237,9 +239,10 @@ __host__ __device__ Dtype JaccardOverlapGPU(const Dtype* bbox1,
 template <typename Dtype>
 void DecodeBBoxesGPU(const int nthreads,
           const Dtype* loc_data, const Dtype* prior_data,
-          const CodeType code_type, const int num_priors,
-          const bool share_location, const int num_loc_classes,
-          const int background_label_id, Dtype* bbox_data);
+          const CodeType code_type, const bool variance_encoded_in_target,
+          const int num_priors, const bool share_location,
+          const int num_loc_classes, const int background_label_id,
+          Dtype* bbox_data);
 
 template <typename Dtype>
 void ComputeOverlappedGPU(const int nthreads,

@@ -198,21 +198,29 @@ bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
 
 void EncodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
-    const CodeType code_type, const NormalizedBBox& bbox,
-    NormalizedBBox* encode_bbox) {
+    const CodeType code_type, const bool encode_variance_in_target,
+    const NormalizedBBox& bbox, NormalizedBBox* encode_bbox) {
   if (code_type == PriorBoxParameter_CodeType_CORNER) {
-    CHECK_EQ(prior_variance.size(), 4);
-    for (int i = 0; i < prior_variance.size(); ++i) {
-      CHECK_GT(prior_variance[i], 0);
+    if (encode_variance_in_target) {
+      encode_bbox->set_xmin(bbox.xmin() - prior_bbox.xmin());
+      encode_bbox->set_ymin(bbox.ymin() - prior_bbox.ymin());
+      encode_bbox->set_xmax(bbox.xmax() - prior_bbox.xmax());
+      encode_bbox->set_ymax(bbox.ymax() - prior_bbox.ymax());
+    } else {
+      // Encode variance in bbox.
+      CHECK_EQ(prior_variance.size(), 4);
+      for (int i = 0; i < prior_variance.size(); ++i) {
+        CHECK_GT(prior_variance[i], 0);
+      }
+      encode_bbox->set_xmin(
+          (bbox.xmin() - prior_bbox.xmin()) / prior_variance[0]);
+      encode_bbox->set_ymin(
+          (bbox.ymin() - prior_bbox.ymin()) / prior_variance[1]);
+      encode_bbox->set_xmax(
+          (bbox.xmax() - prior_bbox.xmax()) / prior_variance[2]);
+      encode_bbox->set_ymax(
+          (bbox.ymax() - prior_bbox.ymax()) / prior_variance[3]);
     }
-    encode_bbox->set_xmin(
-        (bbox.xmin() - prior_bbox.xmin()) / prior_variance[0]);
-    encode_bbox->set_ymin(
-        (bbox.ymin() - prior_bbox.ymin()) / prior_variance[1]);
-    encode_bbox->set_xmax(
-        (bbox.xmax() - prior_bbox.xmax()) / prior_variance[2]);
-    encode_bbox->set_ymax(
-        (bbox.ymax() - prior_bbox.ymax()) / prior_variance[3]);
   } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
     float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
     CHECK_GT(prior_width, 0);
@@ -228,10 +236,22 @@ void EncodeBBox(
     float bbox_center_x = (bbox.xmin() + bbox.xmax()) / 2.;
     float bbox_center_y = (bbox.ymin() + bbox.ymax()) / 2.;
 
-    encode_bbox->set_xmin((bbox_center_x - prior_center_x) / prior_width);
-    encode_bbox->set_ymin((bbox_center_y - prior_center_y) / prior_height);
-    encode_bbox->set_xmax(log(bbox_width / prior_width));
-    encode_bbox->set_ymax(log(bbox_height / prior_height));
+    if (encode_variance_in_target) {
+      encode_bbox->set_xmin((bbox_center_x - prior_center_x) / prior_width);
+      encode_bbox->set_ymin((bbox_center_y - prior_center_y) / prior_height);
+      encode_bbox->set_xmax(log(bbox_width / prior_width));
+      encode_bbox->set_ymax(log(bbox_height / prior_height));
+    } else {
+      // Encode variance in bbox.
+      encode_bbox->set_xmin(
+          (bbox_center_x - prior_center_x) / prior_width / prior_variance[0]);
+      encode_bbox->set_ymin(
+          (bbox_center_y - prior_center_y) / prior_height / prior_variance[1]);
+      encode_bbox->set_xmax(
+          log(bbox_width / prior_width) / prior_variance[2]);
+      encode_bbox->set_ymax(
+          log(bbox_height / prior_height) / prior_variance[3]);
+    }
   } else {
     LOG(FATAL) << "Unknown LocLossType.";
   }
@@ -239,13 +259,27 @@ void EncodeBBox(
 
 void DecodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
-    const CodeType code_type, const NormalizedBBox& bbox,
-    NormalizedBBox* decode_bbox) {
+    const CodeType code_type, const bool variance_encoded_in_target,
+    const NormalizedBBox& bbox, NormalizedBBox* decode_bbox) {
   if (code_type == PriorBoxParameter_CodeType_CORNER) {
-    decode_bbox->set_xmin(prior_bbox.xmin() + prior_variance[0] * bbox.xmin());
-    decode_bbox->set_ymin(prior_bbox.ymin() + prior_variance[1] * bbox.ymin());
-    decode_bbox->set_xmax(prior_bbox.xmax() + prior_variance[2] * bbox.xmax());
-    decode_bbox->set_ymax(prior_bbox.ymax() + prior_variance[3] * bbox.ymax());
+    if (variance_encoded_in_target) {
+      // variance is encoded in target, we simply need to add the offset
+      // predictions.
+      decode_bbox->set_xmin(prior_bbox.xmin() + bbox.xmin());
+      decode_bbox->set_ymin(prior_bbox.ymin() + bbox.ymin());
+      decode_bbox->set_xmax(prior_bbox.xmax() + bbox.xmax());
+      decode_bbox->set_ymax(prior_bbox.ymax() + bbox.ymax());
+    } else {
+      // variance is encoded in bbox, we need to scale the offset accordingly.
+      decode_bbox->set_xmin(
+          prior_bbox.xmin() + prior_variance[0] * bbox.xmin());
+      decode_bbox->set_ymin(
+          prior_bbox.ymin() + prior_variance[1] * bbox.ymin());
+      decode_bbox->set_xmax(
+          prior_bbox.xmax() + prior_variance[2] * bbox.xmax());
+      decode_bbox->set_ymax(
+          prior_bbox.ymax() + prior_variance[3] * bbox.ymax());
+    }
   } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
     float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
     CHECK_GT(prior_width, 0);
@@ -254,10 +288,26 @@ void DecodeBBox(
     float prior_center_x = (prior_bbox.xmin() + prior_bbox.xmax()) / 2.;
     float prior_center_y = (prior_bbox.ymin() + prior_bbox.ymax()) / 2.;
 
-    float decode_bbox_center_x = bbox.xmin() * prior_width + prior_center_x;
-    float decode_bbox_center_y = bbox.ymin() * prior_height + prior_center_y;
-    float decode_bbox_width = exp(bbox.xmax()) * prior_width;
-    float decode_bbox_height = exp(bbox.ymax()) * prior_height;
+    float decode_bbox_center_x, decode_bbox_center_y;
+    float decode_bbox_width, decode_bbox_height;
+    if (variance_encoded_in_target) {
+      // variance is encoded in target, we simply need to retore the offset
+      // predictions.
+      decode_bbox_center_x = bbox.xmin() * prior_width + prior_center_x;
+      decode_bbox_center_y = bbox.ymin() * prior_height + prior_center_y;
+      decode_bbox_width = exp(bbox.xmax()) * prior_width;
+      decode_bbox_height = exp(bbox.ymax()) * prior_height;
+    } else {
+      // variance is encoded in bbox, we need to scale the offset accordingly.
+      decode_bbox_center_x =
+          prior_variance[0] * bbox.xmin() * prior_width + prior_center_x;
+      decode_bbox_center_y =
+          prior_variance[1] * bbox.ymin() * prior_height + prior_center_y;
+      decode_bbox_width =
+          exp(prior_variance[2] * bbox.xmax()) * prior_width;
+      decode_bbox_height =
+          exp(prior_variance[3] * bbox.ymax()) * prior_height;
+    }
 
     decode_bbox->set_xmin(decode_bbox_center_x - decode_bbox_width / 2.);
     decode_bbox->set_ymin(decode_bbox_center_y - decode_bbox_height / 2.);
@@ -273,7 +323,7 @@ void DecodeBBox(
 void DecodeBBoxes(
     const vector<NormalizedBBox>& prior_bboxes,
     const vector<vector<float> >& prior_variances,
-    const CodeType code_type,
+    const CodeType code_type, const bool variance_encoded_in_target,
     const vector<NormalizedBBox>& bboxes,
     vector<NormalizedBBox>* decode_bboxes) {
   CHECK_EQ(prior_bboxes.size(), prior_variances.size());
@@ -286,7 +336,7 @@ void DecodeBBoxes(
   for (int i = 0; i < num_bboxes; ++i) {
     NormalizedBBox decode_bbox;
     DecodeBBox(prior_bboxes[i], prior_variances[i], code_type,
-               bboxes[i], &decode_bbox);
+               variance_encoded_in_target, bboxes[i], &decode_bbox);
     decode_bboxes->push_back(decode_bbox);
   }
 }

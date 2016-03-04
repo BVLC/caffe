@@ -271,8 +271,18 @@ TEST_F(CPUBBoxUtilTest, TestEncodeBBoxCorner) {
 
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   NormalizedBBox encode_bbox;
-  EncodeBBox(prior_bbox, prior_variance, code_type, bbox, &encode_bbox);
 
+  bool encode_variance_in_target = true;
+  EncodeBBox(prior_bbox, prior_variance, code_type, encode_variance_in_target,
+             bbox, &encode_bbox);
+  EXPECT_NEAR(encode_bbox.xmin(), -0.1, eps);
+  EXPECT_NEAR(encode_bbox.ymin(), 0.1, eps);
+  EXPECT_NEAR(encode_bbox.xmax(), 0.1, eps);
+  EXPECT_NEAR(encode_bbox.ymax(), 0.2, eps);
+
+  encode_variance_in_target = false;
+  EncodeBBox(prior_bbox, prior_variance, code_type, encode_variance_in_target,
+             bbox, &encode_bbox);
   EXPECT_NEAR(encode_bbox.xmin(), -1, eps);
   EXPECT_NEAR(encode_bbox.ymin(), 1, eps);
   EXPECT_NEAR(encode_bbox.xmax(), 1, eps);
@@ -285,7 +295,11 @@ TEST_F(CPUBBoxUtilTest, TestEncodeBBoxCenterSize) {
   prior_bbox.set_ymin(0.1);
   prior_bbox.set_xmax(0.3);
   prior_bbox.set_ymax(0.3);
-  vector<float> prior_variance(4, 0.1);
+  vector<float> prior_variance;
+  prior_variance.push_back(0.1);
+  prior_variance.push_back(0.1);
+  prior_variance.push_back(0.2);
+  prior_variance.push_back(0.2);
 
   NormalizedBBox bbox;
   bbox.set_xmin(0);
@@ -295,12 +309,23 @@ TEST_F(CPUBBoxUtilTest, TestEncodeBBoxCenterSize) {
 
   CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
   NormalizedBBox encode_bbox;
-  EncodeBBox(prior_bbox, prior_variance, code_type, bbox, &encode_bbox);
 
+  bool encode_variance_in_target = true;
+  EncodeBBox(prior_bbox, prior_variance, code_type, encode_variance_in_target,
+             bbox, &encode_bbox);
   EXPECT_NEAR(encode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(encode_bbox.ymin(), 0.75, eps);
   EXPECT_NEAR(encode_bbox.xmax(), log(2.), eps);
   EXPECT_NEAR(encode_bbox.ymax(), log(3./2), eps);
+
+  encode_variance_in_target = false;
+  EncodeBBox(prior_bbox, prior_variance, code_type, encode_variance_in_target,
+             bbox, &encode_bbox);
+  float eps = 1e-5;
+  EXPECT_NEAR(encode_bbox.xmin(), 0 / 0.1, eps);
+  EXPECT_NEAR(encode_bbox.ymin(), 0.75 / 0.1, eps);
+  EXPECT_NEAR(encode_bbox.xmax(), log(2.) / 0.2, eps);
+  EXPECT_NEAR(encode_bbox.ymax(), log(3./2) / 0.2, eps);
 }
 
 TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
@@ -319,12 +344,22 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCorner) {
 
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   NormalizedBBox decode_bbox;
-  DecodeBBox(prior_bbox, prior_variance, code_type, bbox, &decode_bbox);
 
+  bool variance_encoded_in_target = false;
+  DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
+             bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
   EXPECT_NEAR(decode_bbox.ymax(), 0.5, eps);
+
+  variance_encoded_in_target = true;
+  DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
+             bbox, &decode_bbox);
+  EXPECT_NEAR(decode_bbox.xmin(), -0.9, eps);
+  EXPECT_NEAR(decode_bbox.ymin(), 1.1, eps);
+  EXPECT_NEAR(decode_bbox.xmax(), 1.3, eps);
+  EXPECT_NEAR(decode_bbox.ymax(), 2.3, eps);
 }
 
 TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
@@ -333,7 +368,11 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
   prior_bbox.set_ymin(0.1);
   prior_bbox.set_xmax(0.3);
   prior_bbox.set_ymax(0.3);
-  vector<float> prior_variance(4, 0.1);
+  vector<float> prior_variance;
+  prior_variance.push_back(0.1);
+  prior_variance.push_back(0.1);
+  prior_variance.push_back(0.2);
+  prior_variance.push_back(0.2);
 
   NormalizedBBox bbox;
   bbox.set_xmin(0);
@@ -343,8 +382,22 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxCenterSize) {
 
   CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
   NormalizedBBox decode_bbox;
-  DecodeBBox(prior_bbox, prior_variance, code_type, bbox, &decode_bbox);
 
+  bool variance_encoded_in_target = true;
+  DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
+             bbox, &decode_bbox);
+  EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
+  EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
+  EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
+  EXPECT_NEAR(decode_bbox.ymax(), 0.5, eps);
+
+  bbox.set_xmin(0);
+  bbox.set_ymin(7.5);
+  bbox.set_xmax(log(2) * 5);
+  bbox.set_ymax(log(3./2) * 5);
+  variance_encoded_in_target = false;
+  DecodeBBox(prior_bbox, prior_variance, code_type, variance_encoded_in_target,
+             bbox, &decode_bbox);
   EXPECT_NEAR(decode_bbox.xmin(), 0, eps);
   EXPECT_NEAR(decode_bbox.ymin(), 0.2, eps);
   EXPECT_NEAR(decode_bbox.xmax(), 0.4, eps);
@@ -376,14 +429,27 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCorner) {
 
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   vector<NormalizedBBox> decode_bboxes;
+
+  bool variance_encoded_in_target = false;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               bboxes, &decode_bboxes);
+               variance_encoded_in_target, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -0.1, eps);
     EXPECT_NEAR(decode_bboxes[i-1].ymin(), 0.1*i + (i+1)%2 * 0.1, eps);
     EXPECT_NEAR(decode_bboxes[i-1].xmax(), 0.1*i + 0.2 + (i+1)%2 * 0.1, eps);
     EXPECT_NEAR(decode_bboxes[i-1].ymax(), 0.1*i + 0.2 + i%2 * 0.1, eps);
+  }
+
+  variance_encoded_in_target = true;
+  DecodeBBoxes(prior_bboxes, prior_variances, code_type,
+               variance_encoded_in_target, bboxes, &decode_bboxes);
+  EXPECT_EQ(decode_bboxes.size(), 4);
+  for (int i = 1; i < 5; ++i) {
+    EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0.1*i + i%2 * -1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].ymin(), 0.1*i + (i+1)%2, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].xmax(), 0.1*i + 0.2 + (i+1)%2, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].ymax(), 0.1*i + 0.2 + i%2, eps);
   }
 }
 
@@ -399,7 +465,11 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
     prior_bbox.set_ymax(0.1*i + 0.2);
     prior_bboxes.push_back(prior_bbox);
 
-    vector<float> prior_variance(4, 0.1);
+    vector<float> prior_variance;
+    prior_variance.push_back(0.1);
+    prior_variance.push_back(0.1);
+    prior_variance.push_back(0.2);
+    prior_variance.push_back(0.2);
     prior_variances.push_back(prior_variance);
 
     NormalizedBBox bbox;
@@ -412,8 +482,29 @@ TEST_F(CPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
 
   CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
   vector<NormalizedBBox> decode_bboxes;
+
+  bool variance_encoded_in_target = true;
   DecodeBBoxes(prior_bboxes, prior_variances, code_type,
-               bboxes, &decode_bboxes);
+               variance_encoded_in_target, bboxes, &decode_bboxes);
+  EXPECT_EQ(decode_bboxes.size(), 4);
+  float eps = 1e-5;
+  for (int i = 1; i < 5; ++i) {
+    EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].ymin(), 0.2 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].xmax(), 0.4 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(decode_bboxes[i-1].ymax(), 0.5 + (i - 1) * 0.1, eps);
+  }
+
+  variance_encoded_in_target = false;
+  for (int i = 0; i < 4; ++i) {
+    NormalizedBBox bbox;
+    bboxes[i].set_xmin(0);
+    bboxes[i].set_ymin(7.5);
+    bboxes[i].set_xmax(log(2.) * 5);
+    bboxes[i].set_ymax(log(3./2) * 5);
+  }
+  DecodeBBoxes(prior_bboxes, prior_variances, code_type,
+               variance_encoded_in_target, bboxes, &decode_bboxes);
   EXPECT_EQ(decode_bboxes.size(), 4);
   for (int i = 1; i < 5; ++i) {
     EXPECT_NEAR(decode_bboxes[i-1].xmin(), 0 + (i - 1) * 0.1, eps);
@@ -1343,16 +1434,29 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCorner) {
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   Blob<TypeParam> bboxes(1, num * 4, 1, 1);
   TypeParam* bbox_data = bboxes.mutable_gpu_data();
-  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type, num, false, 1, -1,
-                  bbox_data);
-  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
 
+  bool variance_encoded_in_target = false;
+  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -0.1, eps);
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.1*i + (i+1)%2 * 0.1, eps);
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2],
                 0.1*i + 0.2 + (i+1)%2 * 0.1, eps);
     EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.1*i + 0.2 + i%2 * 0.1, eps);
+  }
+
+  variance_encoded_in_target = true;
+  bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+  bbox_cpu_data = bboxes.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0.1*i + i%2 * -1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.1*i + (i+1)%2, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2], 0.1*i + 0.2 + (i+1)%2, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.1*i + 0.2 + i%2, eps);
   }
 }
 
@@ -1383,9 +1487,12 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   Blob<TypeParam> bboxes(1, num * num_loc_classes * 4, 1, 1);
   TypeParam* bbox_data = bboxes.mutable_gpu_data();
+
+  bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
-                  num, false, num_loc_classes, -1, bbox_data);
-  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
+                  variance_encoded_in_target, num, false, num_loc_classes, -1,
+                  bbox_data);
+  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
       EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
@@ -1396,6 +1503,25 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClasses) {
                   0.1*i + 0.2 + (i+1)%2 * (2-j) * 0.1, eps);
       EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 3],
                   0.1*i + 0.2 + i%2 * (2-j) * 0.1, eps);
+    }
+  }
+
+  variance_encoded_in_target = true;
+  bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+                  variance_encoded_in_target, num, false, num_loc_classes, -1,
+                  bbox_data);
+  bbox_cpu_data = bboxes.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    for (int j = 0; j < num_loc_classes; ++j) {
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
+                  0.1*i + i%2 * (2-j) * -1, eps);
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 1],
+                  0.1*i + (i+1)%2 * (2-j), eps);
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 2],
+                  0.1*i + 0.2 + (i+1)%2 * (2-j), eps);
+      EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 3],
+                  0.1*i + 0.2 + i%2 * (2-j), eps);
     }
   }
 }
@@ -1427,9 +1553,12 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
   CodeType code_type = PriorBoxParameter_CodeType_CORNER;
   Blob<TypeParam> bboxes(1, num * num_loc_classes * 4, 1, 1);
   TypeParam* bbox_data = bboxes.mutable_gpu_data();
+
+  bool variance_encoded_in_target = false;
   DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
-                  num, false, num_loc_classes, 0, bbox_data);
-  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
+                  variance_encoded_in_target, num, false, num_loc_classes, 0,
+                  bbox_data);
+  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
     for (int j = 0; j < num_loc_classes; ++j) {
       if (j == 0) {
@@ -1438,13 +1567,38 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCornerTwoClassesNegClass0) {
         }
       } else {
         EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
-                    0.1*i + i%2 * - 0.1, eps);
+                    0.1*i + i%2 * -0.1, eps);
         EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 1],
                     0.1*i + (i+1)%2 * 0.1, eps);
         EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 2],
                     0.1*i + 0.2 + (i+1)%2 * 0.1, eps);
         EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 3],
                     0.1*i + 0.2 + i%2 * 0.1, eps);
+      }
+    }
+  }
+
+  variance_encoded_in_target = true;
+  bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * num_loc_classes * 4, loc_data, prior_data, code_type,
+                  variance_encoded_in_target, num, false, num_loc_classes, 0,
+                  bbox_data);
+  bbox_cpu_data = bboxes.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    for (int j = 0; j < num_loc_classes; ++j) {
+      if (j == 0) {
+        for (int k = 0; k < 4; ++k) {
+          EXPECT_NEAR(bbox_cpu_data[(i - 1) * 2 * 4 + k], 0., eps);
+        }
+      } else {
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4],
+                    0.1*i + i%2 * -1, eps);
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 1],
+                    0.1*i + (i+1)%2, eps);
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 2],
+                    0.1*i + 0.2 + (i+1)%2, eps);
+        EXPECT_NEAR(bbox_cpu_data[((i - 1) * 2 + j) * 4 + 3],
+                    0.1*i + 0.2 + i%2, eps);
       }
     }
   }
@@ -1461,9 +1615,10 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
     prior_data[(i - 1) * 4 + 1] = 0.1 * i;
     prior_data[(i - 1) * 4 + 2] = 0.1 * i + 0.2;
     prior_data[(i - 1) * 4 + 3] = 0.1 * i + 0.2;
-    for (int j = 0; j < 4; ++j) {
-      prior_data[num * 4 + (i - 1) * 4 + j] = 0.1;
-    }
+    prior_data[num * 4 + (i - 1) * 4] = 0.1;
+    prior_data[num * 4 + (i - 1) * 4 + 1] = 0.1;
+    prior_data[num * 4 + (i - 1) * 4 + 2] = 0.2;
+    prior_data[num * 4 + (i - 1) * 4 + 3] = 0.2;
 
     loc_data[(i - 1) * 4] = 0;
     loc_data[(i - 1) * 4 + 1] = 0.75;
@@ -1474,15 +1629,34 @@ TYPED_TEST(GPUBBoxUtilTest, TestDecodeBBoxesCenterSize) {
   CodeType code_type = PriorBoxParameter_CodeType_CENTER_SIZE;
   Blob<TypeParam> bboxes(1, num * 4, 1, 1);
   TypeParam* bbox_data = bboxes.mutable_gpu_data();
-  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type, num, false, 1, -1,
-                  bbox_data);
-  const TypeParam* bbox_cpu_data = bboxes.cpu_data();
 
+  bool variance_encoded_in_target = true;
+  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+  TypeParam* bbox_cpu_data = bboxes.mutable_cpu_data();
   for (int i = 1; i <= num; ++i) {
-    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i - 1) * 0.1, eps);
-    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.2 + (i - 1) * 0.1, eps);
-    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2], 0.4 + (i - 1) * 0.1, eps);
-    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.5 + (i - 1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.2 + (i-1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2], 0.4 + (i-1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.5 + (i-1) * 0.1, eps);
+  }
+
+  variance_encoded_in_target = false;
+  for (int i = 1; i <= num; ++i) {
+    loc_data[(i - 1) * 4] = 0;
+    loc_data[(i - 1) * 4 + 1] = 7.5;
+    loc_data[(i - 1) * 4 + 2] = log(2.) * 5;
+    loc_data[(i - 1) * 4 + 3] = log(3./2) * 5;
+  }
+  bbox_data = bboxes.mutable_gpu_data();
+  DecodeBBoxesGPU(num * 4, loc_data, prior_data, code_type,
+                  variance_encoded_in_target, num, false, 1, -1, bbox_data);
+  bbox_cpu_data = bboxes.mutable_cpu_data();
+  for (int i = 1; i <= num; ++i) {
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4], 0 + (i-1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 1], 0.2 + (i-1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 2], 0.4 + (i-1) * 0.1, eps);
+    EXPECT_NEAR(bbox_cpu_data[(i - 1) * 4 + 3], 0.5 + (i-1) * 0.1, eps);
   }
 }
 

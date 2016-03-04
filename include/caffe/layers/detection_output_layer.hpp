@@ -70,6 +70,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   int num_loc_classes_;
   int background_label_id_;
   CodeType code_type_;
+  bool variance_encoded_in_target_;
   int keep_top_k_;
 
   int num_;
