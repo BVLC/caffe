@@ -97,7 +97,8 @@ bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
 }
 
 bool NetNeedsV1ToV2Upgrade(const NetParameter& net_param) {
-  return net_param.layers_size() > 0;
+  return false;// beniz: deactivated, breaks otherwise good nets.
+  //return net_param.layers_size() > 0;
 }
 
 bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
