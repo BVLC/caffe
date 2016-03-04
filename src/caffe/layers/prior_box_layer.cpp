@@ -42,8 +42,20 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   num_priors_ += aspect_ratios_.size();
   clip_ = prior_box_param.clip();
-  variance_ = prior_box_param.variance();
-  CHECK_GT(variance_, 0);
+  if (prior_box_param.variance_size() > 1) {
+    // Must and only provide 4 variance.
+    CHECK_EQ(prior_box_param.variance_size(), 4);
+    for (int i = 0; i < prior_box_param.variance_size(); ++i) {
+      CHECK_GT(prior_box_param.variance(i), 0);
+      variance_.push_back(prior_box_param.variance(i));
+    }
+  } else if (prior_box_param.variance_size() == 1) {
+    CHECK_GT(prior_box_param.variance(0), 0);
+    variance_.push_back(prior_box_param.variance(0));
+  } else {
+    // Set default to 0.1.
+    variance_.push_back(0.1);
+  }
 }
 
 template <typename Dtype>
@@ -131,7 +143,21 @@ void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   // set the variance.
   top_data += top[0]->offset(0, 1);
-  caffe_set<Dtype>(dim, Dtype(variance_), top_data);
+  if (variance_.size() == 1) {
+    caffe_set<Dtype>(dim, Dtype(variance_[0]), top_data);
+  } else {
+    int count = 0;
+    for (int h = 0; h < layer_height; ++h) {
+      for (int w = 0; w < layer_width; ++w) {
+        for (int i = 0; i < num_priors_; ++i) {
+          for (int j = 0; j < 4; ++j) {
+            top_data[count] = variance_[j];
+            ++count;
+          }
+        }
+      }
+    }
+  }
 }
 
 INSTANTIATE_CLASS(PriorBoxLayer);
