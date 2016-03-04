@@ -8,6 +8,7 @@ This work is partially supported by:
 - HHMI Janelia
 - UZH, INI
 - ETH Zurich
+- Intel
 
 For a C++ frontend and models to use for image segmentation with this fork, see:
 - Frontend: https://github.com/naibaf7/caffe_neural_tool
@@ -17,8 +18,61 @@ For a C++ frontend and models to use for image segmentation with this fork, see:
 
 The backend is supposed to work with all vendors. Note however there may be problems with libOpenCL.so provided by nVidia.
 It is therefore recommended to install another OpenCL implementation after installing nVidia drivers. Possibilities are:
-- Intel OpenCL, recommended if you have an Intel CPU along the nVidia GPU.
+- Intel OpenCL, see below for details. 
 - AMD APP SDK (OpenCL), recommended if you have an AMD GPU or CPU.
+
+### OpenCL for Intel platform for Linux.
+
+For 4th or 5th generation Intel Cores and Intel® Xeon® v3, or Intel® Xeon® v4 processor.
+We recommend the driver at the following link: https://software.intel.com/en-us/articles/opencl-drivers#latest_linux_driver.
+For 3th generation cores and atom, we recommend Beignet: https://www.freedesktop.org/wiki/Software/Beignet/.
+
+The spatial domain convolution kernel is for Intel platform only currently, due to
+a vendor specific extension cl_intel_subgroup. This convolution kernel applies auto-tuner
+mechanism to tune a best kernel for current parameters then store the result to the sub
+directory spatialkernels. Thus at the first run, it will take relatively long time to perform
+the auto-tuning process. At the second run, it will get the result from the cache subdirectory
+directly.
+
+To use this fast convolution kernel, you need to create a subdirectory "spatialkernels" at
+the current directory firstly otherwise, it will not store the tuning result.
+
+To enable spatial domain convolution, open the net model specification, and add entry "engine: SPATIAL" to all convolution layer specification.
+
+Take AlexNet as an example, we edit file $CAFFE_ROOT/models/bvlc_alexnet/train_val.prototxt, and add the following line to make conv1 layer to be computed using spatial convolution..
+
+<pre><code>
+     layer {
+       name: "conv1"
+       type: "Convolution"
+       bottom: "data"
+       top: "conv1"
+       param {
+         lr_mult: 1
+         decay_mult: 1
+       }
+       param {
+         lr_mult: 2
+         decay_mult: 0
+       }
+       convolution_param {
+         num_output: 96
+         kernel_size: 11
+         stride: 4
+         engine: SPATIAL 		<-------------------------- this line!
+         weight_filler {
+           type: "gaussian"
+           std: 0.01
+         }
+         bias_filler {
+           type: "constant"
+           value: 0
+         }
+       }
+     }
+</code></pre>
+
+*Please use the latest git master viennacl which has the patch: https://github.com/viennacl/viennacl-dev/pull/181*
 
 ## Technical Report
 Available on arXiv:
