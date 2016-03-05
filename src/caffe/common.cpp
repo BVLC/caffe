@@ -187,7 +187,7 @@ root_solver_(true) {}
 
 Caffe::~Caffe() {}
 
-void Caffe::set_random_seed(const size_t seed) {
+void Caffe::set_random_seed(const size_t seed, device* device_context) {
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
 }
