@@ -11,6 +11,7 @@
 #include "viennacl/ocl/platform.hpp"
 namespace caffe {
 viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);
+viennacl::ocl::program & submit_conv_spatial_program(viennacl::ocl::context &ctx, string name, string options);
 }
 #endif
 #endif
