@@ -114,6 +114,19 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
   cblas_dscal(N, alpha, X, 1);
 }
 
+
+template <>
+void caffe_strided_scal<float>(const int N, const float alpha, float *X, int incx) {
+  cblas_sscal(N, alpha, X, incx);
+}
+
+template <>
+void caffe_strided_scal<double>(const int N, const double alpha, double *X, int incx) {
+  cblas_dscal(N, alpha, X, incx);
+}
+
+
+
 template <>
 void caffe_cpu_axpby<float>(const int N, const float alpha, const float* X,
                             const float beta, float* Y) {
