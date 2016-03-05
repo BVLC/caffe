@@ -13,13 +13,14 @@ namespace caffe {
 
 #ifdef USE_CUDA
 template<typename Dtype>
-__global__ void CopyForward(const int_tp nthreads, const int_tp dims,
-                            const Dtype* bottom_a, const bool forward_a,
-                            const Dtype* bottom_b, const bool forward_b,
-                            Dtype* top, const int_tp num,
-                            const int_tp channels_a, const int_tp channels_b,
-                            const int_tp* shape_a, const int_tp* shape_b) {
-  int_tp pad[6];  // NOLINT(runtime/arrays)
+__global__ void CopyForwardStack(const int_tp nthreads, const int_tp dims,
+                                 const Dtype* bottom_a, const bool forward_a,
+                                 const Dtype* bottom_b, const bool forward_b,
+                                 Dtype* top, const int_tp num,
+                                 const int_tp channels_a,
+                                 const int_tp channels_b, const int_tp* shape_a,
+                                 const int_tp* shape_b) {
+  int_tp pad[6];      // NOLINT(runtime/arrays)
   int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
   int_tp size_a = 1;
   int_tp size_b = 1;
@@ -62,13 +63,15 @@ __global__ void CopyForward(const int_tp nthreads, const int_tp dims,
 }
 
 template<typename Dtype>
-__global__ void CopyBackward(const int_tp nthreads, const int_tp dims,
-                             Dtype* bottom_a, const bool backward_a,
-                             Dtype* bottom_b, const bool backward_b,
-                             const Dtype* top, const int_tp num,
-                             const int_tp channels_a, const int_tp channels_b,
-                             const int_tp* shape_a, const int_tp* shape_b) {
-  int_tp pad[6];  // NOLINT(runtime/arrays)
+__global__ void CopyBackwardStack(const int_tp nthreads, const int_tp dims,
+                                  Dtype* bottom_a, const bool backward_a,
+                                  Dtype* bottom_b, const bool backward_b,
+                                  const Dtype* top, const int_tp num,
+                                  const int_tp channels_a,
+                                  const int_tp channels_b,
+                                  const int_tp* shape_a,
+                                  const int_tp* shape_b) {
+  int_tp pad[6];      // NOLINT(runtime/arrays)
   int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
   int_tp size_a = 1;
   int_tp size_b = 1;
@@ -109,6 +112,93 @@ __global__ void CopyBackward(const int_tp nthreads, const int_tp dims,
     }
   }
 }
+
+template<typename Dtype>
+__global__ void CopyForwardAdd(const int_tp nthreads, const int_tp dims,
+                               const Dtype* bottom_a, const bool forward_a,
+                               const Dtype* bottom_b, const bool forward_b,
+                               Dtype* top, const int_tp num,
+                               const int_tp channels, const int_tp* shape_a,
+                               const int_tp* shape_b) {
+  int_tp pad[6];      // NOLINT(runtime/arrays)
+  int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
+  int_tp size_a = 1;
+  int_tp size_b = 1;
+
+  for (int_tp i = 0; i < dims; ++i) {
+    pad[i] = (shape_b[i] - shape_a[i]) / 2;
+    size_a *= shape_a[i];
+    size_b *= shape_b[i];
+  }
+
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    int_tp batch_id = index / (channels * size_a);
+    int_tp counter = index;
+    for (int_tp i = dims - 1; i >= 0; --i) {
+      tmp_idx[i] = counter % shape_a[i];
+      counter /= shape_a[i];
+    }
+
+    top[index] = 0;
+    int_tp channel_id = (index / size_a) % channels;
+    int_tp aidx = batch_id * channels + channel_id;
+    for (int_tp i = 0; i < dims; ++i) {
+      aidx *= shape_a[i];
+      aidx += tmp_idx[i];
+    }
+    top[index] = forward_a ? top[index] + bottom_a[aidx] : top[index];
+    int_tp bidx = (batch_id * channels + channel_id) * size_b;
+    int_tp btemp = 1;
+    for (int_tp i = dims - 1; i >= 0; --i) {
+      bidx += btemp * (tmp_idx[i] + pad[i]);
+      btemp *= shape_b[i];
+    }
+    top[index] = forward_b ? top[index] + bottom_b[bidx] : top[index];
+  }
+}
+
+template<typename Dtype>
+__global__ void CopyBackwardAdd(const int_tp nthreads, const int_tp dims,
+                                Dtype* bottom_a, const bool backward_a,
+                                Dtype* bottom_b, const bool backward_b,
+                                const Dtype* top, const int_tp num,
+                                const int_tp channels, const int_tp* shape_a,
+                                const int_tp* shape_b) {
+  int_tp pad[6];      // NOLINT(runtime/arrays)
+  int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
+  int_tp size_a = 1;
+  int_tp size_b = 1;
+
+  for (int_tp i = 0; i < dims; ++i) {
+    pad[i] = (shape_b[i] - shape_a[i]) / 2;
+    size_a *= shape_a[i];
+    size_b *= shape_b[i];
+  }
+
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    int_tp batch_id = index / (channels * size_a);
+    int_tp counter = index;
+    for (int_tp i = dims - 1; i >= 0; --i) {
+      tmp_idx[i] = counter % shape_a[i];
+      counter /= shape_a[i];
+    }
+
+    int_tp channel_id = (index / size_a) % channels;
+    int_tp aidx = batch_id * channels + channel_id;
+    for (int_tp i = 0; i < dims; ++i) {
+      aidx *= shape_a[i];
+      aidx += tmp_idx[i];
+    }
+    bottom_a[aidx] = backward_a ? top[index] : 0;
+    int_tp bidx = (batch_id * channels + channel_id) * size_b;
+    int_tp btemp = 1;
+    for (int_tp i = dims - 1; i >= 0; --i) {
+      bidx += btemp * (tmp_idx[i] + pad[i]);
+      btemp *= shape_b[i];
+    }
+    bottom_b[bidx] = backward_b ? top[index] : 0;
+  }
+}
 #endif  // USE_CUDA
 
 template<typename Dtype>
@@ -129,13 +219,28 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    CopyForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS) (
-        count, spatial_dims, bottom_data_a,
-        forward_[0], bottom_data_b,
-        forward_[1], top_data, num, channels_a,
-        channels_b, shape_a_.gpu_data(), shape_b_.gpu_data());
-    CUDA_POST_KERNEL_CHECK;
+    switch (op_) {
+      case MergeCropParameter_MergeOp_STACK: {
+        CopyForwardStack<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+            CAFFE_CUDA_NUM_THREADS) (
+            count, spatial_dims, bottom_data_a,
+            forward_[0], bottom_data_b,
+            forward_[1], top_data, num, channels_a,
+            channels_b, shape_a_.gpu_data(), shape_b_.gpu_data());
+        CUDA_POST_KERNEL_CHECK;
+      }
+      break;
+      case MergeCropParameter_MergeOp_ADD: {
+        CopyForwardAdd<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+            CAFFE_CUDA_NUM_THREADS) (
+            count, spatial_dims, bottom_data_a,
+            forward_[0], bottom_data_b,
+            forward_[1], top_data, num, channels_a,
+            shape_a_.gpu_data(), shape_b_.gpu_data());
+        CUDA_POST_KERNEL_CHECK;
+      }
+      break;
+    }
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -143,17 +248,38 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
 
-    viennacl::ocl::kernel &oclk_copy_forward = program.get_kernel(
-        CL_KERNEL_SELECT("merge_copy_forward"));
-    viennacl::ocl::enqueue(
-        oclk_copy_forward(count, spatial_dims,
-                          WrapHandle((cl_mem) bottom_data_a, &ctx), forward_[0],
-                          WrapHandle((cl_mem) bottom_data_b, &ctx), forward_[1],
-                          WrapHandle((cl_mem) top_data, &ctx), num, channels_a,
-                          channels_b,
-                          WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
-                          WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
-        ctx.get_queue());
+    switch (op_) {
+      case MergeCropParameter_MergeOp_STACK: {
+        viennacl::ocl::kernel &oclk_copy_forward = program.get_kernel(
+            CL_KERNEL_SELECT("merge_copy_forward_stack"));
+        viennacl::ocl::enqueue(
+            oclk_copy_forward(count, spatial_dims,
+                              WrapHandle((cl_mem) bottom_data_a, &ctx),
+                              forward_[0],
+                              WrapHandle((cl_mem) bottom_data_b, &ctx),
+                              forward_[1], WrapHandle((cl_mem) top_data, &ctx),
+                              num, channels_a, channels_b,
+                              WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
+                              WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+            ctx.get_queue());
+      }
+      break;
+      case MergeCropParameter_MergeOp_ADD: {
+        viennacl::ocl::kernel &oclk_copy_forward = program.get_kernel(
+            CL_KERNEL_SELECT("merge_copy_forward_add"));
+        viennacl::ocl::enqueue(
+            oclk_copy_forward(count, spatial_dims,
+                              WrapHandle((cl_mem) bottom_data_a, &ctx),
+                              forward_[0],
+                              WrapHandle((cl_mem) bottom_data_b, &ctx),
+                              forward_[1], WrapHandle((cl_mem) top_data, &ctx),
+                              num, channels_a,
+                              WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
+                              WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+            ctx.get_queue());
+      }
+      break;
+    }
     ctx.get_queue().finish();
 #endif  // USE_GREENTEA
   }
@@ -182,12 +308,26 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   if (this->device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    CopyBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS) (
-        count, spatial_dims, bottom_diff_a, backward_[0],
-        bottom_diff_b, backward_[1], top_diff, num,
-        channels_a, channels_b, shape_a_.gpu_data(), shape_b_.gpu_data());
-    CUDA_POST_KERNEL_CHECK;
+    switch (op_) {
+      case MergeCropParameter_MergeOp_STACK: {
+        CopyBackwardStack<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+            CAFFE_CUDA_NUM_THREADS) (
+            count, spatial_dims, bottom_diff_a, backward_[0],
+            bottom_diff_b, backward_[1], top_diff, num,
+            channels_a, channels_b, shape_a_.gpu_data(), shape_b_.gpu_data());
+        CUDA_POST_KERNEL_CHECK;
+      }
+      break;
+      case MergeCropParameter_MergeOp_ADD: {
+        CopyBackwardAdd<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+            CAFFE_CUDA_NUM_THREADS) (
+            count, spatial_dims, bottom_diff_a, backward_[0],
+            bottom_diff_b, backward_[1], top_diff, num,
+            channels_a, shape_a_.gpu_data(), shape_b_.gpu_data());
+        CUDA_POST_KERNEL_CHECK;
+      }
+      break;
+    }
 #endif  // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
@@ -195,20 +335,37 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
 
-    viennacl::ocl::kernel &oclk_copy_backward = program.get_kernel(
-        CL_KERNEL_SELECT("merge_copy_backward"));
-    viennacl::ocl::enqueue(
-        oclk_copy_backward(count, spatial_dims,
-                           WrapHandle((cl_mem) bottom_diff_a, &ctx),
-                           backward_[0],
-                           WrapHandle((cl_mem) bottom_diff_b, &ctx),
-                           backward_[1], WrapHandle((cl_mem) top_diff, &ctx),
-                           num, channels_a, channels_b,
-                           WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
-                           WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
-        ctx.get_queue());
-    ctx.get_queue().finish();
+    switch (op_) {
+      case MergeCropParameter_MergeOp_STACK: {
+        viennacl::ocl::kernel &oclk_copy_backward = program.get_kernel(
+            CL_KERNEL_SELECT("merge_copy_backward_stack"));
+        viennacl::ocl::enqueue(
+            oclk_copy_backward(
+                count, spatial_dims, WrapHandle((cl_mem) bottom_diff_a, &ctx),
+                backward_[0], WrapHandle((cl_mem) bottom_diff_b, &ctx),
+                backward_[1], WrapHandle((cl_mem) top_diff, &ctx), num,
+                channels_a, channels_b,
+                WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+            ctx.get_queue());
+      }
+      break;
+      case MergeCropParameter_MergeOp_ADD: {
+        viennacl::ocl::kernel &oclk_copy_backward = program.get_kernel(
+            CL_KERNEL_SELECT("merge_copy_backward_add"));
+        viennacl::ocl::enqueue(
+            oclk_copy_backward(
+                count, spatial_dims, WrapHandle((cl_mem) bottom_diff_a, &ctx),
+                backward_[0], WrapHandle((cl_mem) bottom_diff_b, &ctx),
+                backward_[1], WrapHandle((cl_mem) top_diff, &ctx), num,
+                channels_a, WrapHandle((cl_mem) (shape_a_.gpu_data()), &ctx),
+                WrapHandle((cl_mem) (shape_b_.gpu_data()), &ctx)),
+            ctx.get_queue());
+      }
+      break;
+    }
 
+    ctx.get_queue().finish();
 #endif  // USE_GREENTEA
   }
 }

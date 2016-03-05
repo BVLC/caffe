@@ -17,6 +17,7 @@ void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   backward_.push_back(1);
   backward_.push_back(0);
 
+  op_ = MergeCropParameter_MergeOp_STACK;
 
   if (this->layer_param_.has_mergecrop_param()) {
     MergeCropParameter mergecrop_param = this->layer_param_.mergecrop_param();
@@ -26,6 +27,7 @@ void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int_tp i = 0; i < mergecrop_param.backward_size(); ++i) {
       backward_[i] = mergecrop_param.backward(i);
     }
+    op_ = mergecrop_param.operation();
   }
 
   Reshape(bottom, top);
@@ -34,11 +36,18 @@ void MergeCropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void MergeCropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                     const vector<Blob<Dtype>*>& top) {
-  // Same number of batches requires
+  // Same number of batches required
   CHECK_EQ(bottom[0]->shape(0), bottom[1]->shape(0));
 
-  // All channels of both inputs are copied
-  int_tp channels = bottom[0]->shape(1) + bottom[1]->shape(1);
+  int_tp channels = 0;
+  if (op_ == MergeCropParameter_MergeOp_STACK) {
+    // All channels of both inputs are copied
+    channels = bottom[0]->shape(1) + bottom[1]->shape(1);
+  } else {
+    // Same number of feature maps required
+    CHECK_EQ(bottom[0]->shape(1), bottom[1]->shape(1));
+    channels = bottom[0]->shape(1);
+  }
 
   // Spatial of the smaller input, which should be input 0
   vector<int_tp> top_shape = bottom[0]->shape();
