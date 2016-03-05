@@ -272,15 +272,15 @@ Install CuDNN
 
 * Enter the uncompress directory:
 
-        cd cudnn*
+        cd cuda
 
 * Copy the *.h files to your CUDA installation:
 
-        sudo cp *.h /usr/local/cuda/include/
+        sudo cp */*.h /usr/local/cuda/include/
 
 * Copy the *.so* files to your CUDA installation:
 
-        sudo cp *.so* /usr/local/cuda/lib64/
+        sudo cp */*.so* /usr/local/cuda/lib64/
 
 Configure and compile Caffe
 ---------------------------
