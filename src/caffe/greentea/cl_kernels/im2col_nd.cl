@@ -44,7 +44,7 @@ __kernel void TEMPLATE(im2col_nd, Dtype)(const int_tp n, const int_tp num_axes,
 
   for (int_tp index = get_global_id(0); index < n;
       index += get_global_size(0)) {
-    // Initialize channel_in, computed in the loop below, with int_tpermediate
+    // Initialize channel_in, computed in the loop below, with intermediate
     // computations used to compute the spatial indices.
     int_tp channel_in = index;
     int_tp channel_out = 1;
