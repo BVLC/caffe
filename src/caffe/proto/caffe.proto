@@ -1370,8 +1370,14 @@ message AffinityParameter {
 }
 
 message MergeCropParameter {
+  enum MergeOp {
+    STACK = 0;
+    ADD = 1;
+  }
+  optional MergeOp operation = 1 [default = STACK];
+  
   // Forward and backward enable/disable
   // Defined once per bottom blob
-  repeated bool forward = 1;
-  repeated bool backward = 2;
+  repeated bool forward = 2;
+  repeated bool backward = 3;
 }

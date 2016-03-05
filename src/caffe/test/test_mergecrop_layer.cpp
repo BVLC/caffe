@@ -52,7 +52,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     delete blob_top_;
   }
 
-  void TestForward() {
+  void TestForward(MergeCropParameter_MergeOp op) {
     vector<int_tp> shape_a = blob_bottom_a_->shape();
     vector<int_tp> shape_b = blob_bottom_b_->shape();
 
@@ -84,12 +84,19 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
 
 
     LayerParameter layer_param;
+    MergeCropParameter *merge_param = layer_param.mutable_mergecrop_param();
+    merge_param->set_operation(op);
     MergeCropLayer<TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
     EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_a_->shape(0));
-    EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_a_->shape(1)
+    if (op == MergeCropParameter_MergeOp_STACK) {
+      EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_a_->shape(1)
               + this->blob_bottom_b_->shape(1));
+    } else {
+      EXPECT_EQ(this->blob_bottom_a_->shape(1), this->blob_bottom_b_->shape(1));
+      EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_a_->shape(1));
+    }
 
     for (int i = 2; i < this->blob_top_->shape().size(); ++i) {
       EXPECT_EQ(this->blob_top_->shape(i), this->blob_bottom_a_->shape(i));
@@ -98,28 +105,45 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
 
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
 
-    // Test copy from A & B
-    for (int_tp i = 0; i < blob_top_->count(); ++i) {
-      int val = i < blob_bottom_a_->count() ? i : i - blob_bottom_a_->count();
-      int out = 0;
-      int dec = 1;
-      for (int_tp d = shape_top.size() - 1; d  >= 0; --d) {
-        if (i < blob_bottom_a_->count()) {
+    if (op == MergeCropParameter_MergeOp_STACK) {
+      // Test copy from A & B
+      for (int_tp i = 0; i < blob_top_->count(); ++i) {
+        int val = i < blob_bottom_a_->count() ? i : i - blob_bottom_a_->count();
+        int out = 0;
+        int dec = 1;
+        for (int_tp d = shape_top.size() - 1; d  >= 0; --d) {
+          if (i < blob_bottom_a_->count()) {
+            out += (val % shape_a[d]) * dec;
+            val /= shape_a[d];
+            dec *= 10;
+          } else {
+            out += ((val % shape_a[d]) + (shape_b[d] - shape_a[d]) / 2) * dec;
+            val /= shape_a[d];
+            dec *= 10;
+          }
+        }
+        EXPECT_EQ(out, blob_top_->mutable_cpu_data()[i]);
+        // std::cout << i << " - " << out << std::endl;
+      }
+    } else {
+      // Test copy from A & B
+      for (int_tp i = 0; i < blob_top_->count(); ++i) {
+        int val = i < blob_bottom_a_->count() ? i : i - blob_bottom_a_->count();
+        int out = 0;
+        int dec = 1;
+        for (int_tp d = shape_top.size() - 1; d  >= 0; --d) {
           out += (val % shape_a[d]) * dec;
-          val /= shape_a[d];
-          dec *= 10;
-        } else {
           out += ((val % shape_a[d]) + (shape_b[d] - shape_a[d]) / 2) * dec;
           val /= shape_a[d];
           dec *= 10;
         }
+        EXPECT_EQ(out, blob_top_->mutable_cpu_data()[i]);
+        // std::cout << i << " - " << out << std::endl;
       }
-      EXPECT_EQ(out, blob_top_->mutable_cpu_data()[i]);
-      // std::cout << i << " - " << out << std::endl;
     }
   }
 
-  void TestBackward() {
+  void TestBackward(MergeCropParameter_MergeOp op) {
     vector<int_tp> shape_a = blob_bottom_a_->shape();
     vector<int_tp> shape_b = blob_bottom_b_->shape();
     vector<int_tp> shape_top = blob_top_->shape();
@@ -151,6 +175,8 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     }
 
     LayerParameter layer_param;
+    MergeCropParameter *merge_param = layer_param.mutable_mergecrop_param();
+    merge_param->set_operation(op);
     MergeCropLayer<TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
@@ -200,12 +226,20 @@ TYPED_TEST(MergeCropLayerTest, TestSetup) {
   }
 }
 
-TYPED_TEST(MergeCropLayerTest, TestForward) {
-  this->TestForward();
+TYPED_TEST(MergeCropLayerTest, TestStackForward) {
+  this->TestForward(MergeCropParameter_MergeOp_STACK);
 }
 
-TYPED_TEST(MergeCropLayerTest, TestBackward) {
-  this->TestBackward();
+TYPED_TEST(MergeCropLayerTest, TestStackBackward) {
+  this->TestBackward(MergeCropParameter_MergeOp_STACK);
+}
+
+TYPED_TEST(MergeCropLayerTest, TestAddForward) {
+  this->TestForward(MergeCropParameter_MergeOp_ADD);
+}
+
+TYPED_TEST(MergeCropLayerTest, TestAddBackward) {
+  this->TestBackward(MergeCropParameter_MergeOp_ADD);
 }
 
 }  // namespace caffe
