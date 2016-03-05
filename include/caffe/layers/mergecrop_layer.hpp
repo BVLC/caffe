@@ -51,6 +51,7 @@ class MergeCropLayer : public Layer<Dtype> {
   vector<int_tp> backward_;
   Blob<int_tp> shape_a_;
   Blob<int_tp> shape_b_;
+  MergeCropParameter_MergeOp op_;
 };
 
 }  // namespace caffe
