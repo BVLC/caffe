@@ -200,11 +200,24 @@ void Caffe::DeviceQuery() {
   NO_GPU;
 }
 
+
 void Caffe::Synchronize(int device_id) {
+  NO_GPU;
 }
 
 int Caffe::EnumerateDevices(bool silent) {
+  NO_GPU;
   return 0;
+}
+
+bool Caffe::CheckDevice(const int device_id) {
+  NO_GPU;
+  return false;
+}
+
+int Caffe::FindDevice(const int start_id) {
+  NO_GPU;
+  return -1;
 }
 
 class Caffe::RNG::Generator {
@@ -524,6 +537,50 @@ void Caffe::DeviceQuery() {
   }
 
   return;
+}
+
+bool Caffe::CheckDevice(const int device_id) {
+  // TODO: Find some OpenCL equivalent here
+
+  // This function checks the availability of GPU #device_id.
+  // It attempts to create a context on the device by calling cudaFree(0).
+  // cudaSetDevice() alone is not sufficient to check the availability.
+  // It lazily records device_id, however, does not initialize a
+  // context. So it does not know if the host thread has the permission to use
+  // the device or not.
+  //
+  // In a shared environment where the devices are set to EXCLUSIVE_PROCESS
+  // or EXCLUSIVE_THREAD mode, cudaSetDevice() returns cudaSuccess
+  // even if the device is exclusively occupied by another process or thread.
+  // Cuda operations that initialize the context are needed to check
+  // the permission. cudaFree(0) is one of those with no side effect,
+  // except the context initialization.
+  bool r = true;
+#ifdef USE_CUDA
+  r =
+      ((cudaSuccess == cudaSetDevice(device_id))
+          && (cudaSuccess == cudaFree(0)));
+  // reset any error that may have occurred.
+  cudaGetLastError();
+#endif USE_CUDA
+  return r;
+}
+
+int Caffe::FindDevice(const int start_id) {
+  // TODO: Find some OpenCL equivalent here
+
+  // This function finds the first available device by checking devices with
+  // ordinal from start_id to the highest available value. In the
+  // EXCLUSIVE_PROCESS or EXCLUSIVE_THREAD mode, if it succeeds, it also
+  // claims the device due to the initialization of the context.
+#ifdef USE_CUDA
+  int count = 0;
+  CUDA_CHECK(cudaGetDeviceCount(&count));
+  for (int i = start_id; i < count; i++) {
+    if (CheckDevice(i)) return i;
+  }
+#endif  // USE_CUDA
+  return -1;
 }
 
 class Caffe::RNG::Generator {

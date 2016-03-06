@@ -229,7 +229,7 @@ int train() {
     for (int_tp i = 0; i < gpus.size(); ++i) {
       devices.push_back(Caffe::Get().GetDevice(i, true));
     }
-    sync.run(devices);
+    sync.Run(devices);
   } else {
     LOG(INFO) << "Starting Optimization";
     solver->Solve();
