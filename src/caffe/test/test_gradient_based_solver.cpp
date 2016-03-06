@@ -205,8 +205,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       }
       Caffe::set_solver_count(gpus.size());
       this->sync_.reset(new P2PSync<Dtype>(
-              this->solver_, NULL, this->solver_->param()));
-      this->sync_->run(gpus);
+          this->solver_, NULL, this->solver_->param()));
+      this->sync_->Run(gpus);
       Caffe::set_solver_count(1);
     }
     if (snapshot) {
