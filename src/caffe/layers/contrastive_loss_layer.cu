@@ -113,7 +113,8 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(
     const bool legacy_version = this->layer_param_.contrastive_loss_param()
         .legacy_version();
     viennacl::ocl::kernel &oclk_cll = program.get_kernel(
-        legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") : CL_KERNEL_SELECT("cll_backward"));
+        legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") :
+            CL_KERNEL_SELECT("cll_backward"));
 #endif
 
   for (int_tp i = 0; i < 2; ++i) {

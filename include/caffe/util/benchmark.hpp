@@ -31,13 +31,13 @@ class Timer {
   bool has_run_at_least_once_;
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-  cudaEvent_t start_gpu_;
-  cudaEvent_t stop_gpu_;
+  cudaEvent_t start_gpu_cuda_;
+  cudaEvent_t stop_gpu_cuda_;
 #endif  // USE_CUDA
 #ifdef USE_GREENTEA
-  cl_event start_gpu_;
-  cl_event stop_gpu_;
-#endif //USE_GREENTEA
+  cl_event start_gpu_cl_;
+  cl_event stop_gpu_cl_;
+#endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
   boost::posix_time::ptime start_cpu_;
   boost::posix_time::ptime stop_cpu_;

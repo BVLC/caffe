@@ -32,7 +32,8 @@ echo "#include <string>" >> $SOURCE
 echo "namespace caffe {" >> $SOURCE
 
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
-echo "viennacl::ocl::program & submit_conv_spatial_program(viennacl::ocl::context &ctx, string name, string options);" >> $HEADER
+echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $HEADER
+echo "viennacl::ocl::context *ctx, string name, string options);" >> $HEADER
 echo "}" >> $HEADER
 echo "#endif" >> $HEADER
 
@@ -142,8 +143,8 @@ echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $
 echo "      \"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
-echo "viennacl::ocl::program & submit_conv_spatial_program(viennacl::ocl::context &ctx, string name, string options)" >> $SOURCE
-echo "{" >> $SOURCE
+echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $SOURCE
+echo "viennacl::ocl::context *ctx, string name, string options) {" >> $SOURCE
 echo "  static const char* core_defines =" >> $SOURCE
 echo "  \"#define Dtype float\n\"" >> $SOURCE
 echo "  \"#define Dtype2 float2\n\"" >> $SOURCE
@@ -154,8 +155,8 @@ echo "  \"#define OCL_KERNEL_LOOP(i, n)\"" >> $SOURCE
 echo "  \" for (int i = get_global_id(0); i < (n); i += get_global_size(0))\n\";" >> $SOURCE
 echo "  string sources = core_defines;" >> $SOURCE
 echo "  sources += conv_layer_spatial_float;" >> $SOURCE
-echo "  ctx.build_options(options);" >> $SOURCE
-echo "  viennacl::ocl::program &program = ctx.add_program(sources, name);" >> $SOURCE
+echo "  ctx->build_options(options);" >> $SOURCE
+echo "  viennacl::ocl::program &program = ctx->add_program(sources, name);" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
 echo "}  // namespace caffe" >> $SOURCE
