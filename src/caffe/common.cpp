@@ -320,13 +320,13 @@ void Caffe::Synchronize(int device_id) {
     if (device_context->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
       cudaDeviceSynchronize();
-#endif
+#endif  // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
       viennacl::ocl::context &ctx = viennacl::ocl::get_context(
           GetDevice(device_id, true)->id());
       ctx.get_queue().finish();
-#endif
+#endif  // USE_GREENTEA
     }
   }
 }
@@ -337,7 +337,7 @@ int Caffe::EnumerateDevices(bool silent) {
 
 #ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
-#endif
+#endif  // USE_CUDA
 
 #ifdef USE_GREENTEA
   typedef std::vector<viennacl::ocl::platform> platforms_type;
@@ -365,7 +365,7 @@ int Caffe::EnumerateDevices(bool silent) {
       }
     }
   }
-#endif
+#endif  // USE_GREENTEA
 
   if (!silent) {
     LOG(INFO)<< "Total devices: " << cuda_device_count + greentea_device_count;
@@ -562,7 +562,7 @@ bool Caffe::CheckDevice(const int device_id) {
           && (cudaSuccess == cudaFree(0)));
   // reset any error that may have occurred.
   cudaGetLastError();
-#endif USE_CUDA
+#endif  // USE_CUDA
   return r;
 }
 
