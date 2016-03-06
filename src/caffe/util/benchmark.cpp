@@ -6,19 +6,29 @@
 
 namespace caffe {
 
+static std::string benchmark_float = "__kernel void null() {\n}";  // NOLINT
 Timer::Timer()
     : initted_(false), running_(false), has_run_at_least_once_(false) {
   Init();
 }
 
 Timer::~Timer() {
-  if (Caffe::mode() == Caffe::GPU
-      && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+  if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-    CUDA_CHECK(cudaEventDestroy(start_gpu_));
-    CUDA_CHECK(cudaEventDestroy(stop_gpu_));
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+      CUDA_CHECK(cudaEventDestroy(start_gpu_cuda_));
+      CUDA_CHECK(cudaEventDestroy(stop_gpu_cuda_));
+    }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+      clWaitForEvents(1, &start_gpu_cl_);
+      clWaitForEvents(1, &stop_gpu_cl_);
+      clReleaseEvent(start_gpu_cl_);
+      clReleaseEvent(stop_gpu_cl_);
+    }
+#endif  // USE_GREENTEA
 #else
     NO_GPU;
 #endif
@@ -27,12 +37,29 @@ Timer::~Timer() {
 
 void Timer::Start() {
   if (!running()) {
-    if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-      CUDA_CHECK(cudaEventRecord(start_gpu_, 0));
+      if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+        CUDA_CHECK(cudaEventRecord(start_gpu_cuda_, 0));
+      }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+      if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+        clWaitForEvents(1, &start_gpu_cl_);
+        clReleaseEvent(start_gpu_cl_);
+        // ClState& state = Caffe::cl_state();
+        // ClKernel& kernel = state.get_kernel("null");
+        viennacl::ocl::context& ctx = viennacl::ocl::current_context();
+        viennacl::ocl::kernel& kernel = ctx.get_kernel("benchmark", "null");
+        // viennacl::ocl::enqueue(kernel);
+        clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
+        NULL,
+                      &start_gpu_cl_);
+        viennacl::backend::finish();
+        // clFinish(ctx.get_queue().handle().get());
+      }
+#endif
 #else
       NO_GPU;
 #endif
@@ -46,13 +73,33 @@ void Timer::Start() {
 
 void Timer::Stop() {
   if (running()) {
-    if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-      CUDA_CHECK(cudaEventRecord(stop_gpu_, 0));
-      CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
+      if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+        CUDA_CHECK(cudaEventRecord(stop_gpu_cuda_, 0));
+        CUDA_CHECK(cudaEventSynchronize(stop_gpu_cuda_));
+      }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+      if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+        clWaitForEvents(1, &stop_gpu_cl_);
+        clReleaseEvent(stop_gpu_cl_);
+        // ClState& state = Caffe::cl_state();
+        // ClKernel& kernel = state.get_kernel("null");
+        // OCL_CHECK(clEnqueueTask(state.get_command_queue(), kernel, 0, NULL,
+        //    &stop_gpu_));
+        // clFinish(state.get_command_queue());
+        viennacl::ocl::context& ctx = viennacl::ocl::current_context();
+        viennacl::ocl::kernel& kernel = ctx.get_kernel("benchmark", "null");
+        clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
+        NULL,
+                      &stop_gpu_cl_);
+        viennacl::ocl::enqueue(kernel);
+        viennacl::backend::finish();
+        // clFinish(ctx.get_queue().handle().get());
+      }
+#endif
 #else
       NO_GPU;
 #endif
@@ -71,15 +118,28 @@ float Timer::MicroSeconds() {
   if (running()) {
     Stop();
   }
-  if (Caffe::mode() == Caffe::GPU
-      && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+  if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-    CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
-            stop_gpu_));
-    // Cuda only measure milliseconds
-    elapsed_microseconds_ = elapsed_milliseconds_ * 1000;
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+      CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_cuda_,
+              stop_gpu_cuda_));
+      // Cuda only measure milliseconds
+      elapsed_microseconds_ = elapsed_milliseconds_ * 1000;
+    }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+      cl_ulong startTime, stopTime;
+      clWaitForEvents(1, &stop_gpu_cl_);
+      clGetEventProfilingInfo(start_gpu_cl_, CL_PROFILING_COMMAND_END,
+          sizeof startTime, &startTime, NULL);
+      clGetEventProfilingInfo(stop_gpu_cl_, CL_PROFILING_COMMAND_START,
+          sizeof stopTime, &stopTime, NULL);
+      double us = static_cast<double>(stopTime - startTime) / 1000.0;
+      elapsed_microseconds_ = static_cast<float>(us);
+    }
+#endif
 #else
     NO_GPU;
 #endif
@@ -97,13 +157,25 @@ float Timer::MilliSeconds() {
   if (running()) {
     Stop();
   }
-  if (Caffe::mode() == Caffe::GPU
-      && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+  if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-    CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
-            stop_gpu_));
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+      CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_cuda_,
+              stop_gpu_cuda_));
+    }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+    if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+      cl_ulong startTime = 0, stopTime = 0;
+      clGetEventProfilingInfo(start_gpu_cl_, CL_PROFILING_COMMAND_END,
+          sizeof startTime, &startTime, NULL);
+      clGetEventProfilingInfo(stop_gpu_cl_, CL_PROFILING_COMMAND_START,
+          sizeof stopTime, &stopTime, NULL);
+      double ms = static_cast<double>(stopTime - startTime) / 1000000.0;
+      elapsed_milliseconds_ = static_cast<float>(ms);
+    }
+#endif
 #else
     NO_GPU;
 #endif
@@ -119,13 +191,22 @@ float Timer::Seconds() {
 
 void Timer::Init() {
   if (!initted()) {
-    if (Caffe::mode() == Caffe::GPU
-        && Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+    if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
-      CUDA_CHECK(cudaEventCreate(&start_gpu_));
-      CUDA_CHECK(cudaEventCreate(&stop_gpu_));
+      if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
+        CUDA_CHECK(cudaEventCreate(&start_gpu_cuda_));
+        CUDA_CHECK(cudaEventCreate(&stop_gpu_cuda_));
+      }
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+      if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
+        viennacl::ocl::context& ctx = viennacl::ocl::current_context();
+        ctx.add_program(benchmark_float, "benchmark");
+        start_gpu_cl_ = 0;
+        stop_gpu_cl_ = 0;
+      }
+#endif
 #else
       NO_GPU;
 #endif

@@ -124,8 +124,8 @@ __kernel void TEMPLATE(merge_copy_forward_add, Dtype)(const int_tp nthreads,
                                                   const int_tp channels,
                                                   __global const int_tp* shape_a,
                                                   __global const int_tp* shape_b) {
-  int_tp pad[6];      // NOLINT(runtime/arrays)
-  int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
+  int_tp pad[6];
+  int_tp tmp_idx[6];
   int_tp size_a = 1;
   int_tp size_b = 1;
 
@@ -173,8 +173,8 @@ __kernel void TEMPLATE(merge_copy_backward_add,Dtype)(const int_tp nthreads,
                                                   const int_tp channels,
                                                   __global const int_tp* shape_a,
                                                   __global const int_tp* shape_b) {
-  int_tp pad[6];      // NOLINT(runtime/arrays)
-  int_tp tmp_idx[6];  // NOLINT(runtime/arrays)
+  int_tp pad[6];
+  int_tp tmp_idx[6];
   int_tp size_a = 1;
   int_tp size_b = 1;
 

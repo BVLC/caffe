@@ -56,6 +56,9 @@ class CPUDeviceTest : public MultiDeviceTest<CPUDevice<Dtype> > {
 typedef ::testing::Types<CPUDevice<float>,
                          CPUDevice<double> > TestDtypesAndDevices;
 
+typedef ::testing::Types<CPUDevice<float> >
+                         TestFloatAndDevices;
+
 #else
 
 template <typename TypeParam>
@@ -71,6 +74,10 @@ class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
                          GPUDevice<float>, GPUDevice<double> >
                          TestDtypesAndDevices;
+
+typedef ::testing::Types<CPUDevice<float>,
+                         GPUDevice<float> >
+                         TestFloatAndDevices;
 
 #endif
 

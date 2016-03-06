@@ -8,6 +8,8 @@
 #ifndef CAFFE_GREENTEA_HPP_
 #define CAFFE_GREENTEA_HPP_
 
+#define VIENNACL_PROFILING_ENABLED
+
 #ifdef CMAKE_BUILD
   #include "caffe_config.h"
 #endif
