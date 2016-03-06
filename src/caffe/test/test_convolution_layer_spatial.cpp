@@ -20,21 +20,21 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     const vector<shared_ptr<Blob<Dtype> > >& weights,
     Blob<Dtype>* out) {
   // Kernel size, stride, and pad
-  int kernel_h, kernel_w;
+  int_tp kernel_h, kernel_w;
   if (conv_param->has_kernel_w() || conv_param->has_kernel_h()) {
     kernel_h = conv_param->kernel_h();
     kernel_w = conv_param->kernel_w();
   } else {
     kernel_h = kernel_w = conv_param->kernel_size(0);
   }
-  int pad_h, pad_w;
+  int_tp pad_h, pad_w;
   if (conv_param->has_pad_h() || conv_param->has_pad_w()) {
     pad_h = conv_param->pad_h();
     pad_w = conv_param->pad_w();
   } else {
     pad_h = pad_w = conv_param->pad_size() ? conv_param->pad(0) : 0;
   }
-  int stride_h, stride_w;
+  int_tp stride_h, stride_w;
   if (conv_param->has_stride_h() || conv_param->has_stride_w()) {
     stride_h = conv_param->stride_h();
     stride_w = conv_param->stride_w();
@@ -42,28 +42,28 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     stride_h = stride_w = conv_param->stride_size() ? conv_param->stride(0) : 1;
   }
   // Groups
-  int groups = conv_param->group();
-  int o_g = out->shape(1) / groups;
-  int k_g = in->shape(1) / groups;
-  int o_head, k_head;
+  int_tp groups = conv_param->group();
+  int_tp o_g = out->shape(1) / groups;
+  int_tp k_g = in->shape(1) / groups;
+  int_tp o_head, k_head;
   // Convolution
-  vector<int> weight_offset(4);
-  vector<int> in_offset(4);
-  vector<int> out_offset(4);
+  vector<int_tp> weight_offset(4);
+  vector<int_tp> in_offset(4);
+  vector<int_tp> out_offset(4);
 
   Dtype* out_data = out->mutable_cpu_data();
-  for (int n = 0; n < out->shape(0); n++) {
-    for (int g = 0; g < groups; g++) {
+  for (int_tp n = 0; n < out->shape(0); n++) {
+    for (int_tp g = 0; g < groups; g++) {
       o_head = o_g * g;
       k_head = k_g * g;
-      for (int o = 0; o < o_g; o++) {
-        for (int k = 0; k < k_g; k++) {
-          for (int y = 0; y < out->shape(2); y++) {
-            for (int x = 0; x < out->shape(3); x++) {
-              for (int p = 0; p < kernel_h; p++) {
-                for (int q = 0; q < kernel_w; q++) {
-                  int in_y = y * stride_h - pad_h + p;
-                  int in_x = x * stride_w - pad_w + q;
+      for (int_tp o = 0; o < o_g; o++) {
+        for (int_tp k = 0; k < k_g; k++) {
+          for (int_tp y = 0; y < out->shape(2); y++) {
+            for (int_tp x = 0; x < out->shape(3); x++) {
+              for (int_tp p = 0; p < kernel_h; p++) {
+                for (int_tp q = 0; q < kernel_w; q++) {
+                  int_tp in_y = y * stride_h - pad_h + p;
+                  int_tp in_x = x * stride_w - pad_w + q;
                   if (in_y >= 0 && in_y < in->height()
                     && in_x >= 0 && in_x < in->width()) {
                     weight_offset[0] = o + o_head;
@@ -93,10 +93,10 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
   // Bias
   if (conv_param->bias_term()) {
     const Dtype* bias_data = weights[1]->cpu_data();
-    for (int n = 0; n < out->shape(0); n++) {
-      for (int o = 0; o < out->shape(1); o++) {
-        for (int y = 0; y < out->shape(2); y++) {
-          for (int x = 0; x < out->shape(3); x++) {
+    for (int_tp n = 0; n < out->shape(0); n++) {
+      for (int_tp o = 0; o < out->shape(1); o++) {
+        for (int_tp y = 0; y < out->shape(2); y++) {
+          for (int_tp x = 0; x < out->shape(3); x++) {
               out_offset[0] = n;
               out_offset[1] = o;
               out_offset[2] = y;
@@ -161,7 +161,7 @@ class ConvolutionLayerTest_Spatial : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ConvolutionLayerTest_Spatial, TestDtypesAndDevices);
+TYPED_TEST_CASE(ConvolutionLayerTest_Spatial, TestFloatAndDevices);
 
 TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
   typedef typename TypeParam::Dtype Dtype;
@@ -223,14 +223,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -259,14 +259,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -298,14 +298,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -337,14 +337,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -377,14 +377,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -416,14 +416,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -455,14 +455,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -494,14 +494,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -532,14 +532,14 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -566,7 +566,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -594,7 +594,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
@@ -624,8 +624,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
   Dtype* weights = layer->blobs()[0]->mutable_cpu_data();
-  for (int c = 0; c < 3; ++c) {
-    int i = c * 9;  // 3 x 3 filter
+  for (int_tp c = 0; c < 3; ++c) {
+    int_tp i = c * 9;  // 3 x 3 filter
     weights[i +  0] = -1;
     weights[i +  1] =  0;
     weights[i +  2] =  1;
@@ -658,8 +658,8 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 1));
   Dtype* weights_1 = layer->blobs()[0]->mutable_cpu_data();
-  for (int c = 0; c < 3; ++c) {
-    int i = c * 3;  // 3 x 1 filter
+  for (int_tp c = 0; c < 3; ++c) {
+    int_tp i = c * 3;  // 3 x 1 filter
     weights_1[i +  0] = 1;
     weights_1[i +  1] = 2;
     weights_1[i +  2] = 1;
@@ -688,7 +688,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
   // Test equivalence of full and separable filters.
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype* sep_top_data = this->blob_top_2_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], sep_top_data[i], 1e-4);
   }
 }
