@@ -98,8 +98,7 @@ bool NetNeedsV0ToV1Upgrade(const NetParameter& net_param) {
 }
 
 bool NetNeedsV1ToV2Upgrade(const NetParameter& net_param) {
-  return false;// beniz: deactivated, breaks otherwise good nets.
-  //return net_param.layers_size() > 0;
+  return net_param.layers_size() > 0;
 }
 
 bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
@@ -952,7 +951,7 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
 }
 
 bool NetNeedsInputUpgrade(const NetParameter& net_param) {
-  return false;//net_param.input_size() > 0;
+  return false; // beniz: deactivated, as breaking existing net -> net_param.input_size() > 0;
 }
 
 void UpgradeNetInput(NetParameter* net_param) {
