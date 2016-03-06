@@ -1266,6 +1266,9 @@ message MultiBoxLossParameter {
   // If true, encode the variance of prior box in the loc loss target instead of
   // in bbox.
   optional bool encode_variance_in_target = 16 [default = false];
+  // If true, map all object classes to agnostic class. It is useful for learning
+  // objectness detector.
+  optional bool map_object_to_agnostic = 17 [default = false];
 }
 
 message MVNParameter {

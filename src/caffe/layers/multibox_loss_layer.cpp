@@ -39,6 +39,14 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   neg_overlap_ = multibox_loss_param.neg_overlap();
   code_type_ = multibox_loss_param.code_type();
   encode_variance_in_target_ = multibox_loss_param.encode_variance_in_target();
+  map_object_to_agnostic_ = multibox_loss_param.map_object_to_agnostic();
+  if (map_object_to_agnostic_) {
+    if (background_label_id_ >= 0) {
+      CHECK_EQ(num_classes_, 2);
+    } else {
+      CHECK_EQ(num_classes_, 1);
+    }
+  }
 
   if (!this->layer_param_.loss_param().has_normalization() &&
       this->layer_param_.loss_param().has_normalize()) {
@@ -374,7 +382,9 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             if (match_index[j] == -1) {
               continue;
             }
-            const int gt_label = all_gt_bboxes[i][match_index[j]].label();
+            const int gt_label = map_object_to_agnostic_ ?
+                background_label_id_ + 1 :
+                all_gt_bboxes[i][match_index[j]].label();
             int idx = do_neg_mining_ ? count : j;
             switch (conf_loss_type_) {
               case MultiBoxLossParameter_ConfLossType_SOFTMAX:
