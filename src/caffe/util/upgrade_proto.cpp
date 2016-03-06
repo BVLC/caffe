@@ -952,7 +952,7 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
 }
 
 bool NetNeedsInputUpgrade(const NetParameter& net_param) {
-  return net_param.input_size() > 0;
+  return false;//net_param.input_size() > 0;
 }
 
 void UpgradeNetInput(NetParameter* net_param) {
