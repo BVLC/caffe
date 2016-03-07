@@ -344,7 +344,7 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
 {
   CHECK(prv_ptr);
   CHECK(cpu_ptr);
-
+  CHECK(this->convert_from_int);
   int status;
   void *convert_resources[dnnResourceNumber];
 
@@ -395,8 +395,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > current_descr =
         boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> > (prv_mem_descriptor);
 
-      if(!dnnLayoutCompare<Dtype>(current_descr->layout_int , this->layout_int))
-      {
+      if(!dnnLayoutCompare<Dtype>(current_descr->layout_int , this->layout_int)) {
         DLOG(INFO) << "convert priv => priv      " << current_descr->name << " => " << this->name;
 
         dnnPrimitive_t convert_padding;
