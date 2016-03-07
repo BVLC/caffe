@@ -85,7 +85,7 @@ class SyncedMemory {
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   int gpu_device_;
-  //device used when cpu_ptr_ is allocated
+  // device used when cpu_ptr_ is allocated
   int  alloc_device_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
