@@ -48,7 +48,15 @@ class PoolingCodeGeneratorForward
  private:
   void Create_callback(PoolingLayer<Dtype>* layer);
 
-  static Callback_t Naive;
+  static void Naive(
+    const Dtype* bottom_data,
+    Dtype* top_data,
+    int top_count,
+    int batch_start,
+    int batch_end,
+    void* mask,
+    PoolingLayer<Dtype>* layer,
+    bool use_top_mask);
   Callback_t* Callback;
   std::vector<int> Layer_output_shape_signature;
   bool Use_top_mask;
@@ -79,7 +87,14 @@ class PoolingCodeGeneratorBackward
  private:
   void Create_callback(PoolingLayer<Dtype>* layer);
 
-  static Callback_t Naive;
+  static void Naive(
+    const Dtype* top_diff,
+    Dtype* bottom_diff,
+    int batch_start,
+    int batch_end,
+    bool use_top_mask,
+    const void* mask,
+    PoolingLayer<Dtype>* layer);
   Callback_t* Callback;
   std::vector<int> layer_output_shape_signature;
 };
