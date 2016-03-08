@@ -1383,6 +1383,9 @@ std::string ConvolutionLayerSpatial<double>::generate_specific_key(
   NOT_IMPLEMENTED;
   return "";
 }
+
+#endif  // USE_GREENTEA
+
 template<>
 void ConvolutionLayerSpatial<double>::Forward_gpu(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
@@ -1396,8 +1399,23 @@ void ConvolutionLayerSpatial<double>::Backward_gpu(
   NOT_IMPLEMENTED;
 }
 
+#ifndef USE_GREENTEA
+template<>
+void ConvolutionLayerSpatial<float>::Forward_gpu(
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void ConvolutionLayerSpatial<float>::Backward_gpu(
+    const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<double>*>& bottom) {
+  NOT_IMPLEMENTED;
+}
+#endif  // USE_GREENTEA
+
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerSpatial);
 
-#endif  // USE_GREENTEA
+
 
 }  // namespace caffe
