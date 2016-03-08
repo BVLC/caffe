@@ -1402,14 +1402,14 @@ void ConvolutionLayerSpatial<double>::Backward_gpu(
 #ifndef USE_GREENTEA
 template<>
 void ConvolutionLayerSpatial<float>::Forward_gpu(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
+    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
   NOT_IMPLEMENTED;
 }
 
 template<>
 void ConvolutionLayerSpatial<float>::Backward_gpu(
-    const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<double>*>& bottom) {
+    const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<float>*>& bottom) {
   NOT_IMPLEMENTED;
 }
 #endif  // USE_GREENTEA
