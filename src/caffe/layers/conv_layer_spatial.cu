@@ -17,6 +17,8 @@
 
 namespace caffe {
 
+#ifdef USE_GREENTEA
+
 // #define dbg
 
 #ifdef dbg
@@ -24,6 +26,7 @@ namespace caffe {
 #else
 #define dbgPrint(x)
 #endif
+
 
 template<>
 void ConvolutionLayerSpatial<float>::generate_key() {
@@ -1394,5 +1397,7 @@ void ConvolutionLayerSpatial<double>::Backward_gpu(
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerSpatial);
+
+#endif  // USE_GREENTEA
 
 }  // namespace caffe
