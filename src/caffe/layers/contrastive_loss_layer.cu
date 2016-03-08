@@ -14,6 +14,9 @@ namespace caffe {
 template<typename Dtype>
 void ContrastiveLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  const bool legacy_version = this->layer_param_.contrastive_loss_param()
+      .legacy_version();
+
   const int_tp count = bottom[0]->count();
 
   if (this->device_->backend() == BACKEND_CUDA) {
@@ -50,8 +53,6 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
   }
 
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
-  bool legacy_version = this->layer_param_.contrastive_loss_param()
-      .legacy_version();
   Dtype loss(0.0);
   for (int_tp i = 0; i < bottom[0]->num(); ++i) {
     if (static_cast<int_tp>(bottom[2]->cpu_data()[i])) {  // similar pairs
@@ -106,12 +107,13 @@ template<typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  const bool legacy_version = this->layer_param_.contrastive_loss_param()
+      .legacy_version();
+
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_->id());
     viennacl::ocl::program &program = this->device_->program();
-    const bool legacy_version = this->layer_param_.contrastive_loss_param()
-        .legacy_version();
     viennacl::ocl::kernel &oclk_cll = program.get_kernel(
         legacy_version ? CL_KERNEL_SELECT("cll_backward_legacy") :
             CL_KERNEL_SELECT("cll_backward"));
