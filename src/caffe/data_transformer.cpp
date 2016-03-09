@@ -343,6 +343,7 @@ void DataTransformer<Dtype>::CropImage(const Datum& datum,
     CropImage(cv_img, bbox, &crop_img);
     // Save the image into datum.
     EncodeCVMatToDatum(crop_img, "jpg", crop_datum);
+    crop_datum->set_label(datum.label());
     return;
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
@@ -371,6 +372,7 @@ void DataTransformer<Dtype>::CropImage(const Datum& datum,
   crop_datum->set_channels(datum_channels);
   crop_datum->set_height(height);
   crop_datum->set_width(width);
+  crop_datum->set_label(datum.label());
   crop_datum->clear_data();
   crop_datum->clear_float_data();
   crop_datum->set_encoded(false);
