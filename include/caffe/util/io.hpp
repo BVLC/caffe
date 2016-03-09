@@ -206,19 +206,25 @@ bool DecodeDatum(Datum* datum, bool is_color);
 bool ReadRichImageToAnnotatedDatum(const string& filename,
     const string& labelname, const int height, const int width,
     const int min_dim, const int max_dim, const bool is_color,
-    const std::string & encoding, const AnnotatedDatum_AnnotationType type,
-    const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum);
+    const std::string& encoding, const AnnotatedDatum_AnnotationType type,
+    const string& labeltype, const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum);
 
 inline bool ReadRichImageToAnnotatedDatum(const string& filename,
     const string& labelname, const int height, const int width,
     const bool is_color, const std::string & encoding,
-    const AnnotatedDatum_AnnotationType type,
+    const AnnotatedDatum_AnnotationType type, const string& labeltype,
     const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum) {
   return ReadRichImageToAnnotatedDatum(filename, labelname, height, width, 0, 0,
-                      is_color, encoding, type, name_to_label, anno_datum);
+                      is_color, encoding, type, labeltype, name_to_label,
+                      anno_datum);
 }
 
 bool ReadXMLToAnnotatedDatum(const string& labelname, const int img_height,
+    const int img_width, const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum);
+
+bool ReadJSONToAnnotatedDatum(const string& labelname, const int img_height,
     const int img_width, const std::map<string, int>& name_to_label,
     AnnotatedDatum* anno_datum);
 

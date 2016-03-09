@@ -1,6 +1,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <fcntl.h>
@@ -220,7 +222,8 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
     const string& labelfile, const int height, const int width,
     const int min_dim, const int max_dim, const bool is_color,
     const string& encoding, const AnnotatedDatum_AnnotationType type,
-    const std::map<string, int>& name_to_label, AnnotatedDatum* anno_datum) {
+    const string& labeltype, const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum) {
   // Read image to datum.
   bool status = ReadImageToDatum(filename, -1, height, width,
                                  min_dim, max_dim, is_color, encoding,
@@ -229,12 +232,23 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
     return status;
   }
   anno_datum->clear_annotation_group();
+  if (!boost::filesystem::exists(labelfile)) {
+    return true;
+  }
   switch (type) {
     case AnnotatedDatum_AnnotationType_BBOX:
       int ori_height, ori_width;
       GetImageSize(filename, &ori_height, &ori_width);
-      return ReadXMLToAnnotatedDatum(labelfile, ori_height, ori_width,
-                                     name_to_label, anno_datum);
+      if (labeltype == "xml") {
+        return ReadXMLToAnnotatedDatum(labelfile, ori_height, ori_width,
+                                       name_to_label, anno_datum);
+      } else if (labeltype == "json") {
+        return ReadJSONToAnnotatedDatum(labelfile, ori_height, ori_width,
+                                        name_to_label, anno_datum);
+      } else {
+        LOG(FATAL) << "Unknown label file type.";
+        return false;
+      }
       break;
     default:
       LOG(FATAL) << "Unknown annotation type.";
@@ -242,7 +256,7 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
   }
 }
 
-// Parse PASCAL VOC detection annotation.
+// Parse VOC/ILSVRC detection annotation.
 bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
     const int img_width, const std::map<string, int>& name_to_label,
     AnnotatedDatum* anno_datum) {
@@ -259,8 +273,12 @@ bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
     height = img_height;
     width = img_width;
   }
-  CHECK_EQ(height, img_height) << "Inconsistent image width.";
-  CHECK_EQ(width, img_width) << "Inconsistent image width.";
+  LOG_IF(WARNING, height != img_height) << labelfile <<
+      " inconsistent image height.";
+  LOG_IF(WARNING, width != img_width) << labelfile <<
+      " inconsistent image width.";
+  CHECK(width != 0 && height != 0) << labelfile <<
+      " no valid image width/height.";
   int instance_id = 0;
   BOOST_FOREACH(ptree::value_type &v1, pt.get_child("annotation")) {
     ptree pt1 = v1.second;
@@ -307,18 +325,26 @@ bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
           int xmax = pt2.get("xmax", 0);
           int ymax = pt2.get("ymax", 0);
           CHECK_NOTNULL(anno);
-          if (!(width != 0 && height != 0)) {
-            LOG(INFO) << labelfile;
-          }
-          CHECK(width != 0 && height != 0) << "No valid image width/height.";
-          CHECK_LE(xmin, width) << "Bounding box exceeds image boundary.";
-          CHECK_LE(ymin, height) << "Bounding box exceeds image boundary.";
-          CHECK_LE(xmax, width) << "Bounding box exceeds image boundary.";
-          CHECK_LE(ymax, height) << "Bounding box exceeds image boundary.";
-          CHECK_GE(xmin, 0) << "Bounding box exceeds image boundary.";
-          CHECK_GE(ymin, 0) << "Bounding box exceeds image boundary.";
-          CHECK_GE(xmax, 0) << "Bounding box exceeds image boundary.";
-          CHECK_GE(ymax, 0) << "Bounding box exceeds image boundary.";
+          LOG_IF(WARNING, xmin > width) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, ymin > height) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, xmax > width) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, ymax > height) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, xmin < 0) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, ymin < 0) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, xmax < 0) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, ymax < 0) << labelfile <<
+              " bounding box exceeds image boundary.";
+          LOG_IF(WARNING, xmin > xmax) << labelfile <<
+              " bounding box irregular.";
+          LOG_IF(WARNING, ymin > ymax) << labelfile <<
+              " bounding box irregular.";
           // Store the normalized bounding box.
           NormalizedBBox* bbox = anno->mutable_bbox();
           bbox->set_xmin(static_cast<float>(xmin) / width);
@@ -329,6 +355,111 @@ bool ReadXMLToAnnotatedDatum(const string& labelfile, const int img_height,
         }
       }
     }
+  }
+  return true;
+}
+
+// Parse MSCOCO detection annotation.
+bool ReadJSONToAnnotatedDatum(const string& labelfile, const int img_height,
+    const int img_width, const std::map<string, int>& name_to_label,
+    AnnotatedDatum* anno_datum) {
+  ptree pt;
+  read_json(labelfile, pt);
+
+  // Get image info.
+  int width = 0, height = 0;
+  try {
+    height = pt.get<int>("image.height");
+    width = pt.get<int>("image.width");
+  } catch (const ptree_error &e) {
+    LOG(WARNING) << "When parsing " << labelfile << ": " << e.what();
+    height = img_height;
+    width = img_width;
+  }
+  LOG_IF(WARNING, height != img_height) << labelfile <<
+      " inconsistent image height.";
+  LOG_IF(WARNING, width != img_width) << labelfile <<
+      " inconsistent image width.";
+  CHECK(width != 0 && height != 0) << labelfile <<
+      " no valid image width/height.";
+
+  // Get annotation info.
+  int instance_id = 0;
+  BOOST_FOREACH(ptree::value_type& v1, pt.get_child("annotation")) {
+    Annotation* anno = NULL;
+    bool iscrowd = false;
+    ptree object = v1.second;
+    // Get category_id.
+    string name = object.get<string>("category_id");
+    if (name_to_label.find(name) == name_to_label.end()) {
+      LOG(FATAL) << "Unknown name: " << name;
+    }
+    int label = name_to_label.find(name)->second;
+    bool found_group = false;
+    for (int g = 0; g < anno_datum->annotation_group_size(); ++g) {
+      AnnotationGroup* anno_group =
+          anno_datum->mutable_annotation_group(g);
+      if (label == anno_group->group_label()) {
+        if (anno_group->annotation_size() == 0) {
+          instance_id = 0;
+        } else {
+          instance_id = anno_group->annotation(
+              anno_group->annotation_size() - 1).instance_id() + 1;
+        }
+        anno = anno_group->add_annotation();
+        found_group = true;
+      }
+    }
+    if (!found_group) {
+      // If there is no such annotation_group, create a new one.
+      AnnotationGroup* anno_group = anno_datum->add_annotation_group();
+      anno_group->set_group_label(label);
+      anno = anno_group->add_annotation();
+      instance_id = 0;
+    }
+    anno->set_instance_id(instance_id++);
+
+    // Get iscrowd.
+    iscrowd = object.get<int>("iscrowd", 0);
+
+    // Get bbox.
+    vector<float> bbox_items;
+    BOOST_FOREACH(ptree::value_type& v2, object.get_child("bbox")) {
+      bbox_items.push_back(v2.second.get_value<float>());
+    }
+    CHECK_EQ(bbox_items.size(), 4);
+    float xmin = bbox_items[0];
+    float ymin = bbox_items[1];
+    float xmax = bbox_items[0] + bbox_items[2];
+    float ymax = bbox_items[1] + bbox_items[3];
+    CHECK_NOTNULL(anno);
+    LOG_IF(WARNING, xmin > width) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymin > height) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmax > width) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymax > height) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmin < 0) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymin < 0) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmax < 0) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, ymax < 0) << labelfile <<
+        " bounding box exceeds image boundary.";
+    LOG_IF(WARNING, xmin > xmax) << labelfile <<
+        " bounding box irregular.";
+    LOG_IF(WARNING, ymin > ymax) << labelfile <<
+        " bounding box irregular.";
+    // Store the normalized bounding box.
+    NormalizedBBox* bbox = anno->mutable_bbox();
+    bbox->set_xmin(xmin / width);
+    bbox->set_ymin(ymin / height);
+    bbox->set_xmax(xmax / width);
+    bbox->set_ymax(ymax / height);
+    bbox->set_difficult(iscrowd);
   }
   return true;
 }

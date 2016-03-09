@@ -43,6 +43,8 @@ DEFINE_string(backend, "lmdb",
     "The backend {lmdb, leveldb} for storing the result");
 DEFINE_string(anno_type, "classification",
     "The type of annotation {classification, detection}.");
+DEFINE_string(label_type, "xml",
+    "The type of annotation file format.");
 DEFINE_string(label_map_file, "",
     "A file with LabelMap protobuf message.");
 DEFINE_bool(check_label, false,
@@ -87,6 +89,7 @@ int main(int argc, char** argv) {
   const string encode_type = FLAGS_encode_type;
   const string anno_type = FLAGS_anno_type;
   AnnotatedDatum_AnnotationType type;
+  const string label_type = FLAGS_label_type;
   const string label_map_file = FLAGS_label_map_file;
   const bool check_label = FLAGS_check_label;
   std::map<std::string, int> name_to_label;
@@ -159,8 +162,8 @@ int main(int argc, char** argv) {
     } else if (anno_type == "detection") {
       labelname = root_folder + boost::get<std::string>(lines[line_id].second);
       status = ReadRichImageToAnnotatedDatum(filename, labelname, resize_height,
-          resize_width, min_dim, max_dim, is_color, enc, type, name_to_label,
-          &anno_datum);
+          resize_width, min_dim, max_dim, is_color, enc, type, label_type,
+          name_to_label, &anno_datum);
       anno_datum.set_type(AnnotatedDatum_AnnotationType_BBOX);
     }
     if (status == false) {
