@@ -60,24 +60,22 @@ rm -f $LMDB_FILE
 # Install the Python runtime dependencies via miniconda (this is much faster
 # than using pip for everything).
 export PATH=$CONDA_DIR/bin:$PATH
-if [ ! -d $CONDA_DIR ]; then
-  if [ "$PYTHON_VERSION" -eq "3" ]; then
+if [ "$PYTHON_VERSION" -eq "3" ]; then
     wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  else
+else
     wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  fi
-  chmod +x miniconda.sh
-  ./miniconda.sh -b -p $CONDA_DIR
-
-  conda update --yes conda
-  # The version of boost we're using for Python 3 depends on 3.4 for now.
-  if [ "$PYTHON_VERSION" -eq "3" ]; then
-    conda install --yes python=3.4
-  fi
-  conda install --yes numpy scipy matplotlib scikit-image pip
-  # Let conda install boost (so that boost_python matches)
-  conda install --yes -c https://conda.binstar.org/menpo boost=1.56.0
 fi
+chmod +x miniconda.sh
+./miniconda.sh -b -p $CONDA_DIR
+
+conda update --yes conda
+# The version of boost we're using for Python 3 depends on 3.4 for now.
+if [ "$PYTHON_VERSION" -eq "3" ]; then
+    conda install --yes python=3.4
+fi
+conda install --yes numpy scipy matplotlib scikit-image pip
+# Let conda install boost (so that boost_python matches)
+conda install --yes -c https://conda.binstar.org/menpo boost=1.56.0
 
 # install protobuf 3 (just use the miniconda3 directory to avoid having to setup the path again)
 if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
@@ -93,7 +91,7 @@ if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
 fi
 
 if [ "$PYTHON_VERSION" -eq "3" ]; then
-  pip install --pre protobuf==3.0.0b2
+  pip install --pre protobuf
 else
   pip install protobuf
 fi
