@@ -100,4 +100,4 @@ class PoolingCodeGeneratorBackward
 };
 }  // namespace caffe
 
-#endif  // CAFFE_CODE_GENERATORS_POOLING_H_
+#endif  //CAFFE_CODE_GENERATORS_POOLING_H_
