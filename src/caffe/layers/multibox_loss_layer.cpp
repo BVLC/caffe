@@ -447,7 +447,7 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.propagate_down(1)) {
     // TODO(weiliu89): Understand why it needs to divide 2.
     Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-        normalization_, num_, num_priors_, num_conf_);
+        normalization_, num_, num_priors_, num_matches_);
     top[0]->mutable_cpu_data()[0] += conf_loss_.cpu_data()[0] / normalizer;
   }
 }
@@ -520,7 +520,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                  conf_bottom_vec_);
       // Scale gradient.
       Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-          normalization_, num_, num_priors_, num_conf_);
+          normalization_, num_, num_priors_, num_matches_);
       Dtype loss_weight = top[0]->cpu_diff()[0] / normalizer;
       caffe_scal(conf_pred_.count(), loss_weight,
                  conf_pred_.mutable_cpu_diff());
