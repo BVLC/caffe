@@ -320,7 +320,7 @@ def CreateMultiBoxHead(net, data_layer="data", num_classes=[], from_layers=[],
             from_layer = inter_name
 
         # Estimate number of priors per location given provided parameters.
-        aspect_ratio = [2, 3]
+        aspect_ratio = []
         if len(aspect_ratios) > i:
             aspect_ratio = aspect_ratios[i]
             if type(aspect_ratio) is not list:
