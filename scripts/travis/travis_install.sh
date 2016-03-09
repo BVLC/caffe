@@ -76,6 +76,8 @@ if [ ! -d $CONDA_DIR ]; then
     fi
     conda install --yes numpy scipy matplotlib scikit-image pip
 fi
+echo $CONDA_DIR
+ls $CONDA_DIR
 # Let conda install boost (so that boost_python matches)
 conda install --yes -c https://conda.binstar.org/menpo boost=1.56.0
 
