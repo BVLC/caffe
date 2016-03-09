@@ -174,9 +174,10 @@ void DataTransformer<Dtype>::TransformJoints(Joints& j) {
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
   //     L arms: 15(wrist), 14(elbow), 13(shoulder)
   //     6 - pelvis, 7 - thorax, 8 - upper neck, 9 - head top
-  assert(joints.size() == np_in_lmdb);
-  assert(np == 14 || np == 28);
-  Joints jo;
+  //LOG(INFO) << "TransformJoints: here np == " << np << " np_lmdb = " << np_in_lmdb << " joints.size() = " << j.joints.size();
+  //assert(joints.size() == np_in_lmdb);
+  //assert(np == 14 || np == 28);
+  Joints jo = j;
   if(np == 14){
     int MPI_to_ours[14] = {9, 8, 12, 11, 10, 13, 14, 15, 2, 1, 0, 3, 4, 5};
     jo.joints.resize(np);
@@ -605,12 +606,26 @@ Size DataTransformer<Dtype>::augmentation_croppad(Mat& img_src, Mat& img_dst, Me
 
 template<typename Dtype>
 void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
-  assert(j.joints.size() == 14 && j.isVisible.size() == 28);
+  assert(j.joints.size() == 9 && j.joints.size() == 14 && j.isVisible.size() == 28);
   //MPII R leg: 0(ankle), 1(knee), 2(hip)
   //     L leg: 5(ankle), 4(knee), 3(hip)
   //     R arms: 10(wrist), 11(elbow), 12(shoulder)
   //     L arms: 15(wrist), 14(elbow), 13(shoulder)
-  if(np == 14){
+  if(np == 9){
+    int right[4] = {1,2,3,7};
+    int left[4] = {4,5,6,8};
+    for(int i=0; i<4; i++){
+      int ri = right[i] - 1;
+      int li = left[i] - 1;
+      Point2f temp = j.joints[ri];
+      j.joints[ri] = j.joints[li];
+      j.joints[li] = temp;
+      int temp_v = j.isVisible[ri];
+      j.isVisible[ri] = j.isVisible[li];
+      j.isVisible[li] = temp_v;
+    }
+  }
+  else if(np == 14){
     int right[6] = {3,4,5,9,10,11}; //1-index
     int left[6] = {6,7,8,12,13,14}; //1-index
     for(int i=0; i<6; i++){
@@ -889,6 +904,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
   // }
   Mat img_vis = img.clone();
   static int counter = 0;
+
   rectangle(img_vis, meta.objpos-Point2f(3,3), meta.objpos+Point2f(3,3), CV_RGB(255,255,0), CV_FILLED);
   for(int i=0;i<np;i++){
     //LOG(INFO) << "drawing part " << i << ": ";
@@ -909,7 +925,15 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
       else 
         circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,100,100), -1);
     }
-    else {//body case
+    else if(np == 9){
+      if(i==0 || i==1 || i==2 || i==6)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,0,255), -1);
+      else if(i==3 || i==4 || i==5 || i==7)
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,0,0), -1);
+      else
+        circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(255,255,0), -1);
+    }
+    else if(np == 14 || np == 28) {//body case
       if(i < 14){
         if(i==2 || i==3 || i==4 || i==8 || i==9 || i==10)
           circle(img_vis, meta.joint_self.joints[i], 3, CV_RGB(0,0,255), -1);
@@ -930,6 +954,7 @@ void DataTransformer<Dtype>::visualize(Mat& img, MetaData meta, AugmentSelection
       }
     }
   }
+  
   line(img_vis, meta.objpos+Point2f(-368/2,-368/2), meta.objpos+Point2f(368/2,-368/2), CV_RGB(0,255,0), 2);
   line(img_vis, meta.objpos+Point2f(368/2,-368/2), meta.objpos+Point2f(368/2,368/2), CV_RGB(0,255,0), 2);
   line(img_vis, meta.objpos+Point2f(368/2,368/2), meta.objpos+Point2f(-368/2,368/2), CV_RGB(0,255,0), 2);
