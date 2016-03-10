@@ -326,7 +326,7 @@ void MklDnnPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     void* pooling_res[dnnResourceNumber];
 
     pooling_res[dnnResourceWorkspace] = (void*)mask;
-    pooling_res[dnnResourceDiffDst] = bwd_top_diff->get_converted_prv(top[0], false);
+    pooling_res[dnnResourceDiffDst] = bwd_top_diff->get_converted_prv(top[0], true);
 
     if (bwd_bottom_diff->convert_from_int)
     {

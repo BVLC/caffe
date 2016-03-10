@@ -99,12 +99,6 @@ private:
   shared_ptr<MklDnnData<Dtype> > bwdd_filter_data;
   dnnPrimitive_t convolutionBwdData;
 
-#ifndef BWDD_DISABLE_PAD_REMOVING
-  /* Temporary workaround for removing padding from bwdd_bottom_diff */
-  shared_ptr<MklDnnDiff<Dtype> > bwdd_bottom_diff_no_padding;
-  dnnPrimitive_t convert_to_bottom_diff_no_padding;
-#endif
-
   /* Bwd filter step */
   shared_ptr<MklDnnDiff<Dtype> > bwdf_top_diff, bwdf_filter_diff;
   shared_ptr<MklDnnData<Dtype> > bwdf_bottom_data;
@@ -255,7 +249,9 @@ public:
    *     the value @f$ \nu @f$ by which negative values are multiplied.
    */
   explicit MklDnnReLULayer(const LayerParameter& param)
-    : NeuronLayer<Dtype>(param) {}
+    : NeuronLayer<Dtype>(param),
+      fwd_bottom_data_ (new MklDnnData<Dtype>()),
+      bwd_top_diff_    (new MklDnnDiff<Dtype>()) {}
   ~MklDnnReLULayer();
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -275,6 +271,8 @@ protected:
                             const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
 private:
+  shared_ptr<MklDnnData<Dtype> > fwd_bottom_data_;
+  shared_ptr<MklDnnDiff<Dtype> > bwd_top_diff_;
   dnnPrimitive_t reluFwd_, reluBwd_;
 };
 

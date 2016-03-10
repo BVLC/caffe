@@ -642,9 +642,10 @@ int compare() {
           " Param diff: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
           << "   param_id: " << param_id ;
         has_err = true;
+        break;
       }
     }
-    if(has_err) break;
+    //if(has_err) break;
    // {
    //   //
    //   int num      = params[param_id]->num();
