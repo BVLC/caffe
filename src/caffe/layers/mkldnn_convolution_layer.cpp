@@ -319,7 +319,7 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
 
 template <typename Dtype, bool is_diff>
 Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
-  Blob<Dtype>* blob, bool set_prv_ptr) {
+  Blob<Dtype>* blob, bool set_prv_ptr, MklDnnMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {
   if (this->convert_to_int)
   {
     int status;
@@ -356,6 +356,16 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
         boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> > (prv_mem_descriptor);
 
       if(!dnnLayoutCompare<Dtype>(current_descr->layout_int , this->layout_int)) {
+          
+        if(converted_in_fwd)
+        {
+          // hack for reusing previously done conversion
+          if(dnnLayoutCompare<Dtype>(converted_in_fwd->layout_int , this->layout_int))
+          {
+            DLOG(INFO) << "layout OK                 " << converted_in_fwd->name << " == " << this->name;
+            return converted_in_fwd->internal_ptr;
+          }
+        }
         DLOG(INFO) << "convert priv => priv      " << current_descr->name << " => " << this->name;
 
         dnnPrimitive_t convert_padding;
@@ -498,7 +508,8 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
     res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true);
-    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], false);
+    // The last get_converted_prv() argument is a hack for reusing conversion done already in the forward direction.
+    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], false, fwd_bottom_data.get());
 
     if (bwdf_filter_diff->convert_from_int)
     {

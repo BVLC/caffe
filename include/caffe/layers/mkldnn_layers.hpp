@@ -56,7 +56,11 @@ struct MklDnnMemoryDescriptor : PrvMemDescr, boost::enable_shared_from_this<MklD
   virtual size_t prv_count() {return dnnLayoutGetMemorySize<Dtype>(layout_int) / sizeof(Dtype);};
   virtual void convert_from_prv(void* prv_ptr, void* cpu_ptr);
   virtual PrvDescrType get_descr_type() {return PRV_DESCR_MKLDNN;};
-  Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr);
+  
+  // The last get_converted_prv() argument is a hack for reusing 
+  // in backward a conversion done already in the forward direction.
+  Dtype* get_converted_prv(Blob<Dtype> * blob, bool set_prv_ptr, 
+          MklDnnMemoryDescriptor<Dtype, is_diff>* converted_in_fwd = NULL );
 };
 
 template <typename Dtype>
