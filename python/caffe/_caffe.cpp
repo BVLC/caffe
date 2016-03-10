@@ -196,6 +196,33 @@ void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
       PyArray_DIMS(data_arr)[0]);
 }
 
+
+void Net_SetLayerInputArrays(Net<Dtype>* net, Layer<Dtype>* layer,
+                             bp::object data_obj, bp::object labels_obj) {
+  MemoryDataLayer<Dtype>* md_layer = (MemoryDataLayer<Dtype>*)(layer);
+  // check that we were passed appropriately-sized contiguous memory
+  PyArrayObject* data_arr =
+      reinterpret_cast<PyArrayObject*>(data_obj.ptr());
+  PyArrayObject* labels_arr =
+      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  CheckContiguousArray(data_arr, "data array", md_layer->channels(),
+      md_layer->height(), md_layer->width());
+  CheckContiguousArray(labels_arr, "labels array", 1, 1, 1);
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+    throw std::runtime_error("data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
+    throw std::runtime_error("first dimensions of input arrays must be a"
+        " multiple of batch size");
+  }
+
+  md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
+      static_cast<Dtype*>(PyArray_DATA(labels_arr)),
+      PyArray_DIMS(data_arr)[0]);
+}
+
+
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(filename, &param);
@@ -431,7 +458,7 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_blobs", bp::make_function(&Net<Dtype>::blobs,
         bp::return_internal_reference<>()))
-    .add_property("layers", bp::make_function(&Net<Dtype>::layers,
+    .add_property("_layers", bp::make_function(&Net<Dtype>::layers,
         bp::return_internal_reference<>()))
     .add_property("_blob_names", bp::make_function(&Net<Dtype>::blob_names,
         bp::return_value_policy<bp::copy_const_reference>()))
@@ -445,6 +472,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 3,
         bp::with_custodian_and_ward<1, 4> >())
+    .def("_set_layer_input_arrays", &Net_SetLayerInputArrays,
+        bp::with_custodian_and_ward<1, 3,
+        bp::with_custodian_and_ward<1, 4> > ())
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5)
