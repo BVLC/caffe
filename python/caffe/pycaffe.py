@@ -31,7 +31,6 @@ def _Net_blobs(self):
     """
     return OrderedDict(zip(self._blob_names, self._blobs))
 
-
 @property
 def _Net_blob_loss_weights(self):
     """
@@ -51,6 +50,14 @@ def _Net_params(self):
     return OrderedDict([(name, lr.blobs)
                         for name, lr in zip(self._layer_names, self.layers)
                         if len(lr.blobs) > 0])
+
+@property
+def _Net_layers(self):
+    """
+    An OrderedDict (bottom to top, i.e., input to output) of network
+    layers indexed by name
+    """
+    return OrderedDict(zip(self._layer_names, self._layers))
 
 
 @property
@@ -246,6 +253,15 @@ def _Net_set_input_arrays(self, index, data, labels):
                                              np.newaxis])
     return self._set_input_arrays(index, data, labels)
 
+def _Net_set_layer_input_arrays(self, layer, data, labels):
+    """
+    Set input arrays of the in-memory MemoryDataLayer.
+    (Note: this is only for networks declared with the memory data layer.)
+    """
+    if labels.ndim == 1:
+        labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
+                                             np.newaxis])
+    return self._set_layer_input_arrays(layer, data, labels)
 
 def _Net_batch(self, blobs):
     """
@@ -297,6 +313,7 @@ class _Net_IdNameWrapper:
         return [id_to_name[i] for i in ids]
 
 # Attach methods to Net.
+Net.layers = _Net_layers
 Net.blobs = _Net_blobs
 Net.blob_loss_weights = _Net_blob_loss_weights
 Net.params = _Net_params
@@ -305,6 +322,7 @@ Net.backward = _Net_backward
 Net.forward_all = _Net_forward_all
 Net.forward_backward_all = _Net_forward_backward_all
 Net.set_input_arrays = _Net_set_input_arrays
+Net.set_layer_input_arrays = _Net_set_layer_input_arrays
 Net._batch = _Net_batch
 Net.inputs = _Net_inputs
 Net.outputs = _Net_outputs
