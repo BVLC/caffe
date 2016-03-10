@@ -319,8 +319,7 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
 
 template <typename Dtype, bool is_diff>
 Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
-  Blob<Dtype>* blob, bool test_prv_layout, bool set_prv_ptr)
-{
+  Blob<Dtype>* blob, bool set_prv_ptr) {
   if (this->convert_to_int)
   {
     int status;
@@ -344,7 +343,7 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
       }
       return this->internal_ptr;
     }
-    else if (test_prv_layout)
+    else
     {
       // This section helps if padding needs to be added (or removed...)
       // TODO: consider removing when no longer needed.
@@ -429,9 +428,9 @@ void MklDnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 
 
   void *res_convolutionFwd[dnnResourceNumber];
-  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], true, false);
+  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], false);
   res_convolutionFwd[dnnResourceFilter] = fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
-  res_convolutionFwd[dnnResourceBias]   = fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), false);
+  res_convolutionFwd[dnnResourceBias]   = fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), true);
 
   if (fwd_top_data->convert_from_int)
   {
@@ -477,10 +476,10 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   {
     void *res_convolutionBwdData[dnnResourceNumber];
 
-    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true, true);
+    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true);
     // Currently this conversion adds padding to weights. We don't want that to be stored in the weights prv_ptr_
     res_convolutionBwdData[dnnResourceFilter]  =
-      bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), true, false);
+      bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), false);
 
     if (bwdd_bottom_diff->convert_from_int)
     {
@@ -498,8 +497,8 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   {
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
-    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true, true);
-    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], true, false);
+    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], false);
 
     if (bwdf_filter_diff->convert_from_int)
     {
@@ -518,7 +517,7 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   {
     void *res_convolutionBwdBias[dnnResourceNumber];
 
-    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true, true);
+    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true);
 
     if (bwdb_bias_diff->convert_from_int)
     {

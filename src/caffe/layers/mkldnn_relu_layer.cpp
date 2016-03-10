@@ -106,7 +106,7 @@ void MklDnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     void* bottom_diff = NULL;
 
     if (top_diff && bottom[0]->prv_data()) {
-      top_diff = bwd_top_diff_->get_converted_prv(top[0], true, true);
+      top_diff = bwd_top_diff_->get_converted_prv(top[0], true);
       bottom_data = (void*)bottom[0]->prv_data();
       bottom_diff = (void*)bottom[0]->mutable_prv_diff();
 
