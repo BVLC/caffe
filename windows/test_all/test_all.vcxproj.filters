@@ -47,6 +47,9 @@
     <ClCompile Include="..\..\src\caffe\test\test_convolution_layer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_crop_layer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\caffe\test\test_data_layer.cpp">
       <Filter>src</Filter>
     </ClCompile>

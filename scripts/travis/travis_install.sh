@@ -93,7 +93,7 @@ if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
 fi
 
 if [ "$PYTHON_VERSION" -eq "3" ]; then
-  pip install --pre protobuf
+  pip install --pre protobuf==3.0.0b2
 else
   pip install protobuf
 fi
