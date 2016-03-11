@@ -11,8 +11,8 @@ If you find this work useful in your research, please consider citing:
         Year = {2016}
     }
 
-## Download prerequsites
-Install prerequsites for `Caffe` (see: [Caffe installation instructions](http://caffe.berkeleyvision.org/installation.html))
+## Download prerequisites
+Install prerequisites for `Caffe` (see: [Caffe installation instructions](http://caffe.berkeleyvision.org/installation.html))
 
 ## 
 
