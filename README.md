@@ -54,16 +54,17 @@ pip install protobuf
 ```
 
 #### Remark
-After you have build solution with Python support, in order to use it you have to either:  
-1) set PythonPath environment variable to point to <caffe_root>\Build\x64\Release\pycaffe  
-or  
-2) cp –r <caffe_root>\Build\x64\Release\pycaffe\caffe $PYTHON_DIR\lib\site-packages  
+After you have built solution with Python support, in order to use it you have to either:  
+* set `PythonPath` environment variable to point to `<caffe_root>\Build\x64\Release\pycaffe`, or
+* copy folder `<caffe_root>\Build\x64\Release\pycaffe\caffe` under `<python_root>\lib\site-packages`.
 
 ### Matlab
 To build Caffe Matlab wrapper set `MatlabSupport` to `true` and `MatlabDir` to the root of your Matlab installation in `.\windows\CommonSettings.props`.
 
 #### Remark
-After you have build solution with Matlab support, in order to use it you have to set the generated matcaffe folder in the Matlab search path.
+After you have built solution with Matlab support, in order to use it you have to:
+* add the generated `matcaffe` folder to Matlab search path, and
+* add `<caffe_root>\Build\x64\Release` to your system path.
 
 ### Build
 Now, you should be able to build `.\windows\Caffe.sln`
