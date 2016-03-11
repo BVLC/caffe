@@ -1,4 +1,5 @@
 # Deep Metric Learning via Lifted Structured Feature Embedding
+This repository is an extension of Caffe for the paper "Deep Metric Learning via Lifted Structured Feature Embedding" (CVPR16).
 
 ## Citing this work
 If you find this work useful in your research, please consider citing:
