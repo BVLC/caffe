@@ -12,8 +12,8 @@
 // in presence of <80 characters rule
 #define cudnnConvFwd                       cudnnConvolutionForward
 #define cudnnConvBwdBias                   cudnnConvolutionBackwardBias
-#define cudnnConvBwdFilter                 cudnnConvolutionBackwardFilter_v3
-#define cudnnConvBwdData                   cudnnConvolutionBackwardData_v3
+#define cudnnConvBwdFilter                 cudnnConvolutionBackwardFilter
+#define cudnnConvBwdData                   cudnnConvolutionBackwardData
 
 namespace caffe {
 
@@ -58,13 +58,13 @@ namespace caffe {
         // Bias.
         if (this->bias_term_) {
           const Dtype* bias_data = this->blobs_[1]->gpu_data();
-          CUDNN_CHECK(cudnnAddTensor_v3(Caffe::cudnn_handle(),
-                                        cudnn::dataType<Dtype>::one,
-                                        bias_desc_,
-                                        bias_data + bias_offset_ * g,
-                                        cudnn::dataType<Dtype>::one,
-                                        top_descs_[i],
-                                        top_data + top_offset_ * g));
+          CUDNN_CHECK(cudnnAddTensor(Caffe::cudnn_handle(),
+                                     cudnn::dataType<Dtype>::one,
+                                     bias_desc_,
+                                     bias_data + bias_offset_ * g,
+                                     cudnn::dataType<Dtype>::one,
+                                     top_descs_[i],
+                                     top_data + top_offset_ * g));
         }
       }
 
