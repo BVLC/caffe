@@ -15,7 +15,7 @@ If you find this work useful in your research, please consider citing:
 1. Install prerequisites for `Caffe` (see: [Caffe installation instructions](http://caffe.berkeleyvision.org/installation.html))
 
 2. Compile this caffe extension. 
-`make all`,  `make test`
+Run `make all`,  `make test`
 
 ## Licence
 MIT Licence
