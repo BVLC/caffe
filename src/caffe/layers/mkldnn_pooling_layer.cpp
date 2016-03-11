@@ -9,8 +9,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
 
-#include "dnn.h"
-
 namespace caffe {
 template <typename Dtype>
 MklDnnPoolingLayer<Dtype>::~MklDnnPoolingLayer()
@@ -233,12 +231,12 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       bottom_data = (void*)bottom[0]->cpu_data();
       if(NULL == poolingFwd) {
         // Now create poolingFwd
-        status = dnnPoolingCreateForward<Dtype>(&poolingFwd, dnnAlgorithmPoolingMax,
+        status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL, dnnAlgorithmPoolingMax,
                                                 fwd_bottom_data->layout_usr, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
         CHECK_EQ(status, E_SUCCESS);
 
         // Now create poolingBwd
-        status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, dnnAlgorithmPoolingMax,
+        status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL, dnnAlgorithmPoolingMax,
                  fwd_bottom_data->layout_usr, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
         CHECK_EQ(status, E_SUCCESS);
       }
@@ -256,7 +254,7 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       fwd_bottom_data = mem_descr;
 
       // Now create poolingFwd
-      status = dnnPoolingCreateForward<Dtype>(&poolingFwd, dnnAlgorithmPoolingMax,
+      status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL, dnnAlgorithmPoolingMax,
         fwd_bottom_data->layout_int, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
       CHECK_EQ(status, E_SUCCESS);
 
@@ -266,7 +264,7 @@ void MklDnnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       fwd_top_data->create_conversions();
 
       // Now create poolingBwd
-      status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, dnnAlgorithmPoolingMax,
+      status = dnnPoolingCreateBackward<Dtype>(&poolingBwd, NULL, dnnAlgorithmPoolingMax,
         fwd_bottom_data->layout_int, kernel_size, kernel_stride, src_offset, dnnBorderZeros);
       CHECK_EQ(status, E_SUCCESS);
 

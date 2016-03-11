@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "caffe/layers/mkldnn_layers.hpp"
-#include "dnn.h"
 
 namespace caffe {
 template <typename Dtype>
@@ -58,9 +57,9 @@ void MklDnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       
       Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
       dnnError_t e;
-      e = dnnReLUCreateForward<Dtype>(&reluFwd_, mem_descr->layout_int, negative_slope);
+      e = dnnReLUCreateForward<Dtype>(&reluFwd_, NULL, mem_descr->layout_int, negative_slope);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, mem_descr->layout_int, mem_descr->layout_int, negative_slope);
+      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, NULL, mem_descr->layout_int, mem_descr->layout_int, negative_slope);
       CHECK_EQ(e, E_SUCCESS);
       
       // copy shared_ptr
@@ -80,9 +79,9 @@ void MklDnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // first pass
       dnnError_t e;
       Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
-      e = dnnReLUCreateForward<Dtype>(&reluFwd_, fwd_bottom_data_->layout_usr, negative_slope);
+      e = dnnReLUCreateForward<Dtype>(&reluFwd_, NULL, fwd_bottom_data_->layout_usr, negative_slope);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, fwd_bottom_data_->layout_usr, 
+      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, NULL, fwd_bottom_data_->layout_usr, 
               fwd_bottom_data_->layout_usr, negative_slope);
       CHECK_EQ(e, E_SUCCESS);   
     }
@@ -102,16 +101,12 @@ void MklDnnReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
     void* top_diff = (void*)top[0]->prv_diff();
-    void* bottom_data = NULL;
+    void* bottom_data = (void*)bottom[0]->prv_data();;
     void* bottom_diff = NULL;
 
-    if (top_diff && bottom[0]->prv_data()) {
+    if (top_diff && bottom_data) {
       top_diff = bwd_top_diff_->get_converted_prv(top[0], true);
-      bottom_data = (void*)bottom[0]->prv_data();
       bottom_diff = (void*)bottom[0]->mutable_prv_diff();
-
-      if (NULL == bottom_data)
-        LOG(FATAL) << "bottom_data is NULL";
     } else {
       DLOG(INFO) << "Using cpu_data in MklDnnReLULayer.";
       top_diff = (void*)top[0]->cpu_diff();

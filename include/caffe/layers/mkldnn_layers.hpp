@@ -11,7 +11,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "boost/enable_shared_from_this.hpp"
 
-#include "dnn.hpp"
+#include "mkl_dnn_cppwrapper.h"
 
 namespace caffe {
 
