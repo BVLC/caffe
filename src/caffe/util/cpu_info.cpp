@@ -160,6 +160,8 @@ void Collection::updateCpuInformation(const Processor &processor,
 #include <omp.h>
 #include <sched.h>
 
+static const int minCoresForThreadBinding = 12;
+
 static const char *openMpEnvVars[] = {
   "OMP_CANCELLATION", "OMP_DISPLAY_ENV", "OMP_DEFAULT_DEVICE", "OMP_DYNAMIC",
   "OMP_MAX_ACTIVE_LEVELS", "OMP_MAX_TASK_PRIORITY", "OMP_NESTED",
@@ -199,7 +201,10 @@ void OpenMpManager::setGpuDisabled() {
 void OpenMpManager::bindCurrentThreadToPrimaryCore() {
   OpenMpManager &openMpManager = getInstance();
   if (openMpManager.isThreadsBindAllowed()) {
-    openMpManager.bindCurrentThreadToLogicalCoreCpus(0);
+    unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+    if(totalNumberOfCpuCores >= minCoresForThreadBinding) {
+      openMpManager.bindCurrentThreadToLogicalCoreCpus(0);
+    }
   }
 }
 
@@ -212,7 +217,12 @@ void OpenMpManager::bindOpenMpThreads() {
   openMpManager.setOpenMpThreadNumberLimit();
   #pragma omp parallel
   {
-    unsigned logicalCoreId = 1 + omp_get_thread_num();
+    unsigned logicalCoreId = omp_get_thread_num();
+    unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+    if(totalNumberOfCpuCores >= minCoresForThreadBinding) {
+      logicalCoreId += 2;
+    }
+
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
   }
 }
@@ -294,17 +304,16 @@ unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
 }
 
 bool OpenMpManager::isThreadsBindAllowed() {
-  // TODO: Review needed
-  return false;  // !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
+  return !isAnyOpenMpEnvVarSpecified && !isGpuEnabled;
 }
 
 void OpenMpManager::setOpenMpThreadNumberLimit() {
   unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
 
-  if (totalNumberOfAvailableCores > 1)
-    omp_set_num_threads(totalNumberOfAvailableCores - 1);
+  if (totalNumberOfAvailableCores >= minCoresForThreadBinding)
+    omp_set_num_threads(totalNumberOfAvailableCores - 2);
   else
-    omp_set_num_threads(1);
+    omp_set_num_threads(totalNumberOfAvailableCores);
 }
 
 void OpenMpManager::bindCurrentThreadToLogicalCoreCpu(unsigned logicalCoreId) {
