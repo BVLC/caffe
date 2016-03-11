@@ -11,10 +11,10 @@ If you find this work useful in your research, please consider citing:
         Year = {2016}
     }
 
-## Download prerequisites
-Install prerequisites for `Caffe` (see: [Caffe installation instructions](http://caffe.berkeleyvision.org/installation.html))
+## Installation
+1. Install prerequisites for `Caffe` (see: [Caffe installation instructions](http://caffe.berkeleyvision.org/installation.html))
 
-## 
+2. Compile this caffe extension. `make all`
 
 ## Licence
 MIT Licence
