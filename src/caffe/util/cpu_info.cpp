@@ -217,7 +217,12 @@ void OpenMpManager::bindOpenMpThreads() {
   openMpManager.setOpenMpThreadNumberLimit();
   #pragma omp parallel
   {
-    unsigned logicalCoreId = 2 + omp_get_thread_num();
+    unsigned logicalCoreId = omp_get_thread_num();
+    unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
+    if(totalNumberOfCpuCores >= minCoresForThreadBinding) {
+      logicalCoreId += 2;
+    }
+
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
   }
 }
