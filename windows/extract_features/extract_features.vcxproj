@@ -18,7 +18,7 @@
     <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
     <RootNamespace>extract_features</RootNamespace>
-    <NuGetPackageImportStamp>59a71837</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>8be3cb47</NuGetPackageImportStamp>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -79,7 +79,7 @@
     <Import Project="..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.targets" Condition="Exists('..\..\..\NugetPackages\OpenCV.2.4.10\build\native\OpenCV.targets')" />
     <Import Project="..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets" Condition="Exists('..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" />
     <Import Project="..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets" Condition="Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets')" />
-    <Import Project="..\..\..\NugetPackages\hdf5-v120-complete.1.8.15\build\native\hdf5-v120.targets" Condition="Exists('..\..\..\NugetPackages\hdf5-v120-complete.1.8.15\build\native\hdf5-v120.targets')" />
+    <Import Project="..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.1\build\native\hdf5-v120.targets" Condition="Exists('..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.1\build\native\hdf5-v120.targets')" />
     <Import Project="..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets" Condition="Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets')" />
     <Import Project="..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets')" />
     <Import Project="..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets')" />
@@ -90,7 +90,7 @@
     <Import Project="..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets')" />
     <Import Project="..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets" Condition="Exists('..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets')" />
     <Import Project="..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets" Condition="Exists('..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets')" />
-    <Import Project="..\..\..\NugetPackages\lmdb-v120.0.9.14\build\native\lmdb-v120.targets" Condition="Exists('..\..\..\NugetPackages\lmdb-v120.0.9.14\build\native\lmdb-v120.targets')" />
+    <Import Project="..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets" Condition="Exists('..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -101,7 +101,7 @@
     <Error Condition="!Exists('..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\OpenBLAS.0.2.14.1\build\native\openblas.targets'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.props'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\glog.0.3.3.0\build\native\glog.targets'))" />
-    <Error Condition="!Exists('..\..\..\NugetPackages\hdf5-v120-complete.1.8.15\build\native\hdf5-v120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\hdf5-v120-complete.1.8.15\build\native\hdf5-v120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.1\build\native\hdf5-v120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\hdf5-v120-complete.1.8.15.1\build\native\hdf5-v120.targets'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.props'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\gflags.2.1.2.1\build\native\gflags.targets'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_chrono-vc120.1.59.0.0\build\native\boost_chrono-vc120.targets'))" />
@@ -113,6 +113,6 @@
     <Error Condition="!Exists('..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\boost_python2.7-vc120.1.59.0.0\build\native\boost_python-vc120.targets'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\protobuf-v120.2.6.1\build\native\protobuf-v120.targets'))" />
     <Error Condition="!Exists('..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets'))" />
-    <Error Condition="!Exists('..\..\..\NugetPackages\lmdb-v120.0.9.14\build\native\lmdb-v120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\lmdb-v120.0.9.14\build\native\lmdb-v120.targets'))" />
+    <Error Condition="!Exists('..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets'))" />
   </Target>
 </Project>
