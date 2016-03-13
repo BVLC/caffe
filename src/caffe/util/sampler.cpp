@@ -35,6 +35,7 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
   }
   // Reset to true, and then find violations.
   satisfy = true;
+  bool found = false;
   for (int i = 0; i < object_bboxes.size(); ++i) {
     const NormalizedBBox& object_bbox = object_bboxes[i];
     // Test jaccard overlap.
@@ -42,6 +43,9 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
       const float jaccard_overlap = JaccardOverlap(sampled_bbox, object_bbox);
       if (sample_constraint.has_min_jaccard_overlap() &&
           jaccard_overlap < sample_constraint.min_jaccard_overlap()) {
+        if (jaccard_overlap < 1e-5) {
+          continue;
+        }
         satisfy = false;
         break;
       }
@@ -50,12 +54,16 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
         satisfy = false;
         break;
       }
+      found = true;
     }
     // Test sample coverage.
     if (has_sample_coverage) {
       const float sample_coverage = BBoxCoverage(sampled_bbox, object_bbox);
       if (sample_constraint.has_min_sample_coverage() &&
           sample_coverage < sample_constraint.min_sample_coverage()) {
+        if (sample_coverage < 1e-5) {
+          continue;
+        }
         satisfy = false;
         break;
       }
@@ -64,12 +72,16 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
         satisfy = false;
         break;
       }
+      found = true;
     }
     // Test object coverage.
     if (has_object_coverage) {
       const float object_coverage = BBoxCoverage(object_bbox, sampled_bbox);
       if (sample_constraint.has_min_object_coverage() &&
           object_coverage < sample_constraint.min_object_coverage()) {
+        if (object_coverage < 1e-5) {
+          continue;
+        }
         satisfy = false;
         break;
       }
@@ -78,9 +90,10 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
         satisfy = false;
         break;
       }
+      found = true;
     }
   }
-  return satisfy;
+  return satisfy && found;
 }
 
 void SampleBBox(const Sampler& sampler, NormalizedBBox* sampled_bbox) {
