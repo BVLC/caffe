@@ -33,8 +33,7 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
     // By default, the sampled_bbox is "positive" if no constraints are defined.
     return true;
   }
-  // Reset to true, and then find violations.
-  satisfy = true;
+  // Check constraints.
   bool found = false;
   for (int i = 0; i < object_bboxes.size(); ++i) {
     const NormalizedBBox& object_bbox = object_bboxes[i];
@@ -43,16 +42,11 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
       const float jaccard_overlap = JaccardOverlap(sampled_bbox, object_bbox);
       if (sample_constraint.has_min_jaccard_overlap() &&
           jaccard_overlap < sample_constraint.min_jaccard_overlap()) {
-        if (jaccard_overlap < 1e-5) {
-          continue;
-        }
-        satisfy = false;
-        break;
+        continue;
       }
       if (sample_constraint.has_max_jaccard_overlap() &&
           jaccard_overlap > sample_constraint.max_jaccard_overlap()) {
-        satisfy = false;
-        break;
+        continue;
       }
       found = true;
     }
@@ -61,16 +55,11 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
       const float sample_coverage = BBoxCoverage(sampled_bbox, object_bbox);
       if (sample_constraint.has_min_sample_coverage() &&
           sample_coverage < sample_constraint.min_sample_coverage()) {
-        if (sample_coverage < 1e-5) {
-          continue;
-        }
-        satisfy = false;
-        break;
+        continue;
       }
       if (sample_constraint.has_max_sample_coverage() &&
           sample_coverage > sample_constraint.max_sample_coverage()) {
-        satisfy = false;
-        break;
+        continue; 
       }
       found = true;
     }
@@ -79,21 +68,16 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
       const float object_coverage = BBoxCoverage(object_bbox, sampled_bbox);
       if (sample_constraint.has_min_object_coverage() &&
           object_coverage < sample_constraint.min_object_coverage()) {
-        if (object_coverage < 1e-5) {
-          continue;
-        }
-        satisfy = false;
-        break;
+        continue;
       }
       if (sample_constraint.has_max_object_coverage() &&
           object_coverage > sample_constraint.max_object_coverage()) {
-        satisfy = false;
-        break;
+        continue;
       }
       found = true;
     }
   }
-  return satisfy && found;
+  return found;
 }
 
 void SampleBBox(const Sampler& sampler, NormalizedBBox* sampled_bbox) {
