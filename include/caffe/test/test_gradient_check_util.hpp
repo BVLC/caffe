@@ -39,6 +39,11 @@ class GradientChecker {
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom = -1);
 
+  // Check the gradient, allowing for shifts by a constant vector. 
+  void CheckGradientUpToShift(Layer<Dtype>* layer,
+      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+      int check_bottom = -1);
+
   // CheckGradientEltwise can be used to test layers that perform element-wise
   // computation only (e.g., neuron layers) -- where (d y_i) / (d x_j) = 0 when
   // i != j.
@@ -51,7 +56,7 @@ class GradientChecker {
   // param Blobs.  Otherwise (if check_bottom < -1), check only param Blobs.
   void CheckGradientSingle(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
-      int check_bottom, int top_id, int top_data_id, bool element_wise = false);
+      int check_bottom, int top_id, int top_data_id, bool element_wise = false, bool up_to_shift = false);
 
   // Checks the gradient of a network. This network should not have any data
   // layers or loss layers, since the function does not explicitly deal with
@@ -74,7 +79,7 @@ class GradientChecker {
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
-    int check_bottom, int top_id, int top_data_id, bool element_wise) {
+    int check_bottom, int top_id, int top_data_id, bool element_wise, bool up_to_shift) {
   if (element_wise) {
     CHECK_EQ(0, layer->blobs().size());
     CHECK_LE(0, top_id);
@@ -133,6 +138,16 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
         computed_gradient_blobs[blob_id]->cpu_data();
     // LOG(ERROR) << "Blob " << blob_id << ": checking "
     //     << current_blob->count() << " parameters.";
+
+    Dtype deviation = 0;
+    Dtype max_deviation = 0;
+    Dtype min_deviation = 0;
+    Dtype max_scale = 0;
+    int dim = 1;
+    if (current_blob->num_axes() > 0) {
+      dim = current_blob->count() / current_blob->shape(0);
+    }
+
     for (int feat_id = 0; feat_id < current_blob->count(); ++feat_id) {
       // For an element-wise layer, we only need to do finite differencing to
       // compute the derivative of top[top_id][top_data_id] w.r.t.
@@ -161,12 +176,30 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
         estimated_gradient = (positive_objective - negative_objective) /
             stepsize_ / 2.;
       }
+
       Dtype computed_gradient = computed_gradients[feat_id];
       Dtype feature = current_blob->cpu_data()[feat_id];
+
+      if (up_to_shift) {
+	deviation = computed_gradient - estimated_gradient;
+	if (feat_id % dim == 0 || deviation > max_deviation) {
+	  max_deviation = deviation;
+	}
+	if (feat_id % dim == 0 || deviation < min_deviation) {
+	  min_deviation = deviation;
+	}
+        Dtype scale = std::max(
+            std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
+        if (scale > max_scale) {
+	  max_scale = scale;
+	}
+      }
+
       // LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
       //     << current_blob->cpu_diff()[feat_id];
-      if (kink_ - kink_range_ > fabs(feature)
-          || fabs(feature) > kink_ + kink_range_) {
+      if (!up_to_shift 
+          && (kink_ - kink_range_ > fabs(feature)
+          || fabs(feature) > kink_ + kink_range_)) {
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
         Dtype scale = std::max<Dtype>(
@@ -182,6 +215,17 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       // LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
       // LOG(ERROR) << "computed gradient: " << computed_gradient
       //    << " estimated_gradient: " << estimated_gradient;
+
+      if (up_to_shift && feat_id % dim == (dim - 1)) {
+	EXPECT_NEAR(max_deviation, min_deviation, threshold_ * max_scale)
+	  << "debug: (top_id, top_data_id, blob_id) = "
+	  << top_id << "," << top_data_id << "," << blob_id
+	  << "; max - min deviation = " << max_deviation - min_deviation
+	  << "; max scale = " << max_scale;
+        max_scale = 0;
+        min_deviation = 0;
+        max_deviation = 0;
+      }
     }
   }
 }
@@ -198,6 +242,24 @@ void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>* layer,
     for (int j = 0; j < top[i]->count(); ++j) {
       // LOG(ERROR) << "Exhaustive: blob " << i << " data " << j;
       CheckGradientSingle(layer, bottom, top, check_bottom, i, j);
+    }
+  }
+}
+
+template <typename Dtype>
+void GradientChecker<Dtype>::CheckGradientUpToShift(Layer<Dtype>* layer,
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+    int check_bottom) {
+  layer->SetUp(bottom, top);
+  CHECK_GT(top.size(), 0) << "Exhaustive mode requires at least one top blob.";
+  const bool element_wise = false;
+  const bool up_to_shift = true;
+  // LOG(ERROR) << "Up to shift.";
+  for (int i = 0; i < top.size(); ++i) {
+    // LOG(ERROR) << "Up to shift: blob " << i << " size " << top[i]->count();
+    for (int j = 0; j < top[i]->count(); ++j) {
+      // LOG(ERROR) << "Up to shift: blob " << i << " data " << j;
+      CheckGradientSingle(layer, bottom, top, check_bottom, i, j, element_wise, up_to_shift);
     }
   }
 }
@@ -254,7 +316,7 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype>& layer,
       Dtype* top_blob_diff = top_blob->mutable_cpu_diff();
       caffe_set(top_blob->count(), Dtype(0), top_blob_diff);
     }
-    const Dtype loss_weight = 2;
+    const Dtype loss_weight = 1;
     loss = top[top_id]->cpu_data()[top_data_id] * loss_weight;
     top[top_id]->mutable_cpu_diff()[top_data_id] = loss_weight;
   }
