@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 148 (last added: wasserstein_loss_param)
+// LayerParameter next available layer-specific ID: 148 (last added: wasserstein_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
