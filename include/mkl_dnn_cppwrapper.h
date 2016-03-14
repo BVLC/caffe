@@ -12,74 +12,74 @@
 
 TEMPLATE_PREFIX dnnError_t dnnLayoutCreate(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[]);
-    TEMPLATE_PREFIX dnnError_t dnnLayoutCreate<float>(
+SPEC_PREFIX dnnError_t dnnLayoutCreate<float>(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
 	{return dnnLayoutCreate_F32(pLayout, dimension, size, strides);}
-    TEMPLATE_PREFIX dnnError_t dnnLayoutCreate<double>(
+SPEC_PREFIX dnnError_t dnnLayoutCreate<double>(
         dnnLayout_t *pLayout, size_t dimension, const size_t size[], const size_t strides[])
         {return dnnLayoutCreate_F64(pLayout, dimension, size, strides);}
 
 TEMPLATE_PREFIX dnnError_t dnnLayoutCreateFromPrimitive(
         dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type);
-    TEMPLATE_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<float>(
+SPEC_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<float>(
         dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type)
         {return dnnLayoutCreateFromPrimitive_F32(pLayout, primitive, type);}
-    TEMPLATE_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<double>(
+SPEC_PREFIX dnnError_t dnnLayoutCreateFromPrimitive<double>(
         dnnLayout_t *pLayout, const dnnPrimitive_t primitive, dnnResourceType_t type)
         {return dnnLayoutCreateFromPrimitive_F64(pLayout, primitive, type);}
 
 TEMPLATE_PREFIX size_t dnnLayoutGetMemorySize(
         const dnnLayout_t layout);
-    TEMPLATE_PREFIX size_t dnnLayoutGetMemorySize<float>(
+SPEC_PREFIX size_t dnnLayoutGetMemorySize<float>(
         const dnnLayout_t layout)
         {return dnnLayoutGetMemorySize_F32(layout);}
-    TEMPLATE_PREFIX size_t dnnLayoutGetMemorySize<double>(
+SPEC_PREFIX size_t dnnLayoutGetMemorySize<double>(
         const dnnLayout_t layout)
         {return dnnLayoutGetMemorySize_F64(layout);}
 
 TEMPLATE_PREFIX int dnnLayoutCompare(
         const dnnLayout_t l1, const dnnLayout_t l2);
-    TEMPLATE_PREFIX int dnnLayoutCompare<float>(
+SPEC_PREFIX int dnnLayoutCompare<float>(
         const dnnLayout_t l1, const dnnLayout_t l2)
         {return dnnLayoutCompare_F32(l1, l2);}
-    TEMPLATE_PREFIX int dnnLayoutCompare<double>(
+SPEC_PREFIX int dnnLayoutCompare<double>(
         const dnnLayout_t l1, const dnnLayout_t l2)
         {return dnnLayoutCompare_F64(l1, l2);}
 
 
 TEMPLATE_PREFIX dnnError_t dnnAllocateBuffer(
         void **pPtr, dnnLayout_t layout);
-    TEMPLATE_PREFIX dnnError_t dnnAllocateBuffer<float>(
+SPEC_PREFIX dnnError_t dnnAllocateBuffer<float>(
         void **pPtr, dnnLayout_t layout)
     {return dnnAllocateBuffer_F32(pPtr, layout);}
-    TEMPLATE_PREFIX dnnError_t dnnAllocateBuffer<double>(
+SPEC_PREFIX dnnError_t dnnAllocateBuffer<double>(
         void **pPtr, dnnLayout_t layout)
     {return dnnAllocateBuffer_F64(pPtr, layout);}
     
 TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer(
         void *ptr);
-    TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer<float>(
+SPEC_PREFIX dnnError_t dnnReleaseBuffer<float>(
         void *ptr)
     {return dnnReleaseBuffer_F32(ptr);}
-    TEMPLATE_PREFIX dnnError_t dnnReleaseBuffer<double>(
+SPEC_PREFIX dnnError_t dnnReleaseBuffer<double>(
         void *ptr)
     {return dnnReleaseBuffer_F64(ptr);}
     
 TEMPLATE_PREFIX dnnError_t dnnLayoutDelete(
         dnnLayout_t layout);
-    TEMPLATE_PREFIX dnnError_t dnnLayoutDelete<float>(
+SPEC_PREFIX dnnError_t dnnLayoutDelete<float>(
         dnnLayout_t layout)
     {return dnnLayoutDelete_F32(layout);}
-    TEMPLATE_PREFIX dnnError_t dnnLayoutDelete<double>(
+SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
         dnnLayout_t layout)
     {return dnnLayoutDelete_F64(layout);}
 
 TEMPLATE_PREFIX dnnError_t dnnPrimitiveAtrributesCreate(
         dnnPrimitiveAttributes_t *attributes);
-    SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesCreate<float>(
+SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesCreate<float>(
         dnnPrimitiveAttributes_t *attributes)
     {return dnnPrimitiveAtrributesCreate_F32 (attributes);}
-    SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesCreate<double>(
+SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesCreate<double>(
         dnnPrimitiveAttributes_t *attributes)
     {return dnnPrimitiveAtrributesCreate_F64 (attributes);}
 
