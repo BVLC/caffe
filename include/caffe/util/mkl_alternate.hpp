@@ -7,9 +7,43 @@
 
 #else  // If use MKL, simply include the MKL header
 
+#ifdef USE_EIGEN
+
+#include <Eigen/Dense>
+
+using Eigen::Map;
+using Eigen::VectorXf;
+using Eigen::VectorXd;
+using Eigen::Dynamic;
+using Eigen::Matrix;
+using Eigen::RowMajor;
+using Eigen::InnerStride;
+
+enum CBLAS_ORDER { CblasRowMajor = 101, CblasColMajor = 102 };
+enum CBLAS_TRANSPOSE { CblasNoTrans = 111, CblasTrans = 112, CblasConjTrans = 113 };
+
+#define MAP_SVECTOR(name, ptr, N) Map<VectorXf> name(ptr, N)
+#define MAP_CONST_SVECTOR(name, ptr, N) Map<const VectorXf> name(ptr, N)
+#define MAP_CONST_SVECTOR_STRIDE(name, ptr, N, S) Map<const VectorXf, 0, InnerStride<> > name(ptr, N, InnerStride<>(S))
+#define MAP_DVECTOR(name, ptr, N) Map<VectorXd> name(ptr, N)
+#define MAP_CONST_DVECTOR(name, ptr, N) Map<const VectorXd> name(ptr, N)
+#define MAP_CONST_DVECTOR_STRIDE(name, ptr, N, S) Map<const VectorXd, 0, InnerStride<> > name(ptr, N, InnerStride<>(S))
+typedef Matrix<float, Dynamic, Dynamic, RowMajor> MatXf;
+typedef Matrix<double, Dynamic, Dynamic, RowMajor> MatXd;
+
+#define MAP_SMATRIX(name, ptr, M, N) Map<MatXf> name(ptr, M, N)
+#define MAP_CONST_SMATRIX(name, ptr, M, N) Map<const MatXf> name(ptr, M, N)
+#define MAP_DMATRIX(name, ptr, M, N) Map<MatXd> name(ptr, M, N)
+#define MAP_CONST_DMATRIX(name, ptr, M, N) Map<const MatXd> name(ptr, M, N)
+
+#else
+
 extern "C" {
 #include <cblas.h>
 }
+
+#endif  // USE_EIGEN
+
 #include <math.h>
 
 // Functions that caffe uses but are not present if MKL is not linked.
@@ -77,6 +111,8 @@ DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i]);
 DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i]);
 DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
 
+#ifndef USE_EIGEN
+
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.
@@ -92,6 +128,8 @@ inline void cblas_daxpby(const int N, const double alpha, const double* X,
   cblas_dscal(N, beta, Y, incY);
   cblas_daxpy(N, alpha, X, incX, Y, incY);
 }
+
+#endif  // USE_EIGEN
 
 #endif  // USE_MKL
 #endif  // CAFFE_UTIL_MKL_ALTERNATE_H_

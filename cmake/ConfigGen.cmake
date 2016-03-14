@@ -56,6 +56,10 @@ function(caffe_generate_export_configs)
     list(APPEND Caffe_DEFINITIONS -DCPU_ONLY)
   endif()
 
+  if(USE_GLOG)
+    list(APPEND Caffe_DEFINITIONS -DUSE_GLOG)
+  endif()
+
   if(USE_OPENCV)
     list(APPEND Caffe_DEFINITIONS -DUSE_OPENCV)
   endif()
@@ -71,6 +75,10 @@ function(caffe_generate_export_configs)
     list(APPEND Caffe_DEFINITIONS -DUSE_LEVELDB)
   endif()
 
+  if(USE_HDF5)
+    list(APPEND Caffe_DEFINITIONS -DUSE_HDF5)
+  endif()
+
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
   else()
@@ -79,6 +87,10 @@ function(caffe_generate_export_configs)
 
   if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
     list(APPEND Caffe_DEFINITIONS -DUSE_MKL)
+  endif()
+
+  if(BLAS STREQUAL "Eigen" OR BLAS STREQUAL "eigen")
+    list(APPEND Caffe_DEFINITIONS -DUSE_EIGEN)
   endif()
 
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${PROJECT_BINARY_DIR}/CaffeConfig.cmake" @ONLY)

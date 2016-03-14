@@ -32,6 +32,9 @@ set_target_properties(caffe PROPERTIES
 install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION include)
 install(FILES ${proto_hdrs} DESTINATION include/caffe/proto)
 install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
+if(NOT USE_GLOG)
+  install(DIRECTORY ${Caffe_INCLUDE_DIR}/ceres DESTINATION include)
+endif()
 
 file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)
 list(APPEND proto_python ${PROJECT_BINARY_DIR}/__init__.py)

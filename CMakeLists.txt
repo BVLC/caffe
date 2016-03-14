@@ -14,6 +14,19 @@ set(CAFFE_TARGET_VERSION "1.0.0-rc3")
 set(CAFFE_TARGET_SOVERSION "1.0.0-rc3")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
+# Search packages for host system instead of packages for target system
+# in case of cross compilation these macro should be defined by toolchain file
+if(NOT COMMAND find_host_package)
+  macro(find_host_package)
+    find_package(${ARGN})
+  endmacro()
+endif()
+if(NOT COMMAND find_host_program)
+  macro(find_host_program)
+    find_program(${ARGN})
+  endmacro()
+endif()
+
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
@@ -35,9 +48,11 @@ caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
 caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
 caffe_option(USE_OPENCV "Build with OpenCV support" ON)
+caffe_option(USE_GLOG "Build with glog support" ON)
 caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
+caffe_option(USE_HDF5 "Build with hdf5" ON)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
@@ -52,6 +67,10 @@ caffe_set_caffe_link()
 if(USE_libstdcpp)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
+endif()
+
+if(ANDROID)
+  caffe_enable_cpp11_support()
 endif()
 
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
@@ -72,6 +91,7 @@ add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)
 add_subdirectory(examples)
+add_subdirectory(android)
 add_subdirectory(python)
 add_subdirectory(matlab)
 add_subdirectory(docs)

@@ -24,13 +24,14 @@ Caffe has several dependencies:
     * 5.5, and 5.0 are compatible but considered legacy
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
 * [Boost](http://www.boost.org/) >= 1.55
-* `protobuf`, `glog`, `gflags`, `hdf5`
+* `protobuf`, `gflags`
 
 Optional dependencies:
 
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
-* IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
+* IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`), `hdf5`
 * cuDNN for GPU acceleration (v3)
+* `glog`
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
