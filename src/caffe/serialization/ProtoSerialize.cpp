@@ -15,9 +15,7 @@ bool deserialize(const char* data,
   CodedInputStream coded_stream(&zero_stream);
   coded_stream.SetTotalBytesLimit(max_decode_size, max_decode_size);
   bool ret = msg->ParseFromCodedStream(&coded_stream);
-  if (!ret) {
-    LOG(ERROR) << "Parsing BlobUpdate failed";
-  }
+  CHECK(ret);
   return ret;
 }
 

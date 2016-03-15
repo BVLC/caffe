@@ -21,7 +21,7 @@ class ModelServer : public internode::Waypoint::Handler {
   ModelServer(shared_ptr<Solver<Dtype> >, string bind_address);
   void run();
 
-  virtual void received(char* data, size_t size, internode::RemoteId);
+  virtual void received(char* data, size_t size, internode::Waypoint*);
 };
 
 }  // namespace caffe

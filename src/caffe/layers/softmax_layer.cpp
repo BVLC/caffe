@@ -35,26 +35,35 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // We need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   for (int i = 0; i < outer_num_; ++i) {
+    Dtype* top_data_part = top_data + i * inner_num_ * channels;
     // initialize scale_data to the first plane
     caffe_copy(inner_num_, bottom_data + i * dim, scale_data);
-    for (int j = 0; j < channels; j++) {
-      for (int k = 0; k < inner_num_; k++) {
-        scale_data[k] = std::max(scale_data[k],
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int k = 0; k < inner_num_; k++) {
+      Dtype max_val = bottom_data[i * dim + k];
+      for (int j = 1; j < channels; j++) {
+        max_val = std::max(max_val,
             bottom_data[i * dim + j * inner_num_ + k]);
       }
+      scale_data[k] = std::max(scale_data[k], max_val);
     }
     // subtraction
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels, inner_num_,
-        1, -1., sum_multiplier_.cpu_data(), scale_data, 1., top_data);
+        1, -1., sum_multiplier_.cpu_data(), scale_data, 1., top_data_part);
     // exponentiation
-    caffe_exp<Dtype>(dim, top_data, top_data);
+    caffe_exp<Dtype>(dim, top_data_part, top_data_part);
     // sum after exp
     caffe_cpu_gemv<Dtype>(CblasTrans, channels, inner_num_, 1.,
-        top_data, sum_multiplier_.cpu_data(), 0., scale_data);
+        top_data_part, sum_multiplier_.cpu_data(), 0., scale_data);
     // division
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int j = 0; j < channels; j++) {
-      caffe_div(inner_num_, top_data, scale_data, top_data);
-      top_data += inner_num_;
+      caffe_div(inner_num_, top_data_part + j * inner_num_, scale_data,
+        top_data_part + j * inner_num_);
     }
   }
 }
@@ -72,6 +81,9 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_copy(top[0]->count(), top_diff, bottom_diff);
   for (int i = 0; i < outer_num_; ++i) {
     // compute dot(top_diff, top_data) and subtract them from the bottom diff
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int k = 0; k < inner_num_; ++k) {
       scale_data[k] = caffe_cpu_strided_dot<Dtype>(channels,
           bottom_diff + i * dim + k, inner_num_,

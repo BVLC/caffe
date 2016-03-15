@@ -202,7 +202,7 @@ Dtype Solver<Dtype>::ForwardBackward() {
 
   // accumulate the loss and gradient
   for (int i = 0; i < param_.iter_size(); ++i) {
-    loss += net_->ForwardBackward(bottom_vec);
+    loss += net_->ForwardBackward();
   }
   return loss / param_.iter_size();
 }
@@ -212,8 +212,8 @@ void Solver<Dtype>::Step(int iters) {
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;
   int average_loss = this->param_.average_loss();
-  vector<Dtype> losses;
-  Dtype smoothed_loss = 0;
+  losses_.clear();
+  smoothed_loss_ = 0;
 
   while (iter_ < stop_iter) {
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
@@ -234,18 +234,10 @@ void Solver<Dtype>::Step(int iters) {
     Dtype loss = forward_backward_();
 
     // average the loss across iterations for smoothed reporting
-    if (losses.size() < average_loss) {
-      losses.push_back(loss);
-      int size = losses.size();
-      smoothed_loss = (smoothed_loss * (size - 1) + loss) / size;
-    } else {
-      int idx = (iter_ - start_iter) % average_loss;
-      smoothed_loss += (loss - losses[idx]) / average_loss;
-      losses[idx] = loss;
-    }
+    UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
       LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
-          << ", loss = " << smoothed_loss;
+          << ", loss = " << smoothed_loss_;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
@@ -308,6 +300,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
+  int start_iter = iter_;
   Step(param_.max_iter() - iter_);
   // If we haven't already, save a snapshot after optimization, unless
   // overridden by setting snapshot_after_train := false
@@ -326,9 +319,13 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // updated the parameters "max_iter" times -- this final pass is only done to
   // display the loss, which is computed in the forward pass.
   if (param_.display() && iter_ % param_.display() == 0) {
+    int average_loss = this->param_.average_loss();
     Dtype loss;
-    net_->ForwardPrefilled(&loss);
-    LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
+    net_->Forward(&loss);
+
+    UpdateSmoothedLoss(loss, start_iter, average_loss);
+
+    LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
   }
   if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
     TestAll();
@@ -354,7 +351,6 @@ void Solver<Dtype>::Test(const int test_net_id) {
       ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<int> test_score_output_id;
-  vector<Blob<Dtype>*> bottom_vec;
   const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
   for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
@@ -375,7 +371,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
 
     Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
-        test_net->Forward(bottom_vec, &iter_loss);
+        test_net->Forward(&iter_loss);
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }
@@ -490,6 +486,20 @@ void Solver<Dtype>::Restore(const char* state_file) {
     RestoreSolverStateFromHDF5(state_filename);
   } else {
     RestoreSolverStateFromBinaryProto(state_filename);
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
+    int average_loss) {
+  if (losses_.size() < average_loss) {
+    losses_.push_back(loss);
+    int size = losses_.size();
+    smoothed_loss_ = (smoothed_loss_ * (size - 1) + loss) / size;
+  } else {
+    int idx = (iter_ - start_iter) % average_loss;
+    smoothed_loss_ += (loss - losses_[idx]) / average_loss;
+    losses_[idx] = loss;
   }
 }
 

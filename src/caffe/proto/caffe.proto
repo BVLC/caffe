@@ -30,21 +30,26 @@ message ThresholdCompressionConfig {
 }
 
 enum CompressionAlgo {
-  NONE = 0;
-  AVERAGING = 1;
+  COMPRESSION_NONE = 0;
+  COMPRESSION_AVERAGING = 1;
 }
 
 message CompressionParam {
-  optional CompressionAlgo algo = 1 [default = NONE];
+  optional CompressionAlgo algo = 1 [default = COMPRESSION_NONE];
   optional ThresholdCompressionConfig threshold_param = 3;
 };
 
-message BlobUpdate {
+message BlobPartInfo {
   optional uint32 version = 1;
-  required uint32 layer_id = 2;
-  required uint32 blob_id = 3;
-  required uint32 part = 4;
+  optional int32 layer_id = 2;
+  optional int32 blob_id = 3;
+  optional int32 part = 4;
+}
+
+message BlobUpdate {
+  optional BlobPartInfo info = 1;
   optional uint32 iters = 5;
+  repeated BlobPartInfo ack = 2;
   optional CompressionParam compression_param = 7;
   optional bytes data = 8;
 }
@@ -66,7 +71,7 @@ message DataReq {
 message MultinodeParameter {
   optional CompressionParam outgoing_compression = 2;
   optional uint32 update_per_iters = 4 [default = 1];
-  optional uint32 max_packet_size = 5 [default = 314572800];
+  optional uint32 max_packet_size = 5 [default = 65000];
   optional uint32 wait_for_clients = 6 [default = 0];
 }
 //******************************************************
@@ -113,12 +118,12 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  // The input blobs to the network.
+  // DEPRECATED. See InputParameter. The input blobs to the network.
   repeated string input = 3;
-  // The shape of the input blobs.
+  // DEPRECATED. See InputParameter. The shape of the input blobs.
   repeated BlobShape input_shape = 8;
 
-  // 4D input dimensions -- deprecated.  Use "shape" instead.
+  // 4D input dimensions -- deprecated.  Use "input_shape" instead.
   // If specified, for each input blob there should be four
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
@@ -358,7 +363,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 140 (last added: batch_norm_param)
+// LayerParameter next available layer-specific ID: 144 (last added: input_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -408,6 +413,7 @@ message LayerParameter {
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
+  optional BiasParameter bias_param = 141;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -415,6 +421,7 @@ message LayerParameter {
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
+  optional ELUParameter elu_param = 140;
   optional EmbedParameter embed_param = 137;
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
@@ -424,6 +431,7 @@ message LayerParameter {
   optional ImageDataParameter image_data_param = 115;
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
+  optional InputParameter input_param = 143;
   optional LogParameter log_param = 134;
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
@@ -435,6 +443,7 @@ message LayerParameter {
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
+  optional ScaleParameter scale_param = 142;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
@@ -481,7 +490,7 @@ message LossParameter {
     // Outputs that receive the ignore label will NOT be ignored in computing
     // the normalization factor.
     FULL = 0;
-    // Divide by the total number of output locations that do not take the 
+    // Divide by the total number of output locations that do not take the
     // ignore_label.  If ignore_label is not set, this behaves like FULL.
     VALID = 1;
     // Divide by the batch size.
@@ -548,6 +557,38 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+}
+
+message BiasParameter {
+  // The first axis of bottom[0] (the first input Blob) along which to apply
+  // bottom[1] (the second input Blob).  May be negative to index from the end
+  // (e.g., -1 for the last axis).
+  //
+  // For example, if bottom[0] is 4D with shape 100x3x40x60, the output
+  // top[0] will have the same shape, and bottom[1] may have any of the
+  // following shapes (for the given value of axis):
+  //    (axis == 0 == -4) 100; 100x3; 100x3x40; 100x3x40x60
+  //    (axis == 1 == -3)          3;     3x40;     3x40x60
+  //    (axis == 2 == -2)                   40;       40x60
+  //    (axis == 3 == -1)                                60
+  // Furthermore, bottom[1] may have the empty shape (regardless of the value of
+  // "axis") -- a scalar bias.
+  optional int32 axis = 1 [default = 1];
+
+  // (num_axes is ignored unless just one bottom is given and the bias is
+  // a learned parameter of the layer.  Otherwise, num_axes is determined by the
+  // number of axes by the second bottom.)
+  // The number of axes of the input (bottom[0]) covered by the bias
+  // parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
+  // Set num_axes := 0, to add a zero-axis Blob: a scalar.
+  optional int32 num_axes = 2 [default = 1];
+
+  // (filler is ignored unless just one bottom is given and the bias is
+  // a learned parameter of the layer.)
+  // The initialization for the learned bias parameter.
+  // Default is the zero (0) initialization, resulting in the BiasLayer
+  // initially performing the identity operation.
+  optional FillerParameter filler = 3;
 }
 
 message ContrastiveLossParameter {
@@ -703,6 +744,14 @@ message EltwiseParameter {
   optional bool stable_prod_grad = 3 [default = true];
 }
 
+// Message that stores parameters used by ELULayer
+message ELUParameter {
+  // Described in:
+  // Clevert, D.-A., Unterthiner, T., & Hochreiter, S. (2015). Fast and Accurate 
+  // Deep Network Learning by Exponential Linear Units (ELUs). arXiv
+  optional float alpha = 1 [default = 1];
+}
+
 // Message that stores parameters used by EmbedLayer
 message EmbedParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
@@ -813,6 +862,19 @@ message InnerProductParameter {
   // all preceding axes are retained in the output.
   // May be negative to index from the end (e.g., -1 for the last axis).
   optional int32 axis = 5 [default = 1];
+  // Specify whether to transpose the weight matrix or not.
+  // If transpose == true, any operations will be performed on the transpose
+  // of the weight matrix. The weight matrix itself is not going to be transposed
+  // but rather the transfer flag of operations will be toggled accordingly.
+  optional bool transpose = 6 [default = false];
+}
+
+message InputParameter {
+  // This layer produces N >= 1 top blob(s) to be assigned manually.
+  // Define N shapes to set a shape for each top.
+  // Define 1 shape to set the same shape for every top.
+  // Define no shape to defer to reshaping manually.
+  repeated BlobShape shape = 1;
 }
 
 // Message that stores parameters used by LogLayer
@@ -1022,6 +1084,43 @@ message ReshapeParameter {
   //
   optional int32 axis = 2 [default = 0];
   optional int32 num_axes = 3 [default = -1];
+}
+
+message ScaleParameter {
+  // The first axis of bottom[0] (the first input Blob) along which to apply
+  // bottom[1] (the second input Blob).  May be negative to index from the end
+  // (e.g., -1 for the last axis).
+  //
+  // For example, if bottom[0] is 4D with shape 100x3x40x60, the output
+  // top[0] will have the same shape, and bottom[1] may have any of the
+  // following shapes (for the given value of axis):
+  //    (axis == 0 == -4) 100; 100x3; 100x3x40; 100x3x40x60
+  //    (axis == 1 == -3)          3;     3x40;     3x40x60
+  //    (axis == 2 == -2)                   40;       40x60
+  //    (axis == 3 == -1)                                60
+  // Furthermore, bottom[1] may have the empty shape (regardless of the value of
+  // "axis") -- a scalar multiplier.
+  optional int32 axis = 1 [default = 1];
+
+  // (num_axes is ignored unless just one bottom is given and the scale is
+  // a learned parameter of the layer.  Otherwise, num_axes is determined by the
+  // number of axes by the second bottom.)
+  // The number of axes of the input (bottom[0]) covered by the scale
+  // parameter, or -1 to cover all axes of bottom[0] starting from `axis`.
+  // Set num_axes := 0, to multiply with a zero-axis Blob: a scalar.
+  optional int32 num_axes = 2 [default = 1];
+
+  // (filler is ignored unless just one bottom is given and the scale is
+  // a learned parameter of the layer.)
+  // The initialization for the learned scale parameter.
+  // Default is the unit (1) initialization, resulting in the ScaleLayer
+  // initially performing the identity operation.
+  optional FillerParameter filler = 3;
+
+  // Whether to also learn a bias (equivalent to a ScaleLayer+BiasLayer, but
+  // may be more efficient).  Initialized with bias_filler (defaults to 0).
+  optional bool bias_term = 4 [default = false];
+  optional FillerParameter bias_filler = 5;
 }
 
 message SigmoidParameter {
