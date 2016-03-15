@@ -25,26 +25,26 @@ This fork is dedicated to improving Caffe performance when running on CPU, in pa
 servers.
 
 ## Performance Results
-Time measures are average Forward-Backward as stated by caffe time. Speedup factor is
-(bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
+Time measures are average Forward-Backward as stated by caffe time. The speedup factor is
+calculated as (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure).
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            624 |          1172 |         1297 |               21|
-| bvlc-caffe-master |           3872 |          6899 |         7343 |              323|
-|    speedup factor |           x6.2 |          x5.9 |         x5.7 |            x15.4|
+| intelcaffe-master |            597 |          1154 |         1257 |               21|
+| bvlc-caffe-master |           3990 |          6917 |         7307 |              270|
+|    speedup factor |           x6.7 |          x6.0 |         x5.8 |            x12.9|
 
-### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
+### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, OpenBLAS 0.2.14, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |           1047 |          3004 |         3786 |               47|
-| bvlc-caffe-master |          14892 |         25920 |        67542 |              530|
-|    speedup factor |          x14.2 |          x8.6 |        x17.8 |            x11.3|
+| intelcaffe-master |           4782 |          2874 |         3786 |               47|
+| bvlc-caffe-master |          12992 |         25613 |        68415 |              494|
+|    speedup factor |          x2.71 |          x8.9 |        x18.1 |            x10.5|
 
 Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
-The speedup factor highly depends on the amount of running threads and system load.
-Upper tables also shows, the optimal configuration is to use one thread per CPU core.
+The speedup factor highly depends on the amount of running caffe threads, system load and CPU
+temperature.
 
 ## Building
 Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
