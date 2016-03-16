@@ -62,7 +62,6 @@ Classifier::Classifier(const string& model_file,
                        const string& trained_file,
                        const string& mean_file,
                        const string& label_file) {
-
   // Set device id and mode
   vector<int> gpus;
   get_gpus(&gpus);
