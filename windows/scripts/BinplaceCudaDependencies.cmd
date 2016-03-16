@@ -16,7 +16,7 @@ if %IS_CPU_ONLY_BUILD% == true (
     if %USE_CUDNN% == true (
         echo BinplaceCudaDependencies : Copy cudnn*.dll to output.
 
-        if [%CUDNN_PATH%] == [] (
+        if "%CUDNN_PATH%" == "" (
             copy /y "%CUDA_TOOLKIT_BIN_DIR%\cudnn*.dll" "%OUTPUT_DIR%"
         ) else (
             copy /y "%CUDNN_PATH%\cuda\bin\cudnn*.dll" "%OUTPUT_DIR%"
