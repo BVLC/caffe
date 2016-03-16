@@ -52,12 +52,12 @@ def _Net_params(self):
                         if len(lr.blobs) > 0])
 
 @property
-def _Net_layers(self):
+def _Net_layers_dict(self):
     """
     An OrderedDict (bottom to top, i.e., input to output) of network
     layers indexed by name
     """
-    return OrderedDict(zip(self._layer_names, self._layers))
+    return OrderedDict(zip(self._layer_names, self.layers))
 
 
 @property
@@ -313,7 +313,7 @@ class _Net_IdNameWrapper:
         return [id_to_name[i] for i in ids]
 
 # Attach methods to Net.
-Net.layers = _Net_layers
+Net.layers_dict = _Net_layers_dict
 Net.blobs = _Net_blobs
 Net.blob_loss_weights = _Net_blob_loss_weights
 Net.params = _Net_params
