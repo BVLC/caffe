@@ -6,7 +6,6 @@
 
 namespace caffe {
 
-static std::string benchmark_float = "__kernel void null() {\n}";  // NOLINT
 Timer::Timer()
     : initted_(false), running_(false), has_run_at_least_once_(false) {
   Init();
@@ -48,16 +47,13 @@ void Timer::Start() {
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
         clWaitForEvents(1, &start_gpu_cl_);
         clReleaseEvent(start_gpu_cl_);
-        // ClState& state = Caffe::cl_state();
-        // ClKernel& kernel = state.get_kernel("null");
-        viennacl::ocl::context& ctx = viennacl::ocl::current_context();
-        viennacl::ocl::kernel& kernel = ctx.get_kernel("benchmark", "null");
-        // viennacl::ocl::enqueue(kernel);
+        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+            Caffe::GetDefaultDevice()->id());
+        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel_float");
         clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
-        NULL,
-                      &start_gpu_cl_);
-        viennacl::backend::finish();
-        // clFinish(ctx.get_queue().handle().get());
+                        NULL, &start_gpu_cl_);
+        clFinish(ctx.get_queue().handle().get());
       }
 #endif
 #else
@@ -85,19 +81,13 @@ void Timer::Stop() {
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
         clWaitForEvents(1, &stop_gpu_cl_);
         clReleaseEvent(stop_gpu_cl_);
-        // ClState& state = Caffe::cl_state();
-        // ClKernel& kernel = state.get_kernel("null");
-        // OCL_CHECK(clEnqueueTask(state.get_command_queue(), kernel, 0, NULL,
-        //    &stop_gpu_));
-        // clFinish(state.get_command_queue());
-        viennacl::ocl::context& ctx = viennacl::ocl::current_context();
-        viennacl::ocl::kernel& kernel = ctx.get_kernel("benchmark", "null");
+        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+            Caffe::GetDefaultDevice()->id());
+        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
+        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel_float");
         clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
-        NULL,
-                      &stop_gpu_cl_);
-        viennacl::ocl::enqueue(kernel);
-        viennacl::backend::finish();
-        // clFinish(ctx.get_queue().handle().get());
+                        NULL, &stop_gpu_cl_);
+        clFinish(ctx.get_queue().handle().get());
       }
 #endif
 #else
@@ -202,7 +192,6 @@ void Timer::Init() {
 #ifdef USE_GREENTEA
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OpenCL) {
         viennacl::ocl::context& ctx = viennacl::ocl::current_context();
-        ctx.add_program(benchmark_float, "benchmark");
         start_gpu_cl_ = 0;
         stop_gpu_cl_ = 0;
       }

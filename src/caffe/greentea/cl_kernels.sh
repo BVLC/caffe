@@ -150,6 +150,7 @@ shopt -s nullglob
 echo "  for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
 echo "      ss << cl_kernels[i] << \"\n\n\";" >> $SOURCE
 echo "  }" >> $SOURCE
+echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
