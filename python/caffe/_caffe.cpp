@@ -148,9 +148,7 @@ void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
 
 void Net_SetLayerInputArrays(Net<Dtype>* net, Layer<Dtype>* layer,
                              bp::object data_obj, bp::object labels_obj) {
-
   MemoryDataLayer<Dtype>* md_layer = (MemoryDataLayer<Dtype>*)(layer);
-
   // check that we were passed appropriately-sized contiguous memory
   PyArrayObject* data_arr =
       reinterpret_cast<PyArrayObject*>(data_obj.ptr());
