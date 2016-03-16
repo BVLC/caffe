@@ -70,12 +70,12 @@ def _Net_params(self):
     return self._params_dict
 
 @property
-def _Net_layers(self):
+def _Net_layers_dict(self):
     """
     An OrderedDict (bottom to top, i.e., input to output) of network
     layers indexed by name
     """
-    return OrderedDict(zip(self._layer_names, self._layers))
+    return OrderedDict(zip(self._layer_names, self.layers))
 
 
 @property
@@ -347,7 +347,7 @@ def _Net_get_id_name(func, field):
     return get_id_name
 
 # Attach methods to Net.
-Net.layers = _Net_layers
+Net.layers_dict = _Net_layers_dict
 Net.blobs = _Net_blobs
 Net.blob_loss_weights = _Net_blob_loss_weights
 Net.layer_dict = _Net_layer_dict

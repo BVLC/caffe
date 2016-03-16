@@ -458,7 +458,7 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_blobs", bp::make_function(&Net<Dtype>::blobs,
         bp::return_internal_reference<>()))
-    .add_property("_layers", bp::make_function(&Net<Dtype>::layers,
+    .add_property("layers", bp::make_function(&Net<Dtype>::layers,
         bp::return_internal_reference<>()))
     .add_property("_blob_names", bp::make_function(&Net<Dtype>::blob_names,
         bp::return_value_policy<bp::copy_const_reference>()))
