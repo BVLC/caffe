@@ -6,7 +6,7 @@
 
 namespace caffe {
 
-static std::string benchmark_float = "__kernel void null() {\n}";  // NOLINT
+static std::string benchmark_float = "__kernel void null(void) {\n}";  // NOLINT
 Timer::Timer()
     : initted_(false), running_(false), has_run_at_least_once_(false) {
   Init();
