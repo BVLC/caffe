@@ -2,5 +2,5 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(null_kernel,Dtype)() {
+__kernel void TEMPLATE(null_kernel,Dtype)(void) {
 }
