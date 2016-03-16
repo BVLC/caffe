@@ -202,7 +202,7 @@ void OpenMpManager::bindCurrentThreadToPrimaryCore() {
   OpenMpManager &openMpManager = getInstance();
   if (openMpManager.isThreadsBindAllowed()) {
     unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
-    if(totalNumberOfCpuCores >= minCoresForThreadBinding) {
+    if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
       openMpManager.bindCurrentThreadToLogicalCoreCpus(0);
     }
   }
@@ -219,7 +219,7 @@ void OpenMpManager::bindOpenMpThreads() {
   {
     unsigned logicalCoreId = omp_get_thread_num();
     unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
-    if(totalNumberOfCpuCores >= minCoresForThreadBinding) {
+    if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
       logicalCoreId += 2;
     }
 
