@@ -3,12 +3,15 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/unordered_map.hpp>
+#include <algorithm>
 #include <deque>
 #include <string>
 #include <utility>
 #include <vector>
+#include "caffe/internode/broadcast_callback.hpp"
 #include "caffe/internode/communication.hpp"
 #include "caffe/internode/configuration.hpp"
 
@@ -18,6 +21,8 @@ namespace internode {
 extern boost::asio::io_service& get_io_service(boost::shared_ptr<Daemon>);
 
 namespace {
+
+typedef uint64_t MsgSize;
 
 string get_address(const boost::asio::ip::tcp::endpoint&  endpoint) {
   try {
@@ -57,6 +62,7 @@ class SendQueue : public boost::enable_shared_from_this<SendQueue> {
   std::deque<SendQueueItem> queue;
   boost::shared_ptr<boost::asio::ip::tcp::socket> socket;
   bool sending;
+  boost::mutex mtx;
 
   void send() {
     if (sending) return;
@@ -74,14 +80,22 @@ class SendQueue : public boost::enable_shared_from_this<SendQueue> {
   void sent(const boost::system::error_code& error,
             std::size_t size,
             boost::shared_ptr<SendQueue>) {
-    if (error) {
-      LOG(ERROR) << "sent failed with reason: " << error.message();
+    Waypoint::SentCallback callback;
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      if (error) {
+        LOG(ERROR) << "sent failed with reason: " << error.message();
+      }
+      CHECK(!queue.empty());
+      callback = queue.front().callback;
+      queue.pop_front();
     }
-    CHECK(!queue.empty());
-    queue.front().callback(!error);
-    queue.pop_front();
-    sending = false;
-    send();
+    callback(!error);
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      sending = false;
+      send();
+    }
   }
 
  public:
@@ -91,6 +105,7 @@ class SendQueue : public boost::enable_shared_from_this<SendQueue> {
   }
 
   void push(SendQueueItem item) {
+    boost::mutex::scoped_lock lock(mtx);
     queue.push_back(item);
     send();
   }
@@ -98,12 +113,13 @@ class SendQueue : public boost::enable_shared_from_this<SendQueue> {
 
 class SingleClient : public boost::enable_shared_from_this<SingleClient>
                    , public Waypoint {
+  const MsgSize buffer_size;
   boost::shared_ptr<boost::asio::ip::tcp::socket> socket;
   typedef boost::function<void(string)> DisconnectHandler;
   DisconnectHandler disconnect_handler;
 
   std::vector<Handler*> handlers;
-  uint64_t size_buffer;
+  MsgSize size_buffer;
   std::vector<char> buffer;
   string address_;
   boost::recursive_mutex send_mtx;
@@ -174,8 +190,11 @@ class SingleClient : public boost::enable_shared_from_this<SingleClient>
 
  public:
   SingleClient(boost::shared_ptr<boost::asio::ip::tcp::socket> socket,
-               DisconnectHandler disconnect_handler)
-      : socket(socket)
+               DisconnectHandler disconnect_handler,
+               uint32_t max_packet_size)
+      : buffer_size(
+          std::min(max_packet_size + sizeof(MsgSize), 1024 * 1024 * 1024lu))
+      , socket(socket)
       , disconnect_handler(disconnect_handler)
       , address_(get_address(*socket))
       , queue(new SendQueue(socket)) {
@@ -215,39 +234,7 @@ class SingleClient : public boost::enable_shared_from_this<SingleClient>
   }
 
   virtual size_t max_packet_size() const {
-    return 1024 * 1024 * 1024;
-  }
-};
-
-class BroadcastCallback {
-  typedef boost::shared_ptr<SingleClient> Client;
-  struct Impl {
-    bool result;
-    Waypoint::SentCallback callback;
-
-    explicit Impl(Waypoint::SentCallback callback)
-      : result(true)
-      , callback(callback) {
-    }
-
-    void update(bool single_result) {
-      result = result & single_result;
-    }
-
-    ~Impl() {
-      callback(result);
-    }
-  };
-
-  shared_ptr<Impl> shared_impl;
-
- public:
-  explicit BroadcastCallback(Waypoint::SentCallback callback)
-    : shared_impl(new Impl(callback)) {
-  }
-
-  void operator()(bool single_result) {
-    shared_impl->update(single_result);
+    return buffer_size - sizeof(MsgSize);
   }
 };
 
@@ -257,6 +244,7 @@ class ServerCommunicatorImpl : public MultiWaypoint {
   typedef boost::unordered_map<string, Client> Clients;
   typedef Clients::iterator ClientIt;
 
+  const MsgSize                   buffer_size;
   boost::shared_ptr<Daemon>       daemon;
   boost::asio::ip::tcp::endpoint  endpoint;
   boost::asio::ip::tcp::acceptor  acceptor;
@@ -280,7 +268,8 @@ class ServerCommunicatorImpl : public MultiWaypoint {
     LOG(INFO) << "accepted client from address: " << address;
     clients[address].reset(new SingleClient(
       new_client_socket,
-      bind(&ServerCommunicatorImpl::handle_disconnect, this, _1)));
+      bind(&ServerCommunicatorImpl::handle_disconnect, this, _1),
+      max_packet_size()));
     clients[address]->start();
     for (int i = 0; i < receive_handlers.size(); ++i) {
       clients[address]->register_receive_handler(receive_handlers[i]);
@@ -310,8 +299,11 @@ class ServerCommunicatorImpl : public MultiWaypoint {
  public:
   ServerCommunicatorImpl(
           boost::shared_ptr<Daemon> daemon,
-          std::string port)
-      : daemon(daemon)
+          std::string port,
+          uint32_t max_packet_size)
+      : buffer_size(
+          std::min(max_packet_size + sizeof(MsgSize), 1024 * 1024 * 1024lu))
+      , daemon(daemon)
       , endpoint(boost::asio::ip::tcp::v4(),
                  boost::lexical_cast<uint16_t>(port))
       , acceptor(get_io_service(daemon), endpoint)
@@ -331,7 +323,7 @@ class ServerCommunicatorImpl : public MultiWaypoint {
                           SentCallback callback) {
     boost::recursive_mutex::scoped_lock lock(mtx);
     if (clients.empty()) return;
-    BroadcastCallback broadcast_callback(callback);
+    BroadcastCallback<SentCallback> broadcast_callback(callback);
     for (ClientIt it = clients.begin(); it != clients.end(); ++it) {
       it->second->async_send(buffer, size, broadcast_callback);
     }
@@ -357,7 +349,7 @@ class ServerCommunicatorImpl : public MultiWaypoint {
   }
 
   virtual size_t max_packet_size() const {
-    return 1024 * 1024 * 1024;
+    return buffer_size - sizeof(MsgSize);
   }
 };
 
@@ -366,7 +358,8 @@ class ServerCommunicatorImpl : public MultiWaypoint {
 boost::shared_ptr<Waypoint> configure_tcp_client(
     boost::shared_ptr<Daemon> daemon,
     std::string ip,
-    std::string port) {
+    std::string port,
+    size_t max_buffer_size) {
 
   boost::asio::ip::tcp::resolver::query query(ip, port);
   boost::asio::ip::tcp::resolver resolver(get_io_service(daemon));
@@ -382,16 +375,17 @@ boost::shared_ptr<Waypoint> configure_tcp_client(
   }
 
   boost::shared_ptr<SingleClient> ret(
-    new SingleClient(socket, null_disconnect_handler));
+    new SingleClient(socket, null_disconnect_handler, max_buffer_size));
   ret->start();
   return ret;
 }
 
 boost::shared_ptr<MultiWaypoint> configure_tcp_server(
     boost::shared_ptr<Daemon> communication_daemon,
-    std::string port) {
+    std::string port,
+    size_t max_buffer_size) {
   return boost::make_shared<ServerCommunicatorImpl>(
-    communication_daemon, port);
+    communication_daemon, port, max_buffer_size);
 }
 
 }  // namespace internode

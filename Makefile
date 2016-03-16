@@ -309,6 +309,8 @@ ifneq (,$(findstring clang++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
 else ifneq (,$(findstring g++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
+else ifneq (,$(findstring mpi,$(CXX)))
+	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
 else
   # The following line must not be indented with a tab, since we are not inside a target
   $(error Cannot static link with the $(CXX) compiler)
@@ -468,6 +470,16 @@ ifeq ($(USE_OPENMP), 1)
       LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
     endif
   endif
+endif
+
+
+# MPI support
+ifeq ($(USE_MPI), 1)
+  COMMON_FLAGS += -DUSE_MPI
+ #ifneq (,$(findstring mpi,$(CXX)))
+ #  CXXFLAGS += -mt_mpi
+ #  LINKFLAGS += -mt_mpi
+ #endif
 endif
 
 

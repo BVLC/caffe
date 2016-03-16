@@ -70,9 +70,27 @@ node full cifar training.
 The basic setup is to run parameter server with command like this:
 "$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port"
 Than run clients on machines you want with:
-"$TOOLS/caffe train --solver=/path/to/proto --param_server:tcp://127.0.0.1:7777"
+"$TOOLS/caffe train --solver=/path/to/proto --param_server=tcp://127.0.0.1:7777"
 The udp protocol can be used as well, for point to point communication
 and with multicast (i.e. "udp://127.0.0.1:7777;239.1.1.1:7778").
+It is also possible to run the scheme with mpi with mpirun command, i.e:
+"mpirun \
+    -host localhost -n 1 \
+    $TOOLS/caffe param_server --solver=/path/to/proto --listen_address=mpi://uid \
+  : \
+    -host localhost -n 1 \
+    $TOOLS/caffe train --solver=/path/to/proto --param_server=mpi://uid"
+You can run relay points, to accumulate/broadcast data in a tree structure:
+"$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port --param_server=tcp://127.0.0.1:7777"
+It only works with tcp protocol.
+
+The mpi setup with explicit all reduce is with command like this:
+"mpirun -host 127.0.0.1 -n 5 $TOOLS/caffe train --solver=/path/to/proto --param_server=mpi"
+This will run 5 processes on hosts set with host, and each process will calculate
+it's own gradients, and propagate it up with a tree structure to the root, which
+will apply them and propagate parameters down also in a tree structure.
+This version is less configurable than one with param server, relay and client,
+however it uses less cpu resource per node and can get most of the mpi implementations.
 
 Data server is for convenience. By the default you could use data shard prepared
 on each node separetely, either by shuffling the data uniquely or by creating

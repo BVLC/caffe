@@ -5,9 +5,11 @@
 #include <boost/make_shared.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/unordered_map.hpp>
+#include <algorithm>
 #include <deque>
 #include <string>
 #include <vector>
+#include "caffe/internode/broadcast_callback.hpp"
 #include "caffe/internode/communication.hpp"
 #include "caffe/internode/configuration.hpp"
 #include "caffe/internode/guaranteed_comm.hpp"
@@ -218,11 +220,13 @@ class UdpClient : public Waypoint {
  public:
   UdpClient(boost::shared_ptr<Daemon> daemon,
             boost::shared_ptr<boost::asio::ip::udp::socket> socket,
-            boost::asio::ip::udp::endpoint endpoint)
+            boost::asio::ip::udp::endpoint endpoint,
+            size_t max_packet_size)
             : daemon(daemon)
             , socket(socket)
             , queue(new SendQueue<true>(socket))
-            , recv_buffer_(udp_max_datagram_size)
+            , recv_buffer_(
+                std::min(size_t(udp_max_datagram_size), max_packet_size + 1))
             , connected(false)
             , server_endpoint(endpoint) {
     VLOG(2) << "local: " << socket->local_endpoint()
@@ -258,11 +262,12 @@ class UdpClient : public Waypoint {
   }
 
   virtual size_t max_packet_size() const {
-    return udp_max_datagram_size - 1;
+    return recv_buffer_.size() - 1;
   }
 };
 
 struct ClientEndpoint : Waypoint {
+  const uint32_t                        buffer_size;
   boost::asio::ip::udp::endpoint        endpoint;
   boost::posix_time::ptime              last_received;
   std::vector<Waypoint::Handler*>       receive_handlers;
@@ -270,8 +275,11 @@ struct ClientEndpoint : Waypoint {
 
   ClientEndpoint(boost::shared_ptr<Daemon> daemon,
                  boost::asio::ip::udp::endpoint client_endpoint,
-                 SendQueue<false>* queue)
-    : endpoint(client_endpoint)
+                 SendQueue<false>* queue,
+                 size_t max_packet_size)
+    : buffer_size(
+        std::min(max_packet_size + 1, size_t(udp_max_datagram_size)))
+    , endpoint(client_endpoint)
     , last_received(boost::posix_time::second_clock::local_time())
     , queue(queue) {
   }
@@ -301,38 +309,7 @@ struct ClientEndpoint : Waypoint {
   }
 
   virtual size_t max_packet_size() const {
-    return udp_max_datagram_size - 1;
-  }
-};
-
-class BroadcastCallback {
-  struct Impl {
-    bool result;
-    Waypoint::SentCallback callback;
-
-    explicit Impl(Waypoint::SentCallback callback)
-      : result(true)
-      , callback(callback) {
-    }
-
-    void update(bool single_result) {
-      result = result & single_result;
-    }
-
-    ~Impl() {
-      callback(result);
-    }
-  };
-
-  shared_ptr<Impl> shared_impl;
-
- public:
-  explicit BroadcastCallback(Waypoint::SentCallback callback)
-    : shared_impl(new Impl(callback)) {
-  }
-
-  void operator()(bool single_result) {
-    shared_impl->update(single_result);
+    return buffer_size - 1;
   }
 };
 
@@ -342,6 +319,7 @@ class UdpServerCommunicatorImpl : public MultiWaypoint {
           boost::shared_ptr<ClientEndpoint> >                     Clients;
   typedef Clients::iterator                                       ClientIt;
 
+  const uint32_t                                  buffer_size;
   boost::asio::ip::udp::endpoint                  local_endpoint;
   boost::asio::ip::udp::endpoint                  group_endpoint;
   boost::asio::ip::udp::endpoint                  incoming_client_endpoint;
@@ -436,7 +414,10 @@ class UdpServerCommunicatorImpl : public MultiWaypoint {
     if (it == clients.end()) {
       it = clients.insert(
         std::make_pair(addr, new ClientEndpoint(
-          daemon, incoming_client_endpoint, queue.get()))).first;
+          daemon,
+          incoming_client_endpoint,
+          queue.get(),
+          max_packet_size()))).first;
       LOG(INFO) << "Server: accepted client from address: " << addr
         << "(" << it->second->id() << ")";
       queue->push(SendQueueItem(MsgType::Connect, incoming_client_endpoint));
@@ -463,14 +444,18 @@ class UdpServerCommunicatorImpl : public MultiWaypoint {
  public:
   UdpServerCommunicatorImpl(shared_ptr<Daemon> daemon,
                             boost::asio::ip::udp::endpoint local_endpoint,
-                            boost::asio::ip::udp::endpoint group_endpoint)
-                    : local_endpoint(local_endpoint)
+                            boost::asio::ip::udp::endpoint group_endpoint,
+                            size_t max_packet_size)
+                    : buffer_size(
+                        std::min(size_t(udp_max_datagram_size),
+                                 max_packet_size + 1))
+                    , local_endpoint(local_endpoint)
                     , group_endpoint(group_endpoint)
                     , daemon(daemon)
                     , socket(boost::make_shared<boost::asio::ip::udp::socket>(
                              boost::ref(get_io_service(daemon)),
                              local_endpoint))
-                    , recv_buffer_(udp_max_datagram_size)
+                    , recv_buffer_(buffer_size)
                     , queue(new SendQueue<false>(socket)) {
     VLOG(2) << "local : " << local_endpoint
             << " group : " << group_endpoint;
@@ -503,7 +488,7 @@ class UdpServerCommunicatorImpl : public MultiWaypoint {
       queue->push(
         SendQueueItem(buffer, size, callback, group_endpoint));
     } else {
-      BroadcastCallback broadcast_callback(callback);
+      BroadcastCallback<SentCallback> broadcast_callback(callback);
       for (ClientIt it = clients.begin(); it != clients.end(); ++it) {
         queue->push(SendQueueItem(
           buffer, size, broadcast_callback, it->second->endpoint));
@@ -524,7 +509,7 @@ class UdpServerCommunicatorImpl : public MultiWaypoint {
   }
 
   virtual size_t max_packet_size() const {
-    return udp_max_datagram_size - 1;
+    return buffer_size - 1;
   }
 };
 
@@ -554,7 +539,8 @@ boost::shared_ptr<Waypoint> configure_udp_client(
     std::string ip,
     std::string port,
     std::string group_ip,
-    std::string group_port) {
+    std::string group_port,
+    size_t max_buffer_size) {
   using boost::asio::ip::udp;
 
   boost::shared_ptr<Daemon> internal = create_communication_daemon();
@@ -579,7 +565,7 @@ boost::shared_ptr<Waypoint> configure_udp_client(
   return configure_guaranteed_client(
     daemon, internal,
     boost::make_shared<UdpClient>(
-      internal, socket, resolve(internal, ip, port)));
+      internal, socket, resolve(internal, ip, port), max_buffer_size));
 }
 
 boost::shared_ptr<MultiWaypoint> configure_udp_server(
@@ -587,7 +573,8 @@ boost::shared_ptr<MultiWaypoint> configure_udp_server(
     std::string ip,
     std::string port,
     std::string group_ip,
-    std::string group_port) {
+    std::string group_port,
+    size_t max_buffer_size) {
   using boost::asio::ip::udp;
 
   boost::shared_ptr<Daemon> internal = create_communication_daemon();
@@ -601,14 +588,14 @@ boost::shared_ptr<MultiWaypoint> configure_udp_server(
     return configure_guaranteed_server(
       communication_daemon, internal,
       boost::make_shared<UdpServerCommunicatorImpl<true> >(
-        internal, local_endpoint, group_endpoint));
+        internal, local_endpoint, group_endpoint, max_buffer_size));
   }
 
   VLOG(1) << "configured udp server on local endpoint: " << local_endpoint;
   return configure_guaranteed_server(
       communication_daemon, internal,
     boost::make_shared<UdpServerCommunicatorImpl<false> >(
-      internal, local_endpoint, udp::endpoint()));
+      internal, local_endpoint, udp::endpoint(), max_buffer_size));
 }
 
 }  // namespace internode

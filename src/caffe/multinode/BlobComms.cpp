@@ -1,4 +1,5 @@
 #include <boost/bind.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <boost/ref.hpp>
@@ -8,10 +9,13 @@
 #include <deque>
 #include <vector>
 #include "caffe/internode/communication.hpp"
+#include "caffe/internode/tree_cluster.hpp"
 #include "caffe/multinode/BlobComms.hpp"
 #include "caffe/multinode/SendCallback.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
 #include "caffe/serialization/ProtoSerialize.hpp"
+#include "caffe/util/blocking_queue.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -27,18 +31,93 @@ struct Part {
   uint32_t version;
 };
 
-template <typename Dtype>
+template <typename Dtype, bool UseThreads>
 struct BlobCommsImpl : BlobComms<Dtype> {
   const shared_ptr<Solver<Dtype> > solver;
   const shared_ptr<BlobConstInfo> const_info;
   const shared_ptr<BlobSyncInfo> sync_info;
-  const shared_ptr<BlobKeyChain<Dtype> > keychain;
   const shared_ptr<internode::Waypoint> waypoint;
   const shared_ptr<BlobCodec<Dtype> > codec;
-  const uint32_t iter_size;
+  const shared_ptr<BlobKeyChain<Dtype> > keychain;
+  uint32_t iter_size;
   const typename BlobComms<Dtype>::Settings settings;
 
   char* buffer;
+
+  struct Worker {
+    struct Job : Element {
+      std::vector<char> buffer;
+      size_t size;
+      RemoteId id;
+    };
+    struct SendJob : Element {
+    };
+    BlockingQueue<Element*> jobs_to_run;
+    boost::mutex mtx;
+    std::vector<Job*> available_jobs;
+    boost::thread thread;
+    BlobCommsImpl* impl;
+    boost::shared_ptr<SendJob> send_job;
+
+    Worker(BlobCommsImpl* impl, size_t packet_size)
+      : thread(boost::bind(&Worker::execute, this))
+      , impl(impl)
+      , send_job(new SendJob()) {
+    }
+
+    ~Worker() {
+      push_job(NULL, 0, 0);
+      thread.join();
+    }
+
+    void push_job(char* data, size_t size, RemoteId id) {
+      Job* job;
+      {
+        boost::mutex::scoped_lock lock(mtx);
+        if (available_jobs.empty()) {
+          job = new Job();
+        } else {
+          job = available_jobs.back();
+          available_jobs.pop_back();
+        }
+      }
+      if (job->buffer.size() < size) job->buffer.resize(size);
+      caffe_copy(size, data, &job->buffer.front());
+      job->size = size;
+      job->id = id;
+      jobs_to_run.push(job);
+    }
+
+    void push_send_job() {
+      jobs_to_run.push(send_job.get());
+    }
+
+    void execute() {
+      DLOG(INFO) << "Worker started " << this;
+      while (true) {
+        Element* elem = jobs_to_run.pop();
+        if (elem == send_job.get()) {
+          impl->send();
+          continue;
+        }
+        Job* job = elem->cast<Job>();
+        if ((job->size == 0) && (job->id == 0)) {
+          break;
+        }
+        impl->handle(&job->buffer.front(), job->size, job->id);
+        {
+          boost::mutex::scoped_lock lock(mtx);
+          available_jobs.push_back(job);
+        }
+      }
+      DLOG(INFO) << "Worker finished " << this;
+    }
+  };
+
+  std::vector<boost::shared_ptr<Worker> > all_workers;
+  uint32_t worker;
+  mutable boost::recursive_mutex worker_mtx;
+  mutable boost::recursive_mutex mtx;
 
   vector<uint32_t> sending_version;
   vector<uint32_t> cancelled_version;
@@ -48,20 +127,22 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
   BlobCommsImpl(shared_ptr<Solver<Dtype> > solver,
                 shared_ptr<BlobInfo<Dtype> > info,
-                shared_ptr<BlobKeyChain<Dtype> > keychain,
                 shared_ptr<internode::Waypoint> waypoint,
                 shared_ptr<BlobCodec<Dtype> > codec,
-                uint32_t iter_size,
-                typename BlobComms<Dtype>::Settings settings)
+                shared_ptr<BlobKeyChain<Dtype> > keychain,
+                typename BlobComms<Dtype>::Settings settings,
+                uint32_t threads)
     : solver(solver)
     , const_info(info->get_const_info())
     , sync_info(info->get_sync_info())
-    , keychain(keychain)
     , waypoint(waypoint)
     , codec(codec)
-    , iter_size(iter_size)
+    , keychain(keychain)
+    , iter_size(1)
     , settings(settings)
     , buffer(new char[codec->packet_size()])
+    , all_workers(threads)
+    , worker(0)
     , sending_version(const_info->layers(), 0)
     , cancelled_version(const_info->layers(), 0)
     , during_sending(false) {
@@ -75,6 +156,15 @@ struct BlobCommsImpl : BlobComms<Dtype> {
       }
       all_parts.push_back(parts);
     }
+    for (int i = 0; i < threads; ++i)
+      all_workers[i].reset(new Worker(this, codec->packet_size()));
+  }
+
+  Worker* get_worker() {
+    boost::recursive_mutex::scoped_lock lock(worker_mtx);
+    Worker* ret = all_workers[worker].get();
+    worker = (worker + 1) % all_workers.size();
+    return ret;
   }
 
   Blob<Dtype>* get_blob(int layer_id, int blob_id) {
@@ -90,42 +180,58 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   }
 
   boost::optional<Part> get_next_part_to_send() {
+    boost::recursive_mutex::scoped_lock lock(mtx);
     while (!to_send.empty()) {
       Part ret = to_send.front();
       to_send.pop_front();
       if (sending_version[ret.layer_id] > cancelled_version[ret.layer_id]) {
         return ret;
+      } else {
+        DLOG(INFO) << "discard send";
       }
     }
     return boost::none;
   }
 
-  void send() {
-    if (during_sending) {
-      DLOG(INFO) << "during_sending";
-      return;
-    }
-    boost::optional<Part> next = get_next_part_to_send();
-    if (!next) return;
+  bool is_during_sending() const {
+    boost::recursive_mutex::scoped_lock lock(mtx);
+    return during_sending;
+  }
 
+  void send() {
+    boost::optional<Part> next = boost::none;
     BlobUpdate update;
+    {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      if (is_during_sending()) {
+        DLOG(INFO) << "during_sending";
+        return;
+      }
+      next = get_next_part_to_send();
+      if (!next) {
+        DLOG(INFO) << "nothing to send";
+        return;
+      }
+      during_sending = true;
+      update.set_iters(iter_size);
+    }
+
     update.mutable_info()->set_layer_id(next->layer_id);
     update.mutable_info()->set_blob_id(next->blob_id);
     update.mutable_info()->set_part(next->part);
     update.mutable_info()->set_version(sending_version[next->layer_id]);
-    update.set_iters(iter_size);
     DLOG(INFO) << "sending update of layer " << update.info().layer_id()
       << ", blob " << update.info().blob_id()
       << ", part " << update.info().part()
       << " of version: " << update.info().version();
 
-    keychain->lock(update.info().layer_id());
+    keychain->lock(next->layer_id);
     codec->encode(
       &update, get_blob(*next), settings.what_sent, update.info().part());
-    keychain->unlock(update.info().layer_id());
+    keychain->unlock(next->layer_id);
 
     update.SerializeToArray(buffer, codec->packet_size());
-    during_sending = true;
+
     waypoint->async_send(
       buffer, update.ByteSize(), boost::bind(&BlobCommsImpl::sent, this));
     DLOG(INFO) << "sent update of layer " << update.info().layer_id()
@@ -135,11 +241,19 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   }
 
   void sent() {
-    during_sending = false;
-    send();
+    {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      during_sending = false;
+    }
+    if (UseThreads) {
+      get_worker()->push_send_job();
+    } else {
+      send();
+    }
   }
 
   virtual uint32_t currently_sending_version() const {
+    boost::recursive_mutex::scoped_lock lock(mtx);
     uint32_t ret = 0;
     for (int i = 0; i < sending_version.size(); ++i) {
       ret = std::max(ret, sending_version[i]);
@@ -148,27 +262,63 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   }
 
   virtual uint32_t currently_sending_version(int layer_id) const {
+    boost::recursive_mutex::scoped_lock lock(mtx);
     CHECK_GE(layer_id, 0);
     CHECK(layer_id < sending_version.size());
     return sending_version[layer_id];
   }
 
   void push(int layer_id, uint32_t version) {
-    sending_version[layer_id] = std::max(version, sending_version[layer_id]);
-    to_send.insert(
-      to_send.begin(), all_parts[layer_id].begin(), all_parts[layer_id].end());
-    DLOG(INFO) << "pushed: " << layer_id << " with version " << version
-      << " to_send.size(): " << to_send.size();
-    send();
+    {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      sending_version[layer_id] = std::max(version, sending_version[layer_id]);
+      to_send.insert(
+        to_send.begin(),
+        all_parts[layer_id].begin(),
+        all_parts[layer_id].end());
+      DLOG(INFO) << "pushed: " << layer_id << " with version " << version
+        << " to_send.size(): " << to_send.size();
+    }
+    if (UseThreads) {
+      get_worker()->push_send_job();
+    } else {
+      send();
+    }
+  }
+
+  void push(int layer_id, int blob_id, int part_id, uint32_t version) {
+    {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      sending_version[layer_id] = std::max(version, sending_version[layer_id]);
+      Part part = {layer_id, blob_id, part_id, version};
+      to_send.push_front(part);
+      DLOG(INFO) << "pushed: "
+        << "(" << layer_id << ", " << blob_id << ", " << part_id << ")"
+        << " with version " << version
+        << " to_send.size(): " << to_send.size();
+    }
+    if (UseThreads) {
+      get_worker()->push_send_job();
+    } else {
+      send();
+    }
   }
 
   void cancel(int layer_id, uint32_t version) {
+    boost::recursive_mutex::scoped_lock lock(mtx);
     cancelled_version[layer_id] = version;
   }
 
-  virtual void received(char* data,
-                        size_t size,
+  virtual void received(char* data, size_t size,
                         internode::Waypoint* waypoint) {
+    if (UseThreads) {
+      get_worker()->push_job(data, size, waypoint->id());
+    } else {
+      handle(data, size, waypoint->id());
+    }
+  }
+
+  void handle(char* data, size_t size, RemoteId id) {
     BlobUpdate msg;
     if (!deserialize(data, size, &msg)) {
       LOG(ERROR) << "deserialize failed";
@@ -180,10 +330,9 @@ struct BlobCommsImpl : BlobComms<Dtype> {
       return;
     }
 
-    Blob<Dtype>* blob = get_blob(msg.info().layer_id(), msg.info().blob_id());
+    // expected to be thread safe
     if (sync_info->received_version(
-          waypoint->id(),
-          msg.info().layer_id(), msg.info().blob_id(), msg.info().part())
+          id, msg.info().layer_id(), msg.info().blob_id(), msg.info().part())
         >= msg.info().version()) {
       DLOG(INFO) << "ignoring old blob update for blob: "
             << msg.info().blob_id()
@@ -197,30 +346,36 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     DLOG(INFO) << "received update for blob: " << msg.info().blob_id()
                << " of layer " << msg.info().layer_id()
                << ", part " << msg.info().part()
+               << "/" << const_info->parts(msg.info().layer_id(),
+                                           msg.info().blob_id())
                << " with version " << msg.info().version()
                << " current version: "
                << sync_info->received_version(
-                    waypoint->id(), msg.info().layer_id(), msg.info().blob_id(),
+                    id, msg.info().layer_id(), msg.info().blob_id(),
                     msg.info().part())
                << " data size: " << msg.data().size();
 
+    Blob<Dtype>* blob = get_blob(msg.info().layer_id(), msg.info().blob_id());
     keychain->lock(msg.info().layer_id());
-    if (!codec->decode(
-      msg, blob,
-      settings.what_received,
-      settings.received_incoming_multiplier,
-      settings.received_current_multiplier)) {
+    bool result = codec->decode(msg,
+                                blob,
+                                settings.what_received,
+                                settings.received_incoming_multiplier,
+                                settings.received_current_multiplier);
+    keychain->unlock(msg.info().layer_id());
+    if (!result) {
       LOG(ERROR) << "decoding failed";
       return;
     }
-    if (Caffe::mode() == Caffe::GPU) {
-      blob->gpu_data();
-    }
-    keychain->unlock(msg.info().layer_id());
 
     sync_info->received(
-      waypoint->id(), msg.info().layer_id(), msg.info().blob_id(),
+      id, msg.info().layer_id(), msg.info().blob_id(),
       msg.info().part(), msg.info().version(), msg.iters());
+  }
+
+  virtual void set_iter_size(int arg) {
+    boost::recursive_mutex::scoped_lock lock(mtx);
+    iter_size = arg;
   }
 };
 
@@ -230,13 +385,18 @@ template <typename Dtype>
 shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
     shared_ptr<Solver<Dtype> > solver,
     shared_ptr<BlobInfo<Dtype> > info,
-    shared_ptr<BlobKeyChain<Dtype> > keychain,
     shared_ptr<internode::Waypoint> waypoint,
     shared_ptr<BlobCodec<Dtype> > codec,
-    Settings settings) {
-  return boost::make_shared<BlobCommsImpl<Dtype> >(
-      solver, info, keychain, waypoint, codec,
-      solver->param().iter_size(), settings);
+    shared_ptr<BlobKeyChain<Dtype> > keychain,
+    Settings settings,
+    int num_of_threads) {
+
+  if (num_of_threads < 2) {
+    return boost::make_shared<BlobCommsImpl<Dtype, false> >(
+        solver, info, waypoint, codec, keychain, settings, 0);
+  }
+  return boost::make_shared<BlobCommsImpl<Dtype, false> >(
+      solver, info, waypoint, codec, keychain, settings, 0);
 }
 
 template <typename Dtype>

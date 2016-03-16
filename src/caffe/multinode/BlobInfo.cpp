@@ -1,9 +1,14 @@
 #include <boost/make_shared.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <algorithm>
 #include <utility>
 #include <vector>
 #include "caffe/internode/configuration.hpp"
+#include "caffe/internode/tree_cluster.hpp"
 #include "caffe/multinode/BlobInfo.hpp"
 
 namespace caffe {
@@ -59,208 +64,234 @@ struct BlobConstInfoImpl : BlobConstInfo {
   }
 };
 
-struct RemoteSyncInfo {
-  int iter_size;
-  vector<vector<vector<uint32_t> > > versions;
-  shared_ptr<BlobConstInfo> const_info;
-  uint32_t attached_at;
-
-  RemoteSyncInfo(shared_ptr<BlobConstInfo> const_info,
-                 uint32_t attached_at)
-    : iter_size(1)
-    , const_info(const_info)
-    , attached_at(attached_at) {
-    versions.resize(const_info->layers());
-    for (int i = 0; i < const_info->layers(); ++i) {
-      versions[i].resize(const_info->blobs(i));
-      for (int j = 0; j < const_info->blobs(i); ++j) {
-        versions[i][j].resize(const_info->parts(i, j), 0);
-      }
-    }
-  }
-
-  uint32_t min_version(int layer_id) {
-    uint32_t ret = UINT_MAX;
-    CHECK_GE(layer_id, 0);
-    CHECK(layer_id < const_info->layers());
-    for (int j = 0; j < const_info->blobs(layer_id); ++j) {
-      for (int k = 0; k < const_info->parts(layer_id, j); ++k) {
-        ret = std::min(ret, versions[layer_id][j][k]);
-      }
-    }
-    return ret;
-  }
-
-  uint32_t max_version() {
-    uint32_t ret = 0;
-    for (int i = 0; i < const_info->layers(); ++i) {
-      for (int j = 0; j < const_info->blobs(i); ++j) {
-        for (int k = 0; k < const_info->parts(i, j); ++k) {
-          ret = std::max(ret, versions[i][j][k]);
-        }
-      }
-    }
-    return ret;
-  }
-
-  std::pair<uint32_t, bool> synced(int layer_id) {
-    uint32_t min_version = UINT_MAX;
-    uint32_t max_version = 0;
-    CHECK_GE(layer_id, 0);
-    CHECK(layer_id < const_info->layers());
-    for (int j = 0; j < const_info->blobs(layer_id); ++j) {
-      for (int k = 0; k < const_info->parts(layer_id, j); ++k) {
-        min_version = std::min(min_version, versions[layer_id][j][k]);
-        max_version = std::max(max_version, versions[layer_id][j][k]);
-      }
-    }
-    return std::make_pair(min_version, min_version == max_version);
-  }
-
-  std::pair<uint32_t, bool> synced() {
-    uint32_t min_version = UINT_MAX;
-    uint32_t max_version = 0;
-    for (int i = 0; i < const_info->layers(); ++i) {
-      for (int j = 0; j < const_info->blobs(i); ++j) {
-        for (int k = 0; k < const_info->parts(i, j); ++k) {
-          min_version = std::min(min_version, versions[i][j][k]);
-          max_version = std::max(max_version, versions[i][j][k]);
-        }
-      }
-    }
-    return std::make_pair(min_version, min_version == max_version);
-  }
-};
 
 struct BlobSyncInfoImpl : BlobSyncInfo {
-  typedef boost::unordered_map<RemoteId, shared_ptr<RemoteSyncInfo>
-                              > RemoteInfoMap;
+  typedef boost::unordered_map<RemoteId, int> RemoteInfoMap;
+  typedef boost::unordered_set<RemoteId> RemotesSet;
   const shared_ptr<BlobConstInfo> const_info;
   RemoteInfoMap remotes;
   vector<BlobSyncInfo::Handler*> handlers;
+  mutable boost::mutex mtx;
+
+  typedef std::pair<RemoteId, int> PartKey;
+  typedef boost::unordered_set<PartKey> ReceivedParts;
+
+  struct PartInfo {
+    RemotesSet received_from;
+    uint32_t version;
+  };
+  vector<vector<vector<PartInfo> > > parts;
+
+  std::vector<uint32_t> current_versions;
+  std::vector<ReceivedParts> received_for_layer;
+  int max_parts;
 
   explicit BlobSyncInfoImpl(shared_ptr<BlobConstInfo> const_info)
-    : const_info(const_info) {
+    : const_info(const_info)
+    , current_versions(const_info->layers(), 0u)
+    , received_for_layer(const_info->layers())
+    , max_parts(calculate_max_parts()) {
+    parts.resize(const_info->layers());
+    for (int i = 0; i < const_info->layers(); ++i) {
+      parts[i].resize(const_info->blobs(i));
+      for (int j = 0; j < const_info->blobs(i); ++j) {
+        parts[i][j].resize(const_info->parts(i, j));
+      }
+    }
+  }
+
+  uint32_t calculate_max_parts() const {
+    uint32_t ret = 0;
+    for (int i = 0; i < const_info->layers(); ++i) {
+      for (int j = 0; j < const_info->blobs(i); ++j) {
+        ret = std::max(ret, const_info->parts(i, j));
+      }
+    }
+    return ret;
+  }
+
+  int get_id(int blob_id, int part) const {
+    return blob_id * max_parts + part;
   }
 
   virtual bool received(RemoteId from,
                         int layer_id,
                         int blob_id,
-                        int part,
+                        int part_id,
                         uint32_t version,
                         int iters) {
+    PartKey key = PartKey(from, get_id(blob_id, part_id));
     add_remote(from);
-    remotes[from]->iter_size = iters;
+    PartInfo& part_info = parts[layer_id][blob_id][part_id];
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      remotes[from] = iters;
+      DLOG(INFO) << "BlobInfo received from " << from << ": "
+        << layer_id << " " << blob_id << " " << part_id
+        << " of version " << version
+        << " current: " << part_info.version;
+      if (version < part_info.version) return false;
+      if (version > part_info.version) {
+        part_info.received_from.clear();
+        part_info.version = version;
+      }
+      if (version > current_versions[layer_id]) {
+        current_versions[layer_id] = version;
+        received_for_layer[layer_id].clear();
+      }
+      if (!received_for_layer[layer_id].insert(key).second)
+        return false;
+      if (!part_info.received_from.insert(from).second)
+        return false;
+      DLOG(INFO) << "BlobInfo::received for layer " << layer_id
+        << ": " << received_for_layer[layer_id].size()
+        << "/" << (const_info->parts(layer_id) * remotes.size())
+        << " [remotes: " << remotes.size() << "]";
+    }
 
-    DLOG(INFO) << "received update from " << from
-      << "{" << layer_id << ", " << blob_id << ", " << part << "} "
-      << " of version: " << version
-      << " and previous is: "
-      << remotes[from]->versions[layer_id][blob_id][part];
-
-    uint32_t prev_version = remotes[from]->versions[layer_id][blob_id][part];
-    if (prev_version >= version) return false;
-    remotes[from]->versions[layer_id][blob_id][part] = version;
-    if (synced_check_and_callback(layer_id))
+    if (synced_check_and_callback(layer_id, blob_id, part_id)
+        && synced_check_and_callback(layer_id)) {
       synced_check_and_callback();
-    return true;
-  }
-
-  virtual bool synced_check_and_callback(int layer_id) {
-    typedef RemoteInfoMap::const_iterator It;
-    if (remotes.empty()) return true;
-    int count = 0;
-    uint32_t version = remotes.begin()->second->synced(layer_id).first;
-    for (It it = remotes.begin(); it != remotes.end(); ++it) {
-      std::pair<uint32_t, bool> synced = it->second->synced(layer_id);
-      if (synced.first < it->second->attached_at) continue;
-      count++;
-      if (!synced.second) return false;
-      if (synced.first != version) return false;
-    }
-    if (count == 0) return true;
-    for (int i = 0; i < handlers.size(); ++i) {
-      handlers[i]->synced(layer_id, version);
     }
     return true;
-  }
-
-  virtual void synced_check_and_callback() {
-    typedef RemoteInfoMap::const_iterator It;
-    if (remotes.empty()) return;
-    uint32_t version = remotes.begin()->second->synced().first;
-    int count = 0;
-    for (It it = remotes.begin(); it != remotes.end(); ++it) {
-      std::pair<uint32_t, bool> synced = it->second->synced();
-      if (synced.first < it->second->attached_at) continue;
-      ++count;
-      if (!synced.second) return;
-      if (synced.first != version) return;
-    }
-    if (count == 0) return;
-    for (int i = 0; i < handlers.size(); ++i) {
-      handlers[i]->synced(version);
-    }
   }
 
   virtual void register_synced_handler(Handler* handler) {
+    boost::mutex::scoped_lock lock(mtx);
     handlers.push_back(handler);
   }
 
-  virtual uint32_t min_received_version(int layer_id) const {
-    typedef RemoteInfoMap::const_iterator It;
-    uint32_t ret = UINT_MAX;
-    for (It it = remotes.begin(); it != remotes.end(); ++it) {
-      ret = std::min(ret, it->second->min_version(layer_id));
-    }
-    return ret;
-  }
-
   virtual uint32_t received_version(
-    internode::RemoteId from, int layer_id, int blob_id, int part) const {
-    CHECK_GE(part, 0);
-    CHECK_LT(part, const_info->parts(layer_id, blob_id));
-    typedef RemoteInfoMap::const_iterator It;
-    It it = remotes.find(from);
-    if (it == remotes.end()) return 0u;
-    return it->second->versions[layer_id][blob_id][part];
-  }
-
-  virtual uint32_t max_version() const {
-    typedef RemoteInfoMap::const_iterator It;
-    uint32_t ret = 0;
-    for (It it = remotes.begin(); it != remotes.end(); ++it) {
-      ret = std::max(ret, it->second->max_version());
-    }
-    return ret;
+      internode::RemoteId from, int layer_id, int blob_id, int part_id) const {
+    boost::mutex::scoped_lock lock(mtx);
+    const PartInfo& part_info = parts[layer_id][blob_id][part_id];
+    if (part_info.received_from.count(from) > 0)
+      return part_info.version;
+    if (part_info.version == 0) return 0;
+    return part_info.version - 1;
   }
 
   virtual int get_total_iters() const {
+    boost::mutex::scoped_lock lock(mtx);
     typedef RemoteInfoMap::const_iterator It;
     int ret = 0;
     for (It it = remotes.begin(); it != remotes.end(); ++it) {
-      ret += it->second->iter_size;
+      ret += it->second;
     }
     return ret;
   }
 
 
   virtual void add_remote(RemoteId id) {
-    if (remotes.count(id) == 0) {
-      remotes[id].reset(new RemoteSyncInfo(
-        const_info, max_version()));
-      VLOG(1) << "added remote at version " << max_version()
-        << " there are now " << remotes.size() << " remotes";
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      if (remotes.insert(std::make_pair(id, 1)).second) {
+        VLOG(2) << "added remote " << id << " at version " << max_version()
+          << " there are now "
+          << remotes.size() << " remotes";
+      } else {
+        return;
+      }
     }
+    synced_check_and_callback();
   }
 
   virtual void remove_remote(RemoteId id) {
-    remotes.erase(id);
-    for (int i = 0; i < const_info->layers(); ++i) {
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      remotes.erase(id);
+      for (int i = 0; i < const_info->layers(); ++i) {
+        if (!const_info->needs_syncing(i)) continue;
+        for (int j = 0; j < const_info->blobs(i); ++j) {
+          for (int k = 0; k < const_info->parts(i, j); ++k) {
+            received_for_layer[i].erase(PartKey(id, get_id(j, k)));
+            parts[i][j][k].received_from.erase(id);
+          }
+        }
+      }
+    }
+    for (int i = 0; i < parts.size(); ++i) {
       if (!const_info->needs_syncing(i)) continue;
+      for (int j = 0; j < parts[i].size(); ++j) {
+        for (int k = 0; k < parts[i][j].size(); ++k) {
+          synced_check_and_callback(i, j, k);
+        }
+      }
       synced_check_and_callback(i);
     }
     synced_check_and_callback();
+  }
+
+ private:
+  virtual uint32_t max_version() const {
+    uint32_t ret = 0;
+    for (int i = 0; i < const_info->layers(); ++i) {
+      ret = std::max(ret, current_versions[i]);
+    }
+    return ret;
+  }
+
+  bool is_synced(int layer_id) const {
+    boost::mutex::scoped_lock lock(mtx);
+    return (received_for_layer[layer_id].size()
+            >= const_info->parts(layer_id) * remotes.size());
+  }
+
+  bool synced_check_and_callback(int layer_id, int blob_id, int part_id) {
+    PartInfo& part = parts[layer_id][blob_id][part_id];
+    vector<BlobSyncInfo::Handler*> to_call;
+    bool ret = false;
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      if (part.received_from.size() >= remotes.size()) {
+        to_call = handlers;
+        ret = true;
+      }
+    }
+
+    for (int i = 0; i < to_call.size(); ++i) {
+      to_call[i]->synced(layer_id, blob_id, part_id, part.version);
+    }
+    return ret;
+  }
+
+  bool synced_check_and_callback(int layer_id) {
+    {
+      boost::mutex::scoped_lock lock(mtx);
+      if (remotes.empty()) return true;
+    }
+    if (is_synced(layer_id)) {
+      vector<BlobSyncInfo::Handler*> handlers_to_call;
+      uint32_t version = 0;
+      {
+        boost::mutex::scoped_lock lock(mtx);
+        handlers_to_call = handlers;
+        version = current_versions[layer_id];
+      }
+      for (int i = 0; i < handlers_to_call.size(); ++i) {
+        handlers_to_call[i]->synced(layer_id, version);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  void synced_check_and_callback() {
+    uint32_t version = UINT_MAX;
+    vector<BlobSyncInfo::Handler*> handlers_to_call;
+    {
+      for (int i = 0; i < const_info->layers(); ++i) {
+        if (!const_info->needs_syncing(i)) continue;
+        if (!is_synced(i)) return;
+        boost::mutex::scoped_lock lock(mtx);
+        if (version == UINT_MAX) version = current_versions[i];
+        else if (version != current_versions[i]) return;
+        handlers_to_call = handlers;
+      }
+    }
+    for (int i = 0; i < handlers_to_call.size(); ++i) {
+      handlers_to_call[i]->synced(version);
+    }
   }
 };
 

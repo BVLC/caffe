@@ -34,7 +34,7 @@ void encode_simple(Dtype* data, BlobUpdate* msg, uint32_t size) {
   msg->set_data(data, size * sizeof(Dtype));
 }
 
-template <typename Dtype>
+template <bool SingleThreaded, typename Dtype>
 bool decode_simple(Dtype* dest,
                    uint32_t max_size,
                    uint32_t part_size,
@@ -53,12 +53,20 @@ bool decode_simple(Dtype* dest,
 
   Dtype* src =
     reinterpret_cast<Dtype*>(const_cast<char*>(update.data().c_str()));
-
-  // to ensure, that this doesn't interrupt actual calculation
-  // it is done in a naive way, without using threaded implementations
-  // naiveness here improves overall performance
-  for (int i = 0; i < encoded_elements; ++i) {
-    dest[i] = src[i] * alpha + dest[i] * beta;
+  if ((alpha == 1.0) && (beta == 0.0)) {
+    caffe_copy(encoded_elements, src, dest);
+    return true;
+  }
+  if (SingleThreaded) {
+    // to ensure, that this doesn't interrupt actual calculation
+    // it is done in a naive way, without using threaded implementations
+    // naiveness here improves overall performance
+    for (int i = 0; i < encoded_elements; ++i) {
+      dest[i] = src[i] * alpha + dest[i] * beta;
+    }
+  } else {
+    // for server we might not care about multiple threads spawn by below
+    caffe_cpu_axpby<Dtype>(encoded_elements, alpha, src, beta, dest);
   }
   return true;
 }
@@ -132,7 +140,7 @@ bool decode_averaging(Dtype* dest,
   return true;
 }
 
-template <typename Dtype>
+template <typename Dtype, bool SingleThreaded>
 struct BlobCodecImpl : BlobCodec<Dtype> {
   MultinodeParameter param;
   const size_t max_header_size;
@@ -222,7 +230,7 @@ struct BlobCodecImpl : BlobCodec<Dtype> {
       return decode_averaging(
         data, max_size, elements_per_part, update, alpha, beta);
     }
-    return decode_simple(
+    return decode_simple<SingleThreaded>(
         data, max_size, elements_per_part, update, alpha, beta);
   }
 };
@@ -231,8 +239,11 @@ struct BlobCodecImpl : BlobCodec<Dtype> {
 
 template <typename Dtype>
 shared_ptr<BlobCodec<Dtype> > BlobCodec<Dtype>::create_codec(
-  const MultinodeParameter& param) {
-  return boost::make_shared<BlobCodecImpl<Dtype> >(param);
+  const MultinodeParameter& param,
+  bool single_threaded) {
+  if (single_threaded)
+    return boost::make_shared<BlobCodecImpl<Dtype, true> >(param);
+  return boost::make_shared<BlobCodecImpl<Dtype, false> >(param);
 }
 
 INSTANTIATE_CLASS(BlobCodec);

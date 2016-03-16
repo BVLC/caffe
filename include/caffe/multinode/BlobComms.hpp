@@ -28,16 +28,20 @@ class BlobComms : public internode::Waypoint::Handler {
   static shared_ptr<BlobComms> create(
     shared_ptr<Solver<Dtype> > solver,
     shared_ptr<BlobInfo<Dtype> > info,
-    shared_ptr<BlobKeyChain<Dtype> > keychain,
     shared_ptr<internode::Waypoint> waypoint,
     shared_ptr<BlobCodec<Dtype> > codec,
-    Settings settings);
+    shared_ptr<BlobKeyChain<Dtype> > keychain,
+    Settings settings,
+    int num_of_threads);
 
   virtual uint32_t currently_sending_version() const = 0;
   virtual uint32_t currently_sending_version(int layer_id) const = 0;
   virtual void push(int layer_id, uint32_t version) = 0;
+  virtual void push(int layer_id, int blob_id, int part, uint32_t version) = 0;
   virtual void cancel(int layer_id, uint32_t version) = 0;
   virtual void received(char* data, size_t size, internode::Waypoint*) = 0;
+
+  virtual void set_iter_size(int iter_size) = 0;
 };
 
 }  // namespace caffe

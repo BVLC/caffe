@@ -2,10 +2,6 @@
 #define CAFFE_SYNCHRONOUSPARAMSERVER_HPP_
 
 #include <string>
-#include <vector>
-#include "boost/thread/mutex.hpp"
-#include "boost/unordered_map.hpp"
-#include "boost/unordered_set.hpp"
 #include "caffe/internode/configuration.hpp"
 #include "caffe/solver.hpp"
 
@@ -16,7 +12,10 @@ class SynchronousParamServer {
   class Impl;
   shared_ptr<Impl> impl;
  public:
-  SynchronousParamServer(shared_ptr<Solver<Dtype> >, string bind_address);
+  SynchronousParamServer(shared_ptr<Solver<Dtype> >,
+                         string bind_address,
+                         string ignored_address,
+                         int num_of_threads);
   void run();
 };
 }  // namespace caffe
