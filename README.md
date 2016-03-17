@@ -2,6 +2,8 @@
 
 **This is an experimental, community-maintained branch led by Fabian Tschopp (@naibaf7). It is a work-in-progress.**
 
+**For error reports, please run and include the result of `./build/test/test_all.testbin --gtest_filter=*OpenCLKernelCompileTest* X` where `X` is the OpenCL device to test (i.e. `0`). This test is available after a build with `make all`, `make runtest`.**
+
 This branch of Caffe contains an OpenCL backend and additional layers for fast image segmentation.
 This work is partially supported by:
 - AMD
