@@ -36,7 +36,11 @@ echo "namespace caffe {" >> $SOURCE
 echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $HEADER
 echo "viennacl::ocl::context *ctx, string name, string options);" >> $HEADER
-echo "}" >> $HEADER
+echo "std::string getKernelBundleName(int index);" >> $HEADER
+echo "int getKernelBundleCount();" >> $HEADER
+echo "template<typename Dtype>" >> $HEADER
+echo "std::string getKernelBundleSource(int index);" >> $HEADER
+echo "}  // namespace caffe" >> $HEADER
 echo "#endif" >> $HEADER
 
 echo "#ifdef USE_INDEX_64" >> $SOURCE
@@ -186,6 +190,40 @@ echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(sources, name);" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
+echo "int getKernelBundleCount() {" >> $SOURCE
+echo "  return std::extent<decltype(cl_kernels)>::value;" >> $SOURCE
+echo "}" >> $SOURCE
+echo "template<typename Dtype>" >> $SOURCE
+echo "std::string getKernelBundleSource(int index) {" >> $SOURCE
+echo "  std::stringstream ss;" >> $SOURCE
+echo "#ifdef USE_INDEX_64" >> $SOURCE
+echo "  ss << header << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  ss << definitions_64 << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "#else" >> $SOURCE
+echo "  ss << header << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  ss << definitions_32 << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "#endif" >> $SOURCE
+echo "  if (std::is_same<Dtype, float>::value) {" >> $SOURCE
+echo "    ss << \"#define Dtype float\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define TYPE TYPE_FLOAT\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  } else {" >> $SOURCE
+echo "    ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define Dtype double\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "    ss << \"#define TYPE TYPE_DOUBLE\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  }" >> $SOURCE
+echo "  ss << cl_kernels[index] << \"\n\n\";" >> $SOURCE
+echo "  if (std::is_same<Dtype, float>::value) {" >> $SOURCE
+echo "  } else {" >> $SOURCE
+echo "    ss << \"#endif\" << \"\n\n\";  // NOLINT" >> $SOURCE
+echo "  }" >> $SOURCE
+echo "  return ss.str();" >> $SOURCE
+echo "}" >> $SOURCE
+echo "template std::string getKernelBundleSource<float>(int index);" >> $SOURCE
+echo "template std::string getKernelBundleSource<double>(int index);" >> $SOURCE
+echo "std::string getKernelBundleName(int index) {" >> $SOURCE
+echo "  return cl_kernel_names[index];" >> $SOURCE
+echo "}" >> $SOURCE
+
 echo "}  // namespace caffe" >> $SOURCE
 
 echo "#endif" >> $HEADER

@@ -130,5 +130,38 @@ viennacl::ocl::context *ctx, string name, string options) {
   viennacl::ocl::program &program = ctx->add_program(sources, name);
   return program;
 }
+int getKernelBundleCount() {
+  return std::extent<decltype(cl_kernels)>::value;
+}
+template<typename Dtype>
+std::string getKernelBundleSource(int index) {
+  std::stringstream ss;
+#ifdef USE_INDEX_64
+  ss << header << "\n\n";  // NOLINT
+  ss << definitions_64 << "\n\n";  // NOLINT
+#else
+  ss << header << "\n\n";  // NOLINT
+  ss << definitions_32 << "\n\n";  // NOLINT
+#endif
+  if (std::is_same<Dtype, float>::value) {
+    ss << "#define Dtype float" << "\n\n";  // NOLINT
+    ss << "#define TYPE TYPE_FLOAT" << "\n\n";  // NOLINT
+  } else {
+    ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << "\n\n";  // NOLINT
+    ss << "#define Dtype double" << "\n\n";  // NOLINT
+    ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
+  }
+  ss << cl_kernels[index] << "\n\n";
+  if (std::is_same<Dtype, float>::value) {
+  } else {
+    ss << "#endif" << "\n\n";  // NOLINT
+  }
+  return ss.str();
+}
+template std::string getKernelBundleSource<float>(int index);
+template std::string getKernelBundleSource<double>(int index);
+std::string getKernelBundleName(int index) {
+  return cl_kernel_names[index];
+}
 }  // namespace caffe
 #endif

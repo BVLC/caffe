@@ -14,6 +14,10 @@ namespace caffe {
 viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);
 viennacl::ocl::program & submit_conv_spatial_program(
 viennacl::ocl::context *ctx, string name, string options);
-}
+std::string getKernelBundleName(int index);
+int getKernelBundleCount();
+template<typename Dtype>
+std::string getKernelBundleSource(int index);
+}  // namespace caffe
 #endif
 #endif
