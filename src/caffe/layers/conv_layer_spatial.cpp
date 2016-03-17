@@ -185,6 +185,10 @@ void ConvolutionLayerSpatial<Dtype>::Backward_cpu(
   }
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(ConvolutionLayerSpatial);
+#endif
+
 INSTANTIATE_CLASS(ConvolutionLayerSpatial);
 
 }  // namespace caffe
