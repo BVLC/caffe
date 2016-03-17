@@ -61,7 +61,7 @@ Take AlexNet as an example, we edit file $CAFFE_ROOT/models/bvlc_alexnet/train_v
          num_output: 96
          kernel_size: 11
          stride: 4
-         engine: SPATIAL 		<-------------------------- this line!
+         engine: INTEL_SPATIAL 		<-------------------------- this line!
          weight_filler {
            type: "gaussian"
            std: 0.01
