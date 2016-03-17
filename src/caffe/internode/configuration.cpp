@@ -7,6 +7,7 @@
 #include <vector>
 #include "caffe/internode/communication.hpp"
 #include "caffe/internode/configuration.hpp"
+#include "caffe/internode/mpi_configuration.hpp"
 #include "caffe/internode/tcp_configuration.hpp"
 #include "caffe/internode/udp_configuration.hpp"
 
@@ -67,7 +68,7 @@ boost::shared_ptr<Daemon> create_communication_daemon() {
 
 struct Protocol {
   enum Type {
-    NONE, UDP, TCP
+    NONE, UDP, TCP, MPI
   };
 };
 
@@ -95,10 +96,13 @@ AddressInfo extract(string address) {
   static const string separator = "://";
   static const string tcp_prefix = "tcp" + separator;
   static const string udp_prefix = "udp" + separator;
+  static const string mpi_prefix = "mpi" + separator;
   size_t tcp_protocol_pos = address.find(tcp_prefix);
   size_t udp_protocol_pos = address.find(udp_prefix);
-
-  if ((tcp_protocol_pos != 0) && (udp_protocol_pos != 0)) {
+  size_t mpi_protocol_pos = address.find(mpi_prefix);
+  if ((tcp_protocol_pos != 0)
+      && (udp_protocol_pos != 0)
+      && (mpi_protocol_pos != 0)) {
     return AddressInfo(Protocol::NONE);
   }
 
@@ -109,10 +113,12 @@ AddressInfo extract(string address) {
   size_t group_ip_pos = address.find(";");
   size_t group_port_pos = address.find_last_of(":");
 
-  Protocol::Type protocol =
-        (tcp_protocol_pos == 0) ?  Protocol::TCP : Protocol::UDP;
-
-  if (group_ip_pos == std::string::npos) {
+  Protocol::Type protocol = Protocol::TCP;
+  if (udp_protocol_pos == 0) protocol = Protocol::UDP;
+  if (mpi_protocol_pos == 0) {
+    return AddressInfo(Protocol::MPI, address.substr(ip_pos));
+  }
+if(group_ip_pos == std::string::npos) {
     string ip = address.substr(ip_pos, port_pos - ip_pos);
     string port = address.substr(port_pos + 1);
     return AddressInfo(protocol, ip, port);
@@ -128,40 +134,52 @@ AddressInfo extract(string address) {
 
 boost::shared_ptr<MultiWaypoint> configure_server(
     boost::shared_ptr<Daemon> communication_daemon,
-    string address) {
+    string address,
+    size_t max_buffer_size) {
 
   AddressInfo info = extract(address);
   switch (info.protocol) {
     case Protocol::UDP:
       return configure_udp_server(
         communication_daemon, info.ip, info.port,
-                              info.group_ip, info.group_port);
+                              info.group_ip, info.group_port,
+        max_buffer_size);
     case Protocol::TCP:
       return configure_tcp_server(
-        communication_daemon, info.port);
+        communication_daemon, info.port, max_buffer_size);
+    case Protocol::MPI:
+      return configure_mpi_server(
+        communication_daemon, info.ip, max_buffer_size);
     default:
       LOG(ERROR) << "unrecognized address: " << address
-        << ", expected format is: `tcp://*:80` or `udp://*:777`";
+        << ", expected format is: `tcp://*:80` or `udp://*:777` "
+        << "or `mpi://server_name`";
       throw std::runtime_error("invalid address");
   }
 }
 
 boost::shared_ptr<Waypoint> configure_client(
     boost::shared_ptr<Daemon> communication_daemon,
-    string address) {
+    string address,
+    size_t max_buffer_size) {
 
   AddressInfo info = extract(address);
   switch (info.protocol) {
     case Protocol::UDP:
       return configure_udp_client(
         communication_daemon, info.ip, info.port,
-                              info.group_ip, info.group_port);
+                              info.group_ip, info.group_port,
+        max_buffer_size);
     case Protocol::TCP:
       return configure_tcp_client(
-        communication_daemon, info.ip, info.port);
+        communication_daemon, info.ip, info.port, max_buffer_size);
+    case Protocol::MPI:
+      return configure_mpi_client(
+              communication_daemon, info.ip, max_buffer_size);
     default:
       LOG(ERROR) << "unrecognized address: " << address
-        << ", expected format is: `tcp://*:80` or `udp://*:777`";
+        << ", expected format is: `tcp://*:80` or `udp://*:777` "
+        << "or `mpi://server_name`";
       throw std::runtime_error("invalid address");
   }
 }

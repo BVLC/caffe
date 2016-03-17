@@ -25,26 +25,26 @@ This fork is dedicated to improving Caffe performance when running on CPU, in pa
 servers.
 
 ## Performance Results
-Time measures are average Forward-Backward as stated by caffe time. Speedup factor is
-(bvlc-caffe-master branch measure) / (intelcaffe-master branch measure)
+Time measures are average Forward-Backward as stated by caffe time. The speedup factor is
+calculated as (bvlc-caffe-master branch measure) / (intelcaffe-master branch measure).
 
 ### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, MKL 11.3, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |            624 |          1172 |         1297 |               21|
-| bvlc-caffe-master |           3872 |          6899 |         7343 |              323|
-|    speedup factor |           x6.2 |          x5.9 |         x5.7 |            x15.4|
+| intelcaffe-master |            597 |          1154 |         1257 |               21|
+| bvlc-caffe-master |           3990 |          6917 |         7307 |              270|
+|    speedup factor |           x6.7 |          x6.0 |         x5.8 |            x12.9|
 
-### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 thread, OpenBLAS 0.2.14, GCC 4.8.3)
+### Intel(R) Xeon(R) CPU E5-2699 v3 @ 2.30GHz (36 threads, OpenBLAS 0.2.14, GCC 4.8.3)
 |            Branch | googlenet [ms] | caffenet [ms] | alexnet [ms] | cifar10-bn [ms] |
 |------------------:|---------------:|--------------:|-------------:|----------------:|
-| intelcaffe-master |           1047 |          3004 |         3786 |               47|
-| bvlc-caffe-master |          14892 |         25920 |        67542 |              530|
-|    speedup factor |          x14.2 |          x8.6 |        x17.8 |            x11.3|
+| intelcaffe-master |           4782 |          2874 |         3786 |               47|
+| bvlc-caffe-master |          12992 |         25613 |        68415 |              494|
+|    speedup factor |          x2.71 |          x8.9 |        x18.1 |            x10.5|
 
 Tests were made using MKL and OpenBLAS. Please note that MKL is now available free of charge.
-The speedup factor highly depends on the amount of running threads and system load.
-Upper tables also shows, the optimal configuration is to use one thread per CPU core.
+The speedup factor highly depends on the amount of running caffe threads, system load and CPU
+temperature.
 
 ## Building
 Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
@@ -70,9 +70,27 @@ node full cifar training.
 The basic setup is to run parameter server with command like this:
 "$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port"
 Than run clients on machines you want with:
-"$TOOLS/caffe train --solver=/path/to/proto --param_server:tcp://127.0.0.1:7777"
+"$TOOLS/caffe train --solver=/path/to/proto --param_server=tcp://127.0.0.1:7777"
 The udp protocol can be used as well, for point to point communication
 and with multicast (i.e. "udp://127.0.0.1:7777;239.1.1.1:7778").
+It is also possible to run the scheme with mpi with mpirun command, i.e:
+"mpirun \
+    -host localhost -n 1 \
+    $TOOLS/caffe param_server --solver=/path/to/proto --listen_address=mpi://uid \
+  : \
+    -host localhost -n 1 \
+    $TOOLS/caffe train --solver=/path/to/proto --param_server=mpi://uid"
+You can run relay points, to accumulate/broadcast data in a tree structure:
+"$TOOLS/caffe param_server --solver=/path/to/proto --listen_address=tcp://*:port --param_server=tcp://127.0.0.1:7777"
+It only works with tcp protocol.
+
+The mpi setup with explicit all reduce is with command like this:
+"mpirun -host 127.0.0.1 -n 5 $TOOLS/caffe train --solver=/path/to/proto --param_server=mpi"
+This will run 5 processes on hosts set with host, and each process will calculate
+it's own gradients, and propagate it up with a tree structure to the root, which
+will apply them and propagate parameters down also in a tree structure.
+This version is less configurable than one with param server, relay and client,
+however it uses less cpu resource per node and can get most of the mpi implementations.
 
 Data server is for convenience. By the default you could use data shard prepared
 on each node separetely, either by shuffling the data uniquely or by creating

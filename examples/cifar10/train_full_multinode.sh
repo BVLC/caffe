@@ -33,5 +33,5 @@ OMP_NUM_THREADS=1 $TOOLS/caffe train \
 echo "starting train node"
 OMP_NUM_THREADS=1 $TOOLS/caffe train \
     --solver=examples/cifar10/cifar10_full_solver_sync_client.prototxt \
-    --param_server=tcp://127.0.0.1:7777
+    --param_server=tcp://127.0.0.1:7777 -v 10
 

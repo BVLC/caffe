@@ -253,7 +253,7 @@ struct RemoteDataReader : InternalThread, Waypoint::Handler {
   RemoteDataReader(string name, string address, shared_ptr<Queue> queue)
     : daemon(internode::create_communication_daemon())
     , waypoint(internode::is_remote_address(address) ?
-        internode::configure_client(daemon, address) :
+        internode::configure_client(daemon, address, UINT_MAX) :
         boost::shared_ptr<Waypoint>())
     , queue(queue)
     , name(name)

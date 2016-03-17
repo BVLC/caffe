@@ -49,10 +49,11 @@ class ConnectionTest : public ::testing::Test
     expected_msg = msg;
 
     boost::shared_ptr<MultiWaypoint> server =
-      configure_server(daemon, address);
+      configure_server(daemon, address, UINT_MAX);
     server->register_peer_change_handler(this);
 
-    boost::shared_ptr<Waypoint> client = configure_client(daemon, address);
+    boost::shared_ptr<Waypoint> client =
+      configure_client(daemon, address, UINT_MAX);
     client->register_receive_handler(this);
 
     create_timer(
@@ -74,10 +75,11 @@ class ConnectionTest : public ::testing::Test
     expected_msg = msg;
 
     boost::shared_ptr<MultiWaypoint> server =
-      configure_server(daemon, address);
+      configure_server(daemon, address, UINT_MAX);
     server->register_peer_change_handler(this);
 
-    boost::shared_ptr<Waypoint> client = configure_client(daemon, address);
+    boost::shared_ptr<Waypoint> client =
+      configure_client(daemon, address, UINT_MAX);
     client->register_receive_handler(this);
 
     create_timer(

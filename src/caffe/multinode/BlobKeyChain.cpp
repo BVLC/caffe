@@ -8,7 +8,7 @@ namespace caffe {
 
 namespace {
 
-template <typename Dtype>
+template <typename Dtype, bool IsStub>
 struct BlobKeyChainImpl : public BlobKeyChain<Dtype> {
   std::vector<shared_ptr<boost::mutex> > mtxs;
 
@@ -22,24 +22,33 @@ struct BlobKeyChainImpl : public BlobKeyChain<Dtype> {
   virtual void lock(int layer_id) {
     CHECK_GE(layer_id, 0);
     CHECK(layer_id < mtxs.size());
-    mtxs[layer_id]->lock();
-  }
-  virtual bool try_lock(int layer_id) {
-    CHECK_GE(layer_id, 0);
-    CHECK(layer_id < mtxs.size());
-    return mtxs[layer_id]->try_lock();
+    if (!IsStub) mtxs[layer_id]->lock();
   }
   virtual void unlock(int layer_id) {
     CHECK_GE(layer_id, 0);
     CHECK(layer_id < mtxs.size());
-    mtxs[layer_id]->unlock();
+    if (!IsStub) mtxs[layer_id]->unlock();
+  }
+
+  virtual void lock(int layer_id, int blob_id, int part) {
+    if (!IsStub) lock(layer_id);
+  }
+  virtual void unlock(int layer_id, int blob_id, int part) {
+    if (!IsStub) unlock(layer_id);
   }
 };
 }  // namespace
 
 template <typename Dtype>
-shared_ptr<BlobKeyChain<Dtype> > BlobKeyChain<Dtype>::create(size_t layers) {
-  return boost::make_shared<BlobKeyChainImpl<Dtype> >(layers);
+shared_ptr<BlobKeyChain<Dtype> >
+  BlobKeyChain<Dtype>::create(size_t layers) {
+  return boost::make_shared<BlobKeyChainImpl<Dtype, false> >(layers);
+}
+
+template <typename Dtype>
+shared_ptr<BlobKeyChain<Dtype> >
+  BlobKeyChain<Dtype>::create_empty(size_t layers) {
+  return boost::make_shared<BlobKeyChainImpl<Dtype, true> >(layers);
 }
 
 INSTANTIATE_CLASS(BlobKeyChain);

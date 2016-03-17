@@ -17,7 +17,7 @@ weight_decay: 0.004
 # The learning rate policy
 lr_policy: "fixed"
 # Display every 200 iterations
-display: 200
+display: 1
 # The maximum number of iterations
 max_iter: 60000
 # snapshot intermediate results
