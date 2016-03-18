@@ -139,6 +139,11 @@ echo "#endif" >> $SOURCE
 
 shopt -s nullglob
 echo "  ss << \"#define Dtype float\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype2 float2\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype4 float4\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype8 float8\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+echo "  ss << \"#define Dtype16 float16\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
+
 echo "  ss << \"#define TYPE TYPE_FLOAT\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 echo "  for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
 echo "      ss << cl_kernels[i] << \"\n\n\";" >> $SOURCE
@@ -152,13 +157,18 @@ echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 shopt -s nullglob
 echo "  for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
+echo "    if(cl_kernel_names[i] != std::string(\"fft\")) {" >> $SOURCE
 echo "      ss << cl_kernels[i] << \"\n\n\";" >> $SOURCE
+echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ss << \"#endif  // DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
 echo "  // ctx->build_options(\"-cl-fast-relaxed-math -cl-mad-enable\");" >> $SOURCE
+echo "#ifdef USE_FFT" >> $SOURCE
+echo "  ctx->build_options(\"-DFFT\");" >> $SOURCE
+echo "#endif" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
 echo "      \"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE

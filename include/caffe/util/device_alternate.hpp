@@ -104,6 +104,52 @@ inline int_tp CAFFE_GET_BLOCKS(const int_tp N) {
 
 
 #endif  // USE_CUDA
+#ifdef USE_GREENTEA
+#define OCL_CHECK(condition) \
+  do { \
+    cl_int error = (condition); \
+    CHECK_EQ(error, CL_SUCCESS) << " " << caffe::clGetErrorString(error); \
+  } while (0)
+
+#ifdef USE_FFT
+#include "caffe/util/cl_fft_state.hpp"
+#define CLFFT_CHECK(condition) \
+  do { \
+    clfftStatus status = (condition); \
+    CHECK_EQ(status, CLFFT_SUCCESS) << " " \
+      << caffe::clfftGetErrorString(status); \
+  } while (0)
+
+#endif //USE_FFT
+
+namespace caffe {
+
+#ifdef USE_FFT
+const char* clfftGetErrorString(clfftStatus status);
+#endif
+
+const char* clGetErrorString(cl_int error);
+
+#define OCL_LOCAL_WORKGROUP_SIZE 256
+
+// OCL: number of work groups
+inline int CAFFE_GET_BLOCKS_OCL(const int N) {
+  return (N + OCL_LOCAL_WORKGROUP_SIZE - 1) / OCL_LOCAL_WORKGROUP_SIZE;
+}
+inline int CAFFE_GET_BLOCKS_OCL(const int N, const int lws) {
+  return (N + lws - 1) / lws;
+}
+
+// OCL: get padded global work size
+inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N) {
+  return CAFFE_GET_BLOCKS_OCL(N) * OCL_LOCAL_WORKGROUP_SIZE;
+}
+inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N, const int lws) {
+  return CAFFE_GET_BLOCKS_OCL(N, lws) * lws;
+}
+
+}  // namespace caffe
+#endif //USE_GRREENTEA
 #endif  // !CPU_ONLY
 
 #endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_

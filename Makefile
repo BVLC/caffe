@@ -358,6 +358,14 @@ ifeq ($(USE_GREENTEA),1)
 		LIBRARIES += clBLAS
 		COMMON_FLAGS += -DUSE_CLBLAS
 	endif
+
+        ifeq ($(USE_FFT), 1)
+                CLFFT_INCLUDE_DIR := /usr/include
+		CLFFT_LIB_DIR := /usr/lib64/clfft
+  	        INCLUDE_DIRS += $(CLFFT_INCLUDE_DIR)
+		LIBRARY_DIRS += $(CLFFT_LIB_DIR)
+		LIBRARIES += clFFT
+        endif
 	
 	# Use ISAAC clBLAS replacement
 	ifeq ($(USE_ISAAC), 1)
@@ -482,6 +490,16 @@ else
 		endif
 	endif
 endif
+
+# FFT
+USE_FFT ?= 0
+ifeq ($(USE_FFT), 1)
+	ifneq ($(BLAS), mkl)
+		LIBRARIES += fftw3f fftw3
+	endif
+	COMMON_FLAGS += -DUSE_FFT
+endif
+
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
