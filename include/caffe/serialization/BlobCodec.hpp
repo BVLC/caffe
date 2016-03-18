@@ -3,6 +3,8 @@
 
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
+#include <algorithm>
+#include <numeric>
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -43,16 +45,16 @@ class BlobCodec {
 };
 
 template <typename Dtype>
-Dtype check_sum(const Dtype* data, size_t size) {
-  Dtype ret = 0.0f;
-  for (int i = 0; i < size; ++i) {
-    ret += data[i];
-  }
-  return ret;
+double check_sum(const Dtype* data, size_t size) {
+  if (size == 0) return 0.0;
+  if (size == 1) return *data;
+  if (size == 2) return static_cast<double>(data[0]) + data[1];
+  return check_sum(data, size / 2)
+    + check_sum(data + size / 2, size - size / 2);
 }
 
 template <typename Dtype>
-Dtype check_sum(Blob<Dtype>* blob, BlobEncodingWhat what) {
+double check_sum(Blob<Dtype>* blob, BlobEncodingWhat what) {
   return check_sum(
     ((what == BlobEncoding::PARAMS) ?  blob->cpu_data() : blob->cpu_diff()),
     blob->count());

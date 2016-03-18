@@ -7,6 +7,7 @@
   #include <mkl.h>
 #endif
 
+#include "boost/thread/mutex.hpp"
 #include "caffe/common.hpp"
 
 namespace caffe {
@@ -104,13 +105,15 @@ class SyncedMemory {
   void* cpu_ptr_;
   void* gpu_ptr_;
   void* prv_ptr_;
-  size_t size_;
+  const size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
   bool own_prv_data_;
   int gpu_device_;
+  boost::mutex mtx;
+
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
 

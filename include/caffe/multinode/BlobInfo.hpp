@@ -17,6 +17,8 @@ class BlobConstInfo {
   virtual uint32_t blobs(int layer_id) const = 0;
   virtual uint32_t layers() const = 0;
   virtual bool needs_syncing(int layer_id) const = 0;
+
+  virtual ~BlobConstInfo() {}
 };
 
 class Sync {
@@ -25,8 +27,8 @@ class Sync {
                         int layer_id,
                         int blob_id,
                         int part,
-                        uint32_t version,
-                        int iters) = 0;
+                        uint32_t version) = 0;
+  virtual ~Sync() {}
 };
 
 class BlobSyncInfo : public Sync {
@@ -35,8 +37,7 @@ class BlobSyncInfo : public Sync {
                         int layer_id,
                         int blob_id,
                         int part,
-                        uint32_t version,
-                        int iters) = 0;
+                        uint32_t version) = 0;
 
   struct Handler {
     virtual void synced(int layer_id,
@@ -51,21 +52,19 @@ class BlobSyncInfo : public Sync {
   virtual uint32_t received_version(
     internode::RemoteId from, int layer_id, int blob_id, int part) const = 0;
 
-  virtual int get_total_iters() const = 0;
   virtual void add_remote(internode::RemoteId id) = 0;
   virtual void remove_remote(internode::RemoteId id) = 0;
 };
 
 template <typename Dtype>
-class BlobInfo {
-  const shared_ptr<BlobConstInfo> const_info;
-  const shared_ptr<BlobSyncInfo> sync_info;
+class BlobInfoFactory {
  public:
-  BlobInfo(shared_ptr<Solver<Dtype> > solver,
-           size_t elements_per_packet);
+  static shared_ptr<BlobConstInfo> create_const_info(
+    shared_ptr<Solver<Dtype> > solver,
+    size_t elements_per_packet);
 
-  shared_ptr<BlobConstInfo> get_const_info() const;
-  shared_ptr<BlobSyncInfo>  get_sync_info() const;
+  static shared_ptr<BlobSyncInfo>  create_sync_info(
+    shared_ptr<BlobConstInfo> const_info);
 };
 
 }  // namespace caffe

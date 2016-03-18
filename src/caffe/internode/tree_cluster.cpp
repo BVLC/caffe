@@ -51,9 +51,7 @@ class MpiTreeClient : public TreeWaypoint {
   void received(bool ok, int size, int sender) {
     if (ok) {
       boost::recursive_mutex::scoped_lock lock(mtx);
-      DLOG(INFO) << "[proc " << id() << "] received buffer of size: " << size
-        << ", checksum: " << (uint16_t)check_sum<uint8_t>(
-          reinterpret_cast<uint8_t*>(&buffer.front()), size);
+      DLOG(INFO) << "[proc " << id() << "] received buffer of size: " << size;
       if (sender == parent()) {
         for (int i = 0; i < handlers.size(); ++i) {
           handlers[i]->received_from_parent(&buffer.front(), size);
@@ -110,9 +108,7 @@ class MpiTreeClient : public TreeWaypoint {
     std::vector<RemoteId> children_ids = children();
 
     boost::recursive_mutex::scoped_lock lock(mtx);
-    DLOG(INFO) << "[proc " << id() << "] sending buffer of size: " << size
-      << ", checksum: " << (uint16_t)check_sum<uint8_t>(
-        reinterpret_cast<const uint8_t*>(buff), size);
+    DLOG(INFO) << "[proc " << id() << "] sending buffer of size: " << size;
 
 
     BroadcastCallback<SentCallback> broadcast_callback(callback);
@@ -135,6 +131,10 @@ class MpiTreeClient : public TreeWaypoint {
 
   virtual RemoteId id() const {
     return mpi_get_current_proc_rank();
+  }
+
+  virtual int total_nodes() const {
+    return mpi_get_comm_size();
   }
 
   virtual std::vector<RemoteId> children() const {
@@ -167,7 +167,8 @@ class MpiTreeClient : public TreeWaypoint {
       boost::recursive_mutex::scoped_lock lock(mtx);
       for (int i = 0; i < requests.size(); ++i) {
         MPI_Status status;
-        int flag = 0, result = MPI_Test(&requests[i].first, &flag, &status);
+        int flag = 0;
+        int result = MPI_Test(&requests[i].first, &flag, &status);
         if (flag) {
           request = requests[i];
           requests.erase(requests.begin() + i);

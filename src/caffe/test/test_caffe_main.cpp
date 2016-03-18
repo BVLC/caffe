@@ -1,6 +1,7 @@
 // The main caffe test code. Your test cpp code should include this hpp
 // to allow a main function to be compiled into the binary.
 
+#include <gmock/gmock.h>
 #include "caffe/caffe.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -15,7 +16,7 @@ using caffe::CAFFE_TEST_CUDA_PROP;
 #endif
 
 int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
+  ::testing::InitGoogleMock(&argc, argv);
   caffe::GlobalInit(&argc, &argv);
 #ifndef CPU_ONLY
   // Before starting testing, let's first print out a few cuda defice info.

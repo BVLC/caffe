@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-TOOLS=./build/tools
+TOOLS=./cmake_build/tools
 
 echo "starting data server"
 OMP_NUM_THREADS=1 $TOOLS/caffe data_server \

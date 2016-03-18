@@ -297,6 +297,8 @@ message SolverParameter {
 
   optional MultinodeParameter multinode_param = 41;
   optional bool disabled_update = 42 [default = false];
+  optional string dump_dir = 49;
+  optional bool dump_checksums = 50 [default = false];
 }
 
 // A message that stores the solver snapshots
