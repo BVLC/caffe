@@ -18,6 +18,56 @@ cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 #endif
 }
 
+#ifdef USE_GREENTEA
+template <typename Dtype>
+bool caffe::isSupported(void) {
+  return true;
+}
+
+template <>
+bool caffe::isSupported<float>(void) {
+  return true;
+}
+
+template <>
+bool caffe::isSupported<caffe::GPUDevice<float>>(void) {
+  return isSupported<float>();
+}
+
+template <>
+bool caffe::isSupported<double>(void) {
+  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OpenCL ||
+         caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp64");
+}
+
+template <>
+bool caffe::isSupported<caffe::GPUDevice<double>>(void) {
+  return caffe::isSupported<double>();
+}
+
+template <>
+bool caffe::isSupported<caffe::CPUDevice<float>>(void) {
+  return true;
+}
+
+template <>
+bool caffe::isSupported<caffe::CPUDevice<double>>(void) {
+  return true;
+}
+
+#if defined(USE_LEVELDB) && defined(USE_LMDB)
+template <>
+bool caffe::isSupported<caffe::TypeLevelDB>(void) {
+  return true;
+}
+
+template <>
+bool caffe::isSupported<caffe::TypeLMDB>(void) {
+  return true;
+}
+#endif
+#endif
+
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
 using caffe::CAFFE_TEST_CUDA_PROP;
