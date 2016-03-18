@@ -32,6 +32,9 @@ VIENNACL_DIR = ../ViennaCL
 # USE_LEVELDB := 0
 # USE_LMDB := 0
 
+# Uncomment for FFT
+# USE_FFT := 1
+
 # uncomment to allow MDB_NOLOCK when reading LMDB files (only if necessary)
 #	You should not set this flag if you will be reading LMDBs with any
 #	possibility of simultaneous read and write

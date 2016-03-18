@@ -152,6 +152,9 @@ class Caffe {
     return Get().curand_generator64_;
   }
 #endif  // USE_CUDA
+#if defined(USE_GREENTEA) && defined(USE_FFT)
+  inline static ClFFTState& cl_fft_state() { return Get().cl_fft_state_; }
+#endif //USE_GREENTEA
 #endif  // !CPU_ONLY
 
   // Returns the mode: running on CPU or GPU.
@@ -167,6 +170,8 @@ class Caffe {
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
+  // Teardown the device
+  static void TeardownDevice(const int device_id);
   // Switch the current device
   static void SelectDevice(device* device_context);
   static void SelectDevice(int id, bool listId);
@@ -205,6 +210,9 @@ class Caffe {
   curandGenerator_t curand_generator_;
   curandGenerator_t curand_generator64_;
 #endif  // USE_CUDA
+#if defined(USE_GREENTEA) && defined(USE_FFT)
+  ClFFTState cl_fft_state_;
+#endif
 #endif  // !CPU_ONLY
   shared_ptr<RNG> random_generator_;
 

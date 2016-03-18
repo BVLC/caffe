@@ -74,6 +74,14 @@ Take AlexNet as an example, we edit file $CAFFE_ROOT/models/bvlc_alexnet/train_v
      }
 </code></pre>
 
+To enable the FFT domain convolution, you should install libfftw3, libfftw3f(for cpu) and clfft(for opencl) first.
+
+You can downloaded the fftw3 source code from https://github.com/FFTW/fftw3.git
+
+and the clFFT from https://github.com/listenlink/clFFT.git
+
+Then config the Cmake option with ```-DUSE_FFT=ON``` when useing cmake build system or enable the Makefile.config.example line 36 ```USE_FFT := 1``` when using makefile build system
+
 *Please use the latest git master viennacl which has the patch: https://github.com/viennacl/viennacl-dev/pull/181*
 
 ## Technical Report
