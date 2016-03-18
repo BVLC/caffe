@@ -178,12 +178,12 @@ void Caffe::SelectDevice(device* device_context) {
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
-Caffe::Caffe()
-: random_generator_(),
-mode_(Caffe::CPU),
-default_device_(nullptr),
-solver_count_(1),
-root_solver_(true) {}
+Caffe::Caffe() : random_generator_(),
+                 mode_(Caffe::CPU),
+                 cpu_device_(new device(-1, -1, Backend::BACKEND_CPU)),
+                 default_device_(cpu_device_.get()),
+                 solver_count_(1),
+                 root_solver_(true) {}
 
 Caffe::~Caffe() {}
 
