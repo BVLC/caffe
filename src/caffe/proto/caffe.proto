@@ -584,6 +584,7 @@ message ConvolutionParameter {
     CUDNN = 2;
     LIBDNN = 3;
     INTEL_SPATIAL = 4;
+    FFT = 5;
   }
   optional Engine engine = 15 [default = DEFAULT];
   
