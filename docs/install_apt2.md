@@ -43,11 +43,11 @@ NVIDIA drivers
         lspci | grep -i nvidia
 
 * Go to the NVIDIA website and find the latest driver version compatible with your graphics card, if you have a NVIDIA GeForce, go to: <http://www.geforce.com/drivers>
-* Check the latest version compiled in xorg-edgers which also matches your graphics card in:
-<https://launchpad.net/~xorg-edgers/+archive/ubuntu/ppa>
-* Add the xorg-edgers repository:
+* Check the latest version compiled in "Proprietary GPU Drivers" PPA which also matches your graphics card in:
+<https://launchpad.net/~graphics-drivers/+archive/ubuntu/ppa>. For stability, you may want to use the recommended driver in that page.
+* Add the "Proprietary GPU Drivers" PPA repository:
 
-        sudo add-apt-repository ppa:xorg-edgers/ppa
+        sudo add-apt-repository ppa:graphics-drivers/ppa
 
 * Update the repositories database:
 
@@ -55,7 +55,7 @@ NVIDIA drivers
         
 * Install your selected version of the graphics card (this could break your graphic system, be sure to know how to use a shell to be able to repair it), for example:
 
-        sudo apt-get install nvidia-346
+        sudo apt-get install nvidia-352
         
 * Restart your system:
 
