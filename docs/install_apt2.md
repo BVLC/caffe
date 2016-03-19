@@ -270,7 +270,7 @@ Install CuDNN
 
         tar xvf cudnn*.tgz
 
-* Enter the uncompress directory:
+* Enter the uncompressed directory:
 
         cd cuda
 
