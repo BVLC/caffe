@@ -87,20 +87,20 @@ CUDA
         lspci | grep -i nvidia
 
 * You need to have an account or register in the NVIDIA developer program (it's free): <https://developer.nvidia.com/user>
-* Download CUDA 7 from: <https://developer.nvidia.com/rdp/cuda-70-rc-downloads>, you can download the .deb package (cuda repo).
+* Download CUDA 7 from: <https://developer.nvidia.com/cuda-downloads>, you can download the "deb (network)" package (cuda repo).
 * Go to the downloads directory:
 
         cd ~/Downloads
         
 * Install the package (the repository):
 
-        sudo dpkg -i cuda-repo-ubuntu1404-7*amd64.deb
+        sudo dpkg -i cuda-repo-ubuntu1404*amd64.deb
 
 * Update the repositories DB:
 
         sudo apt-get update
 
-* Install CUDA (it should list cuda-7 packages):
+* Install CUDA (it should list cuda packages):
 
         sudo apt-get install cuda
 
