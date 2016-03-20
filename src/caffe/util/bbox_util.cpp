@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "boost/iterator/counting_iterator.hpp"
+
 #include "caffe/3rdparty/hungarian.h"
 #include "caffe/util/bbox_util.hpp"
 
@@ -729,11 +731,13 @@ template void GetDetectionResults(const double* det_data, const int num_det,
       const int background_label_id,
       map<int, map<int, vector<NormalizedBBox> > >* all_detections);
 
-void GetTopKScoreIndex(const vector<float>& scores, const int top_k,
-                       vector<pair<float, int> >* score_index_vec) {
+void GetTopKScoreIndex(const vector<float>& scores, const vector<int>& indices,
+      const int top_k, vector<pair<float, int> >* score_index_vec) {
+  CHECK_EQ(scores.size(), indices.size());
+
   // Generate index score pairs.
   for (int i = 0; i < scores.size(); ++i) {
-    score_index_vec->push_back(std::make_pair(scores[i], i));
+    score_index_vec->push_back(std::make_pair(scores[i], indices[i]));
   }
 
   // Sort the score pair according to the scores in descending order
@@ -754,8 +758,10 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       << "bboxes and scores have different size.";
 
   // Get top_k scores (with corresponding indices).
+  vector<int> idx(boost::counting_iterator<int>(0),
+                  boost::counting_iterator<int>(scores.size()));
   vector<pair<float, int> > score_index_vec;
-  GetTopKScoreIndex(scores, top_k, &score_index_vec);
+  GetTopKScoreIndex(scores, idx, top_k, &score_index_vec);
 
   // Do nms.
   indices->clear();
@@ -819,52 +825,24 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
   }
 }
 
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const bool* overlapped_results, const int top_k, vector<int>* indices) {
-  // Sanity check.
-  CHECK_EQ(bboxes.size(), scores.size())
-      << "bboxes and scores have different size.";
-  int num_bboxes = bboxes.size();
-
-  // Get top_k scores (with corresponding indices).
-  vector<pair<float, int> > score_index_vec;
-  GetTopKScoreIndex(scores, top_k, &score_index_vec);
-
+void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices) {
+  vector<int> index_vec(boost::counting_iterator<int>(0),
+                        boost::counting_iterator<int>(num));
   // Do nms.
   indices->clear();
-  while (score_index_vec.size() != 0) {
+  while (index_vec.size() != 0) {
     // Get the current highest score box.
-    int best_idx = score_index_vec.front().second;
-    const NormalizedBBox& best_bbox = bboxes[best_idx];
-    if (BBoxSize(best_bbox) < 1e-5) {
-      // Erase small box.
-      score_index_vec.erase(score_index_vec.begin());
-      continue;
-    }
+    int best_idx = index_vec.front();
     indices->push_back(best_idx);
     // Erase the best box.
-    score_index_vec.erase(score_index_vec.begin());
+    index_vec.erase(index_vec.begin());
 
-    if (top_k > -1 && indices->size() >= top_k) {
-      // Stop if finding enough bboxes for nms.
-      break;
-    }
-
-    // Compute overlap between best_bbox and other remaining bboxes.
-    // Remove a bbox if the overlap with best_bbox is larger than nms_threshold.
-    for (vector<pair<float, int> >::iterator it = score_index_vec.begin();
-         it != score_index_vec.end(); ) {
-      int cur_idx = it->second;
-      const NormalizedBBox& cur_bbox = bboxes[cur_idx];
-      if (BBoxSize(cur_bbox) < 1e-5) {
-        // Erase small box.
-        it = score_index_vec.erase(it);
-        continue;
-      }
+    for (vector<int>::iterator it = index_vec.begin(); it != index_vec.end();) {
+      int cur_idx = *it;
 
       // Remove it if necessary
-      if (overlapped_results[best_idx * num_bboxes + cur_idx]) {
-        it = score_index_vec.erase(it);
+      if (overlapped[best_idx * num + cur_idx]) {
+        it = index_vec.erase(it);
       } else {
         ++it;
       }

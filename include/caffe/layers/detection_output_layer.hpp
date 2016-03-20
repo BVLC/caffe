@@ -1,6 +1,10 @@
 #ifndef CAFFE_DETECTION_OUTPUT_LAYER_HPP_
 #define CAFFE_DETECTION_OUTPUT_LAYER_HPP_
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/regex.hpp>
+
 #include <map>
 #include <string>
 #include <utility>
@@ -10,6 +14,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/bbox_util.hpp"
+
+using namespace boost::property_tree;  // NOLINT(build/namespaces)
 
 namespace caffe {
 
@@ -72,6 +78,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   CodeType code_type_;
   bool variance_encoded_in_target_;
   int keep_top_k_;
+  float confidence_threshold_;
 
   int num_;
   int num_priors_;
@@ -88,6 +95,8 @@ class DetectionOutputLayer : public Layer<Dtype> {
   vector<pair<int, int> > sizes_;
   int num_test_image_;
   int name_count_;
+
+  ptree detections_;
 };
 
 }  // namespace caffe
