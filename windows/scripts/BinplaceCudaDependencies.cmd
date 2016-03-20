@@ -4,6 +4,8 @@ set IS_CPU_ONLY_BUILD=%3%
 set USE_CUDNN=%4%
 set OUTPUT_DIR=%~5%
 
+if errorlevel 1 goto ErrorDone
+
 if %IS_CPU_ONLY_BUILD% == true (
     echo BinplaceCudaDependencies : CPU only build, don't copy cuda dependencies.
  ) else (
@@ -13,10 +15,12 @@ if %IS_CPU_ONLY_BUILD% == true (
     copy /y "%CUDA_TOOLKIT_BIN_DIR%\cublas*.dll" "%OUTPUT_DIR%"
     copy /y "%CUDA_TOOLKIT_BIN_DIR%\curand*.dll" "%OUTPUT_DIR%"
 
+	if errorlevel 1 goto ErrorDone
+
     if %USE_CUDNN% == true (
         echo BinplaceCudaDependencies : Copy cudnn*.dll to output.
 
-        if [%CUDNN_PATH%] == [] (
+        if ["%CUDNN_PATH%"] == [] (
             copy /y "%CUDA_TOOLKIT_BIN_DIR%\cudnn*.dll" "%OUTPUT_DIR%"
         ) else (
             copy /y "%CUDNN_PATH%\cuda\bin\cudnn*.dll" "%OUTPUT_DIR%"
@@ -24,4 +28,14 @@ if %IS_CPU_ONLY_BUILD% == true (
     ) else (
         echo BinplaceCudaDependencies : cuDNN isn't enabled.
     )
+
+	if errorlevel 1 goto ErrorDone
+	goto Done
 )
+
+:ErrorDone
+  echo "ERROR: copy failed"
+  exit 1
+
+:Done
+  exit 0
