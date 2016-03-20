@@ -961,8 +961,9 @@ message SaveOutputParameter {
   optional string output_name_prefix = 2;
   // Output format.
   //    VOC - PASCAL VOC output format.
+  //    COCO - MS COCO output format.
   optional string output_format = 3;
-  // If output_format is VOC, must provide the following two files.
+  // If you want to output results, must also provide the following two files.
   // Otherwise, we will ignore saving results.
   // label map file.
   optional string label_map_file = 4;
@@ -998,6 +999,9 @@ message DetectionOutputParameter {
   // Number of total bboxes to be kept per image after nms step.
   // -1 means keeping all bboxes after nms step.
   optional int32 keep_top_k = 7 [default = -1];
+  // Only consider detections whose confidences are larger than a threshold.
+  // If not provided, consider all boxes.
+  optional float confidence_threshold = 9;
 }
 
 message DropoutParameter {

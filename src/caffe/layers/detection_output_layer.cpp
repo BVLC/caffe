@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
 #include <map>
+#include <sstream>  // NOLINT(readability/streams)
 #include <string>
 #include <utility>
 #include <vector>
@@ -25,6 +26,8 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   variance_encoded_in_target_ =
       detection_output_param.variance_encoded_in_target();
   keep_top_k_ = detection_output_param.keep_top_k();
+  confidence_threshold_ = detection_output_param.has_confidence_threshold() ?
+      detection_output_param.confidence_threshold() : -FLT_MAX;
   // Parameters used in nms.
   nms_threshold_ = detection_output_param.nms_param().nms_threshold();
   CHECK_GE(nms_threshold_, 0.) << "nms_threshold must be non negative.";
@@ -44,11 +47,11 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   output_name_prefix_ = save_output_param.output_name_prefix();
   need_save_ = output_directory_ == "" ? false : true;
   output_format_ = save_output_param.output_format();
-  if (output_format_ == "VOC") {
+  if (save_output_param.has_label_map_file()) {
     string label_map_file = save_output_param.label_map_file();
     if (label_map_file.empty()) {
-      // Ignore saving if there is no label_map_file provided for VOC output.
-      LOG(WARNING) << "Provide label_map_file if output results for VOC.";
+      // Ignore saving if there is no label_map_file provided.
+      LOG(WARNING) << "Provide label_map_file if output results to files.";
       need_save_ = false;
     } else {
       LabelMap label_map;
@@ -57,10 +60,14 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK(MapLabelToName(label_map, true, &label_to_name_))
           << "Failed to convert label to name.";
     }
+  } else {
+    need_save_ = false;
+  }
+  if (save_output_param.has_name_size_file()) {
     string name_size_file = save_output_param.name_size_file();
     if (name_size_file.empty()) {
-      // Ignore saving if there is no name_size_file provided for VOC output.
-      LOG(WARNING) << "Provide name_size_file if output results for VOC.";
+      // Ignore saving if there is no name_size_file provided.
+      LOG(WARNING) << "Provide name_size_file if output results to files.";
       need_save_ = false;
     } else {
       std::ifstream infile(name_size_file.c_str());
@@ -83,21 +90,8 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       }
       CHECK_LE(num_test_image_, names_.size());
     }
-    // Clean all output files.
-    if (need_save_) {
-      boost::filesystem::path output_directory(output_directory_);
-      for (map<int, string>::iterator it = label_to_name_.begin();
-           it != label_to_name_.end(); ++it) {
-        if (it->first == background_label_id_) {
-          continue;
-        }
-        std::ofstream outfile;
-        boost::filesystem::path file(
-            output_name_prefix_ + it->second + ".txt");
-        boost::filesystem::path out_file = output_directory / file;
-        outfile.open(out_file.string().c_str(), std::ofstream::out);
-      }
-    }
+  } else {
+    need_save_ = false;
   }
   name_count_ = 0;
 }
@@ -113,17 +107,19 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
     if (name_count_ % num_test_image_ == 0) {
       // Clean all outputs.
-      boost::filesystem::path output_directory(output_directory_);
-      for (map<int, string>::iterator it = label_to_name_.begin();
-           it != label_to_name_.end(); ++it) {
-        if (it->first == background_label_id_) {
-          continue;
+      if (output_format_ == "VOC") {
+        boost::filesystem::path output_directory(output_directory_);
+        for (map<int, string>::iterator it = label_to_name_.begin();
+             it != label_to_name_.end(); ++it) {
+          if (it->first == background_label_id_) {
+            continue;
+          }
+          std::ofstream outfile;
+          boost::filesystem::path file(
+              output_name_prefix_ + it->second + ".txt");
+          boost::filesystem::path out_file = output_directory / file;
+          outfile.open(out_file.string().c_str(), std::ofstream::out);
         }
-        std::ofstream outfile;
-        boost::filesystem::path file(
-            output_name_prefix_ + it->second + ".txt");
-        boost::filesystem::path out_file = output_directory / file;
-        outfile.open(out_file.string().c_str(), std::ofstream::out);
       }
     }
   }
@@ -283,11 +279,13 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       if (need_save_) {
         CHECK(label_to_name_.find(label) != label_to_name_.end())
             << "Cannot find label: " << label << " in the label map.";
-        boost::filesystem::path file(
-            output_name_prefix_ + label_to_name_[label] + ".txt");
-        boost::filesystem::path out_file = output_directory / file;
-        outfile.open(out_file.string().c_str(),
-                     std::ofstream::out | std::ofstream::app);
+        if (output_format_ == "VOC") {
+          boost::filesystem::path file(
+              output_name_prefix_ + label_to_name_[label] + ".txt");
+          boost::filesystem::path out_file = output_directory / file;
+          outfile.open(out_file.string().c_str(),
+                       std::ofstream::out | std::ofstream::app);
+        }
         CHECK_LT(name_count_, names_.size());
       }
       for (int j = 0; j < indices.size(); ++j) {
@@ -302,17 +300,42 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7 + 5] = clip_bbox.xmax();
         top_data[count * 7 + 6] = clip_bbox.ymax();
         if (need_save_) {
-          outfile << names_[name_count_];
-          outfile << " " << conf_scores[label][idx];
           NormalizedBBox scale_bbox;
           ScaleBBox(clip_bbox, sizes_[name_count_].first,
                     sizes_[name_count_].second, &scale_bbox);
-          outfile << " " << static_cast<int>(scale_bbox.xmin());
-          outfile << " " << static_cast<int>(scale_bbox.ymin());
-          outfile << " " << static_cast<int>(scale_bbox.xmax());
-          outfile << " " << static_cast<int>(scale_bbox.ymax());
-          outfile << std::endl;
-          outfile.flush();
+          if (output_format_ == "VOC") {
+            outfile << names_[name_count_];
+            outfile << " " << conf_scores[label][idx];
+            outfile << " " << static_cast<int>(scale_bbox.xmin());
+            outfile << " " << static_cast<int>(scale_bbox.ymin());
+            outfile << " " << static_cast<int>(scale_bbox.xmax());
+            outfile << " " << static_cast<int>(scale_bbox.ymax());
+            outfile << std::endl;
+            outfile.flush();
+          } else if (output_format_ == "COCO") {
+            boost::property_tree::ptree xmin, ymin, width, height;
+            xmin.put<float>("", round(scale_bbox.xmin() * 100) / 100.);
+            ymin.put<float>("", round(scale_bbox.ymin() * 100) / 100.);
+            width.put<float>("",
+                round((scale_bbox.xmax() - scale_bbox.xmin()) * 100) / 100.);
+            height.put<float>("",
+                round((scale_bbox.ymax() - scale_bbox.ymin()) * 100) / 100.);
+
+            boost::property_tree::ptree cur_bbox;
+            cur_bbox.push_back(std::make_pair("", xmin));
+            cur_bbox.push_back(std::make_pair("", ymin));
+            cur_bbox.push_back(std::make_pair("", width));
+            cur_bbox.push_back(std::make_pair("", height));
+
+            boost::property_tree::ptree cur_det;
+            cur_det.put<int>("image_id", atoi(names_[name_count_].c_str()));
+            cur_det.put<int>("category_id",
+                atoi(label_to_name_[label].c_str()));
+            cur_det.add_child("bbox", cur_bbox);
+            cur_det.put<float>("score", conf_scores[label][idx]);
+
+            detections_.push_back(std::make_pair("", cur_det));
+          }
         }
         ++count;
       }
@@ -322,6 +345,24 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     }
     if (need_save_) {
       ++name_count_;
+      if (name_count_ % num_test_image_ == 0) {
+        if (output_format_ == "COCO") {
+          boost::filesystem::path output_directory(output_directory_);
+          boost::filesystem::path file(output_name_prefix_ + ".json");
+          boost::filesystem::path out_file = output_directory / file;
+          std::ofstream outfile;
+          outfile.open(out_file.string().c_str(), std::ofstream::out);
+
+          boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
+          boost::property_tree::ptree output;
+          output.add_child("detections", detections_);
+          std::stringstream ss;
+          write_json(ss, output);
+          std::string rv = boost::regex_replace(ss.str(), exp, "$1");
+          outfile << rv.substr(rv.find("["), rv.rfind("]") - rv.find("["))
+              << std::endl << "]" << std::endl;
+        }
+      }
     }
   }
 }

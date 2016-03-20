@@ -6,16 +6,16 @@
 #include <vector>
 
 #include "boost/filesystem.hpp"
+#include "boost/foreach.hpp"
 
 #include "caffe/layers/detection_output_layer.hpp"
-
+#ifdef USE_CUDA
 namespace caffe {
 
 template <typename Dtype>
 void DetectionOutputLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* loc_data = bottom[0]->gpu_data();
-  const Dtype* conf_data = bottom[1]->gpu_data();
   const Dtype* prior_data = bottom[2]->gpu_data();
   const int num = bottom[0]->num();
 
@@ -27,61 +27,43 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
       variance_encoded_in_target_, num_priors_, share_location_,
       num_loc_classes_, background_label_id_, bbox_data);
-
-  // Compute overlap between detection results.
-  Blob<bool> overlapped(num, num_loc_classes_, num_priors_, num_priors_);
-  const int total_bboxes = overlapped.count();
-  bool* overlapped_data = overlapped.mutable_gpu_data();
-  ComputeOverlappedGPU<Dtype>(total_bboxes, bbox_data, num_priors_,
-      num_loc_classes_, nms_threshold_, overlapped_data);
-  const bool* overlapped_results = overlapped.cpu_data();
-
-  const Dtype* bbox_cpu_data = bbox_preds.cpu_data();
-  vector<LabelBBox> all_decode_bboxes;
-  GetLocPredictions(bbox_cpu_data, num, num_priors_, num_loc_classes_,
-      share_location_, &all_decode_bboxes);
+  if (!share_location_) {
+    Blob<Dtype> bbox_permute;
+    bbox_permute.ReshapeLike(*(bottom[0]));
+    Dtype* bbox_permute_data = bbox_permute.mutable_gpu_data();
+    PermuteDataGPU<Dtype>(loc_count, bbox_data, num_loc_classes_, num_priors_,
+        4, bbox_permute_data);
+    caffe_copy(loc_count, bbox_permute_data, bbox_data);
+  }
 
   // Retrieve all confidences.
-  const Dtype* conf_cpu_data = bottom[1]->cpu_data();
-  vector<map<int, vector<float> > > all_conf_scores;
-  GetConfidenceScores(conf_cpu_data, num, num_priors_, num_classes_,
-                      &all_conf_scores);
+  const Dtype* conf_cpu_data;
+  Blob<Dtype> conf_permute;
+  conf_permute.ReshapeLike(*(bottom[1]));
+  Dtype* conf_permute_data = conf_permute.mutable_gpu_data();
+  PermuteDataGPU<Dtype>(conf_permute.count(), bottom[1]->gpu_data(),
+      num_classes_, num_priors_, 1, conf_permute_data);
+  conf_cpu_data = conf_permute.cpu_data();
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
   for (int i = 0; i < num; ++i) {
-    // Retrieve kept bbox after nms for each class.
-    LabelBBox& decode_bboxes = all_decode_bboxes[i];
-    map<int, vector<float> >& conf_scores = all_conf_scores[i];
     map<int, vector<int> > indices;
     int num_det = 0;
+    const int start_idx = i * num_classes_ * num_priors_;
     for (int c = 0; c < num_classes_; ++c) {
-      if (c == background_label_id_) {
-        // Ignore background class.
-        if (!share_location_) {
-          overlapped_results += num_priors_ * num_priors_;
-        }
-        continue;
+      if (c != background_label_id_) {
+        ApplyNMSGPU(bbox_data, conf_cpu_data + start_idx + c * num_priors_,
+            num_priors_, confidence_threshold_, top_k_, nms_threshold_,
+            &(indices[c]));
+        num_det += indices[c].size();
       }
-      if (conf_scores.find(c) == conf_scores.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find confidence predictions for label " << c;
-      }
-      int label = share_location_ ? -1 : c;
-      if (decode_bboxes.find(label) == decode_bboxes.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for label " << label;
-        continue;
-      }
-      ApplyNMS(decode_bboxes[label], conf_scores[c], overlapped_results, top_k_,
-               &(indices[c]));
-      num_det += indices[c].size();
       if (!share_location_) {
-        overlapped_results += num_priors_ * num_priors_;
+        bbox_data += num_priors_ * 4;
       }
     }
     if (share_location_) {
-      overlapped_results += num_priors_ * num_priors_;
+      bbox_data += num_priors_ * 4;
     }
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
       vector<pair<float, pair<int, int> > > score_index_pairs;
@@ -89,16 +71,11 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
            it != indices.end(); ++it) {
         int label = it->first;
         const vector<int>& label_indices = it->second;
-        if (conf_scores.find(label) == conf_scores.end()) {
-          // Something bad happened for current label.
-          LOG(FATAL) << "Could not find location predictions for " << label;
-          continue;
-        }
         for (int j = 0; j < label_indices.size(); ++j) {
           int idx = label_indices[j];
-          CHECK_LT(idx, conf_scores[label].size());
+          float score = conf_cpu_data[start_idx + label * num_priors_ + idx];
           score_index_pairs.push_back(std::make_pair(
-                  conf_scores[label][idx], std::make_pair(label, idx)));
+                  score, std::make_pair(label, idx)));
         }
       }
       // Keep top k results per image.
@@ -125,72 +102,143 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
   top_shape.push_back(7);
   top[0]->Reshape(top_shape);
   Dtype* top_data = top[0]->mutable_cpu_data();
+  const Dtype* bbox_cpu_data = bbox_preds.cpu_data();
 
-  int count = 0;
   boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
-    map<int, vector<float> >& conf_scores = all_conf_scores[i];
-    const LabelBBox& decode_bboxes = all_decode_bboxes[i];
-    for (map<int, vector<int> >::iterator it = all_indices[i].begin();
-         it != all_indices[i].end(); ++it) {
-      int label = it->first;
-      if (conf_scores.find(label) == conf_scores.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find confidence predictions for " << label;
-        continue;
-      }
-      int loc_label = share_location_ ? -1 : label;
-      if (decode_bboxes.find(loc_label) == decode_bboxes.end()) {
-        // Something bad happened if there are no predictions for current label.
-        LOG(FATAL) << "Could not find location predictions for " << loc_label;
-        continue;
-      }
-      const vector<NormalizedBBox>& bboxes =
-          decode_bboxes.find(loc_label)->second;
-      vector<int>& indices = it->second;
-      std::ofstream outfile;
-      if (need_save_) {
-        CHECK(label_to_name_.find(label) != label_to_name_.end())
-            << "Cannot find label: " << label << " in the label map.";
-        boost::filesystem::path file(
-            output_name_prefix_ + label_to_name_[label] + ".txt");
-        boost::filesystem::path out_file = output_directory / file;
-        outfile.open(out_file.string().c_str(),
-                     std::ofstream::out | std::ofstream::app);
-        CHECK_LT(name_count_, names_.size());
-      }
-      for (int j = 0; j < indices.size(); ++j) {
-        int idx = indices[j];
-        top_data[count * 7] = i;
-        top_data[count * 7 + 1] = label;
-        top_data[count * 7 + 2] = conf_scores[label][idx];
-        NormalizedBBox clip_bbox;
-        ClipBBox(bboxes[idx], &clip_bbox);
-        top_data[count * 7 + 3] = clip_bbox.xmin();
-        top_data[count * 7 + 4] = clip_bbox.ymin();
-        top_data[count * 7 + 5] = clip_bbox.xmax();
-        top_data[count * 7 + 6] = clip_bbox.ymax();
-        if (need_save_) {
-          outfile << names_[name_count_];
-          outfile << " " << conf_scores[label][idx];
-          NormalizedBBox scale_bbox;
-          ScaleBBox(clip_bbox, sizes_[name_count_].first,
-                    sizes_[name_count_].second, &scale_bbox);
-          outfile << " " << static_cast<int>(scale_bbox.xmin());
-          outfile << " " << static_cast<int>(scale_bbox.ymin());
-          outfile << " " << static_cast<int>(scale_bbox.xmax());
-          outfile << " " << static_cast<int>(scale_bbox.ymax());
-          outfile << std::endl;
-          outfile.flush();
+    int start_idx = i * num_classes_ * num_priors_;
+    for (int c = 0; c < num_classes_; ++c) {
+      if (all_indices[i].find(c) == all_indices[i].end()) {
+        if (!share_location_) {
+          bbox_cpu_data += num_priors_ * 4;
         }
-        ++count;
+        continue;
+      }
+      vector<int>& indices = all_indices[i].find(c)->second;
+      // Retrieve detection data.
+      bool clip_bbox = true;
+      for (int j = 0; j < indices.size(); ++j) {
+        top_data[j * 7] = i;
+        top_data[j * 7 + 1] = c;
+        int idx = indices[j];
+        top_data[j * 7 + 2] = conf_cpu_data[start_idx + c * num_priors_ + idx];
+        if (clip_bbox) {
+          for (int k = 0; k < 4; ++k) {
+            top_data[j * 7 + 3 + k] = std::max(
+                std::min(bbox_cpu_data[idx * 4 + k], Dtype(1)), Dtype(0));
+          }
+        } else {
+          for (int k = 0; k < 4; ++k) {
+            top_data[j * 7 + 3 + k] = bbox_cpu_data[idx * 4 + k];
+          }
+        }
+      }
+      if (!share_location_) {
+        bbox_cpu_data += num_priors_ * 4;
+      }
+      if (indices.size() == 0) {
+        continue;
       }
       if (need_save_) {
-        outfile.close();
+        CHECK(label_to_name_.find(c) != label_to_name_.end())
+            << "Cannot find label: " << c << " in the label map.";
+        CHECK_LT(name_count_, names_.size());
+        int height = sizes_[name_count_].first;
+        int width = sizes_[name_count_].second;
+        for (int j = 0; j < indices.size(); ++j) {
+          float score = top_data[j * 7 + 2];
+          float xmin = top_data[j * 7 + 3] * width;
+          float ymin = top_data[j * 7 + 4] * height;
+          float xmax = top_data[j * 7 + 5] * width;
+          float ymax = top_data[j * 7 + 6] * height;
+          ptree pt_xmin, pt_ymin, pt_width, pt_height;
+          pt_xmin.put<float>("", round(xmin * 100) / 100.);
+          pt_ymin.put<float>("", round(ymin * 100) / 100.);
+          pt_width.put<float>("", round((xmax - xmin) * 100) / 100.);
+          pt_height.put<float>("", round((ymax - ymin) * 100) / 100.);
+
+          ptree cur_bbox;
+          cur_bbox.push_back(std::make_pair("", pt_xmin));
+          cur_bbox.push_back(std::make_pair("", pt_ymin));
+          cur_bbox.push_back(std::make_pair("", pt_width));
+          cur_bbox.push_back(std::make_pair("", pt_height));
+
+          ptree cur_det;
+          cur_det.put("image_id", names_[name_count_]);
+          cur_det.put("category_id", label_to_name_[c].c_str());
+          cur_det.add_child("bbox", cur_bbox);
+          cur_det.put<float>("score", score);
+
+          detections_.push_back(std::make_pair("", cur_det));
+        }
       }
+      top_data += indices.size() * 7;
+    }
+    if (share_location_) {
+      bbox_cpu_data += num_priors_ * 4;
     }
     if (need_save_) {
       ++name_count_;
+      if (name_count_ % num_test_image_ == 0) {
+        if (output_format_ == "VOC") {
+          map<string, std::ofstream*> outfiles;
+          for (int c = 0; c < num_classes_; ++c) {
+            if (c == background_label_id_) {
+              continue;
+            }
+            string label_name = label_to_name_[c];
+            boost::filesystem::path file(
+                output_name_prefix_ + label_name + ".txt");
+            boost::filesystem::path out_file = output_directory / file;
+            outfiles[label_name] = new std::ofstream(out_file.string().c_str(),
+                std::ofstream::out);
+          }
+          BOOST_FOREACH(ptree::value_type &det, detections_.get_child("")) {
+            ptree pt = det.second;
+            string label_name = pt.get<string>("category_id");
+            if (outfiles.find(label_name) == outfiles.end()) {
+              std::cout << "Cannot find " << label_name << std::endl;
+              continue;
+            }
+            string image_name = pt.get<string>("image_id");
+            float score = pt.get<float>("score");
+            vector<int> bbox;
+            BOOST_FOREACH(ptree::value_type &elem, pt.get_child("bbox")) {
+              bbox.push_back(static_cast<int>(elem.second.get_value<float>()));
+            }
+            *(outfiles[label_name]) << image_name;
+            *(outfiles[label_name]) << " " << score;
+            *(outfiles[label_name]) << " " << bbox[0] << " " << bbox[1];
+            *(outfiles[label_name]) << " " << bbox[0] + bbox[2];
+            *(outfiles[label_name]) << " " << bbox[1] + bbox[3];
+            *(outfiles[label_name]) << std::endl;
+          }
+          for (int c = 0; c < num_classes_; ++c) {
+            if (c == background_label_id_) {
+              continue;
+            }
+            string label_name = label_to_name_[c];
+            outfiles[label_name]->flush();
+            outfiles[label_name]->close();
+            delete outfiles[label_name];
+          }
+        } else if (output_format_ == "COCO") {
+          boost::filesystem::path output_directory(output_directory_);
+          boost::filesystem::path file(output_name_prefix_ + ".json");
+          boost::filesystem::path out_file = output_directory / file;
+          std::ofstream outfile;
+          outfile.open(out_file.string().c_str(), std::ofstream::out);
+
+          boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
+          ptree output;
+          output.add_child("detections", detections_);
+          std::stringstream ss;
+          write_json(ss, output);
+          std::string rv = boost::regex_replace(ss.str(), exp, "$1");
+          outfile << rv.substr(rv.find("["), rv.rfind("]") - rv.find("["))
+              << std::endl << "]" << std::endl;
+        }
+      }
     }
   }
 }
@@ -198,3 +246,4 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
 INSTANTIATE_LAYER_GPU_FUNCS(DetectionOutputLayer);
 
 }  // namespace caffe
+#endif //USE_CUDA

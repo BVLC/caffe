@@ -189,7 +189,7 @@ ifeq ($(USE_CUDA), 1)
 	LIBRARIES := cudart cublas curand nvrtc cuda
 endif
 
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem boost_regex m hdf5_hl hdf5
 
 # handle IO dependencies
 USE_LEVELDB ?= 1

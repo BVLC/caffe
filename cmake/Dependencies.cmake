@@ -5,7 +5,7 @@ set(Caffe_DEFINITIONS "")
 set(Caffe_COMPILE_OPTIONS "")
 
 # ---[ Boost
-find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem)
+find_package(Boost 1.46 REQUIRED COMPONENTS system thread filesystem regex)
 include_directories(SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
 add_definitions(-DBOOST_ALL_NO_LIB)
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${Boost_INCLUDE_DIRS})

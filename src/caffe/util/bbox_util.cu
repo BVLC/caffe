@@ -1,8 +1,15 @@
 #include <algorithm>
+#include <functional>
+#include <map>
+#include <vector>
+
+#include "thrust/functional.h"
+#include "thrust/sort.h"
 
 #include "caffe/common.hpp"
 #include "caffe/util/bbox_util.hpp"
 
+#ifdef USE_CUDA
 namespace caffe {
 
 template <typename Dtype>
@@ -55,6 +62,26 @@ template __host__ __device__ float JaccardOverlapGPU(const float* bbox1,
     const float* bbox2);
 template __host__ __device__ double JaccardOverlapGPU(const double* bbox1,
     const double* bbox2);
+
+template <typename Dtype>
+__device__ Dtype Min(const Dtype x, const Dtype y) {
+  return x < y ? x : y;
+}
+
+template <typename Dtype>
+__device__ Dtype Max(const Dtype x, const Dtype y) {
+  return x > y ? x : y;
+}
+
+template <typename Dtype>
+__device__ void ClipBBoxGPU(const Dtype* bbox, Dtype* clip_bbox) {
+  for (int i = 0; i < 4; ++i) {
+    clip_bbox[i] = Max(Min(bbox[i], Dtype(1.)), Dtype(0.));
+  }
+}
+
+template __device__ void ClipBBoxGPU(const float* bbox, float* clip_bbox);
+template __device__ void ClipBBoxGPU(const double* bbox, double* clip_bbox);
 
 template <typename Dtype>
 __global__ void DecodeBBoxesKernel(const int nthreads,
@@ -168,6 +195,38 @@ template void DecodeBBoxesGPU(const int nthreads,
           double* bbox_data);
 
 template <typename Dtype>
+__global__ void PermuteDataKernel(const int nthreads,
+          const Dtype* data, const int num_classes, const int num_data,
+          const int num_dim, Dtype* new_data) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    const int i = index % num_dim;
+    const int c = (index / num_dim) % num_classes;
+    const int d = (index / num_dim / num_classes) % num_data;
+    const int n = index / num_dim / num_classes / num_data;
+    const int new_index = ((n * num_classes + c) * num_data + d) * num_dim + i;
+    new_data[new_index] = data[index];
+  }
+}
+
+template <typename Dtype>
+void PermuteDataGPU(const int nthreads,
+          const Dtype* data, const int num_classes, const int num_data,
+          const int num_dim, Dtype* new_data) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  PermuteDataKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+      CAFFE_CUDA_NUM_THREADS>>>(nthreads, data, num_classes, num_data,
+      num_dim, new_data);
+  CUDA_POST_KERNEL_CHECK;
+}
+
+template void PermuteDataGPU(const int nthreads,
+          const float* data, const int num_classes, const int num_data,
+          const int num_dim, float* new_data);
+template void PermuteDataGPU(const int nthreads,
+          const double* data, const int num_classes, const int num_data,
+          const int num_dim, double* new_data);
+
+template <typename Dtype>
 __global__ void ComputeOverlappedKernel(const int nthreads,
           const Dtype* bbox_data, const int num_bboxes, const int num_classes,
           const Dtype overlap_threshold, bool* overlapped_data) {
@@ -183,7 +242,7 @@ __global__ void ComputeOverlappedKernel(const int nthreads,
     // Compute overlap between i-th bbox and j-th bbox.
     const int start_loc_i = ((n * num_bboxes + i) * num_classes + c) * 4;
     const int start_loc_j = ((n * num_bboxes + j) * num_classes + c) * 4;
-    const Dtype overlap = JaccardOverlapGPU(bbox_data + start_loc_i,
+    const Dtype overlap = JaccardOverlapGPU<Dtype>(bbox_data + start_loc_i,
         bbox_data + start_loc_j);
     if (overlap > overlap_threshold) {
       overlapped_data[index] = true;
@@ -209,4 +268,149 @@ template void ComputeOverlappedGPU(const int nthreads,
           const double* bbox_data, const int num_bboxes, const int num_classes,
           const double overlap_threshold, bool* overlapped_data);
 
+template <typename Dtype>
+__global__ void ComputeOverlappedByIdxKernel(const int nthreads,
+          const Dtype* bbox_data, const Dtype overlap_threshold,
+          const int* idx, const int num_idx, bool* overlapped_data) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    const int j = index % num_idx;
+    const int i = (index / num_idx);
+    if (i == j) {
+      // Ignore same bbox.
+      return;
+    }
+    // Compute overlap between i-th bbox and j-th bbox.
+    const int start_loc_i = idx[i] * 4;
+    const int start_loc_j = idx[j] * 4;
+    const Dtype overlap = JaccardOverlapGPU<Dtype>(bbox_data + start_loc_i,
+        bbox_data + start_loc_j);
+    if (overlap > overlap_threshold) {
+      overlapped_data[index] = true;
+    }
+  }
+}
+
+template <typename Dtype>
+void ComputeOverlappedByIdxGPU(const int nthreads,
+          const Dtype* bbox_data, const Dtype overlap_threshold,
+          const int* idx, const int num_idx, bool* overlapped_data) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  ComputeOverlappedByIdxKernel<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
+      CAFFE_CUDA_NUM_THREADS>>>(nthreads, bbox_data, overlap_threshold,
+      idx, num_idx, overlapped_data);
+  CUDA_POST_KERNEL_CHECK;
+}
+
+template void ComputeOverlappedByIdxGPU(const int nthreads,
+          const float* bbox_data, const float overlap_threshold,
+          const int* idx, const int num_idx, bool* overlapped_data);
+template void ComputeOverlappedByIdxGPU(const int nthreads,
+          const double* bbox_data, const double overlap_threshold,
+          const int* idx, const int num_idx, bool* overlapped_data);
+
+template <typename Dtype>
+void ApplyNMSGPU(const Dtype* bbox_data, const Dtype* conf_data,
+          const int num_bboxes, const float confidence_threshold,
+          const int top_k, const float nms_threshold, vector<int>* indices) {
+  // Keep part of detections whose scores are higher than confidence threshold.
+  vector<int> idx;
+  vector<Dtype> confidences;
+  for (int i = 0; i < num_bboxes; ++i) {
+    if (conf_data[i] > confidence_threshold) {
+      idx.push_back(i);
+      confidences.push_back(conf_data[i]);
+    }
+  }
+  int num_remain = confidences.size();
+  if (num_remain == 0) {
+    return;
+  }
+  // Sort detections based on score.
+  thrust::sort_by_key(&confidences[0], &confidences[0] + num_remain, &idx[0],
+      thrust::greater<Dtype>());
+  if (top_k > -1 && top_k < num_remain) {
+    num_remain = top_k;
+  }
+
+  // Compute overlap between remaining detections.
+  Blob<int> idx_blob(1, 1, 1, num_remain);
+  int* idx_data = idx_blob.mutable_cpu_data();
+  std::copy(idx.begin(), idx.begin() + num_remain, idx_data);
+
+  Blob<bool> overlapped(1, 1, num_remain, num_remain);
+  const int total_bboxes = overlapped.count();
+  bool* overlapped_data = overlapped.mutable_gpu_data();
+  ComputeOverlappedByIdxGPU<Dtype>(total_bboxes, bbox_data, nms_threshold,
+      idx_blob.gpu_data(), num_remain, overlapped_data);
+
+  // Do non-maximum suppression based on overlapped results.
+  const bool* overlapped_results = overlapped.cpu_data();
+  vector<int> selected_indices;
+  ApplyNMS(overlapped_results, num_remain, &selected_indices);
+
+  // Put back the selected information.
+  for (int i = 0; i < selected_indices.size(); ++i) {
+    indices->push_back(idx[selected_indices[i]]);
+  }
+}
+
+template
+void ApplyNMSGPU(const float* bbox_data, const float* conf_data,
+          const int num_bboxes, const float confidence_threshold,
+          const int top_k, const float nms_threshold, vector<int>* indices);
+template
+void ApplyNMSGPU(const double* bbox_data, const double* conf_data,
+          const int num_bboxes, const float confidence_threshold,
+          const int top_k, const float nms_threshold, vector<int>* indices);
+
+template <typename Dtype>
+__global__ void GetDetectionsKernel(const int nthreads,
+          const Dtype* bbox_data, const Dtype* conf_data, const int image_id,
+          const int label, const int* indices, const bool clip_bbox,
+          Dtype* detection_data) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    const int det_idx = indices[index];
+    detection_data[index * 7] = image_id;
+    detection_data[index * 7 + 1] = label;
+    detection_data[index * 7 + 2] = conf_data[det_idx];
+    if (clip_bbox) {
+      ClipBBoxGPU(&(bbox_data[det_idx * 4]), &(detection_data[index * 7 + 3]));
+    } else {
+      for (int i = 0; i < 4; ++i) {
+        detection_data[index * 7 + 3 + i] = bbox_data[det_idx * 4 + i];
+      }
+    }
+  }
+}
+
+template <typename Dtype>
+void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
+          const int image_id, const int label, const vector<int>& indices,
+          const bool clip_bbox, Blob<Dtype>* detection_blob) {
+  // Store selected indices in array.
+  int num_det = indices.size();
+  if (num_det == 0) {
+    return;
+  }
+  Blob<int> idx_blob(1, 1, 1, num_det);
+  int* idx_data = idx_blob.mutable_cpu_data();
+  std::copy(indices.begin(), indices.end(), idx_data);
+  // Prepare detection_blob.
+  detection_blob->Reshape(1, 1, num_det, 7);
+  Dtype* detection_data = detection_blob->mutable_gpu_data();
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  GetDetectionsKernel<Dtype><<<CAFFE_GET_BLOCKS(num_det),
+      CAFFE_CUDA_NUM_THREADS>>>(num_det, bbox_data, conf_data, image_id, label,
+      idx_blob.gpu_data(), clip_bbox, detection_data);
+  CUDA_POST_KERNEL_CHECK;
+}
+
+template void GetDetectionsGPU(const float* bbox_data, const float* conf_data,
+          const int image_id, const int label, const vector<int>& indices,
+          const bool clip_bbox, Blob<float>* detection_blob);
+template void GetDetectionsGPU(const double* bbox_data, const double* conf_data,
+          const int image_id, const int label, const vector<int>& indices,
+          const bool clip_bbox, Blob<double>* detection_blob);
+
 }  // namespace caffe
+#endif

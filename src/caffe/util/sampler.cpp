@@ -59,7 +59,7 @@ bool SatisfySampleConstraint(const NormalizedBBox& sampled_bbox,
       }
       if (sample_constraint.has_max_sample_coverage() &&
           sample_coverage > sample_constraint.max_sample_coverage()) {
-        continue; 
+        continue;
       }
       found = true;
     }

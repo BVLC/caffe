@@ -13,7 +13,6 @@
 #include "caffe/layers/detection_output_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
 namespace caffe {
 
 static const float eps = 1e-6;

@@ -1339,6 +1339,7 @@ TEST_F(CPUBBoxUtilTest, TestComputeAP) {
 }
 
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
 template <typename Dtype>
 void FillBBoxes(Dtype* gt_bboxes, Dtype* pred_bboxes) {
 }
@@ -1807,7 +1808,7 @@ TYPED_TEST(GPUBBoxUtilTest, TestComputeOverlappedMultiClass) {
   EXPECT_EQ(overlapped_cpu_data[14], 1);
   EXPECT_EQ(overlapped_cpu_data[15], 0);
 }
-
+#endif //USE_CUDA
 #endif
 
 }  // namespace caffe

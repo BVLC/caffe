@@ -420,10 +420,7 @@ void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
       const float threshold, const int top_k, const bool reuse_overlaps,
       map<int, map<int, float> >* overlaps, vector<int>* indices);
 
-// Do non maximum suppression given bboxes and scores after computing the
-// overlap status between all pairs of bboxes. Usually used in GPU code.
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const bool* overlapped_results, const int top_k, vector<int>* indices);
+void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices);
 
 // Compute cumsum of a set of pairs.
 void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
@@ -445,6 +442,7 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
                vector<float>* prec, vector<float>* rec, float* ap);
 
 #ifndef CPU_ONLY  // GPU
+#ifdef USE_CUDA
 template <typename Dtype>
 __host__ __device__ Dtype BBoxSizeGPU(const Dtype* bbox,
                                       const bool normalized = true);
@@ -462,10 +460,30 @@ void DecodeBBoxesGPU(const int nthreads,
           Dtype* bbox_data);
 
 template <typename Dtype>
+void PermuteDataGPU(const int nthreads,
+          const Dtype* data, const int num_classes, const int num_data,
+          const int num_dim, Dtype* new_data);
+
+template <typename Dtype>
 void ComputeOverlappedGPU(const int nthreads,
           const Dtype* bbox_data, const int num_bboxes, const int num_classes,
           const Dtype overlap_threshold, bool* overlapped_data);
 
+template <typename Dtype>
+void ComputeOverlappedByIdxGPU(const int nthreads,
+          const Dtype* bbox_data, const Dtype overlap_threshold,
+          const int* idx, const int num_idx, bool* overlapped_data);
+
+template <typename Dtype>
+void ApplyNMSGPU(const Dtype* bbox_data, const Dtype* conf_data,
+          const int num_bboxes, const float confidence_threshold,
+          const int top_k, const float nms_threshold, vector<int>* indices);
+
+template <typename Dtype>
+void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
+          const int image_id, const int label, const vector<int>& indices,
+          const bool clip_bbox, Blob<Dtype>* detection_blob);
+#endif // USE_CUDA
 #endif  // !CPU_ONLY
 
 }  // namespace caffe
