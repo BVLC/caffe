@@ -51,7 +51,7 @@ run_soon = True
 # Otherwise, we will load from the pretrain_model defined below.
 resume_training = True
 # If true, Remove old model files.
-remove_old_models = True
+remove_old_models = False
 
 # The database file for training data. Created by data/VOC0712/create_data.sh
 train_data = "examples/VOC0712/VOC0712_trainval_lmdb"
@@ -65,8 +65,8 @@ batch_sampler = [
         {
                 'sampler': {
                         },
-                'max_trials': 12,
-                'max_sample': 12,
+                'max_trials': 1,
+                'max_sample': 1,
         },
         {
                 'sampler': {
@@ -76,24 +76,10 @@ batch_sampler = [
                         'max_aspect_ratio': 2.0,
                         },
                 'sample_constraint': {
-                        'min_object_coverage': 1.0,
-                        },
-                'max_trials': 100,
-                'max_sample': 6,
-        },
-        {
-                'sampler': {
-                        'min_scale': 0.3,
-                        'max_scale': 1.0,
-                        'min_aspect_ratio': 0.5,
-                        'max_aspect_ratio': 2.0,
-                        },
-                'sample_constraint': {
-                        'min_object_coverage': 1.0,
-                        'min_sample_coverage': 0.1,
+                        'min_jaccard_overlap': 0.1,
                         },
                 'max_trials': 50,
-                'max_sample': 3,
+                'max_sample': 1,
         },
         {
                 'sampler': {
@@ -103,11 +89,10 @@ batch_sampler = [
                         'max_aspect_ratio': 2.0,
                         },
                 'sample_constraint': {
-                        'min_object_coverage': 1.0,
-                        'min_sample_coverage': 0.3,
+                        'min_jaccard_overlap': 0.3,
                         },
                 'max_trials': 50,
-                'max_sample': 3,
+                'max_sample': 1,
         },
         {
                 'sampler': {
@@ -117,11 +102,10 @@ batch_sampler = [
                         'max_aspect_ratio': 2.0,
                         },
                 'sample_constraint': {
-                        'min_object_coverage': 1.0,
-                        'min_sample_coverage': 0.5,
+                        'min_jaccard_overlap': 0.5,
                         },
                 'max_trials': 50,
-                'max_sample': 3,
+                'max_sample': 1,
         },
         {
                 'sampler': {
@@ -131,11 +115,10 @@ batch_sampler = [
                         'max_aspect_ratio': 2.0,
                         },
                 'sample_constraint': {
-                        'min_object_coverage': 1.0,
-                        'min_sample_coverage': 0.7,
+                        'min_jaccard_overlap': 0.7,
                         },
                 'max_trials': 50,
-                'max_sample': 3,
+                'max_sample': 1,
         },
         {
                 'sampler': {
@@ -145,11 +128,10 @@ batch_sampler = [
                         'max_aspect_ratio': 2.0,
                         },
                 'sample_constraint': {
-                        'min_object_coverage': 0.7,
-                        'max_sample_coverage': 1.0,
+                        'min_jaccard_overlap': 0.9,
                         },
                 'max_trials': 50,
-                'max_sample': 3,
+                'max_sample': 1,
         },
         {
                 'sampler': {
@@ -159,66 +141,10 @@ batch_sampler = [
                         'max_aspect_ratio': 2.0,
                         },
                 'sample_constraint': {
-                        'min_object_coverage': 0.7,
-                        'max_sample_coverage': 0.7,
-                        },
-                'max_trials': 100,
-                'max_sample': 6,
-        },
-        {
-                'sampler': {
-                        'min_scale': 0.3,
-                        'max_scale': 1.0,
-                        'min_aspect_ratio': 0.5,
-                        'max_aspect_ratio': 2.0,
-                        },
-                'sample_constraint': {
-                        'min_object_coverage': 0.7,
-                        'max_sample_coverage': 0.5,
-                        },
-                'max_trials': 100,
-                'max_sample': 6,
-        },
-        {
-                'sampler': {
-                        'min_scale': 0.3,
-                        'max_scale': 1.0,
-                        'min_aspect_ratio': 0.5,
-                        'max_aspect_ratio': 2.0,
-                        },
-                'sample_constraint': {
-                        'min_object_coverage': 0.7,
-                        'max_sample_coverage': 0.3,
-                        },
-                'max_trials': 100,
-                'max_sample': 6,
-        },
-        {
-                'sampler': {
-                        'min_scale': 0.3,
-                        'max_scale': 1.0,
-                        'min_aspect_ratio': 0.5,
-                        'max_aspect_ratio': 2.0,
-                        },
-                'sample_constraint': {
-                        'min_object_coverage': 0.7,
-                        'max_sample_coverage': 0.1,
+                        'max_jaccard_overlap': 1.0,
                         },
                 'max_trials': 50,
-                'max_sample': 3,
-        },
-        {
-                'sampler': {
-                        'min_scale': 0.3,
-                        'max_scale': 1.0,
-                        'min_aspect_ratio': 0.5,
-                        'max_aspect_ratio': 2.0,
-                        },
-                'sample_constraint': {
-                        'max_object_coverage': 0.5,
-                        },
-                'max_trials': 100,
-                'max_sample': 6,
+                'max_sample': 1,
         },
         ]
 train_transform_param = {
@@ -257,9 +183,10 @@ test_transform_param = {
 use_batchnorm = False
 # Use different initial learning rate.
 if use_batchnorm:
-    base_lr = 0.4
+    base_lr = 0.04
 else:
-    base_lr = 0.00016
+    # A learning rate for batch_size = 1, num_gpus = 1.
+    base_lr = 0.00004
 
 # Modify the job name if you want.
 job_name = "SSD_{}".format(resize)
@@ -296,12 +223,15 @@ label_map_file = "data/VOC0712/labelmap_voc.prototxt"
 num_classes = 21
 share_location = True
 background_label_id=0
-train_on_diff_gt = False
-normalization_mode = P.Loss.BATCH_SIZE
+train_on_diff_gt = True
+normalization_mode = P.Loss.VALID
+code_type = P.PriorBox.CENTER_SIZE
+neg_pos_ratio = 3.
+loc_weight = (neg_pos_ratio + 1.) / 4.
 multibox_loss_param = {
     'loc_loss_type': P.MultiBoxLoss.SMOOTH_L1,
     'conf_loss_type': P.MultiBoxLoss.SOFTMAX,
-    'loc_weight': 1.0,
+    'loc_weight': loc_weight,
     'num_classes': num_classes,
     'share_location': share_location,
     'match_type': P.MultiBoxLoss.PER_PREDICTION,
@@ -310,9 +240,9 @@ multibox_loss_param = {
     'background_label_id': background_label_id,
     'use_difficult_gt': train_on_diff_gt,
     'do_neg_mining': True,
-    'neg_pos_ratio': 3,
+    'neg_pos_ratio': neg_pos_ratio,
     'neg_overlap': 0.5,
-    'code_type': P.PriorBox.CORNER,
+    'code_type': code_type,
     }
 loss_param = {
     'normalization': normalization_mode,
@@ -321,22 +251,32 @@ loss_param = {
 # parameters for generating priors.
 # minimum dimension of input image
 min_dim = 300
+# conv4_3 ==> 38 x 38
 # fc7 ==> 19 x 19
 # conv6_2 ==> 10 x 10
 # conv7_2 ==> 5 x 5
 # conv8_2 ==> 3 x 3
 # pool6 ==> 1 x 1
-mbox_source_layers = ['fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'pool6']
+mbox_source_layers = ['conv4_3', 'fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'pool6']
 # in percent %
 min_ratio = 20
-max_ratio = 100
-step = 18
+max_ratio = 95
+step = int(math.floor((max_ratio - min_ratio) / (len(mbox_source_layers) - 2)))
 min_sizes = []
 max_sizes = []
 for ratio in xrange(min_ratio, max_ratio, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-aspect_ratios = [[2], [2], [2, 3], [2, 3], [2]]
+min_sizes = [min_dim * 10 / 100.] + min_sizes
+max_sizes = [[]] + max_sizes
+aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3]]
+# L2 normalize conv4_3.
+normalizations = [20, -1, -1, -1, -1, -1]
+# variance used to encode/decode prior bboxes.
+if code_type == P.PriorBox.CENTER_SIZE:
+  prior_variance = [0.1, 0.1, 0.2, 0.2]
+else:
+  prior_variance = [0.1]
 flip = True
 clip = True
 
@@ -360,16 +300,15 @@ if num_gpus > 0:
   device_id = int(gpulist[0])
 
 if normalization_mode == P.Loss.BATCH_SIZE:
-  base_lr /= iter_size * num_gpus
+  base_lr /= iter_size
 elif normalization_mode == P.Loss.NONE:
-  base_lr /= batch_size
+  base_lr /= batch_size_per_device * iter_size
 elif normalization_mode == P.Loss.VALID:
-  # Roughly there are 8 matching bboxes per image.
-  base_lr *= 8. / iter_size * num_gpus
+  base_lr *= 25. / loc_weight / iter_size
 elif normalization_mode == P.Loss.FULL:
   # Roughly there are 2000 prior bboxes per image.
   # TODO(weiliu89): Estimate the exact # of priors.
-  base_lr *= 2000. / iter_size * num_gpus
+  base_lr *= 2000. / iter_size
 
 # Which layers to freeze (no backward) during training.
 freeze_layers = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2']
@@ -384,12 +323,12 @@ solver_param = {
     'base_lr': base_lr,
     'weight_decay': 0.0005,
     'lr_policy': "step",
-    'stepsize': 30000,
+    'stepsize': 40000,
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
-    'max_iter': 90000,
-    'snapshot': 30000,
+    'max_iter': 60000,
+    'snapshot': 40000,
     'display': 10,
     'average_loss': 10,
     'type': "SGD",
@@ -399,7 +338,7 @@ solver_param = {
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [test_iter],
-    'test_interval': 3000,
+    'test_interval': 10000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
@@ -410,7 +349,7 @@ det_out_param = {
     'num_classes': num_classes,
     'share_location': share_location,
     'background_label_id': background_label_id,
-    'nms_param': {'nms_threshold': 0.3, 'top_k': 400},
+    'nms_param': {'nms_threshold': 0.45, 'top_k': 400},
     'save_output_param': {
         'output_directory': output_result_dir,
         'output_name_prefix': "comp4_det_test_",
@@ -420,7 +359,8 @@ det_out_param = {
         'num_test_image': num_test_image,
         },
     'keep_top_k': 200,
-    'code_type': P.PriorBox.CORNER,
+    'confidence_threshold': 0.01,
+    'code_type': code_type,
     }
 
 # parameters for evaluating detection results.
@@ -448,14 +388,16 @@ net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size
         train=True, output_label=True, label_map_file=label_map_file,
         transform_param=train_transform_param, batch_sampler=batch_sampler)
 
-VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, freeze_layers=freeze_layers)
+VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
+    dropout=False, freeze_layers=freeze_layers)
 
 AddExtraLayers(net, use_batchnorm)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, num_classes=num_classes,
-        share_location=share_location, flip=flip, clip=clip)
+        aspect_ratios=aspect_ratios, normalizations=normalizations,
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
+        prior_variance=prior_variance, kernel_size=3, pad=1)
 
 # Create the MultiBoxLossLayer.
 name = "mbox_loss"
@@ -474,14 +416,16 @@ net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=test_batch_
         train=False, output_label=True, label_map_file=label_map_file,
         transform_param=test_transform_param)
 
-VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, freeze_layers=freeze_layers)
+VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
+    dropout=False, freeze_layers=freeze_layers)
 
 AddExtraLayers(net, use_batchnorm)
 
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, num_classes=num_classes,
-        share_location=share_location, flip=flip, clip=clip)
+        aspect_ratios=aspect_ratios, normalizations=normalizations,
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
+        prior_variance=prior_variance, kernel_size=3, pad=1)
 
 conf_name = "mbox_conf"
 if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:
