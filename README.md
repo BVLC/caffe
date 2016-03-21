@@ -173,6 +173,19 @@ SSD is an unified framework for object detection with a single network. You can 
 <img src="http://www.cs.unc.edu/~wliu/papers/ssd.png" alt="SSD Framework" width="600px">
 </p>
 
+<center>
+
+| System | VOC2007 test *mAP* | **FPS** (Titan X) | Number of Boxes |
+|:-------|:-----:|:-------:|:-------:|
+| [Faster R-CNN (VGG16)](https://github.com/ShaoqingRen/faster_rcnn) | 73.2 | 7 | 300 |
+| [Faster R-CNN (ZF)](https://github.com/ShaoqingRen/faster_rcnn) | 62.1 | 17 | 300 |
+| [YOLO](http://pjreddie.com/darknet/yolo/) | 63.4 | 45 | 98 |
+| [Fast YOLO](http://pjreddie.com/darknet/yolo/) | 52.7 | 155 | 98 |
+| SSD300 (VGG16) | 72.1 | 58 | 7308 |
+| SSD500 (VGG16) | **75.1** | 23 | 20097 |
+
+</center>
+
 ### Citing SSD
 
 Please cite SSD in your publications if it helps your research:
@@ -189,8 +202,6 @@ Please cite SSD in your publications if it helps your research:
 2. [Preparation](#preparation)
 3. [Train/Eval](#traineval)
 4. [Contact](#contact)
-
-:bangbang:**Disclaimer**: This software is still under active development. The result is not the optimal yet.
 
 ### Installation
 1. Get the code. We will call the directory that you cloned Caffe into `$CAFFE_ROOT`
@@ -250,7 +261,7 @@ Please cite SSD in your publications if it helps your research:
   #   - $CAFFE_ROOT/jobs/VGGNet/VOC0712/SSD_300x300/
   # and save temporary evaluation results in:
   #   - $HOME/data/VOCdevkit/results/VOC2007/SSD_300x300/
-  # It should reach 62.* mAP at 60k iterations.
+  # It should reach 72.* mAP at 60k iterations.
   python examples/ssd/ssd_pascal.py
   ```
 
