@@ -24,7 +24,8 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : data_(), diff_(), count_(0), capacity_(0) {}
+       : data_(), diff_(), count_(0), capacity_(0),
+         data_written_(false), diff_written_(false) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -265,6 +266,12 @@ class Blob {
 
   bool ShapeEquals(const BlobProto& other);
 
+  void ClearData();
+  void ClearDiff();
+
+  inline bool has_written_data() const { return data_written_; }
+  inline bool has_written_diff() const { return diff_written_; }
+
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
@@ -272,6 +279,8 @@ class Blob {
   vector<int> shape_;
   int count_;
   int capacity_;
+  bool data_written_;
+  bool diff_written_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
