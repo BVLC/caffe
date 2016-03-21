@@ -8,6 +8,7 @@
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/layers/loss_layer.hpp"
+#include "caffe/layers/softmax_layer.hpp"
 
 namespace caffe {
 
@@ -60,6 +61,12 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   virtual inline int MinBottomBlobs() const { return 2; }
   virtual inline int MaxBottomBlobs() const { return 3; }
 
+  // InfogainLossLayer computes softmax prob internally.
+  // optional second "top" outputs the softmax prob
+  virtual inline int ExactNumTopBlobs() const { return -1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
+
   virtual inline const char* type() const { return "InfogainLoss"; }
 
  protected:
@@ -102,7 +109,35 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /// Read the normalization mode parameter and compute the normalizer based
+  /// on the blob size.  If normalization_mode is VALID, the count of valid
+  /// outputs will be read from valid_count, unless it is -1 in which case
+  /// all outputs are assumed to be valid.
+  virtual Dtype get_normalizer(
+      LossParameter_NormalizationMode normalization_mode, int valid_count);
+  /// fill sum_rows_H_ according to matrix H
+  virtual void sum_rows_of_H(const Blob<Dtype>* H);
+
+  /// The internal SoftmaxLayer used to map predictions to a distribution.
+  shared_ptr<Layer<Dtype> > softmax_layer_;
+  /// prob stores the output probability predictions from the SoftmaxLayer.
+  Blob<Dtype> prob_;
+  /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_bottom_vec_;
+  /// top vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_top_vec_;
+
   Blob<Dtype> infogain_;
+  Blob<Dtype> sum_rows_H_;  // cache the row sums of H.
+
+  /// Whether to ignore instances with a certain label.
+  bool has_ignore_label_;
+  /// The label indicating that an instance should be ignored.
+  int ignore_label_;
+  /// How to normalize the output loss.
+  LossParameter_NormalizationMode normalization_;
+
+  int infogain_axis_, outer_num_, inner_num_, num_labels_;
 };
 
 }  // namespace caffe
