@@ -587,6 +587,11 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
+    } else {
+      const vector<Blob<Dtype>*>& bottoms = bottom_vecs_[i];
+      for (int j = 0; j < bottoms.size(); ++j) {
+        if (bottoms[j]->has_written_diff()) { bottoms[j]->ClearDiff(); }
+      }
     }
   }
 }
@@ -923,21 +928,7 @@ void Net<Dtype>::Update() {
 template <typename Dtype>
 void Net<Dtype>::ClearParamDiffs() {
   for (int i = 0; i < learnable_params_.size(); ++i) {
-    Blob<Dtype>* blob = learnable_params_[i];
-    switch (Caffe::mode()) {
-    case Caffe::CPU:
-      caffe_set(blob->count(), static_cast<Dtype>(0),
-                blob->mutable_cpu_diff());
-      break;
-    case Caffe::GPU:
-#ifndef CPU_ONLY
-      caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
-                    blob->mutable_gpu_diff());
-#else
-      NO_GPU;
-#endif
-      break;
-    }
+    learnable_params_[i]->ClearDiff();
   }
 }
 
