@@ -492,6 +492,16 @@ void Caffe::SetDevice(const int device_id) {
   }
 
   Get().default_device_ = GetDevice(0, true);
+#if defined(USE_GREENTEA) && defined(USE_FFT)
+  Get().cl_fft_state_.setup();
+#endif
+}
+
+// Should call explicitly for OCL + FFT
+void Caffe::TeardownDevice(const int device_id) {
+#if defined(USE_GREENTEA) &&defined(USE_FFT)
+  Get().cl_fft_state_.teardown();
+#endif
 }
 
 // TODO: Fix this for the new backend
