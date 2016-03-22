@@ -99,7 +99,7 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   ss << "#undef TYPE" << "\n\n";  // NOLINT
   ss << "#define TYPE TYPE_DOUBLE" << "\n\n";  // NOLINT
   for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {
-    if(cl_kernel_names[i] != std::string("fft")) {
+    if (cl_kernel_names[i] != std::string("fft")) {
       ss << cl_kernels[i] << "\n\n";
     }
   }

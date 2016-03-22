@@ -120,7 +120,7 @@ inline int_tp CAFFE_GET_BLOCKS(const int_tp N) {
       << caffe::clfftGetErrorString(status); \
   } while (0)
 
-#endif //USE_FFT
+#endif  // USE_FFT
 
 namespace caffe {
 
@@ -149,7 +149,7 @@ inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N, const int lws) {
 }
 
 }  // namespace caffe
-#endif //USE_GRREENTEA
+#endif  // USE_GRREENTEA
 #endif  // !CPU_ONLY
 
 #endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_

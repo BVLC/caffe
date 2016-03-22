@@ -50,7 +50,7 @@ class ClFFTState {
 
 }  // namespace caffe
 
-#endif //USE_GREENTEA && USE_FFT
-#endif //CPU_ONLY
+#endif  // USE_GREENTEA && USE_FFT
+#endif  // CPU_ONLY
 #endif  // CAFFE_UTIL_CL_FFT_HELPER_H_
 

@@ -157,7 +157,7 @@ echo "  ss << \"#define TYPE TYPE_DOUBLE\" << \"\\n\\n\";  // NOLINT" >> $SOURCE
 
 shopt -s nullglob
 echo "  for (int i = 0; i < std::extent<decltype(cl_kernels)>::value; ++i) {" >> $SOURCE
-echo "    if(cl_kernel_names[i] != std::string(\"fft\")) {" >> $SOURCE
+echo "    if (cl_kernel_names[i] != std::string(\"fft\")) {" >> $SOURCE
 echo "      ss << cl_kernels[i] << \"\n\n\";" >> $SOURCE
 echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE

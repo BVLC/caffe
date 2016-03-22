@@ -5,10 +5,10 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/layers/conv_fft_layer.hpp"
 #include "caffe/util/fft.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/layers/conv_fft_layer.hpp"
 
 namespace caffe {
 
@@ -97,7 +97,6 @@ void ConvolutionLayerFFT<Dtype>::fft_setup(const vector<Blob<Dtype>*>& bottom,
       fft_gpu_setup();
 #endif
       break;
-
   }
 }
 
@@ -199,9 +198,7 @@ void ConvolutionLayerFFT<Dtype>::fft_compute_weights() {
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
-                                                      int bottom_data_offset,
-                                                      Dtype* top_data,
-                                                      int top_data_offset, int n) {
+         int bottom_data_offset, Dtype* top_data, int top_data_offset, int n) {
   // clear buffer
   caffe_memset((this->num_output_ * fft_map_complex_size_ *
       sizeof(std::complex<Dtype>)), 0., fft_map_out_complex_);
@@ -282,8 +279,9 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft(const vector<Blob<Dtype>*>& bottom,
-                                                 const vector<Blob<Dtype>*>& top) {
+void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft(
+         const vector<Blob<Dtype>*>& bottom,
+         const vector<Blob<Dtype>*>& top) {
   fft_compute_weights();
 
   for (int i = 0; i < bottom.size(); ++i) {
@@ -297,15 +295,17 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft(const vector<Blob<Dtype>*>& bot
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                                             const vector<Blob<Dtype>*>& top) {
+void ConvolutionLayerFFT<Dtype>::Forward_cpu(
+         const vector<Blob<Dtype>*>& bottom,
+         const vector<Blob<Dtype>*>& top) {
   Forward_cpu_fft(bottom, top);
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(const vector<Blob<Dtype>*>& bottom,
-                                                       const vector<Blob<Dtype>*>& top,
-                                                       const Dtype* weight, int i, int n) {
+void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(
+         const vector<Blob<Dtype>*>& bottom,
+         const vector<Blob<Dtype>*>& top,
+         const Dtype* weight, int i, int n) {
   const Dtype* top_diff = top[i]->cpu_diff();
   Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
 
@@ -379,9 +379,10 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(const vector<Blob<Dtype>*
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-                                              const vector<bool>& propagate_down,
-                                              const vector<Blob<Dtype>*>& bottom) {
+void ConvolutionLayerFFT<Dtype>::Backward_cpu(
+         const vector<Blob<Dtype>*>& top,
+         const vector<bool>& propagate_down,
+         const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   if (this->param_propagate_down_[0]) {

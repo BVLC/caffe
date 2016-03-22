@@ -172,7 +172,6 @@ clfftPlanHandle ClFFTState::createOutOfPlaceManyPlanHandle(int height,
     LOG(INFO) << "clfft does not setup.";
     return (clfftPlanHandle)NULL;
   }
-  //ClState& state = Caffe::cl_state();
   viennacl::ocl::context &ctx = viennacl::ocl::current_context();
   viennacl::ocl::command_queue &queue = ctx.get_queue();
 
@@ -181,7 +180,8 @@ clfftPlanHandle ClFFTState::createOutOfPlaceManyPlanHandle(int height,
   int idist, odist;
   size_t instrides[2], outstrides[2];
   size_t lengths[2] = { (size_t)width, (size_t)height };
-  CLFFT_CHECK(clfftCreateDefaultPlan(&handle, ctx.handle().get(), CLFFT_2D, lengths));
+  CLFFT_CHECK(clfftCreateDefaultPlan(&handle, ctx.handle().get(),
+              CLFFT_2D, lengths));
 
   if (CLFFT_FORWARD == dir) {  // FFT plan handle
     idist = height * width;
@@ -215,7 +215,9 @@ clfftPlanHandle ClFFTState::createOutOfPlaceManyPlanHandle(int height,
   CLFFT_CHECK(clfftSetPlanDistance(handle, idist, odist));
   CLFFT_CHECK(clfftSetPlanInStride(handle, CLFFT_2D, instrides));
   CLFFT_CHECK(clfftSetPlanOutStride(handle, CLFFT_2D, outstrides));
-  CLFFT_CHECK(clfftBakePlan(handle, 1, (cl_command_queue*)&(queue.handle().get()), NULL, NULL));
+  CLFFT_CHECK(clfftBakePlan(handle, 1,
+              const_cast<cl_command_queue *>(&(queue.handle().get())),
+              NULL, NULL));
 
   return handle;
 }
@@ -226,9 +228,6 @@ clfftPlanHandle ClFFTState::createInPlaceManyPlanHandle(int height, int width,
     LOG(INFO) << "clfft does not setup.";
     return (clfftPlanHandle)NULL;
   }
-  //ClState& state = Caffe::cl_state();
-  //cl_context ctx = state.get_context();
-  //cl_command_queue queue = state.get_command_queue();
   viennacl::ocl::context &ctx = viennacl::ocl::current_context();
   viennacl::ocl::command_queue &queue = ctx.get_queue();
 
@@ -237,7 +236,8 @@ clfftPlanHandle ClFFTState::createInPlaceManyPlanHandle(int height, int width,
   int idist, odist;
   size_t instrides[2], outstrides[2];
   size_t lengths[2] = { (size_t)width, (size_t)height };
-  CLFFT_CHECK(clfftCreateDefaultPlan(&handle, ctx.handle().get(), CLFFT_2D, lengths));
+  CLFFT_CHECK(clfftCreateDefaultPlan(&handle, ctx.handle().get(),
+              CLFFT_2D, lengths));
 
   if (CLFFT_FORWARD == dir) {  // FFT plan handle
     idist = height * 2*(width/2 + 1);
@@ -261,11 +261,12 @@ clfftPlanHandle ClFFTState::createInPlaceManyPlanHandle(int height, int width,
   CLFFT_CHECK(clfftSetPlanInStride(handle, CLFFT_2D, instrides));
   CLFFT_CHECK(clfftSetPlanOutStride(handle, CLFFT_2D, outstrides));
   CLFFT_CHECK(clfftSetPlanDistance(handle, idist, odist));
-  CLFFT_CHECK(clfftBakePlan(handle, 1, (cl_command_queue*)&(queue.handle().get()), NULL, NULL));
+  CLFFT_CHECK(clfftBakePlan(handle, 1,
+    const_cast<cl_command_queue*>(&(queue.handle().get())), NULL, NULL));
 
   return handle;
 }
 
 }  // namespace caffe
-#endif //USE_GREENTEA && USE_FFT
-#endif // CPU_ONLY
+#endif  // USE_GREENTEA && USE_FFT
+#endif  // CPU_ONLY

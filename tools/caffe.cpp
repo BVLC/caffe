@@ -133,7 +133,7 @@ int device_query() {
       caffe::Caffe::TeardownDevice(gpus[0]);
     }
   }
-#endif //USE_GREENTEA
+#endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
   }
   return 0;

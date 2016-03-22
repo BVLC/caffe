@@ -1,10 +1,11 @@
 #ifndef CPU_ONLY
-#include "caffe/util/fft.hpp"
-#if defined(USE_GREENTEA) && defined(USE_FFT)
 #include <algorithm>
 #include <vector>
+#include "caffe/common.hpp"
+#if defined(USE_GREENTEA) && defined(USE_FFT)
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/fft.hpp"
 
 #include "caffe/layers/conv_fft_layer.hpp"
 
@@ -41,7 +42,8 @@ void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() {
   int num_weights = this->num_output_ * (this->channels_ / this->group_);
   int tmpMax = std::max(this->num_output_, this->channels_);
   size_t fft_gpu_map_in_real_bytes = fft_map_real_size_ * sizeof(Dtype);
-  size_t fft_gpu_map_in_complex_bytes = fft_map_complex_size_ * sizeof(DtypeComplex<Dtype>);
+  size_t fft_gpu_map_in_complex_bytes = fft_map_complex_size_ *
+                                        sizeof(DtypeComplex<Dtype>);
   size_t fft_gpu_map_out_complex_bytes = tmpMax * fft_gpu_map_in_complex_bytes;
   size_t fft_gpu_map_out_real_bytes = tmpMax * fft_gpu_map_in_real_bytes;
   size_t fft_gpu_weights_complex_bytes =
@@ -59,26 +61,30 @@ void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() {
             << ((Dtype)layerMemoryBytes / (1024.f * 1024.f)) << " MB";
 
   cl_int cl_err;
-  fft_gpu_weights_complex_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_weights_complex_bytes, NULL, &cl_err);
+  fft_gpu_weights_complex_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_weights_complex_bytes, NULL, &cl_err);
 #ifdef COMPLEX_NULT_CONJ_RESHAPE
-  fft_gpu_weights_complex_reshape_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_weights_complex_bytes, NULL, &cl_err);
+  fft_gpu_weights_complex_reshape_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_weights_complex_bytes, NULL, &cl_err);
 #endif
-  fft_gpu_map_in_real_all_channels_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_map_in_real_bytes * this->channels_, NULL, &cl_err);
-  fft_gpu_map_in_complex_all_channels_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_map_in_complex_bytes * this->channels_, NULL, &cl_err);
+  fft_gpu_map_in_real_all_channels_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_map_in_real_bytes * this->channels_,
+      NULL, &cl_err);
+  fft_gpu_map_in_complex_all_channels_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_map_in_complex_bytes * this->channels_,
+      NULL, &cl_err);
 
-  fft_gpu_map_in_real_all_num_output_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_map_in_real_bytes * this->num_output_, NULL, &cl_err);
-  fft_gpu_map_in_complex_all_num_output_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_map_in_complex_bytes * this->num_output_, NULL, &cl_err);
+  fft_gpu_map_in_real_all_num_output_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_map_in_real_bytes * this->num_output_, NULL,
+      &cl_err);
+  fft_gpu_map_in_complex_all_num_output_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_map_in_complex_bytes * this->num_output_,
+      NULL, &cl_err);
 
-  fft_gpu_map_out_complex_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_map_out_complex_bytes, NULL, &cl_err);
-  fft_gpu_map_out_real_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      fft_gpu_map_out_real_bytes, NULL, &cl_err);
+  fft_gpu_map_out_complex_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_map_out_complex_bytes, NULL, &cl_err);
+  fft_gpu_map_out_real_ = clCreateBuffer(ctx.handle().get(),
+      CL_MEM_READ_WRITE, fft_gpu_map_out_real_bytes, NULL, &cl_err);
 
   ClFFTState& fft_state = Caffe::cl_fft_state();
   // FFT plan for weights
@@ -151,9 +157,8 @@ void ConvolutionLayerFFT<Dtype>::fft_gpu_compute_weights() {
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft_task(const Dtype* bottom_data,
-                                                      int bottom_data_offset, Dtype* top_data,
-                                                      int top_data_offset, int n,
-                                                      int ch_gr, int out_gr) {
+         int bottom_data_offset, Dtype* top_data, int top_data_offset, int n,
+         int ch_gr, int out_gr) {
   // Clear buffer
   clear_gpu_fft_buffer(fft_gpu_map_out_complex_,
       this->num_output_ * fft_map_complex_size_ * sizeof(DtypeComplex<Dtype>));
@@ -285,8 +290,9 @@ void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft_task(const Dtype* bottom_data,
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft(const vector<Blob<Dtype>*>& bottom,
-                                                 const vector<Blob<Dtype>*>& top) {
+void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft(
+         const vector<Blob<Dtype>*>& bottom,
+         const vector<Blob<Dtype>*>& top) {
   fft_gpu_compute_weights();
 
   int ch_gr = this->channels_ / this->group_;
@@ -310,10 +316,11 @@ void ConvolutionLayerFFT<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(const vector<Blob<Dtype>*>& bottom,
-                                                       const vector<Blob<Dtype>*>& top,
-                                                       const Dtype* weight, int i, int n,
-                                                       int ch_gr, int out_gr) {
+void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
+         const vector<Blob<Dtype>*>& bottom,
+         const vector<Blob<Dtype>*>& top,
+         const Dtype* weight, int i, int n,
+         int ch_gr, int out_gr) {
   const Dtype* top_diff = top[i]->gpu_diff();
   Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
 
@@ -396,14 +403,16 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(const vector<Blob<Dtype>*
 }
 
 template <typename Dtype>
-void ConvolutionLayerFFT<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-                                              const vector<bool>& propagate_down,
-                                              const vector<Blob<Dtype>*>& bottom) {
+void ConvolutionLayerFFT<Dtype>::Backward_gpu(
+         const vector<Blob<Dtype>*>& top,
+         const vector<bool>& propagate_down,
+         const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 
   if (this->param_propagate_down_[0]) {
-    greentea_gpu_set(this->device_->id(), this->blobs_[0]->count(), Dtype(0), (cl_mem)weight_diff, Dtype(0));
+    greentea_gpu_set(this->device_->id(), this->blobs_[0]->count(), Dtype(0),
+                     (cl_mem)weight_diff, Dtype(0));
   }
   if (this->bias_term_ && this->param_propagate_down_[1]) {
     greentea_gpu_set(this->device_->id(), this->blobs_[1]->count(), Dtype(0),
@@ -467,57 +476,51 @@ template void ConvolutionLayerFFT<float>::Backward_gpu_fft_task(
 
 // double instantiation
 template<>
-void ConvolutionLayerFFT<double>::fft_gpu_setup()
-{
+void ConvolutionLayerFFT<double>::fft_gpu_setup() {
   NOT_IMPLEMENTED;
 }
 
 template<>
-void ConvolutionLayerFFT<double>::fft_gpu_clean()
-{
+void ConvolutionLayerFFT<double>::fft_gpu_clean() {
   NOT_IMPLEMENTED;
 }
 
 template<>
 void ConvolutionLayerFFT<double>::Forward_gpu_fft(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top)
-{
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
 }
 template<>
 void ConvolutionLayerFFT<double>::Forward_gpu_fft_task(
     const double *bottom_data, int bottom_data_offset, double* top_data,
-    int top_data_offset, int n, int ch_gr, int out_gr)
-{
+    int top_data_offset, int n, int ch_gr, int out_gr) {
   NOT_IMPLEMENTED;
 }
 template<>
-void ConvolutionLayerFFT<double>::fft_gpu_compute_weights()
-{
+void ConvolutionLayerFFT<double>::fft_gpu_compute_weights() {
   NOT_IMPLEMENTED;
 }
 template<> void ConvolutionLayerFFT<double>::Backward_gpu_fft_task(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top,
-    const double* weight, int i, int n, int ch_gr, int out_gr)
-{
+    const double* weight, int i, int n, int ch_gr, int out_gr) {
   NOT_IMPLEMENTED;
 }
 template <>
-void ConvolutionLayerFFT<double>::Forward_gpu(const vector<Blob<double>*>& bottom,
-                                             const vector<Blob<double>*>& top)
-{
+void ConvolutionLayerFFT<double>::Forward_gpu(
+         const vector<Blob<double>*>& bottom,
+         const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
 }
 template <>
-void ConvolutionLayerFFT<double>::Backward_gpu(const vector<Blob<double>*>& top,
-                                              const vector<bool>& propagate_down,
-                                              const vector<Blob<double>*>& bottom)
-{
+void ConvolutionLayerFFT<double>::Backward_gpu(
+         const vector<Blob<double>*>& top,
+         const vector<bool>& propagate_down,
+         const vector<Blob<double>*>& bottom) {
   NOT_IMPLEMENTED;
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerFFT);
 
 }  // namespace caffe
-#endif // USE_GREENTEA && USE_FFT
+#endif  // USE_GREENTEA && USE_FFT
 #endif  // !CPU_ONLY
