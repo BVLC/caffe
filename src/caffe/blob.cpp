@@ -39,7 +39,6 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
     diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
-    data_written_ = false;
     diff_written_ = false;
   }
 }
@@ -90,7 +89,6 @@ template <typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   data_->set_cpu_data(data);
-  data_written_ = true;
 }
 
 template <typename Dtype>
@@ -114,14 +112,12 @@ const Dtype* Blob<Dtype>::gpu_diff() const {
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
-  data_written_ = true;
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
-  data_written_ = true;
   return static_cast<Dtype*>(data_->mutable_gpu_data());
 }
 
@@ -143,7 +139,6 @@ template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
-  data_written_ = other.has_written_data();
 }
 
 template <typename Dtype>
@@ -154,29 +149,9 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::ClearData() {
-  switch (data_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    caffe_set(count_, Dtype(0), static_cast<Dtype*>(data_->mutable_cpu_data()));
-    break;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
-    caffe_gpu_set(count_, Dtype(0),
-                  static_cast<Dtype*>(data_->mutable_gpu_data()));
-#else
-    NO_GPU;
-#endif
-    break;
-  default:
-    LOG(FATAL) << "Syncedmem not initialized.";
-  }
-  data_written_ = false;
-}
-
-template <typename Dtype>
 void Blob<Dtype>::ClearDiff() {
   switch (diff_->head()) {
+  case SyncedMemory::UNINITIALIZED:
   case SyncedMemory::HEAD_AT_CPU:
     caffe_set(count_, Dtype(0), static_cast<Dtype*>(diff_->mutable_cpu_data()));
     break;
@@ -190,7 +165,7 @@ void Blob<Dtype>::ClearDiff() {
 #endif
     break;
   default:
-    LOG(FATAL) << "Syncedmem not initialized.";
+    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
   diff_written_ = false;
 }
@@ -478,7 +453,6 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     } else {
       caffe_copy(count_, source.gpu_data(),
           static_cast<Dtype*>(data_->mutable_gpu_data()));
-      data_written_ = source.has_written_data();
     }
     break;
   case Caffe::CPU:
@@ -489,7 +463,6 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     } else {
       caffe_copy(count_, source.cpu_data(),
           static_cast<Dtype*>(data_->mutable_cpu_data()));
-      data_written_ = source.has_written_data();
     }
     break;
   default:
