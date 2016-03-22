@@ -154,7 +154,7 @@ class Caffe {
 #endif  // USE_CUDA
 #if defined(USE_GREENTEA) && defined(USE_FFT)
   inline static ClFFTState& cl_fft_state() { return Get().cl_fft_state_; }
-#endif //USE_GREENTEA
+#endif  // USE_GREENTEA
 #endif  // !CPU_ONLY
 
   // Returns the mode: running on CPU or GPU.

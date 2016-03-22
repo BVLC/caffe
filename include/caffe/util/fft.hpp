@@ -82,9 +82,9 @@ void fft_gpu_copy2buffer_in(Dtype* map_out, const Dtype* map_in,
     int stride_h, int stride_w, int pad_h, int pad_w);
 */
 template <typename Dtype>
-void fft_gpu_copy2buffer_in_2D(Dtype* map_out, const Dtype* map_in, int in_offset,
-    int channels, int height_out, int width_out, int height, int width,
-    int stride_h, int stride_w, int pad_h, int pad_w);
+void fft_gpu_copy2buffer_in_2D(Dtype* map_out, const Dtype* map_in,
+    int in_offset, int channels, int height_out, int width_out, int height,
+    int width, int stride_h, int stride_w, int pad_h, int pad_w);
 /*template <typename Dtype>
 void fft_gpu_copy2buffer_out_forward(Dtype* map_out, const Dtype* map_in,
     int height_out, int width_out, int fft_height, int fft_width,
@@ -92,10 +92,9 @@ void fft_gpu_copy2buffer_out_forward(Dtype* map_out, const Dtype* map_in,
     int stride_h, int stride_w, int pad_h, int pad_w);
 */
 template <typename Dtype>
-void fft_gpu_copy2buffer_out_forward_2D(Dtype* map_out, int out_offset, const Dtype* map_in,
-    int num_output,
-    int height_out, int width_out, int fft_height, int fft_width,
-    int kernel_center_h, int kernel_center_w,
+void fft_gpu_copy2buffer_out_forward_2D(Dtype* map_out, int out_offset,
+    const Dtype* map_in, int num_output, int height_out, int width_out,
+    int fft_height, int fft_width, int kernel_center_h, int kernel_center_w,
     int stride_h, int stride_w, int pad_h, int pad_w);
 template <typename Dtype>
 void fft_gpu_copy2buffer_out_backward(Dtype* map_out, const Dtype* map_in,
@@ -103,10 +102,9 @@ void fft_gpu_copy2buffer_out_backward(Dtype* map_out, const Dtype* map_in,
     int kernel_center_h, int kernel_center_w,
     int stride_h, int stride_w, int pad_h, int pad_w);
 template <typename Dtype>
-void fft_gpu_copy2buffer_out_backward_2D(Dtype* map_out, int out_offset, const Dtype* map_in,
-    int channels,
-    int height_out, int width_out, int fft_height, int fft_width,
-    int kernel_center_h, int kernel_center_w,
+void fft_gpu_copy2buffer_out_backward_2D(Dtype* map_out, int out_offset,
+    const Dtype* map_in, int channels, int height_out, int width_out,
+    int fft_height, int fft_width, int kernel_center_h, int kernel_center_w,
     int stride_h, int stride_w, int pad_h, int pad_w);
 template <typename Dtype>
 void caffe_gpu_elementMulConj_1D(DtypeComplex<Dtype>* dst,
@@ -118,7 +116,8 @@ void caffe_gpu_elementMulConj_Reshape(DtypeComplex<Dtype>* dst,
     const int out_gr, const int map_size, const int ch_gr);
 template <typename Dtype>
 void caffe_gpu_elementMulConj_2D(DtypeComplex<Dtype>* dst, int dst_offset,
-    const DtypeComplex<Dtype>* src1, int src1_offset, const DtypeComplex<Dtype>* src2, int src2_offset,
+    const DtypeComplex<Dtype>* src1, int src1_offset,
+    const DtypeComplex<Dtype>* src2, int src2_offset,
     const int out_gr, const int map_size, const int ch_gr);
 template <typename Dtype>
 void caffe_gpu_elementMulConj_2D_SLM(DtypeComplex<Dtype>* dst,
@@ -155,8 +154,8 @@ void caffe_gpu_fft_execute_c2r(clfftPlanHandle plan,
 template <typename Dtype>
 void reshape_weights(DtypeComplex<Dtype>* dst, DtypeComplex<Dtype>* src,
     const int size, const int num_output, const int ch_gr);
-#endif //USE_GREENTEA
-#endif //CPU_ONLY
+#endif  // USE_GREENTEA
+#endif  // CPU_ONLY
 
 }  // namespace caffe
 

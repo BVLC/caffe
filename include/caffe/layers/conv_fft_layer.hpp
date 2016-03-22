@@ -5,8 +5,8 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/proto/caffe.pb.h"
 #include "caffe/layers/base_conv_layer.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 #ifdef USE_FFT
 #ifndef CPU_ONLY
@@ -47,10 +47,12 @@ class ConvolutionLayerFFT : public BaseConvolutionLayer<Dtype> {
                            const vector<Blob<Dtype>*>& top);
 #endif
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
 #ifdef USE_GREENTEA
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
 #endif
 
   virtual inline bool reverse_dimensions() { return false; }
