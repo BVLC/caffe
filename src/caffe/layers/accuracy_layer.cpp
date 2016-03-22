@@ -17,6 +17,7 @@ void AccuracyLayer<Dtype>::LayerSetUp(
   if (has_ignore_label_) {
     ignore_label_ = this->layer_param_.accuracy_param().ignore_label();
   }
+  threshold_ = this->layer_param_.accuracy_param().threshold();
 }
 
 template <typename Dtype>
@@ -80,7 +81,9 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
       // check if true label is in top k predictions
       for (int k = 0; k < top_k_; k++) {
-        if (bottom_data_vector[k].second == label_value) {
+        if (bottom_data_vector[k].second == label_value &&
+           (threshold_ <= 0 || bottom_data_vector[k].first >= threshold_ ))
+        {
           ++accuracy;
           if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
           break;

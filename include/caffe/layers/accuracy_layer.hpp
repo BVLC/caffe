@@ -86,6 +86,8 @@ class AccuracyLayer : public Layer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
+  /// threshold for inliers
+  float threshold_;
   /// Keeps counts of the number of samples per class.
   Blob<Dtype> nums_buffer_;
 };

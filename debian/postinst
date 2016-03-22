@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ldconfig /usr/lib/libcaffe.so
