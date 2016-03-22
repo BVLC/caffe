@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 145 (last added: crop_param)
+// LayerParameter next available layer-specific ID: 146 (last added: multi_stage_meanfield_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -396,6 +396,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional MultiStageMeanfieldParameter multi_stage_meanfield_param = 145;
 }
 
 // Message that stores parameters used to apply transformation
@@ -446,6 +447,26 @@ message LossParameter {
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+}
+
+// Message that stores parameters used by MultiStageMeanfieldLayer
+message MultiStageMeanfieldParameter {
+  enum Mode {
+    POTTS = 0;
+  }
+  optional Mode compatibility_mode = 1 [default = POTTS];
+  optional float threshold = 2;
+
+  required float theta_alpha = 3 [default = 10.];
+  required float theta_beta = 4 [default = 10.];
+  required float theta_gamma = 5 [default = 10.];
+
+  required uint32 num_iterations = 6 [default = 1];
+  optional float spatial_filter_weight = 7 [default = 1];
+  optional float bilateral_filter_weight = 8 [default = 1];
+
+  optional float forced_spatial_filter_weight = 9;
+  optional float forced_bilateral_filter_weight = 10;
 }
 
 // Messages that store parameters used by individual layer types follow, in
