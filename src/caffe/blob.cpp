@@ -148,6 +148,12 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
   diff_written_ = other.has_written_diff();
 }
 
+// The "ClearDiff" method is used for parameter blobs in a Net, which are stored
+// as Blob<float> or Blob<double> -- hence we do not define it for
+// Blob<int> or Blob<unsigned int>.
+template <> void Blob<unsigned int>::ClearDiff() { NOT_IMPLEMENTED; }
+template <> void Blob<int>::ClearDiff() { NOT_IMPLEMENTED; }
+
 template <typename Dtype>
 void Blob<Dtype>::ClearDiff() {
   switch (diff_->head()) {
