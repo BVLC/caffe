@@ -63,17 +63,24 @@ BLAS := atlas
 # We need to be able to find Python.h and numpy/arrayobject.h.
 PYTHON_INCLUDE := /usr/include/python2.7 \
 		/usr/lib/python2.7/dist-packages/numpy/core/include
-# Anaconda Python distribution is quite popular. Include path:
-# Verify anaconda location, sometimes it's in root.
-# ANACONDA_HOME := $(HOME)/anaconda
-# PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
-		# $(ANACONDA_HOME)/include/python2.7 \
-		# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include \
-
 # Uncomment to use Python 3 (default is Python 2)
 # PYTHON_LIBRARIES := boost_python3 python3.5m
 # PYTHON_INCLUDE := /usr/include/python3.5m \
 #                 /usr/lib/python3.5/dist-packages/numpy/core/include
+# 
+# Anaconda Python distribution is quite popular. Include path:
+# Verify anaconda location, sometimes it's in root.
+# ANACONDA_HOME := $(HOME)/anaconda
+# Anaconda for python2.7:
+# PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
+				# $(ANACONDA_HOME)/include/python2.7 \
+				# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include 
+# Uncomment PYTHON_INCLUDE below to use Anaconda python3
+# Anaconda for python 3:
+# PYTHON_LIBRARIES := boost_python3 python3.5m
+# PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
+				# $(ANACONDA_HOME)/include/python3.5m \
+        		# $(ANACONDA_HOME)/lib/python3.5/site-packages/numpy/core/include
 
 # We need to be able to find libpythonX.X.so or .dylib.
 PYTHON_LIB := /usr/lib
