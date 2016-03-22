@@ -55,7 +55,6 @@ bool caffe::isSupported<caffe::CPUDevice<double>>(void) {
   return true;
 }
 
-#if defined(USE_LEVELDB) && defined(USE_LMDB)
 template <>
 bool caffe::isSupported<caffe::TypeLevelDB>(void) {
   return true;
@@ -65,7 +64,7 @@ template <>
 bool caffe::isSupported<caffe::TypeLMDB>(void) {
   return true;
 }
-#endif
+
 #endif
 
 #ifndef CPU_ONLY
@@ -93,10 +92,5 @@ int main(int argc, char** argv) {
   Caffe::SetDevice(device);
 #endif
   // invoke the test.
-  int r =  RUN_ALL_TESTS();
-#ifdef USE_GREENTEA
-  // Call explicitly for OCL + FFT
-  caffe::Caffe::TeardownDevice(device);
-#endif
-  return r;
+  return RUN_ALL_TESTS();
 }

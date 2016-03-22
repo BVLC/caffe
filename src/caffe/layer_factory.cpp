@@ -7,6 +7,7 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
+#include "caffe/layers/conv_fft_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/conv_spatial_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
@@ -68,6 +69,11 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
     if (engine == ConvolutionParameter_Engine_INTEL_SPATIAL)
       return shared_ptr<Layer<Dtype> >
                (new ConvolutionLayerSpatial<Dtype>(param));
+#ifdef USE_FFT
+    if (engine == ConvolutionParameter_Engine_FFT)
+      return shared_ptr<Layer<Dtype> >
+               (new ConvolutionLayerFFT<Dtype>(param));
+#endif
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
