@@ -42,7 +42,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     const LayerParameter& param) {
   ConvolutionParameter conv_param = param.convolution_param();
   ConvolutionParameter_Engine engine = conv_param.engine();
-#ifdef USE_CUDNN
+#if defined(USE_CUDNN) || defined(USE_MKLDNN)
   bool use_dilation = false;
   for (int i = 0; i < conv_param.dilation_size(); ++i) {
     if (conv_param.dilation(i) > 1) {
@@ -55,6 +55,10 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 #ifdef USE_CUDNN
     if (!use_dilation) {
       engine = ConvolutionParameter_Engine_CUDNN;
+    }
+#elif defined(USE_MKLDNN)
+    if (!use_dilation) {
+      engine = ConvolutionParameter_Engine_MKLDNN;
     }
 #endif
   }
@@ -87,6 +91,8 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = PoolingParameter_Engine_CUDNN;
+#elif defined(USE_MKLDNN)
+    engine = PoolingParameter_Engine_MKLDNN;
 #endif
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
@@ -128,6 +134,8 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   if (engine == LRNParameter_Engine_DEFAULT) {
 #ifdef USE_CUDNN
     engine = LRNParameter_Engine_CUDNN;
+#elif defined(USE_MKLDNN)
+    engine = LRNParameter_Engine_MKLDNN;
 #else
     engine = LRNParameter_Engine_CAFFE;
 #endif
@@ -169,6 +177,8 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
     engine = ReLUParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = ReLUParameter_Engine_CUDNN;
+#elif defined(USE_MKLDNN)
+    engine = ReLUParameter_Engine_MKLDNN;
 #endif
   }
   if (engine == ReLUParameter_Engine_CAFFE) {

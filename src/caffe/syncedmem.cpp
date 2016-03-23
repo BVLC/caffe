@@ -99,15 +99,13 @@ const void* SyncedMemory::cpu_data() {
 
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
-#pragma omp critical
-  {
   if (own_cpu_data_) {
     CaffeFreeHost(cpu_ptr_, cpu_malloc_use_cuda_);
   }
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
-  }
+
 }
 
 const void* SyncedMemory::gpu_data() {
@@ -178,28 +176,24 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
     but (potentially) with different layout.
 */
 void SyncedMemory::set_prv_data(void* data, bool same_data) {
-#pragma omp critical
-  {
-    if(data != NULL) {
-      if (prv_ptr_ && own_prv_data_) {
-        CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
-      }
-      prv_ptr_ = data;
-      own_prv_data_ = false;
+  if(data != NULL) {
+    if (prv_ptr_ && own_prv_data_) {
+      CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
     }
-    else if(NULL == prv_ptr_) {
-      CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
-      caffe_memset(size_, 0, prv_ptr_);
-      own_prv_data_ = true;
-    }
-
-    // If it wasn't synced before, it won't be now.
-    if((head_ != HEAD_AT_PRV) && same_data)
-      head_ = SYNCED_PRV;
-    else
-      head_ = HEAD_AT_PRV;
-
+    prv_ptr_ = data;
+    own_prv_data_ = false;
   }
+  else if(NULL == prv_ptr_) {
+    CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
+    caffe_memset(size_, 0, prv_ptr_);
+    own_prv_data_ = true;
+  }
+
+  // If it wasn't synced before, it won't be now.
+  if((head_ != HEAD_AT_PRV) && same_data)
+    head_ = SYNCED_PRV;
+  else
+    head_ = HEAD_AT_PRV;
 }
 
 const void* SyncedMemory::prv_data() {

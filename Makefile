@@ -372,6 +372,27 @@ ifeq ($(BLAS), mkl)
 	MKLROOT ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
+
+	# detect support for mkl-dnn primitives
+	DUMMY_MKLDNN_BINARY := $(shell mktemp)
+	DUMMY_MKLDNN_FILE := $(shell mktemp).cpp
+	MKLDNN_DETECT_CODE = "\#include <mkl_dnn.h> \n int main() {return 0;}"
+
+	MKLDNN_DETECT_COMPILE_FLAGS = -I$(BLAS_INCLUDE)
+	MKLDNN_DETECT_COMPILE_COMMAND = $(CXX) $(DUMMY_MKLDNN_FILE) $(MKLDNN_DETECT_COMPILE_FLAGS) -o $(DUMMY_MKLDNN_BINARY) 2>/dev/null
+	MKLDNN_DETECT_COMMAND = echo $(MKLDNN_DETECT_CODE) > $(DUMMY_MKLDNN_FILE) && $(MKLDNN_DETECT_COMPILE_COMMAND) && echo 1 || echo 0
+	IS_MKLDNN_PRESENT = $(shell $(MKLDNN_DETECT_COMMAND))
+ 
+	ifeq ($(IS_MKLDNN_PRESENT), 1)
+		CXXFLAGS += -DMKLDNN_SUPPORTED
+		ifeq ($(USE_MKLDNN), 1)
+			CXXFLAGS += -DUSE_MKLDNN
+		endif
+	else
+		ifeq ($(USE_MKLDNN), 1)
+			undefine USE_MKLDNN
+		endif
+	endif
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
