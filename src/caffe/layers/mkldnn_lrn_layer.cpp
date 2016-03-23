@@ -69,6 +69,11 @@ void MklDnnLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     top[0]->Reshape(num_, channels_, height_, width_);
     break;
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    NOT_IMPLEMENTED;
+    break;
+  default:
+    LOG(FATAL) << "Unknown normalization region.";
   }
 }
 
@@ -78,6 +83,9 @@ void MklDnnLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     CrossChannelForward_cpu(bottom, top);
+    break;
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    NOT_IMPLEMENTED;
     break;
   default:
     LOG(FATAL) << "Unknown normalization region.";
@@ -150,6 +158,9 @@ void MklDnnLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     CrossChannelBackward_cpu(top, propagate_down, bottom);
+    break;
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    NOT_IMPLEMENTED;
     break;
   default:
     LOG(FATAL) << "Unknown normalization region.";
