@@ -141,18 +141,24 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                             static_cast<void*>(max_idx_.mutable_cpu_data());
   }
 
+  const int num_batches = bottom[0]->num();
+  const int num_channels = bottom[0]->channels();
+
 #ifdef _OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(2)
 #endif
-  for (int image = 0; image < bottom[0]->num(); ++image)
-    generator_func(bottom_data,
-                   top_data,
-                   top_count,
-                   image,
-                   image+1,
-                   mask,
-                   this,
-                   use_top_mask);
+  for (int image = 0; image < num_batches; ++image)
+    for (int channel = 0; channel < num_channels; ++channel)
+      generator_func(bottom_data,
+                     top_data,
+                     top_count,
+                     image,
+                     image+1,
+                     mask,
+                     channel,
+                     channel+1,
+                     this,
+                     use_top_mask);
 }
 
 template <typename Dtype>
@@ -179,17 +185,23 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                             static_cast<void*>(max_idx_.mutable_cpu_data());
   }
 
+  const int num_batches = bottom[0]->num();
+  const int num_channels = bottom[0]->channels();
+
 #ifdef _OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(2)
 #endif
-  for (int image = 0; image < bottom[0]->num(); ++image)
-    generator_func(top_diff,
-                   bottom_diff,
-                   image,
-                   image+1,
-                   use_top_mask,
-                   mask,
-                   this);
+  for (int image = 0; image < num_batches; ++image)
+    for (int channel = 0; channel < num_channels; ++channel)
+      generator_func(top_diff,
+                     bottom_diff,
+                     image,
+                     image+1,
+                     channel,
+                     channel+1,
+                     use_top_mask,
+                     mask,
+                     this);
 }
 
 
