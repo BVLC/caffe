@@ -64,23 +64,13 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
   int offset_concat_axis = 0;
   const int top_concat_axis = top[0]->shape(concat_axis_);
-#ifndef _OPENMP
   for (int i = 0; i < bottom.size(); ++i) {
-#else
-omp_lock_t lock;
-omp_init_lock(&lock);
-#pragma omp parallel for ordered
-  for (int i = 0; i < bottom.size(); ++i)
-#pragma omp ordered
-  {
-    omp_set_lock(&lock);
-#endif
     const Dtype* bottom_data = bottom[i]->cpu_data();
     const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
     const int offset_value = offset_concat_axis;
     offset_concat_axis += bottom_concat_axis;
 #ifdef _OPENMP
-    omp_unset_lock(&lock);
+  #pragma omp parallel for
 #endif
     for (int n = 0; n < num_concats_; ++n) {
       caffe_copy(bottom_concat_axis * concat_input_size_,
@@ -98,25 +88,15 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   int offset_concat_axis = 0;
   const int top_concat_axis = top[0]->shape(concat_axis_);
-#ifndef _OPENMP
   for (int i = 0; i < bottom.size(); ++i) {
-#else
-omp_lock_t lock;
-omp_init_lock(&lock);
-#pragma omp parallel for ordered
-  for (int i = 0; i < bottom.size(); ++i)
-#pragma omp ordered
-  {
-    omp_set_lock(&lock);
-#endif
     const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
     const int offset_value = offset_concat_axis;
     offset_concat_axis += bottom_concat_axis;
-#ifdef _OPENMP
-    omp_unset_lock(&lock);
-#endif
     if (propagate_down[i]) {
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
       for (int n = 0; n < num_concats_; ++n) {
         caffe_copy(bottom_concat_axis * concat_input_size_, top_diff +
             (n * top_concat_axis + offset_value) * concat_input_size_,
