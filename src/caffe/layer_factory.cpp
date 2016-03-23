@@ -14,7 +14,7 @@
 #include "caffe/layers/sigmoid_layer.hpp"
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
 #include "caffe/layers/mkldnn_layers.hpp"
 #endif
 #include "caffe/proto/caffe.pb.h"
@@ -68,7 +68,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     }
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
-#ifdef USE_MKLDNN    
+#ifdef MKLDNN_SUPPORTED    
   } else if (engine == ConvolutionParameter_Engine_MKLDNN) {
     return shared_ptr<Layer<Dtype> >(new MklDnnConvolutionLayer<Dtype>(param));
 #endif
@@ -109,7 +109,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
         return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
     }
 #endif
-#ifdef USE_MKLDNN    
+#ifdef MKLDNN_SUPPORTED    
   } else if (engine == PoolingParameter_Engine_MKLDNN) {
     return shared_ptr<Layer<Dtype> >(new MklDnnPoolingLayer<Dtype>(param));
 #endif
@@ -150,7 +150,7 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
       }
     }
 #endif
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
   } else if (engine == LRNParameter_Engine_MKLDNN) {
     return shared_ptr<Layer<Dtype> >(new MklDnnLRNLayer<Dtype>(param));
 #endif
@@ -177,7 +177,7 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   } else if (engine == ReLUParameter_Engine_CUDNN) {
     return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
 #endif
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
   } else if (engine == ReLUParameter_Engine_MKLDNN) {
     return shared_ptr<Layer<Dtype> >(new MklDnnReLULayer<Dtype>(param));
 #endif

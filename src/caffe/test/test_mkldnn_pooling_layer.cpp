@@ -1,4 +1,4 @@
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -611,4 +611,4 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAvePadded) {
 }
 #endif
 }  // namespace caffe
-#endif //#ifdef USE_MKLDNN
+#endif //#ifdef MKLDNN_SUPPORTED

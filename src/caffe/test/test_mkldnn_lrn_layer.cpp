@@ -1,4 +1,4 @@
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <vector>
 
@@ -250,4 +250,4 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientWithinChannel) {
 }
 #endif
 }  // namespace caffe
-#endif //#ifdef USE_MKLDNN
+#endif //#ifdef MKLDNN_SUPPORTED

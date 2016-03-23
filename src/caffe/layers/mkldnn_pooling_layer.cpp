@@ -1,4 +1,4 @@
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <cfloat>
 #include <vector>
@@ -358,4 +358,4 @@ STUB_GPU(MklDnnPoolingLayer);
 
 INSTANTIATE_CLASS(MklDnnPoolingLayer);
 }  // namespace caffe
-#endif //#ifdef USE_MKLDNN
+#endif //#ifdef MKLDNN_SUPPORTED

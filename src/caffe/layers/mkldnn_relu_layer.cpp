@@ -1,4 +1,4 @@
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
 #include <algorithm>
 #include <vector>
 
@@ -130,4 +130,4 @@ STUB_GPU(MklDnnReLULayer);
 
 INSTANTIATE_CLASS(MklDnnReLULayer);
 }  // namespace caffe
-#endif //#ifdef USE_MKLDNN
+#endif //#ifdef MKLDNN_SUPPORTED

@@ -1,4 +1,4 @@
-#ifdef USE_MKLDNN
+#ifdef MKLDNN_SUPPORTED
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -218,4 +218,4 @@ STUB_GPU_BACKWARD(MklDnnLRNLayer, CrossChannelBackward);
 
 INSTANTIATE_CLASS(MklDnnLRNLayer);
 }  // namespace caffe
-#endif //#ifdef USE_MKLDNN
+#endif //#ifdef MKLDNN_SUPPORTED
