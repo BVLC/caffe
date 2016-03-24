@@ -453,8 +453,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   void TestLeastSquaresUpdate(const Dtype learning_rate = 1.0,
       const Dtype weight_decay = 0.0, const Dtype momentum = 0.0,
       const int iter_to_check = 0) {
-    const int kNum = num_;
     const int kIterSize = 1;
+    const int kNum = num_;
     // Test over all numbers of devices.
     int available_devices = 1;
 #ifndef CPU_ONLY
@@ -465,7 +465,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     for (int devices = 1; devices <= available_devices; ++devices) {
       // Configure batch size for single / multi device equivalence.
       // Constant data is needed for multi device as for accumulation.
-      num_ = kNum * devices;
+      num_ = kNum * devices * devices;
 
       // Initialize the solver and run K (= iter_to_check) solver iterations
       // (on single device).
@@ -478,12 +478,15 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
           iter_to_check + 1, &updated_params);
 
       // Reinitialize the solver and run K+1 solver iterations.
-      num_ = kNum;
+      num_ = kNum * devices;
       RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
           iter_to_check + 1, kIterSize, devices);
 
       // Check that the solver's solution matches ours.
       CheckLeastSquaresUpdate(updated_params);
+
+      // Reset initial value of num_
+      num_ = kNum;
     }
   }
 

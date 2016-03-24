@@ -10,10 +10,9 @@
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
 
-#if defined(USE_LEVELDB) && defined(USE_LMDB)
+#if defined(USE_LEVELDB)
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
-#include <lmdb.h>
 #endif
 
 #include <stdint.h>
@@ -21,6 +20,10 @@
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
+
+#if defined(USE_LMDB)
+#include "caffe/util/db_lmdb.hpp"
+#endif
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/format.hpp"
@@ -93,7 +96,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     CHECK_EQ(mkdir(db_path, 0744), 0)
         << "mkdir " << db_path << "failed";
     CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
-    CHECK_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
+    CHECK_EQ(mdb_env_set_mapsize(mdb_env, caffe::db::LMDB_MAP_SIZE),
+             MDB_SUCCESS)
         << "mdb_env_set_mapsize failed";
     CHECK_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
         << "mdb_env_open failed";

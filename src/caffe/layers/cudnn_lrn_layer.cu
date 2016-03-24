@@ -12,7 +12,7 @@ void CuDNNLRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
 
   CUDNN_CHECK(cudnnLRNCrossChannelForward(
-        handle_, norm_desc_, CUDNN_LRN_CROSS_CHANNEL_DIM1,
+        Caffe::cudnn_handle(), norm_desc_, CUDNN_LRN_CROSS_CHANNEL_DIM1,
         cudnn::dataType<Dtype>::one,
         bottom_desc_, bottom_data,
         cudnn::dataType<Dtype>::zero,
@@ -28,7 +28,7 @@ void CuDNNLRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
   CUDNN_CHECK(cudnnLRNCrossChannelBackward(
-        handle_, norm_desc_, CUDNN_LRN_CROSS_CHANNEL_DIM1,
+        Caffe::cudnn_handle(), norm_desc_, CUDNN_LRN_CROSS_CHANNEL_DIM1,
         cudnn::dataType<Dtype>::one,
         top_desc_, top_data,
         top_desc_, top_diff,

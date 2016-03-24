@@ -10,7 +10,7 @@
 /* NVIDA cuDNN */
 #cmakedefine HAVE_CUDNN
 #cmakedefine USE_CUDNN
-
+ 
 /* NVIDA cuDNN */
 #cmakedefine CPU_ONLY
 

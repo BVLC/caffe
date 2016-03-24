@@ -57,6 +57,8 @@ class GPUParams : public Params<Dtype> {
   using Params<Dtype>::size_;
   using Params<Dtype>::data_;
   using Params<Dtype>::diff_;
+ private:
+  int buffer_device_;
 };
 
 class DevicePair {
@@ -97,6 +99,9 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   void Prepare(const vector<int>& gpus,
                vector<shared_ptr<P2PSync<Dtype> > >* syncs);
   inline const int initial_iter() const { return initial_iter_; }
+
+  // Divide the batch size by the number of solvers
+  static void divide_batch_size(NetParameter* net);
 
  protected:
   void on_start();

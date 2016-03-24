@@ -46,6 +46,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // the current NetState.
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
+  if (phase_ == TRAIN) {
+    caffe::P2PSync<Dtype>::divide_batch_size(&filtered_param);
+  }
   LOG_IF(INFO, Caffe::root_solver())
       << "Initializing net from parameters: " << std::endl
       << filtered_param.DebugString();
@@ -543,6 +546,9 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
+  for (int i = start; i <= end; ++i) {
+    layers_[i]->ForwardPassed(true);
+  }
   return loss;
 }
 
@@ -589,6 +595,19 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }
+  for (int i = start; i >= end; --i) {
+    layers_[i]->BackwardPassed(true);
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::InputDebugInfo(const int input_id) {
+  const Blob<Dtype>& blob = *net_input_blobs_[input_id];
+  const string& blob_name = blob_names_[net_input_blob_indices_[input_id]];
+  const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
+  LOG_IF(INFO, Caffe::root_solver())
+      << "    [Forward] "
+      << "Input " << blob_name << " data: " << data_abs_val_mean;
 }
 
 template <typename Dtype>

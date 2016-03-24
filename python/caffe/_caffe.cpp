@@ -26,6 +26,10 @@
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
 
+// Hack to convert macro to string
+#define STRINGIZE(m) #m
+#define STRINGIZE2(m) STRINGIZE(m)
+
 namespace bp = boost::python;
 
 namespace caffe {
@@ -213,7 +217,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
 
-  bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
+  bp::scope().attr("CAFFE_VERSION") = STRINGIZE2(CAFFE_VERSION);
 
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);

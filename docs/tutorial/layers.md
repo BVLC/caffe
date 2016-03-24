@@ -39,8 +39,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
     - `n * c_i * h_i * w_i`
 * Output
     - `n * c_o * h_o * w_o`, where `h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1` and `w_o` likewise.
-* Sample (as seen in `./models/bvlc_reference_caffenet/train_val.prototxt`)
-
+* Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
       layer {
         name: "conv1"
         type: "Convolution"

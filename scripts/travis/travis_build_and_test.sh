@@ -6,12 +6,17 @@ set -e
 MAKE="make --jobs=$NUM_THREADS --keep-going"
 
 if $WITH_CMAKE; then
-  mkdir build
+  mkdir -p build
   cd build
   CPU_ONLY=" -DCPU_ONLY=ON"
   if ! $WITH_CUDA; then
     CPU_ONLY=" -DCPU_ONLY=OFF"
   fi
+
+  if $WITH_CUDNN; then
+    CUDNN_ARGS=" -DUSE_CUDNN=ON "
+  fi
+
   PYTHON_ARGS=""
   if [ "$PYTHON_VERSION" = "3" ]; then
     PYTHON_ARGS="$PYTHON_ARGS -Dpython_version=3 -DBOOST_LIBRARYDIR=$CONDA_DIR/lib/"
@@ -21,7 +26,7 @@ if $WITH_CMAKE; then
   else
     IO_ARGS="-DUSE_OPENCV=OFF -DUSE_LMDB=OFF -DUSE_LEVELDB=OFF"
   fi
-  cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release $CPU_ONLY $PYTHON_ARGS -DCMAKE_INCLUDE_PATH="$CONDA_DIR/include/" -DCMAKE_LIBRARY_PATH="$CONDA_DIR/lib/" $IO_ARGS ..
+  cmake -DBUILD_python=ON -DCMAKE_BUILD_TYPE=Release $CPU_ONLY $CUDNN_ARGS $PYTHON_ARGS -DCMAKE_INCLUDE_PATH="$CONDA_DIR/include/" -DCMAKE_LIBRARY_PATH="$CONDA_DIR/lib/" $IO_ARGS ..
   $MAKE
   $MAKE pytest
   if ! $WITH_CUDA; then

@@ -8,6 +8,9 @@ env:
     - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true
     - WITH_CUDA=false WITH_CMAKE=false WITH_IO=false
     - WITH_CUDA=false WITH_CMAKE=true WITH_IO=false PYTHON_VERSION=3
+#  Currently there is no way to install cudnn via apt-get. Uncomment when it's available.
+#    - WITH_CUDA=true WITH_CMAKE=false WITH_IO=true WITH_CUDNN=true
+#    - WITH_CUDA=true WITH_CMAKE=true WITH_IO=true WITH_CUDNN=true
 
 language: cpp
 

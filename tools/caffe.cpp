@@ -13,7 +13,9 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/signal_handler.h"
+
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -63,6 +65,10 @@ class __Registerer_##func { \
 }; \
 __Registerer_##func g_registerer_##func; \
 }
+
+// Hack to convert macro to string
+#define STRINGIZE(m) #m
+#define STRINGIZE2(m) STRINGIZE(m)
 
 static BrewFunction GetBrewFunction(const caffe::string& name) {
   if (g_brew_map.count(name)) {
@@ -148,6 +154,7 @@ caffe::SolverAction::Enum GetRequestedAction(
     return caffe::SolverAction::NONE;
   }
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
+  return caffe::SolverAction::NONE;
 }
 
 // Train / Finetune a model.
@@ -220,6 +227,8 @@ int train() {
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+  // solver.reset();
   return 0;
 }
 RegisterBrewFunction(train);
@@ -246,6 +255,7 @@ int test() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TEST);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
@@ -312,6 +322,7 @@ int time() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
 
@@ -390,7 +401,7 @@ int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
-  gflags::SetVersionString(AS_STRING(CAFFE_VERSION));
+  gflags::SetVersionString(STRINGIZE2(CAFFE_VERSION));
   // Usage message.
   gflags::SetUsageMessage("command line brew\n"
       "usage: caffe <command> <args>\n\n"
@@ -401,6 +412,13 @@ int main(int argc, char** argv) {
       "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+
+
+  // initialize gpu memory arena
+  vector<int> gpus;
+  get_gpus(&gpus);
+  caffe::gpu_memory::arena arena(gpus, caffe::gpu_memory::DefaultPool, false);
+
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {
