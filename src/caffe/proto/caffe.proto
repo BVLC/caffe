@@ -466,7 +466,11 @@ message AccuracyParameter {
 
   // If specified, ignore instances with the given label.
   optional int32 ignore_label = 3;
+
+  // default: 0.0 (disabled, i.e., use Caffe's accuracy)
   optional float threshold = 4 [default = 0.0];
+  // default: 1 (softmax); 2 (hinge loss)
+  optional int32 loss_type = 5 [default = 1];
 }
 
 message ArgMaxParameter {

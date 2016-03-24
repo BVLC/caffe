@@ -11,6 +11,8 @@ template <typename Dtype>
 void AccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   top_k_ = this->layer_param_.accuracy_param().top_k();
+  threshold_ = this->layer_param_.accuracy_param().threshold();
+  loss_type_ = this->layer_param_.accuracy_param().loss_type();
 
   has_ignore_label_ =
     this->layer_param_.accuracy_param().has_ignore_label();
@@ -79,17 +81,37 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       std::partial_sort(
           bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
           bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
-      // check if true label is in top k predictions
-      for (int k = 0; k < top_k_; k++) {
-        if (bottom_data_vector[k].second == label_value &&
-           (threshold_ <= 0 || bottom_data_vector[k].first >= threshold_ ))
-        {
-          ++accuracy;
-          if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
-          break;
+ 
+      // softmax with loss: check if true label is in top k predictions
+      if (loss_type_ == 1) {
+        for (int k = 0; k < top_k_; k++) {          
+          if (bottom_data_vector[k].second == label_value &&
+              (threshold_ <= 0 || bottom_data_vector[k].first >= threshold_)) {  
+            ++accuracy;
+            if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
+            break;
+          }
         }
+        ++count;
       }
-      ++count;
+      // hinge loss
+      else if (loss_type_ == 2) {
+        CHECK_EQ(bottom_data_vector.size(), top_k_);
+        for (int k = 0; k < top_k_; k++) {          
+          if ( (bottom_data_vector[k].second == label_value &&
+                bottom_data_vector[k].first >= threshold_) ||
+               (bottom_data_vector[k].second != label_value &&
+                bottom_data_vector[k].first <= -1.0f * threshold_) ) {  
+            ++accuracy;
+            if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
+          }
+        }
+        ++count;
+        ++count;
+      }
+      else {
+        CHECK_EQ(1, 0);
+      }
     }
   }
 
