@@ -388,10 +388,6 @@ ifeq ($(BLAS), mkl)
 		ifeq ($(USE_MKLDNN), 1)
 			CXXFLAGS += -DUSE_MKLDNN
 		endif
-	else
-		ifeq ($(USE_MKLDNN), 1)
-			undefine USE_MKLDNN
-		endif
 	endif
 else ifeq ($(BLAS), open)
 	# OpenBLAS
