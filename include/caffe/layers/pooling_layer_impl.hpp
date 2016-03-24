@@ -31,7 +31,7 @@ class PoolingCodeGeneratorForward
   PoolingCodeGeneratorForward();
   ~PoolingCodeGeneratorForward();
 
-  typedef void (*Callback_t)(
+  typedef void (Callback_t)(
     const Dtype* bottom_data,
     Dtype* top_data,
     int top_count,
@@ -43,7 +43,7 @@ class PoolingCodeGeneratorForward
     PoolingLayer<Dtype>* layer,
     bool use_top_mask);
 
-  Callback_t Get_callback(
+  Callback_t* Get_callback(
     PoolingLayer<Dtype>* layer,
     Blob<Dtype>* top,
     bool use_top_mask);
@@ -62,6 +62,7 @@ class PoolingCodeGeneratorForward
     int64_t channel_end,
     PoolingLayer<Dtype>* layer,
     bool use_top_mask);
+  Callback_t* Callback;
   std::vector<int> Layer_output_shape_signature;
   bool Use_top_mask;
   PoolingParameter_PoolMethod Method;
@@ -77,7 +78,7 @@ class PoolingCodeGeneratorBackward
   PoolingCodeGeneratorBackward();
   ~PoolingCodeGeneratorBackward();
 
-  typedef void (*Callback_t)(
+  typedef void (Callback_t)(
     const Dtype* top_diff,
     Dtype* bottom_diff,
     int batch_start,
@@ -88,7 +89,7 @@ class PoolingCodeGeneratorBackward
     const void* mask,
     PoolingLayer<Dtype>* layer);
 
-  Callback_t Get_callback(PoolingLayer<Dtype>* layer, Blob<Dtype>* top);
+  Callback_t* Get_callback(PoolingLayer<Dtype>* layer, Blob<Dtype>* top);
 
  private:
   void Create_callback(PoolingLayer<Dtype>* layer);

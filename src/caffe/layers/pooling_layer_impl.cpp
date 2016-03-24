@@ -16,7 +16,7 @@ template <typename Dtype>
 PoolingCodeGeneratorForward<Dtype>::~PoolingCodeGeneratorForward() {}
 
 template <typename Dtype>
-typename PoolingCodeGeneratorForward<Dtype>::Callback_t
+typename PoolingCodeGeneratorForward<Dtype>::Callback_t*
     PoolingCodeGeneratorForward<Dtype>::Get_callback(
   PoolingLayer<Dtype>* layer,
   Blob<Dtype>* top,
@@ -164,7 +164,7 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
 template <typename Dtype>
 void PoolingCodeGeneratorForward<Dtype>::Create_callback(
   PoolingLayer<Dtype>* layer) {
-  Callback = &Naive;
+  Callback = Naive;
 }
 
 #if defined __x86_64__ || defined _M_X64
@@ -655,9 +655,9 @@ void PoolingCodeGeneratorForward<float>::Create_callback(
     pop(rbp);
     ret();
 
-    Callback = getCode<Callback_t>();
+    Callback = getCode<Callback_t*>();
   } else {  // Take naive path.
-    Callback = &Naive;
+    Callback = Naive;
   }
 }
 #endif
@@ -672,7 +672,7 @@ PoolingCodeGeneratorBackward<Dtype>::~PoolingCodeGeneratorBackward() {
 }
 
 template <typename Dtype>
-typename PoolingCodeGeneratorBackward<Dtype>::Callback_t
+typename PoolingCodeGeneratorBackward<Dtype>::Callback_t*
   PoolingCodeGeneratorBackward<Dtype>::Get_callback(
     PoolingLayer<Dtype>* layer, Blob<Dtype>* top) {
   // Wrapper for lazy initialization.
@@ -800,7 +800,7 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
 template <typename Dtype>
 void PoolingCodeGeneratorBackward<Dtype>::Create_callback(
   PoolingLayer<Dtype>* layer) {
-  Callback = &Naive;
+  Callback = Naive;
 }
 
 #if defined __x86_64__ || defined _M_X64
@@ -820,7 +820,7 @@ void PoolingCodeGeneratorBackward<float>::Create_callback(
     if (Callback)
       reset();
 
-    Callback = getCode<Callback_t>();
+    Callback = getCode<Callback_t*>();
   }
   else
   { // Take naive path.

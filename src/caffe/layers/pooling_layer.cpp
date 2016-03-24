@@ -130,7 +130,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
 
-  typename PoolingCodeGeneratorForward<Dtype>::Callback_t generator_func =
+  typename PoolingCodeGeneratorForward<Dtype>::Callback_t* generator_func =
            Forward_code_generator.Get_callback(this, top[0], use_top_mask);
   // We are getting top_mask here as mutable_cpu_data is not thread safe
   // and doing it inside parallel region creates of risk of race condition
@@ -173,7 +173,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
 
-  typename PoolingCodeGeneratorBackward<Dtype>::Callback_t generator_func =
+  typename PoolingCodeGeneratorBackward<Dtype>::Callback_t* generator_func =
                           Backward_code_generator.Get_callback(this, top[0]);
 
   // We are getting top_mask here as mutable_cpu_data is not thread safe
