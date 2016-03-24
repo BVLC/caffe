@@ -92,7 +92,9 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
 #ifdef USE_CUDNN
     engine = PoolingParameter_Engine_CUDNN;
 #elif defined(USE_MKLDNN)
-    engine = PoolingParameter_Engine_MKLDNN;
+    PoolingParameter_PoolMethod method = param.pooling_param().pool();
+    if (method == PoolingParameter_PoolMethod_MAX)
+      engine = PoolingParameter_Engine_MKLDNN;
 #endif
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
