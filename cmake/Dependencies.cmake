@@ -118,6 +118,23 @@ elseif(APPLE)
   list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
 endif()
 
+# ---[ MKL-DNN
+if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
+    if(EXISTS ${MKL_INCLUDE_DIR}/mkl_dnn.h)
+      message(STATUS "Found MKL-DNN")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMKLDNN_SUPPORTED")
+      if(USE_MKLDNN)
+         message(STATUS "MKL-DNN layers will be used by default")
+         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MKLDNN")
+      endif()
+    else()
+      message(STATUS "MKL-DNN not found")
+      if(USE_MKLDNN)
+        message(WARNING "Flag USE_MKLDNN was set, but MKL-DNN not found")
+      endif()
+    endif()
+endif()
+
 # ---[ Python
 if(BUILD_python)
   if(NOT "${python_version}" VERSION_LESS "3.0.0")
