@@ -1,6 +1,7 @@
 #ifndef CAFFE_CODE_GENERATORS_POOLING_H_
 #define CAFFE_CODE_GENERATORS_POOLING_H_
 
+#include <stdint.h>
 #include <vector>
 
 #if defined __x86_64__ || defined _M_X64
@@ -37,6 +38,8 @@ class PoolingCodeGeneratorForward
     int batch_start,
     int batch_end,
     void* mask,
+    int64_t channel_start,
+    int64_t channel_end,
     PoolingLayer<Dtype>* layer,
     bool use_top_mask);
 
@@ -55,9 +58,10 @@ class PoolingCodeGeneratorForward
     int batch_start,
     int batch_end,
     void* mask,
+    int64_t channel_start,
+    int64_t channel_end,
     PoolingLayer<Dtype>* layer,
     bool use_top_mask);
-  Callback_t Callback;
   std::vector<int> Layer_output_shape_signature;
   bool Use_top_mask;
   PoolingParameter_PoolMethod Method;
@@ -78,6 +82,8 @@ class PoolingCodeGeneratorBackward
     Dtype* bottom_diff,
     int batch_start,
     int batch_end,
+    int64_t channel_start,
+    int64_t channel_end,
     bool use_top_mask,
     const void* mask,
     PoolingLayer<Dtype>* layer);
@@ -92,10 +98,12 @@ class PoolingCodeGeneratorBackward
     Dtype* bottom_diff,
     int batch_start,
     int batch_end,
+    int64_t channel_start,
+    int64_t channel_end,
     bool use_top_mask,
     const void* mask,
     PoolingLayer<Dtype>* layer);
-  Callback_t Callback;
+  Callback_t* Callback;
   std::vector<int> layer_output_shape_signature;
 };
 }  // namespace caffe

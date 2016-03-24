@@ -36,12 +36,15 @@ struct LayerState {
   };
 
   Enum state;
+  uint32_t version;
   boost::mutex mtx;
   boost::condition_variable cond;
 
-  LayerState() : state(calculating) {
+  LayerState() : state(calculating), version(0u) {
   }
-  LayerState(const LayerState& other) : state(other.state) {
+  LayerState(const LayerState& other)
+    : state(other.state)
+    , version(other.version) {
   }
 
   void move_to(Enum next_state) {
@@ -66,6 +69,16 @@ struct LayerState {
     }
     return ret;
   }
+
+  void set_version(uint32_t new_version) {
+    boost::mutex::scoped_lock lock(mtx);
+    version = new_version;
+  }
+
+  uint32_t get_version() {
+    boost::mutex::scoped_lock lock(mtx);
+    return version;
+  }
 };
 
 }  // namespace
@@ -75,9 +88,9 @@ struct SynchronousParamSyncingImpl
     : TerminatedHandler, BlobSyncInfo::Handler, InternalThread {
   shared_ptr<Solver<Dtype> > solver;
   shared_ptr<internode::Daemon> comm;
+  shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
-  shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<BlobInfo<Dtype> > info;
   shared_ptr<BlobKeyChain<Dtype> > keychain;
   shared_ptr<BlobComms<Dtype> > comms;
@@ -86,27 +99,40 @@ struct SynchronousParamSyncingImpl
   LayerState init;
 
   boost::mutex mtx;
-  std::vector<int> send_queue;
   bool terminated_;
 
   SynchronousParamSyncingImpl(shared_ptr<Solver<Dtype> > solver,
-                              string address)
+                              string address,
+                              int num_of_threads)
     : solver(solver)
     , comm(internode::create_communication_daemon())
-    , waypoint(internode::configure_client(comm, address))
-    , codec(BlobCodec<Dtype>::create_codec(solver->param().multinode_param()))
+    , codec(BlobCodec<Dtype>::create_codec(
+        solver->param().multinode_param(), true))
+    , waypoint(internode::configure_client(comm, address, codec->packet_size()))
     , info(new BlobInfo<Dtype>(solver, codec->max_elements_per_part()))
-    , keychain(BlobKeyChain<Dtype>::create(info->get_const_info()->layers()))
+    , keychain(BlobKeyChain<Dtype>::create_empty(
+        info->get_const_info()->layers()))
     , comms(
         BlobComms<Dtype>::create(
-          solver, info, keychain, waypoint, codec,
+          solver, info, waypoint, codec, keychain,
           typename BlobComms<Dtype>::Settings(
-            BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0)))
+            BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
+          num_of_threads))
     , layers(info->get_const_info()->layers())
     , terminated_(false) {
     init.move_to(LayerState::updating);
     info->get_sync_info()->register_synced_handler(this);
     waypoint->register_receive_handler(comms.get());
+    comms->set_iter_size(solver->param().iter_size());
+
+    internode::create_timer(
+      comm,
+      500000,
+      boost::bind(&SynchronousParamSyncingImpl::tick, this),
+      true);
+  }
+
+  void tick() {
   }
 
   // called from comm thread
@@ -117,10 +143,14 @@ struct SynchronousParamSyncingImpl
     return terminated_;
   }
 
+  virtual void synced(int layer_id, int blob_id, int part, uint32_t version) {
+  }
+
   virtual void synced(int layer_id, uint32_t version) {
     VLOG(2) << "layer " << layer_id
                << " is in synced with version " << version;
     comms->cancel(layer_id, version - 1);
+    layers.at(layer_id).set_version(version);
     layers.at(layer_id).move_to(LayerState::calculating);
   }
 
@@ -131,16 +161,7 @@ struct SynchronousParamSyncingImpl
 
   virtual void InternalThreadEntry() {
     while (!terminated()) {
-      internode::poll_one(comm);
-      std::vector<int> to_send;
-      {
-        boost::mutex::scoped_lock lock(mtx);
-        to_send.swap(send_queue);
-      }
-      for (int i = 0; i < to_send.size(); ++i) {
-        comms->push(
-          to_send[i], info->get_sync_info()->min_received_version(to_send[i]));
-      }
+      internode::run_one(comm);
     }
   }
 
@@ -149,7 +170,6 @@ struct SynchronousParamSyncingImpl
     if (!info->get_const_info()->needs_syncing(layer_id)) return;
     VLOG(3)  << "waiting for layer " << layer_id;
     int waited = layers.at(layer_id).wait_till(this, LayerState::calculating);
-    keychain->lock(layer_id);
 
     vector<int> param_ids =
       solver->net()->get_layer_learnable_param_ids(layer_id);
@@ -166,21 +186,20 @@ struct SynchronousParamSyncingImpl
   void update(int layer_id) {
     if (!info->get_const_info()->needs_syncing(layer_id)) return;
     VLOG(3) << "backward ready for layer " << layer_id;
-    {
-      boost::mutex::scoped_lock lock(mtx);
-      send_queue.push_back(layer_id);
-    }
-    keychain->unlock(layer_id);
     layers.at(layer_id).move_to(LayerState::updating);
+    comms->push(layer_id, layers.at(layer_id).get_version());
   }
 };
 
 template<typename Dtype>
 SynchronousParamClient<Dtype>::SynchronousParamClient(
         boost::shared_ptr<Solver<Dtype> > solver,
-        string param_server_addr)
+        string param_server_addr,
+        int num_of_threads)
     : solver_(boost::make_shared<MultiSolver<Dtype> >(solver))
-    , sync(new SynchronousParamSyncingImpl<Dtype>(solver, param_server_addr)) {
+    , sync(new SynchronousParamSyncingImpl<Dtype>(
+        solver, param_server_addr, num_of_threads)) {
+  solver->param().set_disabled_update(true);
 }
 
 template<typename Dtype>

@@ -22,7 +22,8 @@ template<typename Dtype>
 class SynchronousParamClient : public MultiSolver<Dtype>::Callback {
  public:
   explicit SynchronousParamClient(shared_ptr<Solver<Dtype> > solver,
-                                  string param_server_address);
+                                  string param_server_address,
+                                  int num_of_threads);
   virtual ~SynchronousParamClient();
 
   void run();

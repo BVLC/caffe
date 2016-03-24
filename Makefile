@@ -309,6 +309,8 @@ ifneq (,$(findstring clang++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
 else ifneq (,$(findstring g++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
+else ifneq (,$(findstring mpi,$(CXX)))
+	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
 else ifneq (,$(findstring icpc,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
 else
@@ -322,7 +324,6 @@ ifeq ($(DEBUG), 1)
 	NVCCFLAGS += -G
 else ifneq (,$(findstring icpc,$(CXX)))
 	COMMON_FLAGS += -DNDEBUG -O3 -xCORE-AVX2 -no-prec-div -fp-model fast=2
-	CXXFLAGS += -O0 -xHOST -march=core-avx2
 else
 	COMMON_FLAGS += -DNDEBUG -O3
 endif
@@ -490,6 +491,16 @@ ifeq ($(USE_OPENMP), 1)
       LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
     endif
   endif
+endif
+
+
+# MPI support
+ifeq ($(USE_MPI), 1)
+  COMMON_FLAGS += -DUSE_MPI
+ #ifneq (,$(findstring mpi,$(CXX)))
+ #  CXXFLAGS += -mt_mpi
+ #  LINKFLAGS += -mt_mpi
+ #endif
 endif
 
 

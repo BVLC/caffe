@@ -296,6 +296,7 @@ message SolverParameter {
   optional SolverType solver_type = 30 [default = SGD];
 
   optional MultinodeParameter multinode_param = 41;
+  optional bool disabled_update = 42 [default = false];
 }
 
 // A message that stores the solver snapshots

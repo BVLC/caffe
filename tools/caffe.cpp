@@ -14,6 +14,7 @@ namespace bp = boost::python;
 #include "boost/algorithm/string.hpp"
 #include "boost/make_shared.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/internode/mpiutil.hpp"
 #include "caffe/multinode/multinode.hpp"
 #include "caffe/util/signal_handler.h"
 
@@ -60,6 +61,9 @@ DEFINE_string(listen_address, "",
 DEFINE_string(multinode_type, "sync",
     "Optional; multinode mode, type of multinode training mode "
     "[sync, async, ave]");
+DEFINE_int32(comm_threads, 1,
+    "Optional; multinode mode,"
+    " The number of threads used by communication code.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -234,9 +238,16 @@ int train() {
     LOG(INFO) << "Configuring multinode setup";
 
     if (FLAGS_multinode_type.find("sync") == 0) {
-      caffe::SynchronousParamClient<float> sync(solver, FLAGS_param_server);
-      LOG(INFO) << "Starting Multi-node Optimization";
-      sync.run();
+      if (FLAGS_param_server == "mpi") {
+        caffe::SynchronousNode<float> sync(solver, FLAGS_comm_threads);
+        LOG(INFO) << "Starting Multi-node Optimization in mpi environment";
+        sync.run();
+      } else {
+        caffe::SynchronousParamClient<float> sync(
+          solver, FLAGS_param_server, FLAGS_comm_threads);
+        LOG(INFO) << "Starting Multi-node Optimization";
+        sync.run();
+      }
     } else if (FLAGS_multinode_type.find("ave") == 0) {
       LOG(ERROR) << "currently unsupported";
       return 0;
@@ -284,14 +295,19 @@ int run_server(string name) {
     CopyLayers(solver.get(), FLAGS_weights);
   }
   LOG(INFO) << "Starting " << name;
-  ServerType<float> server(solver, FLAGS_listen_address);
+  ServerType<float> server(
+    solver, FLAGS_listen_address, FLAGS_param_server, FLAGS_comm_threads);
   server.run();
   return 0;
 }
 
 int param_server() {
   if (FLAGS_multinode_type.find("sync") == 0) {
-    return run_server<caffe::SynchronousParamServer>("Param Server");
+    if (FLAGS_param_server == "") {
+      return run_server<caffe::SynchronousParamServer>("Param Server");
+    } else {
+      return run_server<caffe::ParamRelay>("Param Server");
+    }
   } else if (FLAGS_multinode_type.find("ave") == 0) {
     LOG(ERROR) << "currently unsupported";
   } else if (FLAGS_multinode_type.find("async") == 0) {
@@ -693,6 +709,7 @@ int compare() {
 RegisterBrewFunction(compare);
 
 int main(int argc, char** argv) {
+  caffe::internode::mpi_init(argc, argv);
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
@@ -724,4 +741,5 @@ int main(int argc, char** argv) {
   } else {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
+  caffe::internode::mpi_finalize();
 }

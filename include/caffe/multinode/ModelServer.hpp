@@ -18,7 +18,10 @@ class ModelServer : public internode::Waypoint::Handler {
   SolverParameter prepare_model();
   BlobShape blob_shape_by_name(string name);
  public:
-  ModelServer(shared_ptr<Solver<Dtype> >, string bind_address);
+  ModelServer(shared_ptr<Solver<Dtype> >,
+              string bind_address,
+              string ignored_address,
+              int ignored_threads);
   void run();
 
   virtual void received(char* data, size_t size, internode::Waypoint*);

@@ -16,7 +16,10 @@ class DataServer : public internode::Waypoint::Handler {
   shared_ptr<internode::MultiWaypoint> waypoint;
 
  public:
-  DataServer(shared_ptr<Solver<Dtype> >, string bind_address);
+  DataServer(shared_ptr<Solver<Dtype> >,
+             string bind_address,
+             string ignored_address,
+             int ignored_threads);
   void run();
 
   virtual void received(char* buffer, size_t size, internode::Waypoint*);

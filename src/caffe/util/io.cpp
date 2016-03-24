@@ -73,7 +73,7 @@ bool ReceiveProtoFromRemote(const string& address, Message* proto) {
     using internode::RemoteId;
     shared_ptr<Daemon> comm = internode::create_communication_daemon();
     shared_ptr<Waypoint> remote_client =
-      internode::configure_client(comm, address);
+      internode::configure_client(comm, address, UINT_MAX);
     string msg_name = proto->GetTypeName();
     ModelReq request;
     request.set_name(msg_name);

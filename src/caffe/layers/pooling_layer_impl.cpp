@@ -47,6 +47,8 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
   int batch_start,
   int batch_end,
   void* mask_ptr,
+  int64_t channel_start,
+  int64_t channel_end,
   PoolingLayer<Dtype>* layer,
   bool use_top_mask) {
   int* mask = NULL;  // suppress warnings about uninitalized variables
@@ -64,17 +66,19 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
       mask = static_cast<int*>(mask_ptr);
     }
 
-    bottom_data += fm_size*layer->channels_*batch_start;
-    top_data += pooled_fm_size*layer->channels_*batch_start;
+    // Set starting point eg. memory offset corressponding to
+    // requested starting batch and requested starting channel
+    bottom_data += fm_size*(layer->channels_*batch_start + channel_start);
+    top_data += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     if (use_top_mask) {
-      top_mask += pooled_fm_size*layer->channels_*batch_start;
+      top_mask += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     } else {
-      mask += pooled_fm_size*layer->channels_*batch_start;
+      mask += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     }
 
     // The main loop
     for (int n = batch_start; n < batch_end; ++n) {
-      for (int c = 0; c < layer->channels_; ++c) {
+      for (int c = channel_start; c < channel_end; ++c) {
         for (int ph = 0; ph < layer->pooled_height_; ++ph) {
           for (int pw = 0; pw < layer->pooled_width_; ++pw) {
             int hstart = ph * layer->stride_h_ - layer->pad_h_;
@@ -114,12 +118,12 @@ void PoolingCodeGeneratorForward<Dtype>::Naive(
     break;
   case PoolingParameter_PoolMethod_AVE:
 
-    bottom_data += fm_size*layer->channels_*batch_start;
-    top_data += pooled_fm_size*layer->channels_*batch_start;
+    bottom_data += fm_size*(layer->channels_*batch_start + channel_start);
+    top_data += pooled_fm_size*(layer->channels_*batch_start + channel_start);
 
     // The main loop
     for (int n = batch_start; n < batch_end; ++n) {
-      for (int c = 0; c < layer->channels_; ++c) {
+      for (int c = channel_start; c < channel_end; ++c) {
         for (int ph = 0; ph < layer->pooled_height_; ++ph) {
           for (int pw = 0; pw < layer->pooled_width_; ++pw) {
             int hstart = ph * layer->stride_h_ - layer->pad_h_;
@@ -228,6 +232,8 @@ void PoolingCodeGeneratorForward<float>::Create_callback(
     const Reg64& reg_arg3 = rcx;
     const Reg64& reg_arg4 = r8;
     const Reg64& reg_arg5 = r9;
+    const Address& stackarg_channel_start = qword[rbp + 16];
+    const Address& stackarg_channel_end = qword[rbp + 24];
 
     const Reg64& reg_mul_param = rax;
     const Reg64& reg_mul_result_l = rax;
@@ -276,11 +282,11 @@ void PoolingCodeGeneratorForward<float>::Create_callback(
 
     // Move register arguments to the stack,
     // we gonna need the registers for other purposes.
-    mov(stack_bottom_orig, reg_arg0);
-    mov(stack_top_orig,    reg_arg1);
-    mov(stack_top_count,   reg_arg2);
-    mov(stack_batch_start, reg_arg3);
-    mov(stack_batch_end,   reg_arg4);
+    mov(stack_bottom_orig,   reg_arg0);
+    mov(stack_top_orig,      reg_arg1);
+    mov(stack_top_count,     reg_arg2);
+    mov(stack_batch_start,   reg_arg3);
+    mov(stack_batch_end,     reg_arg4);
 
     if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
       if (Use_top_mask) {
@@ -303,9 +309,11 @@ void PoolingCodeGeneratorForward<float>::Create_callback(
     jae("batch_loop_end", T_NEAR);
 
       // Iterate through channels.
-      mov(stack_channel_cnt, 0);
+      mov(reg_scratch0, stackarg_channel_start);
+      mov(stack_channel_cnt, reg_scratch0);
       L("channel_loop_start");
-      cmp(stack_channel_cnt, layer->channels_);
+      mov(reg_scratch0, stack_channel_cnt);
+      cmp(reg_scratch0, stackarg_channel_end);
       jae("channel_loop_end", T_NEAR);
 
         // Compute batch/channel offsets for buffers.
@@ -686,6 +694,8 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
   Dtype* bottom_diff,
   int batch_start,
   int batch_end,
+  int64_t channel_start,
+  int64_t channel_end,
   bool use_top_mask,
   const void* mask_ptr,
   PoolingLayer<Dtype>* layer) {
@@ -701,16 +711,17 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
     if (!use_top_mask) {
       mask = static_cast<const int*>(mask_ptr);
     }
-    bottom_diff += fm_size*layer->channels_*batch_start;
-    top_diff += pooled_fm_size*layer->channels_*batch_start;
+    bottom_diff += fm_size*(layer->channels_*batch_start + channel_start);
+    top_diff += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     if (use_top_mask) {
-      top_mask += pooled_fm_size*layer->channels_*batch_start;
+      top_mask += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     } else {
-      mask += pooled_fm_size*layer->channels_*batch_start;
+      mask += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     }
+
     for (int n = batch_start; n < batch_end; ++n) {
       if (use_top_mask) {
-        for (int c = 0; c < layer->channels_; ++c) {
+        for (int c = channel_start; c < channel_end; ++c) {
           int index0 = 0;
           for (int ph = 0; ph < layer->pooled_height_; ++ph) {
             int index = index0;
@@ -726,7 +737,7 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
           top_mask += pooled_fm_size;
         }
       } else {
-        for (int c = 0; c < layer->channels_; ++c) {
+        for (int c = channel_start; c < channel_end; ++c) {
           int index0 = 0;
           for (int ph = 0; ph < layer->pooled_height_; ++ph) {
             int index = index0;
@@ -746,11 +757,11 @@ void PoolingCodeGeneratorBackward<Dtype>::Naive(
     break;
   case PoolingParameter_PoolMethod_AVE:
 
-    bottom_diff += fm_size*layer->channels_*batch_start;
-    top_diff += pooled_fm_size*layer->channels_*batch_start;
+    bottom_diff += fm_size*(layer->channels_*batch_start + channel_start);
+    top_diff += pooled_fm_size*(layer->channels_*batch_start + channel_start);
     // The main loop
     for (int n = batch_start; n < batch_end; ++n) {
-      for (int c = 0; c < layer->channels_; ++c) {
+      for (int c = channel_start; c < channel_end; ++c) {
         for (int ph = 0; ph < layer->pooled_height_; ++ph) {
           for (int pw = 0; pw < layer->pooled_width_; ++pw) {
             int hstart = ph * layer->stride_h_ - layer->pad_h_;
