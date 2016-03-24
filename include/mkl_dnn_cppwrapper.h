@@ -74,24 +74,24 @@ SPEC_PREFIX dnnError_t dnnLayoutDelete<double>(
         dnnLayout_t layout)
     {return dnnLayoutDelete_F64(layout);}
 
-TEMPLATE_PREFIX dnnError_t dnnPrimitiveAtrributesCreate(
+TEMPLATE_PREFIX dnnError_t dnnPrimitiveAttributesCreate(
         dnnPrimitiveAttributes_t *attributes);
-SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesCreate<float>(
+SPEC_PREFIX dnnError_t dnnPrimitiveAttributesCreate<float>(
         dnnPrimitiveAttributes_t *attributes)
-    {return dnnPrimitiveAtrributesCreate_F32 (attributes);}
-SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesCreate<double>(
+    {return dnnPrimitiveAttributesCreate_F32 (attributes);}
+SPEC_PREFIX dnnError_t dnnPrimitiveAttributesCreate<double>(
         dnnPrimitiveAttributes_t *attributes)
-    {return dnnPrimitiveAtrributesCreate_F64 (attributes);}
+    {return dnnPrimitiveAttributesCreate_F64 (attributes);}
 
 
-TEMPLATE_PREFIX dnnError_t dnnPrimitiveAtrributesDestroy(
+TEMPLATE_PREFIX dnnError_t dnnPrimitiveAttributesDestroy(
         dnnPrimitiveAttributes_t attributes);
-SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesDestroy<float>(
+SPEC_PREFIX dnnError_t dnnPrimitiveAttributesDestroy<float>(
         dnnPrimitiveAttributes_t attributes)
-        {return dnnPrimitiveAtrributesDestroy_F32(attributes);}
-SPEC_PREFIX dnnError_t dnnPrimitiveAtrributesDestroy<double>(
+        {return dnnPrimitiveAttributesDestroy_F32(attributes);}
+SPEC_PREFIX dnnError_t dnnPrimitiveAttributesDestroy<double>(
         dnnPrimitiveAttributes_t attributes)
-        {return dnnPrimitiveAtrributesDestroy_F64(attributes);}
+        {return dnnPrimitiveAttributesDestroy_F64(attributes);}
 
 TEMPLATE_PREFIX dnnError_t dnnPrimitiveGetAttributes(
         dnnPrimitive_t primitive,
