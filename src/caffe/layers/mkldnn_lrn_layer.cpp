@@ -172,16 +172,11 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   void* top_diff = (void*)top[0]->prv_diff();
-  void* bottom_data = NULL;
+  void* bottom_data = (void*)bottom[0]->prv_data();
   void* bottom_diff = NULL;
 
-  if (NULL != top_diff) {
-    bottom_data = (void*)bottom[0]->prv_data();
+  if (top_diff && bottom_data) {
     bottom_diff = (void*)bottom[0]->mutable_prv_diff();
-
-    if (NULL == bottom_data)
-      LOG(FATAL) << "bottom_data is NULL";
-
     // Is it the first pass? Create a primitive.
     if (lrnBwd == NULL) {
       CHECK((top[0]->get_prv_descriptor_diff())->get_descr_type() == PrvMemDescr::PRV_DESCR_MKLDNN);

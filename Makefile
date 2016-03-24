@@ -375,20 +375,11 @@ ifeq ($(BLAS), mkl)
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 
 	# detect support for mkl-dnn primitives
-	DUMMY_MKLDNN_BINARY := $(shell mktemp)
-	DUMMY_MKLDNN_FILE := $(shell mktemp).cpp
-	MKLDNN_DETECT_CODE = "\#include <mkl_dnn.h> \n int main() {return 0;}"
-
-	MKLDNN_DETECT_COMPILE_FLAGS = -I$(BLAS_INCLUDE)
-	MKLDNN_DETECT_COMPILE_COMMAND = $(CXX) $(DUMMY_MKLDNN_FILE) $(MKLDNN_DETECT_COMPILE_FLAGS) -o $(DUMMY_MKLDNN_BINARY) 2>/dev/null
-	MKLDNN_DETECT_COMMAND = echo $(MKLDNN_DETECT_CODE) > $(DUMMY_MKLDNN_FILE) && $(MKLDNN_DETECT_COMPILE_COMMAND) && echo 1 || echo 0
-	IS_MKLDNN_PRESENT = $(shell $(MKLDNN_DETECT_COMMAND))
- 
-	ifeq ($(IS_MKLDNN_PRESENT), 1)
-		CXXFLAGS += -DMKLDNN_SUPPORTED
-		ifeq ($(USE_MKLDNN), 1)
-			CXXFLAGS += -DUSE_MKLDNN
-		endif
+	ifneq ("$(wildcard $(BLAS_INCLUDE)/mkl_dnn.h)","")
+	    CXXFLAGS += -DMKLDNN_SUPPORTED
+	    ifeq ($(USE_MKLDNN), 1)
+		CXXFLAGS += -DUSE_MKLDNN
+	    endif
 	endif
 else ifeq ($(BLAS), open)
 	# OpenBLAS
@@ -480,7 +471,7 @@ ifeq ($(USE_OPENMP), 1)
     OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)/compiler/lib/intel64
   endif
   OPENMP_VERIFYING_COMPILE_COMMAND = $(CXX) -fopenmp $(DUMMY_OPENMP_FILE) $(OPENMP_VERIFYING_COMPILE_FLAGS) -o $(DUMMY_OPENMP_BINARY) 2>/dev/null
-  OPENMP_VERIFYING_COMMAND = echo -e $(OPENMP_VERIFYING_CODE) > $(DUMMY_OPENMP_FILE) && $(OPENMP_VERIFYING_COMPILE_COMMAND) && echo 1 || echo 0
+  OPENMP_VERIFYING_COMMAND = echo $(OPENMP_VERIFYING_CODE) > $(DUMMY_OPENMP_FILE) && $(OPENMP_VERIFYING_COMPILE_COMMAND) && echo 1 || echo 0
   IS_OPENMP_PRESENT = $(shell $(OPENMP_VERIFYING_COMMAND))
 
   ifeq ($(IS_OPENMP_PRESENT), 1)
