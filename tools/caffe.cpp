@@ -10,7 +10,7 @@ namespace bp = boost::python;
 #include <map>
 #include <string>
 #include <vector>
-#include <algorithm>
+
 #include "boost/algorithm/string.hpp"
 #include "boost/make_shared.hpp"
 #include "caffe/caffe.hpp"
@@ -37,8 +37,6 @@ DEFINE_string(solver, "",
     "The solver definition protocol buffer text file.");
 DEFINE_string(model, "",
     "The model definition protocol buffer text file..");
-DEFINE_string(model_ref, "",
-              "The model definition protocol buffer text file..");
 DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
 DEFINE_string(weights, "",
@@ -442,10 +440,10 @@ int time() {
   Timer forward_timer;
   Timer backward_timer;
   Timer timer;
-  std::vector<float> forward_time_per_layer(layers.size(), 1e37);
-  std::vector<float> backward_time_per_layer(layers.size(), 1e37);
-  float forward_time = 0;
-  float backward_time = 0;
+  std::vector<double> forward_time_per_layer(layers.size(), 0.0);
+  std::vector<double> backward_time_per_layer(layers.size(), 0.0);
+  double forward_time = 0.0;
+  double backward_time = 0.0;
   for (int j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
     iter_timer.Start();
@@ -453,7 +451,7 @@ int time() {
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-      forward_time_per_layer[i] = std::min(forward_time_per_layer[i],timer.MicroSeconds());
+      forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
     backward_timer.Start();
@@ -461,21 +459,21 @@ int time() {
       timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
-      backward_time_per_layer[i] = std::min(backward_time_per_layer[i], timer.MicroSeconds());
+      backward_time_per_layer[i] += timer.MicroSeconds();
     }
     backward_time += backward_timer.MicroSeconds();
     LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
       << iter_timer.MilliSeconds() << " ms.";
   }
-  LOG(INFO) << "Min time per layer: ";
+  LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
-      "\tforward:  " << forward_time_per_layer[i] / 1000 /
-      (1 + 0*FLAGS_iterations) << " ms.";
+      "\tforward: " << forward_time_per_layer[i] / 1000 /
+      FLAGS_iterations << " ms.";
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
       "\tbackward: " << backward_time_per_layer[i] / 1000 /
-      (1+0*FLAGS_iterations) << " ms.";
+      FLAGS_iterations << " ms.";
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
@@ -489,224 +487,6 @@ int time() {
   return 0;
 }
 RegisterBrewFunction(time);
-
-// compare: functional testing against another implementation
-int compare() {
-  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to compare.";
-  CHECK_GT(FLAGS_model_ref.size(), 0) << "Need a model_ref definition to compare.";
-
-  // Set device id and mode
-  vector<int> gpus;
-  get_gpus(&gpus);
-  if (gpus.size() != 0) {
-    LOG(INFO) << "Use GPU with device ID " << gpus[0];
-    Caffe::SetDevice(gpus[0]);
-    Caffe::set_mode(Caffe::GPU);
-  } else {
-    LOG(INFO) << "Use CPU.";
-    Caffe::set_mode(Caffe::CPU);
-  }
-  // Instantiate the caffe net.
-  Net<float> caffe_net    (FLAGS_model, caffe::TRAIN);
-  Net<float> caffe_net_ref(FLAGS_model_ref, caffe::TRAIN);
-
-  float initial_loss;
-
-  // Initial fw/bw pass - all the allocations and initializations will be done
-  LOG(INFO) << "\n\nPerforming Forward - REF";
-  caffe_net_ref.Forward(vector<Blob<float>*>(), &initial_loss);
-  LOG(INFO) << "Initial loss: " << initial_loss;
-  LOG(INFO) << "Performing Backward - REF";
-  caffe_net_ref.Backward();
-
-  LOG(INFO) << "\n\nPerforming Forward";
-  caffe_net.Forward(vector<Blob<float>*>(), &initial_loss);
-  LOG(INFO) << "Initial loss: " << initial_loss;
-  LOG(INFO) << "Performing Backward";
-  caffe_net.Backward();
-
-  const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
-  const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
-  const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
-  const vector<vector<bool> >& bottom_need_backward =
-      caffe_net.bottom_need_backward();
-  const vector<shared_ptr<Blob<float> > >& params = caffe_net.params();
-
-  const vector<shared_ptr<Layer<float> > >& layers_ref = caffe_net_ref.layers();
-  const vector<vector<Blob<float>*> >& bottom_vecs_ref = caffe_net_ref.bottom_vecs();
-  const vector<vector<Blob<float>*> >& top_vecs_ref    = caffe_net_ref.top_vecs();
-  const vector<vector<bool> >& bottom_need_backward_ref =
-    caffe_net_ref.bottom_need_backward();
-  const vector<shared_ptr<Blob<float> > >& params_ref      = caffe_net_ref.params();
-
-  CHECK_EQ(layers.size()      , layers_ref.size());
-  CHECK_EQ(bottom_vecs.size() , bottom_vecs_ref.size());
-  CHECK_EQ(top_vecs.size()    , top_vecs_ref.size());
-  CHECK_EQ(params.size()      , params_ref.size());
-
-  for (int param_id = 0; param_id < params_ref.size();
-       ++param_id)
-  {
-    // use the same initial parameters values
-    caffe::caffe_copy(
-               params_ref[param_id]->count(),
-               params_ref[param_id]->cpu_data(),
-               params[param_id]->mutable_cpu_data());
-
-    if (params[param_id]->prv_diff())
-      caffe::caffe_set(
-        params[param_id]->prv_diff_count(),
-        0.f,
-        params[param_id]->mutable_prv_diff());
-    else
-      caffe::caffe_set(
-        params[param_id]->count(),
-        0.f,
-        params[param_id]->mutable_cpu_diff());
-
-    if (params_ref[param_id]->prv_diff())
-      caffe::caffe_set(
-        params_ref[param_id]->prv_diff_count(),
-        0.f,
-        params_ref[param_id]->mutable_prv_diff());
-    else
-      caffe::caffe_set(
-        params_ref[param_id]->count(),
-        0.f,
-        params_ref[param_id]->mutable_cpu_diff());
-
-  }
-
-  // Data layer from reference:
-  layers_ref[0]->Forward(bottom_vecs_ref[0], top_vecs_ref[0]);
-  // Reuse data layer output from reference net
-  const_cast< vector<vector<Blob<float>*> >& > (bottom_vecs)[1] = bottom_vecs_ref[1];
-
-  LOG(INFO) << "\n\nPerforming Forward - collect data for comparison";
-  // start after the data layer
-  for (int i = 1; i < layers.size(); ++i) {
-
-    CHECK_EQ(layers[i]->layer_param().name(), layers_ref[i]->layer_param().name());
-
-    layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
-    layers_ref[i]->Forward(bottom_vecs_ref[i], top_vecs_ref[i]);
-  }
-
-  LOG(INFO) << "\n\nCompare fwd output, layer by layer";
-  // start after the data layer
-  for (int i = 1; i < layers.size(); ++i) {
-
-    CHECK_EQ(layers[i]->layer_param().name(), layers_ref[i]->layer_param().name());
-
-    // compare vs reference
-    const float max_allowed_error = 0.05; // 1%
-    const float very_small_value = 0.0001; // ;-)
-    const float* data =    top_vecs[i][0]->cpu_data();
-    const float* ref = top_vecs_ref[i][0]->cpu_data();
-
-    CHECK_EQ(top_vecs_ref[i][0]->count(), top_vecs[i][0]->count());
-    for (int j = 0; j < top_vecs_ref[i][0]->count(); ++j) {
-      float err = (fabs(ref[j]) < very_small_value)  ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j]));
-      if (err > max_allowed_error) LOG(INFO) <<
-                                  "Forward: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
-                                  << " layer: " << i << " name: " << layers[i]->layer_param().name();
-    }
-  }
-
-  LOG(INFO) << "\n\nPerforming Backward - collect data for comparison";
-  // Loss layer (we need loss based on the same labels)
-  int loss_id = layers.size() -1;
-  layers_ref[loss_id]->Backward(top_vecs_ref[loss_id], bottom_need_backward_ref[loss_id],
-                          bottom_vecs_ref[loss_id]);
-
-  // Reuse loss layer output from reference net
-  const_cast< vector<vector<Blob<float>*> >& > (top_vecs)[loss_id-1] = top_vecs_ref[loss_id-1];
-  // Start after loss layer
-  for (int i = loss_id - 1; i > 0; --i) {
-    CHECK_EQ(layers[i]->layer_param().name(), layers_ref[i]->layer_param().name());
-    layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                        bottom_vecs[i]);
-    layers_ref[i]->Backward(top_vecs_ref[i], bottom_need_backward_ref[i],
-                            bottom_vecs_ref[i]);
-  }
-
-  LOG(INFO) << "\n\nVeryfing Backward - compare bwd output, layer by layer";
-  for (int i = loss_id - 1; i > 0; --i) {
-    // compare vs reference
-    const float max_allowed_error = 0.01; // 1%
-    const float very_small_value = 0.0001; // ;-)
-    const float* data =    bottom_vecs[i][0]->cpu_diff();
-    const float* ref = bottom_vecs_ref[i][0]->cpu_diff();
-
-    CHECK_EQ(bottom_vecs_ref[i][0]->count(), bottom_vecs[i][0]->count());
-    for (int j = 0; j < bottom_vecs_ref[i][0]->count(); ++j) {
-      float err = (fabs(ref[j]) < very_small_value) ? (fabs(data[j] - ref[j])) : (fabs((data[j] - ref[j]) / ref[j]));
-      if (err > max_allowed_error) LOG(INFO) <<
-         "Backward: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
-         << " layer: " << i << " name: " << layers[i]->layer_param().name();
-    }
-  }
-
-  LOG(INFO) << "\n\nChecking parameters gradients";
-  // compare parameters gradients
-  for (int param_id = params_ref.size() - 1; param_id >= 0;
-       --param_id) {
-  //for (int param_id = 0 ; param_id < params_ref.size();
-  //     ++param_id) {
-
-    const float max_allowed_error = .1; // 10%
-    const float very_small_value = 0.005; // ;-)
-    CHECK_EQ(params[param_id]->count(), params_ref[param_id]->count());
-
-    const float* data =    params[param_id]->cpu_diff();
-    const float* ref = params_ref[param_id]->cpu_diff();
-    bool has_err = false;
-
-    for (int j = 0; j < params_ref[param_id]->count(); ++j) {
-      float err = (fabs(ref[j]) < very_small_value)  ? (fabs(data[j] - ref[j])) : (fabs( (data[j] - ref[j]) / ref[j]));
-      if (err > max_allowed_error) {
-        LOG(INFO) <<
-          " Param diff: Error " << err << " at offset " << j <<  " vals: " << data[j] << " should be " << ref[j]
-          << "   param_id: " << param_id ;
-        has_err = true;
-        break;
-      }
-    }
-    //if(has_err) break;
-   // {
-   //   //
-   //   int num      = params[param_id]->num();
-   //   int channels = params[param_id]->channels();
-   //   int height   = params[param_id]->height();
-   //   int width    = params[param_id]->width();
-   //
-   //   LOG(INFO) << " Dimensions of params at param_id: " << param_id << " - " << num << " " << channels << " " << height << " " << width;
-   //
-   //   for (int n = 0; n < num; n++)
-   //     for (int c = 0; c < channels;  c++)
-   //       for (int h = 0; h < height;  h++)
-   //         for (int w = 0; w < width; w++)
-   //           {
-   //             float r = params_ref[param_id]->diff_at(n,c,h,w);
-   //             float d = params[param_id]->diff_at(n,c,h,w);
-   //
-   //             float err = ( r == 0 || (fabs(r) < very_small_value) ) ? (fabs(d - r)) : (fabs( (d - r) / r ) );
-   //             if (err > max_allowed_error) {
-   //               has_err = true;
-   //               LOG(INFO) <<
-   //                 " Param diff: Error " << err << " at " << n <<  " " << c << " " << h << " " <<  w << " vals: " << d << " should be " << r;
-   //               CHECK(0);
-   //             }
-   //           }
-   // }
-
-  }
-
-
-  LOG(INFO) << "The End";
-  return 0;
-}
-RegisterBrewFunction(compare);
 
 int main(int argc, char** argv) {
   caffe::internode::mpi_init(argc, argv);

@@ -10,7 +10,6 @@ import sys
 import argparse
 import glob
 import time
-import pandas as pd
 
 import caffe
 
@@ -93,7 +92,7 @@ def main(argv):
 
     mean, channel_swap = None, None
     if args.mean_file:
-        mean = np.load(args.mean_file).mean(1).mean(1)
+        mean = np.load(args.mean_file)
     if args.channel_swap:
         channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
@@ -134,47 +133,6 @@ def main(argv):
     print("Saving results into %s" % args.output_file)
     np.save(args.output_file, predictions)
 
-    with open('../data/ilsvrc12/synset_words.txt') as f:
-        labels_df = pd.DataFrame([
-            {
-                'synset_id': l.strip().split(' ')[0],
-                'name': ' '.join(l.strip().split(' ')[1:]).split(',')[0]
-            }
-            for l in f.readlines()
-        ])
-    labels = labels_df.sort('synset_id')['name'].values
-    
 
-    # how to do it better? :)
-    for pic in  range(0, (predictions.size/1000)):
-        indices = (-predictions).argsort()[pic][:5]
-        for i in indices:
-            print '%30s %5d   %.5f' % (labels[i], i, predictions[pic][i])
-        print ""
-
-    # print(predictions)
-    comment_out = """
-    model = 'caffenet'
-    for k, v in classifier.blobs.items():
-        filename = model + '/features_' + k.replace('/','_')+".txt"
-        print "dumping ", k, " ", len(v.data.shape), "dims to ", filename 
-        
-        with open(filename, 'w') as f:
-            if len(v.data.shape) == 4:
-                print "3d data"
-                for x in range(v.data.shape[1]):
-                    f.write('\n----' + str(x) + '\n')
-                    for y in range(v.data.shape[2]):
-                        f.write('\n')
-                        for z in range(v.data.shape[3]):
-                            f.write(repr(v.data[0][x][y][z]))
-                            f.write(' ')
-            
-            elif len(v.data.shape) == 2:
-                print "2d data"
-                for z in range(v.data.shape[1]):
-                    f.write(repr(v.data[0][z]))
-                    f.write('\n')
-    """
 if __name__ == '__main__':
     main(sys.argv)

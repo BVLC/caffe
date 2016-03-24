@@ -120,27 +120,7 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   Normalize(param_id);
   Regularize(param_id);
   ComputeUpdateValue(param_id, rate);
-  switch (Caffe::mode()) {
-    case Caffe::CPU: {
-#ifdef SGD_NO_MEMCPY      
-        this->net_->learnable_params()[param_id]->Update(history_[param_id].get());
-#else
-        this->net_->learnable_params()[param_id]->Update();
-#endif
-        break;
-    }
-     case Caffe::GPU: {
-#ifndef CPU_ONLY
-      this->net_->learnable_params()[param_id]->Update();
-#else
-    NO_GPU;
-#endif
-    break;
-  }
-  default:
-    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-  }
-    
+  this->net_->learnable_params()[param_id]->Update();
 }
 
 template <typename Dtype>
@@ -258,21 +238,21 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                       net_params[param_id]->prv_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
-#ifndef SGD_NO_MEMCPY
+
       caffe_copy(net_params[param_id]->count(),
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_prv_diff());
-#endif
+
     }
     else {
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->cpu_diff(), momentum,
           history_[param_id]->mutable_cpu_data());
-#ifndef SGD_NO_MEMCPY
+
       caffe_copy(net_params[param_id]->count(),
           history_[param_id]->cpu_data(),
           net_params[param_id]->mutable_cpu_diff());
-#endif
+
     }
     break;
   }

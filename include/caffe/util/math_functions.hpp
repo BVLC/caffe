@@ -43,7 +43,7 @@ template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype *X);
 
 inline void caffe_memset(const size_t N, const int alpha, void* X) {
-    caffe_set(N, static_cast<const char>(alpha), static_cast<char*>(X)); // memset(X, alpha, N);  // NOLINT(caffe/alt_fn)
+  memset(X, alpha, N);  // NOLINT(caffe/alt_fn)
 }
 
 template <typename Dtype>

@@ -210,9 +210,7 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
 // as Blob<float> or Blob<double> -- hence we do not define it for
 // Blob<int> or Blob<unsigned int>.
 template <> void Blob<unsigned int>::Update() { NOT_IMPLEMENTED; }
-template <> void Blob<unsigned int>::Update(Blob<unsigned int>* difference) { NOT_IMPLEMENTED; }
 template <> void Blob<int>::Update() { NOT_IMPLEMENTED; }
-template <> void Blob<int>::Update(Blob<int>* difference) { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 void Blob<Dtype>::Update() {
@@ -240,35 +238,6 @@ void Blob<Dtype>::Update() {
     caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
         static_cast<const Dtype*>(diff_->gpu_data()),
         static_cast<Dtype*>(data_->mutable_gpu_data()));
-#else
-    NO_GPU;
-#endif
-    break;
-  default:
-    LOG(FATAL) << "Syncedmem not initialized.";
-  }
-}
-
-template <typename Dtype>
-void Blob<Dtype>::Update(Blob<Dtype>* difference) {
-  // We will perform update based on where the data is located.
-  switch (data_->head()) {
-  case SyncedMemory::SYNCED_PRV:
-  case SyncedMemory::HEAD_AT_PRV:
-      caffe_axpy<Dtype>(prv_diff_count(), Dtype(-1),
-          difference->cpu_data(),
-          static_cast<Dtype*>(data_->mutable_prv_data()));
-      break;
-  case SyncedMemory::HEAD_AT_CPU:
-    // perform computation on CPU
-    caffe_axpy<Dtype>(count_, Dtype(-1),
-        difference->cpu_data(),
-        static_cast<Dtype*>(data_->mutable_cpu_data()));
-    break;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
-    NOT_IMPLEMENTED
 #else
     NO_GPU;
 #endif
