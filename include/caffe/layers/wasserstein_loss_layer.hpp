@@ -95,14 +95,24 @@ class WassersteinLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> groundm_; // ground metric
-  Blob<Dtype> u_; // row scaling element
-  Blob<Dtype> v_; // column scaling element
-  Blob<Dtype> K_; // e^(-lambda*groundm)
-  Blob<Dtype> KM_; // K * groundm
-  Blob<Dtype> KlogK_; // K * log(K)
-  Blob<Dtype> one_; // constant matrix
-  Blob<Dtype> tmp_; // temp
+  /// Ground metric matrix.
+  Blob<Dtype> groundm_;
+  /// Row scaling element.
+  Blob<Dtype> u_;
+  /// Column scaling element.
+  Blob<Dtype> v_;
+  /// e^(-lambda*groundm)
+  Blob<Dtype> K_;
+  /// K .* groundm
+  Blob<Dtype> KM_;
+  /// K * log(K)
+  Blob<Dtype> KlogK_;
+  /// All-ones matrix.
+  Blob<Dtype> one_;
+  /// Temp variable.
+  Blob<Dtype> tmp_;
+  /// Temp variable.
+  Blob<Dtype> tmp2_;
 };
 
 

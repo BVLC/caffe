@@ -39,11 +39,7 @@ class GradientChecker {
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom = -1);
 
-<<<<<<< HEAD
   // Check the gradient, allowing for shifts by a constant vector.
-=======
-  // Check the gradient, allowing for shifts by a constant vector. 
->>>>>>> test_gradient_check_util.hpp: add CheckGradientUpToShift
   void CheckGradientUpToShift(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom = -1);
@@ -187,7 +183,6 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       Dtype feature = current_blob->cpu_data()[feat_id];
 
       if (up_to_shift) {
-
         deviation = computed_gradient - estimated_gradient;
         if (feat_id % dim == 0 || deviation > max_deviation) {
           max_deviation = deviation;

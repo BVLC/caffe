@@ -45,7 +45,8 @@ TYPED_TEST_CASE(WassersteinLossLayerTest, TestDtypes);
 
 TYPED_TEST(WassersteinLossLayerTest, TestGradientCPU) {
   LayerParameter layer_param;
-  layer_param.mutable_wasserstein_param()->set_ground_metric(CMAKE_SOURCE_DIR "caffe/test/test_data/wasserstein_ground_metric.h5");
+  layer_param.mutable_wasserstein_param()->set_ground_metric(
+    CMAKE_SOURCE_DIR "caffe/test/test_data/wasserstein_ground_metric.h5");
   layer_param.mutable_wasserstein_param()->set_scaling_iter(100);
   layer_param.mutable_wasserstein_param()->set_shift_gradient(true);
   WassersteinLossLayer<TypeParam> layer(layer_param);
