@@ -1,25 +1,27 @@
-#include <fstream>
 #include <algorithm>
 #include <cmath>
+#include <string>
 #include <vector>
-#include "hdf5.h"
-#include "hdf5_hl.h"
-#include "stdint.h"
+
 #include "caffe/filler.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/math_functions.hpp"
+
+#include "hdf5.h"
+#include "hdf5_hl.h"
+#include "stdint.h"
 
 #include "caffe/layers/wasserstein_loss_layer.hpp"
 
 #define DISTANCE_DATASET_NAME "data"
 
 namespace caffe {
-    
+
 template <typename Dtype>
 void WassersteinLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
-  u_.ReshapeLike(*bottom[0]);
+  u_.ReshapeLike(static_cast<const Blob<Dtype>&>(*bottom[0]));
   Dtype* u = u_.mutable_cpu_data();
   int dim = bottom[0]->count() / bottom[0]->num();
   float val = 1.0;
@@ -37,11 +39,11 @@ void WassersteinLossLayer<Dtype>::LayerSetUp(
     const int MIN_DATA_DIM = 1;
     const int MAX_DATA_DIM = INT_MAX;
     hdf5_load_nd_dataset(file_id, DISTANCE_DATASET_NAME,
-			 MIN_DATA_DIM, MAX_DATA_DIM, &groundm_);
+                         MIN_DATA_DIM, MAX_DATA_DIM, &groundm_);
     herr_t status = H5Fclose(file_id);
     CHECK_GE(status, 0) << "Failed to close HDF5 file: " << filename;
   }
-  
+
   float lambda = this->layer_param_.wasserstein_param().lambda();
 
   K_.ReshapeLike(groundm_);
@@ -51,11 +53,13 @@ void WassersteinLossLayer<Dtype>::LayerSetUp(
   caffe_exp(K_.count(), K_.cpu_data(), K_.mutable_cpu_data());
 
   KM_.ReshapeLike(groundm_);
-  caffe_mul(K_.count(), K_.cpu_data(), groundm_.cpu_data(), KM_.mutable_cpu_data());
+  caffe_mul(K_.count(), K_.cpu_data(), groundm_.cpu_data(),
+            KM_.mutable_cpu_data());
 
   KlogK_.ReshapeLike(K_);
   caffe_log(dim*dim, K_.cpu_data(), KlogK_.mutable_cpu_data());
-  caffe_mul(dim*dim, K_.cpu_data(), KlogK_.cpu_data(), KlogK_.mutable_cpu_data());
+  caffe_mul(dim*dim, K_.cpu_data(), KlogK_.cpu_data(),
+            KlogK_.mutable_cpu_data());
 
   if (this->layer_param_.wasserstein_param().shift_gradient()) {
     one_.Reshape(dim, dim, 1, 1);
@@ -68,14 +72,15 @@ void WassersteinLossLayer<Dtype>::LayerSetUp(
 
 template <typename Dtype>
 void WassersteinLossLayer<Dtype>::Reshape(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
-  // replace with CHECK_EQ(bottom[1]->channels(), 1) OR CHECK_EQ(bottom[1]->channels(), bottom[0]->channels())
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
   int dim = bottom[0]->count()/bottom[0]->num();
-  CHECK_EQ(groundm_.num(), dim) << "Wrong dimensions of distance matrix";
-  CHECK_EQ(groundm_.count(), dim * dim) << "Wrong dimensions of distance matrix";    
+  CHECK_EQ(groundm_.num(), dim) << "Wrong dimensions for distance matrix";
+  CHECK_EQ(groundm_.count(), dim * dim) <<
+    "Wrong dimensions for distance matrix";
 }
 
 
@@ -98,7 +103,7 @@ void WassersteinLossLayer<Dtype>::Forward_cpu(
     tmp_.ReshapeLike(u_);
     ylabel = tmp_.mutable_cpu_data();
     caffe_set(count, Dtype(0), ylabel);
-    for (int i = 0; i < num; ++i){
+    for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(input_ylabel[i]);
       ylabel[i*dim + label] = Dtype(1);
     }
@@ -112,9 +117,6 @@ void WassersteinLossLayer<Dtype>::Forward_cpu(
       u[i] = Dtype(val);
       v[i] = Dtype(val);
   }
-  
-  tmp_.ReshapeLike(u_);
-  Dtype* tmp = tmp_.mutable_cpu_data();
 
   uint32_t scaling_iter = this->layer_param_.wasserstein_param().scaling_iter();
   for (int i = 0; i < scaling_iter; i++) {
@@ -129,6 +131,12 @@ void WassersteinLossLayer<Dtype>::Forward_cpu(
     caffe_div(count, ypred, u, u);
   }
 
+  tmp_.ReshapeLike(u_);
+  Dtype* tmp = tmp_.mutable_cpu_data();
+
+  tmp2_.ReshapeLike(u_);
+  Dtype* tmp2 = tmp2_.mutable_cpu_data();
+
   // Loss.
   const Dtype* KM = KM_.cpu_data();
   caffe_cpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(1.),
@@ -136,21 +144,21 @@ void WassersteinLossLayer<Dtype>::Forward_cpu(
   Dtype loss = caffe_cpu_dot(count, v, tmp);
 
   // Entropy term.
-  // (u.logu)^t K v 
+  // (u.logu)^t K v
   caffe_log(count, u, tmp);
   caffe_mul(count, u, tmp, tmp);
 
   caffe_cpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(1.0/lambda),
-                 tmp, K, Dtype(0.), tmp);
-  loss += caffe_cpu_dot(count, tmp, v);
+                 tmp, K, Dtype(0.), tmp2);
+  loss += caffe_cpu_dot(count, tmp2, v);
 
-  // u^t K (v.logv) 
+  // u^t K (v.logv)
   caffe_log(count, v, tmp);
   caffe_mul(count, v, tmp, tmp);
 
   caffe_cpu_gemm(CblasNoTrans, CblasTrans, num, dim, dim, Dtype(1.0/lambda),
-                 tmp, K, Dtype(0.), tmp);
-  loss += caffe_cpu_dot(count, tmp, u);
+                 tmp, K, Dtype(0.), tmp2);
+  loss += caffe_cpu_dot(count, tmp2, u);
 
   // u^t (K.logK) v
   caffe_cpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(1.0/lambda),
@@ -180,8 +188,8 @@ void WassersteinLossLayer<Dtype>::Backward_cpu(
     caffe_scal(bottom[0]->count(), Dtype(1.0/(lambda*num)), alpha);
 
     if (this->layer_param_.wasserstein_param().shift_gradient()) {
-      caffe_cpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(-1.0/dim), 
-		     alpha, one_.cpu_data(), Dtype(1.), alpha);
+      caffe_cpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(-1.0/dim),
+                     alpha, one_.cpu_data(), Dtype(1.), alpha);
     }
   }
 }

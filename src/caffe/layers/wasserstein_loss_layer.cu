@@ -1,13 +1,15 @@
-#include <fstream>
 #include <algorithm>
 #include <cmath>
+#include <string>
 #include <vector>
-#include "hdf5.h"
-#include "hdf5_hl.h"
-#include "stdint.h"
+
 #include "caffe/filler.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/math_functions.hpp"
+
+#include "hdf5.h"
+#include "hdf5_hl.h"
+#include "stdint.h"
 
 #include "caffe/layers/wasserstein_loss_layer.hpp"
 
@@ -34,7 +36,7 @@ void WassersteinLossLayer<Dtype>::Forward_gpu(
     tmp_.ReshapeLike(u_);
     ylabel = tmp_.mutable_cpu_data();
     caffe_set(count, Dtype(0), ylabel);
-    for (int i = 0; i < num; ++i){
+    for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(input_ylabel[i]);
       ylabel[i*dim + label] = Dtype(1);
     }
@@ -48,9 +50,6 @@ void WassersteinLossLayer<Dtype>::Forward_gpu(
       u[i] = Dtype(val);
       v[i] = Dtype(val);
   }
-  
-  tmp_.ReshapeLike(u_);
-  Dtype* tmp = tmp_.mutable_gpu_data();
 
   uint32_t scaling_iter = this->layer_param_.wasserstein_param().scaling_iter();
   for (int i = 0; i < scaling_iter; i++) {
@@ -65,6 +64,12 @@ void WassersteinLossLayer<Dtype>::Forward_gpu(
     caffe_div(count, ypred, u, u);
   }
 
+  tmp_.ReshapeLike(u_);
+  Dtype* tmp = tmp_.mutable_gpu_data();
+
+  tmp2_.ReshapeLike(u_);
+  Dtype* tmp2 = tmp2_.mutable_cpu_data();
+
   // Loss.
   Dtype loss;
   Dtype loss_tmp;
@@ -74,22 +79,22 @@ void WassersteinLossLayer<Dtype>::Forward_gpu(
                  u, KM, Dtype(0.), tmp);
   caffe_gpu_dot(count, v, tmp, &loss);
 
-  // (u.logu)^t K v 
+  // (u.logu)^t K v
   caffe_log(count, u, tmp);
   caffe_mul(count, u, tmp, tmp);
 
   caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(1.0/lambda),
-                 tmp, K, Dtype(0.), tmp);
-  caffe_gpu_dot(count, tmp, v, &loss_tmp);
+                 tmp, K, Dtype(0.), tmp2);
+  caffe_gpu_dot(count, tmp2, v, &loss_tmp);
   loss += loss_tmp;
 
-  // u^t K (v.logv) 
+  // u^t K (v.logv)
   caffe_log(count, v, tmp);
   caffe_mul(count, v, tmp, tmp);
 
   caffe_gpu_gemm(CblasNoTrans, CblasTrans, num, dim, dim, Dtype(1.0/lambda),
-                 tmp, K, Dtype(0.), tmp);
-  caffe_gpu_dot(count, tmp, u, &loss_tmp);
+                 tmp, K, Dtype(0.), tmp2);
+  caffe_gpu_dot(count, tmp2, u, &loss_tmp);
   loss += loss_tmp;
 
   // u^t (K.logK) v
@@ -121,8 +126,9 @@ void WassersteinLossLayer<Dtype>::Backward_gpu(
     caffe_scal(bottom[0]->count(), Dtype(1.0/(lambda*num)), alpha);
 
     if (this->layer_param_.wasserstein_param().shift_gradient()) {
-      caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim, Dtype(-1.0/dim), 
-		     alpha, one_.gpu_data(), Dtype(1.), alpha);
+      caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, num, dim, dim,
+                     Dtype(-1.0/dim), alpha, one_.gpu_data(),
+                     Dtype(1.), alpha);
     }
   }
 }

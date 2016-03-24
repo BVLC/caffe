@@ -39,7 +39,7 @@ class GradientChecker {
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom = -1);
 
-  // Check the gradient, allowing for shifts by a constant vector. 
+  // Check the gradient, allowing for shifts by a constant vector.
   void CheckGradientUpToShift(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
       int check_bottom = -1);
@@ -56,7 +56,8 @@ class GradientChecker {
   // param Blobs.  Otherwise (if check_bottom < -1), check only param Blobs.
   void CheckGradientSingle(Layer<Dtype>* layer,
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
-      int check_bottom, int top_id, int top_data_id, bool element_wise = false, bool up_to_shift = false);
+      int check_bottom, int top_id, int top_data_id, bool element_wise = false,
+      bool up_to_shift = false);
 
   // Checks the gradient of a network. This network should not have any data
   // layers or loss layers, since the function does not explicitly deal with
@@ -79,7 +80,8 @@ class GradientChecker {
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
-    int check_bottom, int top_id, int top_data_id, bool element_wise, bool up_to_shift) {
+    int check_bottom, int top_id, int top_data_id, bool element_wise,
+    bool up_to_shift) {
   if (element_wise) {
     CHECK_EQ(0, layer->blobs().size());
     CHECK_LE(0, top_id);
@@ -181,23 +183,23 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       Dtype feature = current_blob->cpu_data()[feat_id];
 
       if (up_to_shift) {
-	deviation = computed_gradient - estimated_gradient;
-	if (feat_id % dim == 0 || deviation > max_deviation) {
-	  max_deviation = deviation;
-	}
-	if (feat_id % dim == 0 || deviation < min_deviation) {
-	  min_deviation = deviation;
-	}
+        deviation = computed_gradient - estimated_gradient;
+        if (feat_id % dim == 0 || deviation > max_deviation) {
+          max_deviation = deviation;
+        }
+        if (feat_id % dim == 0 || deviation < min_deviation) {
+          min_deviation = deviation;
+        }
         Dtype scale = std::max(
-            std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
+          std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         if (scale > max_scale) {
-	  max_scale = scale;
-	}
+          max_scale = scale;
+        }
       }
 
       // LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
       //     << current_blob->cpu_diff()[feat_id];
-      if (!up_to_shift 
+      if (!up_to_shift
           && (kink_ - kink_range_ > fabs(feature)
           || fabs(feature) > kink_ + kink_range_)) {
         // We check relative accuracy, but for too small values, we threshold
@@ -217,11 +219,11 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       //    << " estimated_gradient: " << estimated_gradient;
 
       if (up_to_shift && feat_id % dim == (dim - 1)) {
-	EXPECT_NEAR(max_deviation, min_deviation, threshold_ * max_scale)
-	  << "debug: (top_id, top_data_id, blob_id) = "
-	  << top_id << "," << top_data_id << "," << blob_id
-	  << "; max - min deviation = " << max_deviation - min_deviation
-	  << "; max scale = " << max_scale;
+        EXPECT_NEAR(max_deviation, min_deviation, threshold_ * max_scale)
+          << "debug: (top_id, top_data_id, blob_id) = "
+          << top_id << "," << top_data_id << "," << blob_id
+          << "; max - min deviation = " << max_deviation - min_deviation
+          << "; max scale = " << max_scale;
         max_scale = 0;
         min_deviation = 0;
         max_deviation = 0;
@@ -259,7 +261,8 @@ void GradientChecker<Dtype>::CheckGradientUpToShift(Layer<Dtype>* layer,
     // LOG(ERROR) << "Up to shift: blob " << i << " size " << top[i]->count();
     for (int j = 0; j < top[i]->count(); ++j) {
       // LOG(ERROR) << "Up to shift: blob " << i << " data " << j;
-      CheckGradientSingle(layer, bottom, top, check_bottom, i, j, element_wise, up_to_shift);
+      CheckGradientSingle(layer, bottom, top, check_bottom, i, j, element_wise,
+                          up_to_shift);
     }
   }
 }
