@@ -464,11 +464,11 @@ ifeq ($(USE_OPENMP), 1)
   DUMMY_OPENMP_BINARY := $(shell mktemp)
   DUMMY_OPENMP_FILE := $(shell mktemp).cpp
   INTEL_OMP_DIR ?= $(shell find /opt/intel/ -readable -name libiomp5.so 2>/dev/null | grep -m 1 intel64 | xargs dirname)
-  define OPENMP_VERIFYING_CODE =
+  define OPENMP_VERIFYING_CODE
     "#include<omp.h> \n int main()  { \n #ifdef _OPENMP \n return 0; \n #else \n break_if_openmp_not_supported \n #endif \n }"
   endef
   ifeq ($(BLAS), mkl)
-    OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)/compiler/lib/intel64
+    OPENMP_VERIFYING_COMPILE_FLAGS = -liomp5 -L$(INTEL_OMP_DIR)
   endif
   OPENMP_VERIFYING_COMPILE_COMMAND = $(CXX) -fopenmp $(DUMMY_OPENMP_FILE) $(OPENMP_VERIFYING_COMPILE_FLAGS) -o $(DUMMY_OPENMP_BINARY) 2>/dev/null
   OPENMP_VERIFYING_COMMAND = echo -e $(OPENMP_VERIFYING_CODE) > $(DUMMY_OPENMP_FILE) && $(OPENMP_VERIFYING_COMPILE_COMMAND) && echo 1 || echo 0
@@ -479,7 +479,7 @@ ifeq ($(USE_OPENMP), 1)
     LINKFLAGS += -fopenmp
     ifeq ($(BLAS), mkl)
       LIBRARIES += iomp5
-      LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
+      LIBRARY_DIRS += $(INTEL_OMP_DIR)
     endif
   endif
 endif
