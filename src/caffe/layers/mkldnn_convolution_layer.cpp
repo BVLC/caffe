@@ -334,6 +334,19 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
     if(prv_ptr == NULL)
     {
+      if(converted_in_fwd)
+      {
+        // hack for reusing previously done conversion
+        if(1) //if(dnnLayoutCompare<Dtype>(converted_in_fwd->layout_int , this->layout_int))
+        {
+          DLOG(INFO) << "reusing fwd               " << converted_in_fwd->name << " == " << this->name;
+          return converted_in_fwd->internal_ptr;
+        } else
+        {
+          DLOG(INFO) << "layout doesn't match      " << converted_in_fwd->name << " != " << this->name;
+        }
+      }
+
       DLOG(INFO) << "convert      => priv                                => " << this->name;
 
       convert_resources[dnnResourceFrom] = is_diff ? (void *) blob->cpu_diff() : (void *) blob->cpu_data();
@@ -367,10 +380,13 @@ Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
         if(converted_in_fwd)
         {
           // hack for reusing previously done conversion
-          if(dnnLayoutCompare<Dtype>(converted_in_fwd->layout_int , this->layout_int))
+          if(1) //if(dnnLayoutCompare<Dtype>(converted_in_fwd->layout_int , this->layout_int))
           {
-            DLOG(INFO) << "layout OK                 " << converted_in_fwd->name << " == " << this->name;
+            DLOG(INFO) << "reusing fwd               " << converted_in_fwd->name << " == " << this->name;
             return converted_in_fwd->internal_ptr;
+          } else
+          {
+            DLOG(INFO) << "layout doesn't match      " << converted_in_fwd->name << " != " << this->name;
           }
         }
         DLOG(INFO) << "convert priv => priv      " << current_descr->name << " => " << this->name;
