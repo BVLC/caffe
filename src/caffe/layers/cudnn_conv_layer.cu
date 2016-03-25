@@ -6,7 +6,6 @@
 #include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 // Those defines serve single purpose to keep sane C++ formatting
 // in presence of <80 characters rule

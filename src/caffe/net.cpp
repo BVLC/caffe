@@ -601,16 +601,6 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::InputDebugInfo(const int input_id) {
-  const Blob<Dtype>& blob = *net_input_blobs_[input_id];
-  const string& blob_name = blob_names_[net_input_blob_indices_[input_id]];
-  const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
-  LOG_IF(INFO, Caffe::root_solver())
-      << "    [Forward] "
-      << "Input " << blob_name << " data: " << data_abs_val_mean;
-}
-
-template <typename Dtype>
 void Net<Dtype>::ForwardDebugInfo(const int layer_id) {
   for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
     const Blob<Dtype>& blob = *top_vecs_[layer_id][top_id];

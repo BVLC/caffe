@@ -17,6 +17,7 @@
 #include "caffe/proto/caffe.pb.h"
 
 #ifdef USE_CUDNN
+#include "caffe/layers/cudnn_batch_norm_layer.hpp"
 #include "caffe/layers/cudnn_conv_layer.hpp"
 #include "caffe/layers/cudnn_lcn_layer.hpp"
 #include "caffe/layers/cudnn_lrn_layer.hpp"
@@ -68,6 +69,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
+  return shared_ptr<Layer<Dtype> >();  // [-Wreturn-type]
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);

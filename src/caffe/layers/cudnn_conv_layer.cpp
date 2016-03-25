@@ -7,7 +7,6 @@
 #include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 
 
 namespace caffe {
