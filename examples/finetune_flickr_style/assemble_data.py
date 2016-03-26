@@ -13,7 +13,9 @@ from skimage import io
 import multiprocessing
 
 # Flickr returns a special image if the request is unavailable.
-MISSING_IMAGE_SHA1 = '6a92790b1c2a301c6e7ddef645dca1f53ea97ac2'
+MISSING_IMAGE_SHA1_LIST = ['6a92790b1c2a301c6e7ddef645dca1f53ea97ac2', 
+                           '10f3f7f79e6528aa9d828316248997568ac0d833', #image not found
+                           '0b941f81d506f1245f81a5a153008a3fe475bc9a'] #empty image
 
 example_dirname = os.path.abspath(os.path.dirname(__file__))
 caffe_dirname = os.path.abspath(os.path.join(example_dirname, '../..'))
@@ -27,7 +29,7 @@ def download_image(args_tuple):
         if not os.path.exists(filename):
             urllib.urlretrieve(url, filename)
         with open(filename) as f:
-            assert hashlib.sha1(f.read()).hexdigest() != MISSING_IMAGE_SHA1
+            assert hashlib.sha1(f.read()).hexdigest() not in MISSING_IMAGE_SHA1_LIST
         test_read_image = io.imread(filename)
         return True
     except KeyboardInterrupt:
