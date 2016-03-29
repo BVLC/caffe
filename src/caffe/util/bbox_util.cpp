@@ -1037,6 +1037,7 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
   }
 
   for (int i = 0; i < num_img; ++i) {
+    cv::Mat image = images[i];
     for (map<int, vector<NormalizedBBox> >::iterator it =
          all_detections[i].begin(); it != all_detections[i].end(); ++it) {
       int label = it->first;
@@ -1050,7 +1051,7 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
       for (int j = 0; j < bboxes.size(); ++j) {
         cv::Point top_left_pt(bboxes[j].xmin(), bboxes[j].ymin());
         cv::Point bottom_right_pt(bboxes[j].xmax(), bboxes[j].ymax());
-        cv::rectangle(images[i], top_left_pt, bottom_right_pt, color, 4);
+        cv::rectangle(image, top_left_pt, bottom_right_pt, color, 4);
         cv::Point bottom_left_pt(bboxes[j].xmin(), bboxes[j].ymax());
         int fontface = cv::FONT_HERSHEY_SIMPLEX;
         double scale = 1;
@@ -1062,14 +1063,14 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
         cv::Size text = cv::getTextSize(buffer, fontface, scale, thickness,
                                         &baseline);
         cv::rectangle(
-            images[i], bottom_left_pt + cv::Point(0, 0),
+            image, bottom_left_pt + cv::Point(0, 0),
             bottom_left_pt + cv::Point(text.width, -text.height-baseline),
             color, CV_FILLED);
-        cv::putText(images[i], buffer, bottom_left_pt - cv::Point(0, baseline),
+        cv::putText(image, buffer, bottom_left_pt - cv::Point(0, baseline),
                     fontface, scale, CV_RGB(0, 0, 0), thickness, 8);
       }
     }
-    cv::imshow("detections", images[i]);
+    cv::imshow("detections", image);
     if (cv::waitKey(1) == 27) {
       exit(-1);
     }
