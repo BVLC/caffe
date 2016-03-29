@@ -275,7 +275,7 @@ max_ratio = 95
 step = int(math.floor((max_ratio - min_ratio) / (len(mbox_source_layers) - 2)))
 min_sizes = []
 max_sizes = []
-for ratio in xrange(min_ratio, max_ratio, step):
+for ratio in xrange(min_ratio, max_ratio + 1, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
 min_sizes = [min_dim * 10 / 100.] + min_sizes

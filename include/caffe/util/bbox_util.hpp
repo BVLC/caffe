@@ -1,3 +1,9 @@
+#ifdef USE_OPENCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#endif  // USE_OPENCV
+
 #ifndef CAFFE_UTIL_BBOX_UTIL_H_
 #define CAFFE_UTIL_BBOX_UTIL_H_
 
@@ -265,8 +271,16 @@ template <typename Dtype>
 void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
           const int image_id, const int label, const vector<int>& indices,
           const bool clip_bbox, Blob<Dtype>* detection_blob);
-
 #endif  // !CPU_ONLY
+
+#ifdef USE_OPENCV
+vector<cv::Scalar> GetColors(const int n);
+
+template <typename Dtype>
+void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
+                   const float threshold, const vector<cv::Scalar>& colors,
+                   const map<int, string>& label_to_display_name);
+#endif  // USE_OPENCV
 
 }  // namespace caffe
 
