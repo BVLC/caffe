@@ -73,7 +73,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(batch_size, 0) << "Positive batch size required";
   top_shape[0] = batch_size;
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].data_.Reshape(top_shape);
+    this->prefetch_[i].data_[0]->Reshape(top_shape);
   }
   top[0]->Reshape(top_shape);
 
@@ -84,7 +84,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].label_.Reshape(label_shape);
+    this->prefetch_[i].data_[1]->Reshape(label_shape);
   }
 }
 
@@ -103,7 +103,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   double read_time = 0;
   double trans_time = 0;
   CPUTimer timer;
-  CHECK(batch->data_.count());
+  CHECK(batch->data_[0]->count());
   CHECK(this->transformed_data_.count());
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
@@ -122,10 +122,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
-  batch->data_.Reshape(top_shape);
+  batch->data_[0]->Reshape(top_shape);
 
-  Dtype* prefetch_data = batch->data_.mutable_cpu_data();
-  Dtype* prefetch_label = batch->label_.mutable_cpu_data();
+  Dtype* prefetch_data = batch->data_[0]->mutable_cpu_data();
+  Dtype* prefetch_label = batch->data_[1]->mutable_cpu_data();
 
   // datum scales
   const int lines_size = lines_.size();
@@ -139,7 +139,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
-    int offset = batch->data_.offset(item_id);
+    int offset = batch->data_[0]->offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
