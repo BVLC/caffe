@@ -104,7 +104,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     data_transformer_.reset(
         new DataTransformer<Dtype>(this->layer_param_.transform_param(),
-                                   this->phase_));
+                                   this->phase_, this->device_));
     data_transformer_->InitRand();
   }
 }
