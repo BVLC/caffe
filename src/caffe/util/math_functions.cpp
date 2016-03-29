@@ -62,9 +62,10 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   // TODO: linux memset for AVX2 is very poor (glibc 2.20)
   // I hope it will get rewritten. So no parallelization of memset(Y,0,N)
   // will be needed
- //   memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
- //   return;
- // }
+  // if (alpha == 0) {
+  //   memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+  //   return;
+  // }
 
   // If we are executing parallel region already then do not start another one
   // if also number of data to be processed is smaller than arbitrary:
