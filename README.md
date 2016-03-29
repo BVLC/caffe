@@ -163,7 +163,7 @@ Refer to the BVLC/caffe master branch README for all other details such as licen
 
 # SSD: Single Shot MultiBox Detector
 
-By [Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](http://research.google.com/pubs/DragomirAnguelov.html), [Dumitru Erhan](http://research.google.com/pubs/DumitruErhan.html), [Christian Szegedy](http://research.google.com/pubs/ChristianSzegedy.html), [Scott Reed](http://www-personal.umich.edu/~reedscot/).
+By [Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](http://research.google.com/pubs/DragomirAnguelov.html), [Dumitru Erhan](http://research.google.com/pubs/DumitruErhan.html), [Christian Szegedy](http://research.google.com/pubs/ChristianSzegedy.html), [Scott Reed](http://www-personal.umich.edu/~reedscot/), Cheng-Yang Fu, [Alexander C. Berg](http://acberg.com).
 
 ### Introduction
 
@@ -216,6 +216,7 @@ Please cite SSD in your publications if it helps your research:
   # Modify Makefile.config according to your Caffe installation.
   cp Makefile.config.example Makefile.config
   make -j8
+  # Make sure to include $CAFFE_ROOT/python to your PYTHONPATH.
   make py
   make test -j8
   make runtest
@@ -264,12 +265,20 @@ Please cite SSD in your publications if it helps your research:
   # It should reach 72.* mAP at 60k iterations.
   python examples/ssd/ssd_pascal.py
   ```
+  If you don't have time to train your model, you can download a pre-trained model at [here](http://www.cs.unc.edu/~wliu/projects/SSD/models_VGGNet_VOC0712_SSD_300x300.tar.gz).
 
 2. Evaluate the most recent snapshot.
   ```Shell
   # If you would like to test a model you trained, you can do:
   python examples/ssd/score_ssd_pascal.py
   ```
+
+3. Test your model using a webcam. Note: press <kbd>esc</kbd> to stop.
+  ```Shell
+  # If you would like to attach a webcam to a model you trained, you can do:
+  python examples/ssd/ssd_pascal_webcam.py
+  ```
+  [Here](https://drive.google.com/file/d/0BzKzrI_SkD1_R09NcjM1eElLcWc/view) is a demo video of running a SSD500 model trained on [MSCOCO](http://mscoco.org) dataset.
 
 ### Contact
 Please direct all comments and report all bugs to:

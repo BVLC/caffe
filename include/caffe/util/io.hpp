@@ -256,6 +256,14 @@ inline bool MapLabelToName(const LabelMap& map,
   return MapLabelToName(map, true, label_to_name);
 }
 
+bool MapLabelToDisplayName(const LabelMap& map, const bool strict_check,
+                           std::map<int, string>* label_to_display_name);
+
+inline bool MapLabelToDisplayName(const LabelMap& map,
+                              std::map<int, string>* label_to_display_name) {
+  return MapLabelToDisplayName(map, true, label_to_display_name);
+}
+
 #ifdef USE_OPENCV
 cv::Mat ReadImageToCVMat(const string& filename, const int height,
     const int width, const int min_dim, const int max_dim, const bool is_color);

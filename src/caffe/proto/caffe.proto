@@ -429,7 +429,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: norm_param)
+// LayerParameter next available layer-specific ID: 152 (last added: video_data_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -540,6 +540,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
+  optional VideoDataParameter video_data_param = 151;
   optional WindowDataParameter window_data_param = 129;
   optional MergeCropParameter mergecrop_param = 147;
   optional AffinityParameter affinity_param = 148;
@@ -1002,6 +1003,10 @@ message DetectionOutputParameter {
   // Only consider detections whose confidences are larger than a threshold.
   // If not provided, consider all boxes.
   optional float confidence_threshold = 9;
+  // If true, visualize the detection results.
+  optional bool visualize = 10 [default = false];
+  // The threshold used to visualize the detection results.
+  optional float visualize_threshold = 11;
 }
 
 message DropoutParameter {
@@ -1606,6 +1611,14 @@ message TileParameter {
 // Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
+}
+
+message VideoDataParameter{
+  enum VideoType {
+    WEBCAM = 0;
+  }
+  optional VideoType video_type = 1 [default = WEBCAM];
+  optional int32 device_id = 2 [default = 0];
 }
 
 message WindowDataParameter {

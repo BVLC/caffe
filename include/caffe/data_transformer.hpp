@@ -146,6 +146,10 @@ class DataTransformer {
    */
   void CropImage(const cv::Mat& img, const NormalizedBBox& bbox,
                  cv::Mat* crop_img);
+
+  void TransformInv(const Blob<Dtype>* blob, vector<cv::Mat>* cv_imgs);
+  void TransformInv(const Dtype* data, cv::Mat* cv_img, const int height,
+                    const int width, const int channels);
 #endif  // USE_OPENCV
 
   /**

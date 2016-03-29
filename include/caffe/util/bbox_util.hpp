@@ -486,6 +486,15 @@ void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
 #endif // USE_CUDA
 #endif  // !CPU_ONLY
 
+#ifdef USE_OPENCV
+vector<cv::Scalar> GetColors(const int n);
+
+template <typename Dtype>
+void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
+                   const float threshold, const vector<cv::Scalar>& colors,
+                   const map<int, string>& label_to_display_name);
+#endif  // USE_OPENCV
+
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_BBOX_UTIL_H_

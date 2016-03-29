@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+#include "caffe/data_transformer.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/bbox_util.hpp"
@@ -38,7 +39,8 @@ class DetectionOutputLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "DetectionOutput"; }
-  virtual inline int ExactBottomBlobs() const { return 3; }
+  virtual inline int MinBottomBlobs() const { return 3; }
+  virtual inline int MaxBottomBlobs() const { return 4; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
@@ -95,12 +97,17 @@ class DetectionOutputLayer : public Layer<Dtype> {
   string output_name_prefix_;
   string output_format_;
   map<int, string> label_to_name_;
+  map<int, string> label_to_display_name_;
   vector<string> names_;
   vector<pair<int, int> > sizes_;
   int num_test_image_;
   int name_count_;
 
   ptree detections_;
+
+  bool visualize_;
+  float visualize_threshold_;
+  shared_ptr<DataTransformer<Dtype> > data_transformer_;
 };
 
 }  // namespace caffe

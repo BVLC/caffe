@@ -59,6 +59,8 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           << "Failed to read label map file: " << label_map_file;
       CHECK(MapLabelToName(label_map, true, &label_to_name_))
           << "Failed to convert label to name.";
+      CHECK(MapLabelToDisplayName(label_map, true, &label_to_display_name_))
+          << "Failed to convert label to display name.";
     }
   } else {
     need_save_ = false;
@@ -94,6 +96,17 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     need_save_ = false;
   }
   name_count_ = 0;
+  visualize_ = detection_output_param.visualize();
+  if (visualize_) {
+    visualize_threshold_ = 0.6;
+    if (detection_output_param.has_visualize_threshold()) {
+      visualize_threshold_ = detection_output_param.visualize_threshold();
+    }
+    data_transformer_.reset(
+        new DataTransformer<Dtype>(this->layer_param_.transform_param(),
+                                   this->phase_));
+    data_transformer_->InitRand();
+  }
 }
 
 template <typename Dtype>

@@ -1,3 +1,7 @@
+#ifdef USE_OPENCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#endif  // USE_OPENCV
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
 #include <map>
@@ -97,6 +101,10 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
     }
   }
 
+  if (num_kept == 0) {
+    LOG(INFO) << "Couldn't find any detections";
+    return;
+  }
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
@@ -240,6 +248,15 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
         }
       }
     }
+  }
+  if (visualize_) {
+#ifdef USE_OPENCV
+    vector<cv::Mat> cv_imgs;
+    this->data_transformer_->TransformInv(bottom[3], &cv_imgs);
+    vector<cv::Scalar> colors = GetColors(label_to_display_name_.size());
+    VisualizeBBox(cv_imgs, top[0], visualize_threshold_, colors,
+        label_to_display_name_);
+#endif  // USE_OPENCV
   }
 }
 
