@@ -7,6 +7,7 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
+#include "caffe/layers/batch_norm_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
@@ -31,6 +32,8 @@
 #ifdef WITH_PYTHON_LAYER
 #include "caffe/layers/python_layer.hpp"
 #endif
+
+#pragma GCC diagnostic ignored "-Wreturn-type"
 
 namespace caffe {
 
@@ -69,7 +72,6 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
-  return shared_ptr<Layer<Dtype> >();  // [-Wreturn-type]
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
