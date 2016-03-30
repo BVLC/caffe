@@ -939,8 +939,12 @@ void Net<Dtype>::ClearParamDiffs(int learnable_param_id) {
   Blob<Dtype>* blob = learnable_params_[learnable_param_id];
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    caffe_set(blob->count(), static_cast<Dtype>(0),
-              blob->mutable_cpu_diff());
+      if(blob->prv_diff())
+        caffe_set(blob->prv_diff_count(), static_cast<Dtype>(0),
+                  blob->mutable_prv_diff());
+      else
+        caffe_set(blob->count(), static_cast<Dtype>(0),
+                  blob->mutable_cpu_diff());
     break;
   case Caffe::GPU:
 #ifndef CPU_ONLY

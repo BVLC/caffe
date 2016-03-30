@@ -370,9 +370,17 @@ ifeq ($(BLAS), mkl)
 	# MKL
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
-	MKL_DIR ?= /opt/intel/mkl
-	BLAS_INCLUDE ?= $(MKL_DIR)/include
-	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
+	MKLROOT ?= /opt/intel/mkl
+	BLAS_INCLUDE ?= $(MKLROOT)/include
+	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
+
+	# detect support for mkl-dnn primitives
+	ifneq ("$(wildcard $(BLAS_INCLUDE)/mkl_dnn.h)","")
+	    CXXFLAGS += -DMKLDNN_SUPPORTED
+	    ifeq ($(USE_MKLDNN), 1)
+		CXXFLAGS += -DUSE_MKLDNN
+	    endif
+	endif
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas

@@ -162,10 +162,17 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
-        caffe_axpy(net_params[param_id]->count(),
-            local_decay,
-            net_params[param_id]->cpu_data(),
-            net_params[param_id]->mutable_cpu_diff());
+        if(net_params[param_id]->prv_data()
+           && (net_params[param_id]->prv_data_count() == net_params[param_id]->count()))
+          caffe_axpy(net_params[param_id]->count(),
+                     local_decay,
+                     net_params[param_id]->prv_data(),
+                     net_params[param_id]->mutable_prv_diff());
+        else
+          caffe_axpy(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->cpu_data(),
+              net_params[param_id]->mutable_cpu_diff());
       } else if (regularization_type == "L1") {
         caffe_cpu_sign(net_params[param_id]->count(),
             net_params[param_id]->cpu_data(),
@@ -226,12 +233,27 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-              net_params[param_id]->cpu_diff(), momentum,
-              history_[param_id]->mutable_cpu_data());
-    caffe_copy(net_params[param_id]->count(),
-        history_[param_id]->cpu_data(),
-        net_params[param_id]->mutable_cpu_diff());
+    if(net_params[param_id]->prv_diff()
+        && (net_params[param_id]->prv_diff_count() == net_params[param_id]->count())) {
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->prv_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
+
+      caffe_copy(net_params[param_id]->count(),
+                 history_[param_id]->cpu_data(),
+                 net_params[param_id]->mutable_prv_diff());
+
+    }
+    else {
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+          net_params[param_id]->cpu_diff(), momentum,
+          history_[param_id]->mutable_cpu_data());
+
+      caffe_copy(net_params[param_id]->count(),
+          history_[param_id]->cpu_data(),
+          net_params[param_id]->mutable_cpu_diff());
+
+    }
     break;
   }
   case Caffe::GPU: {
