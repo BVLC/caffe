@@ -26,7 +26,7 @@ class EltwiseLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Eltwise"; }
-  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
