@@ -59,6 +59,8 @@ message FillerParameter {
     AVERAGE = 2;
   }
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+  
+  optional float msra_coeff = 21 [default = 1];  
 }
 
 message NetParameter {
@@ -615,6 +617,10 @@ message CropParameter {
   // axis).
   optional int32 axis = 1 [default = 2];
   repeated uint32 offset = 2;
+  
+  // these are additional fields for the CropSimple layer 
+  optional uint32 crop_width = 11 [default = 0 ];
+  optional uint32 crop_height = 12 [default = 0 ];
 }
 
 message DataParameter {
