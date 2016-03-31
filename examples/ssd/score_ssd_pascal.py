@@ -293,7 +293,7 @@ clip = True
 
 # Solver parameters.
 # Defining which GPUs to use.
-gpus = "5"
+gpus = "0"
 gpulist = gpus.split(",")
 num_gpus = len(gpulist)
 
