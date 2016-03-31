@@ -100,19 +100,19 @@ template <>
 bool isSupported<double>(void);
 
 template <>
-bool isSupported<GPUDevice<double>>(void);
+bool isSupported<GPUDevice<double> >(void);
 
 template <>
 bool isSupported<float>(void);
 
 template <>
-bool isSupported<GPUDevice<float>>(void);
+bool isSupported<GPUDevice<float> >(void);
 
 template <>
-bool isSupported<CPUDevice<float>>(void);
+bool isSupported<CPUDevice<float> >(void);
 
 template <>
-bool isSupported<CPUDevice<double>>(void);
+bool isSupported<CPUDevice<double> >(void);
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
 template <>
