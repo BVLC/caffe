@@ -44,10 +44,6 @@ template <typename Dtype>
 void DetectionEvaluateLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK_LE(count_, sizes_.size());
-  if (sizes_.size() > 0 && count_ == sizes_.size()) {
-    // reset count after a full iterations through the DB.
-    count_ = 0;
-  }
   CHECK_EQ(bottom[0]->num(), 1);
   CHECK_EQ(bottom[0]->channels(), 1);
   CHECK_EQ(bottom[0]->width(), 7);
@@ -220,6 +216,10 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
     }
     if (sizes_.size() > 0) {
       ++count_;
+      if (count_ == sizes_.size()) {
+        // reset count after a full iterations through the DB.
+        count_ = 0;
+      }
     }
   }
 }
