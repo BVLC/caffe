@@ -9,7 +9,6 @@ template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   PoolingLayer<Dtype>::LayerSetUp(bottom, top);
-  CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
   cudnn::createPoolingDesc<Dtype>(&pooling_desc_,
@@ -37,7 +36,6 @@ CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
   cudnnDestroyPoolingDescriptor(pooling_desc_);
-  cudnnDestroy(handle_);
 }
 
 INSTANTIATE_CLASS(CuDNNPoolingLayer);

@@ -2,6 +2,7 @@
 # Contributions simplifying and improving our build system are welcome!
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
+# cuDNN version 4 or higher is required.
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).

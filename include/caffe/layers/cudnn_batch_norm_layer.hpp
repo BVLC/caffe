@@ -1,5 +1,5 @@
-#ifndef CAFFE_CUDNN_SIGMOID_LAYER_HPP_
-#define CAFFE_CUDNN_SIGMOID_LAYER_HPP_
+#ifndef CAFFE_CUDNN_BATCH_NORM_LAYER_HPP_
+#define CAFFE_CUDNN_BATCH_NORM_LAYER_HPP_
 
 #include <vector>
 
@@ -7,25 +7,21 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/neuron_layer.hpp"
-#include "caffe/layers/sigmoid_layer.hpp"
+#include "caffe/layers/batch_norm_layer.hpp"
 
 namespace caffe {
 
 #ifdef USE_CUDNN
-/**
- * @brief CuDNN acceleration of SigmoidLayer.
- */
 template <typename Dtype>
-class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
+class CuDNNBatchNormLayer : public BatchNormLayer<Dtype> {
  public:
-  explicit CuDNNSigmoidLayer(const LayerParameter& param)
-      : SigmoidLayer<Dtype>(param), handles_setup_(false) {}
+  explicit CuDNNBatchNormLayer(const LayerParameter& param)
+      : BatchNormLayer<Dtype>(param), epsilon_(1e-4), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual ~CuDNNSigmoidLayer();
+  virtual ~CuDNNBatchNormLayer();
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -33,13 +29,17 @@ class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  // cuDNN descriptors / handles
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
+  cudnnTensorDescriptor_t scale_bias_mean_var_desc_;
+  cudnnBatchNormMode_t mode_;
+
+  double epsilon_;
+  Blob<Dtype> save_mean_, save_inv_var_;
   bool handles_setup_;
-  cudnnTensorDescriptor_t bottom_desc_;
-  cudnnTensorDescriptor_t top_desc_;
-  cudnnActivationDescriptor_t activ_desc_;
 };
 #endif
 
 }  // namespace caffe
 
-#endif  // CAFFE_CUDNN_SIGMOID_LAYER_HPP_
+#endif  // CAFFE_CUDNN_BATCH_NORM_LAYER_HPP_

@@ -465,7 +465,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     for (int devices = 1; devices <= available_devices; ++devices) {
       // Configure batch size for single / multi device equivalence.
       // Constant data is needed for multi device as for accumulation.
-      num_ = kNum * devices;
+      num_ = kNum * devices * devices;
 
       // Initialize the solver and run K (= iter_to_check) solver iterations
       // (on single device).
@@ -478,12 +478,15 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
           iter_to_check + 1, &updated_params);
 
       // Reinitialize the solver and run K+1 solver iterations.
-      num_ = kNum;
+      num_ = kNum * devices;
       RunLeastSquaresSolver(learning_rate, weight_decay, momentum,
           iter_to_check + 1, kIterSize, devices);
 
       // Check that the solver's solution matches ours.
       CheckLeastSquaresUpdate(updated_params);
+
+      // Reset initial value of num_
+      num_ = kNum;
     }
   }
 
@@ -538,10 +541,12 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     const vector<Blob<Dtype>*>& params = solver_->net()->learnable_params();
     for (int i = 0; i < params.size(); ++i) {
       for (int j = 0; j < params[i]->count(); ++j) {
-        EXPECT_EQ(param_copies[i]->cpu_data()[j], params[i]->cpu_data()[j])
-            << "param " << i << " data differed at dim " << j;
-        EXPECT_EQ(param_copies[i]->cpu_diff()[j], params[i]->cpu_diff()[j])
-            << "param " << i << " diff differed at dim " << j;
+        Dtype rel_error = Dtype(std::max(1., fabs(params[i]->cpu_data()[j])) *
+            1.e-5);
+        EXPECT_NEAR(param_copies[i]->cpu_data()[j], params[i]->cpu_data()[j],
+            rel_error) << "param " << i << " data differed at dim " << j;
+        EXPECT_NEAR(param_copies[i]->cpu_diff()[j], params[i]->cpu_diff()[j],
+            rel_error) << "param " << i << " diff differed at dim " << j;
       }
     }
 
@@ -549,10 +554,12 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
     for (int i = 0; i < history.size(); ++i) {
       for (int j = 0; j < history[i]->count(); ++j) {
-        EXPECT_EQ(history_copies[i]->cpu_data()[j], history[i]->cpu_data()[j])
-            << "history blob " << i << " data differed at dim " << j;
-        EXPECT_EQ(history_copies[i]->cpu_diff()[j], history[i]->cpu_diff()[j])
-            << "history blob " << i << " diff differed at dim " << j;
+        Dtype rel_error = Dtype(std::max(1., fabs(history[i]->cpu_data()[j])) *
+            1.e-5);
+        EXPECT_NEAR(history_copies[i]->cpu_data()[j], history[i]->cpu_data()[j],
+            rel_error) << "history blob " << i << " data differed at dim " << j;
+        EXPECT_NEAR(history_copies[i]->cpu_diff()[j], history[i]->cpu_diff()[j],
+            rel_error) << "history blob " << i << " diff differed at dim " << j;
       }
     }
   }

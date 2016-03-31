@@ -13,6 +13,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/util/gpu_memory.hpp"
 #include "caffe/util/signal_handler.h"
 
 using caffe::Blob;
@@ -148,6 +149,7 @@ caffe::SolverAction::Enum GetRequestedAction(
     return caffe::SolverAction::NONE;
   }
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
+  return caffe::SolverAction::NONE;
 }
 
 // Train / Finetune a model.
@@ -401,6 +403,12 @@ int main(int argc, char** argv) {
       "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+
+  // initialize gpu memory arena
+  vector<int> gpus;
+  get_gpus(&gpus);
+  caffe::gpu_memory::arena arena(gpus, caffe::gpu_memory::DefaultPool, false);
+
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {

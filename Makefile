@@ -7,12 +7,19 @@ $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
+# Rectify input parameters
+ifeq ($(CPU_ONLY),1)
+  USE_CUDNN=0
+endif
+
+PROJECT_DIR=$(PWD)
+
 BUILD_DIR_LINK := $(BUILD_DIR)
 ifeq ($(RELEASE_BUILD_DIR),)
-	RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
+	RELEASE_BUILD_DIR := $(PROJECT_DIR)/.$(BUILD_DIR)_release
 endif
 ifeq ($(DEBUG_BUILD_DIR),)
-	DEBUG_BUILD_DIR := .$(BUILD_DIR)_debug
+	DEBUG_BUILD_DIR := $(PROJECT_DIR)/.$(BUILD_DIR)_debug
 endif
 
 DEBUG ?= 0
@@ -23,6 +30,8 @@ else
 	BUILD_DIR := $(RELEASE_BUILD_DIR)
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
+
+THIRDPARTY_DIR=$(PROJECT_DIR)/3rdparty
 
 # All of the directories containing code.
 SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
@@ -171,7 +180,7 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include $(THIRDPARTY_DIR)
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
@@ -325,6 +334,8 @@ endif
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
+	INCLUDE_DIRS += ${CUDNN_DIR}/include
+	LIBRARY_DIRS += ${CUDNN_DIR}/install/cuda/lib64
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
@@ -440,7 +451,7 @@ endif
 # Define build targets
 ##############################
 .PHONY: all lib test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
-	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
+	py mat py$(PROJECT) mat$(PROJECT) thirdparty proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
 all: lib tools examples
