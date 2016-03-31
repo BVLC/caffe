@@ -881,7 +881,7 @@ void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
   prec->clear();
   rec->clear();
   *ap = 0;
-  if (tp.size() == 0) {
+  if (tp.size() == 0 || num_pos == 0) {
     return;
   }
 
