@@ -1,6 +1,6 @@
 // This program retrieves the sizes of a set of images.
 // Usage:
-//   get_image_size ROOTFOLDER LISTFILE OUTFILE
+//   get_image_size [FLAGS] ROOTFOLDER/ LISTFILE OUTFILE
 //
 // where ROOTFOLDER is the root folder that holds all the images and
 // annotations, and LISTFILE should be a list of files as well as their labels
@@ -23,6 +23,9 @@
 #include "caffe/util/io.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
+
+DEFINE_string(name_id_file, "",
+              "A file which maps image_name to image_id.");
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
@@ -56,6 +59,22 @@ int main(int argc, char** argv) {
   infile.close();
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
+  const string name_id_file = FLAGS_name_id_file;
+  std::map<string, int> map_name_id;
+  if (!name_id_file.empty()) {
+    std::ifstream nameidfile(name_id_file.c_str());
+    if (!nameidfile.good()) {
+      LOG(FATAL) << "Failed to open name_id_file: " << name_id_file;
+    }
+    std::string name;
+    int id;
+    while (nameidfile >> name >> id) {
+      CHECK(map_name_id.find(name) == map_name_id.end());
+      map_name_id[name] = id;
+    }
+    CHECK_EQ(map_name_id.size(), lines.size());
+  }
+
   // Storing to outfile
   boost::filesystem::path root_folder(argv[1]);
   std::ofstream outfile(argv[3]);
@@ -67,8 +86,14 @@ int main(int argc, char** argv) {
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     boost::filesystem::path img_file = root_folder / lines[line_id].first;
     GetImageSize(img_file.string(), &height, &width);
-    outfile << img_file.stem().string() << " " << height << " " << width
-        << std::endl;
+    std::string img_name = img_file.stem().string();
+    if (map_name_id.size() == 0) {
+      outfile << img_name << " " << height << " " << width << std::endl;
+    } else {
+      CHECK(map_name_id.find(img_name) != map_name_id.end());
+      int img_id = map_name_id.find(img_name)->second;
+      outfile << img_id << " " << height << " " << width << std::endl;
+    }
 
     if (++count % 1000 == 0) {
       LOG(INFO) << "Processed " << count << " files.";
