@@ -149,7 +149,7 @@ __global__ void StoPoolForwardTest(const int nthreads,
         cumvalues += bottom_slice[h * width + w] * bottom_slice[h * width + w];
       }
     }
-    top_data[index] = cumvalues / cumsum;
+    top_data[index] = (cumsum > 0.) ? cumvalues / cumsum : 0.;
   }
 }
 
