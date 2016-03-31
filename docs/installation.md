@@ -65,11 +65,11 @@ with a free trial and [student](http://software.intel.com/en-us/intel-education-
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
 
-### MKLDNN (optional)
+### Intel MKLDNN (optional)
 
-Caffe can use optimized primitives that are part of MKL package since MKL 2017 Beta release. 
+Caffe can use optimized primitives that are part of MKL package since Intel MKL 2017 Beta release. 
 Currently supported layers are: convolution, LRN , ReLU and max pooling.
-To make use of MKLDNN primitives, install 'MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add -DBLAS=mkl to your commandline invoking cmake)
+To make use of MKLDNN primitives, install 'Intel MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add -DBLAS=mkl to your commandline invoking cmake)
 
 Support for MKLDNN will be detected and compiled into the caffe. To use optimized MKLDNN primitive for a layer, set 'engine: MKLDNN' in the layer's parameters definition. 
 Example of network accelerated by using MKLDNN is located in models/mkldnn_alexnet directory.
