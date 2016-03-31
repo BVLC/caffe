@@ -173,7 +173,11 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
 
           ptree cur_det;
           cur_det.put("image_id", names_[name_count_]);
-          cur_det.put("category_id", label_to_name_[c].c_str());
+          if (output_format_ == "ILSVRC") {
+            cur_det.put<int>("category_id", c);
+          } else {
+            cur_det.put("category_id", label_to_name_[c].c_str());
+          }
           cur_det.add_child("bbox", cur_bbox);
           cur_det.put<float>("score", score);
 
@@ -245,7 +249,30 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
           std::string rv = boost::regex_replace(ss.str(), exp, "$1");
           outfile << rv.substr(rv.find("["), rv.rfind("]") - rv.find("["))
               << std::endl << "]" << std::endl;
+        } else if (output_format_ == "ILSVRC") {
+          boost::filesystem::path output_directory(output_directory_);
+          boost::filesystem::path file(output_name_prefix_ + ".txt");
+          boost::filesystem::path out_file = output_directory / file;
+          std::ofstream outfile;
+          outfile.open(out_file.string().c_str(), std::ofstream::out);
+
+          BOOST_FOREACH(ptree::value_type &det, detections_.get_child("")) {
+            ptree pt = det.second;
+            int label = pt.get<int>("category_id");
+            string image_name = pt.get<string>("image_id");
+            float score = pt.get<float>("score");
+            vector<int> bbox;
+            BOOST_FOREACH(ptree::value_type &elem, pt.get_child("bbox")) {
+              bbox.push_back(static_cast<int>(elem.second.get_value<float>()));
+            }
+            outfile << image_name << " " << label << " " << score;
+            outfile << " " << bbox[0] << " " << bbox[1];
+            outfile << " " << bbox[0] + bbox[2];
+            outfile << " " << bbox[1] + bbox[3];
+            outfile << std::endl;
+          }
         }
+        name_count_ = 0;
       }
     }
   }

@@ -114,10 +114,6 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   if (need_save_) {
     CHECK_LE(name_count_, names_.size());
-    if (name_count_ == names_.size()) {
-      // reset count after a full iterations through the DB.
-      name_count_ = 0;
-    }
     if (name_count_ % num_test_image_ == 0) {
       // Clean all outputs.
       if (output_format_ == "VOC") {
@@ -375,6 +371,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
           outfile << rv.substr(rv.find("["), rv.rfind("]") - rv.find("["))
               << std::endl << "]" << std::endl;
         }
+      }
+      if (name_count_ == names_.size()) {
+        // reset count after a full iterations through the DB.
+        name_count_ = 0;
       }
     }
   }
