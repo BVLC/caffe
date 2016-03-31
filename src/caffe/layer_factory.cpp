@@ -29,6 +29,10 @@
 #include "caffe/layers/cudnn_tanh_layer.hpp"
 #endif
 
+#ifdef USE_LIBDNN
+#include "caffe/layers/libdnn_conv_layer.hpp"
+#endif  // USE_LIBDNN
+
 #ifdef WITH_PYTHON_LAYER
 #include "caffe/layers/python_layer.hpp"
 #endif
@@ -60,20 +64,35 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
-    engine = ConvolutionParameter_Engine_CUDNN;
+    if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CUDA) {
+      engine = ConvolutionParameter_Engine_CUDNN;
+    }
+#endif
+#ifdef USE_LIBDNN
+    if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL) {
+      engine = ConvolutionParameter_Engine_LIBDNN;
+    }
 #endif
   }
-  if (engine == ConvolutionParameter_Engine_CAFFE
-      || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
-      || checkConvolutionDilated(param.convolution_param())) {
-    if (engine == ConvolutionParameter_Engine_INTEL_SPATIAL)
-      return shared_ptr<Layer<Dtype> >
-               (new ConvolutionLayerSpatial<Dtype>(param));
+
+  if (engine == ConvolutionParameter_Engine_INTEL_SPATIAL) {
+    return shared_ptr<Layer<Dtype> >
+             (new ConvolutionLayerSpatial<Dtype>(param));
+  }
 #ifdef USE_FFT
-    if (engine == ConvolutionParameter_Engine_FFT)
-      return shared_ptr<Layer<Dtype> >
-               (new ConvolutionLayerFFT<Dtype>(param));
-#endif
+  if (engine == ConvolutionParameter_Engine_FFT) {
+    return shared_ptr<Layer<Dtype> >
+             (new ConvolutionLayerFFT<Dtype>(param));
+  }
+#endif  // USE_FFT
+
+  if (engine == ConvolutionParameter_Engine_CUDNN
+      && (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OpenCL
+          || checkConvolutionDilated(param.convolution_param()))) {
+    engine = ConvolutionParameter_Engine_CAFFE;
+  }
+
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
@@ -82,7 +101,11 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
                  << param.name();
     }
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
-#endif
+#endif  // USE_CUDNN
+#ifdef USE_LIBDNN
+  } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
+    return shared_ptr<Layer<Dtype> >(new LibDNNConvolutionLayer<Dtype>(param));
+#endif  // USE_LIBDNN
   } else {
     LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }

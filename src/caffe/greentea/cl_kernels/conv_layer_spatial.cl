@@ -1,3 +1,11 @@
+#ifndef __OPENCL_VERSION__
+#include "header.cl"
+#endif
+
+__kernel void TEMPLATE(conv_layer_spatial_phony,Dtype)(void) {
+
+}
+
 #ifdef VERIFICATION
 __kernel void copyImage(__global Dtype* image_data, int_tp image_offset,
     const int_tp channels, const int_tp height, const int_tp width,
@@ -728,4 +736,3 @@ convolve_simd16(  // __global float *inputs, __global float* weights, __global f
 #endif
 
 #endif
-
