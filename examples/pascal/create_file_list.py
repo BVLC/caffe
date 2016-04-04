@@ -74,7 +74,7 @@ def create_label_list(labels, separator):
 
 
 def create_list_file(root, output_path, phase, suffix,
-                     label_separator, ignore_list, ignore_separator):
+                     label_separator, ignore_list, ignore_separator, force):
     """
     Create a list file for the specified phase
     """
@@ -90,6 +90,12 @@ def create_list_file(root, output_path, phase, suffix,
             ignore_separator, create_label_list(ignore_list, label_separator))
     else:
         ignore_string = ''
+
+    if os.path.exists(filename) and not force:
+        print(
+            "The file %s already exists. Use the --force option to overwrite"
+            % filename)
+        return
 
     with open(filename, 'w') as f:
         f.write('# %s file list generated on %s\n' %
@@ -126,6 +132,9 @@ def get_args():
         '--list-separator', default=';')
     parser.add_argument(
         '--ignore-background', action='store_true')
+    parser.add_argument(
+        '--force', action='store_true',
+        help='Create the output files even if they already exist')
 
     return parser.parse_args()
 
@@ -142,7 +151,7 @@ def main():
         print("Creating list for %s" % phase)
         train_list = create_list_file(
             args.pascal_root, args.output_path, phase, args.suffix,
-            args.label_separator, ignore_list, args.list_separator)
+            args.label_separator, ignore_list, args.list_separator, args.force)
 
 if __name__ == "__main__":
     main()
