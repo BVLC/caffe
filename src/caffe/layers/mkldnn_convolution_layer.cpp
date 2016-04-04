@@ -104,7 +104,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -118,7 +117,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       bdata_sizes,
@@ -160,7 +158,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
       &convolutionBwdData,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -174,7 +171,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnConvolutionCreateBackwardData<Dtype>(
       &convolutionBwdData,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       bdata_sizes,
@@ -212,7 +208,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnGroupsConvolutionCreateBackwardFilter<Dtype>(
       &convolutionBwdFilter,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -226,7 +221,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnConvolutionCreateBackwardFilter<Dtype>(
       &convolutionBwdFilter,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       bdata_sizes,
@@ -263,7 +257,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnGroupsConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -272,7 +265,6 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   {
     status = dnnConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
-      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       tdata_sizes);
