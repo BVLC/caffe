@@ -27,7 +27,9 @@ def _Net_blobs(self):
     An OrderedDict (bottom to top, i.e., input to output) of network
     blobs indexed by name
     """
-    return OrderedDict(zip(self._blob_names, self._blobs))
+    if not hasattr(self, '_blobs_dict'):
+        self._blobs_dict = OrderedDict(zip(self._blob_names, self._blobs))
+    return self._blobs_dict
 
 
 @property
@@ -36,7 +38,10 @@ def _Net_blob_loss_weights(self):
     An OrderedDict (bottom to top, i.e., input to output) of network
     blob loss weights indexed by name
     """
-    return OrderedDict(zip(self._blob_names, self._blob_loss_weights))
+    if not hasattr(self, '_blobs_loss_weights_dict'):
+        self._blob_loss_weights_dict = OrderedDict(zip(self._blob_names,
+                                                       self._blob_loss_weights))
+    return self._blob_loss_weights_dict
 
 
 @property
@@ -46,19 +51,28 @@ def _Net_params(self):
     parameters indexed by name; each is a list of multiple blobs (e.g.,
     weights and biases)
     """
-    return OrderedDict([(name, lr.blobs)
-                        for name, lr in zip(self._layer_names, self.layers)
-                        if len(lr.blobs) > 0])
+    if not hasattr(self, '_params_dict'):
+        self._params_dict = OrderedDict([(name, lr.blobs)
+                                        for name, lr in zip(
+                                            self._layer_names, self.layers)
+                                        if len(lr.blobs) > 0])
+    return self._params_dict
 
 
 @property
 def _Net_inputs(self):
-    return [list(self.blobs.keys())[i] for i in self._inputs]
+    if not hasattr(self, '_input_list'):
+        keys = list(self.blobs.keys())
+        self._input_list = [keys[i] for i in self._inputs]
+    return self._input_list
 
 
 @property
 def _Net_outputs(self):
-    return [list(self.blobs.keys())[i] for i in self._outputs]
+    if not hasattr(self, '_output_list'):
+        keys = list(self.blobs.keys())
+        self._output_list = [keys[i] for i in self._outputs]
+    return self._output_list
 
 
 def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
