@@ -16,11 +16,6 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   min_size_ = prior_box_param.min_size();
   CHECK_GT(min_size_, 0) << "min_size must be positive.";
   max_size_ = -1;
-  if (prior_box_param.has_max_size()) {
-    max_size_ = prior_box_param.max_size();
-    CHECK_GT(max_size_, min_size_) << "max_size must be greater than min_size.";
-    num_priors_ = 1;
-  }
   aspect_ratios_.clear();
   aspect_ratios_.push_back(1.);
   flip_ = prior_box_param.flip();
@@ -40,7 +35,12 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
-  num_priors_ += aspect_ratios_.size();
+  num_priors_ = aspect_ratios_.size();
+  if (prior_box_param.has_max_size()) {
+    max_size_ = prior_box_param.max_size();
+    CHECK_GT(max_size_, min_size_) << "max_size must be greater than min_size.";
+    num_priors_ += 1;
+  }
   clip_ = prior_box_param.clip();
   if (prior_box_param.variance_size() > 1) {
     // Must and only provide 4 variance.
