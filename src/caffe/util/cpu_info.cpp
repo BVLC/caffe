@@ -160,7 +160,7 @@ void Collection::updateCpuInformation(const Processor &processor,
 #include <sched.h>
 
 static const int minCoresForThreadBinding = 12;
-static const int numbreOfBackgroundCores = 2;
+static const int numberOfBackgroundCores = 2;
 
 static const char *openMpEnvVars[] = {
   "OMP_CANCELLATION", "OMP_DISPLAY_ENV", "OMP_DEFAULT_DEVICE", "OMP_DYNAMIC",
@@ -220,7 +220,7 @@ void OpenMpManager::bindOpenMpThreads() {
     unsigned logicalCoreId = omp_get_thread_num();
     unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
     if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
-      logicalCoreId += numbreOfBackgroundCores;
+      logicalCoreId += numberOfBackgroundCores;
     }
 
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
@@ -311,7 +311,7 @@ void OpenMpManager::setOpenMpThreadNumberLimit() {
   unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
 
   if (totalNumberOfAvailableCores >= minCoresForThreadBinding)
-    omp_set_num_threads(totalNumberOfAvailableCores - numbreOfBackgroundCores);
+    omp_set_num_threads(totalNumberOfAvailableCores - numberOfBackgroundCores);
   else
     omp_set_num_threads(totalNumberOfAvailableCores);
 }
