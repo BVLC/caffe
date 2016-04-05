@@ -150,17 +150,17 @@ void Collection::updateCpuInformation(const Processor &processor,
 
 /* The OpenMpManager class is responsible for determining a set of all of
    available CPU cores and delegating each core to perform other tasks. The
-   first of available cores is delegated for background threads. All other
-   cores are dedicated for OpenMP threads. Each OpenMP thread owns one core
-   for exclusive use. The number of OpenMP threads is then limited to the
-   number of available cores minus one. Amount of CPU cores may be limited
-   by system eg. by numactl call. The class is also responsible for selecting
-   right logical processors. Only one logical CPU per core is allowed. */
+   first of available cores is delegated for background threads, while other
+   remaining cores are dedicated for OpenMP threads. Each OpenMP thread owns
+   one core for exclusive use. The number of OpenMP threads is then limited
+   to the number of available cores minus one. The amount of CPU cores may
+   be limited by system eg. when numactl was used. */
 
 #include <omp.h>
 #include <sched.h>
 
 static const int minCoresForThreadBinding = 12;
+static const int numbreOfDisabledCores = 2;
 
 static const char *openMpEnvVars[] = {
   "OMP_CANCELLATION", "OMP_DISPLAY_ENV", "OMP_DEFAULT_DEVICE", "OMP_DYNAMIC",
@@ -220,7 +220,7 @@ void OpenMpManager::bindOpenMpThreads() {
     unsigned logicalCoreId = omp_get_thread_num();
     unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
     if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
-      logicalCoreId += 2;
+      logicalCoreId += numbreOfDisabledCores;
     }
 
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
@@ -251,9 +251,9 @@ void OpenMpManager::getDefaultCpuSet(cpu_set_t *defaultCpuSet) {
 }
 
 /* Function getCurrentCoreSet() fills currentCoreSet variable with a set of
-   all currently used cores. Each core can have different amount of logical
-   CPUs due to hyperthreading. When multiple logical CPUs of single core are
-   used, function is selecting only first used of all available. */
+   available CPUs, where only one CPU per core is chosen. When multiple CPUs
+   of single core are used, function is selecting only first one of all
+   available. */
 
 void OpenMpManager::getCurrentCoreSet() {
   unsigned numberOfProcessors = Collection::getNumberOfProcessors();
@@ -311,7 +311,7 @@ void OpenMpManager::setOpenMpThreadNumberLimit() {
   unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
 
   if (totalNumberOfAvailableCores >= minCoresForThreadBinding)
-    omp_set_num_threads(totalNumberOfAvailableCores - 2);
+    omp_set_num_threads(totalNumberOfAvailableCores - numbreOfDisabledCores);
   else
     omp_set_num_threads(totalNumberOfAvailableCores);
 }
