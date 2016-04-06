@@ -226,7 +226,23 @@ class Net {
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
-
+  /**
+   * @brief Look at the layer outputs and find the maximum absolute values.
+   * The following layers are considered: Data, Convolution, InnerProduct.
+   *
+   * @param layer_name The layers that should be quantized to fixed point.
+   * @param max_out The highest layer output.
+   * @param max_param The highest layer parameter.
+   *
+   * For layer parameters, the biases are ignored.
+   */
+  void RangeInLayers(vector<string>* layer_name, vector<Dtype>* max_out,
+      vector<Dtype>* max_param);
+  /**
+   * @brief Find the maximum value in a blob.
+   */
+  Dtype findMax(Blob<Dtype>* blob);
+  
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
