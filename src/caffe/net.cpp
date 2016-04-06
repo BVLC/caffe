@@ -351,6 +351,39 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
   return true;
 }
 
+template <typename Dtype>
+Dtype Net<Dtype>::findMax(Blob<Dtype>* blob){
+  const Dtype* data = blob->cpu_data();
+  int cnt = blob->count();
+  Dtype max_val = (Dtype)-10;
+  for (int i = 0; i < cnt; ++i) {
+    max_val = std::max(max_val, (Dtype)fabs(data[i]));
+  }
+  return max_val;
+}
+
+template <typename Dtype>
+void Net<Dtype>::RangeInLayers(vector<string>* layer_name,
+      vector<Dtype>* max_out, vector<Dtype>* max_param){
+  Dtype max_val;
+  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+    if (strcmp(layers_[layer_id]->type(), "Convolution") == 0 ||
+          strcmp(layers_[layer_id]->type(), "InnerProduct") == 0) {
+      layer_name->push_back(this->layer_names()[layer_id]);
+      max_val = findMax(top_vecs_[layer_id][0]);
+      max_out->push_back(max_val);
+      // Consider the weights only, ignore the bias
+      max_val = findMax(&(*layers_[layer_id]->blobs()[0]));
+      max_param->push_back(max_val);
+    } else if (strcmp(layers_[layer_id]->type(), "Data") == 0) {
+      layer_name->push_back(this->layer_names()[layer_id]);
+      max_val = findMax(top_vecs_[layer_id][0]);
+      max_out->push_back(max_val);
+      max_param->push_back(1); //no parameters in this layer
+    }
+  }
+}
+
 // Helper for Net::Init: add a new top blob to the net.
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
