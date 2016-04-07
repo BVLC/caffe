@@ -103,8 +103,6 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     if (video_type_ == VideoDataParameter_VideoType_WEBCAM) {
-      if (cv::waitKey(1) == 27) {
-      }
       cv::Mat cv_img;
       cap_ >> cv_img;
       CHECK(cv_img.data) << "Could not load image from webcam!";
