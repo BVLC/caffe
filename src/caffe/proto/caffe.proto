@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 145 (last added: crop_param)
+// LayerParameter next available layer-specific ID: 146 (last added: rbm_inner_product_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -389,6 +389,7 @@ message LayerParameter {
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
+  optional RBMInnerProductParameter rbm_inner_product_param = 145;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
@@ -921,6 +922,39 @@ message PythonParameter {
   // If true, each worker solver sequentially run forward from this layer.
   // This value should be set true if you are using it as a data layer.
   optional bool share_in_parallel = 4 [default = false];
+}
+
+message RBMInnerProductParameter {
+  // Whether a forward pass should be an unsupervised update or just a forward
+  // pass without any updating of the weights and biases
+  optional bool forward_is_update = 1 [default = true];
+  // The type of layer the data is passed through before squashing if forward
+  optional LayerParameter connection_layer_param = 2;
+  // Layer that 'squashes' the data before sampling in top of forward pass.
+  // If not specified, no squashing takes place
+  optional LayerParameter hidden_activation_layer_param = 3;
+  // Layer that samples the hidden data at top of forward pass
+  // If not specified no sampling takes place
+  optional LayerParameter hidden_sampling_layer_param = 4;
+  // Layer that 'squashes' the data before sampling in bottom of backward pass
+  // If not specified, no squashing takes place
+  optional LayerParameter visible_activation_layer_param = 5;
+  // Layer that samples the visible data at bottom of backward pass
+  // If not specified no sampling takes place
+  optional LayerParameter visible_sampling_layer_param = 6;
+  // Whether to have a visible bias term (note that the bias term in
+  // InnerProduct acts as a hidden bias)
+  optional bool visible_bias_term = 7 [default = true];
+  // Number gibbs sampling iterations to perform during update
+  optional uint32 sample_steps_in_update = 8 [default = 1];
+  // The filler for the visible bias
+  optional FillerParameter visible_bias_filler = 9;
+  enum LossMeasure {
+    RECONSTRUCTION = 0;
+    FREE_ENERGY    = 1;
+  }
+  // For each loss_measure given, a new top is added returning this type of loss
+  repeated LossMeasure loss_measure = 10;
 }
 
 // Message that stores parameters used by ReductionLayer
