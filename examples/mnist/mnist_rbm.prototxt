@@ -1,0 +1,107 @@
+name: "CaffeNet"
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 1
+    backend: LMDB
+  }
+}
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    scale: 0.00390625
+  }
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 1
+    backend: LMDB
+  }
+}
+layer {
+  name: "flatten_layer"
+  type: "Flatten"
+  bottom: "data"
+  top: "flat_data"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
+  name: "fc_rbm_1_layer"
+  type: "RBMInnerProduct"
+  bottom: "flat_data"
+  top: "fc_rbm_1"
+  top: "reconstruction"
+  rbm_inner_product_param {
+    forward_is_update: true
+    loss_measure: RECONSTRUCTION
+    sample_steps_in_update: 1
+
+    visible_bias_term: true
+    visible_bias_filler: {
+      type: "constant"
+      value: 0.0
+    }
+
+    connection_layer_param {
+      type: "InnerProduct"
+      inner_product_param {
+        num_output: 100
+        weight_filler {
+          type: "uniform"
+          min: -0.0357142
+          max:  0.0357142
+        }
+        bias_term: true
+        bias_filler {
+          type: "constant"
+          value: 0.0
+        }
+      }
+    }
+    hidden_activation_layer_param {
+      type: "Sigmoid"
+    }
+    hidden_sampling_layer_param {
+      type: "BernoulliSample"
+    }
+    visible_activation_layer_param {
+      type: "Sigmoid"
+    }
+    visible_sampling_layer_param {
+      type: "BernoulliSample"
+    }
+  }
+}
+layer {
+  name: "reconstruction error"
+  type: "EuclideanLoss"
+  bottom: "flat_data"
+  bottom: "reconstruction"
+}
+layer {
+  name: "silent_loss"
+  type: "Silence"
+  bottom: "fc_rbm_1"
+}
+layer {
+  name: "silent_label"
+  type: "Silence"
+  bottom: "label"
+}
