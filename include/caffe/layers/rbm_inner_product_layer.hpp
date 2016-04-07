@@ -59,6 +59,8 @@ class RBMInnerProductLayer : public Layer<Dtype> {
                         const vector<Blob<Dtype>*>& top);
   void gibbs_hvh(const vector<Blob<Dtype>*>& bottom,
                  const vector<Blob<Dtype>*>& top);
+  void update_diffs(const int k, const vector<Blob<Dtype>*>& hidden_k,
+                    const vector<Blob<Dtype>*>& visible_k);
 
   /// Layer which is used to fist process the input on forward pass
   shared_ptr<Layer<Dtype> > connection_layer_;

@@ -354,8 +354,65 @@ void RBMInnerProductLayer<Dtype>::sample_h_given_v(
 }
 
 template <typename Dtype>
+void RBMInnerProductLayer<Dtype>::update_diffs(const int k,
+    const vector<Blob<Dtype>*>& hidden_k,
+    const vector<Blob<Dtype>*>& visible_k) {
+
+  SwapBlob<Dtype> swapped_hidden_k(hidden_k[1]);
+  vector<Blob<Dtype>*> hidden_vec;
+
+  // Update the diffs for the weights and hidden bias
+  vector<bool> propagate_down(1, false);
+
+  Blob<Dtype> scaled_k;
+  if (k == 0) {
+    // In order to get the summation to work out correctly, we need to multiply
+    // the hidden vector by -1.
+    scaled_k.CopyFrom(*hidden_k[1], false, true);
+    scaled_k.scale_data((Dtype)-1.);
+    swapped_hidden_k.SetUp(&scaled_k);
+  }
+  hidden_vec.push_back(&swapped_hidden_k);
+  connection_layer_->Backward(hidden_vec, propagate_down, visible_k);
+
+  // Update the diffs for the visible bias
+  // Update the visible bias diff (delta b -= v_k).
+  if (visible_bias_term_) {
+    Dtype* vbias_diff = 0;  // init to supress compiler warnings
+    const Dtype factor = (k != 0) ? (Dtype)(1) : (Dtype)(-1.);
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      vbias_diff = this->blobs_[visible_bias_index_]->mutable_cpu_diff();
+      caffe_cpu_gemv<Dtype>(CblasTrans, batch_size_, num_visible_, factor,
+                            visible_k[0]->cpu_data(),
+                            bias_multiplier_.cpu_data(),
+                            (Dtype)1., vbias_diff);
+      break;
+    case Caffe::GPU:
+#ifndef CPU_ONLY
+      vbias_diff = this->blobs_[visible_bias_index_]->mutable_gpu_diff();
+      caffe_gpu_gemv<Dtype>(CblasTrans, batch_size_, num_visible_, factor,
+                            visible_k[0]->gpu_data(),
+                            bias_multiplier_.gpu_data(),
+                            (Dtype)1., vbias_diff);
+#else
+      NO_GPU;
+#endif
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    }
+  }
+}
+
+template <typename Dtype>
 void RBMInnerProductLayer<Dtype>::gibbs_hvh(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  const RBMInnerProductParameter& param =
+      this->layer_param_.rbm_inner_product_param();
+
+  // Update the diffs for k = 0, P(h|v_0)
+  update_diffs(0, top, bottom);
 
   // Disable the update of the diffs for the weights.
   for (int i = 0; i < connection_layer_->blobs().size(); ++i) {
@@ -367,6 +424,22 @@ void RBMInnerProductLayer<Dtype>::gibbs_hvh(
     // Down propagation
     sample_v_given_h(bottom, top);
 
+    // copy reconstruction error to top
+    if (k == 0) {
+      for (int i = 0; i < num_error_; ++i) {
+        int top_index = top.size() + i - num_error_;
+        switch (param.loss_measure(i)) {
+          case RBMInnerProductParameter_LossMeasure_RECONSTRUCTION:
+            top[top_index]->CopyFrom(*bottom[0]);
+            break;
+          case RBMInnerProductParameter_LossMeasure_FREE_ENERGY:
+            LOG(FATAL) << "FREE_ENERGY not implemented yet ";
+          default:
+            LOG(FATAL) << "Unknown loss measure: " << param.loss_measure(i);
+        }
+      }
+    }
+
     // Up propagation
     sample_h_given_v(bottom, top);
   }
@@ -375,6 +448,9 @@ void RBMInnerProductLayer<Dtype>::gibbs_hvh(
   for (int i = 0; i < connection_layer_->blobs().size(); ++i) {
     connection_layer_->set_param_propagate_down(i, true);
   }
+
+  // Update the diffs for k, P(h|v_k)
+  update_diffs(num_sample_steps_for_update_, top, bottom);
 }
 
 template <typename Dtype>
