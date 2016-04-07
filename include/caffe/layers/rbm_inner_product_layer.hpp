@@ -53,6 +53,13 @@ class RBMInnerProductLayer : public Layer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
 
+  void sample_h_given_v(const vector<Blob<Dtype>*>& bottom,
+                        const vector<Blob<Dtype>*>& top);
+  void sample_v_given_h(const vector<Blob<Dtype>*>& bottom,
+                        const vector<Blob<Dtype>*>& top);
+  void gibbs_hvh(const vector<Blob<Dtype>*>& bottom,
+                 const vector<Blob<Dtype>*>& top);
+
   /// Layer which is used to fist process the input on forward pass
   shared_ptr<Layer<Dtype> > connection_layer_;
   /// Layer used to squash the hidden units
