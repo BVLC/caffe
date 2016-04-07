@@ -60,6 +60,8 @@ rm -f $LMDB_FILE
 # Install the Python runtime dependencies via miniconda (this is much faster
 # than using pip for everything).
 export PATH=$CONDA_DIR/bin:$PATH
+# clear any cached conda (see #3786)
+rm -rf $CONDA_DIR
 if [ ! -d $CONDA_DIR ]; then
   if [ "$PYTHON_VERSION" -eq "3" ]; then
     wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -93,7 +95,7 @@ if [ "$PYTHON_VERSION" -eq "3" ] && [ ! -e "$CONDA_DIR/bin/protoc" ]; then
 fi
 
 if [ "$PYTHON_VERSION" -eq "3" ]; then
-  pip install --pre protobuf
+  pip install --pre protobuf==3.0.0b2
 else
   pip install protobuf
 fi
