@@ -37,7 +37,6 @@ class RBMInnerProductLayer : public Layer<Dtype> {
                        const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "RBMInnerProduct"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
   /**
@@ -64,6 +63,46 @@ class RBMInnerProductLayer : public Layer<Dtype> {
   shared_ptr<Layer<Dtype> > hidden_sampling_layer_;
   /// Layer used to sample the visible activations
   shared_ptr<Layer<Dtype> > visible_sampling_layer_;
+
+  /// Number of top blobs used for error reporting
+  int num_error_;
+  /// Forward pass is an update and not just a simple forward through connection
+  bool forward_is_update_;
+  /// Number of forward and backward passes that happen for an update step
+  int num_sample_steps_for_update_;
+  /// If a visible bias is added during backwards pass or not
+  bool visible_bias_term_;
+  /// Index in blobs_ where the visible bias weights are saved
+  int visible_bias_index_;
+  /// Vector of ones helpful for doing sums with matrix multiplication
+  Blob<Dtype> bias_multiplier_;
+  /// batch size of input data
+  int batch_size_;
+  /// size of one image in input data
+  int num_visible_;
+  /// The size of the top and bottom at setup
+  vector<int> setup_sizes_;
+
+  /// vectors that store the data after connection_layer_ has done forward
+  /// or backward pass, but before the activation_layer_ has been called
+  shared_ptr<Blob<Dtype> > pre_activation_h1_blob_;
+  shared_ptr<Blob<Dtype> > pre_activation_v1_blob_;
+  vector<Blob<Dtype>*> pre_activation_h1_vec_;
+  vector<Blob<Dtype>*> pre_activation_v1_vec_;
+
+  /// vectors that store the data after activation_layer_ has done forward
+  /// or backward pass, but before the sampling_layer_ has been called
+  shared_ptr<Blob<Dtype> > post_activation_h1_blob_;
+  shared_ptr<Blob<Dtype> > post_activation_v1_blob_;
+  vector<Blob<Dtype>*> post_activation_h1_vec_;
+  vector<Blob<Dtype>*> post_activation_v1_vec_;
+
+  shared_ptr<Blob<Dtype> > sample_h1_blob_;
+  vector<Blob<Dtype>*> sample_h1_vec_;
+  vector<Blob<Dtype>*> sample_v1_vec_;
+
+  /// copy bottom data to this so sampling doesn't change actual bottom data
+  shared_ptr<Blob<Dtype> > bottom_copy_;
 };
 
 }  // namespace caffe
