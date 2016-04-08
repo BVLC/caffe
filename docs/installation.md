@@ -67,8 +67,8 @@ with a free trial and [student](http://software.intel.com/en-us/intel-education-
 
 ### Intel MKLDNN (optional)
 
-Caffe can use optimized primitives that are part of MKL package since Intel MKL 2017 Beta release.
-Currently supported layers are: convolution, LRN , ReLU and max pooling. More information: https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305
+Caffe can use optimized primitives that are part of MKL package since [Intel MKL 2017 Beta release]( https://software.intel.com/en-us/forums/intel-math-kernel-library/topic/623305)
+Currently supported layers are: convolution, LRN , ReLU and max pooling.
 
 To make use of MKLDNN primitives, install 'Intel MKL 2017 Beta' or newer and set `BLAS := mkl` in Makefile.config. (When using cmake, add `-DBLAS=mkl` to your commandline invoking cmake)
 Support for MKLDNN will be detected and compiled into the caffe. To use optimized MKLDNN primitive for a layer, set `engine: MKLDNN` in the layer's parameters definition.
