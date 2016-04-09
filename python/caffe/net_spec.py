@@ -76,7 +76,10 @@ def assign_proto(proto, name, val):
         for k, v in six.iteritems(val):
             assign_proto(getattr(proto, name), k, v)
     else:
-        setattr(proto, name, val)
+        try:
+            setattr(proto, name, val)
+        except:
+            getattr(proto, name).CopyFrom(val)
 
 
 class Top(object):
