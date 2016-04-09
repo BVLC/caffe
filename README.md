@@ -29,7 +29,7 @@ Please cite SSD in your publications if it helps your research:
 
     @article{liu15ssd,
       Title = {{SSD}: Single Shot MultiBox Detector},
-      Author = {Liu, Wei and Anguelov, Dragomir and Erhan, Dumitru and Szegedy, Christian and Reed, Scott},
+      Author = {Liu, Wei and Anguelov, Dragomir and Erhan, Dumitru and Szegedy, Christian and Reed, Scott and Fu, Cheng-Yang and Berg, Alexander C.},
       Journal = {arXiv preprint arXiv:1512.02325},
       Year = {2015}
     }
@@ -56,9 +56,12 @@ Please cite SSD in your publications if it helps your research:
   # Make sure to include $CAFFE_ROOT/python to your PYTHONPATH.
   make py
   make test -j8
-  make runtest
+  make runtest -j8
   # If you have multiple GPUs installed in your machine, make runtest might fail. If so, try following:
-  export CUDA_VISIBLE_DEVICES=0; make runtest
+  export CUDA_VISIBLE_DEVICES=0; make runtest -j8
+  # If you have error: "Check failed: error == cudaSuccess (10 vs. 0)  invalid device ordinal",
+  # first make sure you have the specified GPUs, or try following if you have multiple GPUs:
+  unset CUDA_VISIBLE_DEVICES
   ```
 
 ### Preparation

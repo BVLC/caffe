@@ -13,6 +13,7 @@
 //   ....
 
 #include <fstream>  // NOLINT(readability/streams)
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>

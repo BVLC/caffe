@@ -149,6 +149,11 @@ def write_csv(output_filename, dict_list, delimiter, verbose=False):
     """Write a CSV file
     """
 
+    if not dict_list:
+        if verbose:
+            print('Not writing %s; no lines to write' % output_filename)
+        return
+
     dialect = csv.excel
     dialect.delimiter = delimiter
 
