@@ -7,8 +7,8 @@
 namespace caffe {
 template <typename Dtype>
 MklDnnReLULayer<Dtype>::~MklDnnReLULayer() {
-    dnnDelete<Dtype>(&reluFwd_);
-    dnnDelete<Dtype>(&reluBwd_);
+    dnnDelete<Dtype>(reluFwd_);
+    dnnDelete<Dtype>(reluBwd_);
 }
 
 template <typename Dtype>
