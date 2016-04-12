@@ -69,7 +69,6 @@ class LRNLayer : public Layer<Dtype> {
   // Fields used for normalization ACROSS_CHANNELS
   // scale_ stores the intermediate summing results
   Blob<Dtype> scale_;
-  Blob<Dtype> padded_square_;  // buffer for forward
   Blob<Dtype> padded_ratio_;   // buffer for backward
   Blob<Dtype> accum_ratio_;    // buffer for backward
 

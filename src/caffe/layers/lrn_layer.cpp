@@ -95,8 +95,6 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     top[0]->Reshape(num_, channels_, height_, width_);
     scale_.Reshape(num_, channels_, height_, width_);
-    padded_square_.Reshape(num_of_threads_, channels_ + size_ - 1,
-                           height_, width_);
     padded_ratio_.Reshape(num_of_threads_, channels_ + size_ - 1,
                           height_, width_);
     accum_ratio_.Reshape(num_of_threads_, 1, height_, width_);
@@ -132,62 +130,41 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
-  // start with the constant value
-  caffe_set(scale_.count(), Dtype(k_), scale_data);
-
-  Dtype* padded_square_data = padded_square_.mutable_cpu_data();
-  caffe_set(padded_square_.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
-  // go through the images
-#ifdef _OPENMP
-# pragma omp parallel num_threads(this->num_of_threads_)
-#ifdef USE_MKL
-  {
-    int save;
-    if (omp_get_thread_num() < this->num_incr_mkl_local_threads_) {
-      save = mkl_set_num_threads_local(this->num_mkl_local_threads_ + 1);
-    } else {
-      save = mkl_set_num_threads_local(this->num_mkl_local_threads_);
-    }
-#endif
-#   pragma omp for
-#endif
-    for (int n = 0; n < num_; ++n) {
-      int tid = 0;
-#ifdef _OPENMP
-      tid = omp_get_thread_num();
-#endif
-      // compute the padded square
-      caffe_sqr(channels_ * height_ * width_,
-                bottom_data + bottom[0]->offset(n),
-                padded_square_data + padded_square_.offset(tid, pre_pad_));
-      // Create the first channel scale
-      for (int c = 0; c < size_; ++c) {
-        caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-            padded_square_data + padded_square_.offset(tid, c),
-            scale_data + scale_.offset(n, 0));
-      }
-      for (int c = 1; c < channels_; ++c) {
-        // copy previous scale
-        caffe_cpu_copy<Dtype>(height_ * width_,
-            scale_data + scale_.offset(n, c - 1),
-            scale_data + scale_.offset(n, c));
-        // add head
-        caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
-            padded_square_data + padded_square_.offset(tid, c + size_ - 1),
-            scale_data + scale_.offset(n, c));
-        // subtract tail
-        caffe_axpy<Dtype>(height_ * width_, -alpha_over_size,
-            padded_square_data + padded_square_.offset(tid, c - 1),
-            scale_data + scale_.offset(n, c));
-      }
-    }
-#if defined(_OPENMP) && defined(USE_MKL)
-    mkl_set_num_threads_local(save);
-  }
-#endif
+  int limit = pre_pad_ < (channels_-1) ? pre_pad_ : (channels_-1);
 
-  // In the end, compute output
+  caffe_sqr(num_ * channels_ * height_ * width_, bottom_data, top_data);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for (int n = 0; n < num_; ++n) {
+    caffe_set(limit * height_ * width_, Dtype(k_),
+      scale_data + scale_.offset(n, 0));
+    for (int c = 0; c <= limit; ++c) {
+      caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
+        top_data + scale_.offset(n, c),
+        scale_data + scale_.offset(n, 0));
+    }
+    for (int c = 1; c < channels_; ++c) {
+      caffe_cpu_copy<Dtype>(height_ * width_,
+        scale_data + scale_.offset(n, c - 1),
+        scale_data + scale_.offset(n, c));
+      // copy previous scale
+      if (c < (channels_ - pre_pad_)) {
+        caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
+          top_data + scale_.offset(n, c + pre_pad_),
+          scale_data + scale_.offset(n, c));
+      }
+      // subtract tail
+      if (c > pre_pad_) {
+        caffe_axpy<Dtype>(height_ * width_, -alpha_over_size,
+          top_data + scale_.offset(n, c - pre_pad_ - 1),
+          scale_data + scale_.offset(n, c));
+      }
+    }
+  }
+
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 }
@@ -260,7 +237,8 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
       int block_offset = scale_.offset(n);
       // first, compute diff_i * y_i / s_i
       caffe_mul<Dtype>(channels_ * height_ * width_,
-          top_diff + block_offset, top_data + block_offset,
+          top_diff + block_offset,
+          top_data + block_offset,
           padded_ratio_data + padded_ratio_.offset(tid, inverse_pre_pad));
       caffe_div<Dtype>(channels_ * height_ * width_,
           padded_ratio_data + padded_ratio_.offset(tid, inverse_pre_pad),
@@ -271,12 +249,14 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
                 Dtype(0),
                 accum_ratio_data + accum_ratio_.offset(tid, 0));
       for (int c = 0; c < size_ - 1; ++c) {
-        caffe_axpy<Dtype>(height_ * width_, 1.,
+        caffe_add<Dtype>(height_ * width_,
+                          accum_ratio_data + accum_ratio_.offset(tid, 0),
                           padded_ratio_data + padded_ratio_.offset(tid, c),
                           accum_ratio_data + accum_ratio_.offset(tid, 0));
       }
       for (int c = 0; c < channels_; ++c) {
-        caffe_axpy<Dtype>(height_ * width_, 1.,
+        caffe_add<Dtype>(height_ * width_,
+            accum_ratio_data + accum_ratio_.offset(tid, 0),
             padded_ratio_data + padded_ratio_.offset(tid, c + size_ - 1),
             accum_ratio_data + accum_ratio_.offset(tid, 0));
         // compute bottom diff
@@ -288,7 +268,8 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
         caffe_axpy<Dtype>(height_ * width_, -cache_ratio_value,
             accum_ratio_times_bottom + accum_ratio_.offset(tid, 0),
             bottom_diff + top[0]->offset(n, c));
-        caffe_axpy<Dtype>(height_ * width_, -1.,
+        caffe_sub<Dtype>(height_ * width_,
+            accum_ratio_data + accum_ratio_.offset(tid, 0),
             padded_ratio_data + padded_ratio_.offset(tid, c),
             accum_ratio_data + accum_ratio_.offset(tid, 0));
       }
