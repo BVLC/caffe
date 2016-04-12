@@ -18,7 +18,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/layers/meanfield_iteration.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 

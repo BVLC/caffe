@@ -4,4 +4,3 @@ tornado
 numpy
 pandas
 pillow
-pyyaml

@@ -19,7 +19,7 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/tvg_util.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/layers/multi_stage_meanfield.hpp"
+#include "caffe/vision_layers.hpp"
 
 #include <cmath>
 

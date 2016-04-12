@@ -9,13 +9,9 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
-
-#if defined(USE_LEVELDB) && defined(USE_LMDB)
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <lmdb.h>
-#endif
-
 #include <stdint.h>
 #include <sys/stat.h>
 
@@ -23,9 +19,6 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/format.hpp"
-
-#if defined(USE_LEVELDB) && defined(USE_LMDB)
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
@@ -109,6 +102,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char label;
   char* pixels = new char[rows * cols];
   int count = 0;
+  const int kMaxKeyLength = 10;
+  char key_cstr[kMaxKeyLength];
   string value;
 
   Datum datum;
@@ -122,17 +117,18 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     label_file.read(&label, 1);
     datum.set_data(pixels, rows*cols);
     datum.set_label(label);
-    string key_str = caffe::format_int(item_id, 8);
+    snprintf(key_cstr, kMaxKeyLength, "%08d", item_id);
     datum.SerializeToString(&value);
+    string keystr(key_cstr);
 
     // Put in db
     if (db_backend == "leveldb") {  // leveldb
-      batch->Put(key_str, value);
+      batch->Put(keystr, value);
     } else if (db_backend == "lmdb") {  // lmdb
       mdb_data.mv_size = value.size();
       mdb_data.mv_data = reinterpret_cast<void*>(&value[0]);
-      mdb_key.mv_size = key_str.size();
-      mdb_key.mv_data = reinterpret_cast<void*>(&key_str[0]);
+      mdb_key.mv_size = keystr.size();
+      mdb_key.mv_data = reinterpret_cast<void*>(&keystr[0]);
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
     } else {
@@ -200,9 +196,3 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
-#else
-int main(int argc, char** argv) {
-  LOG(FATAL) << "This example requires LevelDB and LMDB; " <<
-  "compile with USE_LEVELDB and USE_LMDB.";
-}
-#endif  // USE_LEVELDB and USE_LMDB

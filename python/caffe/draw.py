@@ -10,16 +10,7 @@ Caffe network visualization: draw the NetParameter protobuffer.
 """
 
 from caffe.proto import caffe_pb2
-
-"""
-pydot is not supported under python 3 and pydot2 doesn't work properly.
-pydotplus works nicely (pip install pydotplus)
-"""
-try:
-    # Try to load pydotplus
-    import pydotplus as pydot
-except ImportError:
-    import pydot
+import pydot
 
 # Internal layer and blob styles.
 LAYER_STYLE_DEFAULT = {'shape': 'record',
@@ -91,11 +82,11 @@ def get_layer_label(layer, rankdir):
                       separator,
                       layer.type,
                       separator,
-                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size._values) else 1,
+                      layer.convolution_param.kernel_size,
                       separator,
-                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride._values) else 1,
+                      layer.convolution_param.stride,
                       separator,
-                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad._values) else 0)
+                      layer.convolution_param.pad)
     elif layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
         node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\

@@ -1,3 +1,4 @@
+#include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -5,11 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layers/pooling_layer.hpp"
-
-#ifdef USE_CUDNN
-#include "caffe/layers/cudnn_pooling_layer.hpp"
-#endif
+#include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"

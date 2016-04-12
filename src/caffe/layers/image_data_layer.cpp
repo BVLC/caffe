@@ -1,4 +1,3 @@
-#ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 
 #include <fstream>  // NOLINT(readability/streams)
@@ -7,9 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "caffe/data_transformer.hpp"
-#include "caffe/layers/base_data_layer.hpp"
-#include "caffe/layers/image_data_layer.hpp"
+#include "caffe/data_layers.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -166,4 +164,3 @@ INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 
 }  // namespace caffe
-#endif  // USE_OPENCV

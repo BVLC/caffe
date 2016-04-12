@@ -3,7 +3,11 @@
 #endif
 #include <glog/logging.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
+#include <cstdlib>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -380,8 +384,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
 }
 
 template<typename Dtype>
-void P2PSync<Dtype>::Prepare(const vector<int>& gpus,
-            vector<shared_ptr<P2PSync<Dtype> > >* syncs) {
+void P2PSync<Dtype>::run(const vector<int>& gpus) {
   // Pair devices for map-reduce synchronization
   vector<DevicePair> pairs;
   DevicePair::compute(gpus, &pairs);
@@ -392,14 +395,15 @@ void P2PSync<Dtype>::Prepare(const vector<int>& gpus,
   LOG(INFO)<< "GPUs pairs " << s.str();
 
   SolverParameter param(solver_->param());
+  vector<shared_ptr<P2PSync<Dtype> > > syncs(gpus.size());
 
   // Build the GPU tree by finding the parent for each solver
   for (int attempts = 0; attempts < pairs.size(); ++attempts) {
     for (int i = 1; i < pairs.size(); ++i) {
-      if (!syncs->at(i).get()) {
+      if (!syncs[i].get()) {
         P2PSync<Dtype>* parent = NULL;
-        for (int j = 0; j < syncs->size(); ++j) {
-          P2PSync<Dtype>* sync = j == 0 ? this : syncs->at(j).get();
+        for (int j = 0; j < syncs.size(); ++j) {
+          P2PSync<Dtype>* sync = j == 0 ? this : syncs[j].get();
           if (sync) {
             const SolverParameter& p = sync->solver()->param();
             if (p.device_id() == pairs[i].parent()) {
@@ -409,18 +413,12 @@ void P2PSync<Dtype>::Prepare(const vector<int>& gpus,
         }
         if (parent) {
           param.set_device_id(pairs[i].device());
-          syncs->at(i).reset(new P2PSync<Dtype>(solver_, parent, param));
-          parent->children_.push_back((P2PSync<Dtype>*) syncs->at(i).get());
+          syncs[i].reset(new P2PSync<Dtype>(solver_, parent, param));
+          parent->children_.push_back((P2PSync<Dtype>*) syncs[i].get());
         }
       }
     }
   }
-}
-
-template<typename Dtype>
-void P2PSync<Dtype>::Run(const vector<int>& gpus) {
-  vector<shared_ptr<P2PSync<Dtype> > > syncs(gpus.size());
-  Prepare(gpus, &syncs);
 
   LOG(INFO)<< "Starting Optimization";
 

@@ -1,17 +1,16 @@
 ################################################################################################
 # Defines global Caffe_LINK flag, This flag is required to prevent linker from excluding
 # some objects which are not addressed directly but are registered via static constructors
-macro(caffe_set_caffe_link)
-  if(BUILD_SHARED_LIBS)
-    set(Caffe_LINK caffe)
-  else()
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-      set(Caffe_LINK -Wl,-force_load caffe)
-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-      set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
-    endif()
+if(BUILD_SHARED_LIBS)
+  set(Caffe_LINK caffe)
+else()
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(Caffe_LINK -Wl,-force_load caffe)
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
   endif()
-endmacro()
+endif()
+
 ################################################################################################
 # Convenient command to setup source group for IDEs that support this feature (VS, XCode)
 # Usage:

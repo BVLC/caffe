@@ -111,7 +111,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 	N_ = num_points;
 	d_ = num_dimensions;
 	HashTableCopy hash_table( d_, N_/**(d_+1)*/ );
-	
+
 	const int blocksize = sizeof(__m128) / sizeof(float);
 	const __m128 invdplus1   = _mm_set1_ps( 1.0f / (d_+1) );
 	const __m128 dplus1      = _mm_set1_ps( d_+1 );
@@ -124,7 +124,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 	barycentric_.resize( (d_+1)*(N_+16) );
 	std::fill( barycentric_.begin(), barycentric_.end(), 0 );
 	rank_.resize( (d_+1)*(N_+16) );
-	
+
 	// Allocate the local memory
 	__m128 * scale_factor = (__m128*) _mm_malloc( (d_  )*sizeof(__m128) , 16 );
 	__m128 * f            = (__m128*) _mm_malloc( (d_  )*sizeof(__m128) , 16 );
@@ -134,7 +134,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 	float * barycentric = new float[(d_+2)*blocksize];
 	short * canonical = new short[(d_+1)*(d_+1)];
 	short * key = new short[d_+1];
-	
+
 	// Compute the canonical simplex
 	for( int i=0; i<=d_; i++ ){
 		for( int j=0; j<=d_-i; j++ )
@@ -142,13 +142,13 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 		for( int j=d_-i+1; j<=d_; j++ )
 			canonical[i*(d_+1)+j] = i - (d_+1);
 	}
-	
+
 	// Expected standard deviation of our filter (p.6 in [Adams etal 2010])
 	float inv_std_dev = sqrt(2.0 / 3.0)*(d_+1);
 	// Compute the diagonal part of E (p.5 in [Adams etal 2010])
 	for( int i=0; i<d_; i++ )
 		scale_factor[i] = _mm_set1_ps( 1.0 / sqrt( (i+2)*(i+1) ) * inv_std_dev );
-	
+
 	// Setup the SSE rounding
 #ifndef __SSE4_1__
 	const unsigned int old_rounding = _mm_getcsr();
@@ -162,9 +162,9 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 		for( int j=0; j<d_; j++ )
 			for( int i=0; i<blocksize; i++ )
 				ff[ j*blocksize + i ] = k+i < N_ ? *(features + (k+i)*num_dimensions + j) : 0.0;
-		
+
 		// Elevate the feature ( y = Ep, see p.5 in [Adams etal 2010])
-		
+
 		// sm contains the sum of 1..n of our faeture vector
 		__m128 sm = Zero;
 		for( int j=d_; j>0; j-- ){
@@ -173,7 +173,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 			sm += cf;
 		}
 		elevated[0] = sm;
-		
+
 		// Find the closest 0-colored simplex through rounding
 		__m128 sum = Zero;
 		for( int i=0; i<=d_; i++ ){
@@ -186,7 +186,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 			rem0[i] = v*dplus1;
 			sum += v;
 		}
-		
+
 		// Find the simplex we are in and store it in rank (where rank describes what position coorinate i has in the sorted order of the features values)
 		for( int i=0; i<=d_; i++ )
 			rank[i] = Zero;
@@ -199,7 +199,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 				rank[j] += One-c;
 			}
 		}
-		
+
 		// If the point doesn't lie on the plane (sum != 0) bring it back
 		for( int i=0; i<=d_; i++ ){
 			rank[i] += sum;
@@ -208,13 +208,13 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 			rank[i] += add-sub;
 			rem0[i] += add-sub;
 		}
-		
+
 		// Compute the barycentric coordinates (p.10 in [Adams etal 2010])
 		for( int i=0; i<(d_+2)*blocksize; i++ )
 			barycentric[ i ] = 0;
 		for( int i=0; i<=d_; i++ ){
 			__m128 v = (elevated[i] - rem0[i])*invdplus1;
-			
+
 			// Didn't figure out how to SSE this
 			float * fv = (float*)&v;
 			float * frank = (float*)&rank[i];
@@ -224,12 +224,12 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 				barycentric[j*(d_+2)+p+1] -= fv[j];
 			}
 		}
-		
+
 		// The rest is not SSE'd
 		for( int j=0; j<blocksize; j++ ){
 			// Wrap around
 			barycentric[j*(d_+2)+0]+= 1 + barycentric[j*(d_+2)+d_+1];
-			
+
 			float * frank = (float*)rank;
 			float * frem0 = (float*)rem0;
 			// Compute all vertices and their offset
@@ -251,24 +251,24 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 	delete [] barycentric;
 	delete [] canonical;
 	delete [] key;
-	
+
 	// Reset the SSE rounding
 #ifndef __SSE4_1__
 	_mm_setcsr( old_rounding );
 #endif
-	
+
 	// This is normally fast enough so no SSE needed here
 	// Find the Neighbors of each lattice point
-	
+
 	// Get the number of vertices in the lattice
 	M_ = hash_table.size();
-	
+
 	// Create the neighborhood structure
 	blur_neighbors_.resize( (d_+1)*M_ );
-	
+
 	short * n1 = new short[d_+1];
 	short * n2 = new short[d_+1];
-	
+
 	// For each of d+1 axes,
 	for( int j = 0; j <= d_; j++ ){
 		for( int i=0; i<M_; i++ ){
@@ -279,7 +279,7 @@ void ModifiedPermutohedral::init(const float* features, int num_dimensions, int 
 			}
 			n1[j] = key[j] + d_;
 			n2[j] = key[j] - d_;
-			
+
 			blur_neighbors_[j*M_+i].n1 = hash_table.find( n1 );
 			blur_neighbors_[j*M_+i].n2 = hash_table.find( n2 );
 		}
@@ -299,7 +299,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 	offset_.resize( (d_+1)*N_ );
 	rank_.resize( (d_+1)*N_ );
 	barycentric_.resize( (d_+1)*N_ );
-	
+
 	// Allocate the local memory
 	float * scale_factor = new float[d_];
 	float * elevated = new float[d_+1];
@@ -308,7 +308,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 	short * rank = new short[d_+1];
 	short * canonical = new short[(d_+1)*(d_+1)];
 	short * key = new short[d_+1];
-	
+
 	// Compute the canonical simplex
 	for( int i=0; i<=d_; i++ ){
 		for( int j=0; j<=d_-i; j++ )
@@ -316,18 +316,18 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 		for( int j=d_-i+1; j<=d_; j++ )
 			canonical[i*(d_+1)+j] = i - (d_+1);
 	}
-	
+
 	// Expected standard deviation of our filter (p.6 in [Adams etal 2010])
 	float inv_std_dev = sqrt(2.0 / 3.0)*(d_+1);
 	// Compute the diagonal part of E (p.5 in [Adams etal 2010])
 	for( int i=0; i<d_; i++ )
 		scale_factor[i] = 1.0 / sqrt( double((i+2)*(i+1)) ) * inv_std_dev;
-	
+
 	// Compute the simplex each feature lies in
 	for( int k=0; k<N_; k++ ){
 		// Elevate the feature ( y = Ep, see p.5 in [Adams etal 2010])
 		const float * f = (feature + k * num_dimensions);
-		
+
 		// sm contains the sum of 1..n of our faeture vector
 		float sm = 0;
 		for( int j=d_; j>0; j-- ){
@@ -336,7 +336,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 			sm += cf;
 		}
 		elevated[0] = sm;
-		
+
 		// Find the closest 0-colored simplex through rounding
 		float down_factor = 1.0f / (d_+1);
 		float up_factor = (d_+1);
@@ -356,7 +356,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 			rem0[i] = rd2;
 			sum += rd2*down_factor;
 		}
-		
+
 		// Find the simplex we are in and store it in rank (where rank describes what position coorinate i has in the sorted order of the features values)
 		for( int i=0; i<=d_; i++ )
 			rank[i] = 0;
@@ -368,7 +368,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 				else
 					rank[j]++;
 		}
-		
+
 		// If the point doesn't lie on the plane (sum != 0) bring it back
 		for( int i=0; i<=d_; i++ ){
 			rank[i] += sum;
@@ -381,7 +381,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 				rem0[i] -= d_+1;
 			}
 		}
-		
+
 		// Compute the barycentric coordinates (p.10 in [Adams etal 2010])
 		for( int i=0; i<=d_+1; i++ )
 			barycentric[i] = 0;
@@ -392,7 +392,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 		}
 		// Wrap around
 		barycentric[0] += 1.0 + barycentric[d_+1];
-		
+
 		// Compute all vertices and their offset
 		for( int remainder=0; remainder<=d_; remainder++ ){
 			for( int i=0; i<d_; i++ )
@@ -409,19 +409,19 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 	delete [] rank;
 	delete [] canonical;
 	delete [] key;
-	
-	
+
+
 	// Find the Neighbors of each lattice point
-	
+
 	// Get the number of vertices in the lattice
 	M_ = hash_table.size();
-	
+
 	// Create the neighborhood structure
 	blur_neighbors_.resize( (d_+1)*M_ );
-	
+
 	short * n1 = new short[d_+1];
 	short * n2 = new short[d_+1];
-	
+
 	// For each of d+1 axes,
 	for( int j = 0; j <= d_; j++ ){
 		for( int i=0; i<M_; i++ ){
@@ -432,7 +432,7 @@ void ModifiedPermutohedral::init (const float* features, int num_dimensions, int
 			}
 			n1[j] = key[j] + d_;
 			n2[j] = key[j] - d_;
-			
+
 			blur_neighbors_[j*M_+i].n1 = hash_table.find( n1 );
 			blur_neighbors_[j*M_+i].n2 = hash_table.find( n2 );
 		}
@@ -446,10 +446,10 @@ void ModifiedPermutohedral::seqCompute(float* out, const float* in, int value_si
 	// Shift all values by 1 such that -1 -> 0 (used for blurring)
 	float * values = new float[ (M_+2)*value_size ];
 	float * new_values = new float[ (M_+2)*value_size ];
-	
+
 	for( int i=0; i<(M_+2)*value_size; i++ )
 		values[i] = new_values[i] = 0;
-	
+
 	// Splatting
 	for( int i=0;  i<N_; i++ ){
 		for( int j=0; j<=d_; j++ ){
@@ -459,12 +459,12 @@ void ModifiedPermutohedral::seqCompute(float* out, const float* in, int value_si
 				values[ o*value_size+k ] += w * in[k*N_ + i];
 		}
 	}
-	
+
 	for( int j=reverse?d_:0; j<=d_ && j>=0; reverse?j--:j++ ){
 		for( int i=0; i<M_; i++ ){
 			float * old_val = values + (i+1)*value_size;
 			float * new_val = new_values + (i+1)*value_size;
-			
+
 			int n1 = blur_neighbors_[j*M_+i].n1+1;
 			int n2 = blur_neighbors_[j*M_+i].n2+1;
 			float * n1_val = values + n1*value_size;
@@ -476,7 +476,7 @@ void ModifiedPermutohedral::seqCompute(float* out, const float* in, int value_si
 	}
 	// Alpha is a magic scaling constant (write Andrew if you really wanna understand this)
 	float alpha = 1.0f / (1+powf(2, -d_));
-	
+
 	// Slicing
 	for( int i=0; i<N_; i++ ){
 	  if (!add) {
@@ -491,8 +491,8 @@ void ModifiedPermutohedral::seqCompute(float* out, const float* in, int value_si
 			  out[ i + k*N_ ] += w * values[ o*value_size+k ] * alpha;
 		}
 	}
-	
-	
+
+
 	delete[] values;
 	delete[] new_values;
 }
@@ -559,14 +559,14 @@ void ModifiedPermutohedral::sseCompute ( float* out, const float* in, int value_
 	__m128 * sse_val    = (__m128*) _mm_malloc( sse_value_size*sizeof(__m128), 16 );
 	__m128 * values     = (__m128*) _mm_malloc( (M_+2)*sse_value_size*sizeof(__m128), 16 );
 	__m128 * new_values = (__m128*) _mm_malloc( (M_+2)*sse_value_size*sizeof(__m128), 16 );
-	
+
 	__m128 Zero = _mm_set1_ps( 0 );
-	
+
 	for( int i=0; i<(M_+2)*sse_value_size; i++ )
 		values[i] = new_values[i] = Zero;
 	for( int i=0; i<sse_value_size; i++ )
 		sse_val[i] = Zero;
-	
+
 	float* sdp_temp = new float[value_size];
 
 	// Splatting
@@ -591,7 +591,7 @@ void ModifiedPermutohedral::sseCompute ( float* out, const float* in, int value_
 		for( int i=0; i<M_; i++ ){
 			__m128 * old_val = values + (i+1)*sse_value_size;
 			__m128 * new_val = new_values + (i+1)*sse_value_size;
-			
+
 			int n1 = blur_neighbors_[j*M_+i].n1+1;
 			int n2 = blur_neighbors_[j*M_+i].n2+1;
 			__m128 * n1_val = values + n1*sse_value_size;
@@ -603,7 +603,7 @@ void ModifiedPermutohedral::sseCompute ( float* out, const float* in, int value_
 	}
 	// Alpha is a magic scaling constant (write Andrew if you really wanna understand this)
 	float alpha = 1.0f / (1+powf(2, -d_));
-	
+
 	// Slicing
 	for( int i=0; i<N_; i++ ){
 		for( int k=0; k<sse_value_size; k++ )
@@ -626,7 +626,7 @@ void ModifiedPermutohedral::sseCompute ( float* out, const float* in, int value_
       }
     }
 	}
-	
+
 	_mm_free( sse_val );
 	_mm_free( values );
 	_mm_free( new_values );

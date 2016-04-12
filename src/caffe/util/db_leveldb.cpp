@@ -1,4 +1,3 @@
-#ifdef USE_LEVELDB
 #include "caffe/util/db_leveldb.hpp"
 
 #include <string>
@@ -20,4 +19,3 @@ void LevelDB::Open(const string& source, Mode mode) {
 
 }  // namespace db
 }  // namespace caffe
-#endif  // USE_LEVELDB

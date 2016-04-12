@@ -16,7 +16,6 @@ using std::ofstream;
 using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
-  FLAGS_alsologtostderr = 1;  // Print output to stderr (while still logging)
   ::google::InitGoogleLogging(argv[0]);
   if (argc != 3) {
     LOG(ERROR) << "Usage: "
@@ -40,11 +39,11 @@ int main(int argc, char** argv) {
                  << "see details above.";
     }
   } else {
-    LOG(ERROR) << "File already in latest proto format: " << input_filename;
+    LOG(ERROR) << "File already in V1 proto format: " << argv[1];
   }
 
   WriteProtoToBinaryFile(net_param, argv[2]);
 
-  LOG(INFO) << "Wrote upgraded NetParameter binary proto to " << argv[2];
+  LOG(ERROR) << "Wrote upgraded NetParameter binary proto to " << argv[2];
   return !success;
 }

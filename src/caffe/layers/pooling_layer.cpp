@@ -2,8 +2,11 @@
 #include <cfloat>
 #include <vector>
 
-#include "caffe/layers/pooling_layer.hpp"
+#include "caffe/common.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
