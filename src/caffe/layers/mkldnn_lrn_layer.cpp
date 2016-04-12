@@ -99,8 +99,8 @@ void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
   if (NULL != bottom_data) {
     // Is it the first pass? Create a primitive.
     if (lrnFwd == NULL) {
-      CHECK((bottom[0]->get_prv_descriptor_data())->get_descr_type()
-              == PrvMemDescr::PRV_DESCR_MKLDNN);
+      CHECK_EQ((bottom[0]->get_prv_descriptor_data())->get_descr_type(),
+              PrvMemDescr::PRV_DESCR_MKLDNN);
       shared_ptr<MklDnnData<Dtype> > mem_descr
         =  boost::static_pointer_cast<MklDnnData<Dtype> >
               (bottom[0]->get_prv_descriptor_data());
@@ -184,8 +184,8 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     bottom_diff = reinterpret_cast<void*>(bottom[0]->mutable_prv_diff());
     // Is it the first pass? Create a primitive.
     if (lrnBwd == NULL) {
-      CHECK((top[0]->get_prv_descriptor_diff())->get_descr_type()
-              == PrvMemDescr::PRV_DESCR_MKLDNN);
+      CHECK_EQ((top[0]->get_prv_descriptor_diff())->get_descr_type(),
+              PrvMemDescr::PRV_DESCR_MKLDNN);
       shared_ptr<MklDnnDiff<Dtype> > mem_descr
         =  boost::static_pointer_cast<MklDnnDiff<Dtype> >
               (top[0]->get_prv_descriptor_diff());

@@ -58,8 +58,7 @@ struct MklDnnMemoryDescriptor : PrvMemDescr,
               << "Failed internal_ptr memory allocation with status "
               << status << "\n";
 
-      caffe_set(dnnLayoutGetMemorySize<Dtype>(layout_int), Dtype(0),
-              internal_ptr);
+      caffe_set(prv_count(), Dtype(0), internal_ptr);
     }
   }
   virtual size_t prv_count() {
