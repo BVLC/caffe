@@ -836,4 +836,4 @@ TYPED_TEST(MklDnnConvolutionLayerTest, TestGradientGroup) {
 }
 
 }  // namespace caffe
-#endif //#ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKLDNN_SUPPORTED

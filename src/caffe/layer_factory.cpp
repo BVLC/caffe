@@ -72,7 +72,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     }
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
-#ifdef MKLDNN_SUPPORTED    
+#ifdef MKLDNN_SUPPORTED
   } else if (engine == ConvolutionParameter_Engine_MKLDNN) {
     return shared_ptr<Layer<Dtype> >(new MklDnnConvolutionLayer<Dtype>(param));
 #endif
@@ -117,7 +117,7 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
         return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
     }
 #endif
-#ifdef MKLDNN_SUPPORTED    
+#ifdef MKLDNN_SUPPORTED
   } else if (engine == PoolingParameter_Engine_MKLDNN) {
     return shared_ptr<Layer<Dtype> >(new MklDnnPoolingLayer<Dtype>(param));
 #endif

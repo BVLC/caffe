@@ -448,7 +448,8 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMax) {
 
 TYPED_TEST(MklDnnPoolingLayerTest, TestForwardMaxTopMask) {
   typedef typename TypeParam::Dtype Dtype;
-  this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* > (this->blob_top_mask_));
+  this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* >
+          (this->blob_top_mask_));
   this->TestForwardSquare();
   this->TestForwardRectHigh();
   this->TestForwardRectWide();
@@ -529,7 +530,8 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMaxTopMask) {
       pooling_param->set_kernel_w(kernel_w);
       pooling_param->set_stride(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-      this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* > (this->blob_top_mask_));
+      this->blob_top_vec_.push_back(reinterpret_cast<Blob<Dtype>* >
+              (this->blob_top_mask_));
       MklDnnPoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
@@ -540,7 +542,7 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientMaxTopMask) {
 }
 #endif
 
-#if 0 // Average Pooling
+#if 0  // Average Pooling
 TYPED_TEST(MklDnnPoolingLayerTest, TestForwardAve) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -611,4 +613,4 @@ TYPED_TEST(MklDnnPoolingLayerTest, TestGradientAvePadded) {
 }
 #endif
 }  // namespace caffe
-#endif //#ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKLDNN_SUPPORTED

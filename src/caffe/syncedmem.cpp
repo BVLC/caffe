@@ -105,7 +105,6 @@ void SyncedMemory::set_cpu_data(void* data) {
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
-
 }
 
 const void* SyncedMemory::gpu_data() {
@@ -176,31 +175,28 @@ void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
     but (potentially) with different layout.
 */
 void SyncedMemory::set_prv_data(void* data, bool same_data) {
-  if(data != NULL) {
+  if (data != NULL) {
     if (prv_ptr_ && own_prv_data_) {
       CaffeFreeHost(prv_ptr_, cpu_malloc_use_cuda_);
     }
     prv_ptr_ = data;
     own_prv_data_ = false;
-  }
-  else if(NULL == prv_ptr_) {
+  } else if (NULL == prv_ptr_) {
     CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, prv_ptr_);
     own_prv_data_ = true;
   }
 
   // If it wasn't synced before, it won't be now.
-  if((head_ != HEAD_AT_PRV) && same_data)
+  if ((head_ != HEAD_AT_PRV) && same_data)
     head_ = SYNCED_PRV;
   else
     head_ = HEAD_AT_PRV;
 }
 
 const void* SyncedMemory::prv_data() {
-
-  if((head_ != HEAD_AT_PRV) &&
+  if ((head_ != HEAD_AT_PRV) &&
      (head_ != SYNCED_PRV)) {
-
     DLOG(INFO) << "prv_ptr_ is not up-to-date, call set_prv_data() first.";
     return NULL;
   }
@@ -211,7 +207,7 @@ const void* SyncedMemory::prv_data() {
 void* SyncedMemory::mutable_prv_data() {
   head_ = HEAD_AT_PRV;
 
-  if(NULL == prv_ptr_) {
+  if (NULL == prv_ptr_) {
     CaffeMallocHost(&prv_ptr_, size_, &cpu_malloc_use_cuda_);
     caffe_memset(size_, 0, prv_ptr_);
   }

@@ -145,7 +145,8 @@ Dtype* Blob<Dtype>::mutable_prv_data() {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_data(Dtype* data, shared_ptr<PrvMemDescr> descriptor, bool same_data) {
+void Blob<Dtype>::set_prv_data(Dtype* data, shared_ptr<PrvMemDescr> descriptor,
+        bool same_data) {
   CHECK(data_);
   data_->set_prv_data(data, same_data);
   data_->prv_descriptor_ = descriptor;
@@ -164,7 +165,8 @@ Dtype* Blob<Dtype>::mutable_prv_diff() {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor, bool same_data) {
+void Blob<Dtype>::set_prv_diff(Dtype* diff, shared_ptr<PrvMemDescr> descriptor,
+        bool same_data) {
   CHECK(diff_);
   diff_->set_prv_data(diff, same_data);
   diff_->prv_descriptor_ = descriptor;
@@ -218,7 +220,7 @@ void Blob<Dtype>::Update() {
   switch (data_->head()) {
   case SyncedMemory::SYNCED_PRV:
   case SyncedMemory::HEAD_AT_PRV:
-    if( (diff_->head() == SyncedMemory::SYNCED_PRV) ||
+    if ((diff_->head() == SyncedMemory::SYNCED_PRV) ||
         (diff_->head() == SyncedMemory::HEAD_AT_PRV)) {
       caffe_axpy<Dtype>(prv_diff_count(), Dtype(-1),
           static_cast<const Dtype*>(diff_->prv_data()),

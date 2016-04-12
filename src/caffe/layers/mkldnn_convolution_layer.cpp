@@ -6,14 +6,15 @@
 #include "caffe/layers/mkldnn_layers.hpp"
 
 // Uncomment to see where the layout conversions are done
-//#undef DLOG
+// #undef DLOG
 #ifndef DLOG
 #define DLOG LOG
 #endif
 
 namespace caffe {
 template <typename Dtype>
-MklDnnConvolutionLayer<Dtype>::MklDnnConvolutionLayer(const LayerParameter& param)
+MklDnnConvolutionLayer<Dtype>::MklDnnConvolutionLayer(
+  const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param),
         fwd_bottom_data   (new MklDnnData<Dtype>()),
         fwd_top_data      (new MklDnnData<Dtype>()),
@@ -38,8 +39,7 @@ void MklDnnConvolutionLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-MklDnnConvolutionLayer<Dtype>::~MklDnnConvolutionLayer()
-{
+MklDnnConvolutionLayer<Dtype>::~MklDnnConvolutionLayer() {
     dnnDelete<Dtype>(convolutionFwd);
     dnnDelete<Dtype>(convolutionBwdData);
     dnnDelete<Dtype>(convolutionBwdFilter);
@@ -47,7 +47,8 @@ MklDnnConvolutionLayer<Dtype>::~MklDnnConvolutionLayer()
 }
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
+      const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
@@ -100,8 +101,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
   int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
 
-  if (g > 1)
-  {
+  if (g > 1) {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
       dnnAlgorithmConvolutionDirect,
@@ -113,8 +113,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       convolutionStrides,
       inputOffset,
       dnnBorderZeros);
-  } else
-  {
+  } else {
     status = dnnConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
       dnnAlgorithmConvolutionDirect,
@@ -126,25 +125,47 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       inputOffset,
       dnnBorderZeros);
   }
-  CHECK(status == 0) << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status " << status << "\n"  ;
+  CHECK_EQ(status, 0)
+          << "Failed dnnCreateConvolution<Dtype>(dnnForward) with status "
+          << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_bottom_data->layout_int, convolutionFwd, dnnResourceSrc);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(&fwd_bottom_data->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int, convolutionFwd, dnnResourceDst);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(&fwd_top_data->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_filter_data->layout_int, convolutionFwd, dnnResourceFilter);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(&fwd_filter_data->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(&fwd_bias_data->layout_int, ...) with status " << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &fwd_bottom_data->layout_int, convolutionFwd, dnnResourceSrc);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &fwd_top_data->layout_int, convolutionFwd, dnnResourceDst);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &fwd_filter_data->layout_int, convolutionFwd, dnnResourceFilter);
+  CHECK_EQ(status, 0) <<
+          "Failed dnnLayoutCreateFromPrimitive with status " << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &fwd_bias_data->layout_int, convolutionFwd, dnnResourceBias);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
 
-  status = dnnLayoutCreate<Dtype>(&fwd_bottom_data->layout_usr, dimension, bdata_sizes, bdata_strides);
-  CHECK(status == 0) << "Failed creation of l_fwd_bottom_data_usr layout with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&fwd_top_data->layout_usr   , dimension, tdata_sizes, tdata_strides);
-  CHECK(status == 0) << "Failed creation of l_fwd_top_data_usr layout with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&fwd_filter_data->layout_usr, dimension, fdata_sizes, fdata_strides);
-  CHECK(status == 0) << "Failed creation of l_fwd_filter_data_usr layout with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&fwd_bias_data->layout_usr  ,         1, bias_sizes , bias_strides );
-  CHECK(status == 0) << "Failed creation of l_fwd_bias_data_usr layout with status " << status << "\n";
+  status = dnnLayoutCreate<Dtype>(
+          &fwd_bottom_data->layout_usr, dimension, bdata_sizes, bdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of l_fwd_bottom_data_usr layout with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(
+          &fwd_top_data->layout_usr   , dimension, tdata_sizes, tdata_strides);
+  CHECK_EQ(status, 0) <<
+          "Failed creation of l_fwd_top_data_usr layout with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(
+          &fwd_filter_data->layout_usr, dimension, fdata_sizes, fdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of l_fwd_filter_data_usr layout with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(
+          &fwd_bias_data->layout_usr, 1, bias_sizes, bias_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of l_fwd_bias_data_usr layout with status "
+          << status << "\n";
 
   fwd_bottom_data->create_conversions();
   fwd_top_data   ->create_conversions();
@@ -154,8 +175,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
 /*
  * Backward by data layer setup
  */
-  if (g > 1)
-  {
+  if (g > 1) {
     status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
       &convolutionBwdData,
       dnnAlgorithmConvolutionDirect,
@@ -167,8 +187,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       convolutionStrides,
       inputOffset,
       dnnBorderZeros);
-  } else
-  {
+  } else {
     status = dnnConvolutionCreateBackwardData<Dtype>(
       &convolutionBwdData,
       dnnAlgorithmConvolutionDirect,
@@ -180,21 +199,38 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       inputOffset,
       dnnBorderZeros);
   }
-  CHECK(status == 0) << "Failed dnnCreateConvolution<Dtype>(dnnBackwardData) with status " << status << "\n";
+  CHECK_EQ(status, 0)
+          << "Failed dnnConvolutionCreateBackwardData with status "
+          << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_bottom_diff->layout_int, convolutionBwdData, dnnResourceDiffSrc);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdd_bottom_diff->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_top_diff->layout_int   , convolutionBwdData, dnnResourceDiffDst);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdd_top_diff->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_filter_data->layout_int, convolutionBwdData, dnnResourceFilter);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdd_filter_data->layout_int, ...) with status " << status << "\n";
-
-  status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff->layout_usr, dimension, bdata_sizes, bdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdd_bottom_diff->layout_usr with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_top_diff->layout_usr   , dimension, tdata_sizes, tdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdd_top_diff->layout_usr with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdd_filter_data->layout_usr, dimension, fdata_sizes, fdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdd_filter_data->layout_usr with status " << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_bottom_diff->layout_int,
+          convolutionBwdData, dnnResourceDiffSrc);
+  CHECK_EQ(status, 0)
+          << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(
+          &bwdd_top_diff->layout_int, convolutionBwdData, dnnResourceDiffDst);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdd_filter_data->layout_int,
+          convolutionBwdData, dnnResourceFilter);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdd_bottom_diff->layout_usr, dimension,
+          bdata_sizes, bdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdd_bottom_diff->layout_usr with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdd_top_diff->layout_usr, dimension,
+          tdata_sizes, tdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdd_top_diff->layout_usr with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdd_filter_data->layout_usr, dimension,
+          fdata_sizes, fdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdd_filter_data->layout_usr with status "
+          << status << "\n";
 
   bwdd_bottom_diff->create_conversions();
   bwdd_top_diff->create_conversions();
@@ -204,8 +240,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
  * Backward by filter layer setup
  */
 
-  if (g > 1)
-  {
+  if (g > 1) {
     status = dnnGroupsConvolutionCreateBackwardFilter<Dtype>(
       &convolutionBwdFilter,
       dnnAlgorithmConvolutionDirect,
@@ -217,8 +252,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       convolutionStrides,
       inputOffset,
       dnnBorderZeros);
-  } else
-  {
+  } else {
     status = dnnConvolutionCreateBackwardFilter<Dtype>(
       &convolutionBwdFilter,
       dnnAlgorithmConvolutionDirect,
@@ -230,21 +264,38 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       inputOffset,
       dnnBorderZeros);
   }
-  CHECK(status == 0) << "Failed dnnCreateConvolution<Dtype>(dnnBackwardFilter) with status " << status << "\n";
+  CHECK_EQ(status, 0)
+          << "Failed dnnConvolutionCreateBackwardFilter with status "
+          << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_bottom_data->layout_int, convolutionBwdFilter, dnnResourceSrc);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdf_bottom_data->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_top_diff->layout_int   , convolutionBwdFilter, dnnResourceDiffDst);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdf_top_diff->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_filter_diff->layout_int, convolutionBwdFilter, dnnResourceDiffFilter);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdf_filter_diff->layout_int, ...) with status " << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_bottom_data->layout_int,
+          convolutionBwdFilter, dnnResourceSrc);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_top_diff->layout_int,
+          convolutionBwdFilter, dnnResourceDiffDst);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdf_filter_diff->layout_int,
+          convolutionBwdFilter, dnnResourceDiffFilter);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
 
-  status = dnnLayoutCreate<Dtype>(&bwdf_bottom_data->layout_usr, dimension, bdata_sizes, bdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdf_bottom_data->layout_usr with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_top_diff->layout_usr   , dimension, tdata_sizes, tdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdf_top_diff->layout_usr with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdf_filter_diff->layout_usr, dimension, fdata_sizes, fdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdf_filter_diff->layout_usr with status " << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdf_bottom_data->layout_usr, dimension,
+          bdata_sizes, bdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdf_bottom_data->layout_usr with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdf_top_diff->layout_usr, dimension,
+          tdata_sizes, tdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdf_top_diff->layout_usr with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdf_filter_diff->layout_usr, dimension,
+          fdata_sizes, fdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdf_filter_diff->layout_usr with status "
+          << status << "\n";
 
   bwdf_bottom_data->create_conversions();
   bwdf_top_diff->create_conversions();
@@ -253,55 +304,64 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
 /*
  * Backward by bias layer setup
  */
-  if (g > 1)
-  {
+  if (g > 1) {
     status = dnnGroupsConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
       tdata_sizes);
-  } else
-  {
+  } else {
     status = dnnConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
       dnnAlgorithmConvolutionDirect,
       dimension,
       tdata_sizes);
   }
-  CHECK(status == 0) << "Failed dnnCreateConvolution<Dtype>(dnnBackwardBias) with status " << status << "\n"  ;
+  CHECK_EQ(status, 0) << "Failed dnnConvolutionCreateBackwardBias with status "
+          << status << "\n";
 
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int , convolutionBwdBias, dnnResourceDiffDst);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdb_top_diff->layout_int, ...) with status " << status << "\n";
-  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_bias_diff->layout_int, convolutionBwdBias, dnnResourceDiffBias);
-  CHECK(status == 0) << "Failed dnnLayoutCreateFromPrimitive<Dtype>(bwdb_bias_diff->layout_int, ...) with status " << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_top_diff->layout_int,
+          convolutionBwdBias, dnnResourceDiffDst);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
+  status = dnnLayoutCreateFromPrimitive<Dtype>(&bwdb_bias_diff->layout_int,
+          convolutionBwdBias, dnnResourceDiffBias);
+  CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
+          << status << "\n";
 
-  status = dnnLayoutCreate<Dtype>(&bwdb_top_diff->layout_usr , dimension, tdata_sizes, tdata_strides);
-  CHECK(status == 0) << "Failed creation of bwdb_top_diff->layout_usr with status " << status << "\n";
-  status = dnnLayoutCreate<Dtype>(&bwdb_bias_diff->layout_usr,         1, bias_sizes , bias_strides );
-  CHECK(status == 0) << "Failed creation of bwdb_bias_diff->layout_usr with status " << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdb_top_diff->layout_usr , dimension,
+          tdata_sizes, tdata_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdb_top_diff->layout_usr with status "
+          << status << "\n";
+  status = dnnLayoutCreate<Dtype>(&bwdb_bias_diff->layout_usr, 1,
+          bias_sizes, bias_strides);
+  CHECK_EQ(status, 0)
+          << "Failed creation of bwdb_bias_diff->layout_usr with status "
+          << status << "\n";
 
   bwdb_top_diff->create_conversions();
   bwdb_bias_diff->create_conversions();
 
   // Names are for debugging purposes only. TODO: Consider removing this.
-  fwd_bottom_data    ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  fwd_top_data       ->name = "fwd_top_data      @ " + this->layer_param_.name();
-  fwd_filter_data    ->name = "fwd_filter_data   @ " + this->layer_param_.name();
-  fwd_bias_data      ->name = "fwd_bias_data     @ " + this->layer_param_.name();
-  bwdd_top_diff      ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
-  bwdd_bottom_diff   ->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
-  bwdd_filter_data   ->name = "bwdd_filter_data  @ " + this->layer_param_.name();
-  bwdf_top_diff      ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
-  bwdf_bottom_data   ->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
-  bwdf_filter_diff   ->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
-  bwdb_top_diff      ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
-  bwdb_bias_diff     ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
+  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
+  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
+  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
+  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
+  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
+  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
+  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
+  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
+  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
+  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
 }
 
 template <typename Dtype, bool is_diff>
-void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, void* cpu_ptr)
-{
+void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr,
+        void* cpu_ptr) {
   CHECK(prv_ptr);
   CHECK(cpu_ptr);
   CHECK(this->convert_from_int);
@@ -310,123 +370,139 @@ void MklDnnMemoryDescriptor<Dtype, is_diff>::convert_from_prv(void* prv_ptr, voi
 
   DLOG(INFO) << "convert priv =>           "  << this->name << " =>";
 
-  convert_resources[dnnResourceFrom] = (void *)prv_ptr;
-  convert_resources[dnnResourceTo]   = (void *)cpu_ptr;
+  convert_resources[dnnResourceFrom] = prv_ptr;
+  convert_resources[dnnResourceTo]   = cpu_ptr;
   status = dnnExecute<Dtype>(this->convert_from_int, convert_resources);
-  CHECK(status == 0) << "Conversion from prv failed with status " << status;
+  CHECK_EQ(status, 0) << "Conversion from prv failed with status " << status;
 }
 
 template <typename Dtype, bool is_diff>
 Dtype* MklDnnMemoryDescriptor<Dtype, is_diff>::get_converted_prv(
-  Blob<Dtype>* blob, bool set_prv_ptr, MklDnnMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {
-  if (this->convert_to_int)
-  {
+  Blob<Dtype>* blob, bool set_prv_ptr,
+  MklDnnMemoryDescriptor<Dtype, is_diff>* converted_in_fwd) {
+  if (this->convert_to_int) {
     int status;
     void *convert_resources[dnnResourceNumber];
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
-    if(prv_ptr == NULL)
-    {
-      if(converted_in_fwd)
-      {
+    if (prv_ptr == NULL) {
+      if (converted_in_fwd) {
         // hack for reusing previously done conversion
-        if(1) //if(dnnLayoutCompare<Dtype>(converted_in_fwd->layout_int , this->layout_int))
-        {
-          DLOG(INFO) << "reusing fwd               " << converted_in_fwd->name << " == " << this->name;
+        // if(dnnLayoutCompare(converted_in_fwd->layout_int , this->layout_int))
+        if (1) {
+          DLOG(INFO) << "reusing fwd               "
+                  << converted_in_fwd->name << " == " << this->name;
           return converted_in_fwd->internal_ptr;
-        } else
-        {
-          DLOG(INFO) << "layout doesn't match      " << converted_in_fwd->name << " != " << this->name;
+        } else {
+          DLOG(INFO) << "layout doesn't match      "
+                  << converted_in_fwd->name << " != " << this->name;
         }
       }
 
-      DLOG(INFO) << "convert      => priv                                => " << this->name;
+      DLOG(INFO) << "convert      => priv                                => "
+                 << this->name;
 
-      convert_resources[dnnResourceFrom] = is_diff ? (void *) blob->cpu_diff() : (void *) blob->cpu_data();
-      convert_resources[dnnResourceTo]   = (void *)this->internal_ptr;
+      convert_resources[dnnResourceFrom] =
+              is_diff ?
+                reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff()))
+              : reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
+      convert_resources[dnnResourceTo] =
+              reinterpret_cast<void *>(this->internal_ptr);
 
       status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
-      CHECK(status == 0) << "Conversion failed with status " << status;
+      CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
       if (set_prv_ptr) {
-        if(is_diff)
+        if (is_diff)
           blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
         else
           blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
       }
       return this->internal_ptr;
-    }
-    else
-    {
+    } else {
       // This section helps if padding needs to be added (or removed...)
       // TODO: consider removing when no longer needed.
       shared_ptr<PrvMemDescr> prv_mem_descriptor =
-          is_diff ? (blob->get_prv_descriptor_diff()) : (blob->get_prv_descriptor_data());
+          is_diff ? (blob->get_prv_descriptor_diff()) :
+            (blob->get_prv_descriptor_data());
 
-      CHECK(prv_mem_descriptor->get_descr_type() == PrvMemDescr::PRV_DESCR_MKLDNN);
+      CHECK_EQ(prv_mem_descriptor->get_descr_type(),
+              PrvMemDescr::PRV_DESCR_MKLDNN);
 
       shared_ptr<MklDnnMemoryDescriptor<Dtype, is_diff> > current_descr =
-        boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> > (prv_mem_descriptor);
+        boost::static_pointer_cast<MklDnnMemoryDescriptor<Dtype, is_diff> >
+              (prv_mem_descriptor);
 
-      if(!dnnLayoutCompare<Dtype>(current_descr->layout_int , this->layout_int)) {
-          
-        if(converted_in_fwd)
-        {
+      if (!dnnLayoutCompare<Dtype>(current_descr->layout_int,
+              this->layout_int)) {
+        if (converted_in_fwd) {
           // hack for reusing previously done conversion
-          if(1) //if(dnnLayoutCompare<Dtype>(converted_in_fwd->layout_int , this->layout_int))
-          {
-            DLOG(INFO) << "reusing fwd               " << converted_in_fwd->name << " == " << this->name;
+          // if(dnnLayoutCompare(converted_in_fwd->layout_int,this->layout_int))
+          if (1) {
+            DLOG(INFO) << "reusing fwd               "
+                    << converted_in_fwd->name << " == " << this->name;
             return converted_in_fwd->internal_ptr;
-          } else
-          {
-            DLOG(INFO) << "layout doesn't match      " << converted_in_fwd->name << " != " << this->name;
+          } else {
+            DLOG(INFO) << "layout doesn't match      "
+                    << converted_in_fwd->name << " != " << this->name;
           }
         }
-        DLOG(INFO) << "convert priv => priv      " << current_descr->name << " => " << this->name;
+        DLOG(INFO) << "convert priv => priv      "
+                << current_descr->name << " => " << this->name;
 
         dnnPrimitive_t convert_padding;
-        status = dnnConversionCreate<Dtype>(&convert_padding, current_descr->layout_int , this->layout_int);
-        //CHECK(status == 0) << "Failed creation convert_padding with status " << status << "\n";
-        if(status != 0)
-        { // TODO: Very weird that we end up here for conv1. No idea why....
-          DLOG(INFO) << "!!!! Failed creation convert_padding with status " << status << "\n";
-          convert_resources[dnnResourceFrom] = is_diff ? (void *) blob->cpu_diff() : (void *) blob->cpu_data();
-          convert_resources[dnnResourceTo]   = (void *)this->internal_ptr;
+        status = dnnConversionCreate<Dtype>(&convert_padding,
+                current_descr->layout_int , this->layout_int);
+        // CHECK_EQ(status, 0)
+        // << "Failed creation convert_padding with status " << status << "\n";
+        if (status != 0) {
+          // TODO: Very weird that we end up here for conv1. No idea why....
+          DLOG(INFO) << "!!!! Failed creation convert_padding with status "
+                  << status << "\n";
+
+          convert_resources[dnnResourceFrom] = is_diff ?
+            reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_diff())) :
+            reinterpret_cast<void *>(const_cast<Dtype*>(blob->cpu_data()));
+          convert_resources[dnnResourceTo] =
+            reinterpret_cast<void*>(this->internal_ptr);
 
           status = dnnExecute<Dtype>(this->convert_to_int, convert_resources);
-          CHECK(status == 0) << "Conversion failed with status " << status;
+          CHECK_EQ(status, 0) << "Conversion failed with status " << status;
 
         } else {
-          convert_resources[dnnResourceFrom] = is_diff ? (void *) blob->prv_diff() : (void *) blob->prv_data();
-          convert_resources[dnnResourceTo]   = (void *) this->internal_ptr;
+          convert_resources[dnnResourceFrom] = is_diff ?
+            reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_diff())) :
+            reinterpret_cast<void *>(const_cast<Dtype *>(blob->prv_data()));
+          convert_resources[dnnResourceTo] =
+                  reinterpret_cast<void *>(this->internal_ptr);
           status = dnnExecute<Dtype>(convert_padding, convert_resources);
-          CHECK(status == 0) << "Conversion failed with status " << status;
+          CHECK_EQ(status, 0) << "Conversion failed with status " << status;
           dnnDelete<Dtype>(convert_padding);
         }
 
         if (set_prv_ptr) {
-          if(is_diff)
+          if (is_diff)
             blob->set_prv_diff(this->internal_ptr, get_shared_ptr(), true);
           else
             blob->set_prv_data(this->internal_ptr, get_shared_ptr(), true);
         }
         return this->internal_ptr;
-      }
-      else if(current_descr.get() != this) {
-        DLOG(INFO) << "layout OK                 " << current_descr->name << " == " << this->name;
+      } else if (current_descr.get() != this) {
+        DLOG(INFO) << "layout OK                 "
+                << current_descr->name << " == " << this->name;
       }
     }
 
-    return (Dtype*) prv_ptr;
+    return const_cast<Dtype *>(prv_ptr);
   }
 
-  return (is_diff ? (Dtype*) blob->cpu_diff() : (Dtype*) blob->cpu_data());
+  return (is_diff ? const_cast<Dtype *>(blob->cpu_diff()) :
+                    const_cast<Dtype *>(blob->cpu_data()));
 }
 
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top)
-{
+void MklDnnConvolutionLayer<Dtype>::Forward_cpu(
+  const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   int status;
   size_t n, g;
   size_t iw, ih, ic;
@@ -441,7 +517,8 @@ void MklDnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
   CHECK(bottom[0]->width()    == iw &&
         bottom[0]->height()   == ih &&
         bottom[0]->channels() == ic*g &&
-        bottom[0]->num()      == n) << "Inclompatible shape of bottom with layer";
+        bottom[0]->num()      == n)
+          << "Inclompatible shape of bottom with layer";
 
   ow = this->width_out_;
   oh = this->height_out_;
@@ -453,26 +530,28 @@ void MklDnnConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 
 
   void *res_convolutionFwd[dnnResourceNumber];
-  res_convolutionFwd[dnnResourceSrc]    = fwd_bottom_data->get_converted_prv(bottom[0], false);
-  res_convolutionFwd[dnnResourceFilter] = fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
-  res_convolutionFwd[dnnResourceBias]   = fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), true);
+  res_convolutionFwd[dnnResourceSrc] =
+    fwd_bottom_data->get_converted_prv(bottom[0], false);
+  res_convolutionFwd[dnnResourceFilter] =
+    fwd_filter_data->get_converted_prv(this->blobs_[0].get(), true);
+  res_convolutionFwd[dnnResourceBias] =
+    fwd_bias_data  ->get_converted_prv(this->blobs_[1].get(), true);
 
-  if (fwd_top_data->convert_from_int)
-  {
+  if (fwd_top_data->convert_from_int) {
     top[0]->set_prv_data(fwd_top_data->internal_ptr, fwd_top_data, false);
-    res_convolutionFwd[dnnResourceDst] = (void *)fwd_top_data->internal_ptr;
-  }
-  else
+    res_convolutionFwd[dnnResourceDst] =
+            reinterpret_cast<void *>(fwd_top_data->internal_ptr);
+  } else {
     res_convolutionFwd[dnnResourceDst] = top[0]->mutable_cpu_data();
-
-  status = dnnExecute<Dtype>( convolutionFwd, res_convolutionFwd);
-  CHECK(status == 0) << "Forward convolution failed with status " << status;
+  }
+  status = dnnExecute<Dtype>(convolutionFwd, res_convolutionFwd);
+  CHECK_EQ(status, 0) << "Forward convolution failed with status " << status;
 }
 
 template <typename Dtype>
-void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
-{
+void MklDnnConvolutionLayer<Dtype>::Backward_cpu(
+  const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+  const vector<Blob<Dtype>*>& bottom) {
   int status;
   size_t n, g;
   size_t iw, ih, ic;
@@ -487,7 +566,8 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   CHECK(bottom[0]->width()    == iw &&
         bottom[0]->height()   == ih &&
         bottom[0]->channels() == ic*g &&
-        bottom[0]->num()      == n) << "Incompatible shape of bottom with layer";
+        bottom[0]->num()      == n)
+          << "Incompatible shape of bottom with layer";
 
   ow = this->width_out_;
   oh = this->height_out_;
@@ -497,65 +577,70 @@ void MklDnnConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
         top[0]->channels() == oc*g &&
         top[0]->num()      == n) << "Incompatible shape of bottom with layer";
 
-  if (propagate_down[0])
-  {
+  if (propagate_down[0]) {
     void *res_convolutionBwdData[dnnResourceNumber];
 
-    res_convolutionBwdData[dnnResourceDiffDst] = bwdd_top_diff->get_converted_prv(top[0], true);
-    // Currently this conversion adds padding to weights. We don't want that to be stored in the weights prv_ptr_
+    res_convolutionBwdData[dnnResourceDiffDst] =
+      bwdd_top_diff->get_converted_prv(top[0], true);
+    // Currently this conversion adds padding to weights.
+    // We don't want that to be stored in the weights prv_ptr_
     res_convolutionBwdData[dnnResourceFilter]  =
       bwdd_filter_data->get_converted_prv(this->blobs_[0].get(), false);
 
-    if (bwdd_bottom_diff->convert_from_int)
-    {
-      bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, bwdd_bottom_diff, false);
-      res_convolutionBwdData[dnnResourceDiffSrc] = (void *)bwdd_bottom_diff->internal_ptr;
+    if (bwdd_bottom_diff->convert_from_int) {
+      bottom[0]->set_prv_diff(bwdd_bottom_diff->internal_ptr, bwdd_bottom_diff,
+              false);
+      res_convolutionBwdData[dnnResourceDiffSrc] =
+              reinterpret_cast<void *>(bwdd_bottom_diff->internal_ptr);
+    } else {
+      res_convolutionBwdData[dnnResourceDiffSrc] =
+              bottom[0]->mutable_cpu_diff();
     }
-    else
-      res_convolutionBwdData[dnnResourceDiffSrc] = bottom[0]->mutable_cpu_diff();
-
-    status = dnnExecute<Dtype>( convolutionBwdData, res_convolutionBwdData);
-    CHECK(status == 0) << "Backward Data conv failed with status " << status;
+    status = dnnExecute<Dtype>(convolutionBwdData, res_convolutionBwdData);
+    CHECK_EQ(status, 0) << "Backward Data conv failed with status " << status;
   }
 
-  if (this->param_propagate_down(0))
-  {
+  if (this->param_propagate_down(0)) {
     void *res_convolutionBwdFilter[dnnResourceNumber];
 
-    res_convolutionBwdFilter[dnnResourceDiffDst] = bwdf_top_diff->get_converted_prv(top[0], true);
-    // The last get_converted_prv() argument is a hack for reusing conversion done already in the forward direction.
-    res_convolutionBwdFilter[dnnResourceSrc] = bwdf_bottom_data->get_converted_prv(bottom[0], false, fwd_bottom_data.get());
+    res_convolutionBwdFilter[dnnResourceDiffDst] =
+            bwdf_top_diff->get_converted_prv(top[0], true);
+    // The last get_converted_prv() argument is a hack for reusing conversion
+    // done already in the forward direction.
+    res_convolutionBwdFilter[dnnResourceSrc] =
+            bwdf_bottom_data->get_converted_prv(bottom[0], false,
+            fwd_bottom_data.get());
 
-    if (bwdf_filter_diff->convert_from_int)
-    {
-      this->blobs_[0]->set_prv_diff(bwdf_filter_diff->internal_ptr, bwdf_filter_diff, false);
-      res_convolutionBwdFilter[dnnResourceDiffFilter] = (void*) bwdf_filter_diff->internal_ptr;
+    if (bwdf_filter_diff->convert_from_int) {
+      this->blobs_[0]->set_prv_diff(bwdf_filter_diff->internal_ptr,
+              bwdf_filter_diff, false);
+      res_convolutionBwdFilter[dnnResourceDiffFilter] =
+              reinterpret_cast<void *>(bwdf_filter_diff->internal_ptr);
+    } else {
+      res_convolutionBwdFilter[dnnResourceDiffFilter] =
+              this->blobs_[0]->mutable_cpu_diff();
     }
-    else
-      res_convolutionBwdFilter[dnnResourceDiffFilter] = this->blobs_[0]->mutable_cpu_diff();
-
-    status = dnnExecute<Dtype>( convolutionBwdFilter, res_convolutionBwdFilter);
-    CHECK(status == 0) << "Backward Filter conv failed with status " << status;
-
+    status = dnnExecute<Dtype>(convolutionBwdFilter, res_convolutionBwdFilter);
+    CHECK_EQ(status, 0) << "Backward Filter conv failed with status " << status;
   }
 
-  if (this->param_propagate_down(1))
-  {
+  if (this->param_propagate_down(1)) {
     void *res_convolutionBwdBias[dnnResourceNumber];
 
-    res_convolutionBwdBias[dnnResourceDiffDst] = bwdb_top_diff->get_converted_prv(top[0], true);
+    res_convolutionBwdBias[dnnResourceDiffDst] =
+            bwdb_top_diff->get_converted_prv(top[0], true);
 
-    if (bwdb_bias_diff->convert_from_int)
-    {
-      this->blobs_[1]->set_prv_diff(bwdb_bias_diff->internal_ptr, bwdb_bias_diff, false);
-      res_convolutionBwdBias[dnnResourceDiffBias] = bwdb_bias_diff->internal_ptr;
+    if (bwdb_bias_diff->convert_from_int) {
+      this->blobs_[1]->set_prv_diff(bwdb_bias_diff->internal_ptr,
+              bwdb_bias_diff, false);
+      res_convolutionBwdBias[dnnResourceDiffBias] =
+              bwdb_bias_diff->internal_ptr;
+    } else {
+      res_convolutionBwdBias[dnnResourceDiffBias] =
+              reinterpret_cast<void *>(this->blobs_[1]->mutable_cpu_diff());
     }
-    else
-      res_convolutionBwdBias[dnnResourceDiffBias] = (void *)this->blobs_[1]->mutable_cpu_diff();;
-
-    status = dnnExecute<Dtype>( convolutionBwdBias, res_convolutionBwdBias);
-    CHECK(status == 0) << "Backward Bias failed with status " << status;
-
+    status = dnnExecute<Dtype>(convolutionBwdBias, res_convolutionBwdBias);
+    CHECK_EQ(status, 0) << "Backward Bias failed with status " << status;
   }
 }
 
@@ -565,4 +650,4 @@ STUB_GPU(MklDnnConvolutionLayer);
 
 INSTANTIATE_CLASS(MklDnnConvolutionLayer);
 }  // namespace caffe
-#endif // #ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKLDNN_SUPPORTED

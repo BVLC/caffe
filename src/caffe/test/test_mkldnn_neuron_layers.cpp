@@ -66,4 +66,4 @@ TYPED_TEST(MklDnnNeuronLayerTest, TestReLUGradient) {
 }
 
 }  // namespace caffe
-#endif //#ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKLDNN_SUPPORTED
