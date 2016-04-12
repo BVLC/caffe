@@ -4,7 +4,7 @@
 
 #include "thrust/device_vector.h"
 
-#include "caffe/common_layers.hpp"
+#include "caffe/layers/softmax_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

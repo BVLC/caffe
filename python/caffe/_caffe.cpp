@@ -15,7 +15,8 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
-#include "caffe/python_layer.hpp"
+#include "caffe/layers/memory_data_layer.hpp"
+#include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -211,6 +212,9 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
+
+  bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
+
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
@@ -231,6 +235,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("share_with", &Net<Dtype>::ShareTrainedLayersWith)
     .add_property("_blob_loss_weights", bp::make_function(
         &Net<Dtype>::blob_loss_weights, bp::return_internal_reference<>()))
+    .def("_bottom_ids", bp::make_function(&Net<Dtype>::bottom_ids,
+        bp::return_value_policy<bp::copy_const_reference>()))
+    .def("_top_ids", bp::make_function(&Net<Dtype>::top_ids,
+        bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_blobs", bp::make_function(&Net<Dtype>::blobs,
         bp::return_internal_reference<>()))
     .add_property("layers", bp::make_function(&Net<Dtype>::layers,
@@ -247,6 +255,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
     .def("save", &Net_Save);
+  bp::register_ptr_to_python<shared_ptr<Net<Dtype> > >();
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
@@ -266,6 +275,7 @@ BOOST_PYTHON_MODULE(_caffe) {
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
+  bp::register_ptr_to_python<shared_ptr<Blob<Dtype> > >();
 
   bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
     boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
@@ -287,7 +297,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
     .def("step", &Solver<Dtype>::Step)
-    .def("restore", &Solver<Dtype>::Restore);
+    .def("restore", &Solver<Dtype>::Restore)
+    .def("snapshot", &Solver<Dtype>::Snapshot);
+  bp::register_ptr_to_python<shared_ptr<Solver<Dtype> > >();
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(

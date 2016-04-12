@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 
-#include "caffe/loss_layers.hpp"
+#include "caffe/layers/infogain_loss_layer.hpp"
 #include "caffe/util/io.hpp"
 
 namespace caffe {

@@ -16,6 +16,12 @@ void AdamSolver<Dtype>::AdamPreSolve() {
   }
 }
 
+#ifndef CPU_ONLY
+template <typename Dtype>
+void adam_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, Dtype beta1,
+    Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate);
+#endif
+
 template <typename Dtype>
 void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
@@ -30,7 +36,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Blob<Dtype>* val_v = this->history_[param_id + update_history_offset].get();
   Blob<Dtype>* val_t = this->temp_[param_id].get();
 
-  const int t = this->iter_  + 1;
+  const int t = this->iter_ + 1;
   const Dtype correction = std::sqrt(Dtype(1) - pow(beta2, t)) /
       (Dtype(1.) - pow(beta1, t));
   const int N = net_params[param_id]->count();
@@ -69,34 +75,9 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    // update m <- \beta_1 m_{t-1} + (1-\beta_1)g_t
-    caffe_gpu_axpby(N, Dtype(1)-beta1,
-        net_params[param_id]->gpu_diff(), beta1,
-        val_m->mutable_gpu_data());
-
-    // update v <- \beta_2 m_{t-1} + (1-\beta_2)g_t^2
-    caffe_gpu_mul(N,
-        net_params[param_id]->gpu_diff(),
-        net_params[param_id]->gpu_diff(),
-        val_t->mutable_gpu_data());
-    caffe_gpu_axpby(N, Dtype(1)-beta2,
-        val_t->gpu_data(), beta2,
-        val_v->mutable_gpu_data());
-
-    // set update
-    caffe_gpu_powx(N,
-        val_v->gpu_data(), Dtype(0.5),
-        val_t->mutable_gpu_data());
-    caffe_gpu_add_scalar(N, eps_hat,
-        val_t->mutable_gpu_data());
-    caffe_gpu_div(N,
-        val_m->gpu_data(),
-        val_t->gpu_data(),
-        val_t->mutable_gpu_data());
-
-    caffe_gpu_scale(N, local_rate*correction,
-        val_t->gpu_data(),
-        net_params[param_id]->mutable_gpu_diff());
+    adam_update_gpu(N, net_params[param_id]->mutable_gpu_diff(),
+        val_m->mutable_gpu_data(), val_v->mutable_gpu_data(), beta1, beta2,
+        eps_hat, local_rate*correction);
 #else
     NO_GPU;
 #endif
