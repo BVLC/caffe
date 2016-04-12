@@ -4,5 +4,6 @@ from ._caffe import __version__
 from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
 from .detector import Detector
+from .segmenter import Segmenter
 from . import io
 from .net_spec import layers, params, NetSpec, to_proto
