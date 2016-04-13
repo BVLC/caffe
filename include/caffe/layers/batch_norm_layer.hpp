@@ -7,6 +7,9 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#define BN_VARIANCE_CLIP_START 200
+#define BN_VARIANCE_CLIP_CONST 4.0
+
 namespace caffe {
 
 /**
@@ -63,17 +66,30 @@ class BatchNormLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> mean_, variance_, temp_, x_norm_;
+  virtual void multicast_cpu(int N, int C, int S, const Dtype *x, Dtype *y);
+  virtual void compute_sum_per_channel_cpu(int N, int C, int S,
+      const Dtype *x, Dtype *y);
+  virtual void compute_mean_per_channel_cpu(int N, int C, int S,
+      const Dtype *x, Dtype *y);
+#ifndef CPU_ONLY
+  virtual void compute_sum_per_channel_gpu(int N, int C, int S,
+      const Dtype *x, Dtype *y);
+  virtual void multicast_gpu(int N, int C, int S, const Dtype *x, Dtype *y);
+  virtual void compute_mean_per_channel_gpu(int N, int C, int S,
+      const Dtype *x, Dtype *y);
+#endif
+
+  Blob<Dtype> mean_, variance_, inv_variance_, x_norm_;
   bool use_global_stats_;
   Dtype moving_average_fraction_;
   int channels_;
   Dtype eps_;
-
-  // extra temporarary variables is used to carry out sums/broadcasting
-  // using BLAS
-  Blob<Dtype> batch_sum_multiplier_;
-  Blob<Dtype> num_by_chans_;
-  Blob<Dtype> spatial_sum_multiplier_;
+  int iter_;
+  // auxiliary arrays
+  Blob<Dtype> ones_N_, ones_HW_, ones_C_;
+  Blob<Dtype> temp_;
+  Blob<Dtype> temp_C_;
+  Blob<Dtype> temp_NC_;
 };
 
 }  // namespace caffe

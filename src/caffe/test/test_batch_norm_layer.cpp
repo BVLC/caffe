@@ -45,8 +45,17 @@ namespace caffe {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
 
+    BatchNormParameter* bn_param = layer_param.mutable_batch_norm_param();
+    FillerParameter *scale_param = bn_param->mutable_scale_filler();
+    scale_param->set_value(1);
+    FillerParameter *bias_param = bn_param->mutable_bias_filler();
+    bias_param->set_value(0);
+
+    bn_param->set_eps(0.);
+
     BatchNormLayer<Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     // Test mean
@@ -83,6 +92,12 @@ namespace caffe {
     vector<Blob<Dtype>*> blob_bottom_vec;
     vector<Blob<Dtype>*> blob_top_vec;
     LayerParameter layer_param;
+    BatchNormParameter* bn_param = layer_param.mutable_batch_norm_param();
+    FillerParameter *scale_param = bn_param->mutable_scale_filler();
+    scale_param->set_value(1);
+    FillerParameter *bias_param = bn_param->mutable_bias_filler();
+    bias_param->set_value(0);
+
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(&blob_inplace);
@@ -191,6 +206,7 @@ TYPED_TEST(CuDNNBatchNormLayerTest, TestForward) {
   BatchNormParameter* bn_param = layer_param.mutable_batch_norm_param();
   FillerParameter *scale_param = bn_param->mutable_scale_filler();
   scale_param->set_value(1);
+  bn_param->set_eps(0.);
 
   CuDNNBatchNormLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
