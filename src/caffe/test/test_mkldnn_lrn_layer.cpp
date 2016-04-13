@@ -111,7 +111,7 @@ void MklDnnLRNLayerTest<TypeParam>::ReferenceLRNForward(
 }
 
 TYPED_TEST_CASE(MklDnnLRNLayerTest, TestDtypesAndDevices);
- 
+
 
 TYPED_TEST(MklDnnLRNLayerTest, TestSetupAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
@@ -250,4 +250,4 @@ TYPED_TEST(MklDnnLRNLayerTest, TestGradientWithinChannel) {
 }
 #endif
 }  // namespace caffe
-#endif //#ifdef MKLDNN_SUPPORTED
+#endif  // #ifdef MKLDNN_SUPPORTED
