@@ -17,27 +17,23 @@ When updating Caffe, it's best to `make clean` before re-compiling.
 
 ## Prerequisites
 
-Caffe has several dependencies:
+Caffe has several dependencies.
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) is required for GPU mode.
     * library version 7.0 and the latest driver version are recommended, but 6.* is fine too
     * 5.5, and 5.0 are compatible but considered legacy
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) via ATLAS, MKL, or OpenBLAS.
 * [Boost](http://www.boost.org/) >= 1.55
-* `protobuf`, `glog`, `gflags`, `hdf5`
-
-Optional dependencies:
-
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
-* IO libraries: `lmdb`, `leveldb` (note: leveldb requires `snappy`)
-* cuDNN for GPU acceleration (v3)
+* `protobuf`, `glog`, `gflags`
+* IO libraries `hdf5`, `leveldb`, `snappy`, `lmdb`
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
 * For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
-**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. The current version is cuDNN v3; older versions are supported in older Caffe.
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. For now cuDNN v1 is integrated but see [PR #1731](https://github.com/BVLC/caffe/pull/1731) for v2.
 
 **CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
@@ -54,8 +50,7 @@ There are several implementations of this library. The choice is yours:
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
     1. Install MKL.
-    2. Set up MKL environment (Details: [Linux](https://software.intel.com/en-us/node/528499), [OS X](https://software.intel.com/en-us/node/528659)). Example: *source /opt/intel/mkl/bin/mklvars.sh intel64*
-    3. Set `BLAS := mkl` in `Makefile.config`
+    2. Set `BLAS := mkl` in `Makefile.config`
 * [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
     1. Install OpenBLAS
     2. Set `BLAS := open` in `Makefile.config`
@@ -88,20 +83,15 @@ There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https
 
 ## Compilation
 
-Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community.
-
-### Compilation with Make
-
-Configure the build by copying and modifying the example `Makefile.config` for your setup. The defaults should work, but uncomment the relevant lines if using Anaconda Python.
+Now that you have the prerequisites, edit your `Makefile.config` to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.
 
     cp Makefile.config.example Makefile.config
-    # Adjust Makefile.config (for example, if using Anaconda Python, or if cuDNN is desired)
+    # Adjust Makefile.config (for example, if using Anaconda Python)
     make all
     make test
     make runtest
 
-- For CPU & GPU accelerated Caffe, no changes are needed.
-- For cuDNN acceleration using NVIDIA's proprietary cuDNN software, uncomment the `USE_CUDNN := 1` switch in `Makefile.config`. cuDNN is sometimes but not always faster than Caffe's GPU acceleration.
+- For cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
 - For CPU-only Caffe, uncomment `CPU_ONLY := 1` in `Makefile.config`.
 
 To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
@@ -113,7 +103,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### Compilation with CMake
+### CMake Compilation
 
 In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
 The basic steps are as follows:
@@ -122,7 +112,6 @@ The basic steps are as follows:
     cd build
     cmake ..
     make all
-    make install
     make runtest
 
 See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.

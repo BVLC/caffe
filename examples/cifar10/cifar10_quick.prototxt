@@ -1,9 +1,10 @@
 name: "CIFAR10_quick_test"
-layer {
-  name: "data"
-  type: "Input"
-  top: "data"
-  input_param { shape: { dim: 1 dim: 3 dim: 32 dim: 32 } }
+input: "data"
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 32
+  dim: 32
 }
 layer {
   name: "conv1"

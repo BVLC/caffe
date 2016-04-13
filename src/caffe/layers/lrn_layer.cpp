@@ -1,7 +1,8 @@
 #include <vector>
 
-#include "caffe/layers/lrn_layer.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -253,5 +254,6 @@ STUB_GPU_BACKWARD(LRNLayer, CrossChannelBackward);
 #endif
 
 INSTANTIATE_CLASS(LRNLayer);
+REGISTER_LAYER_CLASS(LRN);
 
 }  // namespace caffe

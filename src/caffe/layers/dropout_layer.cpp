@@ -2,8 +2,11 @@
 
 #include <vector>
 
-#include "caffe/layers/dropout_layer.hpp"
+#include "caffe/common.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -23,8 +26,8 @@ void DropoutLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::Reshape(bottom, top);
   // Set up the cache for random number generation
-  // ReshapeLike does not work because rand_vec_ is of Dtype uint
-  rand_vec_.Reshape(bottom[0]->shape());
+  rand_vec_.Reshape(bottom[0]->num(), bottom[0]->channels(),
+      bottom[0]->height(), bottom[0]->width());
 }
 
 template <typename Dtype>

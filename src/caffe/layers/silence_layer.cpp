@@ -1,6 +1,7 @@
 #include <vector>
 
-#include "caffe/layers/silence_layer.hpp"
+#include "caffe/common_layers.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -11,7 +12,7 @@ void SilenceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
       caffe_set(bottom[i]->count(), Dtype(0),
-                bottom[i]->mutable_cpu_diff());
+                bottom[i]->mutable_cpu_data());
     }
   }
 }

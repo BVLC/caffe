@@ -20,7 +20,6 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
-#include "caffe/util/format.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
 
@@ -44,10 +43,7 @@ DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
 
 int main(int argc, char** argv) {
-#ifdef USE_OPENCV
   ::google::InitGoogleLogging(argv[0]);
-  // Print output to stderr (while still logging)
-  FLAGS_alsologtostderr = 1;
 
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
@@ -100,6 +96,8 @@ int main(int argc, char** argv) {
   std::string root_folder(argv[1]);
   Datum datum;
   int count = 0;
+  const int kMaxKeyLength = 256;
+  char key_cstr[kMaxKeyLength];
   int data_size = 0;
   bool data_size_initialized = false;
 
@@ -130,27 +128,25 @@ int main(int argc, char** argv) {
       }
     }
     // sequential
-    string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
+    int length = snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+        lines[line_id].first.c_str());
 
     // Put in db
     string out;
     CHECK(datum.SerializeToString(&out));
-    txn->Put(key_str, out);
+    txn->Put(string(key_cstr, length), out);
 
     if (++count % 1000 == 0) {
       // Commit db
       txn->Commit();
       txn.reset(db->NewTransaction());
-      LOG(INFO) << "Processed " << count << " files.";
+      LOG(ERROR) << "Processed " << count << " files.";
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
     txn->Commit();
-    LOG(INFO) << "Processed " << count << " files.";
+    LOG(ERROR) << "Processed " << count << " files.";
   }
-#else
-  LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
-#endif  // USE_OPENCV
   return 0;
 }

@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include "caffe/layers/sigmoid_layer.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 

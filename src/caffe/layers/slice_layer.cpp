@@ -1,8 +1,9 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layers/slice_layer.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -66,16 +67,11 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
   CHECK_EQ(count, bottom[0]->count());
-  if (top.size() == 1) {
-    top[0]->ShareData(*bottom[0]);
-    top[0]->ShareDiff(*bottom[0]);
-  }
 }
 
 template <typename Dtype>
 void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  if (top.size() == 1) { return; }
   int offset_slice_axis = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
@@ -96,7 +92,7 @@ void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (!propagate_down[0] || top.size() == 1) { return; }
+  if (!propagate_down[0]) { return; }
   int offset_slice_axis = 0;
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
