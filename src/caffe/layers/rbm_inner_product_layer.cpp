@@ -71,7 +71,6 @@ void RBMInnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       LayerRegistry<Dtype>::CreateLayer(param.connection_layer_param());
   }
   connection_layer_->SetUp(sample_v1_vec_, pre_activation_h1_vec_);
-
   // set up the hidden post_activation_layer_ vector
   post_activation_h1_vec_.clear();
   if (top.size() >= num_error_ + 2) {
@@ -413,6 +412,8 @@ void RBMInnerProductLayer<Dtype>::gibbs_hvh(
 
   // Update the diffs for k = 0, P(h|v_0)
   update_diffs(0, top, bottom);
+  vector<Blob<Dtype>*> top_sample(1);
+  top_sample[0] = top[2];
 
   // Disable the update of the diffs for the weights.
   for (int i = 0; i < connection_layer_->blobs().size(); ++i) {
@@ -422,15 +423,25 @@ void RBMInnerProductLayer<Dtype>::gibbs_hvh(
   // Perform k Gibbs sampling steps.
   for (int k = 0; k < num_sample_steps_for_update_; k++) {
     // Down propagation
-    sample_v_given_h(bottom, top);
-
+    sample_v_given_h(bottom, top_sample);
     // copy reconstruction error to top
     if (k == 0) {
       for (int i = 0; i < num_error_; ++i) {
         int top_index = top.size() + i - num_error_;
+        // copy sampled bottom diffs to top data for reconstruction
+        SwapBlob<Dtype> error_blob(top[top_index]);
+        vector<Blob<Dtype>*> error_blob_vec(1);
+        error_blob_vec[0] = &error_blob;
         switch (param.loss_measure(i)) {
           case RBMInnerProductParameter_LossMeasure_RECONSTRUCTION:
-            top[top_index]->CopyFrom(*bottom[0]);
+            error_blob_vec[0]->CopyFrom(*bottom[0], true);
+            // Do a forward pass through the activation layer.
+            if (param.has_visible_activation_layer_param()) {
+              // we can put something new in this vector for the forward pass
+              error_blob_vec[0] = top[top_index];
+              visible_activation_layer_->Forward(error_blob_vec,
+                                                 error_blob_vec);
+            }
             break;
           case RBMInnerProductParameter_LossMeasure_FREE_ENERGY:
             LOG(FATAL) << "FREE_ENERGY not implemented yet ";
@@ -464,7 +475,7 @@ void RBMInnerProductLayer<Dtype>::sample_v_given_h(
 
   // Backward pass through the connection layer, save to pre_activation diffs
   vector<bool> propagate_down(1, true);
-  connection_layer_->Backward(h1, propagate_down, pre_activation_v1_vec_);
+  connection_layer_->Backward(h1, propagate_down, bottom);
   Dtype one = 1;
   // Add the visible bias to the pre activation.
   if (visible_bias_term_) {
@@ -474,7 +485,7 @@ void RBMInnerProductLayer<Dtype>::sample_v_given_h(
                             this->num_visible_, 1, one,
                             this->bias_multiplier_.cpu_data(),
                             this->blobs_[visible_bias_index_]->cpu_data(), one,
-                            pre_activation_v1_vec_[0]->mutable_cpu_diff());
+                            bottom[0]->mutable_cpu_diff());
       break;
     case Caffe::GPU:
 #ifndef CPU_ONLY
@@ -482,7 +493,7 @@ void RBMInnerProductLayer<Dtype>::sample_v_given_h(
                             this->num_visible_, 1, one,
                             this->bias_multiplier_.gpu_data(),
                             this->blobs_[visible_bias_index_]->gpu_data(), one,
-                            pre_activation_v1_vec_[0]->mutable_gpu_diff());
+                            bottom[0]->mutable_gpu_diff());
 #else
       NO_GPU;
 #endif
@@ -493,7 +504,7 @@ void RBMInnerProductLayer<Dtype>::sample_v_given_h(
   }
 
   // swap diff and data for pre_activation to do sqash and sample
-  SwapBlob<Dtype> swapped_pre_activation(pre_activation_v1_vec_[0]);
+  SwapBlob<Dtype> swapped_pre_activation(bottom[0]);
   vector<Blob<Dtype>*> pre_activation_v1;
   pre_activation_v1.push_back(&swapped_pre_activation);
 

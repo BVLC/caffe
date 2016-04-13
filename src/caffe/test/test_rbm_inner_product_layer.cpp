@@ -52,11 +52,8 @@ Dtype calculate_energy(const shared_ptr<Blob<Dtype> >& visable_vector,
                        RBMInnerProductLayer<Dtype>* layer) {
   const shared_ptr<Blob<Dtype> > weight_matrix  = layer->blobs()[0];
   const shared_ptr<Blob<Dtype> > hidden_bias  = layer->blobs()[1];
-  const shared_ptr<Blob<Dtype> > visable_bias = layer->blobs()[2];
-  Dtype matrix_sum = caffe_cpu_dot(visable_bias->count(),
-                       visable_bias->cpu_data(), visable_vector->cpu_data());
 
-  matrix_sum += caffe_cpu_dot(hidden_bias->count(),
+  Dtype matrix_sum = caffe_cpu_dot(hidden_bias->count(),
                        hidden_bias->cpu_data(), hidden_vector->cpu_data());
 
   Blob<Dtype> tmp_blob(vector<int>(1, hidden_vector->count()));
@@ -67,6 +64,13 @@ Dtype calculate_energy(const shared_ptr<Blob<Dtype> >& visable_vector,
 
   matrix_sum += caffe_cpu_dot(hidden_vector->count(),
                        hidden_vector->cpu_data(), tmp_blob.cpu_data());
+
+  // if there is a visable bias term, do this one too
+  if (layer->blobs().size() > 2) {
+    const shared_ptr<Blob<Dtype> > visable_bias = layer->blobs()[2];
+    matrix_sum += caffe_cpu_dot(visable_bias->count(),
+                         visable_bias->cpu_data(), visable_vector->cpu_data());
+  }
 
   // no negative due to double negation
   return exp(matrix_sum);
@@ -212,14 +216,14 @@ class RBMInnerProductLayerTest : public MultiDeviceTest<TypeParam> {
     proto +=
       "      bias_term: true "
       "      weight_filler: { "
-      "        type: 'constant' "
+      "        type: 'uniform' "
       "        min: -.25 "
       "        std:  .25 "
       "      } "
       "      bias_filler: { "
       "        type: 'gaussian' "
       "        mean: 0.0 "
-      "        std:  0.01 "
+      "        std:  0.5 "
       "      } "
       "    } "
       "  } "
@@ -244,7 +248,7 @@ class RBMInnerProductLayerTest : public MultiDeviceTest<TypeParam> {
         "  visible_bias_filler { "
         "    type: 'gaussian' "
         "    mean: 0.0 "
-        "    std:  0.01 "
+        "    std:  0.5 "
         "  } ";
     } else {
       proto += "  visible_bias_term: false ";
@@ -269,7 +273,7 @@ class RBMInnerProductLayerTest : public MultiDeviceTest<TypeParam> {
 TYPED_TEST_CASE(RBMInnerProductLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(RBMInnerProductLayerTest, TestSetUpNoVisibleActivation) {
-  string proto = this->getLayerText();
+  string proto = this->getLayerText("", true, false);
   this->InitLayerFromProtoString(proto);
 
   this->blob_top_vec_.clear();
@@ -303,6 +307,10 @@ TYPED_TEST(RBMInnerProductLayerTest, TestSetUpNoVisibleActivation) {
   EXPECT_EQ(this->sample_h1_->channels(), 10);
   EXPECT_EQ(this->sample_h1_->height(), 1);
   EXPECT_EQ(this->sample_h1_->width(), 1);
+
+  ASSERT_EQ(this->layer_->blobs().size(), 2);
+  EXPECT_EQ(this->layer_->blobs()[0]->count(), 60*10);
+  EXPECT_EQ(this->layer_->blobs()[1]->count(), 10);
 
   // test that error tops are resized correctly
   string extra_text =
@@ -336,7 +344,7 @@ TYPED_TEST(RBMInnerProductLayerTest, TestSetUpWithVisibleActivation) {
       "    type: 'BernoulliSample' "
       "  } ";
 
-  string proto = this->getLayerText(extra_text);
+  string proto = this->getLayerText(extra_text, false, true);
   this->InitLayerFromProtoString(proto);
 
   this->blob_top_vec_.clear();
@@ -371,11 +379,16 @@ TYPED_TEST(RBMInnerProductLayerTest, TestSetUpWithVisibleActivation) {
   EXPECT_EQ(this->sample_h1_->height(), 1);
   EXPECT_EQ(this->sample_h1_->width(), 1);
 
+  ASSERT_EQ(this->layer_->blobs().size(), 3);
+  EXPECT_EQ(this->layer_->blobs()[0]->count(), 60*10);
+  EXPECT_EQ(this->layer_->blobs()[1]->count(), 10);
+  EXPECT_EQ(this->layer_->blobs()[2]->count(), 60);
+
   // test that error tops are resized correctly
   extra_text +=
       "  loss_measure: RECONSTRUCTION "
       "  loss_measure: FREE_ENERGY ";
-  proto = this->getLayerText(extra_text);
+  proto = this->getLayerText(extra_text, false, true);
   this->InitLayerFromProtoString(proto);
   this->blob_top_vec_.push_back(this->blob_top_error_1_);
   this->blob_top_vec_.push_back(this->blob_top_error_2_);
@@ -481,7 +494,7 @@ TYPED_TEST(RBMInnerProductLayerTest, TestForwardNoUpdate) {
   }
 }
 
-TYPED_TEST(RBMInnerProductLayerTest, TestBackward) {
+TYPED_TEST(RBMInnerProductLayerTest, TestBackwardNoBias) {
   typedef typename TypeParam::Dtype Dtype;
   string extra_text =
       "  visible_activation_layer_param { "
@@ -502,6 +515,7 @@ TYPED_TEST(RBMInnerProductLayerTest, TestBackward) {
   this->blob_top_vec_.push_back(this->blob_top_error_1_);
 
   this->layer_->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
   this->Fill();
 
   string ip_proto =
@@ -550,6 +564,92 @@ TYPED_TEST(RBMInnerProductLayerTest, TestBackward) {
   // make sure the diffs are the same
   for (int i = 0; i < ip_bottom_blob.count(); ++i) {
     EXPECT_FLOAT_EQ(ip_bottom_blob.cpu_diff()[i],
+                    this->blob_bottom_input_->cpu_diff()[i]);
+  }
+
+  // make sure that the data is squashed and sampled
+  for (int i = 0; i < ip_top_blob.count(); ++i) {
+    EXPECT_TRUE((this->blob_bottom_input_->cpu_data()[i] == 0 ||
+                 this->blob_bottom_input_->cpu_data()[i] == 1));
+  }
+}
+
+TYPED_TEST(RBMInnerProductLayerTest, TestBackwardWithBias) {
+  typedef typename TypeParam::Dtype Dtype;
+  string extra_text =
+      "  visible_activation_layer_param { "
+      "    name: 'hidden_activation' "
+      "    type: 'Sigmoid' "
+      "  } "
+      "  visible_sampling_layer_param { "
+      "    name: 'hidden_sample' "
+      "    type: 'BernoulliSample' "
+      "  } "
+      "  loss_measure: FREE_ENERGY ";
+  string proto = this->getLayerText(extra_text, false, true);
+
+  // run forward with no non error output
+  this->InitLayerFromProtoString(proto);
+  this->blob_top_vec_.clear();
+  this->blob_top_vec_.push_back(this->pre_activation_h1_);
+  this->blob_top_vec_.push_back(this->blob_top_error_1_);
+
+  this->layer_->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  this->Fill();
+
+  string ip_proto =
+      "name: 'inner_product_layer' "
+      "type: 'InnerProduct' "
+      "inner_product_param { "
+      "  num_output: 10 "
+      "  bias_term: true "
+      "} ";
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(ip_proto, &layer_param));
+  InnerProductLayer<Dtype> ip_layer(layer_param);
+  Blob<Dtype> ip_top_blob;
+  vector<Blob<Dtype>*> ip_top_vec;
+  ip_top_vec.push_back(&ip_top_blob);
+  ip_layer.SetUp(this->blob_bottom_vec_, ip_top_vec);
+  Blob<Dtype> ip_bottom_blob;
+  ip_bottom_blob.ReshapeLike(*this->blob_bottom_input_);
+  vector<Blob<Dtype>*> ip_bottom_vec;
+  ip_bottom_vec.push_back(&ip_bottom_blob);
+
+  // fill the top with random values
+  FillerParameter filler_param;
+  filler_param.set_type("gaussian");
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(&ip_top_blob);
+  caffe_copy(ip_top_blob.count(), ip_top_blob.cpu_data(),
+             ip_top_blob.mutable_cpu_diff());
+  caffe_copy(ip_top_blob.count(), ip_top_blob.cpu_data(),
+             this->pre_activation_h1_->mutable_cpu_diff());
+
+  // copy the weights so they are the same
+  caffe_copy(ip_layer.blobs()[0]->count(), this->layer_->blobs()[0]->cpu_data(),
+             ip_layer.blobs()[0]->mutable_cpu_data());
+  caffe_copy(ip_layer.blobs()[1]->count(), this->layer_->blobs()[1]->cpu_data(),
+             ip_layer.blobs()[1]->mutable_cpu_data());
+  // set the values of the visable bias
+  const int num_visable = this->blob_bottom_vec_[0]->count(1);
+  ASSERT_EQ(num_visable, this->layer_->blobs()[2]->count());
+  for (int i = 0; i < num_visable; ++i) {
+    this->layer_->blobs()[2]->mutable_cpu_data()[i] = i;
+  }
+
+  // do a backward with both layers
+  vector<bool> prop_down(1, true);
+  ip_layer.Backward(ip_top_vec, prop_down, ip_bottom_vec);
+  this->layer_->Backward(this->blob_top_vec_, prop_down,
+                         this->blob_bottom_vec_);
+
+  ASSERT_EQ(ip_bottom_blob.count(), this->blob_bottom_input_->count());
+
+  // make sure the diffs are the same
+  for (int i = 0; i < ip_bottom_blob.count(); ++i) {
+    EXPECT_FLOAT_EQ(ip_bottom_blob.cpu_diff()[i] + (i % num_visable),
                     this->blob_bottom_input_->cpu_diff()[i]);
   }
 
@@ -723,10 +823,10 @@ TYPED_TEST(RBMInnerProductLayerTest, TestZeroUpdate) {
 // Test if a randomly initialized RBM converges to some local minimum
 TYPED_TEST(RBMInnerProductLayerTest, TestLocalMinimum) {
 typedef typename TypeParam::Dtype Dtype;
-  Caffe::set_random_seed(1701);
+  Caffe::set_random_seed(1702);
   const int num_input(4), num_output(3), batch_size(10);
-  const int num_samples(20000);
-  Dtype learning_rate = .000025 * batch_size;
+  const int num_samples(30000);
+  Dtype learning_rate = 10 * .0001 * batch_size;
 
   string extra_text =
       "  visible_activation_layer_param { "
@@ -774,6 +874,8 @@ typedef typename TypeParam::Dtype Dtype;
   switch (Caffe::mode()) {
   case Caffe::CPU:
     for (int i = 0; i < num_samples / batch_size; ++i) {
+      if (i > 0 && i % 1000 == 0)
+        learning_rate /= 10;
       for (int j = 0; j < batch_size; ++j) {
         caffe_copy(num_input, all_visable[multi[i*batch_size + j]]->cpu_data(),
                    this->blob_bottom_input_->mutable_cpu_data() + j*num_input);
@@ -784,6 +886,15 @@ typedef typename TypeParam::Dtype Dtype;
       }
       this->layer_->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
+      if (i < 0) {
+        for (int j = 0; j < this->layer_->blobs().size(); ++j) {
+          for (int k = 0; k < this->layer_->blobs()[j]->count(); ++k) {
+            std::cout << this->layer_->blobs()[j]->cpu_diff()[k] << " ";
+          }
+          std::cout << std::endl;
+        }
+        std::cout << std::endl;
+      }
       for (int j = 0; j < this->layer_->blobs().size(); ++j) {
         shared_ptr<Blob<Dtype> > blobs = this->layer_->blobs()[j];
         caffe_axpy(blobs->count(), Dtype(-1 * learning_rate),
@@ -794,16 +905,19 @@ typedef typename TypeParam::Dtype Dtype;
   case Caffe::GPU:
 #ifndef CPU_ONLY
     for (int i = 0; i < num_samples / batch_size; ++i) {
+      if (i > 0 && i % 1000 == 0)
+        learning_rate /= 10;
+
       for (int j = 0; j < batch_size; ++j) {
         caffe_copy(num_input, all_visable[multi[i*batch_size + j]]->gpu_data(),
                    this->blob_bottom_input_->mutable_gpu_data() + j*num_input);
       }
-      for (int j = 0; j < 3; j++) {
+      for (int j = 0; j < this->layer_->blobs().size(); j++) {
         caffe_gpu_set(this->layer_->blobs()[j]->count(),
                       Dtype(0.), this->layer_->blobs()[j]->mutable_gpu_diff());
       }
       this->layer_->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-      for (int j = 0; j < 3; ++j) {
+      for (int j = 0; j < this->layer_->blobs().size(); ++j) {
         shared_ptr<Blob<Dtype> > blobs = this->layer_->blobs()[j];
         caffe_gpu_axpy(blobs->count(), Dtype(-1 * learning_rate),
                        blobs->gpu_diff(), blobs->mutable_gpu_data());
@@ -830,14 +944,14 @@ typedef typename TypeParam::Dtype Dtype;
   }
   // For every possible direction, perturb the weight and ensure the new
   // solution is worse than that which was estimated
-  const Dtype epsi = 0.25;
+  const Dtype epsi = 0.2;
   vector<Dtype> new_probability;
   Dtype positive_change(0), negative_change(0);
   for (int k = 0; k < this->layer_->blobs().size(); ++k) {
-    Blob<Dtype>& blob_to_test = *this->layer_->blobs()[k];
-    for (int i = 0; i < blob_to_test.count(); ++i) {
+    shared_ptr<Blob<Dtype> > blob_to_test = this->layer_->blobs()[k];
+    for (int i = 0; i < blob_to_test->count(); ++i) {
       for (int s = -1; s <= 1; s += 2) {
-        blob_to_test.mutable_cpu_data()[i] += s * epsi;
+        blob_to_test->mutable_cpu_data()[i] += s * epsi;
         new_probability = sample_frequency(all_visable, all_hidden,
                                            this->layer_.get());
         Dtype new_overlap = 0;
@@ -846,13 +960,13 @@ typedef typename TypeParam::Dtype Dtype;
         }
         negative_change -= std::min(Dtype(0), learned_overlap - new_overlap);
         positive_change += std::max(Dtype(0), learned_overlap - new_overlap);
-        blob_to_test.mutable_cpu_data()[i] -= s * epsi;
+        blob_to_test->mutable_cpu_data()[i] -= s * epsi;
       }
     }
   }
   // ensure that perturbing creates a lot more positive change
   Dtype neg_vs_pos = negative_change / (negative_change + positive_change);
-  EXPECT_LT(neg_vs_pos, .01);
+  EXPECT_LT(neg_vs_pos, .15);
 }
 
 }  // namespace caffe

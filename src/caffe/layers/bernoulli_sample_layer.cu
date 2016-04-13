@@ -10,7 +10,7 @@ template <typename Dtype>
 __global__ void CompareKernel(const int n, const Dtype* input_data,
                               const Dtype* random, Dtype* output_data) {
   CUDA_KERNEL_LOOP(index, n) {
-    output_data[index] = Dtype(input_data[index] > random[index] ? 1 : 0);
+    output_data[index] = Dtype((input_data[index] > random[index]) ? 1 : 0);
   }
 }
 
@@ -25,7 +25,7 @@ void BernoulliSampleLayer<Dtype>::Forward_gpu(
 
   // Transform this uniform sample to zeros and ones
   // NOLINT_NEXT_LINE(whitespace/operators)
-  CompareKernel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>
+  CompareKernel<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>
       (count, bottom_data, uniform_sample, top_data);
   CUDA_POST_KERNEL_CHECK;
 }
