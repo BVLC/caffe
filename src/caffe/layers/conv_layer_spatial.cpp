@@ -27,6 +27,23 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   BaseConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
   tuned_ = 0;
+  // Calculate variables used for kernel generation
+  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
+  kernel_h_ = kernel_shape_data[0];
+  kernel_w_ = kernel_shape_data[1];
+  height_ = bottom[0]->shape(this->channel_axis_ + 1);
+  width_ = bottom[0]->shape(this->channel_axis_ + 2);
+  const int_tp* pad_data = this->pad_.cpu_data();
+  pad_h_ = pad_data[0];
+  pad_w_ = pad_data[1];
+  const int_tp* stride_data = this->stride_.cpu_data();
+  stride_h_ = stride_data[0];
+  stride_w_ = stride_data[1];
+
+  output_h_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
+  output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  padded_width_ = width_ + 2 * pad_w_;
+  padded_height_ = height_ + 2 * pad_h_;
 }
 
 template<typename Dtype>
@@ -50,29 +67,21 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     << "ConvolutionSpatial input must have 2 spatial axes "
     << "(e.g., height and width). ";
 
-  const int_tp height = bottom[0]->shape(this->channel_axis_ + 1);
-  const int_tp width = bottom[0]->shape(this->channel_axis_ + 2);
   const int_tp height_out = top[0]->shape(this->channel_axis_ + 1);
   const int_tp width_out = top[0]->shape(this->channel_axis_ + 2);
-  const int_tp* pad_data = this->pad_.cpu_data();
-  const int_tp pad_h = pad_data[0];
-  const int_tp pad_w = pad_data[1];
-  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
-  const int_tp kernel_h = kernel_shape_data[0];
-  const int_tp kernel_w = kernel_shape_data[1];
 
-//  // Prepare the matrix multiplication computation.
-//  // Each input will be convolved as a single GEMM.
+  // Prepare the matrix multiplication computation.
+  // Each input will be convolved as a single GEMM.
   M_ = this->num_output_ / this->group_;
-  K_ = this->channels_ * kernel_h * kernel_w / this->group_;
+  K_ = this->channels_ * kernel_h_ * kernel_w_ / this->group_;
   N_ = height_out * width_out;
-//  // The im2col result buffer will only hold one image at a time to avoid
-//  // overly large memory usage.
-  col_buffer_.Reshape(this->num_, this->channels_, height + 2 * pad_h,
-                      width + 2 * pad_w);
+  // The im2col result buffer will only hold one image at a time to avoid
+  // overly large memory usage.
+  col_buffer_.Reshape(this->num_, this->channels_, height_ + 2 * pad_h_,
+                      width_ + 2 * pad_w_);
   swizzled_weights_.Reshape(this->num_output_, this->channels_,
-                            kernel_h + 2 * pad_h, kernel_w + 2 * pad_w);
-//  // Set up the all ones "bias multiplier" for adding biases by BLAS
+                            kernel_h_ + 2 * pad_h_, kernel_w_ + 2 * pad_w_);
+  // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (this->bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());

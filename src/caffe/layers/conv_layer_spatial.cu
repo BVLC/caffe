@@ -940,24 +940,6 @@ void ConvolutionLayerSpatial<float>::create_convolution_kernel(
 template<>
 void ConvolutionLayerSpatial<float>::setup_convolution(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top) {
-  // Calculate variables used for kernel generation
-  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
-  kernel_h_ = kernel_shape_data[0];
-  kernel_w_ = kernel_shape_data[1];
-  height_ = bottom[0]->shape(this->channel_axis_ + 1);
-  width_ = bottom[0]->shape(this->channel_axis_ + 2);
-  const int_tp* pad_data = this->pad_.cpu_data();
-  pad_h_ = pad_data[0];
-  pad_w_ = pad_data[1];
-  const int_tp* stride_data = this->stride_.cpu_data();
-  stride_h_ = stride_data[0];
-  stride_w_ = stride_data[1];
-
-  output_h_ = (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  output_w_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
-  padded_width_ = width_ + 2 * pad_w_;
-  padded_height_ = height_ + 2 * pad_h_;
-
   // Generates static key_
   generate_key();
   // Initializes unique kernel ID
