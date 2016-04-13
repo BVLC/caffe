@@ -37,7 +37,10 @@ def param_name_dict():
     # strip the final '_param' or 'Parameter'
     param_names = [s[:-len('_param')] for s in param_names]
     param_type_names = [s[:-len('Parameter')] for s in param_type_names]
-    return dict(zip(param_type_names, param_names))
+    result = dict(zip(param_type_names, param_names))
+    # convolution param is re-used in deconvolution layer
+    result['Deconvolution'] = 'convolution'
+    return result
 
 
 def to_proto(*tops):
