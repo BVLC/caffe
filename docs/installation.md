@@ -5,13 +5,23 @@ title: Installation
 # Installation
 
 Prior to installing, have a glance through this guide and take note of the details for your platform.
-We install and run Caffe on Ubuntu 14.04 and 12.04, OS X 10.10 / 10.9 / 10.8, and AWS.
-The official Makefile and `Makefile.config` build are complemented by an automatic CMake build from the community.
+We install and run Caffe on Ubuntu 16.04–12.04, OS X 10.11–10.8, and through Docker and AWS.
+The official Makefile and `Makefile.config` build are complemented by a [community CMake build](#cmake-build).
+
+**Step-by-step Instructions**:
+
+- [Docker setup](https://github.com/BVLC/caffe/tree/master/docker) *out-of-the-box brewing*
+- [Ubuntu installation](install_apt.html) *the standard platform*
+- [OS X installation](install_osx.html)
+- [RHEL / CentOS / Fedora installation](install_yum.html)
+- [Windows](https://github.com/BVLC/caffe/tree/windows) *see the Windows branch led by Microsoft*
+- [OpenCL](https://github.com/BVLC/caffe/tree/opencl) *see the OpenCL branch led by Fabian Tschopp*
+
+**Overview**:
 
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
 - [Hardware](#hardware)
-- Platforms: [Ubuntu guide](install_apt.html), [OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html)
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 
@@ -82,10 +92,6 @@ Install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 *Caffe's MATLAB interface works with versions 2015a, 2014a/b, 2013a/b, and 2012b.*
 
-#### Windows
-
-There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
-
 ## Compilation
 
 Caffe can be compiled with either Make or CMake. Make is officially supported while CMake is supported by the community.
@@ -113,7 +119,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### Compilation with CMake
+### CMake Build
 
 In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
 The basic steps are as follows:
