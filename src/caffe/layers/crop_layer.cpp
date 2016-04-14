@@ -61,12 +61,12 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         // following axis
         crop_offset = param.offset(i - start_axis);
       }
+      // Check that the image we are cropping minus the margin is bigger
+      // than the destination image.
+      CHECK_GE(bottom[0]->shape(i) - crop_offset,
+               bottom[1]->shape(i))
+          << "invalid crop parameters in dimension: " << i;
     }
-    // Check that the image we are cropping minus the margin is bigger
-    // than the destination image.
-    CHECK_GE(bottom[0]->shape(i) - crop_offset,
-             bottom[1]->shape(i))
-        << "invalid crop parameters in dimension: " << i;
     // Now set new size and offsets
     new_shape[i] = new_size;
     offsets[i] = crop_offset;
