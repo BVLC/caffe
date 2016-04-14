@@ -74,6 +74,12 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
+template <>
+void caffe_gpu_axpy<size_t>(const int N, const size_t alpha, const size_t* X,
+    size_t* Y) {
+  NOT_IMPLEMENTED;
+}
+
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
     CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
@@ -91,6 +97,12 @@ void caffe_gpu_scal<double>(const int N, const double alpha, double *X) {
 }
 
 template <>
+void caffe_gpu_scal<size_t>(const int N, const size_t alpha, size_t *X) {
+  NOT_IMPLEMENTED;
+}
+
+
+template <>
 void caffe_gpu_axpby<float>(const int N, const float alpha, const float* X,
     const float beta, float* Y) {
   caffe_gpu_scal<float>(N, beta, Y);
@@ -102,6 +114,12 @@ void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
     const double beta, double* Y) {
   caffe_gpu_scal<double>(N, beta, Y);
   caffe_gpu_axpy<double>(N, alpha, X, Y);
+}
+
+template <>
+void caffe_gpu_axpby<size_t>(const int N, const size_t alpha, const size_t* X,
+    const size_t beta, size_t* Y) {
+  NOT_IMPLEMENTED;
 }
 
 template <>
@@ -117,6 +135,13 @@ void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
 }
 
 template <>
+void caffe_gpu_dot<size_t>(const int n, const size_t* x, const size_t* y,
+    size_t* out) {
+  NOT_IMPLEMENTED;
+}
+
+
+template <>
 void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
   CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
 }
@@ -124,6 +149,11 @@ void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
 template <>
 void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
   CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
+}
+
+template <>
+void caffe_gpu_asum<size_t>(const int n, const size_t* x, size_t* y) {
+  NOT_IMPLEMENTED;
 }
 
 template <>
