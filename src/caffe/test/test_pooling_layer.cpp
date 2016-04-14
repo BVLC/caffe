@@ -1180,6 +1180,493 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAvePaddedCuDNN) {
   }
 }
 
+// 3D cuDNN pooling tests
+template <typename Dtype>
+class CuDNNPoolingLayerTest3D : public GPUDeviceTest<Dtype> {
+ protected:
+  CuDNNPoolingLayerTest3D()
+      : blob_bottom_(new Blob<Dtype>()),
+        blob_top_(new Blob<Dtype>()),
+        blob_top_mask_(new Blob<Dtype>()) {}
+  virtual void SetUp() {
+    blob_bottom_vec_.push_back(blob_bottom_);
+    blob_top_vec_.push_back(blob_top_);
+  }
+  virtual ~CuDNNPoolingLayerTest3D() {
+    delete blob_bottom_;
+    delete blob_top_;
+    delete blob_top_mask_;
+  }
+  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_top_;
+  Blob<Dtype>* const blob_top_mask_;
+  std::vector<Blob<Dtype>*> blob_bottom_vec_;
+  std::vector<Blob<Dtype>*> blob_top_vec_;
+
+  // set up random blob for gradient tests
+  void SetUp3DRandomBottomBlob() {
+    Caffe::set_random_seed(1701);
+    std::vector<int> shape;
+    shape.push_back(2);
+    shape.push_back(3);
+    shape.push_back(6);
+    shape.push_back(5);
+    shape.push_back(4);
+    this->blob_bottom_->Reshape(shape);
+    // fill the values
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_);
+  }
+
+  // set up fixed blob for forward tests
+  void SetUp3DTestBottomBlob(const int num, const int channels) {
+    std::vector<int> shape;
+    shape.push_back(num);
+    shape.push_back(channels);
+    shape.push_back(4);
+    shape.push_back(3);
+    shape.push_back(6);
+    blob_bottom_->Reshape(shape);
+    // generated with matlab
+    // reshape(randperm(72, 72), [6 3 4]);
+    const int input[] = { 23, 41, 17, 36,  9, 31,
+                          56, 18, 55, 69, 70, 29,
+                          39, 61, 52, 20, 63, 26,
+                          //
+                          71, 30, 59, 48, 32, 47,
+                          21, 19, 38, 27, 57, 13,
+                          37, 49, 64, 44, 33, 60,
+                          //
+                          53, 68, 51, 16, 35, 15,
+                           8, 10,  6, 65, 62,  3,
+                           7, 45, 40, 22,  1, 50,
+                          //
+                          46, 58,  2,  4, 66, 54,
+                          72, 25, 43, 12, 67, 28,
+                           5, 24, 34, 11, 42, 14 };
+    const unsigned int num_elements = sizeof(input) / sizeof(*input);
+    for (int i = 0; i < num_elements * num * channels; i += num_elements) {
+      for (int j = 0; j < num_elements; ++j) {
+        blob_bottom_->mutable_cpu_data()[i + j] = input[j];
+      }
+    }
+  }
+
+  // test for 2x2x2 pooling
+  void TestForwardCube() {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->clear_kernel_size();
+    pooling_param->add_kernel_size(2);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+    const int num = 2;
+    const int channels = 2;
+    SetUp3DTestBottomBlob(num, channels);
+    CuDNNPoolingLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    EXPECT_EQ(blob_top_->shape(0), num);
+    EXPECT_EQ(blob_top_->shape(1), channels);
+    EXPECT_EQ(blob_top_->shape(2), 3);
+    EXPECT_EQ(blob_top_->shape(3), 2);
+    EXPECT_EQ(blob_top_->shape(4), 5);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    // expected output
+    const int output[] = { 71, 59, 69, 70, 70,
+                           61, 64, 69, 70, 70,
+                           //
+                           71, 68, 65, 65, 62,
+                           49, 64, 65, 65, 62,
+                           //
+                           72, 68, 65, 67, 67,
+                           72, 45, 65, 67, 67 };
+    const unsigned int num_elements = sizeof(output) / sizeof(*output);
+    for (int i = 0; i < num_elements * num * channels; i += num_elements) {
+      for (int j = 0; j < num_elements; ++j) {
+        EXPECT_EQ(blob_top_->cpu_data()[i + j], output[j]);
+      }
+    }
+  }
+
+  // test for 2x2x3 pooling
+  void TestForwardCuboidX() {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->clear_kernel_size();
+    pooling_param->add_kernel_size(2);
+    pooling_param->add_kernel_size(2);
+    pooling_param->add_kernel_size(3);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+    const int num = 2;
+    const int channels = 2;
+    SetUp3DTestBottomBlob(num, channels);
+    CuDNNPoolingLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    EXPECT_EQ(blob_top_->shape(0), num);
+    EXPECT_EQ(blob_top_->shape(1), channels);
+    EXPECT_EQ(blob_top_->shape(2), 3);
+    EXPECT_EQ(blob_top_->shape(3), 2);
+    EXPECT_EQ(blob_top_->shape(4), 4);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    // expected output
+    const int output[] = { 71, 69, 70, 70,
+                           64, 69, 70, 70,
+                           //
+                           71, 68, 65, 65,
+                           64, 65, 65, 65,
+                           //
+                           72, 68, 67, 67,
+                           72, 65, 67, 67};
+    const unsigned int num_elements = sizeof(output) / sizeof(*output);
+    for (int i = 0; i < num_elements * num * channels; i += num_elements) {
+      for (int j = 0; j < num_elements; ++j) {
+        EXPECT_EQ(blob_top_->cpu_data()[i + j], output[j]);
+      }
+    }
+  }
+
+  // test for 2x3x2 pooling
+  void TestForwardCuboidY() {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->clear_kernel_size();
+    pooling_param->add_kernel_size(2);
+    pooling_param->add_kernel_size(3);
+    pooling_param->add_kernel_size(2);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+    const int num = 2;
+    const int channels = 2;
+    SetUp3DTestBottomBlob(num, channels);
+    CuDNNPoolingLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    EXPECT_EQ(blob_top_->shape(0), num);
+    EXPECT_EQ(blob_top_->shape(1), channels);
+    EXPECT_EQ(blob_top_->shape(2), 3);
+    EXPECT_EQ(blob_top_->shape(3), 1);
+    EXPECT_EQ(blob_top_->shape(4), 5);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    // expected output
+    const int output[] = { 71, 64, 69, 70, 70,
+                           //
+                           71, 68, 65, 65, 62,
+                           //
+                           72, 68, 65, 67, 67};
+    const unsigned int num_elements = sizeof(output) / sizeof(*output);
+    for (int i = 0; i < num_elements * num * channels; i += num_elements) {
+      for (int j = 0; j < num_elements; ++j) {
+        EXPECT_EQ(blob_top_->cpu_data()[i + j], output[j]);
+      }
+    }
+  }
+
+  // test for 3x2x2 pooling
+  void TestForwardCuboidZ() {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->clear_kernel_size();
+    pooling_param->add_kernel_size(3);
+    pooling_param->add_kernel_size(2);
+    pooling_param->add_kernel_size(2);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+    const int num = 2;
+    const int channels = 2;
+    SetUp3DTestBottomBlob(num, channels);
+    CuDNNPoolingLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    EXPECT_EQ(blob_top_->shape(0), num);
+    EXPECT_EQ(blob_top_->shape(1), channels);
+    EXPECT_EQ(blob_top_->shape(2), 2);
+    EXPECT_EQ(blob_top_->shape(3), 2);
+    EXPECT_EQ(blob_top_->shape(4), 5);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    // expected output
+    const int output[] = { 71, 68, 69, 70, 70,
+                           61, 64, 69, 70, 70,
+                           //
+                           72, 68, 65, 67, 67,
+                           72, 64, 65, 67, 67};
+    const unsigned int num_elements = sizeof(output) / sizeof(*output);
+    for (int i = 0; i < num_elements * num * channels; i += num_elements) {
+      for (int j = 0; j < num_elements; ++j) {
+        EXPECT_EQ(blob_top_->cpu_data()[i + j], output[j]);
+      }
+    }
+  }
+};
+
+TYPED_TEST_CASE(CuDNNPoolingLayerTest3D, TestDtypes);
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestSetup3DCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  // input shape {2, 3, 6, 5, 4}
+  this->SetUp3DRandomBottomBlob();
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
+  EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_->shape(1));
+  EXPECT_EQ(this->blob_top_->shape(2), 3);
+  EXPECT_EQ(this->blob_top_->shape(3), 2);
+  EXPECT_EQ(this->blob_top_->shape(4), 2);
+}
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestSetupPadded3DCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->add_pad(1);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  // input shape {2, 3, 6, 5, 4}
+  this->SetUp3DRandomBottomBlob();
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
+  EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_->shape(1));
+  EXPECT_EQ(this->blob_top_->shape(2), 4);
+  EXPECT_EQ(this->blob_top_->shape(3), 3);
+  EXPECT_EQ(this->blob_top_->shape(4), 3);
+}
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestSetupGlobalPooling3DCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_global_pooling(true);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  // input shape {2, 3, 6, 5, 4}
+  this->SetUp3DRandomBottomBlob();
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
+  EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_->shape(1));
+  EXPECT_EQ(this->blob_top_->shape(2), 1);
+  EXPECT_EQ(this->blob_top_->shape(3), 1);
+  EXPECT_EQ(this->blob_top_->shape(4), 1);
+}
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestForwardMax3DCuDNN) {
+  this->TestForwardCube();
+  this->TestForwardCuboidX();
+  this->TestForwardCuboidY();
+  this->TestForwardCuboidZ();
+}
+
+// Currently, cuDNN does not support a top mask, so we comment this and
+// the corresponding backward test.
+/*
+TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxTopMask3DCuDNN) {
+  this->blob_top_vec_.push_back(this->blob_top_mask_);
+  this->TestForwardCube();
+  this->TestForwardCuboidX();
+  this->TestForwardCuboidY();
+  this->TestForwardCuboidZ();
+}
+*/
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestForwardMaxPadded3DCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->add_pad(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+  std::vector<int> shape;
+  shape.push_back(1);
+  shape.push_back(1);
+  shape.push_back(3);
+  shape.push_back(3);
+  shape.push_back(3);
+  this->blob_bottom_->Reshape(shape);
+  // input
+  const int input[] = { 23, 12, 17,
+                         6,  9,  1,
+                         4, 18,  5,
+                        //
+                        10, 11,  2,
+                        16, 14, 22,
+                        20,  8, 26,
+                        //
+                        15, 13, 27,
+                         3,  7, 25,
+                        21, 19, 24 };
+  for (int i = 0; i < sizeof(input) / sizeof(*input); ++i) {
+    this->blob_bottom_->mutable_cpu_data()[i] = input[i];
+  }
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->shape(0), 1);
+  EXPECT_EQ(this->blob_top_->shape(1), 1);
+  EXPECT_EQ(this->blob_top_->shape(2), 3);
+  EXPECT_EQ(this->blob_top_->shape(3), 3);
+  EXPECT_EQ(this->blob_top_->shape(4), 3);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  Dtype epsilon = 1e-8;
+  // expected output
+  const int output[] = { 23, 23, 17,
+                         23, 23, 17,
+                          4, 18,  5,
+                         //
+                         23, 27, 27,
+                         23, 27, 27,
+                         21, 26, 26,
+                         //
+                         15, 27, 27,
+                         21, 27, 27,
+                         21, 24, 24};
+  for (int i = 0; i < sizeof(output) / sizeof(*output); ++i) {
+    EXPECT_NEAR(this->blob_top_->cpu_data()[i], output[i], epsilon);
+  }
+}
+// Currently, cuDNN does not support a top mask, so we comment this and
+// the corresponding backward test.
+/*
+TYPED_TEST(PoolingLayerTest, TestGradientMaxTopMask3DCuDNN) {
+  typedef TypeParam Dtype;
+  std::vector<int> shape;
+  shape.push_back(2);
+  shape.push_back(3);
+  shape.push_back(6);
+  shape.push_back(5);
+  shape.push_back(4);
+  this->blob_bottom_->Reshape(shape);
+  for (int kernel_d = 3; kernel_d <= 4; kernel_d++) {
+    for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
+      for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
+        LayerParameter layer_param;
+        PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+        pooling_param->clear_kernel_size();
+        pooling_param->add_kernel_size(kernel_d);
+        pooling_param->add_kernel_size(kernel_h);
+        pooling_param->add_kernel_size(kernel_w);
+        pooling_param->add_stride(2);
+        pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+        this->blob_top_vec_.push_back(this->blob_top_mask_);
+        PoolingLayer<Dtype> layer(layer_param);
+        GradientChecker<Dtype> checker(1e-4, 1e-2);
+        checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+            this->blob_top_vec_);
+        this->blob_top_vec_.pop_back();
+      }
+    }
+  }
+}
+*/
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestForwardAve3DCuDNN) {
+  typedef TypeParam Dtype;
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(1);
+  pooling_param->add_pad(1);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  std::vector<int> shape;
+  shape.push_back(1);
+  shape.push_back(1);
+  shape.push_back(3);
+  shape.push_back(3);
+  shape.push_back(3);
+  this->blob_bottom_->Reshape(shape);
+  // input
+  const int input[] = { 23, 12, 17,
+                         6,  9,  1,
+                         4, 18,  5,
+                        //
+                        10, 11,  2,
+                        16, 14, 22,
+                        20,  8, 26,
+                        //
+                        15, 13, 27,
+                         3,  7, 25,
+                        21, 19, 24 };
+  for (int i = 0; i < sizeof(input) / sizeof(*input); ++i) {
+    this->blob_bottom_->mutable_cpu_data()[i] = input[i];
+  }
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->shape(0), 1);
+  EXPECT_EQ(this->blob_top_->shape(1), 1);
+  EXPECT_EQ(this->blob_top_->shape(2), 3);
+  EXPECT_EQ(this->blob_top_->shape(3), 3);
+  EXPECT_EQ(this->blob_top_->shape(4), 3);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  Dtype epsilon = 1e-4;
+  // expected output
+  const Dtype output[] = {  3.7407,  5.2963,  3.2593,
+                            5.5926,  8.2963,  5.3704,
+                            3.5185,  5.5185,  3.8148,
+                           //
+                            5.1481,  8.6296,  5.9259,
+                            8.4815, 14.0000,  9.6296,
+                            5.3704,  9.1852,  6.5926,
+                           //
+                            3.2963,  6.1111,  4.4815,
+                            5.8148, 10.4815,  7.3333,
+                            4.0000,  7.5926,  5.3704};
+  for (int i = 0; i < sizeof(output) / sizeof(*output); ++i) {
+    EXPECT_NEAR(this->blob_top_->cpu_data()[i], output[i], epsilon);
+  }
+}
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestGradientMax3DCuDNN) {
+  typedef TypeParam Dtype;
+  this->SetUp3DRandomBottomBlob();
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->clear_kernel_size();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->add_pad(1);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-4, 1e-2);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestGradientAve3DCuDNN) {
+  typedef TypeParam Dtype;
+  this->SetUp3DRandomBottomBlob();
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->clear_kernel_size();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(CuDNNPoolingLayerTest3D, TestGradientAvePadded3DCuDNN) {
+  typedef TypeParam Dtype;
+  this->SetUp3DRandomBottomBlob();
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->clear_kernel_size();
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
+  pooling_param->add_pad(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  CuDNNPoolingLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
 #endif
 
 }  // namespace caffe
