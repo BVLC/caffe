@@ -137,7 +137,7 @@ See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 **Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
-**CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.
+**CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Brew with caution; we recommend compute capbility >= 3.0.
 
 Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
 
