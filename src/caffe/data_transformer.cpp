@@ -642,7 +642,7 @@ void DataTransformer<Dtype>::swapLeftRight(Joints& j) {
   else if(np == 28){
     int right[11] = {3,4,5,9,10,11,18,19,20,24,25}; //1-index
     int left[11] = {6,7,8,12,13,14,21,22,23,26,27}; //1-index
-    for(int i=0; i<6; i++){
+    for(int i=0; i<11; i++){
       int ri = right[i] - 1;
       int li = left[i] - 1;
       Point2f temp = j.joints[ri];

@@ -14,8 +14,10 @@
 #include <vector>
 
 #include "mex.h"
+//#include "gpu/mxGPUArray.h"
 
 #include "caffe/caffe.hpp"
+
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
 
@@ -396,6 +398,19 @@ static void blob_reshape(MEX_ARGS) {
   blob->Reshape(blob_shape);
 }
 
+// Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)
+static void blob_copy_data(MEX_ARGS) {
+  mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsStruct(prhs[1]),
+    "Usage: caffe_('blob_copy_data', hBlob_to, hBlob_from)");
+  Blob<float>* blob_to = handle_to_ptr<Blob<float> >(prhs[0]);
+  Blob<float>* blob_from = handle_to_ptr<Blob<float> >(prhs[1]);
+  //mxCHECK(blob_from->count() == blob_to->count(),
+  //  "number of elements in target blob doesn't match that in source blob");
+  
+  blob_to->CopyFrom(*blob_from, false, true); 
+}
+
+
 // Usage: caffe_('blob_get_data', hBlob)
 static void blob_get_data(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
@@ -534,6 +549,7 @@ static handler_registry handlers[] = {
   { "blob_get_data",      blob_get_data   },
   { "blob_set_data",      blob_set_data   },
   { "blob_get_diff",      blob_get_diff   },
+  { "blob_copy_data",     blob_copy_data  },
   { "blob_set_diff",      blob_set_diff   },
   { "set_mode_cpu",       set_mode_cpu    },
   { "set_mode_gpu",       set_mode_gpu    },
