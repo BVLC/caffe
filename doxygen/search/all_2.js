@@ -16,13 +16,14 @@ var searchData=
   ['constantfiller',['ConstantFiller',['../classcaffe_1_1ConstantFiller.html',1,'caffe']]],
   ['contrastivelosslayer',['ContrastiveLossLayer',['../classcaffe_1_1ContrastiveLossLayer.html',1,'caffe']]],
   ['conv_5finput_5fshape_5f',['conv_input_shape_',['../classcaffe_1_1BaseConvolutionLayer.html#a63756d6ef00f6491939e539094c21397',1,'caffe::BaseConvolutionLayer']]],
-  ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html',1,'caffe']]],
   ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html#ad27360afd7729001b9e4f1d8c8401866',1,'caffe::ConvolutionLayer']]],
+  ['convolutionlayer',['ConvolutionLayer',['../classcaffe_1_1ConvolutionLayer.html',1,'caffe']]],
   ['copy_5faxes_5f',['copy_axes_',['../classcaffe_1_1ReshapeLayer.html#ace08e8747c8d4562fbc26ca789681a4a',1,'caffe::ReshapeLayer']]],
   ['copyfrom',['CopyFrom',['../classcaffe_1_1Blob.html#a64ad51f99e88233f43a21a85ebe10284',1,'caffe::Blob']]],
   ['copytrainedlayersfrom',['CopyTrainedLayersFrom',['../classcaffe_1_1Net.html#a4ac2b69748470f54d530bc5dfa05b9c3',1,'caffe::Net']]],
   ['count',['count',['../classcaffe_1_1Blob.html#adcc7936d19ff798cfa8f24901a63d1fa',1,'caffe::Blob::count(int start_axis, int end_axis) const '],['../classcaffe_1_1Blob.html#aca6ae30ecc52bd38699fd82fdbe147f7',1,'caffe::Blob::count(int start_axis) const ']]],
   ['cputimer',['CPUTimer',['../classcaffe_1_1CPUTimer.html',1,'caffe']]],
+  ['croplayer',['CropLayer',['../classcaffe_1_1CropLayer.html',1,'caffe']]],
   ['cursor',['Cursor',['../classcaffe_1_1db_1_1Cursor.html',1,'caffe::db']]],
   ['solveraction',['SolverAction',['../namespacecaffe_1_1SolverAction.html',1,'caffe']]]
 ];

@@ -117,9 +117,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abc6e6bf43a2aa628c6bebbe3fe49155e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abc6e6bf43a2aa628c6bebbe3fe49155e"></a>
 const shared_ptr&lt; <a class="el" href="classcaffe_1_1Solver.html">Solver</a>&lt; Dtype &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>solver</b> () const </td></tr>
 <tr class="separator:abc6e6bf43a2aa628c6bebbe3fe49155e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29bb4121b496f4a0ae5e4555abd9c483"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29bb4121b496f4a0ae5e4555abd9c483"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> (const vector&lt; int &gt; &amp;gpus)</td></tr>
-<tr class="separator:a29bb4121b496f4a0ae5e4555abd9c483"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a583e52489a9763b467f41a8bee560cea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a583e52489a9763b467f41a8bee560cea"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Run</b> (const vector&lt; int &gt; &amp;gpus)</td></tr>
+<tr class="separator:a583e52489a9763b467f41a8bee560cea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5a1008622169bd14c2f0e75c97c7e9a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5a1008622169bd14c2f0e75c97c7e9a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Prepare</b> (const vector&lt; int &gt; &amp;gpus, vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1P2PSync.html">P2PSync</a>&lt; Dtype &gt; &gt; &gt; *syncs)</td></tr>
+<tr class="separator:af5a1008622169bd14c2f0e75c97c7e9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafd23c93e0f01f5ed5e46311911f40fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aafd23c93e0f01f5ed5e46311911f40fb"></a>
+const int&#160;</td><td class="memItemRight" valign="bottom"><b>initial_iter</b> () const </td></tr>
+<tr class="separator:aafd23c93e0f01f5ed5e46311911f40fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcaffe_1_1GPUParams"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcaffe_1_1GPUParams')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcaffe_1_1GPUParams.html">caffe::GPUParams&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a62a4d0d304bf708d0299763713f9bed8 inherit pub_methods_classcaffe_1_1GPUParams"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62a4d0d304bf708d0299763713f9bed8"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>GPUParams</b> (shared_ptr&lt; <a class="el" href="classcaffe_1_1Solver.html">Solver</a>&lt; Dtype &gt; &gt; root_solver, int device)</td></tr>
@@ -207,7 +213,7 @@ Dtype *&#160;</td><td class="memItemRight" valign="bottom"><b>diff_</b></td></tr
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Mar 1 2016 15:30:55 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Apr 13 2016 19:02:35 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>
