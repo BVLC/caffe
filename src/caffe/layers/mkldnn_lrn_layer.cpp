@@ -229,6 +229,23 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
 STUB_GPU(MklDnnLRNLayer);
 STUB_GPU_FORWARD(MklDnnLRNLayer, CrossChannelForward);
 STUB_GPU_BACKWARD(MklDnnLRNLayer, CrossChannelBackward);
+#else
+template <typename Dtype>
+void MklDnnLRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {NOT_IMPLEMENTED;}
+template <typename Dtype>
+void MklDnnLRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
+  {NOT_IMPLEMENTED;}
+template <typename Dtype>
+void MklDnnLRNLayer<Dtype>::CrossChannelForward_gpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
+  {NOT_IMPLEMENTED;}
+template <typename Dtype>
+void MklDnnLRNLayer<Dtype>::CrossChannelBackward_gpu(
+    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {NOT_IMPLEMENTED;}
+
 #endif
 
 INSTANTIATE_CLASS(MklDnnLRNLayer);
