@@ -631,4 +631,5 @@ $(DISTRIBUTE_DIR): all py | $(DISTRIBUTE_SUBDIRS)
 -include $(DEPS)
 
 apollo: pycaffe
+	pip install runcython
 	makecython++ python/apollocaffe/cpp/_apollocaffe.pyx '' "$(CXXFLAGS) -Wno-cpp $(PYTHON_LDFLAGS) -lcaffe" && rm python/apollocaffe/cpp/_apollocaffe.h
