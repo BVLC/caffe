@@ -118,14 +118,12 @@ struct BlobSyncInfoImpl : BlobSyncInfo {
                         int layer_id,
                         int blob_id,
                         int part_id,
-                        uint32_t version,
-                        int iters) {
+                        uint32_t version) {
     PartKey key = PartKey(from, get_id(blob_id, part_id));
     add_remote(from);
     PartInfo& part_info = parts[layer_id][blob_id][part_id];
     {
       boost::mutex::scoped_lock lock(mtx);
-      remotes[from] = iters;
       DLOG(INFO) << "BlobInfo received from " << from << ": "
         << layer_id << " " << blob_id << " " << part_id
         << " of version " << version
@@ -141,8 +139,7 @@ struct BlobSyncInfoImpl : BlobSyncInfo {
       }
       if (!received_for_layer[layer_id].insert(key).second)
         return false;
-      if (!part_info.received_from.insert(from).second)
-        return false;
+      CHECK(part_info.received_from.insert(from).second);
       DLOG(INFO) << "BlobInfo::received for layer " << layer_id
         << ": " << received_for_layer[layer_id].size()
         << "/" << (const_info->parts(layer_id) * remotes.size())
@@ -171,22 +168,12 @@ struct BlobSyncInfoImpl : BlobSyncInfo {
     return part_info.version - 1;
   }
 
-  virtual int get_total_iters() const {
-    boost::mutex::scoped_lock lock(mtx);
-    typedef RemoteInfoMap::const_iterator It;
-    int ret = 0;
-    for (It it = remotes.begin(); it != remotes.end(); ++it) {
-      ret += it->second;
-    }
-    return ret;
-  }
-
 
   virtual void add_remote(RemoteId id) {
     {
       boost::mutex::scoped_lock lock(mtx);
-      if (remotes.insert(std::make_pair(id, 1)).second) {
-        VLOG(2) << "added remote " << id << " at version " << max_version()
+      if (remotes.insert(std::make_pair(id, 0)).second) {
+        VLOG(2) << "added remote " << id
           << " there are now "
           << remotes.size() << " remotes";
       } else {
@@ -223,14 +210,6 @@ struct BlobSyncInfoImpl : BlobSyncInfo {
   }
 
  private:
-  virtual uint32_t max_version() const {
-    uint32_t ret = 0;
-    for (int i = 0; i < const_info->layers(); ++i) {
-      ret = std::max(ret, current_versions[i]);
-    }
-    return ret;
-  }
-
   bool is_synced(int layer_id) const {
     boost::mutex::scoped_lock lock(mtx);
     return (received_for_layer[layer_id].size()
@@ -256,10 +235,6 @@ struct BlobSyncInfoImpl : BlobSyncInfo {
   }
 
   bool synced_check_and_callback(int layer_id) {
-    {
-      boost::mutex::scoped_lock lock(mtx);
-      if (remotes.empty()) return true;
-    }
     if (is_synced(layer_id)) {
       vector<BlobSyncInfo::Handler*> handlers_to_call;
       uint32_t version = 0;
@@ -296,8 +271,9 @@ struct BlobSyncInfoImpl : BlobSyncInfo {
 };
 
 template <typename Dtype>
-shared_ptr<BlobConstInfo> create_const_info(shared_ptr<Solver<Dtype> > solver,
-                                            size_t elements_per_packet) {
+shared_ptr<BlobConstInfo> create_const_info_impl(
+    shared_ptr<Solver<Dtype> > solver,
+    size_t elements_per_packet) {
   const int layers = solver->net()->layers().size();
 
   vector<vector<int> > sizes;
@@ -328,23 +304,18 @@ shared_ptr<BlobConstInfo> create_const_info(shared_ptr<Solver<Dtype> > solver,
 }  // namespace
 
 template <typename Dtype>
-BlobInfo<Dtype>::BlobInfo(shared_ptr<Solver<Dtype> > solver,
-                          size_t elements_per_packet)
-  : const_info(create_const_info(solver, elements_per_packet))
-  , sync_info(boost::make_shared<BlobSyncInfoImpl>(const_info)) {
+shared_ptr<BlobConstInfo> BlobInfoFactory<Dtype>::create_const_info(
+    shared_ptr<Solver<Dtype> > solver, size_t elements_per_packet) {
+  return create_const_info_impl(solver, elements_per_packet);
 }
 
 template <typename Dtype>
-shared_ptr<BlobConstInfo> BlobInfo<Dtype>::get_const_info() const {
-  return const_info;
+shared_ptr<BlobSyncInfo> BlobInfoFactory<Dtype>::create_sync_info(
+    shared_ptr<BlobConstInfo> const_info) {
+  return boost::make_shared<BlobSyncInfoImpl>(const_info);
 }
 
-template <typename Dtype>
-shared_ptr<BlobSyncInfo> BlobInfo<Dtype>::get_sync_info() const {
-  return sync_info;
-}
-
-INSTANTIATE_CLASS(BlobInfo);
+INSTANTIATE_CLASS(BlobInfoFactory);
 
 }  // namespace caffe
 

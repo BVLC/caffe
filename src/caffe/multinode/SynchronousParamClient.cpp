@@ -85,13 +85,16 @@ struct LayerState {
 
 template<typename Dtype>
 struct SynchronousParamSyncingImpl
-    : TerminatedHandler, BlobSyncInfo::Handler, InternalThread {
+    : TerminatedHandler
+    , BlobSyncInfo::Handler
+    , InternalThread {
   shared_ptr<Solver<Dtype> > solver;
   shared_ptr<internode::Daemon> comm;
   shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
-  shared_ptr<BlobInfo<Dtype> > info;
+  shared_ptr<BlobConstInfo> const_info;
+  shared_ptr<BlobSyncInfo> sync_info;
   shared_ptr<BlobKeyChain<Dtype> > keychain;
   shared_ptr<BlobComms<Dtype> > comms;
 
@@ -109,21 +112,22 @@ struct SynchronousParamSyncingImpl
     , codec(BlobCodec<Dtype>::create_codec(
         solver->param().multinode_param(), true))
     , waypoint(internode::configure_client(comm, address, codec->packet_size()))
-    , info(new BlobInfo<Dtype>(solver, codec->max_elements_per_part()))
-    , keychain(BlobKeyChain<Dtype>::create_empty(
-        info->get_const_info()->layers()))
+    , const_info(BlobInfoFactory<Dtype>::create_const_info(
+        solver, codec->max_elements_per_part()))
+    , sync_info(BlobInfoFactory<Dtype>::create_sync_info(const_info))
+    , keychain(BlobKeyChain<Dtype>::create_empty(const_info->layers()))
     , comms(
         BlobComms<Dtype>::create(
-          solver, info, waypoint, codec, keychain,
+          solver, const_info, sync_info, waypoint, codec, keychain,
           typename BlobComms<Dtype>::Settings(
             BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
           num_of_threads))
-    , layers(info->get_const_info()->layers())
+    , layers(const_info->layers())
     , terminated_(false) {
     init.move_to(LayerState::updating);
-    info->get_sync_info()->register_synced_handler(this);
+    sync_info->register_synced_handler(this);
     waypoint->register_receive_handler(comms.get());
-    comms->set_iter_size(solver->param().iter_size());
+    comms->send_iter_size(solver->param().iter_size());
 
     internode::create_timer(
       comm,
@@ -167,7 +171,7 @@ struct SynchronousParamSyncingImpl
 
   // called from solver thread
   void calculate(int layer_id) {
-    if (!info->get_const_info()->needs_syncing(layer_id)) return;
+    if (!const_info->needs_syncing(layer_id)) return;
     VLOG(3)  << "waiting for layer " << layer_id;
     int waited = layers.at(layer_id).wait_till(this, LayerState::calculating);
 
@@ -184,7 +188,7 @@ struct SynchronousParamSyncingImpl
   }
 
   void update(int layer_id) {
-    if (!info->get_const_info()->needs_syncing(layer_id)) return;
+    if (!const_info->needs_syncing(layer_id)) return;
     VLOG(3) << "backward ready for layer " << layer_id;
     layers.at(layer_id).move_to(LayerState::updating);
     comms->push(layer_id, layers.at(layer_id).get_version());
@@ -196,7 +200,8 @@ SynchronousParamClient<Dtype>::SynchronousParamClient(
         boost::shared_ptr<Solver<Dtype> > solver,
         string param_server_addr,
         int num_of_threads)
-    : solver_(boost::make_shared<MultiSolver<Dtype> >(solver))
+    : solver_(boost::make_shared<MultiSolver<Dtype> >(
+        solver, (Caffe::mode() != Caffe::GPU)))
     , sync(new SynchronousParamSyncingImpl<Dtype>(
         solver, param_server_addr, num_of_threads)) {
   solver->param().set_disabled_update(true);

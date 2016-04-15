@@ -96,7 +96,12 @@ if(USE_MPI)
     add_definitions("-DUSE_MPI=1")
   endif()
   if(MPI_CXX_COMPILER)
-    set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+    if (NOT ${MPI_CXX_COMPILER} STREQUAL ${CMAKE_CXX_COMPILER})
+      message(FATAL_ERROR "Currently cxx compiler is: \"${CMAKE_CXX_COMPILER}\""
+                          " The mpi compiler should be use (${MPI_CXX_COMPILER})"
+                          " Please set mpi compiler manually"
+                          " (CXX=${MPI_CXX_COMPILER})")
+    endif()
   endif()
   if(MPI_CXX_INCLUDE_PATH)
     include_directories(${MPI_CXX_INCLUDE_PATH})

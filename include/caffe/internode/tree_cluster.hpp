@@ -37,6 +37,7 @@ class TreeWaypoint {
   virtual RemoteId id() const = 0;
   virtual std::vector<RemoteId> children() const = 0;
   virtual RemoteId parent() const = 0;
+  virtual int total_nodes() const = 0;
 };
 }  // namespace internode
 }  // namespace caffe

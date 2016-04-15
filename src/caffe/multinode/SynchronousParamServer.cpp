@@ -22,20 +22,28 @@ using internode::Waypoint;
 using internode::MultiWaypoint;
 
 template <typename Dtype>
-class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
-                                          , public BlobSyncInfo::Handler {
+class SynchronousParamServer<Dtype>::Impl
+    : public MultiWaypoint::Handler
+    , public BlobSyncInfo::Handler
+    , public BlobComms<Dtype>::IterSizeHandler {
   shared_ptr<Daemon> comm;
   shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<MultiWaypoint> waypoint;
   shared_ptr<Solver<Dtype> > solver;
-  shared_ptr<BlobInfo<Dtype> > info;
+  shared_ptr<BlobConstInfo> const_info;
+  shared_ptr<BlobSyncInfo> sync_info;
   shared_ptr<BlobKeyChain<Dtype> > keychain;
   shared_ptr<BlobComms<Dtype> > comms;
 
-  typedef boost::unordered_map<RemoteId, shared_ptr<Waypoint> > ClientMap;
+  struct ClientInfo {
+    shared_ptr<Waypoint> waypoint;
+    int iters;
+  };
+  typedef boost::unordered_map<RemoteId, ClientInfo> ClientMap;
   ClientMap all_clients;
   ClientMap pending;
   uint32_t current_version;
+  int total_iters;
   boost::mutex mtx;
 
   virtual void synced(int layer_id, int blob_id, int part, uint32_t version) {
@@ -63,6 +71,12 @@ class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
     comms->push(layer_id, version + 1);
   }
 
+  virtual void received_iter_size(RemoteId from, int iters) {
+    boost::mutex::scoped_lock lock(mtx);
+    pending[from].iters = iters;
+    total_iters += iters;
+  }
+
   virtual void synced(uint32_t version) {
     VLOG(2) << "net is synced with version: " << version;
     if ((solver->param().test_interval() > 0)
@@ -75,10 +89,10 @@ class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
       solver->Snapshot();
     }
     boost::mutex::scoped_lock lock(mtx);
+    solver->param().set_iter_size(total_iters);
     current_version = version + 1;
     add_pending();
 
-    solver->param().set_iter_size(info->get_sync_info()->get_total_iters());
     solver->set_iter(version + 1);
   }
 
@@ -87,14 +101,19 @@ class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
     if (all_clients.empty() &&
         (pending.size() < solver->param().multinode_param().wait_for_clients()))
       return;
-    typedef ClientMap::iterator It;
+    typedef typename ClientMap::iterator It;
+    ClientMap left;
     for (It it = pending.begin(); it != pending.end(); ++it) {
-      all_clients.insert(*it);
-      info->get_sync_info()->add_remote(it->first);
+      if (it->second.iters > 0) {
+        all_clients.insert(*it);
+        sync_info->add_remote(it->first);
+      } else {
+        left.insert(*it);
+      }
     }
-    pending.clear();
-    for (int i = 0; i < info->get_const_info()->layers(); ++i) {
-      if (!info->get_const_info()->needs_syncing(i)) continue;
+    pending.swap(left);
+    for (int i = 0; i < const_info->layers(); ++i) {
+      if (!const_info->needs_syncing(i)) continue;
       comms->push(i, current_version + 1);
     }
   }
@@ -102,7 +121,8 @@ class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
   void accepted(shared_ptr<Waypoint> waypoint) {
     {
       boost::mutex::scoped_lock lock(mtx);
-      pending[waypoint->id()] = waypoint;
+      ClientInfo info = {waypoint, 0};
+      pending[waypoint->id()] = info;
       if (all_clients.empty()) add_pending();
     }
     LOG(INFO) << "accepted client " << waypoint->id();
@@ -110,9 +130,10 @@ class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
 
   void disconnected(internode::RemoteId id) {
     LOG(INFO) << "client disconnected " << id;
-    info->get_sync_info()->remove_remote(id);
+    sync_info->remove_remote(id);
 
     boost::mutex::scoped_lock lock(mtx);
+    total_iters -= all_clients[id].iters;
     all_clients.erase(id);
     pending.erase(id);
   }
@@ -127,19 +148,22 @@ class SynchronousParamServer<Dtype>::Impl : public MultiWaypoint::Handler
     , waypoint(internode::configure_server(
         comm, bind_address, codec->packet_size()))
     , solver(solver)
-    , info(new BlobInfo<Dtype>(solver, codec->max_elements_per_part()))
-    , keychain(BlobKeyChain<Dtype>::create_empty(
-        info->get_const_info()->layers()))
+    , const_info(BlobInfoFactory<Dtype>::create_const_info(
+        solver, codec->max_elements_per_part()))
+    , sync_info(BlobInfoFactory<Dtype>::create_sync_info(const_info))
+    , keychain(BlobKeyChain<Dtype>::create_empty(const_info->layers()))
     , comms(
         BlobComms<Dtype>::create(
-          solver, info, waypoint, codec, keychain,
+          solver, const_info, sync_info, waypoint, codec, keychain,
           typename BlobComms<Dtype>::Settings(
             BlobEncoding::PARAMS, BlobEncoding::GRADS, 1.0, 1.0),
           num_of_threads))
-    , current_version(0u) {
+    , current_version(0u)
+    , total_iters(0) {
     waypoint->register_peer_change_handler(this);
-    info->get_sync_info()->register_synced_handler(this);
+    sync_info->register_synced_handler(this);
     waypoint->register_receive_handler(comms.get());
+    comms->register_iter_size_handler(this);
 
     internode::create_timer(comm, 500000, boost::bind(&Impl::tick, this), true);
   }

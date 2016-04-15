@@ -67,10 +67,13 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 # ---[ Includes
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
-include_directories(BEFORE src) # This is needed for gtest.
+include_directories(BEFORE src/gtest/include src/gmock/include) # This is needed for gtest.
 
 # ---[ Subdirectories
-add_subdirectory(src/gtest)
+#add_subdirectory(src/gtest)
+set(BUILD_SHARED_LIBS off)
+add_subdirectory(src/gmock)
+set(BUILD_SHARED_LIBS on)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)
 add_subdirectory(examples)

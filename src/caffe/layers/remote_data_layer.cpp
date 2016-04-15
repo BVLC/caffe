@@ -1,17 +1,19 @@
+#include <boost/make_shared.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/unordered_map.hpp>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include "boost/make_shared.hpp"
-#include "boost/thread/mutex.hpp"
-#include "boost/unordered_map.hpp"
 #include "caffe/internode/configuration.hpp"
 #include "caffe/layers/remote_data_layer.hpp"
 #include "caffe/multinode/SendCallback.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/benchmark.hpp"
+#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -60,36 +62,32 @@ struct ReusingShufflingDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
   int read;
   int batch_size;
   int cache_size;
-  int gen;  // randomness generator - large prime number
-  int curr;
   bool read_all;
+  boost::shared_ptr<Caffe::RNG> rng;
   boost::mutex mtx;
 
   template <typename ShapeInfo>
   void create_cache(ShapeInfo info) {
-    vector<vector<int> > shapes(info.shape_size());
-    batch.top.resize(shapes.size());
-    for (int j = 0; j < shapes.size(); ++j) {
+    batch.top.resize(info.shape_size());
+    CHECK_GT(info.shape().size(), 0);
+    for (int j = 0; j < info.shape_size(); ++j) {
       batch.top[j] = new Blob<Dtype>();
       batch.top[j]->Reshape(info.shape(j));
-      shapes[j] = batch.top[j]->shape();
-
-      if (batch_size != 0) {
-        CHECK(shapes[j][0] == batch_size);
-      } else {
-        batch_size = shapes[j][0];
-        cache_size *= batch_size;
-      }
-      shapes[j][0] = 1;
+    }
+    batch_size = batch.top[0]->shape()[0];
+    for (int j = 0; j < info.shape_size(); ++j) {
+      CHECK(batch.top[j]->shape()[0] == batch_size);
     }
 
-    for (int i = 0; i < cache_size; ++i) {
+    for (int i = 0; i < batch_size * cache_size; ++i) {
       Data<Dtype> data;
-      data.top.resize(shapes.size());
+      data.top.resize(batch.top.size());
 
       for (int j = 0; j < data.top.size(); ++j) {
+        vector<int> shape = batch.top[j]->shape();
+        shape[0] = 1;
         data.top[j] = new Blob<Dtype>();
-        data.top[j]->Reshape(shapes[j]);
+        data.top[j]->Reshape(shape);
       }
       cache.push_back(data);
     }
@@ -99,9 +97,8 @@ struct ReusingShufflingDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
     : read(0)
     , batch_size(0)
     , cache_size(param.cache_size())
-    , gen(10000019)
-    , curr(1)
-    , read_all(false) {
+    , read_all(false)
+    , rng(new Caffe::RNG(caffe_rng_rand())) {
     if (param.shape_size() > 0) {
       create_cache(param);
     }
@@ -149,20 +146,21 @@ struct ReusingShufflingDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
   }
 
   virtual void get(string msg, const vector<Blob<Dtype>*>& ret) {
-    int curr_read = 0;
     while (true) {
       boost::mutex::scoped_lock lock(mtx);
-      curr_read = read;
       if (read_all) {
         break;
       }
     }
+
+    boost::uniform_int<int> dist(0, cache.size() - 1);
 
     CHECK_GT(batch_size, 0);
     for (int j = 0; j < ret.size(); ++j) {
       ret[j]->ReshapeLike(*batch.top[j]);
     }
     for (int i = 0; i < batch_size; ++i) {
+      int curr = dist(*static_cast<caffe::rng_t*>(rng->generator()));
       for (int j = 0; j < ret.size(); ++j) {
         Blob<Dtype>* target = ret[j];
         Blob<Dtype>* src = cache[curr].top[j];
@@ -172,8 +170,6 @@ struct ReusingShufflingDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
                    src->cpu_data(),
                    target->mutable_cpu_data() + offset);
       }
-
-      curr = (curr + gen) % curr_read;
     }
   }
 };
@@ -181,6 +177,7 @@ struct ReusingShufflingDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
 template <typename Dtype>
 struct SimpleDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
   BlockingQueue<Element*> cached;
+  BlockingQueue<Element*> waiting;
   BlockingQueue<Element*> free;
   int cache_size;
 
@@ -197,6 +194,18 @@ struct SimpleDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
 
       free.push(data);
     }
+
+    if (cache_size == 0) {
+      Data<Dtype>* data = new Data<Dtype>();
+      data->top.resize(info.shape_size());
+
+      for (int j = 0; j < data->top.size(); ++j) {
+        data->top[j] = new Blob<Dtype>();
+        data->top[j]->Reshape(info.shape(j));
+      }
+
+      waiting.push(data);
+    }
   }
 
   explicit SimpleDataCache(RemoteDataParameter param)
@@ -208,7 +217,7 @@ struct SimpleDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
   }
 
   virtual bool add_data(DataMsg* update) {
-    if (cached.size() + free.size() == 0) {
+    if (cached.size() + free.size() + waiting.size() == 0) {
       create_cache(*update);
     }
 
@@ -228,6 +237,11 @@ struct SimpleDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
   }
 
   virtual void get(string msg, const vector<Blob<Dtype>*>& ret) {
+    if (cache_size == 0) {
+      Data<Dtype>* data = waiting.pop(msg + " waiting")
+        ->template cast<Data<Dtype> >();
+      free.push(data);
+    }
     Data<Dtype>* data = cached.pop(msg)->template cast<Data<Dtype> >();
     CHECK(data->top.size() == ret.size());
     for (int i = 0; i < ret.size(); ++i) {
@@ -236,7 +250,11 @@ struct SimpleDataCache : RemoteDataLayer<Dtype>::RemoteDataQueue {
                  ret[i]->mutable_cpu_data());
     }
 
-    free.push(data);
+    if (cache_size > 0) {
+      free.push(data);
+    } else {
+      waiting.push(data);
+    }
   }
 };
 
