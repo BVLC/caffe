@@ -91,6 +91,24 @@ TYPED_TEST(CropLayerTest, TestSetupShapeNegativeIndexing) {
   }
 }
 
+TYPED_TEST(CropLayerTest, TestDimensionsCheck) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  // Reshape size blob to have incompatible sizes for uncropped dimensions:
+  // the size blob has more channels than the data blob, but this is fine
+  // since the channels dimension is not cropped in this configuration.
+  this->blob_bottom_1_->Reshape(2, 5, 4, 2);
+  CropLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  for (int i = 0; i < this->blob_top_->num_axes(); ++i) {
+    if (i < 2) {
+      EXPECT_EQ(this->blob_bottom_0_->shape(i), this->blob_top_->shape(i));
+    } else {
+      EXPECT_EQ(this->blob_bottom_1_->shape(i), this->blob_top_->shape(i));
+    }
+  }
+}
+
 TYPED_TEST(CropLayerTest, TestCropAll) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
