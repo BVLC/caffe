@@ -15,8 +15,7 @@ namespace caffe {
 template <typename Dtype>
 void CropLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  // All logic that depends only on the number of dimensions is here,
-  // the rest is in Reshape because it depends on Blob size.
+  // LayerSetup() handles the number of dimensions; Reshape() handles the sizes.
   // bottom[0] supplies the data
   // bottom[1] supplies the size
   const CropParameter& param = this->layer_param_.crop_param();
@@ -40,40 +39,35 @@ void CropLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   int input_dim = bottom[0]->num_axes();
   const int start_axis = bottom[0]->CanonicalAxisIndex(param.axis());
 
-  // initialize all offsets to 0
+  // Initialize offsets to 0 and the new shape to the current shape of the data.
   offsets = vector<int>(input_dim, 0);
-  // initialize new shape to bottom[0]
   vector<int> new_shape(bottom[0]->shape());
 
-  // apply crops
+  // Determine crop offsets and the new shape post-crop.
   for (int i = 0; i < input_dim; ++i) {
     int crop_offset = 0;
-    int new_size    = bottom[0]->shape(i);
+    int new_size = bottom[0]->shape(i);
     if (i >= start_axis) {
       new_size = bottom[1]->shape(i);
-
       if (param.offset_size() == 1) {
-        // if only one crop value is supplied, crop all dimensions after axis
-        // by this crop value
+        // If only one offset is given, all crops have the same offset.
         crop_offset = param.offset(0);
       } else if (param.offset_size() > 1) {
-        // crop values specified must be equal to the number of dimensions
-        // following axis
+        // For several offsets, the number of offsets must be equal to the
+        // number of dimensions to crop, that is dimensions after the axis.
         crop_offset = param.offset(i - start_axis);
       }
-      // check that the crop and offset are within the dimension bounds
+      // Check that the crop and offset are within the dimension's bounds.
       CHECK_GE(bottom[0]->shape(i) - crop_offset, bottom[1]->shape(i))
           << "the crop for dimension " << i << " is out-of-bounds with "
           << "size " << bottom[1]->shape(i) << " and offset " << crop_offset;
     }
-    // Now set new size and offsets
     new_shape[i] = new_size;
     offsets[i] = crop_offset;
   }
   top[0]->Reshape(new_shape);
 }
 
-// recursive copy function
 template <typename Dtype>
 void CropLayer<Dtype>::crop_copy(const vector<Blob<Dtype>*>& bottom,
              const vector<Blob<Dtype>*>& top,
