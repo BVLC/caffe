@@ -280,6 +280,9 @@ Please cite SSD in your publications if it helps your research:
   ```
   [Here](https://drive.google.com/file/d/0BzKzrI_SkD1_R09NcjM1eElLcWc/view) is a demo video of running a SSD500 model trained on [MSCOCO](http://mscoco.org) dataset.
 
+4. To train on other dataset, please refer to data/OTHERDATASET for more details.  
+We currently add support for MSCOCO.
+
 ### Contact
 Please direct all comments and report all bugs to:
 
