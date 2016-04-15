@@ -16,8 +16,8 @@ using std::ofstream;
 using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
-  FLAGS_alsologtostderr = 1;  // Print output to stderr (while still logging)
-  ::google::InitGoogleLogging(argv[0]);
+  //FLAGS_alsologtostderr = 1;  // Print output to stderr (while still logging)
+  //::google::InitGoogleLogging(argv[0]);
   if (argc != 3) {
     LOG(ERROR) << "Usage: upgrade_solver_proto_text "
         << "old_solver_proto_file_in solver_proto_file_out";
