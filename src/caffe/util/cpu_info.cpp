@@ -160,7 +160,6 @@ void Collection::updateCpuInformation(const Processor &processor,
 #include <sched.h>
 
 static const int minCoresForThreadBinding = 12;
-static const int numberOfBackgroundCores = 2;
 
 static const char *openMpEnvVars[] = {
   "OMP_CANCELLATION", "OMP_DISPLAY_ENV", "OMP_DEFAULT_DEVICE", "OMP_DYNAMIC",
@@ -177,7 +176,7 @@ static const char *openMpEnvVars[] = {
 static const unsigned numberOfOpenMpEnvVars =
   sizeof(openMpEnvVars) / sizeof(openMpEnvVars[0]);
 
-OpenMpManager::OpenMpManager() {
+OpenMpManager::OpenMpManager() : areBackgroundThreadsPresent(false) {
   getOpenMpEnvVars();
   getCurrentCpuSet();
   getCurrentCoreSet();
@@ -196,6 +195,11 @@ void OpenMpManager::setGpuEnabled() {
 void OpenMpManager::setGpuDisabled() {
   OpenMpManager &openMpManager = getInstance();
   openMpManager.isGpuEnabled = false;
+}
+
+void OpenMpManager::registerBackgroundThread() {
+  OpenMpManager &openMpManager = getInstance();
+  openMpManager.areBackgroundThreadsPresent = true;
 }
 
 void OpenMpManager::bindCurrentThreadToPrimaryCore() {
@@ -220,7 +224,8 @@ void OpenMpManager::bindOpenMpThreads() {
     unsigned logicalCoreId = omp_get_thread_num();
     unsigned totalNumberOfCpuCores = Collection::getTotalNumberOfCpuCores();
     if (totalNumberOfCpuCores >= minCoresForThreadBinding) {
-      logicalCoreId += numberOfBackgroundCores;
+      // TODO: remove this 2 when performance regression is removed
+      logicalCoreId += openMpManager.areBackgroundThreadsPresent ? 2 : 0;
     }
 
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
@@ -311,7 +316,9 @@ void OpenMpManager::setOpenMpThreadNumberLimit() {
   unsigned totalNumberOfAvailableCores = CPU_COUNT(&currentCoreSet);
 
   if (totalNumberOfAvailableCores >= minCoresForThreadBinding)
-    omp_set_num_threads(totalNumberOfAvailableCores - numberOfBackgroundCores);
+    // TODO: remove this 2 when performance regression is removed
+    omp_set_num_threads(totalNumberOfAvailableCores -
+                        (areBackgroundThreadsPresent ? 2 : 0));
   else
     omp_set_num_threads(totalNumberOfAvailableCores);
 }

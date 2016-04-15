@@ -42,20 +42,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK(Caffe::root_solver() || root_net_)
       << "root_net_ needs to be set for all non-root solvers";
 
-#ifdef _OPENMP
-  static bool executed = false;
-  if (!executed) {
-    executed = true;
-    if (Caffe::mode() == Caffe::GPU) {
-      caffe::cpu::OpenMpManager::setGpuEnabled();
-    } else {
-      caffe::cpu::OpenMpManager::setGpuDisabled();
-    }
-
-    caffe::cpu::OpenMpManager::bindOpenMpThreads();
-    caffe::cpu::OpenMpManager::printVerboseInformation();
-  }
-#endif
 
   // Set phase from the state.
   phase_ = in_param.state().phase();
@@ -196,6 +182,23 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
   }
+
+  // OpenMP manager needed some info (for example number of backgroud threads)
+  // that is available after layers are constructed
+#ifdef _OPENMP
+  static bool executed = false;
+  if (!executed) {
+    if (Caffe::mode() == Caffe::GPU) {
+      caffe::cpu::OpenMpManager::setGpuEnabled();
+    } else {
+      caffe::cpu::OpenMpManager::setGpuDisabled();
+    }
+
+    caffe::cpu::OpenMpManager::bindOpenMpThreads();
+    caffe::cpu::OpenMpManager::printVerboseInformation();
+  }
+#endif
+
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.

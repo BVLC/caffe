@@ -37,6 +37,11 @@ void InternalThread::StartInternalThread() {
   } catch (std::exception& e) {
     LOG(FATAL) << "Thread exception: " << e.what();
   }
+
+  // Let know OpenMP mamanger that there is a background thread
+#ifdef _OPENMP
+  caffe::cpu::OpenMpManager::registerBackgroundThread();
+#endif
 }
 
 void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
