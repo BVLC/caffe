@@ -4,7 +4,6 @@
 #include <exception>
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
-//#include <glog/logging.h>
 #include "llogging.h"
 
 #include <climits>

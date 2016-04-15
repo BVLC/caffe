@@ -1,5 +1,4 @@
 #include <boost/thread.hpp>
-#include <glog/logging.h>
 #include <cmath>
 #include <cstdio>
 #include <ctime>
@@ -44,9 +43,9 @@ void GlobalInit(int* pargc, char*** pargv) {
   // Google flags.
   ::gflags::ParseCommandLineFlags(pargc, pargv, true);
   // Google logging.
-  ::google::InitGoogleLogging(*(pargv)[0]);
+  //::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
-  ::google::InstallFailureSignalHandler();
+  //::google::InstallFailureSignalHandler();
 }
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
