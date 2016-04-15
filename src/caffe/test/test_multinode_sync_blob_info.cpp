@@ -27,9 +27,9 @@ struct BlobConstInfoMock : BlobConstInfo {
 
 
 struct SyncedMock : public BlobSyncInfo::Handler {
-  MOCK_METHOD4(synced, void(int, int, int, uint32_t));
-  MOCK_METHOD2(synced, void(int, uint32_t));
-  MOCK_METHOD1(synced, void(uint32_t));
+  MOCK_METHOD4(synced, void(int a, int b, int c, uint32_t d));
+  MOCK_METHOD2(synced, void(int a, uint32_t b));
+  MOCK_METHOD1(synced, void(uint32_t a));
 };
 
 struct SyncBlobInfoTest : public Test {
