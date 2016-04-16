@@ -18,7 +18,7 @@ def reporthook(count, block_size, total_size):
     if count == 0:
         start_time = time.time()
         return
-    duration = time.time() - start_time
+    duration = (time.time() - start_time) or 0.01
     progress_size = int(count * block_size)
     speed = int(progress_size / (1024 * duration))
     percent = int(count * block_size * 100 / total_size)
@@ -32,7 +32,7 @@ def parse_readme_frontmatter(dirname):
     with open(readme_filename) as f:
         lines = [line.strip() for line in f.readlines()]
     top = lines.index('---')
-    bottom = lines[top + 1:].index('---')
+    bottom = lines.index('---', top + 1)
     frontmatter = yaml.load('\n'.join(lines[top + 1:bottom]))
     assert all(key in frontmatter for key in required_keys)
     return dirname, frontmatter

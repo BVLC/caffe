@@ -1,3 +1,4 @@
+#if defined(USE_LEVELDB) && defined(USE_LMDB) && defined(USE_OPENCV)
 #include <string>
 
 #include "boost/scoped_ptr.hpp"
@@ -132,3 +133,4 @@ TYPED_TEST(DBTest, TestWrite) {
 }
 
 }  // namespace caffe
+#endif  // USE_LEVELDB, USE_LMDB and USE_OPENCV

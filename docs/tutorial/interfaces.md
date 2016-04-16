@@ -11,8 +11,8 @@ The command line interface -- cmdcaffe -- is the `caffe` tool for model training
 
 **Training**: `caffe train` learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks:
 
-* All training requires a solver configuration through the `-solver solver.prototxt` argument. 
-* Resuming requires the `-snapshot model_iter_1000.solverstate` argument to load the solver snapshot. 
+* All training requires a solver configuration through the `-solver solver.prototxt` argument.
+* Resuming requires the `-snapshot model_iter_1000.solverstate` argument to load the solver snapshot.
 * Fine-tuning requires the `-weights model.caffemodel` argument for the model initialization.
 
 For example, you can run:
@@ -31,8 +31,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 
 **Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.
 
-    #
-    # score the learned LeNet model on the validation set as defined in the 
+    # score the learned LeNet model on the validation set as defined in the
     # model architeture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 
@@ -51,11 +50,18 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
     # query the first device
     caffe device_query -gpu 0
 
+**Parallelism**: the `-gpu` flag to the `caffe` tool can take a comma separated list of IDs to run on multiple GPUs. A solver and net will be instantiated for each GPU so the batch size is effectively multiplied by the number of GPUs. To reproduce single GPU training, reduce the batch size in the network definition accordingly.
+
+    # train on GPUs 0 & 1 (doubling the batch size)
+    caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 0,1
+    # train on all GPUs (multiplying batch size by number of devices)
+    caffe train -solver examples/mnist/lenet_solver.prototxt -gpu all
+
 ## Python
 
 The Python interface -- pycaffe -- is the `caffe` module and its scripts in caffe/python. `import caffe` to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.
 
-- `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classsifier` and `caffe.Detector` provide convenience interfaces for common tasks.
+- `caffe.Net` is the central interface for loading, configuring, and running models. `caffe.Classifier` and `caffe.Detector` provide convenience interfaces for common tasks.
 - `caffe.SGDSolver` exposes the solving interface.
 - `caffe.io` handles input / output with preprocessing and protocol buffers.
 - `caffe.draw` visualizes network architectures.
@@ -63,7 +69,8 @@ The Python interface -- pycaffe -- is the `caffe` module and its scripts in caff
 
 Tutorial IPython notebooks are found in caffe/examples: do `ipython notebook caffe/examples` to try them. For developer reference docstrings can be found throughout the code.
 
-Compile pycaffe by `make pycaffe`. The module dir caffe/python/caffe should be installed in your PYTHONPATH for `import caffe`.
+Compile pycaffe by `make pycaffe`.
+Add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like for `import caffe`.
 
 ## MATLAB
 
@@ -182,7 +189,7 @@ To get a layer's type (string):
 #### Forward and backward
 
 Forward pass can be done using `net.forward` or `net.forward_prefilled`. Function `net.forward` takes in a cell array of N-D arrays containing data of input blob(s) and outputs a cell array containing data from output blob(s). Function `net.forward_prefilled` uses existing data in input blob(s) during forward pass, takes no input and produces no output. After creating some data for input blobs like `data = rand(net.blobs('data').shape);` you can run
-    
+
     res = net.forward({data});
     prob = res{1};
 
@@ -202,7 +209,7 @@ Or
     net.blobs('prob').set_diff(prob_diff);
     net.backward_prefilled();
     data_diff = net.blobs('data').get_diff();
-    
+
 **However, the backward computation above doesn't get correct results, because Caffe decides that the network does not need backward computation. To get correct backward results, you need to set `'force_backward: true'` in your network prototxt.**
 
 After performing forward or backward pass, you can also get the data or diff in internal blobs. For example, to extract pool5 features after forward pass:

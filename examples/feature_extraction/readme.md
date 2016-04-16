@@ -10,7 +10,7 @@ Extracting Features
 ===================
 
 In this tutorial, we will extract features using a pre-trained model with the included C++ utility.
-Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb).
+Note that we recommend using the Python interface for this task, as for example in the [filter visualization example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 
 Follow instructions for [installing Caffe](../../installation.html) and run `scripts/download_model_binary.py models/bvlc_reference_caffenet` from caffe root directory.
 If you need detailed information about the tools below, please consult their source code, in which additional documentation is usually provided.
@@ -51,7 +51,7 @@ Extract Features
 
 Now everything necessary is in place.
 
-    ./build/tools/extract_features.bin models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10 lmdb
+    ./build/tools/extract_features.bin models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10 leveldb
 
 The name of feature blob that you extract is `fc7`, which represents the highest level feature of the reference model.
 We can use any other layer, as well, such as `conv5` or `pool3`.
@@ -64,7 +64,7 @@ If you meet with the error "Check failed: status.ok() Failed to open leveldb exa
 
     rm -rf examples/_temp/features/
 
-If you'd like to use the Python wrapper for extracting features, check out the [layer visualization notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb).
+If you'd like to use the Python wrapper for extracting features, check out the [filter visualization notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/00-classification.ipynb).
 
 Clean Up
 --------

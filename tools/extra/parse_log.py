@@ -28,7 +28,7 @@ def parse_log(path_to_log):
     regex_iteration = re.compile('Iteration (\d+)')
     regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\deE+-]+)')
-    regex_learning_rate = re.compile('lr = ([\.\d]+)')
+    regex_learning_rate = re.compile('lr = ([-+]?[0-9]*\.?[0-9]+([eE]?[-+]?[0-9]+)?)')
 
     # Pick out lines of interest
     iteration = -1
@@ -148,6 +148,11 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
 def write_csv(output_filename, dict_list, delimiter, verbose=False):
     """Write a CSV file
     """
+
+    if not dict_list:
+        if verbose:
+            print('Not writing %s; no lines to write' % output_filename)
+        return
 
     dialect = csv.excel
     dialect.delimiter = delimiter
