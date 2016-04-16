@@ -1,126 +1,11 @@
-/*!
- *  Copyright (c) 2015 by Contributors, 
- *                2016 Emmanuel Benazera <beniz@droidnik.fr>
- * \file logging.h
- * \brief defines logging macros of dmlc
- *  allows use of GLOG, fall back to internal
- *  implementation when disabled
+/**
+ * Author: Emmanuel Benazera <beniz@droidnik.fr>
  */
-#ifndef CAFFE_LOGGING_H_
-#define CAFFE_LOGGING_H_
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <stdexcept>
 
-class CaffeErrorException : public std::exception
-{
-public:
-  CaffeErrorException(const std::string &s):_s(s) {}
-  ~CaffeErrorException() throw() {}
-  const char* what() const throw() { return _s.c_str(); }
-  std::string _s;
-};
+#ifndef LLOGGING_H
+#define LLOGGING_H
 
-// use a light version of glog
-#include <assert.h>
 #include <iostream>
-#include <sstream>
-#include <ctime>
-
-#if defined(_MSC_VER)
-#pragma warning(disable : 4722)
-#endif
-
-static std::ostream nullstream(0);
-inline std::ostream& lif()
- {
-   return nullstream;
- }
-
-namespace caffe {
-inline void InitLogging(const char* argv0) {
-  // DO NOTHING
-}
- 
-// Always-on checking
-#define SSTR( x ) dynamic_cast< std::ostringstream & >(			\
-		 ( std::ostringstream() << std::dec << x ) ).str()
-#define CHECK(x)								\
-  if (!(x))								\
-    throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Check failed (custom): " #x ""); \
-  lif() \
-  << "Check: "
-
-#define CHECK_LT(x, y) CHECK((x) < (y))
-#define CHECK_GT(x, y) CHECK((x) > (y))
-#define CHECK_LE(x, y) CHECK((x) <= (y))
-#define CHECK_GE(x, y) CHECK((x) >= (y))
-#define CHECK_EQ(x, y) CHECK((x) == (y))
-#define CHECK_NE(x, y) CHECK((x) != (y))
-#define CHECK_NOTNULL(x) \
-  ((x) == NULL ? caffe::LogMessageFatal(__FILE__, __LINE__).stream() << "Check  notnull: "  #x << ' ', (x) : (x)) // NOLINT(*)
-// Debug-only checking.
-#ifdef NDEBUG
-#define DCHECK(x) \
-  while (false) CHECK(x)
-#define DCHECK_LT(x, y) \
-  while (false) CHECK((x) < (y))
-#define DCHECK_GT(x, y) \
-  while (false) CHECK((x) > (y))
-#define DCHECK_LE(x, y) \
-  while (false) CHECK((x) <= (y))
-#define DCHECK_GE(x, y) \
-  while (false) CHECK((x) >= (y))
-#define DCHECK_EQ(x, y) \
-  while (false) CHECK((x) == (y))
-#define DCHECK_NE(x, y) \
-  while (false) CHECK((x) != (y))
-#else
-#define DCHECK(x) CHECK(x)
-#define DCHECK_LT(x, y) CHECK((x) < (y))
-#define DCHECK_GT(x, y) CHECK((x) > (y))
-#define DCHECK_LE(x, y) CHECK((x) <= (y))
-#define DCHECK_GE(x, y) CHECK((x) >= (y))
-#define DCHECK_EQ(x, y) CHECK((x) == (y))
-#define DCHECK_NE(x, y) CHECK((x) != (y))
-#endif  // NDEBUG
-
-/*#if DMLC_LOG_CUSTOMIZE
-#define LOG_INFO caffe::CustomLogMessage(__FILE__, __LINE__)
-#else*/
-#define LOG_INFO caffe::LogMessage(__FILE__, __LINE__)
-//#endif
-#define LOG_ERROR LOG_INFO
-#define LOG_WARNING LOG_INFO
-#define LOG_FATAL caffe::LogMessageFatal(__FILE__, __LINE__)
-#define LOG_QFATAL LOG_FATAL
-//#define LOG_FIRST_N(severity,i) LOG_INFO
-
-// Poor man version of VLOG
-#define VLOG(x) LOG_INFO.stream()
-
-#define LOG(severity) LOG_##severity.stream()
-#define LG LOG_INFO.stream()
-#define LOG_IF(severity, condition)					\
-  !(condition) ? (void)0 : caffe::LogMessageVoidify() & LOG(severity)
-
-#ifdef NDEBUG
-#define LOG_DFATAL LOG_ERROR
-#define DFATAL ERROR
-#define DLOG(severity) true ? (void)0 : caffe::LogMessageVoidify() & LOG(severity)
-#define DLOG_IF(severity, condition) \
-  (true || !(condition)) ? (void)0 : caffe::LogMessageVoidify() & LOG(severity)
-#else
-#define LOG_DFATAL LOG_FATAL
-#define DFATAL FATAL
-#define DLOG(severity) LOG(severity)
-#define DLOG_IF(severity, condition) LOG_IF(severity, condition)
-#endif // NDEBUG
-
-// Poor man version of LOG_EVERY_N
-#define LOG_EVERY_N(severity, n) LOG(severity)
 
 class DateLogger {
  public:
@@ -151,81 +36,176 @@ class DateLogger {
   char buffer_[9];
 };
 
-class LogMessage {
- public:
-  LogMessage(const char* file, int line)
-      :
-#ifdef __ANDROID__
-        log_stream_(std::cout)
-#else
-        log_stream_(std::cerr)
+// avoid fatal checks from glog
+#define CAFFE_THROW_ON_ERROR
+
+// make sure we erase definitions by glog if any
+#undef LOG
+#undef LOG_IF
+#undef CHECK
+#undef CHECK_OP_LOG
+#undef CHECK_EQ
+#undef CHECK_LT
+#undef CHECK_GT
+#undef CHECK_LE
+#undef CHECK_GE
+#undef CHECK_EQ
+#undef CHECK_NE
+#undef CHECK_OP_LOG
+#undef CHECK_NOTNULL
+#undef DCHECK
+#undef DCHECK_LT
+#undef DCHECK_GT
+#undef DCHECK_LE
+#undef DCHECK_GE
+#undef DCHECK_EQ
+#undef DCHECK_NE
+#undef DLOG
+#undef DFATAL
+#undef LOG_DFATAL
+#undef LOG_EVERY_N
+
+#ifdef CAFFE_THROW_ON_ERROR
+#include <sstream>
+#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
+		 ( std::ostringstream() << std::dec << x ) ).str()
+class CaffeErrorException : public std::exception
+{
+public:
+  CaffeErrorException(const std::string &s):_s(s) {}
+  ~CaffeErrorException() throw() {}
+  const char* what() const throw() { return _s.c_str(); }
+  std::string _s;
+};
+
+static std::string INFO="INFO";
+static std::string WARNING="WARNING";
+static std::string ERROR="ERROR";
+static std::string FATAL="FATAL";
+
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+
+#define INFO INFO
+#define WARNING WARNING
+#define ERROR ERROR
+#define FATAL FATAL
+
+#define CHECK(condition)						\
+  if (!(condition)) \
+    throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Check failed (custom): " #condition ""); \
+  LOG_IF(ERROR, false) \
+  << "Check failed (custom): " #condition " "
+
+#define CHECK_LT(x, y) CHECK((x) < (y))
+#define CHECK_GT(x, y) CHECK((x) > (y))
+#define CHECK_LE(x, y) CHECK((x) <= (y))
+#define CHECK_GE(x, y) CHECK((x) >= (y))
+#define CHECK_EQ(x, y) CHECK((x) == (y))
+#define CHECK_NE(x, y) CHECK((x) != (y))
+
+#define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
+#ifdef DEBUG
+#define CHECK_EQ(val1,val2) if (0) std::cerr
 #endif
-  {
-    log_stream_ << "[" << pretty_date_.HumanDate() << "] " << file << ":"
-                << line << ": ";
-  }
-  ~LogMessage() { log_stream_ << '\n'; }
-  std::ostream& stream() { return log_stream_; }
+#endif
 
- protected:
-  std::ostream& log_stream_;
+#define CHECK_NOTNULL(x) \
+  ((x) == NULL ? LOG(FATAL) << "Check  notnull: "  #x << ' ', (x) : (x)) // NOLINT(*)
 
- private:
-  DateLogger pretty_date_;
-  LogMessage(const LogMessage&);
-  void operator=(const LogMessage&);
-};
+#ifdef NDEBUG
+#define DCHECK(x) \
+  while (false) CHECK(x)
+#define DCHECK_LT(x, y) \
+  while (false) CHECK((x) < (y))
+#define DCHECK_GT(x, y) \
+  while (false) CHECK((x) > (y))
+#define DCHECK_LE(x, y) \
+  while (false) CHECK((x) <= (y))
+#define DCHECK_GE(x, y) \
+  while (false) CHECK((x) >= (y))
+#define DCHECK_EQ(x, y) \
+  while (false) CHECK((x) == (y))
+#define DCHECK_NE(x, y) \
+  while (false) CHECK((x) != (y))
+#else
+#define DCHECK(x) CHECK(x)
+#define DCHECK_LT(x, y) CHECK((x) < (y))
+#define DCHECK_GT(x, y) CHECK((x) > (y))
+#define DCHECK_LE(x, y) CHECK((x) <= (y))
+#define DCHECK_GE(x, y) CHECK((x) >= (y))
+#define DCHECK_EQ(x, y) CHECK((x) == (y))
+#define DCHECK_NE(x, y) CHECK((x) != (y))
+#endif  // NDEBUG
 
-// customized logger that can allow user to define where to log the message.
-class CustomLogMessage {
- public:
-  CustomLogMessage(const char* file, int line) {
-    log_stream_ << "[" << DateLogger().HumanDate() << "] " << file << ":"
-                << line << ": ";
-  }
-  ~CustomLogMessage() {
-    Log(log_stream_.str());
-  }
-  std::ostream& stream() { return log_stream_; }
-  /*!
-   * \brief customized logging of the message.
-   * This function won't be implemented by libdmlc
-   * \param msg The message to be logged.
-   */
-  static void Log(const std::string& msg);
+/*static std::string INFO="INFO";
+static std::string WARNING="WARNING";
+static std::string ERROR="ERROR";
+static std::string FATAL="FATAL";*/
 
- private:
-  std::ostringstream log_stream_;
-};
-class LogMessageFatal {
- public:
-  LogMessageFatal(const char* file, int line) {
-    log_stream_ << "[" << pretty_date_.HumanDate() << "] " << file << ":"
-                << line << ": ";
-  }
-  std::ostringstream &stream() { return log_stream_; }
-  ~LogMessageFatal()  {
-    LOG(ERROR) << log_stream_.str();
+static std::ostream nullstream(0);
+
+inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout)
+{
+  if (severity != FATAL)
+    {
+      DateLogger pretty_date;
+      out << std::endl;
+      out << severity << " - " << pretty_date.HumanDate() << " - ";
+      return out;
+    }
+  else
+    {
+      throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Fatal Caffe error"); // XXX: cannot report the exact location of the trigger...
+    }
+  //return out;
 }
 
- private:
-  std::ostringstream log_stream_;
-  DateLogger pretty_date_;
-  LogMessageFatal(const LogMessageFatal&);
-  void operator=(const LogMessageFatal&);
-};
+inline std::ostream& LOG_IF(const std::string &severity,const bool &condition,std::ostream &out=std::cout)
+{
+  if (condition)
+    return LOG(severity,out);
+  else return nullstream;
+}
 
-// This class is used to explicitly ignore values in the conditional
-// logging macros.  This avoids compiler warnings like "value computed
-// is not used" and "statement has no effect".
-class LogMessageVoidify {
- public:
-  LogMessageVoidify() {}
-  // This has to be an operator with a precedence lower than << but
-  // higher than "?:". See its usage.
-  void operator&(std::ostream&) {}
-};
+#ifdef NDEBUG
+inline std::ostream& DFATAL(const std::string &severity, std::ostream &out=std::cout)
+{
+  (void)severity;
+  (void)out;
+  return nullstream;
+}
+inline std::ostream& LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
+{
+  (void)severity;
+  return nullstream;
+}
+inline std::ostream& DLOG(const std::string &severity, std::ostream &out=std::cout)
+{
+  (void)severity;
+  return nullstream;
+}
+#else
+inline std::ostream& DFATAL(const std::string &severity, std::ostream &out=std::cout)
+{
+  (void)severity;
+  return LOG(FATAL,out);
+}
+inline std::ostream& LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
+{
+  (void)severity;
+  return LOG(FATAL,out);
+}
+inline std::ostream& DLOG(const std::string &severity, std::ostream &out=std::cout)
+{
+  return LOG(severity,out);
+}
+#endif
 
-} 
+// Poor man's version...
+inline std::ostream& LOG_EVERY_N(const std::string &severity, const int &n, std::ostream &out=std::cout)
+{
+  (void)n;
+  return LOG(severity,out);
+}
 
 #endif
