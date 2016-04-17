@@ -258,9 +258,8 @@ int test() {
   vector<int> test_score_output_id;
   vector<float> test_score;
   float loss = 0;
-  std::string filename = FLAGS_outfile;
-//LOG(INFO) << "OPEN filename : "<<filename;
-  std::ofstream out(filename.c_str());
+  int softmaxLayer_index = -1;
+  vector<int> softmax_maxprob_index;
   for (int i = 0; i < FLAGS_iterations; ++i) {
 
     if( !(i%100))
@@ -271,6 +270,17 @@ int test() {
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int idx = 0;
+
+    if(softmaxLayer_index < 0)
+        for(int t = 0; t< result.size() ; ++t){
+            const std::string& blob_name = caffe_net.blob_names()[
+                     caffe_net.output_blob_indices()[t]];
+           LOG(INFO)<<"output_layer : "<<t<<", blob_name : "<<blob_name;
+            if(blob_name == "prob")
+                softmaxLayer_index = t;
+        }
+    float max_prob = 0.0;
+    int max_prob_index = -1;
     for (int j = 0; j < result.size(); ++j) {
       const float* result_vec = result[j]->cpu_data();
       for (int k = 0; k < result[j]->count(); ++k, ++idx) {
@@ -282,26 +292,37 @@ int test() {
         else {
           test_score[idx] += score;
         }
-        
-        //const std::string& output_name = caffe_net.blob_names()[
-        //     caffe_net.output_blob_indices()[j]];
-        //LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
-        switch (j)
-        {
-            case 0 : out<<"accuracy : "<<score<<std::endl; break;
-            case 1 : out<<"loss : " <<score<<std::endl; break;
-            case 2 : { 
-                    out<<score<<" ";
-                    break;
-
-              }
+        if( j == softmaxLayer_index ){
+            if(max_prob < score){
+                max_prob = score;
+                max_prob_index = k;
+            }
         }
+        //LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
+        //switch (j)
+        //{
+        //    case 0 : out<<"accuracy : "<<score<<std::endl; break;
+        //    case 1 : out<<"loss : " <<score<<std::endl; break;
+        //    case 2 : { 
+        //            out<<score<<" ";
+        //            break;
+
+        //      }
+        //}
         }
 //LOG(INFO)<<"CLOSE filname : "<<filename;
      }
-    out <<std::endl;
+     softmax_maxprob_index.push_back(max_prob_index);
+    //out <<std::endl;
+  }
+  std::string filename = FLAGS_outfile;
+//LOG(INFO) << "OPEN filename : "<<filename;
+  std::ofstream out(filename.c_str());
+  for(int i =0; i<softmax_maxprob_index.size(); ++i){
+      out<<softmax_maxprob_index[i]<<std::endl;
   }
   out.close();
+
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
   for (int i = 0; i < test_score.size(); ++i) {
