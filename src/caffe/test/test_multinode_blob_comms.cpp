@@ -32,7 +32,7 @@ struct SyncedMock : public BlobSyncInfo::Handler {
   MOCK_METHOD1(synced, void(uint32_t a));
 };
 
-struct BlobCommsTest : TerminatedHandler, public Test, InternalThread {
+struct BlobCommsTest : public Test {
   shared_ptr<internode::Daemon> comm;
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
@@ -41,13 +41,7 @@ struct BlobCommsTest : TerminatedHandler, public Test, InternalThread {
   shared_ptr<SyncedMock> sync_info;
   shared_ptr<BlobKeyChain<float> > keychain;
   shared_ptr<BlobComms<float> > comms;
-  shared_ptr<MultinodeParam> param;
-
-  std::vector<LayerState> layers;
-  LayerState init;
-
-  boost::mutex mtx;
-  bool terminated_;
+  MultinodeParameter &param;
   
   string address;
   int num_of_threads;
@@ -74,11 +68,9 @@ struct BlobCommsTest : TerminatedHandler, public Test, InternalThread {
           typename BlobComms<float>::Settings(
             BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
           num_of_threads))
-    , layers(const_info->layers())
-    , terminated_(false) {
     init.move_to(LayerState::updating);
     waypoint->register_receive_handler(comms.get());
-    comms->send_iter_size(param->iter_size());
+    comms->send_iter_size(param.iter_size());
 
     internode::create_timer(
       comm,
