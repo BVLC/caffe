@@ -61,12 +61,13 @@ class OpenMpManager {
 
   static void bindCurrentThreadToPrimaryCore();
   static void bindOpenMpThreads();
-
+  static void registerBackgroundThread();
   static void printVerboseInformation();
 
  private:
   bool isGpuEnabled;
   bool isAnyOpenMpEnvVarSpecified;
+  bool areBackgroundThreadsPresent;
   cpu_set_t currentCpuSet;
   cpu_set_t currentCoreSet;
 

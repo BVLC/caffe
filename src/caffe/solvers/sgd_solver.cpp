@@ -162,8 +162,9 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
-        if(net_params[param_id]->prv_data()
-           && (net_params[param_id]->prv_data_count() == net_params[param_id]->count()))
+        if (net_params[param_id]->prv_data()
+             && (net_params[param_id]->prv_data_count()
+                 == net_params[param_id]->count()))
           caffe_axpy(net_params[param_id]->count(),
                      local_decay,
                      net_params[param_id]->prv_data(),
@@ -233,8 +234,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    if(net_params[param_id]->prv_diff()
-        && (net_params[param_id]->prv_diff_count() == net_params[param_id]->count())) {
+    if (net_params[param_id]->prv_diff()
+        && (net_params[param_id]->prv_diff_count()
+            == net_params[param_id]->count())) {
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
                       net_params[param_id]->prv_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
@@ -242,9 +244,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_copy(net_params[param_id]->count(),
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_prv_diff());
-
-    }
-    else {
+    } else {
       caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->cpu_diff(), momentum,
           history_[param_id]->mutable_cpu_data());
@@ -252,7 +252,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_copy(net_params[param_id]->count(),
           history_[param_id]->cpu_data(),
           net_params[param_id]->mutable_cpu_diff());
-
     }
     break;
   }

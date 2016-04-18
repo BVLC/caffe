@@ -25,9 +25,14 @@ class BlobComms : public internode::Waypoint::Handler {
     Settings(const Settings& other);
   };
 
+  struct IterSizeHandler {
+    virtual void received_iter_size(internode::RemoteId from, int iters) = 0;
+  };
+
   static shared_ptr<BlobComms> create(
     shared_ptr<Solver<Dtype> > solver,
-    shared_ptr<BlobInfo<Dtype> > info,
+    shared_ptr<BlobConstInfo> const_info,
+    shared_ptr<BlobSyncInfo> sync_info,
     shared_ptr<internode::Waypoint> waypoint,
     shared_ptr<BlobCodec<Dtype> > codec,
     shared_ptr<BlobKeyChain<Dtype> > keychain,
@@ -41,7 +46,8 @@ class BlobComms : public internode::Waypoint::Handler {
   virtual void cancel(int layer_id, uint32_t version) = 0;
   virtual void received(char* data, size_t size, internode::Waypoint*) = 0;
 
-  virtual void set_iter_size(int iter_size) = 0;
+  virtual void send_iter_size(int iter_size) = 0;
+  virtual void register_iter_size_handler(IterSizeHandler* handler) = 0;
 };
 
 }  // namespace caffe

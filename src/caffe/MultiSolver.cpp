@@ -1,19 +1,23 @@
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <vector>
+#include "caffe/internode/tree_cluster.hpp"
 #include "caffe/MultiSolver.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-MultiSolver<Dtype>::MultiSolver(shared_ptr<Solver<Dtype> > root_solver)
-  : root_solver_(root_solver) {
+MultiSolver<Dtype>::MultiSolver(shared_ptr<Solver<Dtype> > root_solver,
+                                bool allocate_per_iter_size)
+  : root_solver_(root_solver)
+  , iter_size(
+      allocate_per_iter_size ? 1 :root_solver->param().iter_size()) {
   root_solver->set_forward_backward(
     boost::bind(&MultiSolver<Dtype>::ForwardBackward, this));
 
   worker_solvers.push_back(root_solver_);
 
-  for (int i = 1; i < root_solver->param().iter_size(); ++i) {
+  for (int i = 1; i < iter_size; ++i) {
     add_another();
   }
 }
@@ -66,40 +70,54 @@ void MultiSolver<Dtype>::add_another() {
 }
 
 template <typename Dtype>
-Dtype MultiSolver<Dtype>::ForwardBackward() {
-  boost::recursive_mutex::scoped_lock lock(mtx);
-
+Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   Dtype loss = 0;
   Net<Dtype>& net = *root_solver_->net();
-
-  // workers share all params
-
   for (int i = 0; i < net.layers().size(); ++i) {
-    for (int j = 0; j < callbacks_.size(); ++j) {
-      callbacks_[j]->on_start(i);
+    if (first) {
+      for (int j = 0; j < callbacks_.size(); ++j) {
+        callbacks_[j]->on_start(i);
+      }
     }
     vector<int> param_ids = net.get_layer_learnable_param_ids(i);
     for (int j = 0; j < worker_solvers.size(); ++j) {
       loss += worker_solvers[j]->net()->ForwardFromTo(i, i);
     }
-    for (int j = 0; j < callbacks_.size(); ++j) {
-      callbacks_[j]->on_forward_finished(i);
+    if (last) {
+      for (int j = 0; j < callbacks_.size(); ++j) {
+        callbacks_[j]->on_forward_finished(i);
+      }
     }
   }
 
   for (int i = net.layers().size() - 1; i >= 0; --i) {
-    for (int j = 0; j < callbacks_.size(); ++j) {
-      callbacks_[j]->on_backward_start(i);
+    if (first) {
+      for (int j = 0; j < callbacks_.size(); ++j) {
+        callbacks_[j]->on_backward_start(i);
+      }
     }
     for (int j = 0; j < worker_solvers.size(); ++j) {
       worker_solvers[j]->net()->BackwardFromTo(i, i);
     }
-    for (int j = 0; j < callbacks_.size(); ++j) {
-      callbacks_[j]->on_gradients_ready(i);
+    if (last) {
+      for (int j = 0; j < callbacks_.size(); ++j) {
+        callbacks_[j]->on_gradients_ready(i);
+      }
     }
   }
+  return loss;
+}
 
-  return loss / root_solver_->param().iter_size();
+template <typename Dtype>
+Dtype MultiSolver<Dtype>::ForwardBackward() {
+  boost::recursive_mutex::scoped_lock lock(mtx);
+
+  Dtype loss = 0;
+  for (int i = 0; i < iter_size; ++i) {
+    loss += ForwardBackwardImpl(
+      (i == 0), (i + 1 == iter_size));
+  }
+  return loss / iter_size;
 }
 
 template <typename Dtype>

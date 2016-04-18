@@ -39,8 +39,10 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   const shared_ptr<internode::Waypoint> waypoint;
   const shared_ptr<BlobCodec<Dtype> > codec;
   const shared_ptr<BlobKeyChain<Dtype> > keychain;
-  uint32_t iter_size;
   const typename BlobComms<Dtype>::Settings settings;
+
+  typedef typename BlobComms<Dtype>::IterSizeHandler IterSizeHandler;
+  vector<IterSizeHandler*> iter_size_handlers;
 
   char* buffer;
 
@@ -126,19 +128,19 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   bool during_sending;
 
   BlobCommsImpl(shared_ptr<Solver<Dtype> > solver,
-                shared_ptr<BlobInfo<Dtype> > info,
+                shared_ptr<BlobConstInfo> const_info,
+                shared_ptr<BlobSyncInfo> sync_info,
                 shared_ptr<internode::Waypoint> waypoint,
                 shared_ptr<BlobCodec<Dtype> > codec,
                 shared_ptr<BlobKeyChain<Dtype> > keychain,
                 typename BlobComms<Dtype>::Settings settings,
                 uint32_t threads)
     : solver(solver)
-    , const_info(info->get_const_info())
-    , sync_info(info->get_sync_info())
+    , const_info(const_info)
+    , sync_info(sync_info)
     , waypoint(waypoint)
     , codec(codec)
     , keychain(keychain)
-    , iter_size(1)
     , settings(settings)
     , buffer(new char[codec->packet_size()])
     , all_workers(threads)
@@ -213,7 +215,6 @@ struct BlobCommsImpl : BlobComms<Dtype> {
         return;
       }
       during_sending = true;
-      update.set_iters(iter_size);
     }
 
     update.mutable_info()->set_layer_id(next->layer_id);
@@ -228,16 +229,16 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     keychain->lock(next->layer_id);
     codec->encode(
       &update, get_blob(*next), settings.what_sent, update.info().part());
-    keychain->unlock(next->layer_id);
-
     update.SerializeToArray(buffer, codec->packet_size());
+    keychain->unlock(next->layer_id);
 
     waypoint->async_send(
       buffer, update.ByteSize(), boost::bind(&BlobCommsImpl::sent, this));
     DLOG(INFO) << "sent update of layer " << update.info().layer_id()
       << ", blob " << update.info().blob_id()
       << ", part " << update.info().part()
-      << " of version: " << update.info().version();
+      << " of version: " << update.info().version()
+      << " size: " << update.ByteSize();
   }
 
   void sent() {
@@ -326,7 +327,19 @@ struct BlobCommsImpl : BlobComms<Dtype> {
     }
 
     if (!msg.has_info()) {
-      LOG(ERROR) << "msg has no info";
+      if (msg.has_iters()) {
+        DLOG(INFO) << "received iters: " << msg.iters() << " from " << id;
+        vector<IterSizeHandler*> to_call;
+        {
+          boost::recursive_mutex::scoped_lock lock(mtx);
+          to_call = iter_size_handlers;
+        }
+        for (int i = 0; i < to_call.size(); ++i) {
+          to_call[i]->received_iter_size(id, msg.iters());
+        }
+      } else {
+        LOG(ERROR) << "empty update blob message";
+      }
       return;
     }
 
@@ -370,12 +383,30 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
     sync_info->received(
       id, msg.info().layer_id(), msg.info().blob_id(),
-      msg.info().part(), msg.info().version(), msg.iters());
+      msg.info().part(), msg.info().version());
   }
 
-  virtual void set_iter_size(int arg) {
+  void send_iter_size(int iter_size) {
+    BlobUpdate update;
+    update.set_iters(iter_size);
+    while (true) {
+      boost::recursive_mutex::scoped_lock lock(mtx);
+      if (is_during_sending()) continue;
+      during_sending = true;
+      break;
+    }
+
+    VLOG(2) << "sending iter size info (iter_size: " << iter_size << ")";
+
+    update.SerializeToArray(buffer, codec->packet_size());
+
+    waypoint->async_send(
+      buffer, update.ByteSize(), boost::bind(&BlobCommsImpl::sent, this));
+  }
+
+  void register_iter_size_handler(IterSizeHandler* handler) {
     boost::recursive_mutex::scoped_lock lock(mtx);
-    iter_size = arg;
+    iter_size_handlers.push_back(handler);
   }
 };
 
@@ -384,7 +415,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 template <typename Dtype>
 shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
     shared_ptr<Solver<Dtype> > solver,
-    shared_ptr<BlobInfo<Dtype> > info,
+    shared_ptr<BlobConstInfo> const_info,
+    shared_ptr<BlobSyncInfo> sync_info,
     shared_ptr<internode::Waypoint> waypoint,
     shared_ptr<BlobCodec<Dtype> > codec,
     shared_ptr<BlobKeyChain<Dtype> > keychain,
@@ -393,10 +425,10 @@ shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
 
   if (num_of_threads < 2) {
     return boost::make_shared<BlobCommsImpl<Dtype, false> >(
-        solver, info, waypoint, codec, keychain, settings, 0);
+        solver, const_info, sync_info, waypoint, codec, keychain, settings, 0);
   }
   return boost::make_shared<BlobCommsImpl<Dtype, false> >(
-      solver, info, waypoint, codec, keychain, settings, 0);
+      solver, const_info, sync_info, waypoint, codec, keychain, settings, 0);
 }
 
 template <typename Dtype>

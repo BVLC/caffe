@@ -10,12 +10,12 @@ namespace {
 
 template <typename Dtype, bool IsStub>
 struct BlobKeyChainImpl : public BlobKeyChain<Dtype> {
-  std::vector<shared_ptr<boost::mutex> > mtxs;
+  std::vector<shared_ptr<boost::recursive_mutex> > mtxs;
 
   explicit BlobKeyChainImpl(size_t layers)
     : mtxs(layers) {
     for (int i = 0; i < mtxs.size(); ++i) {
-      mtxs[i].reset(new boost::mutex());
+      mtxs[i].reset(new boost::recursive_mutex());
     }
   }
 

@@ -240,8 +240,8 @@ class ParamRelay<Dtype>::Impl : MultiWaypoint::Handler {
         internode::configure_client(
           comm, param_server_address, codec->packet_size()))
     , solver(solver)
-    , info(BlobInfo<Dtype>(
-        solver, codec->max_elements_per_part()).get_const_info())
+    , info(BlobInfoFactory<Dtype>::create_const_info(
+        solver, codec->max_elements_per_part()))
     , latest_version(0)
     , server_handler(this)
     , client_handler(this) {

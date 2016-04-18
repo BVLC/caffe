@@ -156,7 +156,7 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
 }
 
 template <>
-void caffe_scal<size_t>(const int N, const size_t alpha, size_t *X) {  
+void caffe_scal<size_t>(const int N, const size_t alpha, size_t *X) {
 }
 
 template <>
@@ -392,8 +392,8 @@ double caffe_cpu_strided_dot<double>(const int n, const double* x,
 }
 
 template <>
-size_t caffe_cpu_strided_dot<size_t>(const int n, const size_t* x, const int incx,
-    const size_t* y, const int incy) {
+size_t caffe_cpu_strided_dot<size_t>(const int n, const size_t* x,
+        const int incx, const size_t* y, const int incy) {
   return 0;
 }
 
