@@ -32,8 +32,13 @@ struct SyncedMock : public BlobSyncInfo::Handler {
   MOCK_METHOD1(synced, void(uint32_t a));
 };
 
+struct SolverMock : Solver<float> {
+  MOCK_METHOD0(net, shared_ptr<Net<float> >());
+};
+
 struct BlobCommsTest : public Test {
   shared_ptr<internode::Daemon> comm;
+  MultinodeParameter &param;
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
@@ -41,7 +46,7 @@ struct BlobCommsTest : public Test {
   shared_ptr<SyncedMock> sync_info;
   shared_ptr<BlobKeyChain<float> > keychain;
   shared_ptr<BlobComms<float> > comms;
-  MultinodeParameter &param;
+  shared_ptr<SolverMock<float> > solver;
   
   string address;
   int num_of_threads;
@@ -49,11 +54,13 @@ struct BlobCommsTest : public Test {
     virtual void SetUp() {
     const_info.reset(new BlobConstInfoMock());
     sync_info.reset(new StrictMock<SyncedMock>());
+    solver.reset(new SolverMock());
   }
 
   virtual void TearDown() {
     const_info.reset();
     sync_info.reset();
+    solver.reset();
   }
   
   BlobCommsTest()
@@ -67,8 +74,8 @@ struct BlobCommsTest : public Test {
           solver, const_info, sync_info, waypoint, codec, keychain,
           typename BlobComms<float>::Settings(
             BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
-          num_of_threads))
-    init.move_to(LayerState::updating);
+          num_of_threads)) {
+    EXPECT_CALL(*solver, layers()).WillRepeatedly(Return(new Net<float>(NetParameter::default_instance())));
     waypoint->register_receive_handler(comms.get());
     comms->send_iter_size(param.iter_size());
 
@@ -78,7 +85,8 @@ struct BlobCommsTest : public Test {
       boost::bind(&SynchronousParamSyncingImpl::tick, this),
       true);
   }
-  
+};
+
 TEST_F(BlobCommsTest, LOL_test1)
 {
 
