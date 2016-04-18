@@ -1,3 +1,11 @@
+#if USE_MKL
+#include <mkl.h>
+#endif
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
@@ -6,10 +14,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 namespace caffe {
 
@@ -335,18 +339,52 @@ template
 void caffe_rng_gaussian<double>(const int n, const double mu,
                                 const double sigma, double* r);
 
+#if USE_MKL
+class RngBernoulli {
+ private:
+  VSLStreamStatePtr stream;
+
+  static RngBernoulli &getInstance() {
+    static RngBernoulli rng;
+    return rng;
+  }
+
+  RngBernoulli() {
+    int seed = 17 + caffe_rng_rand() % 4096;
+    vslNewStream(&stream, VSL_BRNG_MCG31, seed);
+  }
+
+  RngBernoulli(const RngBernoulli &rng);
+  RngBernoulli operator =(const RngBernoulli &rng);
+
+ public:
+  ~RngBernoulli() {
+    vslDeleteStream(&stream);
+  }
+
+  static void generate(int n, double p, int* r) {
+    RngBernoulli &rng = getInstance();
+    viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, rng.stream, n, r, p);
+  }
+};
+#endif
+
 template <typename Dtype>
 void caffe_rng_bernoulli(const int n, const Dtype p, int* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
+#if USE_MKL
+  RngBernoulli::generate(n, p, r);
+#else
   boost::bernoulli_distribution<Dtype> random_distribution(p);
   boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
       variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+#endif
 }
 
 template
@@ -361,12 +399,16 @@ void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r) {
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
+#if USE_MKL
+  RngBernoulli::generate(n, p, reinterpret_cast<int *>(r));
+#else
   boost::bernoulli_distribution<Dtype> random_distribution(p);
   boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
       variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = static_cast<unsigned int>(variate_generator());
   }
+#endif
 }
 
 template
