@@ -1,5 +1,5 @@
 name: "CRFRNN-VOC"
-layers {
+layer {
   name: "data_rgb"
   type: "Data"
   top: "data"
@@ -11,7 +11,7 @@ layers {
   include: { phase: TRAIN }
 }
 
-layers {
+layer {
   name: "data_label"
   type: "Data"
   top: "label"
@@ -23,7 +23,7 @@ layers {
   include: { phase: TRAIN }
 }
 
-layers {
+layer {
   name: "data_rgb"
   type: "Data"
   top: "data"
