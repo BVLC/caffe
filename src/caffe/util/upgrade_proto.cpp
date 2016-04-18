@@ -14,7 +14,8 @@ namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
   return NetNeedsV0ToV1Upgrade(net_param) || NetNeedsV1ToV2Upgrade(net_param)
-      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param);
+      || NetNeedsDataUpgrade(net_param) || NetNeedsInputUpgrade(net_param)
+      || NetNeedsWeightFillerUpgrade(net_param);
 }
 
 bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
@@ -70,6 +71,14 @@ bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
               << "input fields.";
     LOG(WARNING) << "Note that future Caffe releases will only support "
                  << "input layers and not input fields.";
+  }
+  // NetParameter uses deprecated weight fillers; try to upgrade it.
+  if (NetNeedsWeightFillerUpgrade(*param)) {
+    LOG(INFO) << "Attempting to upgrade input file specified using deprecated "
+              << "weight fillers: " << param_file;
+    UpgradeNetWeightFiller(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "weight fillers.";
   }
   return success;
 }
@@ -989,6 +998,33 @@ void UpgradeNetInput(NetParameter* net_param) {
   net_param->clear_input();
   net_param->clear_input_shape();
   net_param->clear_input_dim();
+}
+
+bool NetNeedsWeightFillerUpgrade(const NetParameter& net_param) {
+  // Iterate over all layers and look for deprecated weight filler types.
+  for (int i = 0; i < net_param.layer_size(); ++i) {
+    if (net_param.layer(i).has_convolution_param() &&
+        net_param.layer(i).convolution_param().has_weight_filler()) {
+      const FillerParameter filler_param = net_param.layer(i).
+          convolution_param().weight_filler();
+      if (filler_param.type() == "bilinear") { return true; }
+    }
+  }
+  return false;
+}
+
+void UpgradeNetWeightFiller(NetParameter* net_param) {
+  // Iterate over all layers and change deprecated weight filler types.
+  for (int i = 0; i < net_param->layer_size(); ++i) {
+    if (net_param->layer(i).has_convolution_param() &&
+        net_param->layer(i).convolution_param().has_weight_filler()) {
+      FillerParameter* filler_param = net_param->mutable_layer(i)->
+          mutable_convolution_param()->mutable_weight_filler();
+      if (filler_param->type() == "bilinear") {
+        filler_param->set_type("multilinear");
+      }
+    }
+  }
 }
 
 // Return true iff the solver contains any old solver_type specified as enums
