@@ -6,7 +6,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -277,7 +276,12 @@ void caffe_abs<double>(const int n, const double* a, double* y) {
 }
 
 unsigned int caffe_rng_rand() {
-  return (*caffe_rng())();
+
+#ifdef DETERMINISTIC
+	return 4;
+#else
+	return (*caffe_rng())();
+#endif
 }
 
 template <typename Dtype>
