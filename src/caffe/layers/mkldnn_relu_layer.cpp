@@ -60,10 +60,10 @@ void MklDnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
       Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
       dnnError_t e;
-      e = dnnReLUCreateForward<Dtype>(&reluFwd_, mem_descr->layout_int,
+      e = dnnReLUCreateForward<Dtype>(&reluFwd_, NULL, mem_descr->layout_int,
               negative_slope);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, mem_descr->layout_int,
+      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, NULL, mem_descr->layout_int,
               mem_descr->layout_int, negative_slope);
       CHECK_EQ(e, E_SUCCESS);
 
@@ -85,10 +85,10 @@ void MklDnnReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // first pass
       dnnError_t e;
       Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
-      e = dnnReLUCreateForward<Dtype>(&reluFwd_, fwd_bottom_data_->layout_usr,
+      e = dnnReLUCreateForward<Dtype>(&reluFwd_, NULL, fwd_bottom_data_->layout_usr,
               negative_slope);
       CHECK_EQ(e, E_SUCCESS);
-      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, fwd_bottom_data_->layout_usr,
+      e = dnnReLUCreateBackward<Dtype>(&reluBwd_, NULL, fwd_bottom_data_->layout_usr,
               fwd_bottom_data_->layout_usr, negative_slope);
       CHECK_EQ(e, E_SUCCESS);
     }

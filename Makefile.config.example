@@ -10,6 +10,9 @@
 # Uncomment to use mkl-dnn primitives by default for supported layers
 # USE_MKLDNN := 1
 
+# Temporary: uncomment if you have MKL 2017 Beta-Update or newer
+#COMMON_FLAGS += -DUSE_MKL2017BETA_UPDATE_API
+
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
