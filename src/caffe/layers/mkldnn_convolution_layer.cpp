@@ -104,6 +104,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   if (g > 1) {
     status = dnnGroupsConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -116,6 +117,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   } else {
     status = dnnConvolutionCreateForwardBias<Dtype>(
       &convolutionFwd,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       bdata_sizes,
@@ -178,6 +180,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   if (g > 1) {
     status = dnnGroupsConvolutionCreateBackwardData<Dtype>(
       &convolutionBwdData,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -190,6 +193,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   } else {
     status = dnnConvolutionCreateBackwardData<Dtype>(
       &convolutionBwdData,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       bdata_sizes,
@@ -243,6 +247,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   if (g > 1) {
     status = dnnGroupsConvolutionCreateBackwardFilter<Dtype>(
       &convolutionBwdFilter,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -255,6 +260,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   } else {
     status = dnnConvolutionCreateBackwardFilter<Dtype>(
       &convolutionBwdFilter,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       bdata_sizes,
@@ -307,6 +313,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   if (g > 1) {
     status = dnnGroupsConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       g,
       dimension,
@@ -314,6 +321,7 @@ void MklDnnConvolutionLayer<Dtype>::LayerSetUp(
   } else {
     status = dnnConvolutionCreateBackwardBias<Dtype>(
       &convolutionBwdBias,
+      NULL,
       dnnAlgorithmConvolutionDirect,
       dimension,
       tdata_sizes);

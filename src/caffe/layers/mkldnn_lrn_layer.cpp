@@ -110,7 +110,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
       dnnLayout_t lrn_buffer_l = NULL;
 
       e = dnnLRNCreateForward<Dtype>(
-              &lrnFwd, mem_descr->layout_int, size_, alpha_, beta_, k_);
+              &lrnFwd, NULL, mem_descr->layout_int, size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
       e = dnnLayoutCreateFromPrimitive<Dtype>(
               &lrn_buffer_l, lrnFwd, dnnResourceWorkspace);
@@ -132,7 +132,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelForward_cpu(
       dnnError_t e;
       dnnLayout_t lrn_buffer_l = NULL;
       e = dnnLRNCreateForward<Dtype>(
-              &lrnFwd, layout_usr_, size_, alpha_, beta_, k_);
+              &lrnFwd, NULL, layout_usr_, size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
       e = dnnLayoutCreateFromPrimitive<Dtype>(
               &lrn_buffer_l, lrnFwd, dnnResourceWorkspace);
@@ -192,7 +192,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
       CHECK(mem_descr != NULL);
 
       dnnError_t e;
-      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, mem_descr->layout_int,
+      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL, mem_descr->layout_int,
               mem_descr->layout_int, size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
 
@@ -207,7 +207,7 @@ void MklDnnLRNLayer<Dtype>::CrossChannelBackward_cpu(
     bottom_diff = reinterpret_cast<void*>(bottom[0]->mutable_cpu_diff());
     if (lrnBwd == NULL) {
       dnnError_t e;
-      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, layout_usr_,
+      e = dnnLRNCreateBackward<Dtype>(&lrnBwd, NULL, layout_usr_,
               layout_usr_, size_, alpha_, beta_, k_);
       CHECK_EQ(e, E_SUCCESS);
     }
