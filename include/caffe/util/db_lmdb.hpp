@@ -8,6 +8,10 @@
 
 #include "caffe/util/db.hpp"
 
+#include <limits>
+
+#define BIGNUM_OR_MAX(A) ((A) > (std::numeric_limits<size_t>::max()) ? (std::numeric_limits<size_t>::max()) : (A))
+
 namespace caffe { namespace db {
 
 inline void MDB_CHECK(int mdb_status) {
