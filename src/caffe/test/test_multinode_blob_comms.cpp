@@ -35,7 +35,7 @@ struct SyncedMock : public BlobSyncInfo::Handler {
 
 struct BlobCommsTest : public Test {
   shared_ptr<internode::Daemon> comm;
-  const MultinodeParameter &param;
+  shared_ptr<MultinodeParameter> param;
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
@@ -65,26 +65,28 @@ struct BlobCommsTest : public Test {
     solver.reset();
   }
   
-  BlobCommsTest()
-    : comm(internode::create_communication_daemon())
-    , param(MultinodeParameter::default_instance())
-    , codec(BlobCodec<float>::create_codec(param, true))
-    , waypoint(internode::configure_client(comm, address, codec->packet_size()))
-    , keychain(BlobKeyChain<float>::create_empty(const_info_mock->layers()))
-    , comms(
-        BlobComms<float>::create(
-          solver, const_info_mock, sync_info, waypoint, codec, keychain,
-          typename BlobComms<float>::Settings(
-            BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
-          num_of_threads)) {
-    waypoint->register_receive_handler(comms.get());
-    comms->send_iter_size(solver->param().iter_size());
-  }
+  void buildOne(){
+      
+      comm = internode::create_communication_daemon();
+      param.reset(&MultinodeParameter::default_instance());
+      codec = BlobCodec<float>::create_codec(*param, true);
+      waypoint = internode::configure_client(comm, address, codec->packet_size());
+      keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
+      comms = BlobComms<float>::create(
+              solver, const_info_mock, sync_info, waypoint, codec, keychain,
+              typename BlobComms<float>::Settings(
+                BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
+              num_of_threads);
+      
+        waypoint->register_receive_handler(comms.get());
+        comms->send_iter_size(solver->param().iter_size());      
+  } 
 };
 
 TEST_F(BlobCommsTest, LOL_test1)
 {
-
+    buildOne();
+    EXPECT_EQ(0, comms->currently_sending_version());
 }
         
 }  // namespace
