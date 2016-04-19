@@ -64,16 +64,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     CHECK_EQ(datum_width, data_mean_.width());
     mean = data_mean_.mutable_cpu_data();
   }
-  if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
-     "Specify either 1 mean_value or as many as channels: " << datum_channels;
-    if (datum_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < datum_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
-      }
-    }
-  }
 
   int height = datum_height;
   int width = datum_width;
@@ -93,37 +83,271 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
   }
 
-  Dtype datum_element;
-  int top_index, data_index;
-  for (int c = 0; c < datum_channels; ++c) {
-    for (int h = 0; h < height; ++h) {
-      for (int w = 0; w < width; ++w) {
-        data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
-        if (do_mirror) {
-          top_index = (c * height + h) * width + (width - 1 - w);
-        } else {
-          top_index = (c * height + h) * width + w;
+  // TODO: omp simd pragma perhaps can help
+  // TODO: xbyak may help here as well
+
+  if (has_uint8 == true) {
+    const string* data_ptr = &data;
+    if (has_mean_file == true) {
+      if (do_mirror == false) {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, height, \
+                     width, data_ptr, mean)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + w;
+              Dtype datum_element = static_cast<Dtype>(
+                              static_cast<uint8_t>((*data_ptr)[data_index]));
+              transformed_data[top_index] = (datum_element - mean[data_index]) *
+                                            scale;
+            }
+          }
         }
-        if (has_uint8) {
-          datum_element =
-            static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-        } else {
-          datum_element = datum.float_data(data_index);
+      } else {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, height, \
+                     width, data_ptr, mean)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + (width - 1 - w);
+              Dtype datum_element = static_cast<Dtype>(
+                              static_cast<uint8_t>((*data_ptr)[data_index]));
+              transformed_data[top_index] = (datum_element - mean[data_index]) *
+                                            scale;
+            }
+          }
         }
-        if (has_mean_file) {
-          transformed_data[top_index] =
-            (datum_element - mean[data_index]) * scale;
-        } else {
-          if (has_mean_values) {
-            transformed_data[top_index] =
-              (datum_element - mean_values_[c]) * scale;
-          } else {
-            transformed_data[top_index] = datum_element * scale;
+      }
+    } else if (has_mean_values) {  // mean values
+        CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels)
+              << "Specify either 1 mean_value or as many as channels: "
+              << datum_channels;
+        if (datum_channels > 1 && mean_values_.size() == 1) {
+          // Replicate the mean_value for simplicity
+          for (int c = 1; c < datum_channels; ++c) {
+            mean_values_.push_back(mean_values_[0]);
+          }
+        }
+       Dtype *mean_ptr =  &mean_values_[0];
+
+       if (do_mirror == false) {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, height, \
+                     width, data_ptr, mean_ptr)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+                int data_index = (c * datum_height + h_off + h) * datum_width +
+                             w_off + w;
+                int top_index = (c * height + h) * width + w;
+                Dtype datum_element = static_cast<Dtype>(
+                                static_cast<uint8_t>((*data_ptr)[data_index]));
+                transformed_data[top_index] = (datum_element - mean_ptr[c]) *
+                                              scale;
+              }
+            }
+          }
+       } else {  // do_mirror
+#ifdef _OPENMP
+         #pragma omp task default(none) \
+         firstprivate(transformed_data, h_off, w_off, height, \
+                      width, data_ptr, mean_ptr)
+#endif
+         for (int c = 0; c < datum_channels; ++c) {
+           for (int h = 0; h < height; ++h) {
+             for (int w = 0; w < width; ++w) {
+                 int data_index = (c * datum_height + h_off + h) * datum_width +
+                              w_off + w;
+                 int top_index = (c * height + h) * width + (width - 1 - w);
+                 Dtype datum_element = static_cast<Dtype>(
+                                 static_cast<uint8_t>((*data_ptr)[data_index]));
+                 transformed_data[top_index] = (datum_element - mean_ptr[c]) *
+                                               scale;
+             }
+           }
+         }
+       }
+
+      } else {  // no mean file
+        if (do_mirror == false) {
+  #ifdef _OPENMP
+          #pragma omp task default(none) \
+          firstprivate(transformed_data, h_off, w_off, \
+                       height, width, data_ptr)
+#endif
+          for (int c = 0; c < datum_channels; ++c) {
+            for (int h = 0; h < height; ++h) {
+              for (int w = 0; w < width; ++w) {
+                int data_index = (c * datum_height + h_off + h) * datum_width +
+                             w_off + w;
+                int top_index = (c * height + h) * width + w;
+                Dtype datum_element = static_cast<Dtype>(
+                                static_cast<uint8_t>((*data_ptr)[data_index]));
+                transformed_data[top_index] = datum_element * scale;
+              }
+            }
+          }
+      } else {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, \
+                     height, width, data_ptr)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + (width - 1 - w);
+              Dtype datum_element = static_cast<Dtype>(
+                              static_cast<uint8_t>((*data_ptr)[data_index]));
+              transformed_data[top_index] = datum_element * scale;
+            }
           }
         }
       }
     }
-  }
+  } else {  // float (no uint8_t)
+    const Datum* datum_ptr = &datum;
+    if (has_mean_file == true) {
+      if (do_mirror == false) {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, height, \
+                     width, datum_ptr, mean)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + w;
+              Dtype datum_element = datum_ptr->float_data(data_index);
+              transformed_data[top_index] = (datum_element - mean[data_index]) *
+                                            scale;
+            }
+          }
+        }
+      } else {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, height, \
+                     width, datum_ptr, mean)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + (width - 1 - w);
+              Dtype datum_element = datum_ptr->float_data(data_index);
+              transformed_data[top_index] = (datum_element - mean[data_index]) *
+                                            scale;
+            }
+          }
+        }
+      }
+
+    } else if (has_mean_values) {  // mean values
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels)
+            << "Specify either 1 mean_value or as many as channels: "
+            << datum_channels;
+      if (datum_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < datum_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
+      }
+      Dtype *mean_ptr =  &mean_values_[0];
+
+      if (do_mirror == false) {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, height, \
+                     width, datum_ptr, mean_ptr)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+                int data_index = (c * datum_height + h_off + h) * datum_width +
+                             w_off + w;
+                int top_index = (c * height + h) * width + w;
+                Dtype datum_element = datum_ptr->float_data(data_index);
+                transformed_data[top_index] = (datum_element - mean_ptr[c]) *
+                                              scale;
+            }
+          }
+        }
+      } else {  // do_mirror
+#ifdef _OPENMP
+         #pragma omp task default(none) \
+         firstprivate(transformed_data, h_off, \
+                      w_off, height, width, datum_ptr, mean_ptr)
+#endif
+         for (int c = 0; c < datum_channels; ++c) {
+           for (int h = 0; h < height; ++h) {
+             for (int w = 0; w < width; ++w) {
+                 int data_index = (c * datum_height + h_off + h) * datum_width +
+                              w_off + w;
+                 int top_index = (c * height + h) * width + (width - 1 - w);
+                 Dtype datum_element = datum_ptr->float_data(data_index);
+                 transformed_data[top_index] = (datum_element - mean_ptr[c]) *
+                                               scale;
+             }
+           }
+         }
+       }
+
+    } else {  // no mean file
+      if (do_mirror == false) {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, \
+                     height, width, datum_ptr)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + w;
+              Dtype datum_element = datum_ptr->float_data(data_index);
+              transformed_data[top_index] = datum_element * scale;
+            }
+          }
+        }
+      } else {
+#ifdef _OPENMP
+        #pragma omp task default(none) \
+        firstprivate(transformed_data, h_off, w_off, \
+                     height, width, datum_ptr)
+#endif
+        for (int c = 0; c < datum_channels; ++c) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int data_index = (c * datum_height + h_off + h) * datum_width +
+                           w_off + w;
+              int top_index = (c * height + h) * width + (width - 1 - w);
+              Dtype datum_element = datum_ptr->float_data(data_index);
+              transformed_data[top_index] = datum_element * scale;
+            }
+          }
+        }
+      }
+    }
+  }  // no mean_values
 }
 
 

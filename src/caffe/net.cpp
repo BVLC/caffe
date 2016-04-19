@@ -42,10 +42,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK(Caffe::root_solver() || root_net_)
       << "root_net_ needs to be set for all non-root solvers";
 
-  // TODO: This is temporary location , as it should be called after layer
-  // initialization OpenMP manager needed some info (for example number of
-  // backgroud threads) that is available after layers are constructed
-#ifdef _OPENMP
+  #ifdef _OPENMP
   static bool executed = false;
   if (!executed) {
     if (Caffe::mode() == Caffe::GPU) {
@@ -198,10 +195,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
   }
-
-  // TODO: OpenMP manager should be initialized here, after MKL beta fix is
-  // applied.
-
 
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute
