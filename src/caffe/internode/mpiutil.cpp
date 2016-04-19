@@ -100,6 +100,9 @@ void mpi_init(int argc, char** argv) {
 
 void mpi_finalize() {
 #ifdef USE_MPI
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  LOG(INFO) << "Process rank " << rank << " exitted";
   MPI_Finalize();
 #endif
 }
