@@ -35,7 +35,6 @@ struct SyncedMock : public BlobSyncInfo::Handler {
 
 struct BlobCommsTest : public Test {
   shared_ptr<internode::Daemon> comm;
-  shared_ptr<MultinodeParameter> param;
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
@@ -56,30 +55,32 @@ struct BlobCommsTest : public Test {
     //if (register_handler)
       sync_info->register_synced_handler(sync_mock.get());
     EXPECT_CALL(*const_info_mock, layers()).WillRepeatedly(Return(1));
-    solver.reset(SolverRegistry<float>::CreateSolver(SolverParameter::default_instance()));
   }
 
   virtual void TearDown() {
-    const_info_mock.reset();
     sync_info.reset();
-    solver.reset();
+    sync_mock.reset();
+    const_info_mock.reset();
   }
   
   void buildOne(){
-      
-      comm = internode::create_communication_daemon();
-      param.reset(&MultinodeParameter::default_instance());
-      codec = BlobCodec<float>::create_codec(*param, true);
-      waypoint = internode::configure_client(comm, address, codec->packet_size());
-      keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
-      comms = BlobComms<float>::create(
-              solver, const_info_mock, sync_info, waypoint, codec, keychain,
-              typename BlobComms<float>::Settings(
-                BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
-              num_of_threads);
-      
-        waypoint->register_receive_handler(comms.get());
-        comms->send_iter_size(solver->param().iter_size());      
+    LOG(INFO) << "1";
+    SolverParameter solverparam = SolverParameter::default_instance();
+    solverparam.set_train_net("1");
+    solver.reset(SolverRegistry<float>::CreateSolver(solverparam));
+    LOG(INFO) << "2";
+    comm = internode::create_communication_daemon();
+    codec = BlobCodec<float>::create_codec(MultinodeParameter::default_instance(), true);
+    waypoint = internode::configure_client(comm, address, codec->packet_size());
+    keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
+    comms = BlobComms<float>::create(
+            solver, const_info_mock, sync_info, waypoint, codec, keychain,
+            typename BlobComms<float>::Settings(
+              BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
+            num_of_threads);
+
+      waypoint->register_receive_handler(comms.get());
+      comms->send_iter_size(solver->param().iter_size());      
   } 
 };
 
