@@ -7,6 +7,7 @@
 #include "caffe/multinode/BlobComms.hpp"
 #include "caffe/serialization/BlobCodec.hpp"
 #include "caffe/internode/configuration.hpp"
+#include "caffe/solver_factory.hpp"
 
 namespace caffe {
 namespace {
@@ -32,33 +33,34 @@ struct SyncedMock : public BlobSyncInfo::Handler {
   MOCK_METHOD1(synced, void(uint32_t a));
 };
 
-struct SolverMock : Solver<float> {
-  MOCK_METHOD0(net, shared_ptr<Net<float> >());
-};
-
 struct BlobCommsTest : public Test {
   shared_ptr<internode::Daemon> comm;
-  MultinodeParameter &param;
+  const MultinodeParameter &param;
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
-  shared_ptr<BlobConstInfoMock> const_info;
-  shared_ptr<SyncedMock> sync_info;
+  shared_ptr<BlobConstInfoMock> const_info_mock;
+  shared_ptr<SyncedMock> sync_mock;
+  shared_ptr<BlobSyncInfo> sync_info;
   shared_ptr<BlobKeyChain<float> > keychain;
   shared_ptr<BlobComms<float> > comms;
-  shared_ptr<SolverMock<float> > solver;
+  shared_ptr<Solver<float> > solver;
   
   string address;
   int num_of_threads;
   
     virtual void SetUp() {
-    const_info.reset(new BlobConstInfoMock());
-    sync_info.reset(new StrictMock<SyncedMock>());
-    solver.reset(new SolverMock());
+    const_info_mock.reset(new BlobConstInfoMock());
+    sync_mock.reset(new StrictMock<SyncedMock>());
+    sync_info = BlobInfoFactory<float>::create_sync_info(const_info_mock);
+    //if (register_handler)
+      sync_info->register_synced_handler(sync_mock.get());
+    EXPECT_CALL(*const_info_mock, layers()).WillRepeatedly(Return(1));
+    solver.reset(SolverRegistry<float>::CreateSolver(SolverParameter::default_instance()));
   }
 
   virtual void TearDown() {
-    const_info.reset();
+    const_info_mock.reset();
     sync_info.reset();
     solver.reset();
   }
@@ -68,22 +70,15 @@ struct BlobCommsTest : public Test {
     , param(MultinodeParameter::default_instance())
     , codec(BlobCodec<float>::create_codec(param, true))
     , waypoint(internode::configure_client(comm, address, codec->packet_size()))
-    , keychain(BlobKeyChain<float>::create_empty(const_info->layers()))
+    , keychain(BlobKeyChain<float>::create_empty(const_info_mock->layers()))
     , comms(
         BlobComms<float>::create(
-          solver, const_info, sync_info, waypoint, codec, keychain,
+          solver, const_info_mock, sync_info, waypoint, codec, keychain,
           typename BlobComms<float>::Settings(
             BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
           num_of_threads)) {
-    EXPECT_CALL(*solver, layers()).WillRepeatedly(Return(new Net<float>(NetParameter::default_instance())));
     waypoint->register_receive_handler(comms.get());
-    comms->send_iter_size(param.iter_size());
-
-    internode::create_timer(
-      comm,
-      500000,
-      boost::bind(&SynchronousParamSyncingImpl::tick, this),
-      true);
+    comms->send_iter_size(solver->param().iter_size());
   }
 };
 
