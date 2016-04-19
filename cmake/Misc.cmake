@@ -11,6 +11,10 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
+if("${DETERMINISTIC}" STREQUAL "ON")
+  add_definitions(-DDETERMINISTIC)
+endif()
+
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_COMPILER_IS_CLANGXX TRUE)
 endif()
