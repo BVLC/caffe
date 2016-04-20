@@ -2,15 +2,15 @@
 #ifndef CAFFE_UTIL_DB_LMDB_HPP
 #define CAFFE_UTIL_DB_LMDB_HPP
 
+#include <limits>
 #include <string>
 
 #include "lmdb.h"
 
 #include "caffe/util/db.hpp"
 
-#include <limits>
-
-#define BIGNUM_OR_MAX(A) ((A) > (std::numeric_limits<size_t>::max()) ? (std::numeric_limits<size_t>::max()) : (A))
+#define BIGNUM_OR_MAX(A) ((A) > (std::numeric_limits<size_t>::max()) ?\
+                         (std::numeric_limits<size_t>::max()) : (A))
 #ifndef _LMDB_MAP_SIZE
 #define _LMDB_MAP_SIZE 1099511627776
 #endif

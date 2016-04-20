@@ -23,8 +23,8 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/format.hpp"
 #include "caffe/util/db_lmdb.hpp"
+#include "caffe/util/format.hpp"
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
 
@@ -94,7 +94,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     CHECK_EQ(mkdir(db_path, 0744), 0)
         << "mkdir " << db_path << "failed";
     CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
-    CHECK_EQ(mdb_env_set_mapsize(mdb_env, BIGNUM_OR_MAX(_LMDB_MAP_SIZE)), MDB_SUCCESS) // 1TB or the maximum size of size_t.
+    // Check that the db size is the user specified one, or the max of size_t.
+    CHECK_EQ(mdb_env_set_mapsize(mdb_env, BIGNUM_OR_MAX(_LMDB_MAP_SIZE)), \
+                                MDB_SUCCESS)
         << "mdb_env_set_mapsize failed";
     CHECK_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
         << "mdb_env_open failed";
