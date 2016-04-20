@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
+#include <boost/assign.hpp>
+#include <boost/make_shared.hpp>
 #include "caffe/blob.hpp"
 #include "caffe/internode/configuration.hpp"
 #include "caffe/multinode/BlobComms.hpp"
@@ -34,47 +36,68 @@ struct SyncedMock : public BlobSyncInfo::Handler {
   MOCK_METHOD1(synced, void(uint32_t a));
 };
 
+template<typename Dtype>
+class BlobAccessorMock : public BlobAccessor<Dtype> {
+  Blob<Dtype> *blob;
+  vector<int> v;
+  
+ public:
+  BlobAccessorMock() 
+  : v(boost::assign::list_of(1)(1)(1)(1))
+  , blob(new Blob<Dtype>) {}
+  
+  virtual Blob<Dtype>* get_blob(int layer, int blob_id) {
+    return blob;
+  }
+};
+
 struct BlobCommsTest : public Test {
   shared_ptr<internode::Daemon> comm;
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
-  shared_ptr<BlobAccessor<float> > blob_accessor;
+  shared_ptr<BlobAccessorMock<float> > blob_accessor_mock;
   shared_ptr<BlobConstInfoMock> const_info_mock;
   shared_ptr<SyncedMock> sync_mock;
   shared_ptr<BlobSyncInfo> sync_info;
   shared_ptr<BlobKeyChain<float> > keychain;
   shared_ptr<BlobComms<float> > comms;
   shared_ptr<Solver<float> > solver;
+  //shared_ptr<Blob<float> > mocked_blob;
 
   string address;
   int num_of_threads;
 
     virtual void SetUp() {
     const_info_mock.reset(new BlobConstInfoMock());
+    blob_accessor_mock.reset(new BlobAccessorMock<float>());
     sync_mock.reset(new StrictMock<SyncedMock>());
     sync_info = BlobInfoFactory<float>::create_sync_info(const_info_mock);
     // if (register_handler)
       sync_info->register_synced_handler(sync_mock.get());
     EXPECT_CALL(*const_info_mock, layers()).WillRepeatedly(Return(1));
+    //mocked_blob = boost::make_shared<Blob<float> >(v);
+    //EXPECT_CALL(*blob_accessor_mock, get_blob(0,0)).WillRepeatedly(
+     //       Return(static_cast<Blob<float>* >(mocked_blob.get())));
   }
 
   virtual void TearDown() {
     sync_info.reset();
     sync_mock.reset();
+    blob_accessor_mock.reset();
     const_info_mock.reset();
   }
 
   void buildOne(){
     SolverParameter solverparam = SolverParameter::default_instance();
-    solverparam.set_train_net("1");
+    //solverparam.set_train_net("1");
     solver.reset(SolverRegistry<float>::CreateSolver(solverparam));
     comm = internode::create_communication_daemon();
     codec = BlobCodec<float>::create_codec(
             MultinodeParameter::default_instance(), true);
     waypoint = internode::configure_client(comm, address, codec->packet_size());
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
-    comms = BlobComms<float>::create(blob_accessor,
+    comms = BlobComms<float>::create(blob_accessor_mock,
             solver, const_info_mock, sync_info, waypoint, codec, keychain,
             typename BlobComms<float>::Settings(
               BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),
