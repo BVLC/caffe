@@ -7,6 +7,8 @@ namespace caffe {
 template <typename Dtype>
 void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+      "allow in-place computation.";
   const int start_axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.flatten_param().axis());
   const int end_axis = bottom[0]->CanonicalAxisIndex(

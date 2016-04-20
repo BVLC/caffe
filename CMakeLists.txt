@@ -9,6 +9,11 @@ endif()
 # ---[ Caffe project
 project(Caffe C CXX)
 
+# ---[ Caffe version
+set(CAFFE_TARGET_VERSION "1.0.0-rc3")
+set(CAFFE_TARGET_SOVERSION "1.0.0-rc3")
+add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
+
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
@@ -41,6 +46,8 @@ include(cmake/Dependencies.cmake)
 if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
 endif()
+
+caffe_set_caffe_link()
 
 if(USE_libstdcpp)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
