@@ -34,6 +34,7 @@ struct Part {
 template <typename Dtype, bool UseThreads>
 struct BlobCommsImpl : BlobComms<Dtype> {
   const shared_ptr<Solver<Dtype> > solver;
+  const shared_ptr<BlobAccessor<Dtype> > blob_accessor;
   const shared_ptr<BlobConstInfo> const_info;
   const shared_ptr<BlobSyncInfo> sync_info;
   const shared_ptr<internode::Waypoint> waypoint;
@@ -127,7 +128,8 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   std::deque<Part> to_send;
   bool during_sending;
 
-  BlobCommsImpl(shared_ptr<Solver<Dtype> > solver,
+  BlobCommsImpl(shared_ptr<BlobAccessor<Dtype> > blob_accessor,
+                shared_ptr<Solver<Dtype> > solver,
                 shared_ptr<BlobConstInfo> const_info,
                 shared_ptr<BlobSyncInfo> sync_info,
                 shared_ptr<internode::Waypoint> waypoint,
@@ -136,6 +138,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
                 typename BlobComms<Dtype>::Settings settings,
                 uint32_t threads)
     : solver(solver)
+    , blob_accessor(blob_accessor)
     , const_info(const_info)
     , sync_info(sync_info)
     , waypoint(waypoint)
@@ -178,7 +181,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
   }
   template <typename PartInfo>
   Blob<Dtype>* get_blob(const PartInfo& item) {
-    return get_blob(item.layer_id, item.blob_id);
+    return blob_accessor->get_blob(item.layer_id, item.blob_id);
   }
 
   boost::optional<Part> get_next_part_to_send() {
@@ -414,6 +417,7 @@ struct BlobCommsImpl : BlobComms<Dtype> {
 
 template <typename Dtype>
 shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
+    shared_ptr<BlobAccessor<Dtype> > blob_accessor,
     shared_ptr<Solver<Dtype> > solver,
     shared_ptr<BlobConstInfo> const_info,
     shared_ptr<BlobSyncInfo> sync_info,
@@ -424,10 +428,10 @@ shared_ptr<BlobComms<Dtype> > BlobComms<Dtype>::create(
     int num_of_threads) {
 
   if (num_of_threads < 2) {
-    return boost::make_shared<BlobCommsImpl<Dtype, false> >(
+    return boost::make_shared<BlobCommsImpl<Dtype, false> >(blob_accessor,
         solver, const_info, sync_info, waypoint, codec, keychain, settings, 0);
   }
-  return boost::make_shared<BlobCommsImpl<Dtype, false> >(
+  return boost::make_shared<BlobCommsImpl<Dtype, false> >(blob_accessor,
       solver, const_info, sync_info, waypoint, codec, keychain, settings, 0);
 }
 

@@ -39,6 +39,7 @@ struct BlobCommsTest : public Test {
   shared_ptr<BlobCodec<float> > codec;
   shared_ptr<internode::Waypoint> waypoint;
 
+  shared_ptr<BlobAccessor<float> > blob_accessor;
   shared_ptr<BlobConstInfoMock> const_info_mock;
   shared_ptr<SyncedMock> sync_mock;
   shared_ptr<BlobSyncInfo> sync_info;
@@ -65,17 +66,15 @@ struct BlobCommsTest : public Test {
   }
 
   void buildOne(){
-    LOG(INFO) << "1";
     SolverParameter solverparam = SolverParameter::default_instance();
     solverparam.set_train_net("1");
     solver.reset(SolverRegistry<float>::CreateSolver(solverparam));
-    LOG(INFO) << "2";
     comm = internode::create_communication_daemon();
     codec = BlobCodec<float>::create_codec(
             MultinodeParameter::default_instance(), true);
     waypoint = internode::configure_client(comm, address, codec->packet_size());
     keychain = BlobKeyChain<float>::create_empty(const_info_mock->layers());
-    comms = BlobComms<float>::create(
+    comms = BlobComms<float>::create(blob_accessor,
             solver, const_info_mock, sync_info, waypoint, codec, keychain,
             typename BlobComms<float>::Settings(
               BlobEncoding::GRADS, BlobEncoding::PARAMS, 1.0, 0.0),

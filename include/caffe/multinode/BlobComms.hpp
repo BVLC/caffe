@@ -30,6 +30,7 @@ class BlobComms : public internode::Waypoint::Handler {
   };
 
   static shared_ptr<BlobComms> create(
+    shared_ptr<BlobAccessor<Dtype> > blob_accessor,
     shared_ptr<Solver<Dtype> > solver,
     shared_ptr<BlobConstInfo> const_info,
     shared_ptr<BlobSyncInfo> sync_info,

@@ -64,6 +64,23 @@ struct BlobConstInfoImpl : BlobConstInfo {
   }
 };
 
+template <typename Dtype>
+class BlobAccessorImpl : public BlobAccessor<Dtype> {
+  const shared_ptr<Solver<Dtype> > solver;
+
+ public:
+  explicit BlobAccessorImpl(shared_ptr<Solver<Dtype> > solver)
+    : solver(solver) {}
+
+  virtual Blob<Dtype>* get_blob(int layer_id, int blob_id) {
+    CHECK_GE(layer_id, 0);
+    CHECK_GE(blob_id, 0);
+    CHECK(layer_id < solver->net()->layers().size());
+    CHECK(blob_id < solver->net()->layers()[layer_id]->blobs().size());
+    return solver->net()->layers()[layer_id]->blobs()[blob_id].get();
+  }
+};
+
 
 struct BlobSyncInfoImpl : BlobSyncInfo {
   typedef boost::unordered_map<RemoteId, int> RemoteInfoMap;
@@ -315,7 +332,12 @@ shared_ptr<BlobSyncInfo> BlobInfoFactory<Dtype>::create_sync_info(
   return boost::make_shared<BlobSyncInfoImpl>(const_info);
 }
 
+template <typename Dtype>
+shared_ptr<BlobAccessor<Dtype> > BlobInfoFactory<Dtype>::create_blob_accessor(
+    shared_ptr<Solver<Dtype> > solver) {
+  return boost::make_shared<BlobAccessorImpl<Dtype> >(solver);
+}
+
 INSTANTIATE_CLASS(BlobInfoFactory);
 
 }  // namespace caffe
-

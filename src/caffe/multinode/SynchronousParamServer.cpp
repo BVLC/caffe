@@ -30,6 +30,7 @@ class SynchronousParamServer<Dtype>::Impl
   shared_ptr<BlobCodec<Dtype> > codec;
   shared_ptr<MultiWaypoint> waypoint;
   shared_ptr<Solver<Dtype> > solver;
+  shared_ptr<BlobAccessor<Dtype> > blob_accessor;
   shared_ptr<BlobConstInfo> const_info;
   shared_ptr<BlobSyncInfo> sync_info;
   shared_ptr<BlobKeyChain<Dtype> > keychain;
@@ -148,12 +149,13 @@ class SynchronousParamServer<Dtype>::Impl
     , waypoint(internode::configure_server(
         comm, bind_address, codec->packet_size()))
     , solver(solver)
+    , blob_accessor(BlobInfoFactory<Dtype>::create_blob_accessor(solver))
     , const_info(BlobInfoFactory<Dtype>::create_const_info(
         solver, codec->max_elements_per_part()))
     , sync_info(BlobInfoFactory<Dtype>::create_sync_info(const_info))
     , keychain(BlobKeyChain<Dtype>::create_empty(const_info->layers()))
     , comms(
-        BlobComms<Dtype>::create(
+        BlobComms<Dtype>::create(blob_accessor,
           solver, const_info, sync_info, waypoint, codec, keychain,
           typename BlobComms<Dtype>::Settings(
             BlobEncoding::PARAMS, BlobEncoding::GRADS, 1.0, 1.0),

@@ -57,6 +57,12 @@ class BlobSyncInfo : public Sync {
 };
 
 template <typename Dtype>
+class BlobAccessor {
+ public:
+  virtual Blob<Dtype>* get_blob(int layer_id, int blob_id) = 0;
+};
+
+template <typename Dtype>
 class BlobInfoFactory {
  public:
   static shared_ptr<BlobConstInfo> create_const_info(
@@ -65,6 +71,9 @@ class BlobInfoFactory {
 
   static shared_ptr<BlobSyncInfo>  create_sync_info(
     shared_ptr<BlobConstInfo> const_info);
+
+  static shared_ptr<BlobAccessor<Dtype> > create_blob_accessor(
+    shared_ptr<Solver<Dtype> > solver);
 };
 
 }  // namespace caffe
